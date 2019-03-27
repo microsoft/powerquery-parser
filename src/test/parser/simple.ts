@@ -251,7 +251,7 @@ describe("verify NodeKind tokens in AST", () => {
         expect(actual).members(expected, JSON.stringify(details, null, 4));
     });
 
-    it(`${Ast.NodeKind.ErrorHandlingExpression} without otherwise`, () => {
+    it(`${Ast.NodeKind.ErrorHandlingExpression} otherwise`, () => {
         const actual = tokenizeNodeKindFromAst("try 1");
         const expected = [
             Ast.NodeKind.ErrorHandlingExpression,
@@ -265,7 +265,7 @@ describe("verify NodeKind tokens in AST", () => {
         expect(actual).members(expected, JSON.stringify(details, null, 4));
     });
 
-    it(`${Ast.NodeKind.ErrorHandlingExpression} with otherwise`, () => {
+    it(`${Ast.NodeKind.ErrorHandlingExpression} otherwise`, () => {
         const actual = tokenizeNodeKindFromAst("try 1 otherwise 1");
         const expected = [
             Ast.NodeKind.ErrorHandlingExpression,
@@ -1031,6 +1031,460 @@ describe("verify NodeKind tokens in AST", () => {
         const expected = [
             Ast.NodeKind.LogicalExpression,
             Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(Ast.NodeKind.MetadataExpression, () => {
+        const actual = tokenizeNodeKindFromAst("1 meta 1");
+        const expected = [
+            Ast.NodeKind.MetadataExpression,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(Ast.NodeKind.NotImplementedExpression, () => {
+        const actual = tokenizeNodeKindFromAst("...");
+        const expected = [
+            Ast.NodeKind.NotImplementedExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(Ast.NodeKind.NullablePrimitiveType, () => {
+        const actual = tokenizeNodeKindFromAst("x is nullable number");
+        const expected = [
+            Ast.NodeKind.IsExpression,
+            Ast.NodeKind.IdentifierExpression,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.NullablePrimitiveType,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.PrimitiveType,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(Ast.NodeKind.NullableType, () => {
+        const actual = tokenizeNodeKindFromAst("type nullable number");
+        const expected = [
+            Ast.NodeKind.TypePrimaryType,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.NullableType,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.PrimitiveType,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    // Ast.NodeKind.OtherwiseExpression covered by `${Ast.NodeKind.ErrorHandlingExpression} otherwise`
+
+    // Ast.NodeKind.Parameter covered by many
+
+    // Ast.NodeKind.ParameterList covered by many
+
+    it(Ast.NodeKind.ParenthesizedExpression, () => {
+        const actual = tokenizeNodeKindFromAst("(1)");
+        const expected = [
+            Ast.NodeKind.ParenthesizedExpression,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    // Ast.NodeKind.PrimitiveType covered by many
+
+    it(`${Ast.NodeKind.RecordExpression}`, () => {
+        const actual = tokenizeNodeKindFromAst("[x=1]");
+        const expected = [
+            Ast.NodeKind.RecordExpression,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Csv,
+            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+            Ast.NodeKind.GeneralizedIdentifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.RecordExpression} empty`, () => {
+        const actual = tokenizeNodeKindFromAst("[]");
+        const expected = [
+            Ast.NodeKind.RecordExpression,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    // Ast.NodeKind.RecordLiteral covered by many
+
+    it(`${Ast.NodeKind.RecordType}`, () => {
+        const actual = tokenizeNodeKindFromAst("type [x]");
+        const expected = [
+            Ast.NodeKind.TypePrimaryType,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.RecordType,
+            Ast.NodeKind.FieldSpecificationList,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Csv,
+            Ast.NodeKind.FieldSpecification,
+            Ast.NodeKind.GeneralizedIdentifier,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.RecordType} open record marker`, () => {
+        const actual = tokenizeNodeKindFromAst("type [x, ...]");
+        const expected = [
+            Ast.NodeKind.TypePrimaryType,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.RecordType,
+            Ast.NodeKind.FieldSpecificationList,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Csv,
+            Ast.NodeKind.FieldSpecification,
+            Ast.NodeKind.GeneralizedIdentifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    // Ast.NodeKind.RecursivePrimaryExpression covered by many
+
+    it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.GreaterThan}`, () => {
+        const actual = tokenizeNodeKindFromAst("1 > 1");
+        const expected = [
+            Ast.NodeKind.RelationalExpression,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.GreaterThanEqualTo}`, () => {
+        const actual = tokenizeNodeKindFromAst("1 >= 1");
+        const expected = [
+            Ast.NodeKind.RelationalExpression,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.LessThan}`, () => {
+        const actual = tokenizeNodeKindFromAst("1 <= 1");
+        const expected = [
+            Ast.NodeKind.RelationalExpression,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.LessThanEqualTo}`, () => {
+        const actual = tokenizeNodeKindFromAst("1 <= 1");
+        const expected = [
+            Ast.NodeKind.RelationalExpression,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.Section}`, () => {
+        const actual = tokenizeNodeKindFromAst("section;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.Section} attributes`, () => {
+        const actual = tokenizeNodeKindFromAst("[] section;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.RecordLiteral,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.Section} name`, () => {
+        const actual = tokenizeNodeKindFromAst("section foo;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.Section} member`, () => {
+        const actual = tokenizeNodeKindFromAst("section; x = 1;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMember,
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.Section} members`, () => {
+        const actual = tokenizeNodeKindFromAst("section; x = 1; y = 2;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMember,
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMember,
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.SectionMember}`, () => {
+        const actual = tokenizeNodeKindFromAst("section; x = 1;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMember,
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.SectionMember} attributes`, () => {
+        const actual = tokenizeNodeKindFromAst("section; [] x = 1;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMember,
+            Ast.NodeKind.RecordLiteral,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.SectionMember} shared`, () => {
+        const actual = tokenizeNodeKindFromAst("section; shared x = 1;");
+        const expected = [
+            Ast.NodeKind.Section,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMember,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.TableType}`, () => {
+        const actual = tokenizeNodeKindFromAst("type table [x]");
+        const expected = [
+            Ast.NodeKind.TypePrimaryType,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.TableType,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.FieldSpecificationList,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.Csv,
+            Ast.NodeKind.FieldSpecification,
+            Ast.NodeKind.GeneralizedIdentifier,
+            Ast.NodeKind.Constant,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    // Ast.NodeKind.TypePrimaryType covered by many
+
+    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Negative}`, () => {
+        const actual = tokenizeNodeKindFromAst("-1");
+        const expected = [
+            Ast.NodeKind.UnaryExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Positive}`, () => {
+        const actual = tokenizeNodeKindFromAst("not 1");
+        const expected = [
+            Ast.NodeKind.UnaryExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        const details = {
+            actual,
+            expected,
+        };
+        expect(actual).members(expected, JSON.stringify(details, null, 4));
+    });
+
+    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Positive}`, () => {
+        const actual = tokenizeNodeKindFromAst("+1");
+        const expected = [
+            Ast.NodeKind.UnaryExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
