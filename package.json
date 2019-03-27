@@ -14,7 +14,7 @@
     "mocha": "^5.2.0",
     "ts-loader": "^5.3.3",
     "ts-node": "^7.0.1",
-    "typescript": "^3.1.6",
+    "typescript": "^3.3.3",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0"
   },
@@ -44,12 +44,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JordanBoltonMN/powerquery-parser.git"
+    "url": "git+https://github.com/Microsoft/powerquery-parser.git"
   },
   "author": "Jordan Bolton",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/JordanBoltonMN/powerquery-parser/issues"
+    "url": "https://github.com/Microsoft/powerquery-parser/issues"
   },
-  "homepage": "https://github.com/JordanBoltonMN/powerquery-parser#readme"
+  "homepage": "https://github.com/Microsoft/powerquery-parser#readme"
 }
