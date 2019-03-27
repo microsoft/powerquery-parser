@@ -43,4 +43,9 @@ describe("parsing errors", () => {
         const innerError = expectParserInnerError("let in 1");
         expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
     });
+
+    it("ListType requires at least one parameter: type list {}", () => {
+        const innerError = expectParserInnerError("let in 1");
+        expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
+    });
 });
