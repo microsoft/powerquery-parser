@@ -1,5 +1,20 @@
+# powerquery-format
 
-# Contributing
+A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) language, written in TypeScript. Designed to be consumed by other projects.
+
+## How to build locally
+
+* Install NodeJS
+* `npm install`
+* `tsc`
+
+## How to run tests
+
+* Install NodeJS
+* `npm install`
+* `npm tests`
+
+## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us

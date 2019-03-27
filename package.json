@@ -1,0 +1,52 @@
+{
+  "name": "powerquery-parser",
+  "version": "0.0.5",
+  "description": "A parser for the Power Query langauge.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "dependencies": {
+    "grapheme-splitter": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "ts-loader": "^5.3.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.6",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
+  },
+  "files": [
+    "bundle/*",
+    "lib/common/*",
+    "lib/localization/*",
+    "lib/lexer/*",
+    "lib/parser/*",
+    "lib/index.d.ts",
+    "lib/index.js",
+    "lib/index.js.map",
+    "lib/jobs.d.ts",
+    "lib/jobs.js",
+    "lib/jobs.js.map"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build-all": "npm run-script build & npm run-script build-webpack",
+    "build-webpack": "npm run-script build-webpack-prod & npm run-script build-webpack-dev",
+    "build-webpack-prod": "webpack --config webpack/prod.config.js",
+    "build-webpack-dev": "webpack --config webpack/dev.config.js",
+    "test": "mocha -r ts-node/register src/test/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JordanBoltonMN/powerquery-parser.git"
+  },
+  "author": "Jordan Bolton",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JordanBoltonMN/powerquery-parser/issues"
+  },
+  "homepage": "https://github.com/JordanBoltonMN/powerquery-parser#readme"
+}
