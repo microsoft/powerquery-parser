@@ -32,7 +32,7 @@
     "lib/jobs.js.map"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "node_modules\\.bin\\tsc.cmd",
     "build-all": "npm run-script build & npm run-script build-webpack",
     "build-webpack": "npm run-script build-webpack-prod & npm run-script build-webpack-dev",
     "build-webpack-prod": "webpack --config webpack/prod.config.js",
