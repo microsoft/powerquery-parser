@@ -7,8 +7,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Workspace",
-            "program": "${workspaceFolder}\\src\\scratch\\workspace.ts",
+            "name": "Launch Example",
+            "program": "${workspaceFolder}\\src\\example.ts",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ],
