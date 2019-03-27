@@ -166,6 +166,7 @@ export namespace Lexer {
             case LexerKind.TouchedWithError:
                 return {
                     ...state,
+                    error: new LexerError.LexerError(new LexerError.BadStateError(state.error)),
                     kind: LexerKind.Error,
                 };
 
