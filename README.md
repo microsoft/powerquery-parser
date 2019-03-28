@@ -14,7 +14,7 @@ The Power Query/M language has an [official specification](https://docs.microsof
 
 ##### Error Handling
 
-The project tries avoiding using `try/catch` blocks. Instead it prefers to use the `Result` type to carry exceptions between boundries, and `Option` for explicit nullability. This means library users should assume public functions won't throw an uncaught exception.
+The project tries avoiding using `try/catch` blocks. Instead it prefers to use the `Result` type to carry exceptions between boundaries, and `Option` for explicit nullability. This means library users should assume public functions won't throw an uncaught exception.
 
 ## How to build
 
@@ -26,7 +26,7 @@ The project tries avoiding using `try/catch` blocks. Instead it prefers to use t
 
 * Install NodeJS
 * `npm install`
-* `npm tests`
+* `npm test`
 
 ## Contributing
 
