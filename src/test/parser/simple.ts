@@ -107,7 +107,10 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds)
-    });
+
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Addition, JSON.stringify(operatorNode.literal, null, 4));    });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.And}`, () => {
         const document = `1 & 1`;
@@ -119,6 +122,9 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.And, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Division}`, () => {
@@ -131,6 +137,9 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Division, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Multiplication}`, () => {
@@ -143,6 +152,9 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Multiplication, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Subtraction}`, () => {
@@ -155,6 +167,9 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Subtraction, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} with multiple ${Ast.NodeKind.UnaryExpressionHelper}`, () => {
@@ -250,6 +265,10 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.EqualityOperator.EqualTo, JSON.stringify(operatorNode.literal, null, 4));
+
     });
 
     it(`${Ast.NodeKind.EqualityExpression} ${Ast.EqualityOperator.NotEqualTo}`, () => {
@@ -262,6 +281,10 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.EqualityOperator.NotEqualTo, JSON.stringify(operatorNode.literal, null, 4));
+
     });
 
     it(`${Ast.NodeKind.ErrorHandlingExpression} otherwise`, () => {
@@ -1221,9 +1244,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Negative, JSON.stringify(operatorNode.literal, null, 4));
     });
 
-    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Positive}`, () => {
+    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Not}`, () => {
         const document = `not 1`;
         const expectedNodeKinds = [
             Ast.NodeKind.UnaryExpression,
@@ -1232,6 +1258,9 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Not, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Positive}`, () => {
@@ -1243,5 +1272,8 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
         ];
         expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Positive, JSON.stringify(operatorNode.literal, null, 4));
     });
 });
