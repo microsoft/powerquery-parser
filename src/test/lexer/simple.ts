@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer, TokenKind } from "../../lexer";
+import { Lexer, TokenKind, Keywords } from "../../lexer";
 
 function expectLexSuccess(document: string): Lexer.TouchedLexer {
     let lexer = Lexer.from(document);
@@ -27,7 +27,7 @@ function expectTokens(document: string, expected: [TokenKind, string][]): Lexer.
     return touchedLexer;
 }
 
-describe(`simple lexing`, () => {
+describe(`Lexer.Simple.TokenKinds`, () => {
     it(`HexLiteral`, () => {
         const document = `
 0x1
@@ -105,6 +105,7 @@ type
             [TokenKind.KeywordHashTable, `#table`],
             [TokenKind.KeywordHashTime, `#time`],
         ];
+        expect(expected.length).to.equal(Keywords.length);
         expectTokens(document, expected);
     });
 
