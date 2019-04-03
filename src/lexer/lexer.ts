@@ -99,7 +99,6 @@ export namespace Lexer {
 
             case LexerKind.TouchedWithError:
                 return {
-                    ...lexer,
                     kind: LexerKind.Untouched,
                     document: newDocument,
                     tokens: lexer.tokens,
@@ -165,9 +164,12 @@ export namespace Lexer {
 
             case LexerKind.TouchedWithError:
                 return {
-                    ...state,
-                    error: new LexerError.LexerError(new LexerError.BadStateError(state.error)),
                     kind: LexerKind.Error,
+                    tokens: state.tokens,
+                    comments: state.comments,
+                    document: state.document,
+                    documentIndex: state.documentIndex,
+                    error: new LexerError.LexerError(new LexerError.BadStateError(state.error)),
                 };
 
             default:
