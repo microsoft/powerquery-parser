@@ -28,6 +28,17 @@ function expectTokens(document: string, expected: [TokenKind, string][]): Lexer.
 }
 
 describe("simple lexing", () => {
+    it("HexLiteral", () => {
+        const document = `
+0x1
+0X1`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.HexLiteral, "0x1"],
+            [TokenKind.HexLiteral, "0X1"],
+        ];
+        expectTokens(document, expected);
+    });
+
     it("keywords", () => {
         const document = `
 and
@@ -97,7 +108,13 @@ type
         expectTokens(document, expected);
     });
 
-    it("numeric literals", () => {
+    it("NullLiteral", () => {
+        const document = `null`;
+        const expected: [TokenKind, string][] = [[TokenKind.NullLiteral, "null"]];
+        expectTokens(document, expected);
+    });
+
+    it("NumericLiteral", () => {
         const document = `
 1
 1e1
@@ -110,8 +127,7 @@ type
 0.1
 0.1e1
 0.1e-1
-0.1e+1
-`;
+0.1e+1`;
         const expected: [TokenKind, string][] = [
             [TokenKind.NumericLiteral, "1"],
             [TokenKind.NumericLiteral, "1e1"],
