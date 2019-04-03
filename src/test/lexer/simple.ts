@@ -212,3 +212,10 @@ type
         expectTokens(document, expected);
     });
 });
+
+describe(`Lexer.Simple.Whitespace`, () => {
+    it(`only spaces`, () => {
+        const document = `    `;
+        expectTokens(document, []);
+    });
+});
