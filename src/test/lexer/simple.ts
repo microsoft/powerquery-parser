@@ -14,14 +14,15 @@ function expectLexSuccess(document: string): Lexer.TouchedLexer {
     return lexer;
 }
 
-function expectTokenKinds(document: string, expectedTokenKinds: TokenKind[]): Lexer.TouchedLexer {
+function expectTokens(document: string, expected: [TokenKind, string][]): Lexer.TouchedLexer {
     const touchedLexer = expectLexSuccess(document);
-    const lexedTokenKinds = touchedLexer.tokens.map(token => token.kind);
+    const actual = touchedLexer.tokens.map(token => [token.kind, token.data]);
     const details = {
-        lexedTokenKinds,
-        expectedNodeKinds: expectedTokenKinds,
+        actual,
+        expected,
     };
-    expect(lexedTokenKinds).members(expectedTokenKinds, JSON.stringify(details, null, 4));
+
+    expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
 
     return touchedLexer;
 }
@@ -60,39 +61,71 @@ type
 #shared
 #table
 #time`;
-        const expectedTokenKinds = [
-            TokenKind.KeywordAnd,
-            TokenKind.KeywordAs,
-            TokenKind.KeywordEach,
-            TokenKind.KeywordElse,
-            TokenKind.KeywordError,
-            TokenKind.KeywordFalse,
-            TokenKind.KeywordIf,
-            TokenKind.KeywordIn,
-            TokenKind.KeywordIs,
-            TokenKind.KeywordLet,
-            TokenKind.KeywordMeta,
-            TokenKind.KeywordNot,
-            TokenKind.KeywordOtherwise,
-            TokenKind.KeywordOr,
-            TokenKind.KeywordSection,
-            TokenKind.KeywordShared,
-            TokenKind.KeywordThen,
-            TokenKind.KeywordTrue,
-            TokenKind.KeywordTry,
-            TokenKind.KeywordType,
-            TokenKind.KeywordHashBinary,
-            TokenKind.KeywordHashDate,
-            TokenKind.KeywordHashDateTime,
-            TokenKind.KeywordHashDateTimeZone,
-            TokenKind.KeywordHashDuration,
-            TokenKind.KeywordHashInfinity,
-            TokenKind.KeywordHashNan,
-            TokenKind.KeywordHashSections,
-            TokenKind.KeywordHashShared,
-            TokenKind.KeywordHashTable,
-            TokenKind.KeywordHashTime,
+        const expected: [TokenKind, string][] = [
+            [TokenKind.KeywordAnd, "and"],
+            [TokenKind.KeywordAs, "as"],
+            [TokenKind.KeywordEach, "each"],
+            [TokenKind.KeywordElse, "else"],
+            [TokenKind.KeywordError, "error"],
+            [TokenKind.KeywordFalse, "false"],
+            [TokenKind.KeywordIf, "if"],
+            [TokenKind.KeywordIn, "in"],
+            [TokenKind.KeywordIs, "is"],
+            [TokenKind.KeywordLet, "let"],
+            [TokenKind.KeywordMeta, "meta"],
+            [TokenKind.KeywordNot, "not"],
+            [TokenKind.KeywordOtherwise, "otherwise"],
+            [TokenKind.KeywordOr, "or"],
+            [TokenKind.KeywordSection, "section"],
+            [TokenKind.KeywordShared, "shared"],
+            [TokenKind.KeywordThen, "then"],
+            [TokenKind.KeywordTrue, "true"],
+            [TokenKind.KeywordTry, "try"],
+            [TokenKind.KeywordType, "type"],
+            [TokenKind.KeywordHashBinary, "#binary"],
+            [TokenKind.KeywordHashDate, "#date"],
+            [TokenKind.KeywordHashDateTime, "#datetime"],
+            [TokenKind.KeywordHashDateTimeZone, "#datetimezone"],
+            [TokenKind.KeywordHashDuration, "#duration"],
+            [TokenKind.KeywordHashInfinity, "#infinity"],
+            [TokenKind.KeywordHashNan, "#nan"],
+            [TokenKind.KeywordHashSections, "#sections"],
+            [TokenKind.KeywordHashShared, "#shared"],
+            [TokenKind.KeywordHashTable, "#table"],
+            [TokenKind.KeywordHashTime, "#time"],
         ];
-        expectTokenKinds(document, expectedTokenKinds);
+        expectTokens(document, expected);
+    });
+
+    it("numeric literals", () => {
+        const document = `
+1
+1e1
+1e-1
+1e+1
+.1
+.1e1
+.1e-1
+.1e+1
+0.1
+0.1e1
+0.1e-1
+0.1e+1
+`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.NumericLiteral, "1"],
+            [TokenKind.NumericLiteral, "1e1"],
+            [TokenKind.NumericLiteral, "1e-1"],
+            [TokenKind.NumericLiteral, "1e+1"],
+            [TokenKind.NumericLiteral, ".1"],
+            [TokenKind.NumericLiteral, ".1e1"],
+            [TokenKind.NumericLiteral, ".1e-1"],
+            [TokenKind.NumericLiteral, ".1e+1"],
+            [TokenKind.NumericLiteral, "0.1"],
+            [TokenKind.NumericLiteral, "0.1e1"],
+            [TokenKind.NumericLiteral, "0.1e-1"],
+            [TokenKind.NumericLiteral, "0.1e+1"],
+        ];
+        expectTokens(document, expected);
     });
 });
