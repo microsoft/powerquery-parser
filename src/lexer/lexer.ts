@@ -246,13 +246,17 @@ export namespace Lexer {
             documentIndex = drainWhitespace(document, documentIndex);
 
             const chr = state.document[documentIndex];
+            if (chr === undefined) {
+                break;
+            }
+
             const newlineKind = StringHelpers.maybeNewlineKindAt(document, documentIndex);
 
-            if (newlineKind == StringHelpers.NewlineKind.SingleCharacter) {
+            if (newlineKind === StringHelpers.NewlineKind.SingleCharacter) {
                 documentIndex += 1;
                 continue;
             }
-            else if (newlineKind == StringHelpers.NewlineKind.DoubleCharacter) {
+            else if (newlineKind === StringHelpers.NewlineKind.DoubleCharacter) {
                 documentIndex += 2;
                 continue;
             }
@@ -601,6 +605,8 @@ export namespace Lexer {
                 return readConstantToken(documentIndex, TokenKind.KeywordHashInfinity, substring);
             case Keyword.HashNan:
                 return readConstantToken(documentIndex, TokenKind.KeywordHashNan, substring);
+            case Keyword.HashSections:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashSections, substring);
             case Keyword.HashShared:
                 return readConstantToken(documentIndex, TokenKind.KeywordHashShared, substring);
             case Keyword.HashTable:
