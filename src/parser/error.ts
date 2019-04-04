@@ -3,6 +3,7 @@ import { Option } from "../common/option";
 import { TokenPosition } from "../lexer/lexerSnapshot";
 import { TokenKind } from "../lexer/token";
 import { Localization } from "../localization/error";
+import { Ast } from "./ast";
 
 export namespace ParserError {
 
@@ -14,8 +15,9 @@ export namespace ParserError {
     export type TInnerParserError = (
         | ExpectedAnyTokenKindError
         | ExpectedTokenKindError
-        | InvalidPrimitiveType
+        | InvalidPrimitiveTypeError
         | RequiredParameterAfterOptionalParameterError
+        | UnexpectedEndOfTokensError
         | UnterminatedBracketError
         | UnterminatedParenthesesError
         | UnusedTokensRemainError
@@ -49,7 +51,7 @@ export namespace ParserError {
         }
     }
 
-    export class InvalidPrimitiveType extends Error {
+    export class InvalidPrimitiveTypeError extends Error {
         constructor(
             readonly foundIdentifier: string,
             readonly tokenPosition: TokenPosition,
@@ -63,6 +65,15 @@ export namespace ParserError {
         constructor(
             readonly missingOptionalTokenPosition: TokenPosition,
             readonly message = Localization.Error.parserRequiredParameterAfterOptionalParameter(missingOptionalTokenPosition),
+        ) {
+            super(message);
+        }
+    }
+
+    export class UnexpectedEndOfTokensError extends Error {
+        constructor(
+            readonly topOfTokenRangeStack: Ast.NodeKind,
+            readonly message = Localization.Error.parserUnexpectedEndOfTokens(topOfTokenRangeStack),
         ) {
             super(message);
         }
@@ -106,8 +117,9 @@ export namespace ParserError {
         return (
             x instanceof ExpectedAnyTokenKindError
             || x instanceof ExpectedTokenKindError
-            || x instanceof InvalidPrimitiveType
+            || x instanceof InvalidPrimitiveTypeError
             || x instanceof RequiredParameterAfterOptionalParameterError
+            || x instanceof UnexpectedEndOfTokensError
             || x instanceof UnterminatedBracketError
             || x instanceof UnterminatedParenthesesError
             || x instanceof UnusedTokensRemainError
