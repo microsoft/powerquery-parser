@@ -69,7 +69,7 @@ export namespace Lexer {
         readonly documentEndIndex: number,
     }
 
-    // treat as `new Lexer(document)`
+    // create a new default state Lexer for the given document
     export function from(document: string): UntouchedLexer {
         return {
             kind: LexerKind.Untouched,
