@@ -709,7 +709,7 @@ export class Parser {
         }
     }
 
-    private tryReadPrimaryType(): Result<Ast.TPrimaryType, ParserError.InvalidPrimitiveType | CommonError.InvariantError> {
+    private tryReadPrimaryType(): Result<Ast.TPrimaryType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError> {
         const state = this.backup();
 
         const isTableTypeNext = (
@@ -1230,7 +1230,7 @@ export class Parser {
         }
     }
 
-    private tryReadPrimitiveType(): Result<Ast.PrimitiveType, ParserError.InvalidPrimitiveType | CommonError.InvariantError> {
+    private tryReadPrimitiveType(): Result<Ast.PrimitiveType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError> {
         this.startTokenRange(Ast.NodeKind.PrimitiveType);
         const state = this.backup();
         const expectedTokenKinds = [
@@ -1270,7 +1270,7 @@ export class Parser {
                     this.restore(state);
                     return {
                         kind: ResultKind.Err,
-                        error: new ParserError.InvalidPrimitiveType(currentTokenData, currentTokenPosition),
+                        error: new ParserError.InvalidPrimitiveTypeError(currentTokenData, currentTokenPosition),
                     }
             }
         }
@@ -1810,8 +1810,13 @@ export class Parser {
     }
 
     private startTokenRangeAt(nodeKind: Ast.NodeKind, tokenStartIndex: number) {
+        if (tokenStartIndex >= this.lexerSnapshot.tokens.length) {
+            const topOfTokenRangeStack = this.tokenRangeStack[this.tokenRangeStack.length - 1].nodeKind;
+            throw new ParserError.UnexpectedEndOfTokensError(topOfTokenRangeStack);
+        }
+
         this.tokenRangeStack.push({
-            nodeKind: nodeKind,
+            nodeKind,
             tokenStartIndex,
             documentStartIndex: this.lexerSnapshot.tokens[tokenStartIndex].documentStartIndex,
         });
