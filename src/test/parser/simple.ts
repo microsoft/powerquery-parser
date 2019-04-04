@@ -1,24 +1,36 @@
 import { expect } from "chai";
 import "mocha";
-import { ResultKind, Traverse } from "../../common";
+import { ResultKind, Traverse, Option } from "../../common";
 import { lexAndParse } from "../../jobs";
 import { Ast } from "../../parser";
 
-interface State extends Traverse.IState<Ast.NodeKind[]> { }
-interface Request extends Traverse.IRequest<State, Ast.NodeKind[]> { }
+interface CollectAllNodeKindState extends Traverse.IState<Ast.NodeKind[]> { }
+interface CollectAllNodeKindRequest extends Traverse.IRequest<CollectAllNodeKindState, Ast.NodeKind[]> { }
 
-function tokenizeNodeKindFromAst(document: string): Ast.NodeKind[] {
+interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
+    readonly nodeKind: Ast.NodeKind,
+    readonly nthRequired: number,
+    nthCounter: number,
+}
+interface NthNodeOfKindRequest extends Traverse.IRequest<NthNodeOfKindState, Option<Ast.TNode>> { }
+
+function astFromDocument(document: string): Ast.TDocument {
     const parseResult = lexAndParse(document);
     if (parseResult.kind === ResultKind.Err) {
         throw new Error(`parseResult.kind === ResultKind.Err: ${JSON.stringify(parseResult)}`);
     }
 
-    const request: Request = {
-        ast: parseResult.value.ast,
+    return parseResult.value.ast;
+}
+
+function collectNodeKindsFromAst(document: string): Ast.NodeKind[] {
+    const ast = astFromDocument(document);
+    const request: CollectAllNodeKindRequest = {
+        ast,
         state: {
             result: [],
         },
-        visitNodeFn,
+        visitNodeFn: collectNodeKindVisit,
         visitNodeStrategy: Traverse.VisitNodeStrategy.BreadthFirst,
         maybeEarlyExitFn: undefined,
     };
@@ -31,94 +43,138 @@ function tokenizeNodeKindFromAst(document: string): Ast.NodeKind[] {
     return traverseRequest.value;
 }
 
-function visitNodeFn(node: Ast.TNode, state: State) {
+function expectNthNodeOfKind<T>(document: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
+    const ast = astFromDocument(document);
+    const request: NthNodeOfKindRequest = {
+        ast,
+        state: {
+            result: undefined,
+            nodeKind,
+            nthCounter: 0,
+            nthRequired,
+        },
+        visitNodeFn: nthNodeVisit,
+        visitNodeStrategy: Traverse.VisitNodeStrategy.BreadthFirst,
+        maybeEarlyExitFn: nthNodeEarlyExit,
+    };
+
+    const traverseRequest = Traverse.traverseAst(request);
+    if (traverseRequest.kind === ResultKind.Err) {
+        throw new Error(`traverseRequest.kind === ResultKind.Err: ${JSON.stringify(traverseRequest)}`);
+    }
+    else if (traverseRequest.value === undefined) {
+        throw new Error (`could not find nth NodeKind where nth=${nthRequired} and NodeKind=${nodeKind}`);
+    }
+
+    const node: Ast.TNode = traverseRequest.value;
+    return <T & Ast.TNode> node;
+}
+
+function collectNodeKindVisit(node: Ast.TNode, state: CollectAllNodeKindState) {
     state.result.push(node.kind);
 }
 
-describe("verify NodeKind tokens in AST", () => {
+function nthNodeVisit(node: Ast.TNode, state: NthNodeOfKindState) {
+    if (node.kind === state.nodeKind) {
+        state.nthCounter += 1;
+        if (state.nthCounter === state.nthRequired) {
+            state.result = node;
+        }
+    }
+}
+
+function nthNodeEarlyExit(_: Ast.TNode, state: NthNodeOfKindState) {
+    return state.nthCounter === state.nthRequired;
+}
+
+function expectNodeKinds(document: string, expectedNodeKinds: Ast.NodeKind[]) {
+    const actualNodeKinds = collectNodeKindsFromAst(document);
+    const details = {
+        actualNodeKinds,
+        expectedNodeKinds,
+    };
+    expect(actualNodeKinds).members(expectedNodeKinds, JSON.stringify(details, null, 4));
+}
+
+describe("Parser.NodeKind", () => {
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Addition}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 + 1");
-        const expected = [
+        const document = `1 + 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
-    });
+        expectNodeKinds(document, expectedNodeKinds)
+
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Addition, JSON.stringify(operatorNode.literal, null, 4));    });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.And}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 & 1");
-        const expected = [
+        const document = `1 & 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.And, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Division}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 / 1");
-        const expected = [
+        const document = `1 / 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Division, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Multiplication}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 * 1");
-        const expected = [
+        const document = `1 * 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Multiplication, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Subtraction}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 - 1");
-        const expected = [
+        const document = `1 - 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Subtraction, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} with multiple ${Ast.NodeKind.UnaryExpressionHelper}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 + 1 + 1 + 1");
-        const expected = [
+        const document = `1 + 1 + 1 + 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
@@ -131,32 +187,24 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.AsExpression, () => {
-        const actual = tokenizeNodeKindFromAst("1 as number");
-        const expected = [
+        const document = `1 as number`;
+        const expectedNodeKinds = [
             Ast.NodeKind.AsExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.AsNullablePrimitiveType, () => {
-        const actual = tokenizeNodeKindFromAst("1 as nullable number");
-        const expected = [
+        const document = `1 as nullable number`;
+        const expectedNodeKinds = [
             Ast.NodeKind.AsExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
@@ -165,16 +213,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.AsType, () => {
-        const actual = tokenizeNodeKindFromAst("type function (x as number) as number");
-        const expected = [
+        const document = `type function (x as number) as number`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.FunctionType,
@@ -194,11 +238,7 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.Constant covered by many
@@ -206,68 +246,60 @@ describe("verify NodeKind tokens in AST", () => {
     // Ast.NodeKind.Csv covered by many
 
     it(Ast.NodeKind.EachExpression, () => {
-        const actual = tokenizeNodeKindFromAst("each 1");
-        const expected = [
+        const document = `each 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.EachExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.EqualityExpression} ${Ast.EqualityOperator.EqualTo}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 = 1");
-        const expected = [
+        const document = `1 = 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.EqualityExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.EqualityOperator.EqualTo, JSON.stringify(operatorNode.literal, null, 4));
+
     });
 
     it(`${Ast.NodeKind.EqualityExpression} ${Ast.EqualityOperator.NotEqualTo}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 <> 1");
-        const expected = [
+        const document = `1 <> 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.EqualityExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.EqualityOperator.NotEqualTo, JSON.stringify(operatorNode.literal, null, 4));
+
     });
 
     it(`${Ast.NodeKind.ErrorHandlingExpression} otherwise`, () => {
-        const actual = tokenizeNodeKindFromAst("try 1");
-        const expected = [
+        const document = `try 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ErrorHandlingExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ErrorHandlingExpression} otherwise`, () => {
-        const actual = tokenizeNodeKindFromAst("try 1 otherwise 1");
-        const expected = [
+        const document = `try 1 otherwise 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ErrorHandlingExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
@@ -275,30 +307,22 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ErrorRaisingExpression, () => {
-        const actual = tokenizeNodeKindFromAst("error 1");
-        const expected = [
+        const document = `error 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ErrorRaisingExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldProjection, () => {
-        const actual = tokenizeNodeKindFromAst("x[[y]]");
-        const expected = [
+        const document = `x[[y]]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecursivePrimaryExpression,
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
@@ -311,16 +335,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldProjection}multiple`, () => {
-        const actual = tokenizeNodeKindFromAst("x[[y], [z]]");
-        const expected = [
+        const document = `x[[y], [z]]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecursivePrimaryExpression,
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
@@ -339,16 +359,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldProjection} optional`, () => {
-        const actual = tokenizeNodeKindFromAst("x[[y]]?");
-        const expected = [
+        const document = `x[[y]]?`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecursivePrimaryExpression,
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
@@ -362,47 +378,35 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldSelector, () => {
-        const actual = tokenizeNodeKindFromAst("[x]");
-        const expected = [
+        const document = `[x]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FieldSelector,
             Ast.NodeKind.Constant,
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSelector} optional`, () => {
-        const actual = tokenizeNodeKindFromAst("[x]?");
-        const expected = [
+        const document = `[x]?`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FieldSelector,
             Ast.NodeKind.Constant,
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldSpecification, () => {
-        const actual = tokenizeNodeKindFromAst("type [x]");
-        const expected = [
+        const document = `type [x]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.RecordType,
@@ -413,16 +417,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSpecification} optional`, () => {
-        const actual = tokenizeNodeKindFromAst("type [optional x]");
-        const expected = [
+        const document = `type [optional x]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.RecordType,
@@ -434,16 +434,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSpecification} FieldTypeSpecification`, () => {
-        const actual = tokenizeNodeKindFromAst("type [x = number]");
-        const expected = [
+        const document = `type [x = number]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.RecordType,
@@ -458,16 +454,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldSpecificationList, () => {
-        const actual = tokenizeNodeKindFromAst("type [x]");
-        const expected = [
+        const document = `type [x]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.RecordType,
@@ -478,16 +470,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSpecificationList}`, () => {
-        const actual = tokenizeNodeKindFromAst("type [x, ...]");
-        const expected = [
+        const document = `type [x, ...]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.RecordType,
@@ -500,18 +488,14 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.FieldTypeSpecification covered by FieldSpecification
 
     it(Ast.NodeKind.FunctionExpression, () => {
-        const actual = tokenizeNodeKindFromAst("() => 1");
-        const expected = [
+        const document = `() => 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FunctionExpression,
             Ast.NodeKind.ParameterList,
             Ast.NodeKind.Constant,
@@ -519,16 +503,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList`, () => {
-        const actual = tokenizeNodeKindFromAst("(x) => 1");
-        const expected = [
+        const document = `(x) => 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FunctionExpression,
             Ast.NodeKind.ParameterList,
             Ast.NodeKind.Constant,
@@ -539,16 +519,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} multiple ParameterList`, () => {
-        const actual = tokenizeNodeKindFromAst("(x, y, z) => 1");
-        const expected = [
+        const document = `(x, y, z) => 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FunctionExpression,
             Ast.NodeKind.ParameterList,
             Ast.NodeKind.Constant,
@@ -567,16 +543,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList with optional`, () => {
-        const actual = tokenizeNodeKindFromAst("(optional x) => 1");
-        const expected = [
+        const document = `(optional x) => 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FunctionExpression,
             Ast.NodeKind.ParameterList,
             Ast.NodeKind.Constant,
@@ -588,16 +560,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList with AsNullablePrimitiveType`, () => {
-        const actual = tokenizeNodeKindFromAst("(x as nullable text) => 1");
-        const expected = [
+        const document = `(x as nullable text) => 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FunctionExpression,
             Ast.NodeKind.ParameterList,
             Ast.NodeKind.Constant,
@@ -614,33 +582,25 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.FieldTypeSpecification covered by AsType
 
     it(Ast.NodeKind.GeneralizedIdentifier, () => {
-        const actual = tokenizeNodeKindFromAst("[foo bar]");
-        const expected = [
+        const document = `[foo bar]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.FieldSelector,
             Ast.NodeKind.Constant,
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, () => {
-        const actual = tokenizeNodeKindFromAst("[x=1] section;");
-        const expected = [
+        const document = `[x=1] section;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.RecordLiteral,
             Ast.NodeKind.Constant,
@@ -653,16 +613,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.GeneralizedIdentifierPairedExpression, () => {
-        const actual = tokenizeNodeKindFromAst("[x=1]");
-        const expected = [
+        const document = `[x=1]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecordExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Csv,
@@ -672,34 +628,26 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.Identifier covered by many
 
     it(Ast.NodeKind.IdentifierExpression, () => {
-        const actual = tokenizeNodeKindFromAst("@foo");
-        const expected = [
+        const document = `@foo`;
+        const expectedNodeKinds = [
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Identifier,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.IdentifierExpressionPairedExpression covered by LetExpression
 
     it(Ast.NodeKind.IdentifierPairedExpression, () => {
-        const actual = tokenizeNodeKindFromAst("section; x = 1;");
-        const expected = [
+        const document = `section; x = 1;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
@@ -710,16 +658,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.IfExpression, () => {
-        const actual = tokenizeNodeKindFromAst("if x then x else x");
-        const expected = [
+        const document = `if x then x else x`;
+        const expectedNodeKinds = [
             Ast.NodeKind.IfExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.IdentifierExpression,
@@ -731,16 +675,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.InvokeExpression, () => {
-        const actual = tokenizeNodeKindFromAst("foo()");
-        const expected = [
+        const document = `foo()`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecursivePrimaryExpression,
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
@@ -748,32 +688,24 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.IsExpression, () => {
-        const actual = tokenizeNodeKindFromAst("1 is number");
-        const expected = [
+        const document = `1 is number`;
+        const expectedNodeKinds = [
             Ast.NodeKind.IsExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ItemAccessExpression, () => {
-        const actual = tokenizeNodeKindFromAst("x{1}");
-        const expected = [
+        const document = `x{1}`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecursivePrimaryExpression,
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
@@ -782,16 +714,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ItemAccessExpression} optional`, () => {
-        const actual = tokenizeNodeKindFromAst("x{1}?");
-        const expected = [
+        const document = `x{1}?`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecursivePrimaryExpression,
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
@@ -801,16 +729,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.LetExpression, () => {
-        const actual = tokenizeNodeKindFromAst("let x = 1 in x");
-        const expected = [
+        const document = `let x = 1 in x`;
+        const expectedNodeKinds = [
             Ast.NodeKind.LetExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Csv,
@@ -822,16 +746,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ListExpression, () => {
-        const actual = tokenizeNodeKindFromAst("{1, 2}");
-        const expected = [
+        const document = `{1, 2}`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ListExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Csv,
@@ -841,30 +761,22 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ListExpression} empty`, () => {
-        const actual = tokenizeNodeKindFromAst("{}");
-        const expected = [
+        const document = `{}`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ListExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ListLiteral, () => {
-        const actual = tokenizeNodeKindFromAst("[foo = {1}] section;");
-        const expected = [
+        const document = `[foo = {1}] section;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.RecordLiteral,
             Ast.NodeKind.Constant,
@@ -881,16 +793,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ListLiteral} empty`, () => {
-        const actual = tokenizeNodeKindFromAst("[foo = {}] section;");
-        const expected = [
+        const document = `[foo = {}] section;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.RecordLiteral,
             Ast.NodeKind.Constant,
@@ -905,16 +813,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ListType, () => {
-        const actual = tokenizeNodeKindFromAst("type {number}");
-        const expected = [
+        const document = `type {number}`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.ListType,
@@ -923,156 +827,104 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Logical} true`, () => {
-        const actual = tokenizeNodeKindFromAst("true");
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `true`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Logical} false`, () => {
-        const actual = tokenizeNodeKindFromAst("false");
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `false`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Numeric} decimal`, () => {
-        const actual = tokenizeNodeKindFromAst("1");
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `1`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Numeric} hex`, () => {
-        const actual = tokenizeNodeKindFromAst("0x1");
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `0x1`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Numeric} float`, () => {
-        const actual = tokenizeNodeKindFromAst("1.1");
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `1.1`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Str}`, () => {
-        const actual = tokenizeNodeKindFromAst(`""`);
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `""`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Str} double quote escape`, () => {
-        const actual = tokenizeNodeKindFromAst(`""""`);
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `""""`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Null}`, () => {
-        const actual = tokenizeNodeKindFromAst(`null`);
-        const expected = [ Ast.NodeKind.LiteralExpression ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const document = `null`;
+        const expectedNodeKinds = [ Ast.NodeKind.LiteralExpression ];
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LogicalExpression} and`, () => {
-        const actual = tokenizeNodeKindFromAst("true and true");
-        const expected = [
+        const document = `true and true`;
+        const expectedNodeKinds = [
             Ast.NodeKind.LogicalExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LogicalExpression} or`, () => {
-        const actual = tokenizeNodeKindFromAst("true or true");
-        const expected = [
+        const document = `true or true`;
+        const expectedNodeKinds = [
             Ast.NodeKind.LogicalExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.MetadataExpression, () => {
-        const actual = tokenizeNodeKindFromAst("1 meta 1");
-        const expected = [
+        const document = `1 meta 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.MetadataExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.NotImplementedExpression, () => {
-        const actual = tokenizeNodeKindFromAst("...");
-        const expected = [
+        const document = `...`;
+        const expectedNodeKinds = [
             Ast.NodeKind.NotImplementedExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.NullablePrimitiveType, () => {
-        const actual = tokenizeNodeKindFromAst("x is nullable number");
-        const expected = [
+        const document = `x is nullable number`;
+        const expectedNodeKinds = [
             Ast.NodeKind.IsExpression,
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
@@ -1082,16 +934,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.NullableType, () => {
-        const actual = tokenizeNodeKindFromAst("type nullable number");
-        const expected = [
+        const document = `type nullable number`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.NullableType,
@@ -1099,11 +947,7 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.OtherwiseExpression covered by `${Ast.NodeKind.ErrorHandlingExpression} otherwise`
@@ -1113,25 +957,21 @@ describe("verify NodeKind tokens in AST", () => {
     // Ast.NodeKind.ParameterList covered by many
 
     it(Ast.NodeKind.ParenthesizedExpression, () => {
-        const actual = tokenizeNodeKindFromAst("(1)");
-        const expected = [
+        const document = `(1)`;
+        const expectedNodeKinds = [
             Ast.NodeKind.ParenthesizedExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.PrimitiveType covered by many
 
     it(`${Ast.NodeKind.RecordExpression}`, () => {
-        const actual = tokenizeNodeKindFromAst("[x=1]");
-        const expected = [
+        const document = `[x=1]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecordExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Csv,
@@ -1141,32 +981,24 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.RecordExpression} empty`, () => {
-        const actual = tokenizeNodeKindFromAst("[]");
-        const expected = [
+        const document = `[]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RecordExpression,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.RecordLiteral covered by many
 
     it(`${Ast.NodeKind.RecordType}`, () => {
-        const actual = tokenizeNodeKindFromAst("type [x]");
-        const expected = [
+        const document = `type [x]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.RecordType,
@@ -1177,16 +1009,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.RecordType} open record marker`, () => {
-        const actual = tokenizeNodeKindFromAst("type [x, ...]");
-        const expected = [
+        const document = `type [x, ...]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.RecordType,
@@ -1199,96 +1027,84 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.RecursivePrimaryExpression covered by many
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.GreaterThan}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 > 1");
-        const expected = [
+        const document = `1 > 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.RelationalOperator.GreaterThan, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.GreaterThanEqualTo}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 >= 1");
-        const expected = [
+        const document = `1 >= 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.RelationalOperator.GreaterThanEqualTo, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.LessThan}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 <= 1");
-        const expected = [
+        const document = `1 < 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.RelationalOperator.LessThan, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.LessThanEqualTo}`, () => {
-        const actual = tokenizeNodeKindFromAst("1 <= 1");
-        const expected = [
+        const document = `1 <= 1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.RelationalOperator.LessThanEqualTo, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.Section}`, () => {
-        const actual = tokenizeNodeKindFromAst("section;");
-        const expected = [
+        const document = `section;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} attributes`, () => {
-        const actual = tokenizeNodeKindFromAst("[] section;");
-        const expected = [
+        const document = `[] section;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.RecordLiteral,
             Ast.NodeKind.Constant,
@@ -1296,31 +1112,23 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} name`, () => {
-        const actual = tokenizeNodeKindFromAst("section foo;");
-        const expected = [
+        const document = `section foo;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Identifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} member`, () => {
-        const actual = tokenizeNodeKindFromAst("section; x = 1;");
-        const expected = [
+        const document = `section; x = 1;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
@@ -1331,16 +1139,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} members`, () => {
-        const actual = tokenizeNodeKindFromAst("section; x = 1; y = 2;");
-        const expected = [
+        const document = `section; x = 1; y = 2;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
@@ -1357,16 +1161,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.SectionMember}`, () => {
-        const actual = tokenizeNodeKindFromAst("section; x = 1;");
-        const expected = [
+        const document = `section; x = 1;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
@@ -1377,16 +1177,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.SectionMember} attributes`, () => {
-        const actual = tokenizeNodeKindFromAst("section; [] x = 1;");
-        const expected = [
+        const document = `section; [] x = 1;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
@@ -1400,16 +1196,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.SectionMember} shared`, () => {
-        const actual = tokenizeNodeKindFromAst("section; shared x = 1;");
-        const expected = [
+        const document = `section; shared x = 1;`;
+        const expectedNodeKinds = [
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
@@ -1421,16 +1213,12 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.TableType}`, () => {
-        const actual = tokenizeNodeKindFromAst("type table [x]");
-        const expected = [
+        const document = `type table [x]`;
+        const expectedNodeKinds = [
             Ast.NodeKind.TypePrimaryType,
             Ast.NodeKind.Constant,
             Ast.NodeKind.TableType,
@@ -1442,57 +1230,50 @@ describe("verify NodeKind tokens in AST", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
     });
 
     // Ast.NodeKind.TypePrimaryType covered by many
 
     it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Negative}`, () => {
-        const actual = tokenizeNodeKindFromAst("-1");
-        const expected = [
+        const document = `-1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.UnaryExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Negative, JSON.stringify(operatorNode.literal, null, 4));
+    });
+
+    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Not}`, () => {
+        const document = `not 1`;
+        const expectedNodeKinds = [
+            Ast.NodeKind.UnaryExpression,
+            Ast.NodeKind.UnaryExpressionHelper,
+            Ast.NodeKind.Constant,
+            Ast.NodeKind.LiteralExpression,
+        ];
+        expectNodeKinds(document, expectedNodeKinds);
+
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Not, JSON.stringify(operatorNode.literal, null, 4));
     });
 
     it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Positive}`, () => {
-        const actual = tokenizeNodeKindFromAst("not 1");
-        const expected = [
+        const document = `+1`;
+        const expectedNodeKinds = [
             Ast.NodeKind.UnaryExpression,
             Ast.NodeKind.UnaryExpressionHelper,
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
-    });
+        expectNodeKinds(document, expectedNodeKinds);
 
-    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Positive}`, () => {
-        const actual = tokenizeNodeKindFromAst("+1");
-        const expected = [
-            Ast.NodeKind.UnaryExpression,
-            Ast.NodeKind.UnaryExpressionHelper,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
-        ];
-        const details = {
-            actual,
-            expected,
-        };
-        expect(actual).members(expected, JSON.stringify(details, null, 4));
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(document, Ast.NodeKind.Constant, 1);
+        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Positive, JSON.stringify(operatorNode.literal, null, 4));
     });
 });

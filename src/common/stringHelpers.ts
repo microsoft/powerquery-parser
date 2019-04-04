@@ -35,9 +35,7 @@ export namespace StringHelpers {
     export function maybeNewlineKindAt(str: string, index: number): Option<NewlineKind> {
         if (regexMatchLength(Pattern.RegExpNewline, str, index)) {
             // test for CARRIAGE RETURN + LINE FEED
-            const chr1 = str[index];
-            const chr2 = str[index + 1];
-            if (chr1 === "\u000D" && chr2 === "\u000A") {
+            if (str[index] === "\r" && str[index + 1] === "\n") {
                 return NewlineKind.DoubleCharacter;
             }
             else {

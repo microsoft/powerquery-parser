@@ -25,6 +25,7 @@ export const enum TokenKind {
     KeywordHashDuration = "KeywordHashDuration",
     KeywordHashInfinity = "KeywordHashInfinity",
     KeywordHashNan = "KeywordHashNan",
+    KeywordHashSections = "KeywordHashSections",
     KeywordHashShared = "KeywordHashShared",
     KeywordHashTable = "KeywordHashTable",
     KeywordHashTime = "KeywordHashTime",

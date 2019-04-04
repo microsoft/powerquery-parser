@@ -339,31 +339,31 @@ export class Parser {
                     throw new CommonError.NotYetImplementedError("todo");
 
                 case TokenKind.KeywordHashBinary:
-                    primaryExpression = this.readKeyword(Keyword.HashBinary);
+                    primaryExpression = this.readKeyword();
                     break;
 
                 case TokenKind.KeywordHashDate:
-                    primaryExpression = this.readKeyword(Keyword.HashDate);
+                    primaryExpression = this.readKeyword();
                     break;
 
                 case TokenKind.KeywordHashDateTime:
-                    primaryExpression = this.readKeyword(Keyword.HashDateTime);
+                    primaryExpression = this.readKeyword();
                     break;
 
                 case TokenKind.KeywordHashDateTimeZone:
-                    primaryExpression = this.readKeyword(Keyword.HashDateTimeZone);
+                    primaryExpression = this.readKeyword();
                     break;
 
                 case TokenKind.KeywordHashDuration:
-                    primaryExpression = this.readKeyword(Keyword.HashDuration);
+                    primaryExpression = this.readKeyword();
                     break;
 
                 case TokenKind.KeywordHashTable:
-                    primaryExpression = this.readKeyword(Keyword.HashTable);
+                    primaryExpression = this.readKeyword();
                     break;
 
                 case TokenKind.KeywordHashTime:
-                    primaryExpression = this.readKeyword(Keyword.HashTime);
+                    primaryExpression = this.readKeyword();
                     break;
 
                 default:
@@ -1453,7 +1453,7 @@ export class Parser {
         }
     }
 
-    private readKeyword(keyword: Keyword): Ast.IdentifierExpression {
+    private readKeyword(): Ast.IdentifierExpression {
         const tokenRange = this.singleTokenRange(TokenKind.Identifier);
         const literal = this.readToken();
         const identifier: Ast.Identifier = {
@@ -1465,7 +1465,7 @@ export class Parser {
 
         return {
             kind: Ast.NodeKind.IdentifierExpression,
-            tokenRange: this.singleTokenRange(keyword),
+            tokenRange,
             terminalNode: false,
             maybeInclusiveConstant: undefined,
             identifier,

@@ -18,7 +18,7 @@ function expectParserInnerError(document: string): ParserError.TInnerParserError
     }
 }
 
-describe("parsing errors", () => {
+describe("Parser.Error", () => {
     it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
         const innerError = expectParserInnerError("(optional x, y) => x");
         expect(innerError instanceof ParserError.RequiredParameterAfterOptionalParameterError).to.equal(true, innerError.message);

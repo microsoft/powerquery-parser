@@ -1,129 +1,282 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer, LexerError, TokenKind } from "../../lexer";
+import { Lexer, TokenKind, Keywords } from "../../lexer";
 
-function expectLexerInnerError(document: string): LexerError.TInnerLexerError {
-    let lexer: Lexer.TLexer = Lexer.from(document);
-    lexer = Lexer.remaining(lexer);
-
-    if (!Lexer.hasError(lexer)) {
-        throw new Error(`expected !Lexer.hasError(lexer): ${JSON.stringify(lexer)}`);
-    }
-    else if (!(lexer.error instanceof LexerError.LexerError)) {
-        throw new Error(`!(lexer.error instanceof LexerError): ${lexer.error.message}`);
-    }
-    else {
-        return lexer.error.innerError;
-    }
-}
-
-function touchedLexerFactory(): Lexer.TLexer {
-    const document = "!";
+function expectLexSuccess(document: string): Lexer.TouchedLexer {
     let lexer = Lexer.from(document);
     lexer = Lexer.remaining(lexer);
 
     if (lexer.kind !== Lexer.LexerKind.Touched) {
-        throw new Error(`lexer.kind !== Lexer.LexerKind.Touched: ${JSON.stringify(lexer)}`);
+        const details = { lexer };
+        throw new Error(`lexer.kind !== Lexer.LexerKind.Touched: ${JSON.stringify(details, null, 4)}`);
     }
+
     return lexer;
 }
 
-function touchedWithErrorLexerFactory(document: string): Lexer.TLexer {
-    let lexer = Lexer.from(document);
-    lexer = Lexer.remaining(lexer);
+function expectTokens(document: string, expected: [TokenKind, string][]): Lexer.TouchedLexer {
+    const touchedLexer = expectLexSuccess(document);
+    const actual = touchedLexer.tokens.map(token => [token.kind, token.data]);
+    const details = {
+        actual,
+        expected,
+    };
 
-    if (!Lexer.hasError(lexer)) {
-        throw new Error(`expected Lexer.hasError(lexer): ${JSON.stringify(lexer)}`);
-    }
-    return lexer;
+    expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
+
+    return touchedLexer;
 }
 
-describe("lexing errors", () => {
-    it("EndOfStream: ''", () => {
-        const innerError = expectLexerInnerError("");
-        expect(innerError instanceof LexerError.EndOfStreamError).to.equal(true, innerError.message);
+describe(`Lexer.Simple.TokenKinds`, () => {
+    it(`HexLiteral`, () => {
+        const document = `
+0x1
+0X1`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.HexLiteral, `0x1`],
+            [TokenKind.HexLiteral, `0X1`],
+        ];
+        expectTokens(document, expected);
     });
 
-    it("ExpectedHexLiteralError: 0x", () => {
-        const innerError = expectLexerInnerError("0x");
-        expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
+    it(`keywords`, () => {
+        const document = `
+and
+as
+each
+else
+error
+false
+if
+in
+is
+let
+meta
+not
+otherwise
+or
+section
+shared
+then
+true
+try
+type
+#binary
+#date
+#datetime
+#datetimezone
+#duration
+#infinity
+#nan
+#sections
+#shared
+#table
+#time`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.KeywordAnd, `and`],
+            [TokenKind.KeywordAs, `as`],
+            [TokenKind.KeywordEach, `each`],
+            [TokenKind.KeywordElse, `else`],
+            [TokenKind.KeywordError, `error`],
+            [TokenKind.KeywordFalse, `false`],
+            [TokenKind.KeywordIf, `if`],
+            [TokenKind.KeywordIn, `in`],
+            [TokenKind.KeywordIs, `is`],
+            [TokenKind.KeywordLet, `let`],
+            [TokenKind.KeywordMeta, `meta`],
+            [TokenKind.KeywordNot, `not`],
+            [TokenKind.KeywordOtherwise, `otherwise`],
+            [TokenKind.KeywordOr, `or`],
+            [TokenKind.KeywordSection, `section`],
+            [TokenKind.KeywordShared, `shared`],
+            [TokenKind.KeywordThen, `then`],
+            [TokenKind.KeywordTrue, `true`],
+            [TokenKind.KeywordTry, `try`],
+            [TokenKind.KeywordType, `type`],
+            [TokenKind.KeywordHashBinary, `#binary`],
+            [TokenKind.KeywordHashDate, `#date`],
+            [TokenKind.KeywordHashDateTime, `#datetime`],
+            [TokenKind.KeywordHashDateTimeZone, `#datetimezone`],
+            [TokenKind.KeywordHashDuration, `#duration`],
+            [TokenKind.KeywordHashInfinity, `#infinity`],
+            [TokenKind.KeywordHashNan, `#nan`],
+            [TokenKind.KeywordHashSections, `#sections`],
+            [TokenKind.KeywordHashShared, `#shared`],
+            [TokenKind.KeywordHashTable, `#table`],
+            [TokenKind.KeywordHashTime, `#time`],
+        ];
+        expect(expected.length).to.equal(Keywords.length);
+        expectTokens(document, expected);
     });
 
-    it("UnterminatedMultilineCommentError: /*", () => {
-        const innerError = expectLexerInnerError("/*");
-        expect(innerError instanceof LexerError.UnterminatedMultilineCommentError).to.equal(true, innerError.message);
+    it(`NullLiteral`, () => {
+        const document = `null`;
+        const expected: [TokenKind, string][] = [[TokenKind.NullLiteral, `null`]];
+        expectTokens(document, expected);
     });
 
-    it("UnterminatedStringError: \"", () => {
-        const innerError = expectLexerInnerError("\"");
-        expect(innerError instanceof LexerError.UnterminatedStringError).to.equal(true, innerError.message);
+    it(`NumericLiteral`, () => {
+        const document = `
+1
+1e1
+1e-1
+1e+1
+.1
+.1e1
+.1e-1
+.1e+1
+0.1
+0.1e1
+0.1e-1
+0.1e+1`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.NumericLiteral, `1`],
+            [TokenKind.NumericLiteral, `1e1`],
+            [TokenKind.NumericLiteral, `1e-1`],
+            [TokenKind.NumericLiteral, `1e+1`],
+            [TokenKind.NumericLiteral, `.1`],
+            [TokenKind.NumericLiteral, `.1e1`],
+            [TokenKind.NumericLiteral, `.1e-1`],
+            [TokenKind.NumericLiteral, `.1e+1`],
+            [TokenKind.NumericLiteral, `0.1`],
+            [TokenKind.NumericLiteral, `0.1e1`],
+            [TokenKind.NumericLiteral, `0.1e-1`],
+            [TokenKind.NumericLiteral, `0.1e+1`],
+        ];
+        expectTokens(document, expected);
     });
 
-    it("BadStateError", () => {
-        let lexer = touchedWithErrorLexerFactory("1 0x");
+    it(`operator-or-punctuator`, () => {
+        const document = `
+,
+;
+=
+<
+<=
+>
+>=
+<>
++
+-
+*
+/
+&
+(
+)
+[
+]
+{
+}
+@
+?
+=>
+// TODO look into adding ..
+...`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Comma, `,`],
+            [TokenKind.Semicolon, `;`],
+            [TokenKind.Equal, `=`],
+            [TokenKind.LessThan, `<`],
+            [TokenKind.LessThanEqualTo, `<=`],
+            [TokenKind.GreaterThan, `>`],
+            [TokenKind.GreaterThanEqualTo, `>=`],
+            [TokenKind.NotEqual, `<>`],
+            [TokenKind.Plus, `+`],
+            [TokenKind.Minus, `-`],
+            [TokenKind.Asterisk, `*`],
+            [TokenKind.Division, `/`],
+            [TokenKind.Ampersand, `&`],
+            [TokenKind.LeftParenthesis, `(`],
+            [TokenKind.RightParenthesis, `)`],
+            [TokenKind.LeftBracket, `[`],
+            [TokenKind.RightBracket, `]`],
+            [TokenKind.LeftBrace, `{`],
+            [TokenKind.RightBrace, `}`],
+            [TokenKind.AtSign, `@`],
+            [TokenKind.QuestionMark, `?`],
+            [TokenKind.FatArrow, `=>`],
+            [TokenKind.Ellipsis, `...`],
+        ];
+        expectTokens(document, expected);
+    });
 
-        if (lexer.kind !== Lexer.LexerKind.TouchedWithError) {
-            const details = JSON.stringify(lexer, null, 4);
-            throw new Error(`expected lexer.kind === Lexer.LexerKind.TouchedWithError: ${details}`);
-        }
-        let innerError = lexer.error.innerError;
-        expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
-
-        lexer = Lexer.remaining(lexer);
-        if (lexer.kind !== Lexer.LexerKind.Error) {
-            const details = JSON.stringify(lexer, null, 4);
-            throw new Error(`expected lexer.kind === Lexer.LexerKind.Error: ${details}`);
-        }
-        innerError = lexer.error.innerError;
-        expect(innerError instanceof LexerError.BadStateError).to.equal(true, innerError.message);
+    it(`StringLiteral`, () => {
+        const document = `
+""
+""""
+`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.StringLiteral, `""`],
+            [TokenKind.StringLiteral, `""""`],
+        ];
+        expectTokens(document, expected);
     });
 });
 
-describe("incremental lexer", () => {
-    it("appendToDocument '1' to '!' on Touched", () => {
-        let lexer = touchedLexerFactory();
-        lexer = Lexer.remaining(lexer);
-        lexer = Lexer.appendToDocument(lexer, "1");
-        lexer = Lexer.remaining(lexer);
-
-        if (lexer.kind !== Lexer.LexerKind.Touched) {
-            const details = JSON.stringify(lexer, null, 4);
-            throw new Error(`expected lexer.kind === Lexer.LexerKind.Touched: ${details}`);
-        }
-
-        const lastRead = lexer.lastRead;
-        expect(lastRead.documentStartIndex).to.equal(1, lastRead.documentStartIndex.toString());
-        expect(lastRead.documentEndIndex).to.equal(2, lastRead.documentEndIndex.toString());
-        expect(lastRead.comments).to.length(0, lastRead.comments.length.toString());
-
-        expect(lastRead.tokens).to.length(1, lastRead.tokens.length.toString());
-        expect(lastRead.tokens[0].kind).to.equal(TokenKind.NumericLiteral, lastRead.tokens[0].kind);
-        expect(lastRead.tokens[0].data).to.equal("1", lastRead.tokens[0].data);
+describe(`Lexer.Simple.Whitespace`, () => {
+    it(`spaces`, () => {
+        const document = ` a a `;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
     });
 
-    it("appendToDocument '1' to '0x' on TouchedError changes state", () => {
-        let lexer = touchedWithErrorLexerFactory("0x");
-        lexer = Lexer.appendToDocument(lexer, "1");
-        expect(lexer.kind).to.equal(Lexer.LexerKind.Untouched, lexer.kind);
-    })
-
-    it("appendToDocument '1' to '0x' on TouchedError returns Ok", () => {
-        let lexer = touchedWithErrorLexerFactory("0x");
-        lexer = Lexer.appendToDocument(lexer, "1");
-
-        lexer = Lexer.remaining(lexer);
-        if (lexer.kind !== Lexer.LexerKind.Touched) {
-            const details = JSON.stringify(lexer, null, 4);
-            throw new Error(`expected lexer.kind === Lexer.LexerKind.Touched: ${details}`);
-        }
-
-        const lastRead = lexer.lastRead;
-        expect(lastRead.documentStartIndex).to.equal(0, lastRead.documentStartIndex.toString());
-        expect(lastRead.documentEndIndex).to.equal(3, lastRead.documentEndIndex.toString());
-        expect(lastRead.comments).to.length(0, lastRead.comments.length.toString());
-
-        expect(lastRead.tokens).to.length(1, lastRead.tokens.length.toString());
-        expect(lastRead.tokens[0].kind).to.equal(TokenKind.HexLiteral, lastRead.tokens[0].kind);
-        expect(lastRead.tokens[0].data).to.equal("0x1", lastRead.tokens[0].data);
+    it(`tabs`, () => {
+        const document = `\ta\ta\t`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
     });
-})
+
+    it(`trailing \\n`, () => {
+        const document = `a\n`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`trailing \\r\\n`, () => {
+        const document = `a\r\n`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`trailing space`, () => {
+        const document = `a `;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`leading \\n`, () => {
+        const document = `\na`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`leading \\r\\n`, () => {
+        const document = `\r\na`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`leading space`, () => {
+        const document = ` a`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+});
