@@ -17,6 +17,12 @@ export namespace Lexer {
         | UntouchedLexer
     )
 
+    export type TLexerExceptUntouched = (
+        | TouchedLexer
+        | TouchedWithErrorLexer
+        | ErrorLexer
+    )
+
     export interface ILexer {
         readonly kind: LexerKind,
         readonly document: string,
@@ -25,22 +31,28 @@ export namespace Lexer {
         readonly documentIndex: number, // where the lexer left off, can be EOF
     }
 
+    // the last read attempt didn't read any new tokens/comments (though possibly whitespace),
+    // and encountered an error such as: unterminated string, eof, expected hex literal, etc.
     export interface ErrorLexer extends ILexer {
         readonly kind: LexerKind.Error,
         readonly error: LexerError.TLexerError,
     }
 
+    // the last read attempt succeeded without encountering an error.
+    // possible that only whitespace was consumed.
     export interface TouchedLexer extends ILexer {
         readonly kind: LexerKind.Touched,
         readonly lastRead: LexerRead,
     }
 
+    // the last read attempt read at least one token or comment before encountering an error
     export interface TouchedWithErrorLexer extends ILexer {
         readonly kind: LexerKind.TouchedWithError,
         readonly lastRead: LexerRead,
         readonly error: LexerError.TLexerError,
     }
 
+    // a call to appendtToDocument clears existing state marking it ready to be lexed
     export interface UntouchedLexer extends ILexer {
         readonly kind: LexerKind.Untouched,
         readonly maybeLastRead: Option<LexerRead>,
@@ -62,7 +74,7 @@ export namespace Lexer {
     }
 
     // treat as `new Lexer(document)`
-    export function from(document: string): TLexer {
+    export function from(document: string): UntouchedLexer {
         return {
             kind: LexerKind.Untouched,
             document: document,
@@ -73,8 +85,8 @@ export namespace Lexer {
         }
     }
 
-    // resets TLexerKind to Untouched
-    export function appendToDocument(lexer: TLexer, toAppend: string): TLexer {
+    // resets TLexerKind to UntouchedLexer
+    export function appendToDocument(lexer: TLexer, toAppend: string): UntouchedLexer {
         const newDocument = lexer.document + toAppend;
         switch (lexer.kind) {
             case LexerKind.Error:
@@ -124,19 +136,17 @@ export namespace Lexer {
         )
     }
 
-    // single token lex
-    // returns [new TLexer, PartialResult<...>]
-    export function next(lexer: TLexer): TLexer {
+    // lex one token and all comments before that token
+    export function next(lexer: TLexer): TLexerExceptUntouched {
         return lex(lexer, LexerStrategy.SingleToken);
     }
 
     // lex until EOF or an error occurs
-    // returns [new TLexer, PartialResult<...>]
-    export function remaining(state: TLexer): TLexer {
+    export function remaining(state: TLexer): TLexerExceptUntouched {
         return lex(state, LexerStrategy.UntilEofOrError);
     }
 
-    export function hasError(lexer: TLexer): lexer is ErrorLexer | TouchedWithErrorLexer {
+    export function hasError(lexer: TLexer): lexer is (ErrorLexer | TouchedWithErrorLexer) {
         switch (lexer.kind) {
             case LexerKind.Error:
             case LexerKind.TouchedWithError:
@@ -151,7 +161,7 @@ export namespace Lexer {
         }
     }
 
-    function lex(state: TLexer, strategy: LexerStrategy): TLexer {
+    function lex(state: TLexer, strategy: LexerStrategy): TLexerExceptUntouched {
         switch (state.kind) {
             case LexerKind.Touched:
             case LexerKind.Untouched:
@@ -177,7 +187,7 @@ export namespace Lexer {
         }
     }
 
-    function updateState(originalState: TLexer, lexerReadPartialResult: PartialResult<LexerRead, LexerError.TLexerError>): TLexer {
+    function updateState(originalState: TLexer, lexerReadPartialResult: PartialResult<LexerRead, LexerError.TLexerError>): TLexerExceptUntouched {
         switch (lexerReadPartialResult.kind) {
             case PartialResultKind.Ok: {
                 const lexerRead = lexerReadPartialResult.value;
