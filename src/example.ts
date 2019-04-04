@@ -2,12 +2,10 @@ import { isNever, ResultKind } from "./common";
 import { lexAndParse } from "./jobs";
 import { Lexer } from "./lexer";
 
-// parse document.
+// parse document
 // @ts-ignore
-function parseDocument() {
-    const document = `if true then x else y`;
+function parseDocument(document: string) {
     const parseResult = lexAndParse(document);
-
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, null, 4));
     }
@@ -17,10 +15,9 @@ function parseDocument() {
     }
 }
 
-// lex document.
+// lex document
 // @ts-ignore
-function lexDocument() {
-    const document = `if true then x else y`;
+function lexDocument(document: string) {
     // lexer isn't const as calling Lexer functions return a new state object
     let state: Lexer.TLexer = Lexer.from(document);
     state = Lexer.remaining(state);
@@ -48,15 +45,20 @@ function lexDocument() {
     }
 }
 
-// lex document, one chunk at a time.
+// lex document, one chunk at a time
 // @ts-ignore
-function iterativeLexer() {
-    const documentChunks: string[] = `if true then x else y`.split(" ");
+function iterativeLexer(document: string) {
+    // production could should perform better error checking for initial state
+    const documentChunks = document.split(" ");
+    if (documentChunks.length === 1) {
+        throw new Error("expecting at least 2 chunks")
+    }
+
     // lexer isn't const as calling Lexer functions return a new state object
     let state: Lexer.TLexer = Lexer.from(documentChunks[0]);
     state = Lexer.next(state);
 
-    // production could should perform better error checking for initial
+    // production could should perform better error checking for initial state
     if (Lexer.hasError(state)) {
         throw new Error("initial state shouldn't have a problem");
     }
@@ -85,3 +87,5 @@ function iterativeLexer() {
         }
     }
 }
+
+parseDocument("if true then x else y");
