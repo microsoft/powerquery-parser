@@ -3,7 +3,7 @@ import "mocha";
 import { Lexer, TokenKind, Keywords } from "../../lexer";
 
 function expectLexSuccess(document: string): Lexer.TouchedLexer {
-    let lexer = Lexer.from(document);
+    let lexer: Lexer.TLexer = Lexer.from(document);
     lexer = Lexer.remaining(lexer);
 
     if (lexer.kind !== Lexer.LexerKind.Touched) {
