@@ -18,7 +18,7 @@ function expectLexerInnerError(document: string): LexerError.TInnerLexerError {
     }
 }
 
-describe("lexing errors", () => {
+describe("Lexer.Error", () => {
     it("EndOfStream: ''", () => {
         const innerError = expectLexerInnerError("");
         expect(innerError instanceof LexerError.EndOfStreamError).to.equal(true, innerError.message);

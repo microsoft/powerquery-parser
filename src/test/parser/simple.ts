@@ -96,7 +96,7 @@ function expectNodeKinds(document: string, expectedNodeKinds: Ast.NodeKind[]) {
     expect(actualNodeKinds).members(expectedNodeKinds, JSON.stringify(details, null, 4));
 }
 
-describe("verify NodeKind tokens in AST", () => {
+describe("Parser.NodeKind", () => {
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Addition}`, () => {
         const document = `1 + 1`;
         const expectedNodeKinds = [

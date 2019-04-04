@@ -3,7 +3,7 @@ import "mocha";
 import { Lexer, TokenKind } from "../../lexer";
 import { touchedLexerFactory, touchedWithErrorLexerFactory } from "./common";
 
-describe("incremental lexer", () => {
+describe("Lexer.IncrementalLexer", () => {
     it("appendToDocument '1' to '!' on Touched", () => {
         let lexer = touchedLexerFactory();
         lexer = Lexer.remaining(lexer);
