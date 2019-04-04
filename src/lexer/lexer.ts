@@ -17,11 +17,7 @@ export namespace Lexer {
         | UntouchedLexer
     )
 
-    export type TLexerExceptUntouched = (
-        | TouchedLexer
-        | TouchedWithErrorLexer
-        | ErrorLexer
-    )
+    export type TLexerExceptUntouched = Exclude<TLexer, UntouchedLexer>;
 
     export interface ILexer {
         readonly kind: LexerKind,
