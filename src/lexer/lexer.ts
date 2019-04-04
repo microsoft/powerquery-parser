@@ -186,9 +186,9 @@ export namespace Lexer {
     function updateState(originalState: TLexer, lexerReadPartialResult: PartialResult<LexerRead, LexerError.TLexerError>): TLexerExceptUntouched {
         switch (lexerReadPartialResult.kind) {
             case PartialResultKind.Ok: {
-                const lexerRead = lexerReadPartialResult.value;
-                const newTokens = originalState.tokens.concat(lexerRead.tokens);
-                const newComments = originalState.comments.concat(lexerRead.comments);
+                const lexerRead: LexerRead = lexerReadPartialResult.value;
+                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
 
                 return {
                     kind: LexerKind.Touched,
@@ -201,9 +201,9 @@ export namespace Lexer {
             }
 
             case PartialResultKind.Partial: {
-                const lexerRead = lexerReadPartialResult.value;
-                const newTokens = originalState.tokens.concat(lexerRead.tokens);
-                const newComments = originalState.comments.concat(lexerRead.comments);
+                const lexerRead: LexerRead = lexerReadPartialResult.value;
+                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
                 return {
                     kind: LexerKind.TouchedWithError,
                     document: originalState.document,
@@ -246,7 +246,7 @@ export namespace Lexer {
         }
 
         const newTokens: Token[] = [];
-        let newComments: TComment[] = [];
+        const newComments: TComment[] = [];
         let maybeError: Option<LexerError.TLexerError>;
         while (continueLexing) {
             documentIndex = drainWhitespace(document, documentIndex);
@@ -579,14 +579,14 @@ export namespace Lexer {
         return readTokenFromSlice(document, documentIndex, TokenKind.Identifier, stringEndIndex + 1);
     }
 
-    function readKeyword(document: string, documentIndex: number, substring: Option<string>): Token {
-        if (!substring) {
-            const maybeSubstring = maybeKeywordOrIdentifierSubstring(document, documentIndex);
+    function readKeyword(document: string, documentIndex: number, maybeSubstring: Option<string>): Token {
+        if (maybeSubstring === undefined) {
+            maybeSubstring = maybeKeywordOrIdentifierSubstring(document, documentIndex);
             if (maybeSubstring === undefined) {
                 throw unexpectedReadError(document, documentIndex);
             }
-            substring = maybeSubstring;
         }
+        const substring = maybeSubstring;
 
         switch (substring) {
             case Keyword.And:
@@ -662,8 +662,8 @@ export namespace Lexer {
             const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
             throw new LexerError.ExpectedKeywordOrIdentifierError(graphemePosition);
         }
-
         const substring = maybeSubstring;
+
         if (substring[0] === "#" || Keywords.indexOf(substring) !== -1) {
             return readKeyword(document, documentIndex, substring);
         }
