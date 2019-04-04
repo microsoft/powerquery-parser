@@ -21,23 +21,23 @@ function lexDocument(document: string) {
     state = Lexer.remaining(state);
 
     switch (state.kind) {
-        // nothing was read, and an error was encountered such as an unterminated string.
+        // nothing was read and an error was encountered, such as an unterminated string.
         case Lexer.LexerKind.Error:
-            // handle error located on state.error.
+            // handle the error, find it on state.error.
             break;
 
         // reached EOF without any errors.
         // it's possible that no tokens or comments were read,
-        // such as only whitespace being consumed.
+        // eg. only whitespace being consumed.
         case Lexer.LexerKind.Touched:
-            // state.tokens and state.comments hold all comments ever read,
+            // state.tokens and state.comments hold all tokens and comments ever read,
             // where state.lastRead holds what was read in the last call.
             break;
 
         // some tokens or comments were read,
         // but then an error was encountered such as an unterminated string.
         case Lexer.LexerKind.TouchedWithError:
-            // state.tokens and state.comments hold all comments ever read,
+            // state.tokens and state.comments hold all tokens and comments ever read,
             // where state.lastRead holds what was read in the last call.
             break;
 
@@ -71,23 +71,23 @@ function iterativeLexer(document: string) {
         state = Lexer.next(state);
 
         switch (state.kind) {
-            // nothing was read, and an error was encountered such as an unterminated string.
+            // nothing was read and an error was encountered, such as an unterminated string.
             case Lexer.LexerKind.Error:
-                // handle error located on state.error.
+                // handle the error, find it on state.error.
                 break;
 
             // reached EOF without any errors.
             // it's possible that no tokens or comments were read,
-            // such as only whitespace being consumed.
+            // eg. only whitespace being consumed.
             case Lexer.LexerKind.Touched:
-                // state.tokens and state.comments hold all comments ever read,
+                // state.tokens and state.comments hold all tokens and comments ever read,
                 // where state.lastRead holds what was read in the last call.
                 break;
 
             // some tokens or comments were read,
             // but then an error was encountered such as an unterminated string.
             case Lexer.LexerKind.TouchedWithError:
-                // state.tokens and state.comments hold all comments ever read,
+                // state.tokens and state.comments hold all tokens and comments ever read,
                 // where state.lastRead holds what was read in the last call.
                 break;
 
