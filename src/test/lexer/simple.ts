@@ -214,8 +214,69 @@ type
 });
 
 describe(`Lexer.Simple.Whitespace`, () => {
-    it(`only spaces`, () => {
-        const document = `    `;
-        expectTokens(document, []);
+    it(`spaces`, () => {
+        const document = ` a a `;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`tabs`, () => {
+        const document = `\ta\ta\t`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`trailing \\n`, () => {
+        const document = `a\n`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`trailing \\r\\n`, () => {
+        const document = `a\r\n`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`trailing space`, () => {
+        const document = `a `;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`leading \\n`, () => {
+        const document = `\na`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`leading \\r\\n`, () => {
+        const document = `\r\na`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
+    });
+
+    it(`leading space`, () => {
+        const document = ` a`;
+        const expected: [TokenKind, string][] = [
+            [TokenKind.Identifier, `a`],
+        ];
+        expectTokens(document, expected);
     });
 });
