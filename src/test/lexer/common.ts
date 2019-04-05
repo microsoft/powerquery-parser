@@ -2,7 +2,7 @@ import { Lexer } from "../../lexer";
 
 export function touchedLexerFactory(): Lexer.TLexer {
     const document = "!";
-    let lexer = Lexer.from(document);
+    let lexer: Lexer.TLexer = Lexer.from(document);
     lexer = Lexer.remaining(lexer);
 
     if (lexer.kind !== Lexer.LexerKind.Touched) {
@@ -12,7 +12,7 @@ export function touchedLexerFactory(): Lexer.TLexer {
 }
 
 export function touchedWithErrorLexerFactory(document: string): Lexer.TLexer {
-    let lexer = Lexer.from(document);
+    let lexer: Lexer.TLexer = Lexer.from(document);
     lexer = Lexer.remaining(lexer);
 
     if (!Lexer.hasError(lexer)) {

@@ -2,12 +2,12 @@ import { Result, ResultKind } from "./common";
 import { Lexer, LexerError, TComment } from "./lexer";
 import { Ast, Parser, ParserError } from "./parser";
 
-export interface ParseAndLexSuccess {
+export interface LexAndParseSuccess {
     readonly ast: Ast.TDocument,
     readonly comments: TComment[],
 }
 
-export function lexAndParse(document: string): Result<ParseAndLexSuccess, LexerError.TLexerError | ParserError.TParserError> {
+export function lexAndParse(document: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
     let lexer: Lexer.TLexer = Lexer.from(document);
     lexer = Lexer.remaining(lexer);
     if (Lexer.hasError(lexer)) {
