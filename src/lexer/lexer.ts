@@ -17,30 +17,38 @@ export namespace Lexer {
         | UntouchedLexer
     )
 
+    export type TLexerExceptUntouched = Exclude<TLexer, UntouchedLexer>;
+
     export interface ILexer {
         readonly kind: LexerKind,
         readonly document: string,
-        readonly tokens: Token[],
-        readonly comments: TComment[],
+        readonly tokens: Token[],       // all tokens read up to this point
+        readonly comments: TComment[],  // all comments read up to this point
         readonly documentIndex: number, // where the lexer left off, can be EOF
     }
 
+    // the last read attempt didn't read any new tokens/comments (though possibly whitespace),
+    // and encountered an error such as: unterminated string, eof, expected hex literal, etc.
     export interface ErrorLexer extends ILexer {
         readonly kind: LexerKind.Error,
         readonly error: LexerError.TLexerError,
     }
 
+    // the last read attempt succeeded without encountering an error.
+    // possible that only whitespace was consumed.
     export interface TouchedLexer extends ILexer {
         readonly kind: LexerKind.Touched,
         readonly lastRead: LexerRead,
     }
 
+    // the last read attempt read at least one token or comment before encountering an error
     export interface TouchedWithErrorLexer extends ILexer {
         readonly kind: LexerKind.TouchedWithError,
         readonly lastRead: LexerRead,
         readonly error: LexerError.TLexerError,
     }
 
+    // a call to appendtToDocument clears existing state marking it ready to be lexed
     export interface UntouchedLexer extends ILexer {
         readonly kind: LexerKind.Untouched,
         readonly maybeLastRead: Option<LexerRead>,
@@ -61,8 +69,8 @@ export namespace Lexer {
         readonly documentEndIndex: number,
     }
 
-    // treat as `new Lexer(document)`
-    export function from(document: string): TLexer {
+    // create a new default state Lexer for the given document
+    export function from(document: string): UntouchedLexer {
         return {
             kind: LexerKind.Untouched,
             document: document,
@@ -73,8 +81,8 @@ export namespace Lexer {
         }
     }
 
-    // resets TLexerKind to Untouched
-    export function appendToDocument(lexer: TLexer, toAppend: string): TLexer {
+    // resets TLexerKind to UntouchedLexer
+    export function appendToDocument(lexer: TLexer, toAppend: string): UntouchedLexer {
         const newDocument = lexer.document + toAppend;
         switch (lexer.kind) {
             case LexerKind.Error:
@@ -124,19 +132,17 @@ export namespace Lexer {
         )
     }
 
-    // single token lex
-    // returns [new TLexer, PartialResult<...>]
-    export function next(lexer: TLexer): TLexer {
+    // lex one token and all comments before that token
+    export function next(lexer: TLexer): TLexerExceptUntouched {
         return lex(lexer, LexerStrategy.SingleToken);
     }
 
     // lex until EOF or an error occurs
-    // returns [new TLexer, PartialResult<...>]
-    export function remaining(state: TLexer): TLexer {
+    export function remaining(state: TLexer): TLexerExceptUntouched {
         return lex(state, LexerStrategy.UntilEofOrError);
     }
 
-    export function hasError(lexer: TLexer): lexer is ErrorLexer | TouchedWithErrorLexer {
+    export function hasError(lexer: TLexer): lexer is (ErrorLexer | TouchedWithErrorLexer) {
         switch (lexer.kind) {
             case LexerKind.Error:
             case LexerKind.TouchedWithError:
@@ -151,7 +157,7 @@ export namespace Lexer {
         }
     }
 
-    function lex(state: TLexer, strategy: LexerStrategy): TLexer {
+    function lex(state: TLexer, strategy: LexerStrategy): TLexerExceptUntouched {
         switch (state.kind) {
             case LexerKind.Touched:
             case LexerKind.Untouched:
@@ -177,12 +183,12 @@ export namespace Lexer {
         }
     }
 
-    function updateState(originalState: TLexer, lexerReadPartialResult: PartialResult<LexerRead, LexerError.TLexerError>): TLexer {
+    function updateState(originalState: TLexer, lexerReadPartialResult: PartialResult<LexerRead, LexerError.TLexerError>): TLexerExceptUntouched {
         switch (lexerReadPartialResult.kind) {
             case PartialResultKind.Ok: {
-                const lexerRead = lexerReadPartialResult.value;
-                const newTokens = originalState.tokens.concat(lexerRead.tokens);
-                const newComments = originalState.comments.concat(lexerRead.comments);
+                const lexerRead: LexerRead = lexerReadPartialResult.value;
+                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
 
                 return {
                     kind: LexerKind.Touched,
@@ -195,9 +201,9 @@ export namespace Lexer {
             }
 
             case PartialResultKind.Partial: {
-                const lexerRead = lexerReadPartialResult.value;
-                const newTokens = originalState.tokens.concat(lexerRead.tokens);
-                const newComments = originalState.comments.concat(lexerRead.comments);
+                const lexerRead: LexerRead = lexerReadPartialResult.value;
+                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
                 return {
                     kind: LexerKind.TouchedWithError,
                     document: originalState.document,
@@ -240,7 +246,7 @@ export namespace Lexer {
         }
 
         const newTokens: Token[] = [];
-        let newComments: TComment[] = [];
+        const newComments: TComment[] = [];
         let maybeError: Option<LexerError.TLexerError>;
         while (continueLexing) {
             documentIndex = drainWhitespace(document, documentIndex);
@@ -427,7 +433,7 @@ export namespace Lexer {
     }
 
     function readStringLiteral(document: string, documentIndex: number): Token {
-        const stringEndIndex = indexOfStringEnd(document, documentIndex);
+        const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex);
         if (stringEndIndex === undefined) {
             throw unterminatedStringError(document, documentIndex);
         }
@@ -501,20 +507,20 @@ export namespace Lexer {
         const documentLength = document.length;
         const commentStart = documentIndex;
 
-        let literal;
+        let maybeLiteral: Option<string>;
         let commentEnd = commentStart + 2;
 
-        while (!literal && commentEnd < documentLength) {
+        while (!maybeLiteral && commentEnd < documentLength) {
             const maybeNewlineKind = StringHelpers.maybeNewlineKindAt(document, commentEnd);
             if (maybeNewlineKind) {
                 switch (maybeNewlineKind) {
                     case StringHelpers.NewlineKind.DoubleCharacter:
-                        literal = document.substring(commentStart, commentEnd);
+                        maybeLiteral = document.substring(commentStart, commentEnd);
                         documentIndex = commentEnd + 2;
                         break;
 
                     case StringHelpers.NewlineKind.SingleCharacter:
-                        literal = document.substring(commentStart, commentEnd);
+                        maybeLiteral = document.substring(commentStart, commentEnd);
                         documentIndex = commentEnd + 1;
                         break;
 
@@ -528,14 +534,14 @@ export namespace Lexer {
         }
 
         // reached EOF without a trailing newline
-        if (!literal) {
-            literal = document.substring(commentStart, document.length);
+        if (!maybeLiteral) {
+            maybeLiteral = document.substring(commentStart, document.length);
             documentIndex = document.length;
         }
 
         return {
             kind: CommentKind.Line,
-            literal,
+            literal: maybeLiteral,
             phantomTokenIndex,
             containsNewline: true,
             documentStartIndex: commentStart,
@@ -565,7 +571,7 @@ export namespace Lexer {
     }
 
     function readQuotedIdentifier(document: string, documentIndex: number): Token {
-        const stringEndIndex = indexOfStringEnd(document, documentIndex + 1);
+        const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex + 1);
         if (stringEndIndex === undefined) {
             throw unterminatedStringError(document, documentIndex + 1);
         }
@@ -573,10 +579,14 @@ export namespace Lexer {
         return readTokenFromSlice(document, documentIndex, TokenKind.Identifier, stringEndIndex + 1);
     }
 
-    function readKeyword(document: string, documentIndex: number, substring: Option<string>): Token {
-        if (!substring) {
-            substring = keywordOrIdentifierSubstring(document, documentIndex);
+    function readKeyword(document: string, documentIndex: number, maybeSubstring: Option<string>): Token {
+        if (maybeSubstring === undefined) {
+            maybeSubstring = maybeKeywordOrIdentifierSubstring(document, documentIndex);
+            if (maybeSubstring === undefined) {
+                throw unexpectedReadError(document, documentIndex);
+            }
         }
+        const substring = maybeSubstring;
 
         switch (substring) {
             case Keyword.And:
@@ -591,28 +601,6 @@ export namespace Lexer {
                 return readConstantToken(documentIndex, TokenKind.KeywordError, substring);
             case Keyword.False:
                 return readConstantToken(documentIndex, TokenKind.KeywordFalse, substring);
-            case Keyword.HashBinary:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashBinary, substring);
-            case Keyword.HashDate:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashDate, substring);
-            case Keyword.HashDateTime:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashDateTime, substring);
-            case Keyword.HashDateTimeZone:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashDateTimeZone, substring);
-            case Keyword.HashDuration:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashDuration, substring);
-            case Keyword.HashInfinity:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashInfinity, substring);
-            case Keyword.HashNan:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashNan, substring);
-            case Keyword.HashSections:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashSections, substring);
-            case Keyword.HashShared:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashShared, substring);
-            case Keyword.HashTable:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashTable, substring);
-            case Keyword.HashTime:
-                return readConstantToken(documentIndex, TokenKind.KeywordHashTime, substring);
             case Keyword.If:
                 return readConstantToken(documentIndex, TokenKind.KeywordIf, substring);
             case Keyword.In:
@@ -641,17 +629,40 @@ export namespace Lexer {
                 return readConstantToken(documentIndex, TokenKind.KeywordTry, substring);
             case Keyword.Type:
                 return readConstantToken(documentIndex, TokenKind.KeywordType, substring);
+            case Keyword.HashBinary:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashBinary, substring);
+            case Keyword.HashDate:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashDate, substring);
+            case Keyword.HashDateTime:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashDateTime, substring);
+            case Keyword.HashDateTimeZone:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashDateTimeZone, substring);
+            case Keyword.HashDuration:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashDuration, substring);
+            case Keyword.HashInfinity:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashInfinity, substring);
+            case Keyword.HashNan:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashNan, substring);
+            case Keyword.HashSections:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashSections, substring);
+            case Keyword.HashShared:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashShared, substring);
+            case Keyword.HashTable:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashTable, substring);
+            case Keyword.HashTime:
+                return readConstantToken(documentIndex, TokenKind.KeywordHashTime, substring);
             default:
                 throw new CommonError.InvariantError("unknown keyword", { keyword: substring });
         }
     }
 
     function readKeywordOrIdentifier(document: string, documentIndex: number): Token {
-        const substring = keywordOrIdentifierSubstring(document, documentIndex);
-        if (substring === undefined) {
+        const maybeSubstring = maybeKeywordOrIdentifierSubstring(document, documentIndex);
+        if (maybeSubstring === undefined) {
             const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
             throw new LexerError.ExpectedKeywordOrIdentifierError(graphemePosition);
         }
+        const substring = maybeSubstring;
 
         if (substring[0] === "#" || Keywords.indexOf(substring) !== -1) {
             return readKeyword(document, documentIndex, substring);
@@ -671,7 +682,7 @@ export namespace Lexer {
         }
     }
 
-    function keywordOrIdentifierSubstring(document: string, documentIndex: number): Option<string> {
+    function maybeKeywordOrIdentifierSubstring(document: string, documentIndex: number): Option<string> {
         const chr = document[documentIndex];
 
         let indexOfStart = documentIndex;
@@ -735,7 +746,7 @@ export namespace Lexer {
         }
     }
 
-    function indexOfStringEnd(
+    function maybeIndexOfStringEnd(
         document: string,
         documentStartIndex: number,
     ): Option<number> {
