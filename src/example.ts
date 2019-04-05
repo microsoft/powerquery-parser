@@ -2,6 +2,8 @@ import { isNever, ResultKind } from "./common";
 import { lexAndParse } from "./jobs";
 import { Lexer } from "./lexer";
 
+parseDocument("if true then x else y");
+
 // @ts-ignore
 function parseDocument(document: string) {
     const parseResult = lexAndParse(document);
@@ -47,7 +49,7 @@ function lexDocument(document: string) {
 }
 
 // @ts-ignore
-function iterativeLexer(document: string) {
+function iterativeLexDocument(document: string) {
     // for brevity's sake I'll be asserting:
     //  * document.split(" ").length > 1
     //  * the first chunk from the split won't result in a lexer error
@@ -96,5 +98,3 @@ function iterativeLexer(document: string) {
         }
     }
 }
-
-parseDocument("if true then x else y");
