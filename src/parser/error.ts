@@ -33,7 +33,7 @@ export namespace ParserError {
 
     export class ExpectedAnyTokenKindError extends Error {
         constructor(
-            readonly expectedAnyTokenKind: TokenKind[],
+            readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
             readonly maybeFoundTokenPosition: Option<TokenPosition>,
             readonly message = Localization.Error.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundTokenPosition),
         ) {

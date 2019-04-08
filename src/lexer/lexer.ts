@@ -466,13 +466,13 @@ export namespace Lexer {
         document: string,
         documentIndex: number,
         initial: CommentKind,
-        phantomTokenIndex: number
+        phantomTokenIndex: number,
     ): ReadonlyArray<TComment> {
         let maybeNextCommentKind: Option<CommentKind> = initial;
         let chr1 = document[documentIndex];
         let chr2 = document[documentIndex + 1];
 
-        const comments = [];
+        const newComments = [];
         while (maybeNextCommentKind) {
             let comment: TComment;
             switch (maybeNextCommentKind) {
@@ -489,7 +489,7 @@ export namespace Lexer {
             }
 
             documentIndex = comment.documentEndIndex;
-            comments.push(comment);
+            newComments.push(comment);
 
             chr1 = document[documentIndex];
             chr2 = document[documentIndex + 1];
@@ -506,10 +506,14 @@ export namespace Lexer {
             }
         }
 
-        return comments;
+        return newComments;
     }
 
-    function readLineComment(document: string, documentIndex: number, phantomTokenIndex: number): LineComment {
+    function readLineComment(
+        document: string,
+        documentIndex: number,
+        phantomTokenIndex: number,
+    ): LineComment {
         const documentLength = document.length;
         const commentStart = documentIndex;
 
@@ -555,7 +559,11 @@ export namespace Lexer {
         }
     }
 
-    function readMultilineComment(document: string, documentIndex: number, phantomTokenIndex: number): MultilineComment {
+    function readMultilineComment(
+        document: string,
+        documentIndex: number,
+        phantomTokenIndex: number,
+    ): MultilineComment {
         const documentStartIndex = documentIndex;
         const indexOfCommentEnd = document.indexOf("*/", documentStartIndex + 2);
         if (indexOfCommentEnd === -1) {

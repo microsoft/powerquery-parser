@@ -523,7 +523,7 @@ function maybeTraverse<State, StateType, Return>(
 }
 
 function traverseArray<State, StateType, Return>(
-    collection: Ast.TNode[],
+    collection: ReadonlyArray<Ast.TNode>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitNodeFn<State, StateType, Return>,
     strategy: Traverse.VisitNodeStrategy,
@@ -546,7 +546,7 @@ function traversePairedConstant<State, StateType, Return>(
 }
 
 function traverseUnaryExpressionHelpers<State, StateType, Return>(
-    nodes: Ast.TUnaryExpressionHelper[],
+    nodes: ReadonlyArray<Ast.TUnaryExpressionHelper>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitNodeFn<State, StateType, Return>,
     strategy: Traverse.VisitNodeStrategy,
@@ -582,7 +582,7 @@ function maybeTraverseChild<State, StateType, Return>(
 
 function traverseChildArray<State, StateType, Return>(
     parent: Ast.TNode,
-    collection: Ast.TNode[],
+    collection: ReadonlyArray<Ast.TNode>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitChildNodeFn<State, StateType, Return>,
 ) {
@@ -592,7 +592,7 @@ function traverseChildArray<State, StateType, Return>(
 }
 
 function traverseUnaryExpressionHelperChildren<State, StateType, Return>(
-    nodes: Ast.TUnaryExpressionHelper[],
+    nodes: ReadonlyArray<Ast.TUnaryExpressionHelper>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitChildNodeFn<State, StateType, Return>,
 ) {
