@@ -70,7 +70,7 @@ export namespace Lexer {
     }
 
     // create a new default state Lexer for the given document
-    export function from(document: string): UntouchedLexer {
+    export function from(document: string): TLexer {
         return {
             kind: LexerKind.Untouched,
             document: document,
