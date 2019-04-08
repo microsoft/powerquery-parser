@@ -22,8 +22,8 @@ export namespace Lexer {
     export interface ILexer {
         readonly kind: LexerKind,
         readonly document: string,
-        readonly tokens: Token[],       // all tokens read up to this point
-        readonly comments: TComment[],  // all comments read up to this point
+        readonly tokens: ReadonlyArray<Token>,       // all tokens read up to this point
+        readonly comments: ReadonlyArray<TComment>,  // all comments read up to this point
         readonly documentIndex: number, // where the lexer left off, can be EOF
     }
 
@@ -63,8 +63,8 @@ export namespace Lexer {
 
     // what was read on a call to lex
     export interface LexerRead {
-        readonly tokens: Token[],
-        readonly comments: TComment[],
+        readonly tokens: ReadonlyArray<Token>,
+        readonly comments: ReadonlyArray<TComment>,
         readonly documentStartIndex: number,
         readonly documentEndIndex: number,
     }
@@ -187,8 +187,8 @@ export namespace Lexer {
         switch (lexerReadPartialResult.kind) {
             case PartialResultKind.Ok: {
                 const lexerRead: LexerRead = lexerReadPartialResult.value;
-                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
-                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
+                const newTokens: ReadonlyArray<Token> = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: ReadonlyArray<TComment> = originalState.comments.concat(lexerRead.comments);
 
                 return {
                     kind: LexerKind.Touched,
@@ -202,8 +202,9 @@ export namespace Lexer {
 
             case PartialResultKind.Partial: {
                 const lexerRead: LexerRead = lexerReadPartialResult.value;
-                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
-                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
+                const newTokens: ReadonlyArray<Token> = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: ReadonlyArray<TComment> = originalState.comments.concat(lexerRead.comments);
+                
                 return {
                     kind: LexerKind.TouchedWithError,
                     document: originalState.document,
@@ -461,7 +462,12 @@ export namespace Lexer {
         return readTokenFromSlice(document, documentIndex, TokenKind.NumericLiteral, numericEndIndex);
     }
 
-    function readComments(document: string, documentIndex: number, initial: CommentKind, phantomTokenIndex: number): TComment[] {
+    function readComments(
+        document: string,
+        documentIndex: number,
+        initial: CommentKind,
+        phantomTokenIndex: number
+    ): ReadonlyArray<TComment> {
         let maybeNextCommentKind: Option<CommentKind> = initial;
         let chr1 = document[documentIndex];
         let chr2 = document[documentIndex + 1];
