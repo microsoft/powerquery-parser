@@ -1835,9 +1835,9 @@ export class Parser {
         });
     }
 
+    // faster version of popTokenRange, returns no value
     private popTokenRangeNoop() {
-        const element = this.tokenRangeStack.pop();
-        if (!element) {
+        if (!this.tokenRangeStack.pop()) {
             throw new CommonError.InvariantError("tried to pop from an empty stack");
         }
     }
@@ -1851,11 +1851,11 @@ export class Parser {
 
         const tokenStartIndex = element.tokenStartIndex;
         const tokenEndIndex = this.tokenIndex;
-        const lastInclusiveToken = lexerSnapshot.tokens[tokenEndIndex - 1];
+        const maybeLastInclusiveToken: Option<Token> = lexerSnapshot.tokens[tokenEndIndex - 1];
 
         let documentEndIndex;
-        if (lastInclusiveToken) {
-            documentEndIndex = lastInclusiveToken.documentEndIndex;
+        if (maybeLastInclusiveToken) {
+            documentEndIndex = maybeLastInclusiveToken.documentEndIndex;
         }
         else {
             documentEndIndex = lexerSnapshot.document.length;
@@ -1870,6 +1870,7 @@ export class Parser {
         };
     }
 
+    // create a TokenRange of length 1
     private singleTokenRange(
         tag: TokenKind | Keyword | Ast.IdentifierConstant | Ast.TUnaryExpressionHelperOperator,
     ): TokenRange {
@@ -1894,13 +1895,13 @@ export class Parser {
     }
 
     private isTokenKind(tokenKind: TokenKind, tokenIndex: number): boolean {
-        const tokens = this.lexerSnapshot.tokens;
-
-        if (tokenIndex < 0 || tokenIndex >= tokens.length) {
-            return false;
+        const maybeToken: Option<Token> = this.lexerSnapshot.tokens[tokenIndex];
+        
+        if (maybeToken) {
+            return maybeToken.kind === tokenKind;
         }
         else {
-            return tokens[tokenIndex].kind === tokenKind;
+            return false;
         }
     }
 
@@ -1923,6 +1924,7 @@ export class Parser {
     private currentTokenPosition(): Option<TokenPosition> {
         const lexerSnapshot = this.lexerSnapshot;
         const maybeToken: Option<Token> = lexerSnapshot.tokens[this.tokenIndex];
+
         if (maybeToken) {
             return lexerSnapshot.tokenPosition(maybeToken);
         }
