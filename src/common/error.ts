@@ -21,9 +21,8 @@ export namespace CommonError {
         constructor(
             readonly invariantBroken: string,
             readonly maybeDetails: Option<any> = undefined,
-            readonly message = Localization.Error.invariantError(invariantBroken, maybeDetails),
         ) {
-            super(message);
+            super(Localization.Error.invariantError(invariantBroken, maybeDetails));
         }
     }
 
@@ -31,18 +30,16 @@ export namespace CommonError {
         constructor(
             readonly reason: string,
             readonly maybeDetails: Option<any> = undefined,
-            readonly message = Localization.Error.notYetImplemented(reason, maybeDetails),
         ) {
-            super(message);
+            super(Localization.Error.notYetImplemented(reason, maybeDetails));
         }
     }
 
     export class UnknownError extends Error {
         constructor(
             readonly innerError: any,
-            readonly message = Localization.Error.unknownError(innerError),
         ) {
-            super(message);
+            super(Localization.Error.unknownError(innerError));
         }
     }
 
