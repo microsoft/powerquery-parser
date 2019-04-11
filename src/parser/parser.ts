@@ -1870,7 +1870,9 @@ export class Parser {
         };
     }
 
-    private singleTokenRange(tag: TokenKind | Keyword | Ast.IdentifierConstant | Ast.TUnaryExpressionHelperOperator): TokenRange {
+    private singleTokenRange(
+        tag: TokenKind | Keyword | Ast.IdentifierConstant | Ast.TUnaryExpressionHelperOperator,
+    ): TokenRange {
         const tokenIndex = this.tokenIndex;
         const token = this.lexerSnapshot.tokens[tokenIndex];
 

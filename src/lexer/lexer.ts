@@ -17,14 +17,15 @@ export namespace Lexer {
         | UntouchedLexer
     )
 
+    // most Lexer actions leave a TLexer in a touched state of some sort
     export type TLexerExceptUntouched = Exclude<TLexer, UntouchedLexer>;
 
     export interface ILexer {
         readonly kind: LexerKind,
         readonly document: string,
-        readonly tokens: ReadonlyArray<Token>,       // all tokens read up to this point
-        readonly comments: ReadonlyArray<TComment>,  // all comments read up to this point
-        readonly documentIndex: number, // where the lexer left off, can be EOF
+        readonly tokens: ReadonlyArray<Token>,      // all tokens read up to this point
+        readonly comments: ReadonlyArray<TComment>, // all comments read up to this point
+        readonly documentIndex: number,             // where the lexer left off, can be EOF
     }
 
     // the last read attempt didn't read any new tokens/comments (though possibly whitespace),
@@ -183,7 +184,11 @@ export namespace Lexer {
         }
     }
 
-    function updateState(originalState: TLexer, lexerReadPartialResult: PartialResult<LexerRead, LexerError.TLexerError>): TLexerExceptUntouched {
+    function updateState(
+        originalState: TLexer,
+        lexerReadPartialResult:
+        PartialResult<LexerRead, LexerError.TLexerError>,
+    ): TLexerExceptUntouched {
         switch (lexerReadPartialResult.kind) {
             case PartialResultKind.Ok: {
                 const lexerRead: LexerRead = lexerReadPartialResult.value;
@@ -231,7 +236,10 @@ export namespace Lexer {
         }
     }
 
-    function read(state: TLexer, behavior: LexerStrategy): PartialResult<LexerRead, LexerError.TLexerError> {
+    function read(
+        state: TLexer,
+        behavior: LexerStrategy,
+    ): PartialResult<LexerRead, LexerError.TLexerError> {
         const document = state.document;
         const documentLength = document.length;
         const documentStartIndex = state.documentIndex;
@@ -600,7 +608,7 @@ export namespace Lexer {
                 throw unexpectedReadError(document, documentIndex);
             }
         }
-        const substring = maybeSubstring;
+        const substring: string = maybeSubstring;
 
         switch (substring) {
             case Keyword.And:
@@ -676,7 +684,7 @@ export namespace Lexer {
             const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
             throw new LexerError.ExpectedKeywordOrIdentifierError(graphemePosition);
         }
-        const substring = maybeSubstring;
+        const substring: string = maybeSubstring;
 
         if (substring[0] === "#" || Keywords.indexOf(substring) !== -1) {
             return readKeyword(document, documentIndex, substring);
@@ -696,12 +704,18 @@ export namespace Lexer {
         }
     }
 
-    function maybeKeywordOrIdentifierSubstring(document: string, documentIndex: number): Option<string> {
+    function maybeKeywordOrIdentifierSubstring(
+        document: string,
+        documentIndex: number,
+    ): Option<string> {
         const chr = document[documentIndex];
+        let indexOfStart: number;
 
-        let indexOfStart = documentIndex;
         if (chr === "#") {
-            indexOfStart += 1;
+            indexOfStart = documentIndex + 1;
+        }
+        else {
+            indexOfStart = documentIndex;
         }
 
         const identifierEndIndex = indexOfRegexEnd(Pattern.RegExpIdentifier, document, indexOfStart);
@@ -713,7 +727,11 @@ export namespace Lexer {
         }
     }
 
-    function readConstantToken(documentStartIndex: number, tokenKind: TokenKind, data: string): Token {
+    function readConstantToken(
+        documentStartIndex: number,
+        tokenKind: TokenKind,
+        data: string,
+    ): Token {
         return {
             kind: tokenKind,
             documentStartIndex,

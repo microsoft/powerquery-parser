@@ -23,7 +23,7 @@ function astFromDocument(document: string): Ast.TDocument {
     return parseResult.value.ast;
 }
 
-function collectNodeKindsFromAst(document: string): Ast.NodeKind[] {
+function collectNodeKindsFromAst(document: string): ReadonlyArray<Ast.NodeKind> {
     const ast = astFromDocument(document);
     const request: CollectAllNodeKindRequest = {
         ast,
