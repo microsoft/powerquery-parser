@@ -265,17 +265,6 @@ export namespace Lexer {
                 break;
             }
 
-            const newlineKind = StringHelpers.maybeNewlineKindAt(document, documentIndex);
-
-            if (newlineKind === StringHelpers.NewlineKind.SingleCharacter) {
-                documentIndex += 1;
-                continue;
-            }
-            else if (newlineKind === StringHelpers.NewlineKind.DoubleCharacter) {
-                documentIndex += 2;
-                continue;
-            }
-
             try {
                 let token: Token;
 
@@ -428,13 +417,26 @@ export namespace Lexer {
     }
 
     function drainWhitespace(document: string, documentIndex: number): number {
-        while (document[documentIndex] !== undefined) {
-            const maybeLength = StringHelpers.regexMatchLength(Pattern.RegExpWhitespace, document, documentIndex);
+        let continueDraining = document[documentIndex] !== undefined;
+        while (continueDraining) {
+            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, document, documentIndex);
             if (maybeLength) {
                 documentIndex += maybeLength;
             }
             else {
-                break;
+                switch (StringHelpers.maybeNewlineKindAt(document, documentIndex)) {
+                    case StringHelpers.NewlineKind.DoubleCharacter:
+                        documentIndex += 1;
+                        break;
+
+                    case StringHelpers.NewlineKind.SingleCharacter:
+                        documentIndex += 1;
+                        break;
+
+                    default:
+                        continueDraining = false;
+                        break;
+                }
             }
         }
 
@@ -769,9 +771,9 @@ export namespace Lexer {
         document: string,
         documentStartIndex: number,
     ): Option<number> {
-        const matchLength = StringHelpers.regexMatchLength(pattern, document, documentStartIndex);
-        if (matchLength) {
-            return documentStartIndex + matchLength;
+        const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, document, documentStartIndex);
+        if (maybeLength) {
+            return documentStartIndex + maybeLength;
         }
         else {
             return undefined;

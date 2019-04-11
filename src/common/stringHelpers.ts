@@ -33,7 +33,7 @@ export namespace StringHelpers {
     }
 
     export function maybeNewlineKindAt(str: string, index: number): Option<NewlineKind> {
-        if (regexMatchLength(Pattern.RegExpNewline, str, index)) {
+        if (maybeRegexMatchLength(Pattern.RegExpNewline, str, index)) {
             // test for CARRIAGE RETURN + LINE FEED
             if (str[index] === "\r" && str[index + 1] === "\n") {
                 return NewlineKind.DoubleCharacter;
@@ -47,7 +47,7 @@ export namespace StringHelpers {
         }
     }
 
-    export function regexMatchLength(pattern: RegExp, str: string, index: number): Option<number> {
+    export function maybeRegexMatchLength(pattern: RegExp, str: string, index: number): Option<number> {
         pattern.lastIndex = index;
         const matches = pattern.exec(str);
 
