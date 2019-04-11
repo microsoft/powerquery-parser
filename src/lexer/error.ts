@@ -30,7 +30,7 @@ export namespace LexerError {
 
     export class BadStateError extends Error {
         constructor(
-            readonly lastError: TLexerError,
+            readonly innerError: TLexerError,
         ) {
             super(Localization.Error.lexerBadState());
         }
