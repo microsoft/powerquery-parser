@@ -20,8 +20,8 @@ export namespace CommonError {
     export class InvariantError extends Error {
         constructor(
             readonly invariantBroken: string,
-            readonly maybeJsonfyable: Option<any> = undefined,
-            readonly message = Localization.Error.invariantError(invariantBroken, maybeJsonfyable),
+            readonly maybeDetails: Option<any> = undefined,
+            readonly message = Localization.Error.invariantError(invariantBroken, maybeDetails),
         ) {
             super(message);
         }
@@ -30,8 +30,8 @@ export namespace CommonError {
     export class NotYetImplementedError extends Error {
         constructor(
             readonly reason: string,
-            readonly maybeJsonfyable: Option<any> = undefined,
-            readonly message = Localization.Error.notYetImplemented(reason, maybeJsonfyable),
+            readonly maybeDetails: Option<any> = undefined,
+            readonly message = Localization.Error.notYetImplemented(reason, maybeDetails),
         ) {
             super(message);
         }
