@@ -788,7 +788,7 @@ export namespace Lexer {
         let indexOfDoubleQuote = document.indexOf("\"", documentIndex)
 
         while (indexOfDoubleQuote !== -1) {
-            if (document[indexOfDoubleQuote + 1] == "\"") {
+            if (document[indexOfDoubleQuote + 1] === "\"") {
                 documentIndex = indexOfDoubleQuote + 2;
                 indexOfDoubleQuote = document.indexOf("\"", documentIndex);
             }
