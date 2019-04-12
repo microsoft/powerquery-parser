@@ -87,7 +87,7 @@ function nthNodeEarlyExit(_: Ast.TNode, state: NthNodeOfKindState) {
     return state.nthCounter === state.nthRequired;
 }
 
-function expectNodeKinds(document: string, expectedNodeKinds: Ast.NodeKind[]) {
+function expectNodeKinds(document: string, expectedNodeKinds: ReadonlyArray<Ast.NodeKind>) {
     const actualNodeKinds = collectNodeKindsFromAst(document);
     const details = {
         actualNodeKinds,
