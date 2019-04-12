@@ -1,5 +1,5 @@
-// similar to Result, except there's a third 'Partial' state added
-// which represents a job being partially completed before an error occured
+// similar to Result, except there's a third in-between state
+// representing when a job was partially completed before an error occured
 export type PartialResult<T, E> = (
     | PartialOk<T>
     | PartialMixed<T, E>
