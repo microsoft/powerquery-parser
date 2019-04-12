@@ -12,7 +12,7 @@ export interface TokenRange {
 // used as a key in TokenRangeMap.
 // tag is needed as some TNodes can have the same range,
 // eg. an IdentifierExpression without the inclusive modifier '@'
-// have the same TokenRange as its Identifier child.
+// has the same TokenRange as its child, Identifier.
 export function tokenRangeHashFrom(
     tag: string,
     tokenStartIndex: number,
