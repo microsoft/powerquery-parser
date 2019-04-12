@@ -8,6 +8,15 @@ import { Keyword, Keywords } from "./keywords";
 import { LexerSnapshot as LexerSnapshot } from "./lexerSnapshot";
 import { Token, TokenKind } from "./token";
 
+// the lexer is
+//  * functional
+//  * represented by a discriminate union (TLexer which are implementations for ILexer)
+//  * incremental, allowing line-by-line lexing
+
+// instantiate an instance using Lexer.from
+// calling Lexer.appendToDocument, Lexer.next, Lexer.remaining returns an updated lexer state
+// Lexer.snapshot creates a frozen copy of a lexer state
+
 export namespace Lexer {
 
     export type TLexer = (
@@ -418,6 +427,7 @@ export namespace Lexer {
 
     function drainWhitespace(document: string, documentIndex: number): number {
         let continueDraining = document[documentIndex] !== undefined;
+
         while (continueDraining) {
             const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, document, documentIndex);
             if (maybeLength) {
@@ -532,24 +542,23 @@ export namespace Lexer {
 
         while (!maybeLiteral && commentEnd < documentLength) {
             const maybeNewlineKind = StringHelpers.maybeNewlineKindAt(document, commentEnd);
-            if (maybeNewlineKind) {
-                switch (maybeNewlineKind) {
-                    case StringHelpers.NewlineKind.DoubleCharacter:
-                        maybeLiteral = document.substring(commentStart, commentEnd);
-                        documentIndex = commentEnd + 2;
-                        break;
+            switch (maybeNewlineKind) {
+                case StringHelpers.NewlineKind.DoubleCharacter:
+                    maybeLiteral = document.substring(commentStart, commentEnd);
+                    documentIndex = commentEnd + 2;
+                    break;
 
-                    case StringHelpers.NewlineKind.SingleCharacter:
-                        maybeLiteral = document.substring(commentStart, commentEnd);
-                        documentIndex = commentEnd + 1;
-                        break;
+                case StringHelpers.NewlineKind.SingleCharacter:
+                    maybeLiteral = document.substring(commentStart, commentEnd);
+                    documentIndex = commentEnd + 1;
+                    break;
 
-                    default:
-                        throw isNever(maybeNewlineKind);
-                }
-            }
-            else {
-                commentEnd += 1;
+                case undefined:
+                    commentEnd += 1;
+                    break;
+
+                default:
+                    throw isNever(maybeNewlineKind);
             }
         }
 
@@ -757,11 +766,10 @@ export namespace Lexer {
         tokenKind: TokenKind,
         data: string,
     ): Token {
-        const documentEndIndex = documentStartIndex + data.length;
         return {
             kind: tokenKind,
             documentStartIndex,
-            documentEndIndex,
+            documentEndIndex: documentStartIndex + data.length,
             data,
         };
     }
@@ -772,7 +780,7 @@ export namespace Lexer {
         documentStartIndex: number,
     ): Option<number> {
         const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, document, documentStartIndex);
-        if (maybeLength) {
+        if (maybeLength !== undefined) {
             return documentStartIndex + maybeLength;
         }
         else {
