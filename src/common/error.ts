@@ -51,7 +51,7 @@ export namespace CommonError {
         );
     }
 
-    export function ensureWrappedError(err: Error): CommonError {
+    export function ensureCommonError(err: Error): CommonError {
         if (isTInnerCommonError(err)) {
             return new CommonError(err);
         }

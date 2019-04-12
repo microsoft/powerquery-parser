@@ -40,7 +40,7 @@ export class Parser {
                 error = new ParserError.ParserError(e);
             }
             else {
-                error = CommonError.ensureWrappedError(e);
+                error = CommonError.ensureCommonError(e);
             }
             return {
                 kind: ResultKind.Err,
@@ -1896,7 +1896,7 @@ export class Parser {
 
     private isTokenKind(tokenKind: TokenKind, tokenIndex: number): boolean {
         const maybeToken: Option<Token> = this.lexerSnapshot.tokens[tokenIndex];
-        
+
         if (maybeToken) {
             return maybeToken.kind === tokenKind;
         }

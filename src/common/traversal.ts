@@ -49,7 +49,7 @@ export namespace Traverse {
         catch (e) {
             return {
                 kind: ResultKind.Err,
-                error: CommonError.ensureWrappedError(e),
+                error: CommonError.ensureCommonError(e),
             };
         }
         return {

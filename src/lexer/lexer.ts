@@ -385,7 +385,7 @@ export namespace Lexer {
                     error = new LexerError.LexerError(e);
                 }
                 else {
-                    error = CommonError.ensureWrappedError(e);
+                    error = CommonError.ensureCommonError(e);
                 }
                 continueLexing = false;
                 maybeError = error;
