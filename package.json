@@ -1,6 +1,6 @@
 {
   "name": "powerquery-parser",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A parser for the Power Query langauge.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

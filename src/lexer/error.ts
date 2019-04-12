@@ -30,81 +30,71 @@ export namespace LexerError {
 
     export class BadStateError extends Error {
         constructor(
-            readonly lastError: TLexerError,
-            readonly message = Localization.Error.lexerBadState(),
+            readonly innerError: TLexerError,
         ) {
-            super(message);
+            super(Localization.Error.lexerBadState());
         }
     }
 
     export class EndOfStreamError extends Error {
-        constructor(
-            readonly message = Localization.Error.lexerEndOfStream(),
-        ) {
-            super(message);
+        constructor() {
+            super(Localization.Error.lexerEndOfStream());
         }
     }
 
     export class ExpectedHexLiteralError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly message = Localization.Error.lexerExpectedHexLiteral(graphemePosition),
         ) {
-            super(message);
+            super(Localization.Error.lexerExpectedHexLiteral(graphemePosition));
         }
     }
 
     export class ExpectedKeywordOrIdentifierError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly message = Localization.Error.lexerExpectedKeywordOrIdentifier(graphemePosition),
         ) {
-            super(message);
+            super(Localization.Error.lexerExpectedKeywordOrIdentifier(graphemePosition));
         }
     }
 
     export class ExpectedNumericLiteralError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly message = Localization.Error.lexerExpectedNumericLiteral(graphemePosition),
         ) {
-            super(message);
+            super(Localization.Error.lexerExpectedNumericLiteral(graphemePosition));
         }
     }
 
     export class UnexpectedEofError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly message = Localization.Error.lexerUnexpectedEof(graphemePosition),
         ) {
-            super(message);
+            super(Localization.Error.lexerUnexpectedEof(graphemePosition));
         }
     }
 
     export class UnexpectedReadError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly message = Localization.Error.lexerUnexpectedRead(graphemePosition),
         ) {
-            super(message);
+            super(Localization.Error.lexerUnexpectedRead(graphemePosition));
         }
     }
 
     export class UnterminatedMultilineCommentError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly message = Localization.Error.lexerUnterminatedString(graphemePosition),
         ) {
-            super(message);
+            super(Localization.Error.lexerUnterminatedString(graphemePosition));
         }
     }
 
     export class UnterminatedStringError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly message = Localization.Error.lexerUnterminatedString(graphemePosition),
         ) {
-            super(message);
+            super(Localization.Error.lexerUnterminatedString(graphemePosition));
         }
     }
 

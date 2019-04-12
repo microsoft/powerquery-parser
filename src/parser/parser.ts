@@ -40,7 +40,7 @@ export class Parser {
                 error = new ParserError.ParserError(e);
             }
             else {
-                error = CommonError.ensureWrappedError(e);
+                error = CommonError.ensureCommonError(e);
             }
             return {
                 kind: ResultKind.Err,
@@ -461,7 +461,7 @@ export class Parser {
     // 12.2.3.16 Invoke expression
     private readInvokeExpression(): Ast.InvokeExpression {
         const continueReadingValues = !this.isNextTokenKind(TokenKind.RightParenthesis);
-        return this.readWrapped<Ast.NodeKind.InvokeExpression, Ast.ICsv<Ast.TExpression>[]>(
+        return this.readWrapped<Ast.NodeKind.InvokeExpression, ReadonlyArray<Ast.ICsv<Ast.TExpression>>>(
             Ast.NodeKind.InvokeExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
             () => this.readCsv(
@@ -475,7 +475,7 @@ export class Parser {
     // 12.2.3.17 List expression
     private readListExpression(): Ast.ListExpression {
         const continueReadingValues = !this.isNextTokenKind(TokenKind.RightBrace);
-        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ICsv<Ast.TExpression>[]>(
+        return this.readWrapped<Ast.NodeKind.ListExpression, ReadonlyArray<Ast.ICsv<Ast.TExpression>>>(
             Ast.NodeKind.ListExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsv(
@@ -489,7 +489,7 @@ export class Parser {
     // 12.2.3.18 Record expression
     private readRecordExpression(): Ast.RecordExpression {
         const continueReadingValues = !this.isNextTokenKind(TokenKind.RightBracket);
-        return this.readWrapped<Ast.NodeKind.RecordExpression, Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>[]>(
+        return this.readWrapped<Ast.NodeKind.RecordExpression, ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>>>(
             Ast.NodeKind.RecordExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readGeneralizedIdentifierPairedExpressions(continueReadingValues),
@@ -534,7 +534,7 @@ export class Parser {
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(isImplicit: boolean): Ast.FieldProjection {
         this.startTokenRange(Ast.NodeKind.FieldProjection);
-        const maybeReturn = this.readWrapped<Ast.NodeKind.FieldProjection, Ast.ICsv<Ast.FieldSelector>[]>(
+        const maybeReturn = this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readCsv(
@@ -971,7 +971,7 @@ export class Parser {
 
     private readRecordLiteral(): Ast.RecordLiteral {
         const continueReadingValues = !this.isNextTokenKind(TokenKind.RightBracket);
-        const wrappedRead = this.readWrapped<Ast.NodeKind.RecordLiteral, Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>[]>(
+        const wrappedRead = this.readWrapped<Ast.NodeKind.RecordLiteral, ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>>(
             Ast.NodeKind.RecordLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readFieldNamePairedAnyLiterals(continueReadingValues),
@@ -983,7 +983,9 @@ export class Parser {
         }
     }
 
-    private readFieldNamePairedAnyLiterals(continueReadingValues: boolean): Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>[] {
+    private readFieldNamePairedAnyLiterals(
+        continueReadingValues: boolean
+    ): ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>> {
         return this.readCsv(
             () => this.readKeyValuePair<Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, Ast.GeneralizedIdentifier, Ast.TAnyLiteral>(
                 Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
@@ -996,7 +998,7 @@ export class Parser {
 
     private readListLiteral(): Ast.ListLiteral {
         const continueReadingValues = !this.isNextTokenKind(TokenKind.RightBrace);
-        const wrappedRead = this.readWrapped<Ast.NodeKind.ListLiteral, Ast.ICsv<Ast.TAnyLiteral>[]>(
+        const wrappedRead = this.readWrapped<Ast.NodeKind.ListLiteral, ReadonlyArray<Ast.ICsv<Ast.TAnyLiteral>>>(
             Ast.NodeKind.ListLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsv(
@@ -1303,14 +1305,18 @@ export class Parser {
         };
     }
 
-    private readIdentifierPairedExpressions(continueReadingValues: boolean): Ast.ICsv<Ast.IdentifierPairedExpression>[] {
+    private readIdentifierPairedExpressions(
+        continueReadingValues: boolean
+    ): ReadonlyArray<Ast.ICsv<Ast.IdentifierPairedExpression>> {
         return this.readCsv(
             () => this.readIdentifierPairedExpression(),
             continueReadingValues,
         );
     }
 
-    private readGeneralizedIdentifierPairedExpressions(continueReadingValues: boolean): Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>[] {
+    private readGeneralizedIdentifierPairedExpressions(
+        continueReadingValues: boolean
+    ): ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>> {
         return this.readCsv(
             () => this.readGeneralizedIdentifierPairedExpression(),
             continueReadingValues,
@@ -1508,8 +1514,15 @@ export class Parser {
         }
     }
 
-    private expectAnyTokenKind(expectedAnyTokenKind: TokenKind[]): Option<ParserError.ExpectedAnyTokenKindError> {
-        if (this.currentTokenKind === undefined || expectedAnyTokenKind.indexOf(this.currentTokenKind) === -1) {
+    private expectAnyTokenKind(
+        expectedAnyTokenKind: ReadonlyArray<TokenKind>
+    ): Option<ParserError.ExpectedAnyTokenKindError> {
+        const isError = (
+            this.currentTokenKind === undefined
+            || expectedAnyTokenKind.indexOf(this.currentTokenKind) === -1
+        )
+
+        if (isError) {
             const maybeFoundTokenPosition = this.currentTokenPosition();
             return new ParserError.ExpectedAnyTokenKindError(
                 expectedAnyTokenKind,
@@ -1669,7 +1682,7 @@ export class Parser {
     private readCsv<T>(
         valueReader: () => T,
         continueReadingValues: boolean,
-    ): Ast.ICsv<T>[] {
+    ): ReadonlyArray<Ast.ICsv<T>> {
         const values: Ast.ICsv<T>[] = [];
 
         while (continueReadingValues) {
@@ -1822,9 +1835,9 @@ export class Parser {
         });
     }
 
+    // faster version of popTokenRange, returns no value
     private popTokenRangeNoop() {
-        const element = this.tokenRangeStack.pop();
-        if (!element) {
+        if (!this.tokenRangeStack.pop()) {
             throw new CommonError.InvariantError("tried to pop from an empty stack");
         }
     }
@@ -1838,11 +1851,11 @@ export class Parser {
 
         const tokenStartIndex = element.tokenStartIndex;
         const tokenEndIndex = this.tokenIndex;
-        const lastInclusiveToken = lexerSnapshot.tokens[tokenEndIndex - 1];
+        const maybeLastInclusiveToken: Option<Token> = lexerSnapshot.tokens[tokenEndIndex - 1];
 
         let documentEndIndex;
-        if (lastInclusiveToken) {
-            documentEndIndex = lastInclusiveToken.documentEndIndex;
+        if (maybeLastInclusiveToken) {
+            documentEndIndex = maybeLastInclusiveToken.documentEndIndex;
         }
         else {
             documentEndIndex = lexerSnapshot.document.length;
@@ -1857,7 +1870,10 @@ export class Parser {
         };
     }
 
-    private singleTokenRange(tag: TokenKind | Keyword | Ast.IdentifierConstant | Ast.TUnaryExpressionHelperOperator): TokenRange {
+    // create a TokenRange of length 1
+    private singleTokenRange(
+        tag: TokenKind | Keyword | Ast.IdentifierConstant | Ast.TUnaryExpressionHelperOperator,
+    ): TokenRange {
         const tokenIndex = this.tokenIndex;
         const token = this.lexerSnapshot.tokens[tokenIndex];
 
@@ -1879,13 +1895,13 @@ export class Parser {
     }
 
     private isTokenKind(tokenKind: TokenKind, tokenIndex: number): boolean {
-        const tokens = this.lexerSnapshot.tokens;
+        const maybeToken: Option<Token> = this.lexerSnapshot.tokens[tokenIndex];
 
-        if (tokenIndex < 0 || tokenIndex >= tokens.length) {
-            return false;
+        if (maybeToken) {
+            return maybeToken.kind === tokenKind;
         }
         else {
-            return tokens[tokenIndex].kind === tokenKind;
+            return false;
         }
     }
 
@@ -1908,6 +1924,7 @@ export class Parser {
     private currentTokenPosition(): Option<TokenPosition> {
         const lexerSnapshot = this.lexerSnapshot;
         const maybeToken: Option<Token> = lexerSnapshot.tokens[this.tokenIndex];
+
         if (maybeToken) {
             return lexerSnapshot.tokenPosition(maybeToken);
         }

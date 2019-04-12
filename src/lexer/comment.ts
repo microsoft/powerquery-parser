@@ -18,10 +18,10 @@ export interface IComment {
 }
 
 export interface LineComment extends IComment {
-    readonly kind: CommentKind.Line;
+    readonly kind: CommentKind.Line,
     readonly containsNewline: true,
 }
 
 export interface MultilineComment extends IComment {
-    readonly kind: CommentKind.Multiline;
+    readonly kind: CommentKind.Multiline,
 }

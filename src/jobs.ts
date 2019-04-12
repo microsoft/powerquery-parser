@@ -4,7 +4,7 @@ import { Ast, Parser, ParserError } from "./parser";
 
 export interface LexAndParseSuccess {
     readonly ast: Ast.TDocument,
-    readonly comments: TComment[],
+    readonly comments: ReadonlyArray<TComment>,
 }
 
 export function lexAndParse(document: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {

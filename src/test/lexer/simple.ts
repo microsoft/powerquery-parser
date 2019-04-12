@@ -14,7 +14,7 @@ function expectLexSuccess(document: string): Lexer.TouchedLexer {
     return lexer;
 }
 
-function expectTokens(document: string, expected: [TokenKind, string][]): Lexer.TouchedLexer {
+function expectTokens(document: string, expected: ReadonlyArray<[TokenKind, string]>): Lexer.TouchedLexer {
     const touchedLexer = expectLexSuccess(document);
     const actual = touchedLexer.tokens.map(token => [token.kind, token.data]);
     const details = {
@@ -32,7 +32,7 @@ describe(`Lexer.Simple.TokenKinds`, () => {
         const document = `
 0x1
 0X1`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.HexLiteral, `0x1`],
             [TokenKind.HexLiteral, `0X1`],
         ];
@@ -72,7 +72,7 @@ type
 #shared
 #table
 #time`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.KeywordAnd, `and`],
             [TokenKind.KeywordAs, `as`],
             [TokenKind.KeywordEach, `each`],
@@ -111,7 +111,7 @@ type
 
     it(`NullLiteral`, () => {
         const document = `null`;
-        const expected: [TokenKind, string][] = [[TokenKind.NullLiteral, `null`]];
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.NullLiteral, `null`]];
         expectTokens(document, expected);
     });
 
@@ -129,7 +129,7 @@ type
 0.1e1
 0.1e-1
 0.1e+1`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.NumericLiteral, `1`],
             [TokenKind.NumericLiteral, `1e1`],
             [TokenKind.NumericLiteral, `1e-1`],
@@ -172,7 +172,7 @@ type
 =>
 // TODO look into adding ..
 ...`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Comma, `,`],
             [TokenKind.Semicolon, `;`],
             [TokenKind.Equal, `=`],
@@ -205,7 +205,7 @@ type
 ""
 """"
 `;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.StringLiteral, `""`],
             [TokenKind.StringLiteral, `""""`],
         ];
@@ -216,7 +216,7 @@ type
 describe(`Lexer.Simple.Whitespace`, () => {
     it(`spaces`, () => {
         const document = ` a a `;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
             [TokenKind.Identifier, `a`],
         ];
@@ -225,7 +225,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`tabs`, () => {
         const document = `\ta\ta\t`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
             [TokenKind.Identifier, `a`],
         ];
@@ -234,7 +234,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`trailing \\n`, () => {
         const document = `a\n`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
         expectTokens(document, expected);
@@ -242,7 +242,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`trailing \\r\\n`, () => {
         const document = `a\r\n`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
         expectTokens(document, expected);
@@ -250,7 +250,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`trailing space`, () => {
         const document = `a `;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
         expectTokens(document, expected);
@@ -258,7 +258,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`leading \\n`, () => {
         const document = `\na`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
         expectTokens(document, expected);
@@ -266,7 +266,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`leading \\r\\n`, () => {
         const document = `\r\na`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
         expectTokens(document, expected);
@@ -274,7 +274,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`leading space`, () => {
         const document = ` a`;
-        const expected: [TokenKind, string][] = [
+        const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
         expectTokens(document, expected);

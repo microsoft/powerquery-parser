@@ -8,6 +8,15 @@ import { Keyword, Keywords } from "./keywords";
 import { LexerSnapshot as LexerSnapshot } from "./lexerSnapshot";
 import { Token, TokenKind } from "./token";
 
+// the lexer is
+//  * functional
+//  * represented by a discriminate union (TLexer which are implementations for ILexer)
+//  * incremental, allowing line-by-line lexing
+
+// instantiate an instance using Lexer.from
+// calling Lexer.appendToDocument, Lexer.next, Lexer.remaining returns an updated lexer state
+// Lexer.snapshot creates a frozen copy of a lexer state
+
 export namespace Lexer {
 
     export type TLexer = (
@@ -17,14 +26,15 @@ export namespace Lexer {
         | UntouchedLexer
     )
 
+    // most Lexer actions leave a TLexer in a touched state of some sort
     export type TLexerExceptUntouched = Exclude<TLexer, UntouchedLexer>;
 
     export interface ILexer {
         readonly kind: LexerKind,
         readonly document: string,
-        readonly tokens: Token[],       // all tokens read up to this point
-        readonly comments: TComment[],  // all comments read up to this point
-        readonly documentIndex: number, // where the lexer left off, can be EOF
+        readonly tokens: ReadonlyArray<Token>,      // all tokens read up to this point
+        readonly comments: ReadonlyArray<TComment>, // all comments read up to this point
+        readonly documentIndex: number,             // where the lexer left off, can be EOF
     }
 
     // the last read attempt didn't read any new tokens/comments (though possibly whitespace),
@@ -63,8 +73,8 @@ export namespace Lexer {
 
     // what was read on a call to lex
     export interface LexerRead {
-        readonly tokens: Token[],
-        readonly comments: TComment[],
+        readonly tokens: ReadonlyArray<Token>,
+        readonly comments: ReadonlyArray<TComment>,
         readonly documentStartIndex: number,
         readonly documentEndIndex: number,
     }
@@ -183,12 +193,16 @@ export namespace Lexer {
         }
     }
 
-    function updateState(originalState: TLexer, lexerReadPartialResult: PartialResult<LexerRead, LexerError.TLexerError>): TLexerExceptUntouched {
+    function updateState(
+        originalState: TLexer,
+        lexerReadPartialResult:
+        PartialResult<LexerRead, LexerError.TLexerError>,
+    ): TLexerExceptUntouched {
         switch (lexerReadPartialResult.kind) {
             case PartialResultKind.Ok: {
                 const lexerRead: LexerRead = lexerReadPartialResult.value;
-                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
-                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
+                const newTokens: ReadonlyArray<Token> = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: ReadonlyArray<TComment> = originalState.comments.concat(lexerRead.comments);
 
                 return {
                     kind: LexerKind.Touched,
@@ -202,8 +216,9 @@ export namespace Lexer {
 
             case PartialResultKind.Partial: {
                 const lexerRead: LexerRead = lexerReadPartialResult.value;
-                const newTokens: Token[] = originalState.tokens.concat(lexerRead.tokens);
-                const newComments: TComment[] = originalState.comments.concat(lexerRead.comments);
+                const newTokens: ReadonlyArray<Token> = originalState.tokens.concat(lexerRead.tokens);
+                const newComments: ReadonlyArray<TComment> = originalState.comments.concat(lexerRead.comments);
+                
                 return {
                     kind: LexerKind.TouchedWithError,
                     document: originalState.document,
@@ -230,7 +245,10 @@ export namespace Lexer {
         }
     }
 
-    function read(state: TLexer, behavior: LexerStrategy): PartialResult<LexerRead, LexerError.TLexerError> {
+    function read(
+        state: TLexer,
+        behavior: LexerStrategy,
+    ): PartialResult<LexerRead, LexerError.TLexerError> {
         const document = state.document;
         const documentLength = document.length;
         const documentStartIndex = state.documentIndex;
@@ -254,17 +272,6 @@ export namespace Lexer {
             const chr = state.document[documentIndex];
             if (chr === undefined) {
                 break;
-            }
-
-            const newlineKind = StringHelpers.maybeNewlineKindAt(document, documentIndex);
-
-            if (newlineKind === StringHelpers.NewlineKind.SingleCharacter) {
-                documentIndex += 1;
-                continue;
-            }
-            else if (newlineKind === StringHelpers.NewlineKind.DoubleCharacter) {
-                documentIndex += 2;
-                continue;
             }
 
             try {
@@ -378,7 +385,7 @@ export namespace Lexer {
                     error = new LexerError.LexerError(e);
                 }
                 else {
-                    error = CommonError.ensureWrappedError(e);
+                    error = CommonError.ensureCommonError(e);
                 }
                 continueLexing = false;
                 maybeError = error;
@@ -419,13 +426,27 @@ export namespace Lexer {
     }
 
     function drainWhitespace(document: string, documentIndex: number): number {
-        while (document[documentIndex] !== undefined) {
-            const maybeLength = StringHelpers.regexMatchLength(Pattern.RegExpWhitespace, document, documentIndex);
+        let continueDraining = document[documentIndex] !== undefined;
+
+        while (continueDraining) {
+            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, document, documentIndex);
             if (maybeLength) {
                 documentIndex += maybeLength;
             }
             else {
-                break;
+                switch (StringHelpers.maybeNewlineKindAt(document, documentIndex)) {
+                    case StringHelpers.NewlineKind.DoubleCharacter:
+                        documentIndex += 1;
+                        break;
+
+                    case StringHelpers.NewlineKind.SingleCharacter:
+                        documentIndex += 1;
+                        break;
+
+                    default:
+                        continueDraining = false;
+                        break;
+                }
             }
         }
 
@@ -461,12 +482,17 @@ export namespace Lexer {
         return readTokenFromSlice(document, documentIndex, TokenKind.NumericLiteral, numericEndIndex);
     }
 
-    function readComments(document: string, documentIndex: number, initial: CommentKind, phantomTokenIndex: number): TComment[] {
+    function readComments(
+        document: string,
+        documentIndex: number,
+        initial: CommentKind,
+        phantomTokenIndex: number,
+    ): ReadonlyArray<TComment> {
         let maybeNextCommentKind: Option<CommentKind> = initial;
         let chr1 = document[documentIndex];
         let chr2 = document[documentIndex + 1];
 
-        const comments = [];
+        const newComments = [];
         while (maybeNextCommentKind) {
             let comment: TComment;
             switch (maybeNextCommentKind) {
@@ -483,7 +509,7 @@ export namespace Lexer {
             }
 
             documentIndex = comment.documentEndIndex;
-            comments.push(comment);
+            newComments.push(comment);
 
             chr1 = document[documentIndex];
             chr2 = document[documentIndex + 1];
@@ -500,10 +526,14 @@ export namespace Lexer {
             }
         }
 
-        return comments;
+        return newComments;
     }
 
-    function readLineComment(document: string, documentIndex: number, phantomTokenIndex: number): LineComment {
+    function readLineComment(
+        document: string,
+        documentIndex: number,
+        phantomTokenIndex: number,
+    ): LineComment {
         const documentLength = document.length;
         const commentStart = documentIndex;
 
@@ -512,24 +542,23 @@ export namespace Lexer {
 
         while (!maybeLiteral && commentEnd < documentLength) {
             const maybeNewlineKind = StringHelpers.maybeNewlineKindAt(document, commentEnd);
-            if (maybeNewlineKind) {
-                switch (maybeNewlineKind) {
-                    case StringHelpers.NewlineKind.DoubleCharacter:
-                        maybeLiteral = document.substring(commentStart, commentEnd);
-                        documentIndex = commentEnd + 2;
-                        break;
+            switch (maybeNewlineKind) {
+                case StringHelpers.NewlineKind.DoubleCharacter:
+                    maybeLiteral = document.substring(commentStart, commentEnd);
+                    documentIndex = commentEnd + 2;
+                    break;
 
-                    case StringHelpers.NewlineKind.SingleCharacter:
-                        maybeLiteral = document.substring(commentStart, commentEnd);
-                        documentIndex = commentEnd + 1;
-                        break;
+                case StringHelpers.NewlineKind.SingleCharacter:
+                    maybeLiteral = document.substring(commentStart, commentEnd);
+                    documentIndex = commentEnd + 1;
+                    break;
 
-                    default:
-                        throw isNever(maybeNewlineKind);
-                }
-            }
-            else {
-                commentEnd += 1;
+                case undefined:
+                    commentEnd += 1;
+                    break;
+
+                default:
+                    throw isNever(maybeNewlineKind);
             }
         }
 
@@ -549,7 +578,11 @@ export namespace Lexer {
         }
     }
 
-    function readMultilineComment(document: string, documentIndex: number, phantomTokenIndex: number): MultilineComment {
+    function readMultilineComment(
+        document: string,
+        documentIndex: number,
+        phantomTokenIndex: number,
+    ): MultilineComment {
         const documentStartIndex = documentIndex;
         const indexOfCommentEnd = document.indexOf("*/", documentStartIndex + 2);
         if (indexOfCommentEnd === -1) {
@@ -586,7 +619,7 @@ export namespace Lexer {
                 throw unexpectedReadError(document, documentIndex);
             }
         }
-        const substring = maybeSubstring;
+        const substring: string = maybeSubstring;
 
         switch (substring) {
             case Keyword.And:
@@ -662,7 +695,7 @@ export namespace Lexer {
             const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
             throw new LexerError.ExpectedKeywordOrIdentifierError(graphemePosition);
         }
-        const substring = maybeSubstring;
+        const substring: string = maybeSubstring;
 
         if (substring[0] === "#" || Keywords.indexOf(substring) !== -1) {
             return readKeyword(document, documentIndex, substring);
@@ -682,12 +715,18 @@ export namespace Lexer {
         }
     }
 
-    function maybeKeywordOrIdentifierSubstring(document: string, documentIndex: number): Option<string> {
+    function maybeKeywordOrIdentifierSubstring(
+        document: string,
+        documentIndex: number,
+    ): Option<string> {
         const chr = document[documentIndex];
+        let indexOfStart: number;
 
-        let indexOfStart = documentIndex;
         if (chr === "#") {
-            indexOfStart += 1;
+            indexOfStart = documentIndex + 1;
+        }
+        else {
+            indexOfStart = documentIndex;
         }
 
         const identifierEndIndex = indexOfRegexEnd(Pattern.RegExpIdentifier, document, indexOfStart);
@@ -699,7 +738,11 @@ export namespace Lexer {
         }
     }
 
-    function readConstantToken(documentStartIndex: number, tokenKind: TokenKind, data: string): Token {
+    function readConstantToken(
+        documentStartIndex: number,
+        tokenKind: TokenKind,
+        data: string,
+    ): Token {
         return {
             kind: tokenKind,
             documentStartIndex,
@@ -723,11 +766,10 @@ export namespace Lexer {
         tokenKind: TokenKind,
         data: string,
     ): Token {
-        const documentEndIndex = documentStartIndex + data.length;
         return {
             kind: tokenKind,
             documentStartIndex,
-            documentEndIndex,
+            documentEndIndex: documentStartIndex + data.length,
             data,
         };
     }
@@ -737,9 +779,9 @@ export namespace Lexer {
         document: string,
         documentStartIndex: number,
     ): Option<number> {
-        const matchLength = StringHelpers.regexMatchLength(pattern, document, documentStartIndex);
-        if (matchLength) {
-            return documentStartIndex + matchLength;
+        const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, document, documentStartIndex);
+        if (maybeLength !== undefined) {
+            return documentStartIndex + maybeLength;
         }
         else {
             return undefined;
@@ -754,7 +796,7 @@ export namespace Lexer {
         let indexOfDoubleQuote = document.indexOf("\"", documentIndex)
 
         while (indexOfDoubleQuote !== -1) {
-            if (document[indexOfDoubleQuote + 1] == "\"") {
+            if (document[indexOfDoubleQuote + 1] === "\"") {
                 documentIndex = indexOfDoubleQuote + 2;
                 indexOfDoubleQuote = document.indexOf("\"", documentIndex);
             }

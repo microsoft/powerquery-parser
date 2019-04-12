@@ -5,8 +5,8 @@ import { Token } from "./token";
 export class LexerSnapshot {
     constructor(
         public readonly document: string,
-        public readonly tokens: Token[],
-        public readonly comments: TComment[],
+        public readonly tokens: ReadonlyArray<Token>,
+        public readonly comments: ReadonlyArray<TComment>,
     ) { }
 
     public tokenPosition(token: Token): TokenPosition {

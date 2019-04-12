@@ -20,29 +20,26 @@ export namespace CommonError {
     export class InvariantError extends Error {
         constructor(
             readonly invariantBroken: string,
-            readonly maybeJsonfyable: Option<any> = undefined,
-            readonly message = Localization.Error.invariantError(invariantBroken, maybeJsonfyable),
+            readonly maybeDetails: Option<any> = undefined,
         ) {
-            super(message);
+            super(Localization.Error.invariantError(invariantBroken, maybeDetails));
         }
     }
 
     export class NotYetImplementedError extends Error {
         constructor(
             readonly reason: string,
-            readonly maybeJsonfyable: Option<any> = undefined,
-            readonly message = Localization.Error.notYetImplemented(reason, maybeJsonfyable),
+            readonly maybeDetails: Option<any> = undefined,
         ) {
-            super(message);
+            super(Localization.Error.notYetImplemented(reason, maybeDetails));
         }
     }
 
     export class UnknownError extends Error {
         constructor(
             readonly innerError: any,
-            readonly message = Localization.Error.unknownError(innerError),
         ) {
-            super(message);
+            super(Localization.Error.unknownError(innerError));
         }
     }
 
@@ -54,7 +51,7 @@ export namespace CommonError {
         );
     }
 
-    export function ensureWrappedError(err: Error): CommonError {
+    export function ensureCommonError(err: Error): CommonError {
         if (isTInnerCommonError(err)) {
             return new CommonError(err);
         }

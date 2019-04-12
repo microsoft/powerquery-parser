@@ -5,13 +5,12 @@ import { Option } from "./option";
 import { Result, ResultKind } from "./result";
 
 // Adds some structure / helper functions for traversing an AST.
-// A traversal should have a function which creates an IRequest,
-// which is then consumed by runTraverseRequest.
 //
 // By default a traversal visits every node and calls a visit function.
-// A traversal visit nodes either using a depth-first or breadth-first strategy.
-// It can prune branches if an optional early exit fn is given.
-// Any values needed during a traversal should be stored on an IState instance.
+// A traversal can visit nodes either using a depth-first or breadth-first strategy.
+// Branches can be pruned if an optional early exit fn is given.
+//
+// Review the traversals used in tests for an example.
 
 export namespace Traverse {
 
@@ -19,8 +18,8 @@ export namespace Traverse {
     export type TVisitChildNodeFn<State, StateType, Return> = (parent: Ast.TNode, node: Ast.TNode, state: State & Traverse.IState<StateType>) => Return;
 
     export const enum VisitNodeStrategy {
-        BreadthFirst,
-        DepthFirst,
+        BreadthFirst = "BreadthFirst",
+        DepthFirst = "DepthFirst",
     }
 
     export interface IRequest<State, StateType> {
@@ -50,7 +49,7 @@ export namespace Traverse {
         catch (e) {
             return {
                 kind: ResultKind.Err,
-                error: CommonError.ensureWrappedError(e),
+                error: CommonError.ensureCommonError(e),
             };
         }
         return {
@@ -523,7 +522,7 @@ function maybeTraverse<State, StateType, Return>(
 }
 
 function traverseArray<State, StateType, Return>(
-    collection: Ast.TNode[],
+    collection: ReadonlyArray<Ast.TNode>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitNodeFn<State, StateType, Return>,
     strategy: Traverse.VisitNodeStrategy,
@@ -546,7 +545,7 @@ function traversePairedConstant<State, StateType, Return>(
 }
 
 function traverseUnaryExpressionHelpers<State, StateType, Return>(
-    nodes: Ast.TUnaryExpressionHelper[],
+    nodes: ReadonlyArray<Ast.TUnaryExpressionHelper>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitNodeFn<State, StateType, Return>,
     strategy: Traverse.VisitNodeStrategy,
@@ -582,7 +581,7 @@ function maybeTraverseChild<State, StateType, Return>(
 
 function traverseChildArray<State, StateType, Return>(
     parent: Ast.TNode,
-    collection: Ast.TNode[],
+    collection: ReadonlyArray<Ast.TNode>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitChildNodeFn<State, StateType, Return>,
 ) {
@@ -592,7 +591,7 @@ function traverseChildArray<State, StateType, Return>(
 }
 
 function traverseUnaryExpressionHelperChildren<State, StateType, Return>(
-    nodes: Ast.TUnaryExpressionHelper[],
+    nodes: ReadonlyArray<Ast.TUnaryExpressionHelper>,
     state: State & Traverse.IState<StateType>,
     visitFn: Traverse.TVisitChildNodeFn<State, StateType, Return>,
 ) {

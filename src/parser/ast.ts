@@ -235,7 +235,7 @@ export namespace Ast {
         readonly sectionConstant: Constant,
         readonly maybeName: Option<Identifier>,
         readonly semicolonConstant: Constant,
-        readonly sectionMembers: SectionMember[],
+        readonly sectionMembers: ReadonlyArray<SectionMember>,
     }
 
     export interface SectionMember extends INode {
@@ -425,7 +425,7 @@ export namespace Ast {
     export interface UnaryExpression extends INode {
         readonly kind: NodeKind.UnaryExpression,
         readonly terminalNode: false,
-        readonly expressions: UnaryExpressionHelper<UnaryOperator, TUnaryExpression>[],
+        readonly expressions: ReadonlyArray<UnaryExpressionHelper<UnaryOperator, TUnaryExpression>>,
     }
 
     export const enum UnaryOperator {
@@ -510,19 +510,19 @@ export namespace Ast {
     // ---------- 12.2.3.16 Invoke expression ----------
     // -------------------------------------------------
 
-    export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, ICsv<TExpression>[]> { }
+    export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, ReadonlyArray<ICsv<TExpression>>> { }
 
     // -----------------------------------------------
     // ---------- 12.2.3.17 List expression ----------
     // -----------------------------------------------
 
-    export interface ListExpression extends IWrapped<NodeKind.ListExpression, ICsv<TExpression>[]> { }
+    export interface ListExpression extends IWrapped<NodeKind.ListExpression, ReadonlyArray<ICsv<TExpression>>> { }
 
     // -------------------------------------------------
     // ---------- 12.2.3.18 Record expression ----------
     // -------------------------------------------------
 
-    export interface RecordExpression extends IWrapped<NodeKind.RecordExpression, ICsv<GeneralizedIdentifierPairedExpression>[]> { }
+    export interface RecordExpression extends IWrapped<NodeKind.RecordExpression, ReadonlyArray<ICsv<GeneralizedIdentifierPairedExpression>>> { }
 
     // ------------------------------------------------------
     // ---------- 12.2.3.19 Item access expression ----------
@@ -549,7 +549,7 @@ export namespace Ast {
         readonly implicit: boolean,
     }
 
-    export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ICsv<FieldSelector>[]> {
+    export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ReadonlyArray<ICsv<FieldSelector>>> {
         // located after closeWrapperConstant
         readonly maybeOptionalConstant: Option<Constant>,
         // metadata marked for future use
@@ -582,7 +582,7 @@ export namespace Ast {
     export interface LetExpression extends INode {
         readonly kind: NodeKind.LetExpression,
         readonly letConstant: Constant,
-        readonly variableList: ICsv<IdentifierPairedExpression>[],
+        readonly variableList: ReadonlyArray<ICsv<IdentifierPairedExpression>>,
         readonly inConstant: Constant,
         readonly expression: TExpression,
     }
@@ -676,7 +676,7 @@ export namespace Ast {
         readonly kind: NodeKind.RecursivePrimaryExpression,
         readonly terminalNode: false,
         readonly head: TPrimaryExpression,
-        readonly recursiveExpressions: TRecursivePrimaryExpression[],
+        readonly recursiveExpressions: ReadonlyArray<TRecursivePrimaryExpression>,
     }
 
     export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryType, TPrimaryType> { }
@@ -691,11 +691,11 @@ export namespace Ast {
         | RecordLiteral
     )
 
-    export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, ICsv<TAnyLiteral>[]> {
+    export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, ReadonlyArray<ICsv<TAnyLiteral>>> {
         readonly literalKind: LiteralKind.List,
     }
 
-    export interface RecordLiteral extends IWrapped<NodeKind.RecordLiteral, ICsv<GeneralizedIdentifierPairedAnyLiteral>[]> {
+    export interface RecordLiteral extends IWrapped<NodeKind.RecordLiteral, ReadonlyArray<ICsv<GeneralizedIdentifierPairedAnyLiteral>>> {
         readonly literalKind: LiteralKind.Record,
     }
 
@@ -708,7 +708,7 @@ export namespace Ast {
     export interface IBinOpExpression<NodeKindVariant, Operator, Operand> extends INode {
         readonly kind: NodeKindVariant & TBinOpExpressionNodeKind,
         readonly first: Operand,
-        readonly rest: UnaryExpressionHelper<Operator, Operand>[],
+        readonly rest: ReadonlyArray<UnaryExpressionHelper<Operator, Operand>>,
     }
 
     // BinOp expressions which uses a keyword as operators,
@@ -800,7 +800,7 @@ export namespace Ast {
         | Option<AsNullablePrimitiveType>
     )
 
-    export interface ParameterList<T> extends IWrapped<NodeKind.ParameterList, ICsv<Parameter<T>>[]> { }
+    export interface ParameterList<T> extends IWrapped<NodeKind.ParameterList, ReadonlyArray<ICsv<Parameter<T>>>> { }
 
     export interface Parameter<T> extends INode {
         readonly kind: NodeKind.Parameter,
@@ -831,7 +831,7 @@ export namespace Ast {
         readonly name: GeneralizedIdentifier,
         readonly maybeFieldTypeSpeification: Option<FieldTypeSpecification>,
     }
-    export interface FieldSpecificationList extends IWrapped<NodeKind.FieldSpecificationList, ICsv<FieldSpecification>[]> {
+    export interface FieldSpecificationList extends IWrapped<NodeKind.FieldSpecificationList, ReadonlyArray<ICsv<FieldSpecification>>> {
         // located between content and closeWrapperConstant
         readonly maybeOpenRecordMarkerConstant: Option<Constant>,
     }

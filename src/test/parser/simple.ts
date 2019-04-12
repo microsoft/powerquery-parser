@@ -23,7 +23,7 @@ function astFromDocument(document: string): Ast.TDocument {
     return parseResult.value.ast;
 }
 
-function collectNodeKindsFromAst(document: string): Ast.NodeKind[] {
+function collectNodeKindsFromAst(document: string): ReadonlyArray<Ast.NodeKind> {
     const ast = astFromDocument(document);
     const request: CollectAllNodeKindRequest = {
         ast,
@@ -87,7 +87,7 @@ function nthNodeEarlyExit(_: Ast.TNode, state: NthNodeOfKindState) {
     return state.nthCounter === state.nthRequired;
 }
 
-function expectNodeKinds(document: string, expectedNodeKinds: Ast.NodeKind[]) {
+function expectNodeKinds(document: string, expectedNodeKinds: ReadonlyArray<Ast.NodeKind>) {
     const actualNodeKinds = collectNodeKindsFromAst(document);
     const details = {
         actualNodeKinds,

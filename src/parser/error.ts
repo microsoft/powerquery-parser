@@ -33,11 +33,10 @@ export namespace ParserError {
 
     export class ExpectedAnyTokenKindError extends Error {
         constructor(
-            readonly expectedAnyTokenKind: TokenKind[],
+            readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
             readonly maybeFoundTokenPosition: Option<TokenPosition>,
-            readonly message = Localization.Error.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundTokenPosition),
         ) {
-            super(message);
+            super(Localization.Error.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundTokenPosition));
         }
     }
 
@@ -45,9 +44,8 @@ export namespace ParserError {
         constructor(
             readonly expectedTokenKind: TokenKind,
             readonly maybeFoundTokenPosition: Option<TokenPosition>,
-            readonly message = Localization.Error.parserExpectedTokenKind(expectedTokenKind, maybeFoundTokenPosition),
         ) {
-            super(message);
+            super(Localization.Error.parserExpectedTokenKind(expectedTokenKind, maybeFoundTokenPosition));
         }
     }
 
@@ -55,54 +53,48 @@ export namespace ParserError {
         constructor(
             readonly foundIdentifier: string,
             readonly tokenPosition: TokenPosition,
-            readonly message = Localization.Error.parserInvalidPrimitiveType(foundIdentifier, tokenPosition),
         ) {
-            super(message);
+            super(Localization.Error.parserInvalidPrimitiveType(foundIdentifier, tokenPosition));
         }
     }
 
     export class RequiredParameterAfterOptionalParameterError extends Error {
         constructor(
             readonly missingOptionalTokenPosition: TokenPosition,
-            readonly message = Localization.Error.parserRequiredParameterAfterOptionalParameter(missingOptionalTokenPosition),
         ) {
-            super(message);
+            super(Localization.Error.parserRequiredParameterAfterOptionalParameter(missingOptionalTokenPosition));
         }
     }
 
     export class UnexpectedEndOfTokensError extends Error {
         constructor(
             readonly topOfTokenRangeStack: Ast.NodeKind,
-            readonly message = Localization.Error.parserUnexpectedEndOfTokens(topOfTokenRangeStack),
         ) {
-            super(message);
+            super(Localization.Error.parserUnexpectedEndOfTokens(topOfTokenRangeStack));
         }
     }
 
     export class UnterminatedBracketError extends Error {
         constructor(
             readonly openBracketTokenPosition: TokenPosition,
-            readonly message = Localization.Error.parserUnterminatedBracket(openBracketTokenPosition),
         ) {
-            super(message);
+            super(Localization.Error.parserUnterminatedBracket(openBracketTokenPosition));
         }
     }
 
     export class UnterminatedParenthesesError extends Error {
         constructor(
             readonly openParenthesesTokenPosition: TokenPosition,
-            readonly message = Localization.Error.parserUnterminatedParentheses(openParenthesesTokenPosition),
         ) {
-            super(message);
+            super(Localization.Error.parserUnterminatedParentheses(openParenthesesTokenPosition));
         }
     }
 
     export class UnusedTokensRemainError extends Error {
         constructor(
             readonly firstUnusedTokenPosition: TokenPosition,
-            readonly message = Localization.Error.parserUnusedTokensRemain(firstUnusedTokenPosition),
         ) {
-            super(message);
+            super(Localization.Error.parserUnusedTokensRemain(firstUnusedTokenPosition));
         }
     }
 

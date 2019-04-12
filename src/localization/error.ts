@@ -91,7 +91,7 @@ export namespace Localization.Error {
     }
 
     export function parserExpectedAnyTokenKind(
-        expectedAnyTokenKind: TokenKind[],
+        expectedAnyTokenKind: ReadonlyArray<TokenKind>,
         maybeFoundTokenPosition: Option<TokenPosition>,
     ): string {
         if (maybeFoundTokenPosition) {
