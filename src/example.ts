@@ -49,19 +49,19 @@ function lexDocument(document: string) {
 }
 
 // @ts-ignore
-function iterativeLexDocument(document: string) {
+function iterativeLexDocument(document: string, chunkSeperator: string) {
     // for brevity's sake I'll be asserting:
-    //  * document.split(" ").length > 1
+    //  * document.split(chunkSeperator).length > 1
     //  * the first chunk from the split won't result in a lexer error
 
-    const documentChunks = document.split(" ");
+    const documentChunks = document.split(chunkSeperator);
     if (documentChunks.length === 1) {
-        throw new Error(`AssertFailed: document.split(" ").length > 1`)
+        throw new Error(`AssertFailed: document.split(chunkSeperator).length > 1`)
     }
 
     // state isn't const as calling Lexer functions return a new state object.
     let state: Lexer.TLexer = Lexer.from(documentChunks[0]);
-    state = Lexer.next(state);
+    state = Lexer.remaining(state);
 
     if (Lexer.hasError(state)) {
         throw new Error(`AssertFailed: the first chunk from the split won't result in a lexer error`);
@@ -69,8 +69,8 @@ function iterativeLexDocument(document: string) {
 
     for (let index = 1; index < documentChunks.length; index++) {
         const chunk = documentChunks[index];
-        state = Lexer.appendToDocument(state, chunk);
-        state = Lexer.next(state);
+        state = Lexer.appendToDocument(state, `${chunkSeperator} ${chunk}`);
+        state = Lexer.remaining(state);
 
         switch (state.kind) {
             // nothing was read and an error was encountered, such as an unterminated string.
