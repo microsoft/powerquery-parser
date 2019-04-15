@@ -545,15 +545,11 @@ export namespace Ast {
     export interface FieldSelector extends IWrapped<NodeKind.FieldSelector, GeneralizedIdentifier> {
         // located after closeWrapperConstant
         readonly maybeOptionalConstant: Option<Constant>,
-        // metadata marked for future use
-        readonly implicit: boolean,
     }
 
     export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ReadonlyArray<ICsv<FieldSelector>>> {
         // located after closeWrapperConstant
         readonly maybeOptionalConstant: Option<Constant>,
-        // metadata marked for future use
-        readonly implicit: boolean,
     }
 
     // ---------------------------------------------------

@@ -311,11 +311,11 @@ export class Parser {
                     const disambiguation = this.disambiguateBracket();
                     switch (disambiguation) {
                         case BracketDisambiguation.FieldProjection:
-                            primaryExpression = this.readFieldProjection(true);
+                            primaryExpression = this.readFieldProjection();
                             break;
 
                         case BracketDisambiguation.FieldSelection:
-                            primaryExpression = this.readFieldSelection(true);
+                            primaryExpression = this.readFieldSelection();
                             break;
 
                         case BracketDisambiguation.Record:
@@ -527,18 +527,18 @@ export class Parser {
     }
 
     // sub-item of 12.2.3.20 Field access expressions
-    private readFieldSelection(isImplicit: boolean): Ast.FieldSelector {
-        return this.readFieldSelector(isImplicit, true);
+    private readFieldSelection(): Ast.FieldSelector {
+        return this.readFieldSelector(true);
     }
 
     // sub-item of 12.2.3.20 Field access expressions
-    private readFieldProjection(isImplicit: boolean): Ast.FieldProjection {
+    private readFieldProjection(): Ast.FieldProjection {
         this.startTokenRange(Ast.NodeKind.FieldProjection);
         const maybeReturn = this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readCsv(
-                () => this.readFieldSelector(isImplicit, false),
+                () => this.readFieldSelector(false),
                 true,
             ),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
@@ -552,7 +552,6 @@ export class Parser {
             return {
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
-                implicit: isImplicit,
                 ...maybeReturn
             };
         }
@@ -560,14 +559,13 @@ export class Parser {
             this.popTokenRangeNoop();
             return {
                 maybeOptionalConstant: undefined,
-                implicit: isImplicit,
                 ...maybeReturn,
             };
         }
     }
 
     // sub-item of 12.2.3.20 Field access expressions
-    private readFieldSelector(implicit: boolean, allowOptional: boolean): Ast.FieldSelector {
+    private readFieldSelector(allowOptional: boolean): Ast.FieldSelector {
         this.startTokenRange(Ast.NodeKind.FieldSelector);
         const maybeReturn = this.readWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
             Ast.NodeKind.FieldSelector,
@@ -584,7 +582,6 @@ export class Parser {
             return {
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
-                implicit,
                 ...maybeReturn
             };
         }
@@ -592,7 +589,6 @@ export class Parser {
             this.popTokenRangeNoop();
             return {
                 maybeOptionalConstant: undefined,
-                implicit,
                 ...maybeReturn,
             };
         }
@@ -1131,11 +1127,11 @@ export class Parser {
 
                 switch (disambiguation) {
                     case BracketDisambiguation.FieldProjection:
-                        recursiveExpressions.push(this.readFieldProjection(false));
+                        recursiveExpressions.push(this.readFieldProjection());
                         break;
 
                     case BracketDisambiguation.FieldSelection:
-                        recursiveExpressions.push(this.readFieldSelection(false));
+                        recursiveExpressions.push(this.readFieldSelection());
                         break;
 
                     default:
