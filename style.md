@@ -14,11 +14,10 @@
 
 ## If statements
 
-* Always use brace-less.
-* Prefer to pair if with an else, except in the case of invariant checks
-
-```typescript
-if (foo === undefined) {
-    throw new Error("should never be undefined");
-}
-```
+* Always use braces.
+* Prefer to pair if with an else, except in the case of invariant checks, eg.
+    ```typescript
+    if (foo === undefined) {
+        throw new Error("should never be undefined");
+    }
+    ```
