@@ -1,4 +1,4 @@
-# powerquery-format
+# powerquery-parser
 
 A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) language, written in TypeScript. Designed to be consumed by other projects.
 
