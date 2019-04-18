@@ -1,3 +1,5 @@
+import { Position } from "./position";
+
 export const enum TokenKind {
     Ampersand = "Ampersand",
     Asterisk = "Asterisk",
@@ -63,7 +65,8 @@ export const enum TokenKind {
 
 export interface Token {
     readonly kind: TokenKind,
-    readonly documentStartIndex: number,
-    readonly documentEndIndex: number, // exclusive
+    // range is [positionStart, positionEnd)
+    readonly postionStart: Position,
+    readonly positionEnd: Position,
     readonly data: string,
 }
