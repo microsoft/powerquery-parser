@@ -6,6 +6,8 @@ import { Pattern } from './patterns';
 
 export namespace StringHelpers {
 
+    export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
+
     export const enum NewlineKind {
         SingleCharacter = "SingleCharacter",
         DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
@@ -14,7 +16,7 @@ export namespace StringHelpers {
     // columnNumber is by grapheme, not by code unit
     // starts lineNumber/columnNumber at 1
     export interface GraphemePosition {
-        readonly characterCodeUnitIndex: number,
+        readonly stringIndex: number,
         readonly lineNumber: number;
         readonly columnNumber: number,
     }
@@ -59,22 +61,21 @@ export namespace StringHelpers {
         }
     }
 
-    export function graphemePositionAt(document: string, characterCodeUnitIndex: number): GraphemePosition {
-        if (characterCodeUnitIndex > document.length) {
-            throw new CommonError.InvariantError(`characterCodeUnitIndex > document.length : ${characterCodeUnitIndex} > ${document.length}`)
+    export function graphemePositionAt(document: string, documentIndex: number): GraphemePosition {
+        if (documentIndex > document.length) {
+            throw new CommonError.InvariantError(`documentIndex > document.length : ${documentIndex} > ${document.length}`)
         }
 
-        const splitter: GraphemeSplitter = new GraphemeSplitter();
-        const graphemes = splitter.iterateGraphemes(document);
+        const graphemes = graphemeSplitter.iterateGraphemes(document);
 
-        let documentIndex = 0;
+        let tmpDocumentIndex = 0;
         let lineNumber = 1;
         let columnNumber = 1;
         for (const grapheme of graphemes) {
-            if (documentIndex >= characterCodeUnitIndex) {
-                if (documentIndex === characterCodeUnitIndex) {
+            if (tmpDocumentIndex >= documentIndex) {
+                if (tmpDocumentIndex === documentIndex) {
                     return {
-                        characterCodeUnitIndex,
+                        stringIndex: documentIndex,
                         lineNumber,
                         columnNumber,
                     };
@@ -84,7 +85,7 @@ export namespace StringHelpers {
                         lineNumber,
                         columnNumber,
                     }
-                    throw new CommonError.InvariantError("documentIndex should never be larger than characterCodeUnitIndex", details);
+                    throw new CommonError.InvariantError("documentIndex should never be larger than documentIndex", details);
                 }
             }
 
@@ -92,13 +93,13 @@ export namespace StringHelpers {
             if (maybeNewlineKind) {
                 switch (maybeNewlineKind) {
                     case NewlineKind.DoubleCharacter:
-                        documentIndex += 2;
+                        tmpDocumentIndex += 2;
                         lineNumber += 1;
                         columnNumber = 1;
                         break;
 
                     case NewlineKind.SingleCharacter:
-                        documentIndex += 1;
+                        tmpDocumentIndex += 1;
                         lineNumber += 1;
                         columnNumber = 1;
                         break;
@@ -109,13 +110,13 @@ export namespace StringHelpers {
                 }
             }
             else {
-                documentIndex += grapheme.length;
+                tmpDocumentIndex += grapheme.length;
                 columnNumber += 1;
             }
         }
 
-        const details = { characterCodeUnitIndex }
-        throw new CommonError.InvariantError("characterCodeUnitIndex should've been found", details);
+        const details = { documentIndex }
+        throw new CommonError.InvariantError("documentIndex should've been found", details);
     }
 
 }
