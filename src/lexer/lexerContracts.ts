@@ -1,5 +1,5 @@
 import { Token } from "./token";
-import { Option } from "../common";
+import { Option, StringHelpers } from "../common";
 import { LexerError } from "./error";
 
 export type TLexerLine = (
@@ -14,14 +14,26 @@ export interface LexerState {
     readonly multilineKindUpdate: { [lineNumber: number]: LexerMultilineKind; }
 }
 
+export interface GraphemeDocument {
+    readonly blob: string,
+    readonly graphemes: ReadonlyArray<string>,
+    readonly documentIndex2GraphemeIndex: { [documentIndex: number]: number; }
+    readonly graphemeIndex2DocumentIndex: { [graphemeIndex: number]: number; }
+}
+
 export interface ILexerLine {
     readonly kind: LexerLineKind,
     readonly multilineKind: LexerMultilineKind,
-    readonly document: string,
-    readonly graphemes: ReadonlyArray<string>
-    // allows quick checking if a state chnage occured w/o having to check tokens
-    readonly actionsTaken: number,          
+    readonly document: GraphemeDocument,
+    readonly position: GraphemeDocumentPosition,
     readonly tokens: ReadonlyArray<Token>,
+    readonly numberOfActions: number,
+}
+
+export interface GraphemeDocumentPosition {
+    readonly documentIndex: number,
+    readonly lineNumber: number,
+    readonly columnNumber: number,
 }
 
 export const enum LexerLineKind {
@@ -65,11 +77,6 @@ export interface UntouchedLine extends ILexerLine {
 
 export interface LexerRead {
     readonly tokens: ReadonlyArray<Token>,
-    readonly startPosition: Position,
-    readonly endPosition: Position,
-}
-
-export const enum LexStrategy {
-    SingleToken = "SingleToken",
-    UntilEofOrError = "UntilEofOrError"
+    readonly startPosition: GraphemeDocumentPosition,
+    readonly endPosition: GraphemeDocumentPosition,
 }

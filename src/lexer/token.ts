@@ -1,4 +1,4 @@
-import { Position } from "./position";
+import { GraphemeDocumentPosition } from "./lexerContracts";
 
 export const enum TokenKind {
     Ampersand = "Ampersand",
@@ -65,8 +65,8 @@ export const enum TokenKind {
 
 export interface Token {
     readonly kind: TokenKind,
-    // range is [positionStart, positionEnd)
-    readonly postionStart: Position,
-    readonly positionEnd: Position,
+    // range is [start, end)
+    readonly startPosition: GraphemeDocumentPosition,
+    readonly endPosition: GraphemeDocumentPosition,
     readonly data: string,
 }
