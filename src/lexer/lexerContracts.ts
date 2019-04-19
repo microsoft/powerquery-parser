@@ -1,6 +1,8 @@
-import { Token } from "./token";
-import { Option, StringHelpers } from "../common";
+import { Option } from "../common";
 import { LexerError } from "./error";
+import { Token } from "./token";
+
+export type TLexerLineExceptUntouched = Exclude<TLexerLine, UntouchedLine>;
 
 export type TLexerLine = (
     | TouchedLine
@@ -25,9 +27,9 @@ export interface ILexerLine {
     readonly kind: LexerLineKind,
     readonly multilineKind: LexerMultilineKind,
     readonly document: GraphemeDocument,
+    readonly numberOfActions: number,
     readonly position: GraphemeDocumentPosition,
     readonly tokens: ReadonlyArray<Token>,
-    readonly numberOfActions: number,
 }
 
 export interface GraphemeDocumentPosition {
@@ -65,8 +67,8 @@ export interface TouchedLine extends ILexerLine {
 // the last read attempt read at least one token or comment before encountering an error
 export interface TouchedWithErrorLine extends ILexerLine {
     readonly kind: LexerLineKind.TouchedWithError,
-    readonly lastRead: LexerRead,
     readonly error: LexerError.TLexerError,
+    readonly lastRead: LexerRead,
 }
 
 // a call to appendtToDocument clears existing state marking it ready to be lexed
