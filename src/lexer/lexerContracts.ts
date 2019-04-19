@@ -84,6 +84,6 @@ export interface UntouchedLine extends ILexerLine {
 
 export interface LexerRead {
     readonly tokens: ReadonlyArray<Token>,
-    readonly startPosition: GraphemeDocumentPosition,
-    readonly endPosition: GraphemeDocumentPosition,
+    readonly positionStart: GraphemeDocumentPosition,
+    readonly positionEnd: GraphemeDocumentPosition,
 }

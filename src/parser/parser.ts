@@ -1206,8 +1206,8 @@ export class Parser {
 
             const lexerSnapshot = this.lexerSnapshot;
             const tokens = lexerSnapshot.tokens;
-            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].startPosition.documentIndex;
-            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].endPosition.documentIndex;
+            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].positionStart.documentIndex;
+            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].positionEnd.documentIndex;
             literal = lexerSnapshot.document.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
         }
 
@@ -1828,8 +1828,8 @@ export class Parser {
         const currentToken = this.lexerSnapshot.tokens[tokenIndex];
         this.tokenRangeStack.push({
             nodeKind,
-            startTokenIndex: tokenIndex,
-            startPosition: currentToken.startPosition,
+            tokenIndexStart: tokenIndex,
+            positionStart: currentToken.positionStart,
         });
     }
 
@@ -1847,16 +1847,16 @@ export class Parser {
         }
 
         const element: TokenRangeStackElement = maybeElement;
-        const startPosition = element.startPosition;
+        const positionStart = element.positionStart;
         const endTokenIndex = this.tokenIndex;
         const lastInclusiveToken = this.lexerSnapshot.tokens[endTokenIndex - 1];
 
         return {
-            startTokenIndex: element.startTokenIndex,
+            startTokenIndex: element.tokenIndexStart,
             endTokenIndex,
-            startPosition: element.startPosition,
-            endPosition: lastInclusiveToken.endPosition,
-            hash: tokenRangeHashFrom(maybeElement.nodeKind, startPosition, startPosition),
+            positionStart: element.positionStart,
+            positionEnd: lastInclusiveToken.positionEnd,
+            hash: tokenRangeHashFrom(maybeElement.nodeKind, positionStart, positionStart),
         };
     }
 
@@ -1866,15 +1866,15 @@ export class Parser {
     ): TokenRange {
         const tokenIndex = this.tokenIndex;
         const token = this.lexerSnapshot.tokens[tokenIndex];
-        const startPosition = token.startPosition;
-        const endPosition = token.endPosition;
+        const positionStart = token.positionStart;
+        const positionEnd = token.positionEnd;
 
         return {
             startTokenIndex: tokenIndex,
             endTokenIndex: tokenIndex + 1,
-            startPosition,
-            endPosition,
-            hash: tokenRangeHashFrom(tag, startPosition, endPosition),
+            positionStart,
+            positionEnd,
+            hash: tokenRangeHashFrom(tag, positionStart, positionEnd),
         }
     }
 
@@ -1976,8 +1976,8 @@ const enum BracketDisambiguation {
 
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind,
-    readonly startTokenIndex: number,
-    readonly startPosition: GraphemeDocumentPosition,
+    readonly tokenIndexStart: number,
+    readonly positionStart: GraphemeDocumentPosition,
 }
 
 interface ParserState {

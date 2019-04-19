@@ -66,7 +66,7 @@ export const enum TokenKind {
 export interface Token {
     readonly kind: TokenKind,
     // range is [start, end)
-    readonly startPosition: GraphemeDocumentPosition,
-    readonly endPosition: GraphemeDocumentPosition,
+    readonly positionStart: GraphemeDocumentPosition,
+    readonly positionEnd: GraphemeDocumentPosition,
     readonly data: string,
 }

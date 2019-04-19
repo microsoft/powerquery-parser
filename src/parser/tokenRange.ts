@@ -6,8 +6,8 @@ export type TokenRangeMap<T> = { [key: string]: T; }
 export interface TokenRange {
     readonly startTokenIndex: number,
     readonly endTokenIndex: number // exclusive
-    readonly startPosition: GraphemeDocumentPosition,
-    readonly endPosition: GraphemeDocumentPosition,
+    readonly positionStart: GraphemeDocumentPosition,
+    readonly positionEnd: GraphemeDocumentPosition,
     readonly hash: string,
 }
 
@@ -17,8 +17,8 @@ export interface TokenRange {
 // has the same TokenRange as its child, Identifier.
 export function tokenRangeHashFrom(
     tag: string,
-    startPosition: GraphemeDocumentPosition,
-    endPosition: GraphemeDocumentPosition,
+    positionStart: GraphemeDocumentPosition,
+    positionEnd: GraphemeDocumentPosition,
 ): string {
-    return `${tag}:${startPosition.lineNumber},${startPosition.columnNumber}:${endPosition.lineNumber},${endPosition.columnNumber}`;
+    return `${tag}:${positionStart.lineNumber},${positionStart.columnNumber}:${positionEnd.lineNumber},${positionEnd.columnNumber}`;
 }

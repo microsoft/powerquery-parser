@@ -341,7 +341,7 @@ export namespace Lexer {
                     multilineKind: LexerMultilineKind.Default,
                     document: originalState.document,
                     tokens: newTokens,
-                    position: lexerRead.endPosition,
+                    position: lexerRead.positionEnd,
                     lastRead: lexerRead,
                     numberOfActions: originalState.numberOfActions + 1,
                 }
@@ -356,7 +356,7 @@ export namespace Lexer {
                     multilineKind: LexerMultilineKind.Default,
                     document: originalState.document,
                     numberOfActions: originalState.numberOfActions + 1,
-                    position: lexerRead.endPosition,
+                    position: lexerRead.positionEnd,
                     tokens: newTokens,
                     error: lexPartialResult.error,
                     lastRead: lexerRead,
@@ -383,10 +383,10 @@ export namespace Lexer {
         const document: GraphemeDocument = line.document;
         const documentBlob = line.document.blob;
         const documentLength = documentBlob.length;
-        const startPosition = line.position;
+        const positionStart = line.position;
 
-        let currentPosition = startPosition;
-        let continueLexing = startPosition.documentIndex < documentLength;
+        let currentPosition = positionStart;
+        let continueLexing = positionStart.documentIndex < documentLength;
 
         if (!continueLexing) {
             return {
@@ -506,7 +506,7 @@ export namespace Lexer {
 
                 else { throw unexpectedReadError(document.blob, currentPosition.documentIndex); }
 
-                currentPosition = token.endPosition;
+                currentPosition = token.positionEnd;
                 newTokens.push(token);
 
                 if (currentPosition.documentIndex === documentLength) {
@@ -532,8 +532,8 @@ export namespace Lexer {
                     kind: PartialResultKind.Partial,
                     value: {
                         tokens: newTokens,
-                        startPosition: startPosition,
-                        endPosition: currentPosition,
+                        positionStart: positionStart,
+                        positionEnd: currentPosition,
                     },
                     error: maybeError,
                 };
@@ -550,8 +550,8 @@ export namespace Lexer {
                 kind: PartialResultKind.Ok,
                 value: {
                     tokens: newTokens,
-                    startPosition: startPosition,
-                    endPosition: currentPosition,
+                    positionStart: positionStart,
+                    positionEnd: currentPosition,
                 }
             }
         }
@@ -586,34 +586,34 @@ export namespace Lexer {
     //     return readTokenFromSlice(document, documentIndex, TokenKind.StringLiteral, stringEndIndex + 1);
     // }
 
-    function readHexLiteral(document: GraphemeDocument, startPosition: GraphemeDocumentPosition): Token {
-        const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpHex, document, startPosition);
+    function readHexLiteral(document: GraphemeDocument, positionStart: GraphemeDocumentPosition): Token {
+        const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpHex, document, positionStart);
         if (maybeDocumentIndexEnd === undefined) {
-            const graphemePosition = StringHelpers.graphemePositionAt(document.blob, startPosition.documentIndex);
+            const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
             throw new LexerError.ExpectedHexLiteralError(graphemePosition);
         }
 
-        const endPosition: GraphemeDocumentPosition = {
+        const positionEnd: GraphemeDocumentPosition = {
             documentIndex: maybeDocumentIndexEnd,
-            lineNumber: startPosition.lineNumber,
+            lineNumber: positionStart.lineNumber,
             columnNumber: document.graphemeIndex2DocumentIndex[maybeDocumentIndexEnd],
         }
-        return readTokenFromPositions(TokenKind.HexLiteral, document, startPosition, endPosition);
+        return readTokenFromPositions(TokenKind.HexLiteral, document, positionStart, positionEnd);
     }
 
-    function readNumericLiteral(document: GraphemeDocument, startPosition: GraphemeDocumentPosition): Token {
-        const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, document, startPosition);
+    function readNumericLiteral(document: GraphemeDocument, positionStart: GraphemeDocumentPosition): Token {
+        const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, document, positionStart);
         if (maybeDocumentIndexEnd === undefined) {
-            const graphemePosition = StringHelpers.graphemePositionAt(document.blob, startPosition.documentIndex);
+            const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
             throw new LexerError.ExpectedNumericLiteralError(graphemePosition);
         }
 
-        const endPosition: GraphemeDocumentPosition = {
+        const positionEnd: GraphemeDocumentPosition = {
             documentIndex: maybeDocumentIndexEnd,
-            lineNumber: startPosition.lineNumber,
+            lineNumber: positionStart.lineNumber,
             columnNumber: document.graphemeIndex2DocumentIndex[maybeDocumentIndexEnd],
         }
-        return readTokenFromPositions(TokenKind.HexLiteral, document, startPosition, endPosition);
+        return readTokenFromPositions(TokenKind.HexLiteral, document, positionStart, positionEnd);
     }
 
     // function readComments(
@@ -886,8 +886,8 @@ export namespace Lexer {
 
         return {
             kind: tokenKind,
-            startPosition,
-            endPosition: {
+            positionStart: startPosition,
+            positionEnd: {
                 documentIndex: documentIndexEnd,
                 lineNumber: startPosition.lineNumber,
                 columnNumber: columnNumberEnd,
@@ -900,13 +900,13 @@ export namespace Lexer {
         tokenKind: TokenKind,
         document: GraphemeDocument,
         startPosition: GraphemeDocumentPosition,
-        endPosition: GraphemeDocumentPosition,
+        positionEnd: GraphemeDocumentPosition,
     ): Token {
         return {
             kind: tokenKind,
-            startPosition,
-            endPosition,
-            data: document.blob.substring(startPosition.documentIndex, endPosition.documentIndex),
+            positionStart: startPosition,
+            positionEnd: positionEnd,
+            data: document.blob.substring(startPosition.documentIndex, positionEnd.documentIndex),
         };
     }
 
