@@ -1106,7 +1106,7 @@ export class Parser {
     }
 
     private readRecursivePrimaryExpression(head: Ast.TPrimaryExpression): Ast.RecursivePrimaryExpression {
-        const tokenRangeStart = head.tokenRange.tokenStartIndex;
+        const tokenRangeStart = head.tokenRange.startTokenIndex;
         this.startTokenRangeAt(Ast.NodeKind.RecursivePrimaryExpression, tokenRangeStart);
 
         const recursiveExpressions = [];
@@ -1819,16 +1819,17 @@ export class Parser {
         return this.startTokenRangeAt(nodeKind, this.tokenIndex);
     }
 
-    private startTokenRangeAt(nodeKind: Ast.NodeKind, tokenStartIndex: number) {
-        if (tokenStartIndex >= this.lexerSnapshot.tokens.length) {
+    private startTokenRangeAt(nodeKind: Ast.NodeKind, tokenIndex: number) {
+        if (tokenIndex >= this.lexerSnapshot.tokens.length) {
             const topOfTokenRangeStack = this.tokenRangeStack[this.tokenRangeStack.length - 1].nodeKind;
             throw new ParserError.UnexpectedEndOfTokensError(topOfTokenRangeStack);
         }
 
+        const currentToken = this.lexerSnapshot.tokens[tokenIndex];
         this.tokenRangeStack.push({
             nodeKind,
-            tokenStartIndex,
-            documentStartIndex: this.lexerSnapshot.tokens[tokenStartIndex].documentStartIndex,
+            startTokenIndex: tokenIndex,
+            startPosition: currentToken.startPosition,
         });
     }
 
@@ -1840,30 +1841,22 @@ export class Parser {
     }
 
     private popTokenRange(): TokenRange {
-        const lexerSnapshot = this.lexerSnapshot;
         const maybeElement: Option<TokenRangeStackElement> = this.tokenRangeStack.pop();
-        if (!maybeElement) {
+        if (maybeElement === undefined) {
             throw new CommonError.InvariantError("tried to pop from an empty stack");
         }
 
-        const tokenStartIndex = maybeElement.tokenStartIndex;
-        const tokenEndIndex = this.tokenIndex;
-        const maybeLastInclusiveToken: Option<Token> = lexerSnapshot.tokens[tokenEndIndex - 1];
-
-        let documentEndIndex;
-        if (maybeLastInclusiveToken) {
-            documentEndIndex = maybeLastInclusiveToken.startPosition.;
-        }
-        else {
-            documentEndIndex = lexerSnapshot.document.length;
-        }
+        const element: TokenRangeStackElement = maybeElement;
+        const startPosition = element.startPosition;
+        const endTokenIndex = this.tokenIndex;
+        const lastInclusiveToken = this.lexerSnapshot.tokens[endTokenIndex - 1];
 
         return {
-            tokenStartIndex,
-            tokenEndIndex,
-            startPosition: maybeElement.startPosition,
-            endPosition: maybeElement.endPosition,
-            hash: tokenRangeHashFrom(maybeElement.nodeKind, tokenStartIndex, tokenEndIndex),
+            startTokenIndex: element.startTokenIndex,
+            endTokenIndex,
+            startPosition: element.startPosition,
+            endPosition: lastInclusiveToken.endPosition,
+            hash: tokenRangeHashFrom(maybeElement.nodeKind, startPosition.lineNumber, startPosition.columnNumber),
         };
     }
 
@@ -1875,7 +1868,7 @@ export class Parser {
         const token = this.lexerSnapshot.tokens[tokenIndex];
 
         return {
-            tokenStartIndex: tokenIndex,
+            startTokenIndex: tokenIndex,
             tokenEndIndex: tokenIndex + 1,
             documentStartIndex: token.documentStartIndex,
             documentEndIndex: token.documentEndIndex,
@@ -1981,8 +1974,8 @@ const enum BracketDisambiguation {
 
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind,
+    readonly startTokenIndex: number,
     readonly startPosition: GraphemeDocumentPosition,
-    readonly endPosition: GraphemeDocumentPosition,
 }
 
 interface ParserState {
