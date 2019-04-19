@@ -1,11 +1,13 @@
+import { GraphemeDocumentPosition } from "../lexer";
+
 export type TokenRangeMap<T> = { [key: string]: T; }
 
 // keep track of how many tokens and code units make up a TNode in the range of [start, end).
 export interface TokenRange {
     readonly tokenStartIndex: number,
     readonly tokenEndIndex: number // exclusive
-    readonly documentStartIndex: number,
-    readonly documentEndIndex: number, // exclusive
+    readonly startPosition: GraphemeDocumentPosition,
+    readonly endPosition: GraphemeDocumentPosition,
     readonly hash: string,
 }
 
@@ -15,8 +17,8 @@ export interface TokenRange {
 // has the same TokenRange as its child, Identifier.
 export function tokenRangeHashFrom(
     tag: string,
-    tokenStartIndex: number,
-    tokenEndIndex: number,
+    lineNumber: number,
+    columnNumber: number,
 ): string {
-    return `${tag}:${tokenStartIndex}:${tokenEndIndex}`;
+    return `${tag}:${lineNumber}:${columnNumber}`;
 }

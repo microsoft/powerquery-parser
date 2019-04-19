@@ -8,6 +8,7 @@ import { Token, TokenKind } from "../lexer/token";
 import { Ast } from "./ast";
 import { ParserError } from "./error";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
+import { GraphemeDocumentPosition } from "../lexer";
 
 export class Parser {
     private currentTokenKind: Option<TokenKind>;
@@ -1205,8 +1206,8 @@ export class Parser {
 
             const lexerSnapshot = this.lexerSnapshot;
             const tokens = lexerSnapshot.tokens;
-            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].documentStartIndex;
-            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].documentEndIndex;
+            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].startPosition.documentIndex;
+            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].endPosition.documentIndex;
             literal = lexerSnapshot.document.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
         }
 
@@ -1840,18 +1841,18 @@ export class Parser {
 
     private popTokenRange(): TokenRange {
         const lexerSnapshot = this.lexerSnapshot;
-        const element = this.tokenRangeStack.pop();
-        if (!element) {
+        const maybeElement: Option<TokenRangeStackElement> = this.tokenRangeStack.pop();
+        if (!maybeElement) {
             throw new CommonError.InvariantError("tried to pop from an empty stack");
         }
 
-        const tokenStartIndex = element.tokenStartIndex;
+        const tokenStartIndex = maybeElement.tokenStartIndex;
         const tokenEndIndex = this.tokenIndex;
         const maybeLastInclusiveToken: Option<Token> = lexerSnapshot.tokens[tokenEndIndex - 1];
 
         let documentEndIndex;
         if (maybeLastInclusiveToken) {
-            documentEndIndex = maybeLastInclusiveToken.documentEndIndex;
+            documentEndIndex = maybeLastInclusiveToken.startPosition.;
         }
         else {
             documentEndIndex = lexerSnapshot.document.length;
@@ -1860,9 +1861,9 @@ export class Parser {
         return {
             tokenStartIndex,
             tokenEndIndex,
-            documentStartIndex: element.documentStartIndex,
-            documentEndIndex,
-            hash: tokenRangeHashFrom(element.nodeKind, tokenStartIndex, tokenEndIndex),
+            startPosition: maybeElement.startPosition,
+            endPosition: maybeElement.endPosition,
+            hash: tokenRangeHashFrom(maybeElement.nodeKind, tokenStartIndex, tokenEndIndex),
         };
     }
 
@@ -1980,8 +1981,8 @@ const enum BracketDisambiguation {
 
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind,
-    readonly tokenStartIndex: number,
-    readonly documentStartIndex: number,
+    readonly startPosition: GraphemeDocumentPosition,
+    readonly endPosition: GraphemeDocumentPosition,
 }
 
 interface ParserState {
