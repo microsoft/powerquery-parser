@@ -891,6 +891,7 @@ export namespace Lexer {
     // }
 
     // the quoted identifier case has already been taken care of
+    // null-literal is also read here
     function readKeywordOrIdentifier(document: GraphemeString, positionStart: GraphemePosition): Token {
         const documentBlob = document.blob;
         const documentIndexStart = positionStart.documentIndex;
@@ -909,9 +910,17 @@ export namespace Lexer {
             const substring = documentBlob.substring(documentIndexStart, documentIndexEnd);
 
             const maybeKeywordTokenKind = maybeKeywordTokenKindFrom(substring);
-            const tokenKind = maybeKeywordTokenKind === undefined
-                ? TokenKind.Identifier
-                : maybeKeywordTokenKind;
+
+            let tokenKind;
+            if (maybeKeywordTokenKind !== undefined) {
+                tokenKind = maybeKeywordTokenKind;
+            }
+            else if (substring === "null") {
+                tokenKind = TokenKind.NullLiteral;
+            }
+            else {
+                tokenKind = TokenKind.Identifier;
+            }
 
             return {
                 kind: tokenKind,
