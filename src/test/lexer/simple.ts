@@ -1,31 +1,42 @@
-// import { expect } from "chai";
-// import "mocha";
-// import { Lexer, TokenKind, Keywords } from "../../lexer";
+import { expect } from "chai";
+import "mocha";
+import { Lexer, LexerSnapshot, LexerState, TokenKind } from "../../lexer";
 
-// function expectLexSuccess(document: string): Lexer.TouchedLexer {
-//     let lexer: Lexer.TLexer = Lexer.from(document);
-//     lexer = Lexer.remaining(lexer);
+function expectLexSuccess(document: string): LexerState {
+    const state: LexerState = Lexer.fromSplit(document, "\n");
+    if (Lexer.isErrorState(state)) {
+        const maybeErrorLine = Lexer.firstErrorLine(state);
+        if (maybeErrorLine === undefined) {
+            throw new Error(`AssertFailed: maybeErrorLine === undefined`);
+        }
+        const errorLine = maybeErrorLine;
 
-//     if (lexer.kind !== Lexer.LexerKind.Touched) {
-//         const details = { lexer };
-//         throw new Error(`lexer.kind !== Lexer.LexerKind.Touched: ${JSON.stringify(details, null, 4)}`);
-//     }
+        const details = {
+            errorLine,
+            error: errorLine.error.message,
+        };
+        throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, null, 4)}`);
+    }
 
-//     return lexer;
-// }
+    return state;
+}
 
-// function expectTokens(document: string, expected: ReadonlyArray<[TokenKind, string]>): Lexer.TouchedLexer {
-//     const touchedLexer = expectLexSuccess(document);
-//     const actual = touchedLexer.tokens.map(token => [token.kind, token.data]);
-//     const details = {
-//         actual,
-//         expected,
-//     };
+function expectLexerSnapshot(document: string): LexerSnapshot {
+    const state = expectLexSuccess(document);
+    return Lexer.snapshot(state);
+}
 
-//     expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
+function expectTokens(document: string, expected: ReadonlyArray<[TokenKind, string]>): LexerSnapshot {
+    const snapshot = expectLexerSnapshot(document);
+    const actual = snapshot.tokens.map(token => [token.kind, token.data]);
+    const details = {
+        actual,
+        expected,
+    };
 
-//     return touchedLexer;
-// }
+    expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
+    return snapshot;
+}
 
 // describe(`Lexer.Simple.TokenKinds`, () => {
 //     it(`HexLiteral`, () => {
@@ -115,36 +126,36 @@
 //         expectTokens(document, expected);
 //     });
 
-//     it(`NumericLiteral`, () => {
-//         const document = `
-// 1
-// 1e1
-// 1e-1
-// 1e+1
-// .1
-// .1e1
-// .1e-1
-// .1e+1
-// 0.1
-// 0.1e1
-// 0.1e-1
-// 0.1e+1`;
-//         const expected: ReadonlyArray<[TokenKind, string]> = [
-//             [TokenKind.NumericLiteral, `1`],
-//             [TokenKind.NumericLiteral, `1e1`],
-//             [TokenKind.NumericLiteral, `1e-1`],
-//             [TokenKind.NumericLiteral, `1e+1`],
-//             [TokenKind.NumericLiteral, `.1`],
-//             [TokenKind.NumericLiteral, `.1e1`],
-//             [TokenKind.NumericLiteral, `.1e-1`],
-//             [TokenKind.NumericLiteral, `.1e+1`],
-//             [TokenKind.NumericLiteral, `0.1`],
-//             [TokenKind.NumericLiteral, `0.1e1`],
-//             [TokenKind.NumericLiteral, `0.1e-1`],
-//             [TokenKind.NumericLiteral, `0.1e+1`],
-//         ];
-//         expectTokens(document, expected);
-//     });
+it(`NumericLiteral`, () => {
+    const document = `
+1
+1e1
+1e-1
+1e+1
+.1
+.1e1
+.1e-1
+.1e+1
+0.1
+0.1e1
+0.1e-1
+0.1e+1`;
+    const expected: ReadonlyArray<[TokenKind, string]> = [
+        [TokenKind.NumericLiteral, `1`],
+        [TokenKind.NumericLiteral, `1e1`],
+        [TokenKind.NumericLiteral, `1e-1`],
+        [TokenKind.NumericLiteral, `1e+1`],
+        [TokenKind.NumericLiteral, `.1`],
+        [TokenKind.NumericLiteral, `.1e1`],
+        [TokenKind.NumericLiteral, `.1e-1`],
+        [TokenKind.NumericLiteral, `.1e+1`],
+        [TokenKind.NumericLiteral, `0.1`],
+        [TokenKind.NumericLiteral, `0.1e1`],
+        [TokenKind.NumericLiteral, `0.1e-1`],
+        [TokenKind.NumericLiteral, `0.1e+1`],
+    ];
+    expectTokens(document, expected);
+});
 
 //     it(`operator-or-punctuator`, () => {
 //         const document = `

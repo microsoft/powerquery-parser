@@ -19,6 +19,7 @@ export type TErrorLexerLine = (
 export interface LexerState {
     readonly lines: ReadonlyArray<TLexerLine>,
     readonly multilineKindUpdate: { [lineNumber: number]: LexerMultilineKind; }
+    readonly separator: string,
 }
 
 export interface ILexerLine {

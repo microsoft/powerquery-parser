@@ -4,6 +4,7 @@ import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { ErrorLine, LexerLineKind, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine as TLexerLineError, TLexerLine, TLexerLineExceptUntouched, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
 import { Token, TokenKind } from "./token";
+import { LexerSnapshot } from "./lexerSnapshot";
 
 type GraphemeString = StringHelpers.GraphemeString;
 type GraphemePosition = StringHelpers.GraphemePosition;
@@ -19,10 +20,11 @@ type GraphemePosition = StringHelpers.GraphemePosition;
 
 export namespace Lexer {
 
-    export function from(blob: string, lexAfter = true): LexerState {
-        let newState = {
+    export function from(blob: string, separator = "\n", lexAfter = true): LexerState {
+        let newState: LexerState = {
             lines: [lineFrom(blob, 0)],
             multilineKindUpdate: {},
+            separator,
         };
 
         if (lexAfter) {
@@ -240,14 +242,26 @@ export namespace Lexer {
     //     }
     // }
 
-    // // get a copy of all document, tokens, and comments lexed up to this point
-    // export function snapshot(lexer: TLexer): LexerSnapshot {
-    //     return new LexerSnapshot(
-    //         lexer.document,
-    //         lexer.tokens,
-    //         lexer.comments,
-    //     )
-    // }
+    // get a frozen copy of all document, tokens, and comments lexed up to this point
+    export function snapshot(state: LexerState): LexerSnapshot {
+        const allDocuments = state
+            .lines
+            .map(line => line.document)
+            .join(state.separator);
+
+        const allTokens: Token[] = [];
+        for (let line of state.lines) {
+            for (let token of line.tokens) {
+                allTokens.push({
+                    ...token,
+                    positionStart: { ...token.positionStart },
+                    positionEnd: { ...token.positionEnd },
+                });
+            }
+        }
+
+        return new LexerSnapshot(allDocuments, allTokens);
+    }
 
     // // lex one token and all comments before that token
     // export function next(lexer: TLexer): TLexerExceptUntouched {
@@ -279,15 +293,15 @@ export namespace Lexer {
         }
     }
 
-    // function firstErrorLine(state: LexerState): Option<TLexerLineError> {
-    //     for (let line of state.lines) {
-    //         if (isErrorLine(line)) {
-    //             return line;
-    //         }
-    //     }
+    export function firstErrorLine(state: LexerState): Option<TLexerLineError> {
+        for (let line of state.lines) {
+            if (isErrorLine(line)) {
+                return line;
+            }
+        }
 
-    //     return undefined;
-    // }
+        return undefined;
+    }
 
     // function lex(state: TLexer, strategy: LexerStrategy): TLexerExceptUntouched {
     //     switch (state.kind) {
@@ -368,6 +382,17 @@ export namespace Lexer {
     }
 
     function lex(line: TLexerLine): PartialResult<LexerRead, LexerError.TLexerError> {
+        if (!line.document.blob) {
+            return {
+                kind: PartialResultKind.Ok,
+                value: {
+                    tokens: [],
+                    positionStart: line.position,
+                    positionEnd: line.position,
+                }
+            };
+        }
+
         const document: GraphemeString = line.document;
         const documentBlob = line.document.blob;
         const documentLength = documentBlob.length;
@@ -423,22 +448,22 @@ export namespace Lexer {
 
                 else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(document, currentPosition); }
 
-                // else if (chr === ".") {
-                //     const secondChr = document[documentIndex + 1];
+                else if (chr1 === ".") {
+                    const chr2 = document.blob[currentPosition.documentIndex + 1];
 
-                //     if (secondChr === undefined) {
-                //         const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
-                //         throw new LexerError.UnexpectedEofError(graphemePosition);
-                //     }
-                //     else if ("1" <= secondChr && secondChr <= "9") { token = readNumericLiteral(document, documentIndex); }
-                //     else if (secondChr === ".") {
-                //         const thirdChr = document[documentIndex + 2];
+                    if (chr2 === undefined) {
+                        const graphemePosition = StringHelpers.graphemePositionAt(document.blob, currentPosition.documentIndex);
+                        throw new LexerError.UnexpectedEofError(graphemePosition);
+                    }
+                    else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(document, currentPosition); }
+                    else if (chr2 === ".") {
+                        const chr3 = document.blob[currentPosition.documentIndex + 2];
 
-                //         if (thirdChr === ".") { token = readConstantToken(documentIndex, TokenKind.Ellipsis, "..."); }
-                //         else { throw unexpectedReadError(document, documentIndex) }
-                //     }
-                //     else { throw unexpectedReadError(document, documentIndex) }
-                // }
+                        if (chr3 === ".") { token = readConstant(TokenKind.Ellipsis, document, currentPosition, 3); }
+                        else { throw unexpectedReadError(document.blob, currentPosition.documentIndex) }
+                    }
+                    else { throw unexpectedReadError(document.blob, currentPosition.documentIndex) }
+                }
 
                 // else if (chr === ">") {
                 //     const secondChr = document[documentIndex + 1];
