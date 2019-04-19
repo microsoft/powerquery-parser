@@ -4,8 +4,8 @@ export type TokenRangeMap<T> = { [key: string]: T; }
 
 // keep track of how many tokens and code units make up a TNode in the range of [start, end).
 export interface TokenRange {
-    readonly tokenIndexStart: number,
-    readonly tokenIndexEnd: number // exclusive
+    readonly startTokenIndex: number,
+    readonly endTokenIndex: number // exclusive
     readonly startPosition: GraphemeDocumentPosition,
     readonly endPosition: GraphemeDocumentPosition,
     readonly hash: string,
@@ -17,8 +17,8 @@ export interface TokenRange {
 // has the same TokenRange as its child, Identifier.
 export function tokenRangeHashFrom(
     tag: string,
-    lineNumber: number,
-    columnNumber: number,
+    startPosition: GraphemeDocumentPosition,
+    endPosition: GraphemeDocumentPosition,
 ): string {
-    return `${tag}:${lineNumber}:${columnNumber}`;
+    return `${tag}:${startPosition.lineNumber},${startPosition.columnNumber}:${endPosition.lineNumber},${endPosition.columnNumber}`;
 }

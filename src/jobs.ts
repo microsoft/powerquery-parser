@@ -7,9 +7,9 @@ export interface LexAndParseSuccess {
     readonly comments: ReadonlyArray<TComment>,
 }
 
-export function lexAndParse(document: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
-    let lexer: Lexer.TLexer = Lexer.from(document);
-    lexer = Lexer.remaining(lexer);
+export function lexAndParse(blob: string, separator: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
+    let state = Lexer.fromSplit(blob, separator);
+
     if (Lexer.hasError(lexer)) {
         return {
             kind: ResultKind.Err,

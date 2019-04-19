@@ -10,7 +10,7 @@ export class LexerSnapshot {
     ) { }
 
     public tokenPosition(token: Token): TokenPosition {
-        const graphemePosition = StringHelpers.graphemePositionAt(this.document, token.documentStartIndex);
+        const graphemePosition = StringHelpers.graphemePositionAt(this.document, token.startPosition.documentIndex);
         return {
             token,
             ...graphemePosition

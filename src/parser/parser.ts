@@ -1856,7 +1856,7 @@ export class Parser {
             endTokenIndex,
             startPosition: element.startPosition,
             endPosition: lastInclusiveToken.endPosition,
-            hash: tokenRangeHashFrom(maybeElement.nodeKind, startPosition.lineNumber, startPosition.columnNumber),
+            hash: tokenRangeHashFrom(maybeElement.nodeKind, startPosition, startPosition),
         };
     }
 
@@ -1866,13 +1866,15 @@ export class Parser {
     ): TokenRange {
         const tokenIndex = this.tokenIndex;
         const token = this.lexerSnapshot.tokens[tokenIndex];
+        const startPosition = token.startPosition;
+        const endPosition = token.endPosition;
 
         return {
             startTokenIndex: tokenIndex,
-            tokenEndIndex: tokenIndex + 1,
-            documentStartIndex: token.documentStartIndex,
-            documentEndIndex: token.documentEndIndex,
-            hash: tokenRangeHashFrom(tag, tokenIndex, tokenIndex + 1),
+            endTokenIndex: tokenIndex + 1,
+            startPosition,
+            endPosition,
+            hash: tokenRangeHashFrom(tag, startPosition, endPosition),
         }
     }
 

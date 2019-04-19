@@ -23,7 +23,23 @@ export namespace Lexer {
         }
     }
 
-    export function appendNewLine(state: LexerState, blob: string, lexAfter = true): LexerState {
+    export function fromSplit(blob: string, separator: string) {
+        const lines = blob.split(separator);
+        const numLines = lines.length;
+
+        let state = from(lines[0]);
+        if (numLines === 1) {
+            return state;
+        }
+
+        for (let index=1; index<numLines; index++) {
+            state = appendLine(state, lines[index]);
+        }
+
+        return state;
+    }
+
+    export function appendLine(state: LexerState, blob: string, lexAfter = true): LexerState {
         let newState: LexerState = {
             ...state,
             lines: state.lines.concat(lineFrom(blob, state.lines.length)),
