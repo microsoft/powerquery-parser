@@ -2,7 +2,7 @@ import { CommonError, Pattern, StringHelpers, isNever } from "../common";
 import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
-import { GraphemeDocument, GraphemeDocumentPosition, LexerLineKind, LexerMultilineKind, LexerRead, LexerState, TLexerLine, UntouchedLine, TLexerLineExceptUntouched } from "./lexerContracts";
+import { GraphemeDocument, GraphemeDocumentPosition, LexerLineKind, LexerMultilineKind, LexerRead, LexerState, TLexerLine, UntouchedLine, TLexerLineExceptUntouched, ErrorLine, TouchedWithErrorLine, TErrorLexerLine as TLexerLineError } from "./lexerContracts";
 import { Token, TokenKind } from "./token";
 
 // the lexer is
@@ -32,8 +32,11 @@ export namespace Lexer {
             return state;
         }
 
-        for (let index=1; index<numLines; index++) {
+        for (let index = 1; index < numLines; index++) {
             state = appendLine(state, lines[index]);
+            if (isErrorLine(state.lines[index])) {
+                return state;
+            }
         }
 
         return state;
@@ -268,20 +271,35 @@ export namespace Lexer {
     //     return lex(state, LexerStrategy.UntilEofOrError);
     // }
 
-    // export function hasError(lexer: TLexer): lexer is (ErrorLexer | TouchedWithErrorLexer) {
-    //     switch (lexer.kind) {
-    //         case LexerKind.Error:
-    //         case LexerKind.TouchedWithError:
-    //             return true;
+    export function isErrorState(state: LexerState): boolean {
+        const linesWithErrors: ReadonlyArray<ErrorLine | TouchedWithErrorLine> = state.lines.filter(isErrorLine);
+        return linesWithErrors.length !== 0;
+    }
 
-    //         case LexerKind.Touched:
-    //         case LexerKind.Untouched:
-    //             return false;
+    export function isErrorLine(line: TLexerLine): line is TLexerLineError {
+        switch (line.kind) {
+            case LexerLineKind.Error:
+            case LexerLineKind.TouchedWithError:
+                return true;
 
-    //         default:
-    //             throw isNever(lexer);
-    //     }
-    // }
+            case LexerLineKind.Touched:
+            case LexerLineKind.Untouched:
+                return false;
+
+            default:
+                throw isNever(line);
+        }
+    }
+
+    function firstErrorLine(state: LexerState): Option<TLexerLineError> {
+        for (let line of state.lines) {
+            if (isErrorLine(line)) {
+                return line;
+            }
+        }
+
+        return undefined;
+    }
 
     // function lex(state: TLexer, strategy: LexerStrategy): TLexerExceptUntouched {
     //     switch (state.kind) {

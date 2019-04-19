@@ -11,6 +11,11 @@ export type TLexerLine = (
     | ErrorLine
 )
 
+export type TErrorLexerLine = (
+    | ErrorLine
+    | TouchedWithErrorLine
+)
+
 export interface LexerState {
     readonly lines: ReadonlyArray<TLexerLine>,
     readonly multilineKindUpdate: { [lineNumber: number]: LexerMultilineKind; }

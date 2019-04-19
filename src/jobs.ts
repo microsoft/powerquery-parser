@@ -10,10 +10,10 @@ export interface LexAndParseSuccess {
 export function lexAndParse(blob: string, separator: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
     let state = Lexer.fromSplit(blob, separator);
 
-    if (Lexer.hasError(lexer)) {
+    if (Lexer.isErrorState(state)) {
         return {
             kind: ResultKind.Err,
-            error: lexer.error,
+            error: state.error,
         };
     }
 

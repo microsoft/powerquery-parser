@@ -5,7 +5,7 @@ parseDocument("1");
 
 // @ts-ignore
 function parseDocument(document: string) {
-    const parseResult = lexAndParse(document);
+    const parseResult = lexAndParse(document, "\n");
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, null, 4));
     }
