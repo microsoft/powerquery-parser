@@ -157,59 +157,59 @@ it(`NumericLiteral`, () => {
     expectTokens(document, expected);
 });
 
-//     it(`operator-or-punctuator`, () => {
-//         const document = `
-// ,
-// ;
-// =
-// <
-// <=
-// >
-// >=
-// <>
-// +
-// -
-// *
-// /
-// &
-// (
-// )
-// [
-// ]
-// {
-// }
-// @
-// ?
-// =>
-// // TODO look into adding ..
-// ...`;
-//         const expected: ReadonlyArray<[TokenKind, string]> = [
-//             [TokenKind.Comma, `,`],
-//             [TokenKind.Semicolon, `;`],
-//             [TokenKind.Equal, `=`],
-//             [TokenKind.LessThan, `<`],
-//             [TokenKind.LessThanEqualTo, `<=`],
-//             [TokenKind.GreaterThan, `>`],
-//             [TokenKind.GreaterThanEqualTo, `>=`],
-//             [TokenKind.NotEqual, `<>`],
-//             [TokenKind.Plus, `+`],
-//             [TokenKind.Minus, `-`],
-//             [TokenKind.Asterisk, `*`],
-//             [TokenKind.Division, `/`],
-//             [TokenKind.Ampersand, `&`],
-//             [TokenKind.LeftParenthesis, `(`],
-//             [TokenKind.RightParenthesis, `)`],
-//             [TokenKind.LeftBracket, `[`],
-//             [TokenKind.RightBracket, `]`],
-//             [TokenKind.LeftBrace, `{`],
-//             [TokenKind.RightBrace, `}`],
-//             [TokenKind.AtSign, `@`],
-//             [TokenKind.QuestionMark, `?`],
-//             [TokenKind.FatArrow, `=>`],
-//             [TokenKind.Ellipsis, `...`],
-//         ];
-//         expectTokens(document, expected);
-//     });
+    // TODO: look into adding `..`
+    it(`operator-or-punctuator`, () => {
+        const document = `
+,
+;
+=
+<
+<=
+>
+>=
+<>
++
+-
+*
+/
+&
+(
+)
+[
+]
+{
+}
+@
+?
+=>
+...`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.Comma, `,`],
+            [TokenKind.Semicolon, `;`],
+            [TokenKind.Equal, `=`],
+            [TokenKind.LessThan, `<`],
+            [TokenKind.LessThanEqualTo, `<=`],
+            [TokenKind.GreaterThan, `>`],
+            [TokenKind.GreaterThanEqualTo, `>=`],
+            [TokenKind.NotEqual, `<>`],
+            [TokenKind.Plus, `+`],
+            [TokenKind.Minus, `-`],
+            [TokenKind.Asterisk, `*`],
+            [TokenKind.Division, `/`],
+            [TokenKind.Ampersand, `&`],
+            [TokenKind.LeftParenthesis, `(`],
+            [TokenKind.RightParenthesis, `)`],
+            [TokenKind.LeftBracket, `[`],
+            [TokenKind.RightBracket, `]`],
+            [TokenKind.LeftBrace, `{`],
+            [TokenKind.RightBrace, `}`],
+            [TokenKind.AtSign, `@`],
+            [TokenKind.QuestionMark, `?`],
+            [TokenKind.FatArrow, `=>`],
+            [TokenKind.Ellipsis, `...`],
+        ];
+        expectTokens(document, expected);
+    });
 
 //     it(`StringLiteral`, () => {
 //         const document = `
