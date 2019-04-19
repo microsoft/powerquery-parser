@@ -16,14 +16,21 @@ import { Token, TokenKind } from "./token";
 
 export namespace Lexer {
 
-    export function from(blob: string): LexerState {
-        return {
+    export function from(blob: string, lexAfter = true): LexerState {
+        let newState = {
             lines: [lineFrom(blob, 0)],
             multilineKindUpdate: {},
+        };
+
+        if (lexAfter) {
+            return lexLine(newState);
+        }
+        else {
+            return newState;
         }
     }
 
-    export function fromSplit(blob: string, separator: string) {
+    export function fromSplit(blob: string, separator: string): LexerState {
         const lines = blob.split(separator);
         const numLines = lines.length;
 
@@ -101,7 +108,6 @@ export namespace Lexer {
     }
 
     function lineFrom(blob: string, lineNumber: number): UntouchedLine {
-
         return {
             kind: LexerLineKind.Untouched,
             multilineKind: LexerMultilineKind.Default,
@@ -129,6 +135,9 @@ export namespace Lexer {
             documentIndex2GraphemeIndex[summedCodeUnits] = index;
             summedCodeUnits += graphemes[index].length;
         }
+
+        graphemeIndex2DocumentIndex[numGraphemes] = blob.length;
+        documentIndex2GraphemeIndex[blob.length] = numGraphemes;
 
         return {
             blob,
@@ -291,15 +300,15 @@ export namespace Lexer {
         }
     }
 
-    function firstErrorLine(state: LexerState): Option<TLexerLineError> {
-        for (let line of state.lines) {
-            if (isErrorLine(line)) {
-                return line;
-            }
-        }
+    // function firstErrorLine(state: LexerState): Option<TLexerLineError> {
+    //     for (let line of state.lines) {
+    //         if (isErrorLine(line)) {
+    //             return line;
+    //         }
+    //     }
 
-        return undefined;
-    }
+    //     return undefined;
+    // }
 
     // function lex(state: TLexer, strategy: LexerStrategy): TLexerExceptUntouched {
     //     switch (state.kind) {
@@ -396,7 +405,6 @@ export namespace Lexer {
         }
 
         const newTokens: Token[] = [];
-        const newComments: Comment[] = [];
         let maybeError: Option<LexerError.TLexerError>;
         while (continueLexing) {
             currentPosition = drainWhitespace(document, currentPosition);
@@ -434,7 +442,7 @@ export namespace Lexer {
                     else { token = readNumericLiteral(document, currentPosition); }
                 }
 
-                // else if ("1" <= chr && chr <= "9") { token = readNumericLiteral(document, documentIndex); }
+                else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(document, currentPosition); }
 
                 // else if (chr === ".") {
                 //     const secondChr = document[documentIndex + 1];
@@ -527,7 +535,7 @@ export namespace Lexer {
         }
 
         if (maybeError) {
-            if (newTokens.length || newComments.length) {
+            if (newTokens.length) {
                 return {
                     kind: PartialResultKind.Partial,
                     value: {
@@ -587,33 +595,35 @@ export namespace Lexer {
     // }
 
     function readHexLiteral(document: GraphemeDocument, positionStart: GraphemeDocumentPosition): Token {
-        const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpHex, document, positionStart);
+        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, document, positionStart);
         if (maybeDocumentIndexEnd === undefined) {
             const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
             throw new LexerError.ExpectedHexLiteralError(graphemePosition);
         }
+        const documentIndexEnd: number = maybeDocumentIndexEnd;
 
         const positionEnd: GraphemeDocumentPosition = {
-            documentIndex: maybeDocumentIndexEnd,
+            documentIndex: documentIndexEnd,
             lineNumber: positionStart.lineNumber,
-            columnNumber: document.graphemeIndex2DocumentIndex[maybeDocumentIndexEnd],
+            columnNumber: document.graphemeIndex2DocumentIndex[documentIndexEnd],
         }
         return readTokenFromPositions(TokenKind.HexLiteral, document, positionStart, positionEnd);
     }
 
     function readNumericLiteral(document: GraphemeDocument, positionStart: GraphemeDocumentPosition): Token {
-        const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, document, positionStart);
+        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, document, positionStart);
         if (maybeDocumentIndexEnd === undefined) {
             const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
             throw new LexerError.ExpectedNumericLiteralError(graphemePosition);
         }
+        const documentIndexEnd: number = maybeDocumentIndexEnd;
 
         const positionEnd: GraphemeDocumentPosition = {
-            documentIndex: maybeDocumentIndexEnd,
+            documentIndex: documentIndexEnd,
             lineNumber: positionStart.lineNumber,
-            columnNumber: document.graphemeIndex2DocumentIndex[maybeDocumentIndexEnd],
+            columnNumber: document.graphemeIndex2DocumentIndex[documentIndexEnd],
         }
-        return readTokenFromPositions(TokenKind.HexLiteral, document, positionStart, positionEnd);
+        return readTokenFromPositions(TokenKind.NumericLiteral, document, positionStart, positionEnd);
     }
 
     // function readComments(
@@ -942,7 +952,7 @@ export namespace Lexer {
         const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, document.blob, documentIndex);
 
         return maybeLength !== undefined
-            ? documentIndex
+            ? documentIndex + maybeLength
             : undefined;
     }
 

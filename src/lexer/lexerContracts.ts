@@ -28,6 +28,12 @@ export interface GraphemeDocument {
     readonly graphemeIndex2DocumentIndex: { [graphemeIndex: number]: number; }
 }
 
+export interface GraphemeDocumentPosition {
+    readonly documentIndex: number,
+    readonly lineNumber: number,
+    readonly columnNumber: number,
+}
+
 export interface ILexerLine {
     readonly kind: LexerLineKind,
     readonly multilineKind: LexerMultilineKind,
@@ -35,12 +41,6 @@ export interface ILexerLine {
     readonly numberOfActions: number,
     readonly position: GraphemeDocumentPosition,
     readonly tokens: ReadonlyArray<Token>,
-}
-
-export interface GraphemeDocumentPosition {
-    readonly documentIndex: number,
-    readonly lineNumber: number,
-    readonly columnNumber: number,
 }
 
 export const enum LexerLineKind {
