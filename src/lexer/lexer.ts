@@ -2,9 +2,10 @@ import { CommonError, isNever, Pattern, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
+import { Keyword } from "./keywords";
 import { ErrorLine, LexerLineKind, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine as TLexerLineError, TLexerLine, TLexerLineExceptUntouched, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
-import { Token, TokenKind } from "./token";
 import { LexerSnapshot } from "./lexerSnapshot";
+import { Token, TokenKind } from "./token";
 
 type GraphemeString = StringHelpers.GraphemeString;
 type GraphemePosition = StringHelpers.GraphemePosition;
@@ -487,36 +488,36 @@ export namespace Lexer {
                     else { token = readConstant(TokenKind.Equal, document, currentPosition, 1); }
                 }
 
-                // else if (chr === "/") {
-                //     const secondChr = document[documentIndex + 1];
+                else if (chr1 === "/") {
+                    const chr2 = document.blob[currentPosition.documentIndex + 1];
 
-                //     if (secondChr === "/") {
-                //         const phantomTokenIndex = line.tokens.length + newTokens.length;
-                //         const commentRead = readComments(document, documentIndex, CommentKind.Line, phantomTokenIndex);
-                //         documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
-                //         newComments.push(...commentRead);
-                //         continue;
-                //     }
-                //     else if (secondChr === "*") {
-                //         const phantomTokenIndex = line.tokens.length + newTokens.length;
-                //         const commentRead = readComments(document, documentIndex, CommentKind.Multiline, phantomTokenIndex);
-                //         documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
-                //         newComments.push(...commentRead);
-                //         continue;
-                //     }
-                //     else { token = readConstantToken(documentIndex, TokenKind.Division, chr); }
-                // }
+                    if (chr2 === "/") {
+                        throw new Error("comments not supported");
+                        // const phantomTokenIndex = line.tokens.length + newTokens.length;
+                        // const commentRead = readComments(document, documentIndex, CommentKind.Line, phantomTokenIndex);
+                        // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
+                        // newComments.push(...commentRead);
+                        // continue;
+                    }
+                    else if (chr2 === "*") {
+                        throw new Error("comments not supported");
+                        // const phantomTokenIndex = line.tokens.length + newTokens.length;
+                        // const commentRead = readComments(document, documentIndex, CommentKind.Multiline, phantomTokenIndex);
+                        // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
+                        // newComments.push(...commentRead);
+                        // continue;
+                    }
+                    else { token = readConstant(TokenKind.Division, document, currentPosition, 1); }
+                }
 
-                // else if (chr === "#") {
-                //     const secondChr = document[documentIndex + 1];
+                else if (chr1 === "#") {
+                    const chr2 = document.blob[currentPosition.documentIndex + 1];
 
-                //     if (secondChr === "\"") { token = readQuotedIdentifier(document, documentIndex); }
-                //     else { token = readKeyword(document, documentIndex, undefined); }
-                // }
+                    if (chr2 === "\"") { token = readQuotedIdentifier(document, currentPosition); }
+                    else { token = readKeyword(document, currentPosition); }
+                }
 
-                // else { token = readKeywordOrIdentifier(document, documentIndex); }
-
-                else { throw unexpectedReadError(document.blob, currentPosition.documentIndex); }
+                else { token = readKeywordOrIdentifier(document, currentPosition); }
 
                 currentPosition = token.positionEnd;
                 newTokens.push(token);
@@ -605,7 +606,7 @@ export namespace Lexer {
         document: GraphemeString,
         positionStart: GraphemePosition,
     ): Token {
-        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, document, positionStart);
+        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, document.blob, positionStart.documentIndex);
         if (maybeDocumentIndexEnd === undefined) {
             const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
             throw new LexerError.ExpectedHexLiteralError(graphemePosition);
@@ -615,13 +616,13 @@ export namespace Lexer {
         const positionEnd: GraphemePosition = {
             documentIndex: documentIndexEnd,
             lineNumber: positionStart.lineNumber,
-            columnNumber: document.graphemeIndex2DocumentIndex[documentIndexEnd],
+            columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
         }
         return readTokenFromPositions(TokenKind.HexLiteral, document, positionStart, positionEnd);
     }
 
     function readNumericLiteral(document: GraphemeString, positionStart: GraphemePosition): Token {
-        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, document, positionStart);
+        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, document.blob, positionStart.documentIndex);
         if (maybeDocumentIndexEnd === undefined) {
             const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
             throw new LexerError.ExpectedNumericLiteralError(graphemePosition);
@@ -631,7 +632,7 @@ export namespace Lexer {
         const positionEnd: GraphemePosition = {
             documentIndex: documentIndexEnd,
             lineNumber: positionStart.lineNumber,
-            columnNumber: document.graphemeIndex2DocumentIndex[documentIndexEnd],
+            columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
         }
         return readTokenFromPositions(TokenKind.NumericLiteral, document, positionStart, positionEnd);
     }
@@ -757,14 +758,59 @@ export namespace Lexer {
     //     }
     // }
 
-    // function readQuotedIdentifier(document: string, documentIndex: number): Token {
-    //     const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex + 1);
-    //     if (stringEndIndex === undefined) {
-    //         throw unterminatedStringError(document, documentIndex + 1);
-    //     }
+    function readKeyword(document: GraphemeString, positionStart: GraphemePosition): Token {
+        const maybeToken: Option<Token> = maybeReadKeyword(document, positionStart);
+        if (maybeToken) {
+            return maybeToken;
+        }
+        else {
+            throw unexpectedReadError(document.blob, positionStart.documentIndex);
+        }
+    }
 
-    //     return readTokenFromSlice(document, documentIndex, TokenKind.Identifier, stringEndIndex + 1);
-    // }
+    function maybeReadKeyword(document: GraphemeString, positionStart: GraphemePosition): Option<Token> {
+        const documentBlob = document.blob;
+
+        const documentIndexStart = positionStart.documentIndex;
+        const identifierDocumentIndexStart = documentBlob[documentIndexStart] === "#"
+            ? documentIndexStart + 1
+            : documentIndexStart;
+
+        const maybeIdentifierDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, documentBlob, identifierDocumentIndexStart);
+        if (maybeIdentifierDocumentIndexEnd === undefined) {
+            return undefined;
+        }
+        const documentIndexEnd = maybeIdentifierDocumentIndexEnd;
+
+        const substring = document.blob.substring(documentIndexStart, documentIndexEnd);
+
+        const maybeKeywordTokenKind = maybeKeywordTokenKindFrom(substring);
+        if (maybeKeywordTokenKind === undefined) {
+            return undefined;
+        }
+        else {
+            return {
+                kind: maybeKeywordTokenKind,
+                positionStart,
+                positionEnd: {
+                    documentIndex: documentIndexEnd,
+                    lineNumber: positionStart.lineNumber,
+                    columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
+                },
+                data: substring,
+            }
+        }
+    }
+
+    function readQuotedIdentifier(_document: GraphemeString, _position: GraphemePosition): Token {
+        throw new Error("not supported");
+        // const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex + 1);
+        // if (stringEndIndex === undefined) {
+        //     throw unterminatedStringError(document, documentIndex + 1);
+        // }
+
+        // return readTokenFromSlice(document, documentIndex, TokenKind.Identifier, stringEndIndex + 1);
+    }
 
     // function readKeyword(document: GraphemeString, startPosition: GraphemePosition, maybeSubstring: Option<string>): Token {
     //     if (maybeSubstring === undefined) {
@@ -844,41 +890,51 @@ export namespace Lexer {
     //     }
     // }
 
-    // function readKeywordOrIdentifier(document: string, documentIndex: number): Token {
-    //     const maybeSubstring = maybeKeywordOrIdentifierSubstring(document, documentIndex);
-    //     if (maybeSubstring === undefined) {
-    //         const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
-    //         throw new LexerError.ExpectedKeywordOrIdentifierError(graphemePosition);
-    //     }
-    //     const substring: string = maybeSubstring;
+    // the quoted identifier case has already been taken care of
+    function readKeywordOrIdentifier(document: GraphemeString, positionStart: GraphemePosition): Token {
+        const documentBlob = document.blob;
+        const documentIndexStart = positionStart.documentIndex;
 
-    //     if (substring[0] === "#" || Keywords.indexOf(substring) !== -1) {
-    //         return readKeyword(document, documentIndex, substring);
-    //     }
-    //     else if (substring === "null") {
-    //         const documentStartIndex = documentIndex;
-    //         const documentEndIndex = documentStartIndex + 4;
-    //         return {
-    //             kind: TokenKind.NullLiteral,
-    //             documentStartIndex,
-    //             documentEndIndex,
-    //             data: "null",
-    //         }
-    //     }
-    //     else {
-    //         return readTokenFromSubstring(documentIndex, TokenKind.Identifier, substring);
-    //     }
-    // }
+        // keyword
+        if (document.blob[documentIndexStart] === "#") {
+            return readKeyword(document, positionStart);
+        }
+        // either keyword or identifier
+        else {
+            const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, documentBlob, documentIndexStart);
+            if (maybeDocumentIndexEnd === undefined) {
+                throw unexpectedReadError(document.blob, documentIndexStart);
+            }
+            const documentIndexEnd = maybeDocumentIndexEnd;
+            const substring = documentBlob.substring(documentIndexStart, documentIndexEnd);
+
+            const maybeKeywordTokenKind = maybeKeywordTokenKindFrom(substring);
+            const tokenKind = maybeKeywordTokenKind === undefined
+                ? TokenKind.Identifier
+                : maybeKeywordTokenKind;
+
+            return {
+                kind: tokenKind,
+                positionStart,
+                positionEnd: {
+                    documentIndex: documentIndexEnd,
+                    lineNumber: positionStart.lineNumber,
+                    columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
+                },
+                data: substring,
+            }
+        }
+    }
 
     // function maybeKeywordOrIdentifierSubstring(
     //     document: GraphemeString,
-    //     startPosition: GraphemePosition,
+    //     positionStart: GraphemePosition,
     // ): Option<string> {
-    //     const chr = document[documentIndex];
+    //     const chr = document.blob[positionStart.documentIndex];
     //     let indexOfStart: number;
 
     //     if (chr === "#") {
-    //         indexOfStart = documentIndex + 1;
+    //         indexOfStart = positionStart.documentIndex + 1;
     //     }
     //     else {
     //         indexOfStart = documentIndex;
@@ -903,7 +959,7 @@ export namespace Lexer {
         const positionEnd = {
             documentIndex: positionStart.documentIndex + length,
             lineNumber: positionStart.lineNumber,
-            columnNumber: document.graphemeIndex2DocumentIndex[documentIndexEnd]
+            columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd]
         }
         return readTokenFromPositions(tokenKind, document, positionStart, positionEnd);
     }
@@ -947,15 +1003,83 @@ export namespace Lexer {
 
     function maybeIndexOfRegexEnd(
         pattern: RegExp,
-        document: GraphemeString,
-        position: GraphemePosition,
+        documentBlob: string,
+        documentIndex: number,
     ): Option<number> {
-        const documentIndex = position.documentIndex;
-        const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, document.blob, documentIndex);
+        const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, documentBlob, documentIndex);
 
         return maybeLength !== undefined
             ? documentIndex + maybeLength
             : undefined;
+    }
+
+    function maybeKeywordTokenKindFrom(str: string): Option<TokenKind> {
+        switch (str) {
+            case Keyword.And:
+                return TokenKind.KeywordAnd;
+            case Keyword.As:
+                return TokenKind.KeywordAs;
+            case Keyword.Each:
+                return TokenKind.KeywordEach;
+            case Keyword.Else:
+                return TokenKind.KeywordElse;
+            case Keyword.Error:
+                return TokenKind.KeywordError;
+            case Keyword.False:
+                return TokenKind.KeywordFalse;
+            case Keyword.If:
+                return TokenKind.KeywordIf;
+            case Keyword.In:
+                return TokenKind.KeywordIn;
+            case Keyword.Is:
+                return TokenKind.KeywordIs;
+            case Keyword.Let:
+                return TokenKind.KeywordLet;
+            case Keyword.Meta:
+                return TokenKind.KeywordMeta;
+            case Keyword.Not:
+                return TokenKind.KeywordNot;
+            case Keyword.Or:
+                return TokenKind.KeywordOr;
+            case Keyword.Otherwise:
+                return TokenKind.KeywordOtherwise;
+            case Keyword.Section:
+                return TokenKind.KeywordSection;
+            case Keyword.Shared:
+                return TokenKind.KeywordShared;
+            case Keyword.Then:
+                return TokenKind.KeywordThen;
+            case Keyword.True:
+                return TokenKind.KeywordTrue;
+            case Keyword.Try:
+                return TokenKind.KeywordTry;
+            case Keyword.Type:
+                return TokenKind.KeywordType;
+            case Keyword.HashBinary:
+                return TokenKind.KeywordHashBinary;
+            case Keyword.HashDate:
+                return TokenKind.KeywordHashDate;
+            case Keyword.HashDateTime:
+                return TokenKind.KeywordHashDateTime;
+            case Keyword.HashDateTimeZone:
+                return TokenKind.KeywordHashDateTimeZone;
+            case Keyword.HashDuration:
+                return TokenKind.KeywordHashDuration;
+            case Keyword.HashInfinity:
+                return TokenKind.KeywordHashInfinity;
+            case Keyword.HashNan:
+                return TokenKind.KeywordHashNan;
+            case Keyword.HashSections:
+                return TokenKind.KeywordHashSections;
+            case Keyword.HashShared:
+                return TokenKind.KeywordHashShared;
+            case Keyword.HashTable:
+                return TokenKind.KeywordHashTable;
+            case Keyword.HashTime:
+                return TokenKind.KeywordHashTime;
+            default:
+                return undefined;
+        }
     }
 
     // function maybeIndexOfStringEnd(
