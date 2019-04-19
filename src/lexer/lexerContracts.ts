@@ -1,4 +1,4 @@
-import { Option } from "../common";
+import { Option, StringHelpers } from "../common";
 import { LexerError } from "./error";
 import { Token } from "./token";
 
@@ -21,25 +21,12 @@ export interface LexerState {
     readonly multilineKindUpdate: { [lineNumber: number]: LexerMultilineKind; }
 }
 
-export interface GraphemeDocument {
-    readonly blob: string,
-    readonly graphemes: ReadonlyArray<string>,
-    readonly documentIndex2GraphemeIndex: { [documentIndex: number]: number; }
-    readonly graphemeIndex2DocumentIndex: { [graphemeIndex: number]: number; }
-}
-
-export interface GraphemeDocumentPosition {
-    readonly documentIndex: number,
-    readonly lineNumber: number,
-    readonly columnNumber: number,
-}
-
 export interface ILexerLine {
     readonly kind: LexerLineKind,
     readonly multilineKind: LexerMultilineKind,
-    readonly document: GraphemeDocument,
+    readonly document: StringHelpers.GraphemeString,
     readonly numberOfActions: number,
-    readonly position: GraphemeDocumentPosition,
+    readonly position: StringHelpers.GraphemePosition,
     readonly tokens: ReadonlyArray<Token>,
 }
 
@@ -84,6 +71,6 @@ export interface UntouchedLine extends ILexerLine {
 
 export interface LexerRead {
     readonly tokens: ReadonlyArray<Token>,
-    readonly positionStart: GraphemeDocumentPosition,
-    readonly positionEnd: GraphemeDocumentPosition,
+    readonly positionStart: StringHelpers.GraphemePosition,
+    readonly positionEnd: StringHelpers.GraphemePosition,
 }

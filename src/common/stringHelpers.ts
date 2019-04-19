@@ -13,12 +13,41 @@ export namespace StringHelpers {
         DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
     }
 
-    // columnNumber is by grapheme, not by code unit
-    // starts lineNumber/columnNumber at 1
+    export interface GraphemeString {
+        readonly blob: string,
+        readonly graphemes: ReadonlyArray<string>,
+        readonly documentIndex2GraphemeIndex: { [documentIndex: number]: number; }
+        readonly graphemeIndex2DocumentIndex: { [graphemeIndex: number]: number; }
+    }
+
     export interface GraphemePosition {
-        readonly stringIndex: number,
-        readonly lineNumber: number;
+        readonly documentIndex: number,
+        readonly lineNumber: number,
         readonly columnNumber: number,
+    }
+
+    export function graphemeDocument(blob: string): GraphemeString {
+        const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(blob);
+        const numGraphemes = graphemes.length;
+        const documentIndex2GraphemeIndex: { [documentIndex: number]: number; } = {};
+        const graphemeIndex2DocumentIndex: { [graphemeIndex: number]: number; } = {};
+
+        let summedCodeUnits = 0;
+        for (let index = 0; index < numGraphemes; index++) {
+            graphemeIndex2DocumentIndex[index] = summedCodeUnits;
+            documentIndex2GraphemeIndex[summedCodeUnits] = index;
+            summedCodeUnits += graphemes[index].length;
+        }
+
+        graphemeIndex2DocumentIndex[numGraphemes] = blob.length;
+        documentIndex2GraphemeIndex[blob.length] = numGraphemes;
+
+        return {
+            blob,
+            graphemes,
+            documentIndex2GraphemeIndex,
+            graphemeIndex2DocumentIndex
+        }
     }
 
     export function containsNewline(str: string): boolean {
@@ -75,7 +104,7 @@ export namespace StringHelpers {
             if (tmpDocumentIndex >= documentIndex) {
                 if (tmpDocumentIndex === documentIndex) {
                     return {
-                        stringIndex: documentIndex,
+                        documentIndex,
                         lineNumber,
                         columnNumber,
                     };

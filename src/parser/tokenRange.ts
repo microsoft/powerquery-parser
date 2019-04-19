@@ -1,4 +1,4 @@
-import { GraphemeDocumentPosition } from "../lexer";
+import { StringHelpers } from "../common";
 
 export type TokenRangeMap<T> = { [key: string]: T; }
 
@@ -6,8 +6,8 @@ export type TokenRangeMap<T> = { [key: string]: T; }
 export interface TokenRange {
     readonly startTokenIndex: number,
     readonly endTokenIndex: number // exclusive
-    readonly positionStart: GraphemeDocumentPosition,
-    readonly positionEnd: GraphemeDocumentPosition,
+    readonly positionStart: StringHelpers.GraphemePosition,
+    readonly positionEnd: StringHelpers.GraphemePosition,
     readonly hash: string,
 }
 
@@ -17,8 +17,8 @@ export interface TokenRange {
 // has the same TokenRange as its child, Identifier.
 export function tokenRangeHashFrom(
     tag: string,
-    positionStart: GraphemeDocumentPosition,
-    positionEnd: GraphemeDocumentPosition,
+    positionStart: StringHelpers.GraphemePosition,
+    positionEnd: StringHelpers.GraphemePosition,
 ): string {
     return `${tag}:${positionStart.lineNumber},${positionStart.columnNumber}:${positionEnd.lineNumber},${positionEnd.columnNumber}`;
 }

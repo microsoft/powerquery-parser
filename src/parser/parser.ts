@@ -1,4 +1,4 @@
-import { CommonError } from "../common";
+import { CommonError, StringHelpers } from "../common";
 import { isNever } from "../common/assert";
 import { Option } from "../common/option";
 import { Result, ResultKind } from "../common/result";
@@ -8,7 +8,6 @@ import { Token, TokenKind } from "../lexer/token";
 import { Ast } from "./ast";
 import { ParserError } from "./error";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
-import { GraphemeDocumentPosition } from "../lexer";
 
 export class Parser {
     private currentTokenKind: Option<TokenKind>;
@@ -1977,7 +1976,7 @@ const enum BracketDisambiguation {
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind,
     readonly tokenIndexStart: number,
-    readonly positionStart: GraphemeDocumentPosition,
+    readonly positionStart: StringHelpers.GraphemePosition,
 }
 
 interface ParserState {
