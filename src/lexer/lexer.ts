@@ -465,27 +465,27 @@ export namespace Lexer {
                     else { throw unexpectedReadError(document.blob, currentPosition.documentIndex) }
                 }
 
-                // else if (chr === ">") {
-                //     const secondChr = document[documentIndex + 1];
+                else if (chr1 === ">") {
+                    const chr2 = document.blob[currentPosition.documentIndex + 1];
 
-                //     if (secondChr === "=") { token = readConstantToken(documentIndex, TokenKind.GreaterThanEqualTo, ">="); }
-                //     else { token = readConstantToken(documentIndex, TokenKind.GreaterThan, chr); }
-                // }
+                    if (chr2 === "=") { token = readConstant(TokenKind.GreaterThanEqualTo, document, currentPosition, 2); }
+                    else { token = readConstant(TokenKind.GreaterThan, document, currentPosition, 1); }
+                }
 
-                // else if (chr === "<") {
-                //     const secondChr = document[documentIndex + 1];
+                else if (chr1 === "<") {
+                    const chr2 = document.blob[currentPosition.documentIndex + 1];
 
-                //     if (secondChr === "=") { token = readConstantToken(documentIndex, TokenKind.LessThanEqualTo, "<="); }
-                //     else if (secondChr === ">") { token = readConstantToken(documentIndex, TokenKind.NotEqual, "<>"); }
-                //     else { token = readConstantToken(documentIndex, TokenKind.LessThan, chr) }
-                // }
+                    if (chr2 === "=") { token = readConstant(TokenKind.LessThanEqualTo, document, currentPosition, 2); }
+                    else if (chr2 === ">") { token = readConstant(TokenKind.NotEqual, document, currentPosition, 2); }
+                    else { token = readConstant(TokenKind.LessThan, document, currentPosition, 1) }
+                }
 
-                // else if (chr === "=") {
-                //     const secondChr = document[documentIndex + 1];
+                else if (chr1 === "=") {
+                    const chr2 = document.blob[currentPosition.documentIndex + 1];
 
-                //     if (secondChr === ">") { token = readConstantToken(documentIndex, TokenKind.FatArrow, "=>"); }
-                //     else { token = readConstantToken(documentIndex, TokenKind.Equal, chr); }
-                // }
+                    if (chr2 === ">") { token = readConstant(TokenKind.FatArrow, document, currentPosition, 2); }
+                    else { token = readConstant(TokenKind.Equal, document, currentPosition, 1); }
+                }
 
                 // else if (chr === "/") {
                 //     const secondChr = document[documentIndex + 1];
@@ -896,24 +896,16 @@ export namespace Lexer {
     function readConstant(
         tokenKind: TokenKind,
         document: GraphemeString,
-        startPosition: GraphemePosition,
+        positionStart: GraphemePosition,
         length: number,
     ): Token {
-        const documentIndexStart = startPosition.documentIndex;
-        const documentIndexEnd = documentIndexStart + length;
-        const columnNumberEnd = document.documentIndex2GraphemeIndex[documentIndexEnd];
-        const data = document.blob.substring(documentIndexStart, documentIndexEnd);
-
-        return {
-            kind: tokenKind,
-            positionStart: startPosition,
-            positionEnd: {
-                documentIndex: documentIndexEnd,
-                lineNumber: startPosition.lineNumber,
-                columnNumber: columnNumberEnd,
-            },
-            data,
+        const documentIndexEnd = positionStart.documentIndex + length;
+        const positionEnd = {
+            documentIndex: positionStart.documentIndex + length,
+            lineNumber: positionStart.lineNumber,
+            columnNumber: document.graphemeIndex2DocumentIndex[documentIndexEnd]
         }
+        return readTokenFromPositions(tokenKind, document, positionStart, positionEnd);
     }
 
     function readTokenFromPositions(
