@@ -301,7 +301,7 @@ export namespace Lexer {
         const textLength = text.length;
         const positionStart = line.position;
 
-        let currentPosition = positionStart;
+        let currentPosition = drainWhitespace(lineString, positionStart);
         let continueLexing = positionStart.textIndex < textLength;
 
         if (!continueLexing) {
@@ -319,7 +319,7 @@ export namespace Lexer {
                 let token: LineToken;
                 switch (multilineKind) {
                     case LexerMultilineKind.Default:
-                        token = lexDefault(line);
+                        token = lexDefault(line, currentPosition);
                         break;
 
                     case LexerMultilineKind.Comment:
@@ -331,7 +331,7 @@ export namespace Lexer {
                         throw isNever(multilineKind);
                 }
 
-                currentPosition = token.positionEnd;
+                currentPosition = drainWhitespace(lineString, token.positionEnd);
                 newTokens.push(token);
 
                 if (currentPosition.textIndex === textLength) {
@@ -384,12 +384,12 @@ export namespace Lexer {
         }
     }
 
-    function lexDefault(line: TLexerLine): LineToken {
+    function lexDefault(line: TLexerLine, currentPosition: LexerLinePosition): LineToken {
         const lineString = line.lineString;
         const text = lineString.text;
-        const positionStart = line.position;
+        const positionStart = currentPosition;
 
-        let currentPosition = drainWhitespace(lineString, positionStart);
+        currentPosition = drainWhitespace(lineString, positionStart);
         const chr1: string = text[currentPosition.textIndex];
         let token: LineToken;
 
@@ -462,14 +462,7 @@ export namespace Lexer {
         else if (chr1 === "/") {
             const chr2 = text[currentPosition.textIndex + 1];
 
-            if (chr2 === "/") {
-                throw new Error("comments not supported");
-                // const phantomTokenIndex = line.tokens.length + newTokens.length;
-                // const commentRead = readComments(document, documentIndex, CommentKind.Line, phantomTokenIndex);
-                // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
-                // newComments.push(...commentRead);
-                // continue;
-            }
+            if (chr2 === "/") { token = readLineComment(lineString, currentPosition); }
             else if (chr2 === "*") {
                 throw new Error("comments not supported");
                 // const phantomTokenIndex = line.tokens.length + newTokens.length;
@@ -497,13 +490,13 @@ export namespace Lexer {
         lineString: LexerLineString,
         position: LexerLinePosition,
     ): LexerLinePosition {
-        let textIndex = position.textIndex;
-        let continueDraining = lineString.text[textIndex] !== undefined;
+        let textIndexEnd = position.textIndex;
+        let continueDraining = lineString.text[textIndexEnd] !== undefined;
 
         while (continueDraining) {
-            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, lineString.text, textIndex);
+            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, lineString.text, textIndexEnd);
             if (maybeLength) {
-                textIndex += maybeLength;
+                textIndexEnd += maybeLength;
             }
             else {
                 continueDraining = false;
@@ -511,8 +504,8 @@ export namespace Lexer {
         }
 
         return {
-            ...position,
-            textIndex,
+            textIndex: textIndexEnd,
+            columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
         };
     }
 
@@ -605,54 +598,19 @@ export namespace Lexer {
     //     return newComments;
     // }
 
-    // function readLineComment(
-    //     document: string,
-    //     documentIndex: number,
-    //     phantomTokenIndex: number,
-    // ): LineComment {
-    //     const documentLength = document.length;
-    //     const commentStart = documentIndex;
-
-    //     let maybeLiteral: Option<string>;
-    //     let commentEnd = commentStart + 2;
-
-    //     while (!maybeLiteral && commentEnd < documentLength) {
-    //         const maybeNewlineKind = StringHelpers.maybeNewlineKindAt(document, commentEnd);
-    //         switch (maybeNewlineKind) {
-    //             case StringHelpers.NewlineKind.DoubleCharacter:
-    //                 maybeLiteral = document.substring(commentStart, commentEnd);
-    //                 documentIndex = commentEnd + 2;
-    //                 break;
-
-    //             case StringHelpers.NewlineKind.SingleCharacter:
-    //                 maybeLiteral = document.substring(commentStart, commentEnd);
-    //                 documentIndex = commentEnd + 1;
-    //                 break;
-
-    //             case undefined:
-    //                 commentEnd += 1;
-    //                 break;
-
-    //             default:
-    //                 throw isNever(maybeNewlineKind);
-    //         }
-    //     }
-
-    //     // reached EOF without a trailing newline
-    //     if (!maybeLiteral) {
-    //         maybeLiteral = document.substring(commentStart, document.length);
-    //         documentIndex = document.length;
-    //     }
-
-    //     return {
-    //         kind: CommentKind.Line,
-    //         literal: maybeLiteral,
-    //         phantomTokenIndex,
-    //         containsNewline: true,
-    //         documentStartIndex: commentStart,
-    //         documentEndIndex: documentIndex,
-    //     }
-    // }
+    function readLineComment(
+        lineString: LexerLineString,
+        positionStart: LexerLinePosition,
+    ): LineToken {
+        // LexerLineString is already split on newline,
+        // so the remainder of the line is a line comment
+        const commentTextIndexEnd = lineString.text.length;
+        const positionEnd: LexerLinePosition = {
+            textIndex: commentTextIndexEnd,
+            columnNumber: lineString.textIndex2GraphemeIndex[commentTextIndexEnd],
+        }
+        return readTokenFromPositions(LineTokenKind.LineComment, lineString, positionStart, positionEnd);
+    }
 
     // function readMultilineComment(
     //     document: string,
@@ -793,14 +751,14 @@ export namespace Lexer {
     function readTokenFromPositions(
         lineTokenKind: LineTokenKind,
         lineString: LexerLineString,
-        startPosition: LexerLinePosition,
+        positionStart: LexerLinePosition,
         positionEnd: LexerLinePosition,
     ): LineToken {
         return {
             kind: lineTokenKind,
-            positionStart: startPosition,
-            positionEnd: positionEnd,
-            data: lineString.text.substring(startPosition.textIndex, positionEnd.textIndex),
+            positionStart,
+            positionEnd,
+            data: lineString.text.substring(positionStart.textIndex, positionEnd.textIndex),
         };
     }
 

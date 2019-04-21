@@ -226,19 +226,19 @@ type
 
 describe(`Lexer.Simple.Whitespace`, () => {
     it(`spaces`, () => {
-        const document = ` a a `;
+        const document = ` a b `;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
-            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `b`],
         ];
         expectTokens(document, "\n", expected);
     });
 
     it(`tabs`, () => {
-        const document = `\ta\ta\t`;
+        const document = `\ta\tb\t`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
-            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `b`],
         ];
         expectTokens(document, "\n", expected);
     });
