@@ -1,7 +1,6 @@
 import { CommonError } from "../common";
 import { Option } from "../common/option";
-import { TokenPosition } from "../lexer/lexerSnapshot";
-import { TokenKind } from "../lexer/token";
+import { TokenKind, Token } from "../lexer/token";
 import { Localization } from "../localization/error";
 import { Ast } from "./ast";
 
@@ -34,35 +33,34 @@ export namespace ParserError {
     export class ExpectedAnyTokenKindError extends Error {
         constructor(
             readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-            readonly maybeFoundTokenPosition: Option<TokenPosition>,
+            readonly maybeFoundToken: Option<Token>,
         ) {
-            super(Localization.Error.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundTokenPosition));
+            super(Localization.Error.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
         }
     }
 
     export class ExpectedTokenKindError extends Error {
         constructor(
             readonly expectedTokenKind: TokenKind,
-            readonly maybeFoundTokenPosition: Option<TokenPosition>,
+            readonly maybeFoundToken: Option<Token>,
         ) {
-            super(Localization.Error.parserExpectedTokenKind(expectedTokenKind, maybeFoundTokenPosition));
+            super(Localization.Error.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
         }
     }
 
     export class InvalidPrimitiveTypeError extends Error {
         constructor(
-            readonly foundIdentifier: string,
-            readonly tokenPosition: TokenPosition,
+            readonly token: Token,
         ) {
-            super(Localization.Error.parserInvalidPrimitiveType(foundIdentifier, tokenPosition));
+            super(Localization.Error.parserInvalidPrimitiveType(token));
         }
     }
 
     export class RequiredParameterAfterOptionalParameterError extends Error {
         constructor(
-            readonly missingOptionalTokenPosition: TokenPosition,
+            readonly missingOptionalToken: Token,
         ) {
-            super(Localization.Error.parserRequiredParameterAfterOptionalParameter(missingOptionalTokenPosition));
+            super(Localization.Error.parserRequiredParameterAfterOptionalParameter(missingOptionalToken));
         }
     }
 
@@ -76,25 +74,25 @@ export namespace ParserError {
 
     export class UnterminatedBracketError extends Error {
         constructor(
-            readonly openBracketTokenPosition: TokenPosition,
+            readonly openBracketToken: Token,
         ) {
-            super(Localization.Error.parserUnterminatedBracket(openBracketTokenPosition));
+            super(Localization.Error.parserUnterminatedBracket(openBracketToken));
         }
     }
 
     export class UnterminatedParenthesesError extends Error {
         constructor(
-            readonly openParenthesesTokenPosition: TokenPosition,
+            readonly openParenthesesToken: Token,
         ) {
-            super(Localization.Error.parserUnterminatedParentheses(openParenthesesTokenPosition));
+            super(Localization.Error.parserUnterminatedParentheses(openParenthesesToken));
         }
     }
 
     export class UnusedTokensRemainError extends Error {
         constructor(
-            readonly firstUnusedTokenPosition: TokenPosition,
+            readonly firstUnusedToken: Token,
         ) {
-            super(Localization.Error.parserUnusedTokensRemain(firstUnusedTokenPosition));
+            super(Localization.Error.parserUnusedTokensRemain(firstUnusedToken));
         }
     }
 

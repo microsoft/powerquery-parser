@@ -1,4 +1,3 @@
-import { StringHelpers } from "../common";
 import { Token } from "./token";
 
 export class LexerSnapshot {
@@ -6,16 +5,4 @@ export class LexerSnapshot {
         public readonly document: string,
         public readonly tokens: ReadonlyArray<Token>,
     ) { }
-
-    public tokenPosition(token: Token): TokenPosition {
-        const graphemePosition = StringHelpers.graphemePositionAt(this.document, token.positionStart.textIndex);
-        return {
-            token,
-            ...graphemePosition
-        };
-    }
-}
-
-export interface TokenPosition extends StringHelpers.GraphemePosition {
-    readonly token: Token,
 }

@@ -1,5 +1,5 @@
 import { Option } from "../common/option";
-import { TokenKind, TokenPosition } from "../lexer";
+import { TokenKind, Token } from "../lexer";
 import { Ast } from "../parser";
 import { StringHelpers } from "../common";
 
@@ -65,11 +65,12 @@ export namespace Localization.Error {
 
     export function parserExpectedTokenKind(
         expectedTokenKind: TokenKind,
-        maybeFoundTokenPosition: Option<TokenPosition>,
+        maybeFoundToken: Option<Token>,
     ): string {
-        if (maybeFoundTokenPosition) {
-            const position = maybeFoundTokenPosition;
-            return `Expected to find a ${expectedTokenKind} on line ${position.lineNumber}, column ${position.columnNumber}, but a ${position.token.kind} was found instead.`;
+        if (maybeFoundToken) {
+            const token = maybeFoundToken;
+            const positionStart = token.positionStart;
+            return `Expected to find a ${expectedTokenKind} on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}, but a ${token.kind} was found instead.`;
         }
         else {
             return `Expected to find a ${expectedTokenKind} but the end-of-file was reached instead.`;
@@ -78,49 +79,55 @@ export namespace Localization.Error {
 
     export function parserInvalidLiteralValue(
         currentTokenData: string,
-        tokenPosition: TokenPosition,
+        token: Token,
     ): string {
-        return `Expected to find a literal on line ${tokenPosition.lineNumber}, column ${tokenPosition.columnNumber}, but ${currentTokenData} was found instead.`;
+        const positionStart = token.positionStart;
+        return `Expected to find a literal on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}, but ${currentTokenData} was found instead.`;
     }
 
     export function parserInvalidPrimitiveType(
-        foundIdentifier: string,
-        tokenPosition: TokenPosition,
+        token: Token,
     ): string {
-        return `Expected to find a primitive literal on line ${tokenPosition.lineNumber}, column ${tokenPosition.columnNumber}, but ${foundIdentifier} was found instead.`;
+        const positionStart = token.positionStart;
+        return `Expected to find a primitive literal on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}, but ${token.data} was found instead.`;
     }
 
     export function parserExpectedAnyTokenKind(
         expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-        maybeFoundTokenPosition: Option<TokenPosition>,
+        maybeFoundToken: Option<Token>,
     ): string {
-        if (maybeFoundTokenPosition) {
-            const position = maybeFoundTokenPosition;
-            return `Expected to find one of the following on line ${position.lineNumber}, column ${position.columnNumber}, but a ${position.token.kind} was found instead: [${expectedAnyTokenKind}].`;
+        if (maybeFoundToken) {
+            const token = maybeFoundToken;
+            const positionStart = maybeFoundToken.positionStart;
+            return `Expected to find one of the following on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}, but a ${token.kind} was found instead: [${expectedAnyTokenKind}].`;
         }
         else {
             return `Expected to find one of the following, but the end-of-file was reached instead: [${expectedAnyTokenKind}].`;
         }
     }
 
-    export function parserRequiredParameterAfterOptionalParameter(missingOptionalTokenPosition: TokenPosition): string {
-        return `Cannot have a non-optional parameter after an optional parameter. Line ${missingOptionalTokenPosition.lineNumber}, column ${missingOptionalTokenPosition.columnNumber}.`;
+    export function parserRequiredParameterAfterOptionalParameter(missingOptionalToken: Token): string {
+        const positionStart = missingOptionalToken.positionStart
+        return `Cannot have a non-optional parameter after an optional parameter. Line ${positionStart.lineNumber}, column ${positionStart.columnNumber}.`;
     }
 
     export function parserUnexpectedEndOfTokens(nodeKindOnStack: Ast.NodeKind): string {
         return `Reached end of tokens while attempting to parse ${nodeKindOnStack}.`
     }
 
-    export function parserUnterminatedBracket(openBracketTokenPosition: TokenPosition): string {
-        return `Unterminated bracket starting on line ${openBracketTokenPosition.lineNumber}, column ${openBracketTokenPosition.columnNumber}.`
+    export function parserUnterminatedBracket(openBracketToken: Token): string {
+        const positionStart = openBracketToken.positionStart;
+        return `Unterminated bracket starting on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}.`
     }
 
-    export function parserUnterminatedParentheses(openParenthesesTokenPosition: TokenPosition): string {
-        return `Unterminated parentheses starting on line ${openParenthesesTokenPosition.lineNumber}, column ${openParenthesesTokenPosition.columnNumber}.`
+    export function parserUnterminatedParentheses(openParenthesesToken: Token): string {
+        const positionStart = openParenthesesToken.positionStart;
+        return `Unterminated parentheses starting on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}.`
     }
 
-    export function parserUnusedTokensRemain(firstUnusedTokenPosition: TokenPosition): string {
-        return `Finished parsing, but more tokens remain starting on line ${firstUnusedTokenPosition.lineNumber}, column ${firstUnusedTokenPosition.columnNumber}.`;
+    export function parserUnusedTokensRemain(firstUnusedToken: Token): string {
+        const positionStart = firstUnusedToken.positionStart;
+        return `Finished parsing, but more tokens remain starting on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}.`;
     }
 
 }

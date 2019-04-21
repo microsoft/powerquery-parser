@@ -3,9 +3,9 @@ import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { Keyword } from "./keywords";
-import { ErrorLine, LexerLineKind, LexerLineString, LexerRead, LexerState, TLexerLine, TouchedWithErrorLine, UntouchedLine, TErrorLexerLine } from "./lexerContracts";
+import { ErrorLine, LexerLineKind, LexerLineString, LexerRead, LexerState, TErrorLexerLine, TLexerLine, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
 import { LexerSnapshot } from "./lexerSnapshot";
-import { TokenKind, LineToken, Token, LexerLinePosition } from "./token";
+import { LexerLinePosition, LineToken, Token, TokenKind } from "./token";
 
 // the lexer is
 //  * functional
