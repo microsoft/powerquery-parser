@@ -21,13 +21,22 @@ export interface LexerState {
     readonly separator: string,
 }
 
+export const enum LexerMultilineKind {
+    Default,
+    String,
+    QuotedIdentifier,
+    Comment
+}
+
 export interface ILexerLine {
     readonly kind: LexerLineKind,
-    readonly lineString: LexerLineString,       // text representation for the line
-    readonly numberOfActions: number,           // used for quick comparisons
-    readonly lineNumber: number,                // what line number is this
-    readonly position: LexerLinePosition,       // the cursor postion within the line
-    readonly tokens: ReadonlyArray<LineToken>,
+    readonly lineString: LexerLineString,               // text representation for the line
+    readonly numberOfActions: number,                   // allows for quick LexerLine equality comparisons
+    readonly lineNumber: number,                        // what line number is this
+    readonly position: LexerLinePosition,               // the cursor postion within the line
+    readonly tokens: ReadonlyArray<LineToken>,          // LineTokens lexed so far
+    readonly multilineKindStart: LexerMultilineKind,
+    readonly multilineKindEnd: LexerMultilineKind,
 }
 
 export interface LexerLineString {
@@ -73,4 +82,5 @@ export interface LexerRead {
     readonly tokens: ReadonlyArray<LineToken>,
     readonly positionStart: LexerLinePosition,
     readonly positionEnd: LexerLinePosition,
+    readonly multilineKindEnd: LexerMultilineKind,
 }

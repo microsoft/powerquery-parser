@@ -3,7 +3,7 @@ import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { Keyword } from "./keywords";
-import { ErrorLine, LexerLineKind, LexerLineString, LexerRead, LexerState, TErrorLexerLine, TLexerLine, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
+import { ErrorLine, LexerLineKind, LexerLineString, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine, TLexerLine, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
 import { LexerSnapshot } from "./lexerSnapshot";
 import { LexerLinePosition, LineToken, Token, TokenKind } from "./token";
 
@@ -118,6 +118,8 @@ export namespace Lexer {
                     lineNumber: line.lineNumber,
                     position: line.position,
                     tokens: line.tokens,
+                    multilineKindStart: line.multilineKindStart,
+                    multilineKindEnd: line.multilineKindEnd,
                     error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
                 };
                 break;
@@ -144,6 +146,8 @@ export namespace Lexer {
                 columnNumber: 0,
             },
             tokens: [],
+            multilineKindStart: LexerMultilineKind.Default,
+            multilineKindEnd: LexerMultilineKind.Default,
             maybeLastRead: undefined,
         }
     }
@@ -227,11 +231,13 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.Touched,
                     lineString: originalState.lineString,
-                    tokens: newTokens,
+                    numberOfActions: originalState.numberOfActions + 1,
                     lineNumber: originalState.lineNumber,
                     position: lexerRead.positionEnd,
+                    tokens: newTokens,
+                    multilineKindStart: originalState.multilineKindStart,
+                    multilineKindEnd: lexerRead.multilineKindEnd,
                     lastRead: lexerRead,
-                    numberOfActions: originalState.numberOfActions + 1,
                 }
             }
 
@@ -246,6 +252,8 @@ export namespace Lexer {
                     lineNumber: originalState.lineNumber,
                     position: lexerRead.positionEnd,
                     tokens: newTokens,
+                    multilineKindStart: originalState.multilineKindStart,
+                    multilineKindEnd: lexerRead.multilineKindEnd,
                     error: lexPartialResult.error,
                     lastRead: lexerRead,
                 }
@@ -258,6 +266,8 @@ export namespace Lexer {
                     numberOfActions: originalState.numberOfActions,
                     tokens: originalState.tokens,
                     lineNumber: originalState.lineNumber,
+                    multilineKindStart: originalState.multilineKindStart,
+                    multilineKindEnd: originalState.multilineKindEnd,
                     position: originalState.position,
                     error: lexPartialResult.error,
                 }
@@ -275,6 +285,7 @@ export namespace Lexer {
                     tokens: [],
                     positionStart: line.position,
                     positionEnd: line.position,
+                    multilineKindEnd: LexerMultilineKind.Default,
                 }
             };
         }
@@ -296,113 +307,23 @@ export namespace Lexer {
 
         const newTokens: LineToken[] = [];
         let maybeError: Option<LexerError.TLexerError>;
+        let multilineKind = line.multilineKindEnd;
         while (continueLexing) {
-            currentPosition = drainWhitespace(lineString, currentPosition);
-
-            const chr1: string = text[currentPosition.textIndex];
-            if (chr1 === undefined) {
-                break;
-            }
-
             try {
                 let token: LineToken;
+                switch (multilineKind) {
+                    case LexerMultilineKind.Default:
+                        token = lexDefault(line);
+                        break;
 
-                if (chr1 === "!") { token = readConstant(TokenKind.Bang, lineString, currentPosition, 1); }
-                else if (chr1 === "&") { token = readConstant(TokenKind.Ampersand, lineString, currentPosition, 1); }
-                else if (chr1 === "(") { token = readConstant(TokenKind.LeftParenthesis, lineString, currentPosition, 1); }
-                else if (chr1 === ")") { token = readConstant(TokenKind.RightParenthesis, lineString, currentPosition, 1); }
-                else if (chr1 === "*") { token = readConstant(TokenKind.Asterisk, lineString, currentPosition, 1); }
-                else if (chr1 === "+") { token = readConstant(TokenKind.Plus, lineString, currentPosition, 1); }
-                else if (chr1 === ",") { token = readConstant(TokenKind.Comma, lineString, currentPosition, 1); }
-                else if (chr1 === "-") { token = readConstant(TokenKind.Minus, lineString, currentPosition, 1); }
-                else if (chr1 === ";") { token = readConstant(TokenKind.Semicolon, lineString, currentPosition, 1); }
-                else if (chr1 === "?") { token = readConstant(TokenKind.QuestionMark, lineString, currentPosition, 1); }
-                else if (chr1 === "@") { token = readConstant(TokenKind.AtSign, lineString, currentPosition, 1); }
-                else if (chr1 === "[") { token = readConstant(TokenKind.LeftBracket, lineString, currentPosition, 1); }
-                else if (chr1 === "]") { token = readConstant(TokenKind.RightBracket, lineString, currentPosition, 1); }
-                else if (chr1 === "{") { token = readConstant(TokenKind.LeftBrace, lineString, currentPosition, 1); }
-                else if (chr1 === "}") { token = readConstant(TokenKind.RightBrace, lineString, currentPosition, 1); }
+                    case LexerMultilineKind.Comment:
+                    case LexerMultilineKind.QuotedIdentifier:
+                    case LexerMultilineKind.String:
+                        throw new Error("todo");
 
-                else if (chr1 === "\"") { throw new Error("not supported") }
-
-                else if (chr1 === "0") {
-                    const chr2 = text[currentPosition.textIndex + 1];
-
-                    if (chr2 === "x" || chr2 === "X") { token = readHexLiteral(lineString, currentPosition); }
-                    else { token = readNumericLiteral(lineString, currentPosition); }
+                    default:
+                        throw isNever(multilineKind);
                 }
-
-                else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(lineString, currentPosition); }
-
-                else if (chr1 === ".") {
-                    const chr2 = text[currentPosition.textIndex + 1];
-
-                    if (chr2 === undefined) {
-                        const LexerLinePosition = StringHelpers.graphemePositionAt(text, currentPosition.textIndex);
-                        throw new LexerError.UnexpectedEofError(LexerLinePosition);
-                    }
-                    else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(lineString, currentPosition); }
-                    else if (chr2 === ".") {
-                        const chr3 = text[currentPosition.textIndex + 2];
-
-                        if (chr3 === ".") { token = readConstant(TokenKind.Ellipsis, lineString, currentPosition, 3); }
-                        else { throw unexpectedReadError(text, currentPosition.textIndex) }
-                    }
-                    else { throw unexpectedReadError(text, currentPosition.textIndex) }
-                }
-
-                else if (chr1 === ">") {
-                    const chr2 = text[currentPosition.textIndex + 1];
-
-                    if (chr2 === "=") { token = readConstant(TokenKind.GreaterThanEqualTo, lineString, currentPosition, 2); }
-                    else { token = readConstant(TokenKind.GreaterThan, lineString, currentPosition, 1); }
-                }
-
-                else if (chr1 === "<") {
-                    const chr2 = text[currentPosition.textIndex + 1];
-
-                    if (chr2 === "=") { token = readConstant(TokenKind.LessThanEqualTo, lineString, currentPosition, 2); }
-                    else if (chr2 === ">") { token = readConstant(TokenKind.NotEqual, lineString, currentPosition, 2); }
-                    else { token = readConstant(TokenKind.LessThan, lineString, currentPosition, 1) }
-                }
-
-                else if (chr1 === "=") {
-                    const chr2 = text[currentPosition.textIndex + 1];
-
-                    if (chr2 === ">") { token = readConstant(TokenKind.FatArrow, lineString, currentPosition, 2); }
-                    else { token = readConstant(TokenKind.Equal, lineString, currentPosition, 1); }
-                }
-
-                else if (chr1 === "/") {
-                    const chr2 = text[currentPosition.textIndex + 1];
-
-                    if (chr2 === "/") {
-                        throw new Error("comments not supported");
-                        // const phantomTokenIndex = line.tokens.length + newTokens.length;
-                        // const commentRead = readComments(document, documentIndex, CommentKind.Line, phantomTokenIndex);
-                        // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
-                        // newComments.push(...commentRead);
-                        // continue;
-                    }
-                    else if (chr2 === "*") {
-                        throw new Error("comments not supported");
-                        // const phantomTokenIndex = line.tokens.length + newTokens.length;
-                        // const commentRead = readComments(document, documentIndex, CommentKind.Multiline, phantomTokenIndex);
-                        // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
-                        // newComments.push(...commentRead);
-                        // continue;
-                    }
-                    else { token = readConstant(TokenKind.Division, lineString, currentPosition, 1); }
-                }
-
-                else if (chr1 === "#") {
-                    const chr2 = text[currentPosition.textIndex + 1];
-
-                    if (chr2 === "\"") { token = readQuotedIdentifier(lineString, currentPosition); }
-                    else { token = readKeyword(lineString, currentPosition); }
-                }
-
-                else { token = readKeywordOrIdentifier(lineString, currentPosition); }
 
                 currentPosition = token.positionEnd;
                 newTokens.push(token);
@@ -410,8 +331,8 @@ export namespace Lexer {
                 if (currentPosition.textIndex === textLength) {
                     continueLexing = false;
                 }
-
-            } catch (e) {
+            }
+            catch (e) {
                 let error: LexerError.TLexerError;
                 if (LexerError.isTInnerLexerError(e)) {
                     error = new LexerError.LexerError(e);
@@ -432,6 +353,7 @@ export namespace Lexer {
                         tokens: newTokens,
                         positionStart: positionStart,
                         positionEnd: currentPosition,
+                        multilineKindEnd: multilineKind,
                     },
                     error: maybeError,
                 };
@@ -450,9 +372,119 @@ export namespace Lexer {
                     tokens: newTokens,
                     positionStart: positionStart,
                     positionEnd: currentPosition,
+                    multilineKindEnd: multilineKind,
                 }
             }
         }
+    }
+
+    function lexDefault(line: TLexerLine): LineToken {
+        const lineString = line.lineString;
+        const text = lineString.text;
+        const positionStart = line.position;
+
+        let currentPosition = drainWhitespace(lineString, positionStart);
+        const chr1: string = text[currentPosition.textIndex];
+        let token: LineToken;
+
+        if (chr1 === "!") { token = readConstant(TokenKind.Bang, lineString, currentPosition, 1); }
+        else if (chr1 === "&") { token = readConstant(TokenKind.Ampersand, lineString, currentPosition, 1); }
+        else if (chr1 === "(") { token = readConstant(TokenKind.LeftParenthesis, lineString, currentPosition, 1); }
+        else if (chr1 === ")") { token = readConstant(TokenKind.RightParenthesis, lineString, currentPosition, 1); }
+        else if (chr1 === "*") { token = readConstant(TokenKind.Asterisk, lineString, currentPosition, 1); }
+        else if (chr1 === "+") { token = readConstant(TokenKind.Plus, lineString, currentPosition, 1); }
+        else if (chr1 === ",") { token = readConstant(TokenKind.Comma, lineString, currentPosition, 1); }
+        else if (chr1 === "-") { token = readConstant(TokenKind.Minus, lineString, currentPosition, 1); }
+        else if (chr1 === ";") { token = readConstant(TokenKind.Semicolon, lineString, currentPosition, 1); }
+        else if (chr1 === "?") { token = readConstant(TokenKind.QuestionMark, lineString, currentPosition, 1); }
+        else if (chr1 === "@") { token = readConstant(TokenKind.AtSign, lineString, currentPosition, 1); }
+        else if (chr1 === "[") { token = readConstant(TokenKind.LeftBracket, lineString, currentPosition, 1); }
+        else if (chr1 === "]") { token = readConstant(TokenKind.RightBracket, lineString, currentPosition, 1); }
+        else if (chr1 === "{") { token = readConstant(TokenKind.LeftBrace, lineString, currentPosition, 1); }
+        else if (chr1 === "}") { token = readConstant(TokenKind.RightBrace, lineString, currentPosition, 1); }
+
+        else if (chr1 === "\"") { throw new Error("not supported") }
+
+        else if (chr1 === "0") {
+            const chr2 = text[currentPosition.textIndex + 1];
+
+            if (chr2 === "x" || chr2 === "X") { token = readHexLiteral(lineString, currentPosition); }
+            else { token = readNumericLiteral(lineString, currentPosition); }
+        }
+
+        else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(lineString, currentPosition); }
+
+        else if (chr1 === ".") {
+            const chr2 = text[currentPosition.textIndex + 1];
+
+            if (chr2 === undefined) {
+                const LexerLinePosition = StringHelpers.graphemePositionAt(text, currentPosition.textIndex);
+                throw new LexerError.UnexpectedEofError(LexerLinePosition);
+            }
+            else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(lineString, currentPosition); }
+            else if (chr2 === ".") {
+                const chr3 = text[currentPosition.textIndex + 2];
+
+                if (chr3 === ".") { token = readConstant(TokenKind.Ellipsis, lineString, currentPosition, 3); }
+                else { throw unexpectedReadError(text, currentPosition.textIndex) }
+            }
+            else { throw unexpectedReadError(text, currentPosition.textIndex) }
+        }
+
+        else if (chr1 === ">") {
+            const chr2 = text[currentPosition.textIndex + 1];
+
+            if (chr2 === "=") { token = readConstant(TokenKind.GreaterThanEqualTo, lineString, currentPosition, 2); }
+            else { token = readConstant(TokenKind.GreaterThan, lineString, currentPosition, 1); }
+        }
+
+        else if (chr1 === "<") {
+            const chr2 = text[currentPosition.textIndex + 1];
+
+            if (chr2 === "=") { token = readConstant(TokenKind.LessThanEqualTo, lineString, currentPosition, 2); }
+            else if (chr2 === ">") { token = readConstant(TokenKind.NotEqual, lineString, currentPosition, 2); }
+            else { token = readConstant(TokenKind.LessThan, lineString, currentPosition, 1) }
+        }
+
+        else if (chr1 === "=") {
+            const chr2 = text[currentPosition.textIndex + 1];
+
+            if (chr2 === ">") { token = readConstant(TokenKind.FatArrow, lineString, currentPosition, 2); }
+            else { token = readConstant(TokenKind.Equal, lineString, currentPosition, 1); }
+        }
+
+        else if (chr1 === "/") {
+            const chr2 = text[currentPosition.textIndex + 1];
+
+            if (chr2 === "/") {
+                throw new Error("comments not supported");
+                // const phantomTokenIndex = line.tokens.length + newTokens.length;
+                // const commentRead = readComments(document, documentIndex, CommentKind.Line, phantomTokenIndex);
+                // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
+                // newComments.push(...commentRead);
+                // continue;
+            }
+            else if (chr2 === "*") {
+                throw new Error("comments not supported");
+                // const phantomTokenIndex = line.tokens.length + newTokens.length;
+                // const commentRead = readComments(document, documentIndex, CommentKind.Multiline, phantomTokenIndex);
+                // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
+                // newComments.push(...commentRead);
+                // continue;
+            }
+            else { token = readConstant(TokenKind.Division, lineString, currentPosition, 1); }
+        }
+
+        else if (chr1 === "#") {
+            const chr2 = text[currentPosition.textIndex + 1];
+
+            if (chr2 === "\"") { token = readQuotedIdentifier(lineString, currentPosition); }
+            else { token = readKeyword(lineString, currentPosition); }
+        }
+
+        else { token = readKeywordOrIdentifier(lineString, currentPosition); }
+
+        return token;
     }
 
     function drainWhitespace(
