@@ -5,7 +5,7 @@ import { LexerError } from "./error";
 import { Keyword } from "./keywords";
 import { ErrorLine, LexerLineKind, LexerLineString, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine, TLexerLine, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
 import { LexerSnapshot } from "./lexerSnapshot";
-import { LexerLinePosition, LineToken, Token, TokenKind } from "./token";
+import { LexerLinePosition, LineToken, LineTokenKind, Token, tokenKindFrom } from "./token";
 
 // the lexer is
 //  * functional
@@ -128,7 +128,12 @@ export namespace Lexer {
                 throw isNever(line);
         }
 
-        // unsafe: temp removal of ReadonlyArray
+        // unsafe action:
+        //      change ReadonlyArray into standard array
+        // what I'm trying to avoid:
+        //      a single element needs to be updated, avoids recreating the object.
+        // why it's safe:
+        //      same as re-creating the array
         const lines: TLexerLine[] = state.lines as TLexerLine[];
         lines[lineIndex] = line;
 
@@ -164,6 +169,7 @@ export namespace Lexer {
             for (let token of line.tokens) {
                 allTokens.push({
                     ...token,
+                    kind: tokenKindFrom(token.kind),
                     positionStart: {
                         lineNumber: line.lineNumber,
                         ...token.positionStart,
@@ -387,21 +393,21 @@ export namespace Lexer {
         const chr1: string = text[currentPosition.textIndex];
         let token: LineToken;
 
-        if (chr1 === "!") { token = readConstant(TokenKind.Bang, lineString, currentPosition, 1); }
-        else if (chr1 === "&") { token = readConstant(TokenKind.Ampersand, lineString, currentPosition, 1); }
-        else if (chr1 === "(") { token = readConstant(TokenKind.LeftParenthesis, lineString, currentPosition, 1); }
-        else if (chr1 === ")") { token = readConstant(TokenKind.RightParenthesis, lineString, currentPosition, 1); }
-        else if (chr1 === "*") { token = readConstant(TokenKind.Asterisk, lineString, currentPosition, 1); }
-        else if (chr1 === "+") { token = readConstant(TokenKind.Plus, lineString, currentPosition, 1); }
-        else if (chr1 === ",") { token = readConstant(TokenKind.Comma, lineString, currentPosition, 1); }
-        else if (chr1 === "-") { token = readConstant(TokenKind.Minus, lineString, currentPosition, 1); }
-        else if (chr1 === ";") { token = readConstant(TokenKind.Semicolon, lineString, currentPosition, 1); }
-        else if (chr1 === "?") { token = readConstant(TokenKind.QuestionMark, lineString, currentPosition, 1); }
-        else if (chr1 === "@") { token = readConstant(TokenKind.AtSign, lineString, currentPosition, 1); }
-        else if (chr1 === "[") { token = readConstant(TokenKind.LeftBracket, lineString, currentPosition, 1); }
-        else if (chr1 === "]") { token = readConstant(TokenKind.RightBracket, lineString, currentPosition, 1); }
-        else if (chr1 === "{") { token = readConstant(TokenKind.LeftBrace, lineString, currentPosition, 1); }
-        else if (chr1 === "}") { token = readConstant(TokenKind.RightBrace, lineString, currentPosition, 1); }
+        if (chr1 === "!") { token = readConstant(LineTokenKind.Bang, lineString, currentPosition, 1); }
+        else if (chr1 === "&") { token = readConstant(LineTokenKind.Ampersand, lineString, currentPosition, 1); }
+        else if (chr1 === "(") { token = readConstant(LineTokenKind.LeftParenthesis, lineString, currentPosition, 1); }
+        else if (chr1 === ")") { token = readConstant(LineTokenKind.RightParenthesis, lineString, currentPosition, 1); }
+        else if (chr1 === "*") { token = readConstant(LineTokenKind.Asterisk, lineString, currentPosition, 1); }
+        else if (chr1 === "+") { token = readConstant(LineTokenKind.Plus, lineString, currentPosition, 1); }
+        else if (chr1 === ",") { token = readConstant(LineTokenKind.Comma, lineString, currentPosition, 1); }
+        else if (chr1 === "-") { token = readConstant(LineTokenKind.Minus, lineString, currentPosition, 1); }
+        else if (chr1 === ";") { token = readConstant(LineTokenKind.Semicolon, lineString, currentPosition, 1); }
+        else if (chr1 === "?") { token = readConstant(LineTokenKind.QuestionMark, lineString, currentPosition, 1); }
+        else if (chr1 === "@") { token = readConstant(LineTokenKind.AtSign, lineString, currentPosition, 1); }
+        else if (chr1 === "[") { token = readConstant(LineTokenKind.LeftBracket, lineString, currentPosition, 1); }
+        else if (chr1 === "]") { token = readConstant(LineTokenKind.RightBracket, lineString, currentPosition, 1); }
+        else if (chr1 === "{") { token = readConstant(LineTokenKind.LeftBrace, lineString, currentPosition, 1); }
+        else if (chr1 === "}") { token = readConstant(LineTokenKind.RightBrace, lineString, currentPosition, 1); }
 
         else if (chr1 === "\"") { throw new Error("not supported") }
 
@@ -425,7 +431,7 @@ export namespace Lexer {
             else if (chr2 === ".") {
                 const chr3 = text[currentPosition.textIndex + 2];
 
-                if (chr3 === ".") { token = readConstant(TokenKind.Ellipsis, lineString, currentPosition, 3); }
+                if (chr3 === ".") { token = readConstant(LineTokenKind.Ellipsis, lineString, currentPosition, 3); }
                 else { throw unexpectedReadError(text, currentPosition.textIndex) }
             }
             else { throw unexpectedReadError(text, currentPosition.textIndex) }
@@ -434,23 +440,23 @@ export namespace Lexer {
         else if (chr1 === ">") {
             const chr2 = text[currentPosition.textIndex + 1];
 
-            if (chr2 === "=") { token = readConstant(TokenKind.GreaterThanEqualTo, lineString, currentPosition, 2); }
-            else { token = readConstant(TokenKind.GreaterThan, lineString, currentPosition, 1); }
+            if (chr2 === "=") { token = readConstant(LineTokenKind.GreaterThanEqualTo, lineString, currentPosition, 2); }
+            else { token = readConstant(LineTokenKind.GreaterThan, lineString, currentPosition, 1); }
         }
 
         else if (chr1 === "<") {
             const chr2 = text[currentPosition.textIndex + 1];
 
-            if (chr2 === "=") { token = readConstant(TokenKind.LessThanEqualTo, lineString, currentPosition, 2); }
-            else if (chr2 === ">") { token = readConstant(TokenKind.NotEqual, lineString, currentPosition, 2); }
-            else { token = readConstant(TokenKind.LessThan, lineString, currentPosition, 1) }
+            if (chr2 === "=") { token = readConstant(LineTokenKind.LessThanEqualTo, lineString, currentPosition, 2); }
+            else if (chr2 === ">") { token = readConstant(LineTokenKind.NotEqual, lineString, currentPosition, 2); }
+            else { token = readConstant(LineTokenKind.LessThan, lineString, currentPosition, 1) }
         }
 
         else if (chr1 === "=") {
             const chr2 = text[currentPosition.textIndex + 1];
 
-            if (chr2 === ">") { token = readConstant(TokenKind.FatArrow, lineString, currentPosition, 2); }
-            else { token = readConstant(TokenKind.Equal, lineString, currentPosition, 1); }
+            if (chr2 === ">") { token = readConstant(LineTokenKind.FatArrow, lineString, currentPosition, 2); }
+            else { token = readConstant(LineTokenKind.Equal, lineString, currentPosition, 1); }
         }
 
         else if (chr1 === "/") {
@@ -472,7 +478,7 @@ export namespace Lexer {
                 // newComments.push(...commentRead);
                 // continue;
             }
-            else { token = readConstant(TokenKind.Division, lineString, currentPosition, 1); }
+            else { token = readConstant(LineTokenKind.Division, lineString, currentPosition, 1); }
         }
 
         else if (chr1 === "#") {
@@ -516,7 +522,7 @@ export namespace Lexer {
     //         throw unterminatedStringError(document, documentIndex);
     //     }
 
-    //     return readTokenFromSlice(document, documentIndex, TokenKind.StringLiteral, stringEndIndex + 1);
+    //     return readTokenFromSlice(document, documentIndex, LineTokenKind.StringLiteral, stringEndIndex + 1);
     // }
 
     function readHexLiteral(
@@ -534,7 +540,7 @@ export namespace Lexer {
             textIndex: textIndexEnd,
             columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
         }
-        return readTokenFromPositions(TokenKind.HexLiteral, lineString, positionStart, positionEnd);
+        return readTokenFromPositions(LineTokenKind.HexLiteral, lineString, positionStart, positionEnd);
     }
 
     function readNumericLiteral(lineString: LexerLineString, positionStart: LexerLinePosition): LineToken {
@@ -549,7 +555,7 @@ export namespace Lexer {
             textIndex: textEndIndex,
             columnNumber: lineString.textIndex2GraphemeIndex[textEndIndex],
         }
-        return readTokenFromPositions(TokenKind.NumericLiteral, lineString, positionStart, positionEnd);
+        return readTokenFromPositions(LineTokenKind.NumericLiteral, lineString, positionStart, positionEnd);
     }
 
     // function readComments(
@@ -699,7 +705,7 @@ export namespace Lexer {
 
         const substring = text.substring(textStartIndex, textIndexEnd);
 
-        const maybeKeywordTokenKind = maybeKeywordTokenKindFrom(substring);
+        const maybeKeywordTokenKind = maybeKeywordLineTokenKindFrom(substring);
         if (maybeKeywordTokenKind === undefined) {
             return undefined;
         }
@@ -723,7 +729,7 @@ export namespace Lexer {
         //     throw unterminatedStringError(document, documentIndex + 1);
         // }
 
-        // return readTokenFromSlice(document, documentIndex, TokenKind.Identifier, stringEndIndex + 1);
+        // return readTokenFromSlice(document, documentIndex, LineTokenKind.Identifier, stringEndIndex + 1);
     }
 
     // the quoted identifier case has already been taken care of
@@ -745,17 +751,17 @@ export namespace Lexer {
             const textIndexEnd = maybeTextIndexEnd;
             const substring = text.substring(textIndexStart, textIndexEnd);
 
-            const maybeKeywordTokenKind = maybeKeywordTokenKindFrom(substring);
+            const maybeKeywordTokenKind = maybeKeywordLineTokenKindFrom(substring);
 
             let tokenKind;
             if (maybeKeywordTokenKind !== undefined) {
                 tokenKind = maybeKeywordTokenKind;
             }
             else if (substring === "null") {
-                tokenKind = TokenKind.NullLiteral;
+                tokenKind = LineTokenKind.NullLiteral;
             }
             else {
-                tokenKind = TokenKind.Identifier;
+                tokenKind = LineTokenKind.Identifier;
             }
 
             return {
@@ -771,7 +777,7 @@ export namespace Lexer {
     }
 
     function readConstant(
-        tokenKind: TokenKind,
+        lineTokenKind: LineTokenKind,
         lineString: LexerLineString,
         positionStart: LexerLinePosition,
         length: number,
@@ -781,17 +787,17 @@ export namespace Lexer {
             textIndex: positionStart.textIndex + length,
             columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd]
         }
-        return readTokenFromPositions(tokenKind, lineString, positionStart, positionEnd);
+        return readTokenFromPositions(lineTokenKind, lineString, positionStart, positionEnd);
     }
 
     function readTokenFromPositions(
-        tokenKind: TokenKind,
+        lineTokenKind: LineTokenKind,
         lineString: LexerLineString,
         startPosition: LexerLinePosition,
         positionEnd: LexerLinePosition,
     ): LineToken {
         return {
-            kind: tokenKind,
+            kind: lineTokenKind,
             positionStart: startPosition,
             positionEnd: positionEnd,
             data: lineString.text.substring(startPosition.textIndex, positionEnd.textIndex),
@@ -810,70 +816,70 @@ export namespace Lexer {
             : undefined;
     }
 
-    function maybeKeywordTokenKindFrom(str: string): Option<TokenKind> {
+    function maybeKeywordLineTokenKindFrom(str: string): Option<LineTokenKind> {
         switch (str) {
             case Keyword.And:
-                return TokenKind.KeywordAnd;
+                return LineTokenKind.KeywordAnd;
             case Keyword.As:
-                return TokenKind.KeywordAs;
+                return LineTokenKind.KeywordAs;
             case Keyword.Each:
-                return TokenKind.KeywordEach;
+                return LineTokenKind.KeywordEach;
             case Keyword.Else:
-                return TokenKind.KeywordElse;
+                return LineTokenKind.KeywordElse;
             case Keyword.Error:
-                return TokenKind.KeywordError;
+                return LineTokenKind.KeywordError;
             case Keyword.False:
-                return TokenKind.KeywordFalse;
+                return LineTokenKind.KeywordFalse;
             case Keyword.If:
-                return TokenKind.KeywordIf;
+                return LineTokenKind.KeywordIf;
             case Keyword.In:
-                return TokenKind.KeywordIn;
+                return LineTokenKind.KeywordIn;
             case Keyword.Is:
-                return TokenKind.KeywordIs;
+                return LineTokenKind.KeywordIs;
             case Keyword.Let:
-                return TokenKind.KeywordLet;
+                return LineTokenKind.KeywordLet;
             case Keyword.Meta:
-                return TokenKind.KeywordMeta;
+                return LineTokenKind.KeywordMeta;
             case Keyword.Not:
-                return TokenKind.KeywordNot;
+                return LineTokenKind.KeywordNot;
             case Keyword.Or:
-                return TokenKind.KeywordOr;
+                return LineTokenKind.KeywordOr;
             case Keyword.Otherwise:
-                return TokenKind.KeywordOtherwise;
+                return LineTokenKind.KeywordOtherwise;
             case Keyword.Section:
-                return TokenKind.KeywordSection;
+                return LineTokenKind.KeywordSection;
             case Keyword.Shared:
-                return TokenKind.KeywordShared;
+                return LineTokenKind.KeywordShared;
             case Keyword.Then:
-                return TokenKind.KeywordThen;
+                return LineTokenKind.KeywordThen;
             case Keyword.True:
-                return TokenKind.KeywordTrue;
+                return LineTokenKind.KeywordTrue;
             case Keyword.Try:
-                return TokenKind.KeywordTry;
+                return LineTokenKind.KeywordTry;
             case Keyword.Type:
-                return TokenKind.KeywordType;
+                return LineTokenKind.KeywordType;
             case Keyword.HashBinary:
-                return TokenKind.KeywordHashBinary;
+                return LineTokenKind.KeywordHashBinary;
             case Keyword.HashDate:
-                return TokenKind.KeywordHashDate;
+                return LineTokenKind.KeywordHashDate;
             case Keyword.HashDateTime:
-                return TokenKind.KeywordHashDateTime;
+                return LineTokenKind.KeywordHashDateTime;
             case Keyword.HashDateTimeZone:
-                return TokenKind.KeywordHashDateTimeZone;
+                return LineTokenKind.KeywordHashDateTimeZone;
             case Keyword.HashDuration:
-                return TokenKind.KeywordHashDuration;
+                return LineTokenKind.KeywordHashDuration;
             case Keyword.HashInfinity:
-                return TokenKind.KeywordHashInfinity;
+                return LineTokenKind.KeywordHashInfinity;
             case Keyword.HashNan:
-                return TokenKind.KeywordHashNan;
+                return LineTokenKind.KeywordHashNan;
             case Keyword.HashSections:
-                return TokenKind.KeywordHashSections;
+                return LineTokenKind.KeywordHashSections;
             case Keyword.HashShared:
-                return TokenKind.KeywordHashShared;
+                return LineTokenKind.KeywordHashShared;
             case Keyword.HashTable:
-                return TokenKind.KeywordHashTable;
+                return LineTokenKind.KeywordHashTable;
             case Keyword.HashTime:
-                return TokenKind.KeywordHashTime;
+                return LineTokenKind.KeywordHashTime;
             default:
                 return undefined;
         }
