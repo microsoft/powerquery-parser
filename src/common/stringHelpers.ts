@@ -13,41 +13,10 @@ export namespace StringHelpers {
         DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
     }
 
-    export interface GraphemeString {
-        readonly blob: string,
-        readonly graphemes: ReadonlyArray<string>,
-        readonly documentIndex2GraphemeIndex: { [documentIndex: number]: number; }
-        readonly graphemeIndex2DocumentIndex: { [graphemeIndex: number]: number; }
-    }
-
     export interface GraphemePosition {
-        readonly documentIndex: number,
+        readonly textIndex: number,
         readonly lineNumber: number,
         readonly columnNumber: number,
-    }
-
-    export function graphemeDocument(blob: string): GraphemeString {
-        const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(blob);
-        const numGraphemes = graphemes.length;
-        const documentIndex2GraphemeIndex: { [documentIndex: number]: number; } = {};
-        const graphemeIndex2DocumentIndex: { [graphemeIndex: number]: number; } = {};
-
-        let summedCodeUnits = 0;
-        for (let index = 0; index < numGraphemes; index++) {
-            graphemeIndex2DocumentIndex[index] = summedCodeUnits;
-            documentIndex2GraphemeIndex[summedCodeUnits] = index;
-            summedCodeUnits += graphemes[index].length;
-        }
-
-        graphemeIndex2DocumentIndex[numGraphemes] = blob.length;
-        documentIndex2GraphemeIndex[blob.length] = numGraphemes;
-
-        return {
-            blob,
-            graphemes,
-            documentIndex2GraphemeIndex,
-            graphemeIndex2DocumentIndex
-        }
     }
 
     export function containsNewline(str: string): boolean {
@@ -90,21 +59,21 @@ export namespace StringHelpers {
         }
     }
 
-    export function graphemePositionAt(document: string, documentIndex: number): GraphemePosition {
-        if (documentIndex > document.length) {
-            throw new CommonError.InvariantError(`documentIndex > document.length : ${documentIndex} > ${document.length}`)
+    export function graphemePositionAt(text: string, textIndex: number): GraphemePosition {
+        if (textIndex > text.length) {
+            throw new CommonError.InvariantError(`textIndex > text.length : ${textIndex} > ${text.length}`)
         }
 
-        const graphemes = graphemeSplitter.iterateGraphemes(document);
+        const graphemes = graphemeSplitter.iterateGraphemes(text);
 
-        let tmpDocumentIndex = 0;
+        let tmpTextIndex = 0;
         let lineNumber = 1;
         let columnNumber = 1;
         for (const grapheme of graphemes) {
-            if (tmpDocumentIndex >= documentIndex) {
-                if (tmpDocumentIndex === documentIndex) {
+            if (tmpTextIndex >= textIndex) {
+                if (tmpTextIndex === textIndex) {
                     return {
-                        documentIndex,
+                        textIndex: textIndex,
                         lineNumber,
                         columnNumber,
                     };
@@ -114,7 +83,7 @@ export namespace StringHelpers {
                         lineNumber,
                         columnNumber,
                     }
-                    throw new CommonError.InvariantError("documentIndex should never be larger than documentIndex", details);
+                    throw new CommonError.InvariantError("tmpTextIndex should never be larger than textIndex", details);
                 }
             }
 
@@ -122,13 +91,13 @@ export namespace StringHelpers {
             if (maybeNewlineKind) {
                 switch (maybeNewlineKind) {
                     case NewlineKind.DoubleCharacter:
-                        tmpDocumentIndex += 2;
+                        tmpTextIndex += 2;
                         lineNumber += 1;
                         columnNumber = 1;
                         break;
 
                     case NewlineKind.SingleCharacter:
-                        tmpDocumentIndex += 1;
+                        tmpTextIndex += 1;
                         lineNumber += 1;
                         columnNumber = 1;
                         break;
@@ -139,13 +108,13 @@ export namespace StringHelpers {
                 }
             }
             else {
-                tmpDocumentIndex += grapheme.length;
+                tmpTextIndex += grapheme.length;
                 columnNumber += 1;
             }
         }
 
-        const details = { documentIndex }
-        throw new CommonError.InvariantError("documentIndex should've been found", details);
+        const details = { textIndex }
+        throw new CommonError.InvariantError("textIndex should've been found", details);
     }
 
 }

@@ -1,6 +1,6 @@
-import { Option, StringHelpers } from "../common";
+import { Option } from "../common";
 import { LexerError } from "./error";
-import { Token } from "./token";
+import { LexerLinePosition, LineToken } from "./token";
 
 export type TLexerLineExceptUntouched = Exclude<TLexerLine, UntouchedLine>;
 
@@ -18,17 +18,23 @@ export type TErrorLexerLine = (
 
 export interface LexerState {
     readonly lines: ReadonlyArray<TLexerLine>,
-    readonly multilineKindUpdate: { [lineNumber: number]: LexerMultilineKind; }
     readonly separator: string,
 }
 
 export interface ILexerLine {
     readonly kind: LexerLineKind,
-    readonly multilineKind: LexerMultilineKind,
-    readonly document: StringHelpers.GraphemeString,
-    readonly numberOfActions: number,
-    readonly position: StringHelpers.GraphemePosition,
-    readonly tokens: ReadonlyArray<Token>,
+    readonly lineString: LexerLineString,       // text representation for the line
+    readonly numberOfActions: number,           // used for quick comparisons
+    readonly lineNumber: number,                // what line number is this
+    readonly position: LexerLinePosition,       // the cursor postion within the line
+    readonly tokens: ReadonlyArray<LineToken>,
+}
+
+export interface LexerLineString {
+    readonly text: string,
+    readonly graphemes: ReadonlyArray<string>,
+    readonly textIndex2GraphemeIndex: { [textIndex: number]: number; }
+    readonly graphemeIndex2TextIndex: { [graphemeIndex: number]: number; }
 }
 
 export const enum LexerLineKind {
@@ -36,13 +42,6 @@ export const enum LexerLineKind {
     Touched = "Touched",
     TouchedWithError = "TouchedWithError",
     Untouched = "Untouched",
-}
-
-export const enum LexerMultilineKind {
-    Default = "Default",
-    ExpectingMultilineComment = "ExpectingMultilineComment",
-    ExpectingMultilineQuotedIdentifier = "ExpectingMultilineQuotedIdentifier",
-    ExpectingMultilineString = "ExpectingMultilineString",
 }
 
 export interface ErrorLine extends ILexerLine {
@@ -71,7 +70,7 @@ export interface UntouchedLine extends ILexerLine {
 }
 
 export interface LexerRead {
-    readonly tokens: ReadonlyArray<Token>,
-    readonly positionStart: StringHelpers.GraphemePosition,
-    readonly positionEnd: StringHelpers.GraphemePosition,
+    readonly tokens: ReadonlyArray<LineToken>,
+    readonly positionStart: LexerLinePosition,
+    readonly positionEnd: LexerLinePosition,
 }

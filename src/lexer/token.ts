@@ -1,5 +1,3 @@
-import { StringHelpers } from "../common";
-
 export const enum TokenKind {
     Ampersand = "Ampersand",
     Asterisk = "Asterisk",
@@ -63,10 +61,31 @@ export const enum TokenKind {
     StringLiteral = "StringLiteral",
 }
 
-export interface Token {
+// ---------------------------
+// ---------- Token ----------
+// ---------------------------
+
+export interface IToken<T> {
     readonly kind: TokenKind,
     // range is [start, end)
-    readonly positionStart: StringHelpers.GraphemePosition,
-    readonly positionEnd: StringHelpers.GraphemePosition,
+    readonly positionStart: T,
+    readonly positionEnd: T,
     readonly data: string,
+}
+
+export interface LineToken extends IToken<LexerLinePosition> {};
+
+export interface Token extends IToken<TokenPosition> {}
+
+// --------------------------------------------
+// ---------- IToken type parameters ----------
+// --------------------------------------------
+
+export interface LexerLinePosition {
+    readonly textIndex: number,
+    readonly columnNumber: number,
+}
+
+export interface TokenPosition extends LexerLinePosition {
+    readonly lineNumber: number,
 }

@@ -3,12 +3,9 @@ import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { Keyword } from "./keywords";
-import { ErrorLine, LexerLineKind, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine as TLexerLineError, TLexerLine, TLexerLineExceptUntouched, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
+import { ErrorLine, LexerLineKind, LexerLineString, LexerRead, LexerState, TLexerLine, TouchedWithErrorLine, UntouchedLine, TErrorLexerLine } from "./lexerContracts";
 import { LexerSnapshot } from "./lexerSnapshot";
-import { Token, TokenKind } from "./token";
-
-type GraphemeString = StringHelpers.GraphemeString;
-type GraphemePosition = StringHelpers.GraphemePosition;
+import { TokenKind, LineToken, Token, LexerLinePosition } from "./token";
 
 // the lexer is
 //  * functional
@@ -21,10 +18,33 @@ type GraphemePosition = StringHelpers.GraphemePosition;
 
 export namespace Lexer {
 
+    export function lexerLineStringFrom(text: string): LexerLineString {
+        const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(text);
+        const numGraphemes = graphemes.length;
+        const textIndex2GraphemeIndex: { [textIndex: number]: number; } = {};
+        const graphemeIndex2TextIndex: { [graphemeIndex: number]: number; } = {};
+
+        let summedCodeUnits = 0;
+        for (let index = 0; index < numGraphemes; index++) {
+            graphemeIndex2TextIndex[index] = summedCodeUnits;
+            textIndex2GraphemeIndex[summedCodeUnits] = index;
+            summedCodeUnits += graphemes[index].length;
+        }
+
+        graphemeIndex2TextIndex[numGraphemes] = text.length;
+        textIndex2GraphemeIndex[text.length] = numGraphemes;
+
+        return {
+            text,
+            graphemes,
+            textIndex2GraphemeIndex,
+            graphemeIndex2TextIndex
+        }
+    }
+
     export function from(blob: string, separator = "\n", lexAfter = true): LexerState {
         let newState: LexerState = {
             lines: [lineFrom(blob, 0)],
-            multilineKindUpdate: {},
             separator,
         };
 
@@ -93,9 +113,9 @@ export namespace Lexer {
             case LexerLineKind.TouchedWithError:
                 line = {
                     kind: LexerLineKind.Error,
-                    multilineKind: line.multilineKind,
-                    document: line.document,
+                    lineString: line.lineString,
                     numberOfActions: line.numberOfActions + 1,
+                    lineNumber: line.lineNumber,
                     position: line.position,
                     tokens: line.tokens,
                     error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
@@ -107,7 +127,7 @@ export namespace Lexer {
         }
 
         // unsafe: temp removal of ReadonlyArray
-        const lines: TLexerLineExceptUntouched[] = state.lines as TLexerLineExceptUntouched[];
+        const lines: TLexerLine[] = state.lines as TLexerLine[];
         lines[lineIndex] = line;
 
         return state;
@@ -116,138 +136,23 @@ export namespace Lexer {
     function lineFrom(blob: string, lineNumber: number): UntouchedLine {
         return {
             kind: LexerLineKind.Untouched,
-            multilineKind: LexerMultilineKind.Default,
-            document: StringHelpers.graphemeDocument(blob),
+            lineString: lexerLineStringFrom(blob),
+            numberOfActions: 0,
+            lineNumber,
             position: {
-                documentIndex: 0,
+                textIndex: 0,
                 columnNumber: 0,
-                lineNumber,
             },
             tokens: [],
-            numberOfActions: 0,
             maybeLastRead: undefined,
         }
     }
 
-    // export type TLexer = (
-    //     | TouchedLexer
-    //     | TouchedWithErrorLexer
-    //     | ErrorLexer
-    //     | UntouchedLexer
-    // )
-
-    // // most Lexer actions leave a TLexer in a touched state of some sort
-    // export type TLexerExceptUntouched = Exclude<TLexer, UntouchedLexer>;
-
-    // export interface ILexer {
-    //     readonly kind: LexerKind,
-    //     readonly document: string,
-    //     readonly tokens: ReadonlyArray<Token>,      // all tokens read up to this point
-    //     readonly comments: ReadonlyArray<TComment>, // all comments read up to this point
-    //     readonly documentIndex: number,             // where the lexer left off, can be EOF
-    // }
-
-    // // the last read attempt didn't read any new tokens/comments (though possibly whitespace),
-    // // and encountered an error such as: unterminated string, eof, expected hex literal, etc.
-    // export interface ErrorLexer extends ILexer {
-    //     readonly kind: LexerKind.Error,
-    //     readonly error: LexerError.TLexerError,
-    // }
-
-    // // the last read attempt succeeded without encountering an error.
-    // // possible that only whitespace was consumed.
-    // export interface TouchedLexer extends ILexer {
-    //     readonly kind: LexerKind.Touched,
-    //     readonly lastRead: LexerRead,
-    // }
-
-    // // the last read attempt read at least one token or comment before encountering an error
-    // export interface TouchedWithErrorLexer extends ILexer {
-    //     readonly kind: LexerKind.TouchedWithError,
-    //     readonly lastRead: LexerRead,
-    //     readonly error: LexerError.TLexerError,
-    // }
-
-    // // a call to appendtToDocument clears existing state marking it ready to be lexed
-    // export interface UntouchedLexer extends ILexer {
-    //     readonly kind: LexerKind.Untouched,
-    //     readonly maybeLastRead: Option<LexerRead>,
-    // }
-
-    // export const enum LexerKind {
-    //     Error = "Error",
-    //     Touched = "Touched",                    // a call to lex returned PartialResultKind.Ok
-    //     TouchedWithError = "TouchedWithError",  // a call to lex returned PartialResultKind.Partial
-    //     Untouched = "Untouched",                // the last Lexer action was appendToDocument
-    // }
-
-    // // what was read on a call to lex
-    // export interface LexerRead {
-    //     readonly tokens: ReadonlyArray<Token>,
-    //     readonly comments: ReadonlyArray<TComment>,
-    //     readonly documentStartIndex: number,
-    //     readonly documentEndIndex: number,
-    // }
-
-    // // create a new default state Lexer for the given document
-    // export function from(document: string): TLexer {
-    //     return {
-    //         kind: LexerKind.Untouched,
-    //         document: document,
-    //         tokens: [],
-    //         comments: [],
-    //         documentIndex: 0,
-    //         maybeLastRead: undefined,
-    //     }
-    // }
-
-    // // resets TLexerKind to UntouchedLexer
-    // export function appendToDocument(lexer: TLexer, toAppend: string): UntouchedLexer {
-    //     const newDocument = lexer.document + toAppend;
-    //     switch (lexer.kind) {
-    //         case LexerKind.Error:
-    //             return {
-    //                 kind: LexerKind.Untouched,
-    //                 document: newDocument,
-    //                 tokens: lexer.tokens,
-    //                 comments: lexer.comments,
-    //                 documentIndex: lexer.documentIndex,
-    //                 maybeLastRead: undefined,
-    //             };
-
-    //         case LexerKind.Touched:
-    //             return {
-    //                 kind: LexerKind.Untouched,
-    //                 document: newDocument,
-    //                 tokens: lexer.tokens,
-    //                 comments: lexer.comments,
-    //                 documentIndex: lexer.documentIndex,
-    //                 maybeLastRead: lexer.lastRead,
-    //             };
-
-    //         case LexerKind.TouchedWithError:
-    //             return {
-    //                 kind: LexerKind.Untouched,
-    //                 document: newDocument,
-    //                 tokens: lexer.tokens,
-    //                 comments: lexer.comments,
-    //                 documentIndex: lexer.documentIndex,
-    //                 maybeLastRead: undefined,
-    //             };
-
-    //         case LexerKind.Untouched:
-    //             return {
-    //                 ...lexer,
-    //                 document: newDocument,
-    //             };
-    //     }
-    // }
-
     // get a frozen copy of all document, tokens, and comments lexed up to this point
     export function snapshot(state: LexerState): LexerSnapshot {
-        const allDocuments = state
+        const allLineStrings = state
             .lines
-            .map(line => line.document)
+            .map(line => line.lineString)
             .join(state.separator);
 
         const allTokens: Token[] = [];
@@ -255,13 +160,19 @@ export namespace Lexer {
             for (let token of line.tokens) {
                 allTokens.push({
                     ...token,
-                    positionStart: { ...token.positionStart },
-                    positionEnd: { ...token.positionEnd },
+                    positionStart: {
+                        lineNumber: line.lineNumber,
+                        ...token.positionStart,
+                    },
+                    positionEnd: {
+                        lineNumber: line.lineNumber,
+                        ...token.positionEnd,
+                    },
                 });
             }
         }
 
-        return new LexerSnapshot(allDocuments, allTokens);
+        return new LexerSnapshot(allLineStrings, allTokens);
     }
 
     // // lex one token and all comments before that token
@@ -279,7 +190,7 @@ export namespace Lexer {
         return linesWithErrors.length !== 0;
     }
 
-    export function isErrorLine(line: TLexerLine): line is TLexerLineError {
+    export function isErrorLine(line: TLexerLine): line is TErrorLexerLine {
         switch (line.kind) {
             case LexerLineKind.Error:
             case LexerLineKind.TouchedWithError:
@@ -294,7 +205,7 @@ export namespace Lexer {
         }
     }
 
-    export function firstErrorLine(state: LexerState): Option<TLexerLineError> {
+    export function firstErrorLine(state: LexerState): Option<TErrorLexerLine> {
         for (let line of state.lines) {
             if (isErrorLine(line)) {
                 return line;
@@ -304,46 +215,20 @@ export namespace Lexer {
         return undefined;
     }
 
-    // function lex(state: TLexer, strategy: LexerStrategy): TLexerExceptUntouched {
-    //     switch (state.kind) {
-    //         case LexerKind.Touched:
-    //         case LexerKind.Untouched:
-    //             const lexerRead = read(state, strategy);
-    //             const newState = updateState(state, lexerRead);
-    //             return newState;
-
-    //         case LexerKind.Error:
-    //             return state;
-
-    //         case LexerKind.TouchedWithError:
-    //             return {
-    //                 kind: LexerKind.Error,
-    //                 tokens: state.tokens,
-    //                 comments: state.comments,
-    //                 document: state.document,
-    //                 documentIndex: state.documentIndex,
-    //                 error: new LexerError.LexerError(new LexerError.BadStateError(state.error)),
-    //             };
-
-    //         default:
-    //             throw isNever(state);
-    //     }
-    // }
-
     function updateLine(
         originalState: TLexerLine,
         lexPartialResult: PartialResult<LexerRead, LexerError.TLexerError>,
-    ): TLexerLineExceptUntouched {
+    ): TLexerLine {
         switch (lexPartialResult.kind) {
             case PartialResultKind.Ok: {
                 const lexerRead: LexerRead = lexPartialResult.value;
-                const newTokens: ReadonlyArray<Token> = originalState.tokens.concat(lexerRead.tokens);
+                const newTokens: ReadonlyArray<LineToken> = originalState.tokens.concat(lexerRead.tokens);
 
                 return {
                     kind: LexerLineKind.Touched,
-                    multilineKind: LexerMultilineKind.Default,
-                    document: originalState.document,
+                    lineString: originalState.lineString,
                     tokens: newTokens,
+                    lineNumber: originalState.lineNumber,
                     position: lexerRead.positionEnd,
                     lastRead: lexerRead,
                     numberOfActions: originalState.numberOfActions + 1,
@@ -352,13 +237,13 @@ export namespace Lexer {
 
             case PartialResultKind.Partial: {
                 const lexerRead: LexerRead = lexPartialResult.value;
-                const newTokens: ReadonlyArray<Token> = originalState.tokens.concat(lexerRead.tokens);
+                const newTokens: ReadonlyArray<LineToken> = originalState.tokens.concat(lexerRead.tokens);
 
                 return {
                     kind: LexerLineKind.TouchedWithError,
-                    multilineKind: LexerMultilineKind.Default,
-                    document: originalState.document,
+                    lineString: originalState.lineString,
                     numberOfActions: originalState.numberOfActions + 1,
+                    lineNumber: originalState.lineNumber,
                     position: lexerRead.positionEnd,
                     tokens: newTokens,
                     error: lexPartialResult.error,
@@ -369,10 +254,10 @@ export namespace Lexer {
             case PartialResultKind.Err:
                 return {
                     kind: LexerLineKind.Error,
-                    multilineKind: LexerMultilineKind.Default,
-                    document: originalState.document,
+                    lineString: originalState.lineString,
                     numberOfActions: originalState.numberOfActions,
                     tokens: originalState.tokens,
+                    lineNumber: originalState.lineNumber,
                     position: originalState.position,
                     error: lexPartialResult.error,
                 }
@@ -383,7 +268,7 @@ export namespace Lexer {
     }
 
     function lex(line: TLexerLine): PartialResult<LexerRead, LexerError.TLexerError> {
-        if (!line.document.blob) {
+        if (!line.lineString.text) {
             return {
                 kind: PartialResultKind.Ok,
                 value: {
@@ -394,13 +279,13 @@ export namespace Lexer {
             };
         }
 
-        const document: GraphemeString = line.document;
-        const documentBlob = line.document.blob;
-        const documentLength = documentBlob.length;
+        const lineString = line.lineString;
+        const text = lineString.text;
+        const textLength = text.length;
         const positionStart = line.position;
 
         let currentPosition = positionStart;
-        let continueLexing = positionStart.documentIndex < documentLength;
+        let continueLexing = positionStart.textIndex < textLength;
 
         if (!continueLexing) {
             return {
@@ -409,87 +294,87 @@ export namespace Lexer {
             }
         }
 
-        const newTokens: Token[] = [];
+        const newTokens: LineToken[] = [];
         let maybeError: Option<LexerError.TLexerError>;
         while (continueLexing) {
-            currentPosition = drainWhitespace(document, currentPosition);
+            currentPosition = drainWhitespace(lineString, currentPosition);
 
-            const chr1: string = documentBlob[currentPosition.documentIndex];
+            const chr1: string = text[currentPosition.textIndex];
             if (chr1 === undefined) {
                 break;
             }
 
             try {
-                let token: Token;
+                let token: LineToken;
 
-                if (chr1 === "!") { token = readConstant(TokenKind.Bang, document, currentPosition, 1); }
-                else if (chr1 === "&") { token = readConstant(TokenKind.Ampersand, document, currentPosition, 1); }
-                else if (chr1 === "(") { token = readConstant(TokenKind.LeftParenthesis, document, currentPosition, 1); }
-                else if (chr1 === ")") { token = readConstant(TokenKind.RightParenthesis, document, currentPosition, 1); }
-                else if (chr1 === "*") { token = readConstant(TokenKind.Asterisk, document, currentPosition, 1); }
-                else if (chr1 === "+") { token = readConstant(TokenKind.Plus, document, currentPosition, 1); }
-                else if (chr1 === ",") { token = readConstant(TokenKind.Comma, document, currentPosition, 1); }
-                else if (chr1 === "-") { token = readConstant(TokenKind.Minus, document, currentPosition, 1); }
-                else if (chr1 === ";") { token = readConstant(TokenKind.Semicolon, document, currentPosition, 1); }
-                else if (chr1 === "?") { token = readConstant(TokenKind.QuestionMark, document, currentPosition, 1); }
-                else if (chr1 === "@") { token = readConstant(TokenKind.AtSign, document, currentPosition, 1); }
-                else if (chr1 === "[") { token = readConstant(TokenKind.LeftBracket, document, currentPosition, 1); }
-                else if (chr1 === "]") { token = readConstant(TokenKind.RightBracket, document, currentPosition, 1); }
-                else if (chr1 === "{") { token = readConstant(TokenKind.LeftBrace, document, currentPosition, 1); }
-                else if (chr1 === "}") { token = readConstant(TokenKind.RightBrace, document, currentPosition, 1); }
+                if (chr1 === "!") { token = readConstant(TokenKind.Bang, lineString, currentPosition, 1); }
+                else if (chr1 === "&") { token = readConstant(TokenKind.Ampersand, lineString, currentPosition, 1); }
+                else if (chr1 === "(") { token = readConstant(TokenKind.LeftParenthesis, lineString, currentPosition, 1); }
+                else if (chr1 === ")") { token = readConstant(TokenKind.RightParenthesis, lineString, currentPosition, 1); }
+                else if (chr1 === "*") { token = readConstant(TokenKind.Asterisk, lineString, currentPosition, 1); }
+                else if (chr1 === "+") { token = readConstant(TokenKind.Plus, lineString, currentPosition, 1); }
+                else if (chr1 === ",") { token = readConstant(TokenKind.Comma, lineString, currentPosition, 1); }
+                else if (chr1 === "-") { token = readConstant(TokenKind.Minus, lineString, currentPosition, 1); }
+                else if (chr1 === ";") { token = readConstant(TokenKind.Semicolon, lineString, currentPosition, 1); }
+                else if (chr1 === "?") { token = readConstant(TokenKind.QuestionMark, lineString, currentPosition, 1); }
+                else if (chr1 === "@") { token = readConstant(TokenKind.AtSign, lineString, currentPosition, 1); }
+                else if (chr1 === "[") { token = readConstant(TokenKind.LeftBracket, lineString, currentPosition, 1); }
+                else if (chr1 === "]") { token = readConstant(TokenKind.RightBracket, lineString, currentPosition, 1); }
+                else if (chr1 === "{") { token = readConstant(TokenKind.LeftBrace, lineString, currentPosition, 1); }
+                else if (chr1 === "}") { token = readConstant(TokenKind.RightBrace, lineString, currentPosition, 1); }
 
-                // else if (chr === "\"") { token = readStringLiteral(document, documentIndex); }
+                else if (chr1 === "\"") { throw new Error("not supported") }
 
                 else if (chr1 === "0") {
-                    const chr2 = documentBlob[currentPosition.documentIndex + 1];
+                    const chr2 = text[currentPosition.textIndex + 1];
 
-                    if (chr2 === "x" || chr2 === "X") { token = readHexLiteral(document, currentPosition); }
-                    else { token = readNumericLiteral(document, currentPosition); }
+                    if (chr2 === "x" || chr2 === "X") { token = readHexLiteral(lineString, currentPosition); }
+                    else { token = readNumericLiteral(lineString, currentPosition); }
                 }
 
-                else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(document, currentPosition); }
+                else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(lineString, currentPosition); }
 
                 else if (chr1 === ".") {
-                    const chr2 = document.blob[currentPosition.documentIndex + 1];
+                    const chr2 = text[currentPosition.textIndex + 1];
 
                     if (chr2 === undefined) {
-                        const graphemePosition = StringHelpers.graphemePositionAt(document.blob, currentPosition.documentIndex);
-                        throw new LexerError.UnexpectedEofError(graphemePosition);
+                        const LexerLinePosition = StringHelpers.graphemePositionAt(text, currentPosition.textIndex);
+                        throw new LexerError.UnexpectedEofError(LexerLinePosition);
                     }
-                    else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(document, currentPosition); }
+                    else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(lineString, currentPosition); }
                     else if (chr2 === ".") {
-                        const chr3 = document.blob[currentPosition.documentIndex + 2];
+                        const chr3 = text[currentPosition.textIndex + 2];
 
-                        if (chr3 === ".") { token = readConstant(TokenKind.Ellipsis, document, currentPosition, 3); }
-                        else { throw unexpectedReadError(document.blob, currentPosition.documentIndex) }
+                        if (chr3 === ".") { token = readConstant(TokenKind.Ellipsis, lineString, currentPosition, 3); }
+                        else { throw unexpectedReadError(text, currentPosition.textIndex) }
                     }
-                    else { throw unexpectedReadError(document.blob, currentPosition.documentIndex) }
+                    else { throw unexpectedReadError(text, currentPosition.textIndex) }
                 }
 
                 else if (chr1 === ">") {
-                    const chr2 = document.blob[currentPosition.documentIndex + 1];
+                    const chr2 = text[currentPosition.textIndex + 1];
 
-                    if (chr2 === "=") { token = readConstant(TokenKind.GreaterThanEqualTo, document, currentPosition, 2); }
-                    else { token = readConstant(TokenKind.GreaterThan, document, currentPosition, 1); }
+                    if (chr2 === "=") { token = readConstant(TokenKind.GreaterThanEqualTo, lineString, currentPosition, 2); }
+                    else { token = readConstant(TokenKind.GreaterThan, lineString, currentPosition, 1); }
                 }
 
                 else if (chr1 === "<") {
-                    const chr2 = document.blob[currentPosition.documentIndex + 1];
+                    const chr2 = text[currentPosition.textIndex + 1];
 
-                    if (chr2 === "=") { token = readConstant(TokenKind.LessThanEqualTo, document, currentPosition, 2); }
-                    else if (chr2 === ">") { token = readConstant(TokenKind.NotEqual, document, currentPosition, 2); }
-                    else { token = readConstant(TokenKind.LessThan, document, currentPosition, 1) }
+                    if (chr2 === "=") { token = readConstant(TokenKind.LessThanEqualTo, lineString, currentPosition, 2); }
+                    else if (chr2 === ">") { token = readConstant(TokenKind.NotEqual, lineString, currentPosition, 2); }
+                    else { token = readConstant(TokenKind.LessThan, lineString, currentPosition, 1) }
                 }
 
                 else if (chr1 === "=") {
-                    const chr2 = document.blob[currentPosition.documentIndex + 1];
+                    const chr2 = text[currentPosition.textIndex + 1];
 
-                    if (chr2 === ">") { token = readConstant(TokenKind.FatArrow, document, currentPosition, 2); }
-                    else { token = readConstant(TokenKind.Equal, document, currentPosition, 1); }
+                    if (chr2 === ">") { token = readConstant(TokenKind.FatArrow, lineString, currentPosition, 2); }
+                    else { token = readConstant(TokenKind.Equal, lineString, currentPosition, 1); }
                 }
 
                 else if (chr1 === "/") {
-                    const chr2 = document.blob[currentPosition.documentIndex + 1];
+                    const chr2 = text[currentPosition.textIndex + 1];
 
                     if (chr2 === "/") {
                         throw new Error("comments not supported");
@@ -507,22 +392,22 @@ export namespace Lexer {
                         // newComments.push(...commentRead);
                         // continue;
                     }
-                    else { token = readConstant(TokenKind.Division, document, currentPosition, 1); }
+                    else { token = readConstant(TokenKind.Division, lineString, currentPosition, 1); }
                 }
 
                 else if (chr1 === "#") {
-                    const chr2 = document.blob[currentPosition.documentIndex + 1];
+                    const chr2 = text[currentPosition.textIndex + 1];
 
-                    if (chr2 === "\"") { token = readQuotedIdentifier(document, currentPosition); }
-                    else { token = readKeyword(document, currentPosition); }
+                    if (chr2 === "\"") { token = readQuotedIdentifier(lineString, currentPosition); }
+                    else { token = readKeyword(lineString, currentPosition); }
                 }
 
-                else { token = readKeywordOrIdentifier(document, currentPosition); }
+                else { token = readKeywordOrIdentifier(lineString, currentPosition); }
 
                 currentPosition = token.positionEnd;
                 newTokens.push(token);
 
-                if (currentPosition.documentIndex === documentLength) {
+                if (currentPosition.textIndex === textLength) {
                     continueLexing = false;
                 }
 
@@ -571,16 +456,16 @@ export namespace Lexer {
     }
 
     function drainWhitespace(
-        document: GraphemeString,
-        position: GraphemePosition,
-    ): GraphemePosition {
-        let documentIndex = position.documentIndex;
-        let continueDraining = document.blob[documentIndex] !== undefined;
+        lineString: LexerLineString,
+        position: LexerLinePosition,
+    ): LexerLinePosition {
+        let textIndex = position.textIndex;
+        let continueDraining = lineString.text[textIndex] !== undefined;
 
         while (continueDraining) {
-            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, document.blob, documentIndex);
+            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, lineString.text, textIndex);
             if (maybeLength) {
-                documentIndex += maybeLength;
+                textIndex += maybeLength;
             }
             else {
                 continueDraining = false;
@@ -589,11 +474,11 @@ export namespace Lexer {
 
         return {
             ...position,
-            documentIndex,
+            textIndex,
         };
     }
 
-    // function readStringLiteral(document: string, documentIndex: number): Token {
+    // function readStringLiteral(document: string, documentIndex: number): LineToken {
     //     const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex);
     //     if (stringEndIndex === undefined) {
     //         throw unterminatedStringError(document, documentIndex);
@@ -603,38 +488,36 @@ export namespace Lexer {
     // }
 
     function readHexLiteral(
-        document: GraphemeString,
-        positionStart: GraphemePosition,
-    ): Token {
-        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, document.blob, positionStart.documentIndex);
-        if (maybeDocumentIndexEnd === undefined) {
-            const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
-            throw new LexerError.ExpectedHexLiteralError(graphemePosition);
+        lineString: LexerLineString,
+        positionStart: LexerLinePosition,
+    ): LineToken {
+        const maybeTextIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, lineString.text, positionStart.textIndex);
+        if (maybeTextIndexEnd === undefined) {
+            const LexerLinePosition = StringHelpers.graphemePositionAt(lineString.text, positionStart.textIndex);
+            throw new LexerError.ExpectedHexLiteralError(LexerLinePosition);
         }
-        const documentIndexEnd: number = maybeDocumentIndexEnd;
+        const textIndexEnd: number = maybeTextIndexEnd;
 
-        const positionEnd: GraphemePosition = {
-            documentIndex: documentIndexEnd,
-            lineNumber: positionStart.lineNumber,
-            columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
+        const positionEnd: LexerLinePosition = {
+            textIndex: textIndexEnd,
+            columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
         }
-        return readTokenFromPositions(TokenKind.HexLiteral, document, positionStart, positionEnd);
+        return readTokenFromPositions(TokenKind.HexLiteral, lineString, positionStart, positionEnd);
     }
 
-    function readNumericLiteral(document: GraphemeString, positionStart: GraphemePosition): Token {
-        const maybeDocumentIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, document.blob, positionStart.documentIndex);
-        if (maybeDocumentIndexEnd === undefined) {
-            const graphemePosition = StringHelpers.graphemePositionAt(document.blob, positionStart.documentIndex);
-            throw new LexerError.ExpectedNumericLiteralError(graphemePosition);
+    function readNumericLiteral(lineString: LexerLineString, positionStart: LexerLinePosition): LineToken {
+        const maybeTextIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, lineString.text, positionStart.textIndex);
+        if (maybeTextIndexEnd === undefined) {
+            const LexerLinePosition = StringHelpers.graphemePositionAt(lineString.text, positionStart.textIndex);
+            throw new LexerError.ExpectedNumericLiteralError(LexerLinePosition);
         }
-        const documentIndexEnd: number = maybeDocumentIndexEnd;
+        const textEndIndex: number = maybeTextIndexEnd;
 
-        const positionEnd: GraphemePosition = {
-            documentIndex: documentIndexEnd,
-            lineNumber: positionStart.lineNumber,
-            columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
+        const positionEnd: LexerLinePosition = {
+            textIndex: textEndIndex,
+            columnNumber: lineString.textIndex2GraphemeIndex[textEndIndex],
         }
-        return readTokenFromPositions(TokenKind.NumericLiteral, document, positionStart, positionEnd);
+        return readTokenFromPositions(TokenKind.NumericLiteral, lineString, positionStart, positionEnd);
     }
 
     // function readComments(
@@ -741,8 +624,8 @@ export namespace Lexer {
     //     const documentStartIndex = documentIndex;
     //     const indexOfCommentEnd = document.indexOf("*/", documentStartIndex + 2);
     //     if (indexOfCommentEnd === -1) {
-    //         const graphemePosition = StringHelpers.graphemePositionAt(document, documentStartIndex);
-    //         throw new LexerError.UnterminatedMultilineCommentError(graphemePosition);
+    //         const LexerLinePosition = StringHelpers.LexerLinePositionAt(document, documentStartIndex);
+    //         throw new LexerError.UnterminatedMultilineCommentError(LexerLinePosition);
     //     }
 
     //     const documentEndIndex = indexOfCommentEnd + 2;
@@ -758,31 +641,31 @@ export namespace Lexer {
     //     }
     // }
 
-    function readKeyword(document: GraphemeString, positionStart: GraphemePosition): Token {
-        const maybeToken: Option<Token> = maybeReadKeyword(document, positionStart);
+    function readKeyword(lineString: LexerLineString, positionStart: LexerLinePosition): LineToken {
+        const maybeToken: Option<LineToken> = maybeReadKeyword(lineString, positionStart);
         if (maybeToken) {
             return maybeToken;
         }
         else {
-            throw unexpectedReadError(document.blob, positionStart.documentIndex);
+            throw unexpectedReadError(lineString.text, positionStart.textIndex);
         }
     }
 
-    function maybeReadKeyword(document: GraphemeString, positionStart: GraphemePosition): Option<Token> {
-        const documentBlob = document.blob;
+    function maybeReadKeyword(lineString: LexerLineString, positionStart: LexerLinePosition): Option<LineToken> {
+        const text = lineString.text;
 
-        const documentIndexStart = positionStart.documentIndex;
-        const identifierDocumentIndexStart = documentBlob[documentIndexStart] === "#"
-            ? documentIndexStart + 1
-            : documentIndexStart;
+        const textStartIndex = positionStart.textIndex;
+        const identifierTextIndexStart = text[textStartIndex] === "#"
+            ? textStartIndex + 1
+            : textStartIndex;
 
-        const maybeIdentifierDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, documentBlob, identifierDocumentIndexStart);
-        if (maybeIdentifierDocumentIndexEnd === undefined) {
+        const maybeIdentifierTextIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, identifierTextIndexStart);
+        if (maybeIdentifierTextIndexEnd === undefined) {
             return undefined;
         }
-        const documentIndexEnd = maybeIdentifierDocumentIndexEnd;
+        const textIndexEnd = maybeIdentifierTextIndexEnd;
 
-        const substring = document.blob.substring(documentIndexStart, documentIndexEnd);
+        const substring = text.substring(textStartIndex, textIndexEnd);
 
         const maybeKeywordTokenKind = maybeKeywordTokenKindFrom(substring);
         if (maybeKeywordTokenKind === undefined) {
@@ -793,16 +676,15 @@ export namespace Lexer {
                 kind: maybeKeywordTokenKind,
                 positionStart,
                 positionEnd: {
-                    documentIndex: documentIndexEnd,
-                    lineNumber: positionStart.lineNumber,
-                    columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
+                    textIndex: textIndexEnd,
+                    columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
                 },
                 data: substring,
             }
         }
     }
 
-    function readQuotedIdentifier(_document: GraphemeString, _position: GraphemePosition): Token {
+    function readQuotedIdentifier(_document: LexerLineString, _position: LexerLinePosition): LineToken {
         throw new Error("not supported");
         // const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex + 1);
         // if (stringEndIndex === undefined) {
@@ -812,102 +694,24 @@ export namespace Lexer {
         // return readTokenFromSlice(document, documentIndex, TokenKind.Identifier, stringEndIndex + 1);
     }
 
-    // function readKeyword(document: GraphemeString, startPosition: GraphemePosition, maybeSubstring: Option<string>): Token {
-    //     if (maybeSubstring === undefined) {
-    //         maybeSubstring = maybeKeywordOrIdentifierSubstring(document, documentIndex);
-    //         if (maybeSubstring === undefined) {
-    //             throw unexpectedReadError(document, documentIndex);
-    //         }
-    //     }
-    //     const substring: string = maybeSubstring;
-    //     const substringLength = substring.length;
-
-    //     switch (substring) {
-    //         case Keyword.And:
-    //             return readConstant(TokenKind.KeywordAnd, document, startPosition, substringLength);
-    //         case Keyword.As:
-    //             return readConstant(TokenKind.KeywordAs, document, startPosition, substringLength);
-    //         case Keyword.Each:
-    //             return readConstant(TokenKind.KeywordEach, document, startPosition, substringLength);
-    //         case Keyword.Else:
-    //             return readConstant(TokenKind.KeywordElse, document, startPosition, substringLength);
-    //         case Keyword.Error:
-    //             return readConstant(TokenKind.KeywordError, document, startPosition, substringLength);
-    //         case Keyword.False:
-    //             return readConstant(TokenKind.KeywordFalse, document, startPosition, substringLength);
-    //         case Keyword.If:
-    //             return readConstant(TokenKind.KeywordIf, document, startPosition, substringLength);
-    //         case Keyword.In:
-    //             return readConstant(TokenKind.KeywordIn, document, startPosition, substringLength);
-    //         case Keyword.Is:
-    //             return readConstant(TokenKind.KeywordIs, document, startPosition, substringLength);
-    //         case Keyword.Let:
-    //             return readConstant(TokenKind.KeywordLet, document, startPosition, substringLength);
-    //         case Keyword.Meta:
-    //             return readConstant(TokenKind.KeywordMeta, document, startPosition, substringLength);
-    //         case Keyword.Not:
-    //             return readConstant(TokenKind.KeywordNot, document, startPosition, substringLength);
-    //         case Keyword.Or:
-    //             return readConstant(TokenKind.KeywordOr, document, startPosition, substringLength);
-    //         case Keyword.Otherwise:
-    //             return readConstant(TokenKind.KeywordOtherwise, document, startPosition, substringLength);
-    //         case Keyword.Section:
-    //             return readConstant(TokenKind.KeywordSection, document, startPosition, substringLength);
-    //         case Keyword.Shared:
-    //             return readConstant(TokenKind.KeywordShared, document, startPosition, substringLength);
-    //         case Keyword.Then:
-    //             return readConstant(TokenKind.KeywordThen, document, startPosition, substringLength);
-    //         case Keyword.True:
-    //             return readConstant(TokenKind.KeywordTrue, document, startPosition, substringLength);
-    //         case Keyword.Try:
-    //             return readConstant(TokenKind.KeywordTry, document, startPosition, substringLength);
-    //         case Keyword.Type:
-    //             return readConstant(TokenKind.KeywordType, document, startPosition, substringLength);
-    //         case Keyword.HashBinary:
-    //             return readConstant(TokenKind.KeywordHashBinary, document, startPosition, substringLength);
-    //         case Keyword.HashDate:
-    //             return readConstant(TokenKind.KeywordHashDate, document, startPosition, substringLength);
-    //         case Keyword.HashDateTime:
-    //             return readConstant(TokenKind.KeywordHashDateTime, document, startPosition, substringLength);
-    //         case Keyword.HashDateTimeZone:
-    //             return readConstant(TokenKind.KeywordHashDateTimeZone, document, startPosition, substringLength);
-    //         case Keyword.HashDuration:
-    //             return readConstant(TokenKind.KeywordHashDuration, document, startPosition, substringLength);
-    //         case Keyword.HashInfinity:
-    //             return readConstant(TokenKind.KeywordHashInfinity, document, startPosition, substringLength);
-    //         case Keyword.HashNan:
-    //             return readConstant(TokenKind.KeywordHashNan, document, startPosition, substringLength);
-    //         case Keyword.HashSections:
-    //             return readConstant(TokenKind.KeywordHashSections, document, startPosition, substringLength);
-    //         case Keyword.HashShared:
-    //             return readConstant(TokenKind.KeywordHashShared, document, startPosition, substringLength);
-    //         case Keyword.HashTable:
-    //             return readConstant(TokenKind.KeywordHashTable, document, startPosition, substringLength);
-    //         case Keyword.HashTime:
-    //             return readConstant(TokenKind.KeywordHashTime, document, startPosition, substringLength);
-    //         default:
-    //             throw new CommonError.InvariantError("unknown keyword", { keyword: substring });
-    //     }
-    // }
-
     // the quoted identifier case has already been taken care of
     // null-literal is also read here
-    function readKeywordOrIdentifier(document: GraphemeString, positionStart: GraphemePosition): Token {
-        const documentBlob = document.blob;
-        const documentIndexStart = positionStart.documentIndex;
+    function readKeywordOrIdentifier(lineString: LexerLineString, positionStart: LexerLinePosition): LineToken {
+        const text = lineString.text;
+        const textIndexStart = positionStart.textIndex;
 
         // keyword
-        if (document.blob[documentIndexStart] === "#") {
-            return readKeyword(document, positionStart);
+        if (text[textIndexStart] === "#") {
+            return readKeyword(lineString, positionStart);
         }
         // either keyword or identifier
         else {
-            const maybeDocumentIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, documentBlob, documentIndexStart);
-            if (maybeDocumentIndexEnd === undefined) {
-                throw unexpectedReadError(document.blob, documentIndexStart);
+            const maybeTextIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, textIndexStart);
+            if (maybeTextIndexEnd === undefined) {
+                throw unexpectedReadError(text, textIndexStart);
             }
-            const documentIndexEnd = maybeDocumentIndexEnd;
-            const substring = documentBlob.substring(documentIndexStart, documentIndexEnd);
+            const textIndexEnd = maybeTextIndexEnd;
+            const substring = text.substring(textIndexStart, textIndexEnd);
 
             const maybeKeywordTokenKind = maybeKeywordTokenKindFrom(substring);
 
@@ -926,99 +730,51 @@ export namespace Lexer {
                 kind: tokenKind,
                 positionStart,
                 positionEnd: {
-                    documentIndex: documentIndexEnd,
-                    lineNumber: positionStart.lineNumber,
-                    columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd],
+                    textIndex: textIndexEnd,
+                    columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
                 },
                 data: substring,
             }
         }
     }
 
-    // function maybeKeywordOrIdentifierSubstring(
-    //     document: GraphemeString,
-    //     positionStart: GraphemePosition,
-    // ): Option<string> {
-    //     const chr = document.blob[positionStart.documentIndex];
-    //     let indexOfStart: number;
-
-    //     if (chr === "#") {
-    //         indexOfStart = positionStart.documentIndex + 1;
-    //     }
-    //     else {
-    //         indexOfStart = documentIndex;
-    //     }
-
-    //     const identifierEndIndex = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, document, indexOfStart);
-    //     if (identifierEndIndex !== -1) {
-    //         return document.substring(documentIndex, identifierEndIndex);
-    //     }
-    //     else {
-    //         return undefined;
-    //     }
-    // }
-
     function readConstant(
         tokenKind: TokenKind,
-        document: GraphemeString,
-        positionStart: GraphemePosition,
+        lineString: LexerLineString,
+        positionStart: LexerLinePosition,
         length: number,
-    ): Token {
-        const documentIndexEnd = positionStart.documentIndex + length;
-        const positionEnd = {
-            documentIndex: positionStart.documentIndex + length,
-            lineNumber: positionStart.lineNumber,
-            columnNumber: document.documentIndex2GraphemeIndex[documentIndexEnd]
+    ): LineToken {
+        const textIndexEnd = positionStart.textIndex + length;
+        const positionEnd: LexerLinePosition = {
+            textIndex: positionStart.textIndex + length,
+            columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd]
         }
-        return readTokenFromPositions(tokenKind, document, positionStart, positionEnd);
+        return readTokenFromPositions(tokenKind, lineString, positionStart, positionEnd);
     }
 
     function readTokenFromPositions(
         tokenKind: TokenKind,
-        document: GraphemeString,
-        startPosition: GraphemePosition,
-        positionEnd: GraphemePosition,
-    ): Token {
+        lineString: LexerLineString,
+        startPosition: LexerLinePosition,
+        positionEnd: LexerLinePosition,
+    ): LineToken {
         return {
             kind: tokenKind,
             positionStart: startPosition,
             positionEnd: positionEnd,
-            data: document.blob.substring(startPosition.documentIndex, positionEnd.documentIndex),
+            data: lineString.text.substring(startPosition.textIndex, positionEnd.textIndex),
         };
     }
 
-    // function readTokenFromSlice(
-    //     document: string,
-    //     documentIndex: number,
-    //     tokenKind: TokenKind,
-    //     documentIndexEnd: number,
-    // ): Token {
-    //     const data = document.substring(documentIndex, documentIndexEnd);
-    //     return readTokenFromSubstring(documentIndex, tokenKind, data);
-    // }
-
-    // function readTokenFromSubstring(
-    //     documentStartIndex: number,
-    //     tokenKind: TokenKind,
-    //     data: string,
-    // ): Token {
-    //     return {
-    //         kind: tokenKind,
-    //         documentStartIndex,
-    //         documentEndIndex: documentStartIndex + data.length,
-    //         data,
-    //     };
-    // }
-
     function maybeIndexOfRegexEnd(
         pattern: RegExp,
-        documentBlob: string,
-        documentIndex: number,
+        text: string,
+        textIndex: number,
     ): Option<number> {
-        const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, documentBlob, documentIndex);
+        const maybeLength = StringHelpers.maybeRegexMatchLength(pattern, text, textIndex);
 
         return maybeLength !== undefined
-            ? documentIndex + maybeLength
+            ? textIndex + maybeLength
             : undefined;
     }
 
@@ -1112,18 +868,18 @@ export namespace Lexer {
     // }
 
     function unexpectedReadError(
-        document: string,
-        documentIndex: number,
+        text: string,
+        textIndex: number,
     ): LexerError.UnexpectedReadError {
-        const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
-        return new LexerError.UnexpectedReadError(graphemePosition);
+        const LexerLinePosition = StringHelpers.graphemePositionAt(text, textIndex);
+        return new LexerError.UnexpectedReadError(LexerLinePosition);
     }
 
     // function unterminatedStringError(
-    //     document: string,
-    //     documentIndex: number,
+    //     text: string,
+    //     textIndex: number,
     // ): LexerError.UnterminatedStringError {
-    //     const graphemePosition = StringHelpers.graphemePositionAt(document, documentIndex);
-    //     return new LexerError.UnterminatedStringError(graphemePosition);
+    //     const LexerLinePosition = StringHelpers.graphemePositionAt(text, textIndex);
+    //     return new LexerError.UnterminatedStringError(LexerLinePosition);
     // }
 }
