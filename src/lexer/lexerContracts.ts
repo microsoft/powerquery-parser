@@ -22,10 +22,10 @@ export interface LexerState {
 }
 
 export const enum LexerMultilineKind {
-    Default,
-    String,
-    QuotedIdentifier,
-    Comment
+    Comment = "Comment",
+    Default = "Default",
+    QuotedIdentifier = "QuotedIdentifier",
+    String = "String",
 }
 
 export interface ILexerLine {

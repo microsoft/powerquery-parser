@@ -1209,7 +1209,7 @@ export class Parser {
             const tokens = lexerSnapshot.tokens;
             const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].positionStart.textIndex;
             const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].positionEnd.textIndex;
-            literal = lexerSnapshot.document.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+            literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
         }
 
         return {

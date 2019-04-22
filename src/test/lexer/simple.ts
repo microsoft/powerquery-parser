@@ -23,7 +23,7 @@ function expectLexSuccess(document: string, separator: string): LexerState {
 
 function expectLexerSnapshot(document: string, separator: string): LexerSnapshot {
     const state = expectLexSuccess(document, separator);
-    return Lexer.snapshot(state);
+    return new LexerSnapshot(state);
 }
 
 function expectTokens(document: string, separator: string, expected: ReadonlyArray<[TokenKind, string]>): LexerSnapshot {

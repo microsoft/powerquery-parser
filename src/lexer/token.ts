@@ -1,12 +1,15 @@
 import { CommonError } from "../common";
 
 const enum LineTokenKindAdditions {
-    StringLiteralStart = "StringLiteralStart",
-    StringLiteralEnd = "StringLiteralEnd",
-    QuotedIdentifierStart = "QuotedIdentifierStart",
-    QuotedIdentifierEnd = "QuotedIdentifierEnd",
-    MultilineCommentStart = "MultilineCommentStart",
+    MultilineCommentContent = "MultilineCommentContent",
     MultilineCommentEnd = "MultilineCommentEnd",
+    MultilineCommentStart = "MultilineCommentStart",
+    QuotedIdentifierContent = "QuotedIdentifierContent",
+    QuotedIdentifierEnd = "QuotedIdentifierEnd",
+    QuotedIdentifierStart = "QuotedIdentifierStart",
+    StringLiteralContent = "StringContent",
+    StringLiteralEnd = "StringLiteralEnd",
+    StringLiteralStart = "StringLiteralStart",
 }
 
 export const enum TokenKind {
@@ -23,7 +26,6 @@ export const enum TokenKind {
     GreaterThanEqualTo = "GreaterThanEqualTo",
     HexLiteral = "HexLiteral",
     Identifier = "Identifier",
-    LineComment = "LineComment",
     KeywordAnd = "KeywordAnd",
     KeywordAs = "KeywordAs",
     KeywordEach = "KeywordEach",
@@ -60,6 +62,7 @@ export const enum TokenKind {
     LeftParenthesis = "LeftParenthesis",
     LessThan = "LessThan",
     LessThanEqualTo = "LessThanEqualTo",
+    LineComment = "LineComment",
     Minus = "Minus",
     NotEqual = "NotEqual",
     NullLiteral = "NullLiteral",
@@ -102,7 +105,6 @@ export const enum LineTokenKind {
     KeywordHashNan = TokenKind.KeywordHashNan,
     KeywordHashSections = TokenKind.KeywordHashSections,
     KeywordHashShared = TokenKind.KeywordHashShared,
-    LineComment = TokenKind.LineComment,
     KeywordHashTable = TokenKind.KeywordHashTable,
     KeywordHashTime = TokenKind.KeywordHashTime,
     KeywordIf = TokenKind.KeywordIf,
@@ -124,6 +126,7 @@ export const enum LineTokenKind {
     LeftParenthesis = TokenKind.LeftParenthesis,
     LessThan = TokenKind.LessThan,
     LessThanEqualTo = TokenKind.LessThanEqualTo,
+    LineComment = TokenKind.LineComment,
     Minus = TokenKind.Minus,
     NotEqual = TokenKind.NotEqual,
     NullLiteral = TokenKind.NullLiteral,
@@ -135,12 +138,15 @@ export const enum LineTokenKind {
     RightParenthesis = TokenKind.RightParenthesis,
     Semicolon = TokenKind.Semicolon,
 
-    StringLiteralStart = LineTokenKindAdditions.StringLiteralStart,
-    StringLiteralEnd = LineTokenKindAdditions.StringLiteralEnd,
-    QuotedIdentifierStart = LineTokenKindAdditions.QuotedIdentifierStart,
-    QuotedIdentifierEnd = LineTokenKindAdditions.QuotedIdentifierEnd,
-    MultilineCommentStart = LineTokenKindAdditions.MultilineCommentStart,
+    MultilineCommentContent = LineTokenKindAdditions.MultilineCommentContent,
     MultilineCommentEnd = LineTokenKindAdditions.MultilineCommentEnd,
+    MultilineCommentStart = LineTokenKindAdditions.MultilineCommentStart,
+    QuotedIdentifierContent = LineTokenKindAdditions.QuotedIdentifierContent,
+    QuotedIdentifierEnd = LineTokenKindAdditions.QuotedIdentifierEnd,
+    QuotedIdentifierStart = LineTokenKindAdditions.QuotedIdentifierStart,
+    StringLiteralContent = LineTokenKindAdditions.StringLiteralContent,
+    StringLiteralEnd = LineTokenKindAdditions.StringLiteralEnd,
+    StringLiteralStart = LineTokenKindAdditions.StringLiteralStart,
 }
 
 // ---------------------------
@@ -172,18 +178,21 @@ export interface TokenPosition extends LexerLinePosition {
     readonly lineNumber: number,
 }
 
-// --------------------------------------------
-// ---------- IToken type parameters ----------
-// --------------------------------------------
+// -------------------------------------
+// ---------- fromX functions ----------
+// -------------------------------------
 
 export function tokenKindFrom(lineTokenKind: LineTokenKind): TokenKind {
     switch (lineTokenKind) {
-        case LineTokenKind.StringLiteralStart:
-        case LineTokenKind.StringLiteralEnd:
-        case LineTokenKind.QuotedIdentifierStart:
-        case LineTokenKind.QuotedIdentifierEnd:
-        case LineTokenKind.MultilineCommentStart:
+        case LineTokenKind.MultilineCommentContent:
         case LineTokenKind.MultilineCommentEnd:
+        case LineTokenKind.MultilineCommentStart:
+        case LineTokenKind.QuotedIdentifierContent:
+        case LineTokenKind.QuotedIdentifierEnd:
+        case LineTokenKind.QuotedIdentifierStart:
+        case LineTokenKind.StringLiteralContent:
+        case LineTokenKind.StringLiteralEnd:
+        case LineTokenKind.StringLiteralStart:
             const details = { lineTokenKind };
             throw new CommonError.InvariantError("lineTokenKind should've already been stripped out", details);
         default:

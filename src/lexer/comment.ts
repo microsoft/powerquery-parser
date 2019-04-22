@@ -1,3 +1,5 @@
+import { TokenPosition } from "./token";
+
 export type TComment = (
     | LineComment
     | MultilineComment
@@ -12,14 +14,12 @@ export interface IComment {
     readonly kind: CommentKind,
     readonly literal: string,
     readonly containsNewline: boolean,
-    readonly phantomTokenIndex: number,
-    readonly documentStartIndex: number,
-    readonly documentEndIndex: number,
+    readonly positionStart: TokenPosition,
+    readonly positionEnd: TokenPosition,
 }
 
 export interface LineComment extends IComment {
     readonly kind: CommentKind.Line,
-    readonly containsNewline: true,
 }
 
 export interface MultilineComment extends IComment {

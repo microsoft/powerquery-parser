@@ -4,8 +4,7 @@ import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { Keyword } from "./keywords";
 import { ErrorLine, LexerLineKind, LexerLineString, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine, TLexerLine, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
-import { LexerSnapshot } from "./lexerSnapshot";
-import { LexerLinePosition, LineToken, LineTokenKind, Token, tokenKindFrom } from "./token";
+import { LexerLinePosition, LineToken, LineTokenKind } from "./token";
 
 // the lexer is
 //  * functional
@@ -157,34 +156,6 @@ export namespace Lexer {
         }
     }
 
-    // get a frozen copy of all document, tokens, and comments lexed up to this point
-    export function snapshot(state: LexerState): LexerSnapshot {
-        const allLineStrings = state
-            .lines
-            .map(line => line.lineString)
-            .join(state.separator);
-
-        const allTokens: Token[] = [];
-        for (let line of state.lines) {
-            for (let token of line.tokens) {
-                allTokens.push({
-                    ...token,
-                    kind: tokenKindFrom(token.kind),
-                    positionStart: {
-                        lineNumber: line.lineNumber,
-                        ...token.positionStart,
-                    },
-                    positionEnd: {
-                        lineNumber: line.lineNumber,
-                        ...token.positionEnd,
-                    },
-                });
-            }
-        }
-
-        return new LexerSnapshot(allLineStrings, allTokens);
-    }
-
     // // lex one token and all comments before that token
     // export function next(lexer: TLexer): TLexerExceptUntouched {
     //     return lex(lexer, LexerStrategy.SingleToken);
@@ -316,13 +287,16 @@ export namespace Lexer {
         let multilineKind = line.multilineKindEnd;
         while (continueLexing) {
             try {
-                let token: LineToken;
+                let foobar: Foobar;
                 switch (multilineKind) {
-                    case LexerMultilineKind.Default:
-                        token = lexDefault(line, currentPosition);
+                    case LexerMultilineKind.Comment:
+                        foobar = readMultilineCommentContentOrEnd(line, currentPosition);
                         break;
 
-                    case LexerMultilineKind.Comment:
+                    case LexerMultilineKind.Default:
+                        foobar = readDefault(line, currentPosition);
+                        break;
+
                     case LexerMultilineKind.QuotedIdentifier:
                     case LexerMultilineKind.String:
                         throw new Error("todo");
@@ -331,6 +305,9 @@ export namespace Lexer {
                         throw isNever(multilineKind);
                 }
 
+                multilineKind = foobar.multilineKind;
+
+                const token = foobar.token;
                 currentPosition = drainWhitespace(lineString, token.positionEnd);
                 newTokens.push(token);
 
@@ -384,7 +361,38 @@ export namespace Lexer {
         }
     }
 
-    function lexDefault(line: TLexerLine, currentPosition: LexerLinePosition): LineToken {
+    function readMultilineCommentContentOrEnd(line: TLexerLine, currentPosition: LexerLinePosition): Foobar {
+        const lineString = line.lineString;
+        const text = lineString.text;
+        const indexOfCloseComment = text.indexOf("*/", currentPosition.textIndex);
+
+        if (indexOfCloseComment === -1) {
+            const textLength = text.length;
+            const positionEnd: LexerLinePosition = {
+                textIndex: textLength,
+                columnNumber: lineString.textIndex2GraphemeIndex[textLength],
+            };
+
+            return {
+                token: readTokenFrom(LineTokenKind.StringLiteralContent, lineString, currentPosition, positionEnd),
+                multilineKind: LexerMultilineKind.Comment,
+            }
+        }
+        else {
+            const textIndexEnd = indexOfCloseComment + 2;
+            const positionEnd: LexerLinePosition = {
+                textIndex: textIndexEnd,
+                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
+            };
+
+            return {
+                token: readTokenFrom(LineTokenKind.StringLiteralEnd, lineString, currentPosition, positionEnd),
+                multilineKind: LexerMultilineKind.Default,
+            }
+        }
+    }
+
+    function readDefault(line: TLexerLine, currentPosition: LexerLinePosition): Foobar {
         const lineString = line.lineString;
         const text = lineString.text;
         const positionStart = currentPosition;
@@ -392,6 +400,7 @@ export namespace Lexer {
         currentPosition = drainWhitespace(lineString, positionStart);
         const chr1: string = text[currentPosition.textIndex];
         let token: LineToken;
+        let multilineKind = line.multilineKindEnd;
 
         if (chr1 === "!") { token = readConstant(LineTokenKind.Bang, lineString, currentPosition, 1); }
         else if (chr1 === "&") { token = readConstant(LineTokenKind.Ampersand, lineString, currentPosition, 1); }
@@ -464,12 +473,8 @@ export namespace Lexer {
 
             if (chr2 === "/") { token = readLineComment(lineString, currentPosition); }
             else if (chr2 === "*") {
-                throw new Error("comments not supported");
-                // const phantomTokenIndex = line.tokens.length + newTokens.length;
-                // const commentRead = readComments(document, documentIndex, CommentKind.Multiline, phantomTokenIndex);
-                // documentIndex = commentRead[commentRead.length - 1].documentEndIndex;
-                // newComments.push(...commentRead);
-                // continue;
+                token = readMultilineCommentStart(lineString, currentPosition);
+                multilineKind = LexerMultilineKind.Comment;
             }
             else { token = readConstant(LineTokenKind.Division, lineString, currentPosition, 1); }
         }
@@ -483,7 +488,10 @@ export namespace Lexer {
 
         else { token = readKeywordOrIdentifier(lineString, currentPosition); }
 
-        return token;
+        return {
+            token,
+            multilineKind,
+        };
     }
 
     function drainWhitespace(
@@ -533,7 +541,7 @@ export namespace Lexer {
             textIndex: textIndexEnd,
             columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
         }
-        return readTokenFromPositions(LineTokenKind.HexLiteral, lineString, positionStart, positionEnd);
+        return readTokenFrom(LineTokenKind.HexLiteral, lineString, positionStart, positionEnd);
     }
 
     function readNumericLiteral(lineString: LexerLineString, positionStart: LexerLinePosition): LineToken {
@@ -548,55 +556,8 @@ export namespace Lexer {
             textIndex: textEndIndex,
             columnNumber: lineString.textIndex2GraphemeIndex[textEndIndex],
         }
-        return readTokenFromPositions(LineTokenKind.NumericLiteral, lineString, positionStart, positionEnd);
+        return readTokenFrom(LineTokenKind.NumericLiteral, lineString, positionStart, positionEnd);
     }
-
-    // function readComments(
-    //     document: string,
-    //     documentIndex: number,
-    //     initial: CommentKind,
-    //     phantomTokenIndex: number,
-    // ): ReadonlyArray<TComment> {
-    //     let maybeNextCommentKind: Option<CommentKind> = initial;
-    //     let chr1 = document[documentIndex];
-    //     let chr2 = document[documentIndex + 1];
-
-    //     const newComments = [];
-    //     while (maybeNextCommentKind) {
-    //         let comment: TComment;
-    //         switch (maybeNextCommentKind) {
-    //             case CommentKind.Line:
-    //                 comment = readLineComment(document, documentIndex, phantomTokenIndex)
-    //                 break;
-
-    //             case CommentKind.Multiline:
-    //                 comment = readMultilineComment(document, documentIndex, phantomTokenIndex);
-    //                 break;
-
-    //             default:
-    //                 throw isNever(maybeNextCommentKind)
-    //         }
-
-    //         documentIndex = comment.documentEndIndex;
-    //         newComments.push(comment);
-
-    //         chr1 = document[documentIndex];
-    //         chr2 = document[documentIndex + 1];
-    //         // line comment
-    //         if (chr1 === "/" && chr2 === "/") {
-    //             maybeNextCommentKind = CommentKind.Line;
-    //         }
-    //         // multiline comment
-    //         else if (chr1 === "/" && chr2 === "*") {
-    //             maybeNextCommentKind = CommentKind.Multiline;
-    //         }
-    //         else {
-    //             maybeNextCommentKind = undefined;
-    //         }
-    //     }
-
-    //     return newComments;
-    // }
 
     function readLineComment(
         lineString: LexerLineString,
@@ -609,33 +570,19 @@ export namespace Lexer {
             textIndex: commentTextIndexEnd,
             columnNumber: lineString.textIndex2GraphemeIndex[commentTextIndexEnd],
         }
-        return readTokenFromPositions(LineTokenKind.LineComment, lineString, positionStart, positionEnd);
+        return readTokenFrom(LineTokenKind.LineComment, lineString, positionStart, positionEnd);
     }
 
-    // function readMultilineComment(
-    //     document: string,
-    //     documentIndex: number,
-    //     phantomTokenIndex: number,
-    // ): MultilineComment {
-    //     const documentStartIndex = documentIndex;
-    //     const indexOfCommentEnd = document.indexOf("*/", documentStartIndex + 2);
-    //     if (indexOfCommentEnd === -1) {
-    //         const LexerLinePosition = StringHelpers.LexerLinePositionAt(document, documentStartIndex);
-    //         throw new LexerError.UnterminatedMultilineCommentError(LexerLinePosition);
-    //     }
-
-    //     const documentEndIndex = indexOfCommentEnd + 2;
-    //     const literal = document.substring(documentStartIndex, documentEndIndex);
-
-    //     return {
-    //         kind: CommentKind.Multiline,
-    //         literal,
-    //         phantomTokenIndex,
-    //         containsNewline: StringHelpers.containsNewline(literal),
-    //         documentStartIndex,
-    //         documentEndIndex,
-    //     }
-    // }
+    function readMultilineCommentStart(
+        lineString: LexerLineString,
+        positionStart: LexerLinePosition,
+    ): LineToken {
+        const positionEnd: LexerLinePosition = {
+            textIndex: positionStart.textIndex + 2,
+            columnNumber: positionStart.columnNumber + 2,
+        }
+        return readTokenFrom(LineTokenKind.MultilineCommentStart, lineString, positionStart, positionEnd);
+    }
 
     function readKeyword(lineString: LexerLineString, positionStart: LexerLinePosition): LineToken {
         const maybeToken: Option<LineToken> = maybeReadKeyword(lineString, positionStart);
@@ -745,10 +692,10 @@ export namespace Lexer {
             textIndex: positionStart.textIndex + length,
             columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd]
         }
-        return readTokenFromPositions(lineTokenKind, lineString, positionStart, positionEnd);
+        return readTokenFrom(lineTokenKind, lineString, positionStart, positionEnd);
     }
 
-    function readTokenFromPositions(
+    function readTokenFrom(
         lineTokenKind: LineTokenKind,
         lineString: LexerLineString,
         positionStart: LexerLinePosition,
@@ -878,4 +825,9 @@ export namespace Lexer {
     //     const LexerLinePosition = StringHelpers.graphemePositionAt(text, textIndex);
     //     return new LexerError.UnterminatedStringError(LexerLinePosition);
     // }
+}
+
+interface Foobar {
+    readonly token: LineToken,
+    readonly multilineKind: LexerMultilineKind,
 }
