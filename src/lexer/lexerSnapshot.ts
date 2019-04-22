@@ -15,6 +15,8 @@ export class LexerSnapshot {
         const comments: TComment[] = [];
         let text = "";
 
+        const lineSeparator = lexerState.lineSeparator;
+
         let flatLineTokens: FlatLineToken[] = [];
         let flatIndex = 0;
         for (let line of lexerState.lines) {
@@ -40,21 +42,21 @@ export class LexerSnapshot {
             switch (lineTokenKind) {
 
                 case LineTokenKind.MultilineCommentStart: {
-                    const concatenation = LexerSnapshot.readMultilineComment(flatLineTokens, flatLineToken);
+                    const concatenation = LexerSnapshot.readMultilineComment(lineSeparator, flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
                     flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
                 }
 
                 case LineTokenKind.QuotedIdentifierStart: {
-                    const concatenation = LexerSnapshot.readQuotedIdentifier(flatLineTokens, flatLineToken);
+                    const concatenation = LexerSnapshot.readQuotedIdentifier(lineSeparator, flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
                     flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
                 }
 
                 case LineTokenKind.StringLiteralStart: {
-                    const concatenation = LexerSnapshot.readStringLiteral(flatLineTokens, flatLineToken);
+                    const concatenation = LexerSnapshot.readStringLiteral(lineSeparator, flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
                     flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
@@ -84,10 +86,12 @@ export class LexerSnapshot {
     }
 
     private static readMultilineComment(
+        lineSeparator: string,
         flatLineTokens: ReadonlyArray<FlatLineToken>,
         flatLineTokenStart: FlatLineToken,
     ): TokenConcatenation {
         const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
+            lineSeparator,
             flatLineTokens,
             flatLineTokenStart,
             TokenKind.MultilineComment,
@@ -107,10 +111,12 @@ export class LexerSnapshot {
     }
 
     private static readQuotedIdentifier(
+        lineSeparator: string,
         flatLineTokens: ReadonlyArray<FlatLineToken>,
         flatLineTokenStart: FlatLineToken,
     ): TokenConcatenation {
         const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
+            lineSeparator,
             flatLineTokens,
             flatLineTokenStart,
             TokenKind.Identifier,
@@ -130,10 +136,12 @@ export class LexerSnapshot {
     }
 
     private static readStringLiteral(
+        lineSeparator: string,
         flatLineTokens: ReadonlyArray<FlatLineToken>,
         flatLineTokenStart: FlatLineToken,
     ): TokenConcatenation {
         const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
+            lineSeparator,
             flatLineTokens,
             flatLineTokenStart,
             TokenKind.StringLiteral,
@@ -153,6 +161,7 @@ export class LexerSnapshot {
     }
 
     private static maybeReadConcatenatedToken(
+        lineSeparator: string,
         flatLineTokens: ReadonlyArray<FlatLineToken>,
         flatLineTokenStart: FlatLineToken,
         newTokenKind: TokenKind,
@@ -164,9 +173,15 @@ export class LexerSnapshot {
 
         let concatenatedData = lineTokenStart.data;
         let flatLineTokenIndex = flatLineTokenStart.flatIndex + 1;
+        let currentLineNumber = flatLineTokenStart.lineNumber;
         while (flatLineTokenIndex < numTokens) {
             const flatLineToken = flatLineTokens[flatLineTokenIndex];
             const lineToken = flatLineToken.token;
+
+            if (currentLineNumber !== flatLineToken.lineNumber) {
+                concatenatedData += lineSeparator;
+                currentLineNumber = flatLineToken.lineNumber;
+            }
 
             if (lineToken.kind === contentLineTokenKind) {
                 concatenatedData += lineToken.data;
