@@ -1,4 +1,5 @@
-import { Lexer, LexerState, LexerSnapshot } from "../../lexer";
+import { expect } from "chai";
+import { Lexer, LexerSnapshot, LexerState, TokenKind } from "../../lexer";
 
 export function expectLexSuccess(document: string, separator: string): LexerState {
     const state: LexerState = Lexer.fromSplit(document, separator);
@@ -22,6 +23,22 @@ export function expectLexSuccess(document: string, separator: string): LexerStat
 export function expectLexerSnapshot(document: string, separator: string): LexerSnapshot {
     const state = expectLexSuccess(document, separator);
     return new LexerSnapshot(state);
+}
+
+export function expectAbridgedTokens(
+    document: string,
+    separator: string,
+    expected: ReadonlyArray<[TokenKind, string]>
+): LexerSnapshot {
+    const snapshot = expectLexerSnapshot(document, separator);
+    const actual = snapshot.tokens.map(token => [token.kind, token.data]);
+    const details = {
+        actual,
+        expected,
+    };
+
+    expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
+    return snapshot;
 }
 
 // export function touchedLexerFactory(): Lexer.TLexer {

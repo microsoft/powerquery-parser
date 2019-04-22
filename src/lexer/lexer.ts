@@ -73,7 +73,7 @@ export namespace Lexer {
         const numLines = lines.length;
         const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];
         const multilineKind = maybeLatestLine !== undefined
-            ? maybeLatestLine.multilineKindEnd
+            ? maybeLatestLine.multilineKind
             : LexerMultilineKind.Default;
 
         const newLine = lineFrom(blob, numLines, multilineKind)
@@ -113,9 +113,7 @@ export namespace Lexer {
                     numberOfActions: line.numberOfActions + 1,
                     lineNumber: line.lineNumber,
                     tokens: line.tokens,
-                    multilineKindStart: line.multilineKindStart,
-                    multilineKindEnd: line.multilineKindEnd,
-                    isLineEof: line.isLineEof,
+                    multilineKind: line.multilineKind,
                     error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
                 };
                 break;
@@ -136,16 +134,14 @@ export namespace Lexer {
         return state;
     }
 
-    function lineFrom(blob: string, lineNumber: number, _multilineKind: LexerMultilineKind): UntouchedLine {
+    function lineFrom(blob: string, lineNumber: number, multilineKind: LexerMultilineKind): UntouchedLine {
         return {
             kind: LexerLineKind.Untouched,
             lineString: lexerLineStringFrom(blob),
             numberOfActions: 0,
             lineNumber,
             tokens: [],
-            multilineKindStart: LexerMultilineKind.Default,
-            multilineKindEnd: LexerMultilineKind.Default,
-            isLineEof: blob.length !== 0,
+            multilineKind,
             maybeLastRead: undefined,
         }
     }
@@ -195,9 +191,7 @@ export namespace Lexer {
                     numberOfActions: originalState.numberOfActions + 1,
                     lineNumber: originalState.lineNumber,
                     tokens: newTokens,
-                    multilineKindStart: originalState.multilineKindEnd,
-                    multilineKindEnd: lexerRead.multilineKindEnd,
-                    isLineEof: lexerRead.isLineEof,
+                    multilineKind: lexerRead.multilineKind,
                     lastRead: lexerRead,
                 }
             }
@@ -212,9 +206,7 @@ export namespace Lexer {
                     numberOfActions: originalState.numberOfActions + 1,
                     lineNumber: originalState.lineNumber,
                     tokens: newTokens,
-                    multilineKindStart: originalState.multilineKindEnd,
-                    multilineKindEnd: lexerRead.multilineKindEnd,
-                    isLineEof: lexerRead.isLineEof,
+                    multilineKind: lexerRead.multilineKind,
                     error: lexPartialResult.error,
                     lastRead: lexerRead,
                 }
@@ -227,9 +219,7 @@ export namespace Lexer {
                     numberOfActions: originalState.numberOfActions,
                     tokens: originalState.tokens,
                     lineNumber: originalState.lineNumber,
-                    multilineKindStart: originalState.multilineKindEnd,
-                    multilineKindEnd: originalState.multilineKindEnd,
-                    isLineEof: originalState.isLineEof,
+                    multilineKind: originalState.multilineKind,
                     error: lexPartialResult.error,
                 }
 
@@ -244,8 +234,7 @@ export namespace Lexer {
                 kind: PartialResultKind.Ok,
                 value: {
                     tokens: [],
-                    isLineEof: true,
-                    multilineKindEnd: LexerMultilineKind.Default,
+                    multilineKind: LexerMultilineKind.Default,
                 }
             };
         }
@@ -253,7 +242,7 @@ export namespace Lexer {
         const lineString = line.lineString;
         const text = lineString.text;
         const textLength = text.length;
-        let multilineKind = line.multilineKindEnd;
+        let multilineKind = line.multilineKind;
         let currentPosition: LexerLinePosition = {
             textIndex: 0,
             columnNumber: 0,
@@ -330,8 +319,7 @@ export namespace Lexer {
                     kind: PartialResultKind.Partial,
                     value: {
                         tokens: newTokens,
-                        multilineKindEnd: multilineKind,
-                        isLineEof: currentPosition.textIndex === text.length,
+                        multilineKind,
                     },
                     error: maybeError,
                 };
@@ -348,8 +336,7 @@ export namespace Lexer {
                 kind: PartialResultKind.Ok,
                 value: {
                     tokens: newTokens,
-                    multilineKindEnd: multilineKind,
-                    isLineEof: currentPosition.textIndex === text.length,
+                    multilineKind,
                 }
             }
         }
@@ -429,7 +416,7 @@ export namespace Lexer {
 
         const chr1: string = text[currentPosition.textIndex];
         let token: LineToken;
-        let multilineKind = line.multilineKindEnd;
+        let multilineKind = line.multilineKind;
 
         if (chr1 === "!") { token = readConstant(LineTokenKind.Bang, lineString, currentPosition, 1); }
         else if (chr1 === "&") { token = readConstant(LineTokenKind.Ampersand, lineString, currentPosition, 1); }

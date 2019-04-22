@@ -34,9 +34,7 @@ export interface ILexerLine {
     readonly numberOfActions: number,                   // allows for quick LexerLine equality comparisons
     readonly lineNumber: number,                        // what line number is this
     readonly tokens: ReadonlyArray<LineToken>,          // LineTokens lexed so far
-    readonly multilineKindStart: LexerMultilineKind,
-    readonly multilineKindEnd: LexerMultilineKind,
-    readonly isLineEof: boolean,
+    readonly multilineKind: LexerMultilineKind,
 }
 
 export interface LexerLineString {
@@ -80,6 +78,5 @@ export interface UntouchedLine extends ILexerLine {
 
 export interface LexerRead {
     readonly tokens: ReadonlyArray<LineToken>,
-    readonly multilineKindEnd: LexerMultilineKind,
-    readonly isLineEof: boolean,
+    readonly multilineKind: LexerMultilineKind,
 }
