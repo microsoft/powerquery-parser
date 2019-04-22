@@ -37,6 +37,7 @@ export interface ILexerLine {
     readonly tokens: ReadonlyArray<LineToken>,          // LineTokens lexed so far
     readonly multilineKindStart: LexerMultilineKind,
     readonly multilineKindEnd: LexerMultilineKind,
+    readonly isLineEof: boolean,
 }
 
 export interface LexerLineString {
@@ -83,4 +84,5 @@ export interface LexerRead {
     readonly positionStart: LexerLinePosition,
     readonly positionEnd: LexerLinePosition,
     readonly multilineKindEnd: LexerMultilineKind,
+    readonly isLineEof: boolean,
 }

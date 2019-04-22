@@ -48,7 +48,7 @@ export namespace Lexer {
         };
 
         if (lexAfter) {
-            return lexLine(newState);
+            return singleLexLine(newState, 0);
         }
         else {
             return newState;
@@ -65,7 +65,7 @@ export namespace Lexer {
         }
 
         for (let index = 1; index < numLines; index++) {
-            state = appendLine(state, lines[index]);
+            state = appendNewLine(state, lines[index]);
             if (isErrorLine(state.lines[index])) {
                 return state;
             }
@@ -74,21 +74,24 @@ export namespace Lexer {
         return state;
     }
 
-    export function appendLine(state: LexerState, blob: string, lexAfter = true): LexerState {
+    export function appendNewLine(state: LexerState, blob: string, lexAfter = true): LexerState {
         let newState: LexerState = {
             ...state,
             lines: state.lines.concat(lineFrom(blob, state.lines.length)),
         };
 
         if (lexAfter) {
-            return lexLine(newState);
+            return singleLexLine(newState, state.lines.length - 1);
         }
         else {
             return newState;
         }
     }
 
-    function lexLine(state: LexerState, lineIndex = (state.lines.length - 1)): LexerState {
+    // function propagatableLexLine(state: LexerState, lineIndex: number): LexerState {
+    // }
+
+    function singleLexLine(state: LexerState, lineIndex: number): LexerState {
         const maybeLine = state.lines[lineIndex];
         if (maybeLine === undefined) {
             throw new Error("invalid line number");
@@ -99,7 +102,7 @@ export namespace Lexer {
             case LexerLineKind.Touched:
             case LexerLineKind.Untouched:
                 const lexResult = lex(line);
-                line = updateLine(line, lexResult);
+                line = updateLineState(line, lexResult);
                 break;
 
             case LexerLineKind.Error:
@@ -119,6 +122,7 @@ export namespace Lexer {
                     tokens: line.tokens,
                     multilineKindStart: line.multilineKindStart,
                     multilineKindEnd: line.multilineKindEnd,
+                    isLineEof: line.isLineEof,
                     error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
                 };
                 break;
@@ -130,7 +134,7 @@ export namespace Lexer {
         // unsafe action:
         //      change ReadonlyArray into standard array
         // what I'm trying to avoid:
-        //      a single element needs to be updated, avoids recreating the object.
+        //      1-2 elements needs to be updated, avoids recreating the container/objects.
         // why it's safe:
         //      same as re-creating the array
         const lines: TLexerLine[] = state.lines as TLexerLine[];
@@ -152,6 +156,7 @@ export namespace Lexer {
             tokens: [],
             multilineKindStart: LexerMultilineKind.Default,
             multilineKindEnd: LexerMultilineKind.Default,
+            isLineEof: blob.length !== 0,
             maybeLastRead: undefined,
         }
     }
@@ -196,7 +201,7 @@ export namespace Lexer {
         return undefined;
     }
 
-    function updateLine(
+    function updateLineState(
         originalState: TLexerLine,
         lexPartialResult: PartialResult<LexerRead, LexerError.TLexerError>,
     ): TLexerLine {
@@ -212,8 +217,9 @@ export namespace Lexer {
                     lineNumber: originalState.lineNumber,
                     position: lexerRead.positionEnd,
                     tokens: newTokens,
-                    multilineKindStart: originalState.multilineKindStart,
+                    multilineKindStart: originalState.multilineKindEnd,
                     multilineKindEnd: lexerRead.multilineKindEnd,
+                    isLineEof: lexerRead.isLineEof,
                     lastRead: lexerRead,
                 }
             }
@@ -229,8 +235,9 @@ export namespace Lexer {
                     lineNumber: originalState.lineNumber,
                     position: lexerRead.positionEnd,
                     tokens: newTokens,
-                    multilineKindStart: originalState.multilineKindStart,
+                    multilineKindStart: originalState.multilineKindEnd,
                     multilineKindEnd: lexerRead.multilineKindEnd,
+                    isLineEof: lexerRead.isLineEof,
                     error: lexPartialResult.error,
                     lastRead: lexerRead,
                 }
@@ -243,8 +250,9 @@ export namespace Lexer {
                     numberOfActions: originalState.numberOfActions,
                     tokens: originalState.tokens,
                     lineNumber: originalState.lineNumber,
-                    multilineKindStart: originalState.multilineKindStart,
+                    multilineKindStart: originalState.multilineKindEnd,
                     multilineKindEnd: originalState.multilineKindEnd,
+                    isLineEof: originalState.isLineEof,
                     position: originalState.position,
                     error: lexPartialResult.error,
                 }
@@ -262,6 +270,7 @@ export namespace Lexer {
                     tokens: [],
                     positionStart: line.position,
                     positionEnd: line.position,
+                    isLineEof: true,
                     multilineKindEnd: LexerMultilineKind.Default,
                 }
             };
@@ -293,29 +302,29 @@ export namespace Lexer {
         let maybeError: Option<LexerError.TLexerError>;
         while (continueLexing) {
             try {
-                let foobar: Foobar;
+                let readOutcome: ReadOutcome;
                 switch (multilineKind) {
                     case LexerMultilineKind.Comment:
-                        foobar = readMultilineCommentContentOrEnd(line, currentPosition);
+                        readOutcome = readMultilineCommentContentOrEnd(line, currentPosition);
                         break;
 
                     case LexerMultilineKind.Default:
-                        foobar = readDefault(line, currentPosition);
+                        readOutcome = readDefault(line, currentPosition);
                         break;
 
                     case LexerMultilineKind.QuotedIdentifier:
                         throw new Error("todo");
 
                     case LexerMultilineKind.String:
-                        foobar = readStringLiteralContentOrEnd(line, currentPosition);
+                        readOutcome = readStringLiteralContentOrEnd(line, currentPosition);
                         break;
 
                     default:
                         throw isNever(multilineKind);
                 }
 
-                multilineKind = foobar.multilineKind;
-                const token = foobar.token;
+                multilineKind = readOutcome.multilineKind;
+                const token = readOutcome.token;
                 newTokens.push(token);
 
                 if (multilineKind === LexerMultilineKind.Default) {
@@ -351,6 +360,7 @@ export namespace Lexer {
                         positionStart: positionStart,
                         positionEnd: currentPosition,
                         multilineKindEnd: multilineKind,
+                        isLineEof: currentPosition.textIndex === text.length,
                     },
                     error: maybeError,
                 };
@@ -370,12 +380,16 @@ export namespace Lexer {
                     positionStart: positionStart,
                     positionEnd: currentPosition,
                     multilineKindEnd: multilineKind,
+                    isLineEof: currentPosition.textIndex === text.length,
                 }
             }
         }
     }
 
-    function readMultilineCommentContentOrEnd(line: TLexerLine, currentPosition: LexerLinePosition): Foobar {
+    function readMultilineCommentContentOrEnd(
+        line: TLexerLine,
+        currentPosition: LexerLinePosition,
+    ): ReadOutcome {
         const lineString = line.lineString;
         const text = lineString.text;
         const indexOfCloseComment = text.indexOf("*/", currentPosition.textIndex);
@@ -406,7 +420,10 @@ export namespace Lexer {
         }
     }
 
-    function readStringLiteralContentOrEnd(line: TLexerLine, currentPosition: LexerLinePosition): Foobar {
+    function readStringLiteralContentOrEnd(
+        line: TLexerLine,
+        currentPosition: LexerLinePosition,
+    ): ReadOutcome {
         const lineString = line.lineString;
         const text = lineString.text;
         const maybeTextIndexEnd = maybeIndexOfStringEnd(text, currentPosition.textIndex);
@@ -437,7 +454,7 @@ export namespace Lexer {
         }
     }
 
-    function readDefault(line: TLexerLine, currentPosition: LexerLinePosition): Foobar {
+    function readDefault(line: TLexerLine, currentPosition: LexerLinePosition): ReadOutcome {
         const lineString = line.lineString;
         const text = lineString.text;
 
@@ -881,7 +898,7 @@ export namespace Lexer {
     // }
 }
 
-interface Foobar {
+interface ReadOutcome {
     readonly token: LineToken,
     readonly multilineKind: LexerMultilineKind,
 }
