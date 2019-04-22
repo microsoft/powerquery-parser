@@ -1,6 +1,6 @@
 import { Option } from "../common";
 import { LexerError } from "./error";
-import { LexerLinePosition, LineToken } from "./token";
+import { LineToken } from "./token";
 
 export type TLexerLineExceptUntouched = Exclude<TLexerLine, UntouchedLine>;
 
@@ -33,7 +33,6 @@ export interface ILexerLine {
     readonly lineString: LexerLineString,               // text representation for the line
     readonly numberOfActions: number,                   // allows for quick LexerLine equality comparisons
     readonly lineNumber: number,                        // what line number is this
-    readonly position: LexerLinePosition,               // the cursor postion within the line
     readonly tokens: ReadonlyArray<LineToken>,          // LineTokens lexed so far
     readonly multilineKindStart: LexerMultilineKind,
     readonly multilineKindEnd: LexerMultilineKind,
@@ -81,8 +80,6 @@ export interface UntouchedLine extends ILexerLine {
 
 export interface LexerRead {
     readonly tokens: ReadonlyArray<LineToken>,
-    readonly positionStart: LexerLinePosition,
-    readonly positionEnd: LexerLinePosition,
     readonly multilineKindEnd: LexerMultilineKind,
     readonly isLineEof: boolean,
 }
