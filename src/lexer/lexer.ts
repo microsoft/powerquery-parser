@@ -271,10 +271,17 @@ export namespace Lexer {
         const text = lineString.text;
         const textLength = text.length;
         const positionStart = line.position;
+        let multilineKind = line.multilineKindEnd;
+        let currentPosition;
 
-        let currentPosition = drainWhitespace(lineString, positionStart);
+        if (multilineKind === LexerMultilineKind.Default) {
+            currentPosition = drainWhitespace(lineString, positionStart);
+        }
+        else {
+            currentPosition = positionStart;
+        }
+
         let continueLexing = currentPosition.textIndex < textLength;
-
         if (!continueLexing) {
             return {
                 kind: PartialResultKind.Err,
@@ -284,7 +291,6 @@ export namespace Lexer {
 
         const newTokens: LineToken[] = [];
         let maybeError: Option<LexerError.TLexerError>;
-        let multilineKind = line.multilineKindEnd;
         while (continueLexing) {
             try {
                 let foobar: Foobar;
@@ -298,18 +304,26 @@ export namespace Lexer {
                         break;
 
                     case LexerMultilineKind.QuotedIdentifier:
-                    case LexerMultilineKind.String:
                         throw new Error("todo");
+
+                    case LexerMultilineKind.String:
+                        foobar = readStringLiteralContentOrEnd(line, currentPosition);
+                        break;
 
                     default:
                         throw isNever(multilineKind);
                 }
 
                 multilineKind = foobar.multilineKind;
-
                 const token = foobar.token;
-                currentPosition = drainWhitespace(lineString, token.positionEnd);
                 newTokens.push(token);
+
+                if (multilineKind === LexerMultilineKind.Default) {
+                    currentPosition = drainWhitespace(lineString, token.positionEnd);
+                }
+                else {
+                    currentPosition = token.positionEnd;
+                }
 
                 if (currentPosition.textIndex === textLength) {
                     continueLexing = false;
@@ -374,12 +388,43 @@ export namespace Lexer {
             };
 
             return {
-                token: readTokenFrom(LineTokenKind.StringLiteralContent, lineString, currentPosition, positionEnd),
+                token: readTokenFrom(LineTokenKind.MultilineCommentContent, lineString, currentPosition, positionEnd),
                 multilineKind: LexerMultilineKind.Comment,
             }
         }
         else {
             const textIndexEnd = indexOfCloseComment + 2;
+            const positionEnd: LexerLinePosition = {
+                textIndex: textIndexEnd,
+                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
+            };
+
+            return {
+                token: readTokenFrom(LineTokenKind.MultilineCommentEnd, lineString, currentPosition, positionEnd),
+                multilineKind: LexerMultilineKind.Default,
+            }
+        }
+    }
+
+    function readStringLiteralContentOrEnd(line: TLexerLine, currentPosition: LexerLinePosition): Foobar {
+        const lineString = line.lineString;
+        const text = lineString.text;
+        const maybeTextIndexEnd = maybeIndexOfStringEnd(text, currentPosition.textIndex);
+
+        if (maybeTextIndexEnd === undefined) {
+            const textLength = text.length;
+            const positionEnd: LexerLinePosition = {
+                textIndex: textLength,
+                columnNumber: lineString.textIndex2GraphemeIndex[textLength],
+            };
+
+            return {
+                token: readTokenFrom(LineTokenKind.StringLiteralContent, lineString, currentPosition, positionEnd),
+                multilineKind: LexerMultilineKind.String,
+            }
+        }
+        else {
+            const textIndexEnd = maybeTextIndexEnd;
             const positionEnd: LexerLinePosition = {
                 textIndex: textIndexEnd,
                 columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
@@ -416,7 +461,16 @@ export namespace Lexer {
         else if (chr1 === "{") { token = readConstant(LineTokenKind.LeftBrace, lineString, currentPosition, 1); }
         else if (chr1 === "}") { token = readConstant(LineTokenKind.RightBrace, lineString, currentPosition, 1); }
 
-        else if (chr1 === "\"") { throw new Error("not supported") }
+        else if (chr1 === "\"") {
+            const chr2 = text[currentPosition.textIndex + 1];
+            const chr3 = text[currentPosition.textIndex + 2];
+
+            if (chr2 == "\"" && chr3 !== "\"") { token = readConstant(LineTokenKind.StringLiteral, lineString, currentPosition, 2); }
+            else {
+                token = readStringLiteralStart(lineString, currentPosition);
+                multilineKind = LexerMultilineKind.String;
+            }
+        }
 
         else if (chr1 === "0") {
             const chr2 = text[currentPosition.textIndex + 1];
@@ -515,14 +569,16 @@ export namespace Lexer {
         };
     }
 
-    // function readStringLiteral(document: string, documentIndex: number): LineToken {
-    //     const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex);
-    //     if (stringEndIndex === undefined) {
-    //         throw unterminatedStringError(document, documentIndex);
-    //     }
-
-    //     return readTokenFromSlice(document, documentIndex, LineTokenKind.StringLiteral, stringEndIndex + 1);
-    // }
+    function readStringLiteralStart(
+        lineString: LexerLineString,
+        positionStart: LexerLinePosition,
+    ): LineToken {
+        const positionEnd: LexerLinePosition = {
+            textIndex: positionStart.textIndex + 1,
+            columnNumber: positionStart.columnNumber + 1,
+        }
+        return readTokenFrom(LineTokenKind.StringLiteralStart, lineString, positionStart, positionEnd);
+    }
 
     function readHexLiteral(
         lineString: LexerLineString,
@@ -788,25 +844,25 @@ export namespace Lexer {
         }
     }
 
-    // function maybeIndexOfStringEnd(
-    //     document: string,
-    //     documentStartIndex: number,
-    // ): Option<number> {
-    //     let documentIndex = documentStartIndex + 1;
-    //     let indexOfDoubleQuote = document.indexOf("\"", documentIndex)
+    function maybeIndexOfStringEnd(
+        text: string,
+        textIndexStart: number,
+    ): Option<number> {
+        let indexLow = textIndexStart;
+        let indexHigh = text.indexOf("\"", indexLow)
 
-    //     while (indexOfDoubleQuote !== -1) {
-    //         if (document[indexOfDoubleQuote + 1] === "\"") {
-    //             documentIndex = indexOfDoubleQuote + 2;
-    //             indexOfDoubleQuote = document.indexOf("\"", documentIndex);
-    //         }
-    //         else {
-    //             return indexOfDoubleQuote;
-    //         }
-    //     }
+        while (indexHigh !== -1) {
+            if (text[indexHigh + 1] === "\"") {
+                indexLow = indexHigh + 2;
+                indexHigh = text.indexOf("\"", indexLow);
+            }
+            else {
+                return indexHigh + 1;
+            }
+        }
 
-    //     return undefined;
-    // }
+        return undefined;
+    }
 
     function unexpectedReadError(
         text: string,

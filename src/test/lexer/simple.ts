@@ -1,30 +1,7 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer, LexerSnapshot, LexerState, TokenKind, Keywords } from "../../lexer";
-
-function expectLexSuccess(document: string, separator: string): LexerState {
-    const state: LexerState = Lexer.fromSplit(document, separator);
-    if (Lexer.isErrorState(state)) {
-        const maybeErrorLine = Lexer.firstErrorLine(state);
-        if (maybeErrorLine === undefined) {
-            throw new Error(`AssertFailed: maybeErrorLine === undefined`);
-        }
-        const errorLine = maybeErrorLine;
-
-        const details = {
-            errorLine,
-            error: errorLine.error.message,
-        };
-        throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, null, 4)}`);
-    }
-
-    return state;
-}
-
-function expectLexerSnapshot(document: string, separator: string): LexerSnapshot {
-    const state = expectLexSuccess(document, separator);
-    return new LexerSnapshot(state);
-}
+import { Keywords, LexerSnapshot, TokenKind } from "../../lexer";
+import { expectLexerSnapshot } from "./common";
 
 function expectTokens(document: string, separator: string, expected: ReadonlyArray<[TokenKind, string]>): LexerSnapshot {
     const snapshot = expectLexerSnapshot(document, separator);
@@ -120,6 +97,39 @@ type
         expectTokens(document, "\n", expected);
     });
 
+    it(`LineComment`, () => {
+        const document = `
+a // b
+c`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.LineComment, `// b`],
+            [TokenKind.Identifier, `c`],
+        ];
+        expectTokens(document, "\n", expected);
+    });
+
+    it(`LineComment on last line`, () => {
+        const document = `
+a
+// b`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.LineComment, `// b`],
+        ];
+        expectTokens(document, "\n", expected);
+    });
+
+    it(`MultilineComment`, () => {
+        const document = `a /* b */ c`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.MultilineComment, `/* b */`],
+            [TokenKind.Identifier, `c`],
+        ];
+        expectTokens(document, "\n", expected);
+    });
+
     it(`NullLiteral`, () => {
         const document = `null`;
         const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.NullLiteral, `null`]];
@@ -211,40 +221,17 @@ type
         expectTokens(document, "\n", expected);
     });
 
-    //     it(`StringLiteral`, () => {
-    //         const document = `
-    // ""
-    // """"
-    // `;
-    //         const expected: ReadonlyArray<[TokenKind, string]> = [
-    //             [TokenKind.StringLiteral, `""`],
-    //             [TokenKind.StringLiteral, `""""`],
-    //         ];
-    //         expectTokens(document, "\n", expected);
-    //     });
-
-    it(`LineComment`, () => {
+    it(`StringLiteral`, () => {
         const document = `
-// a
-b`;
+""
+""""
+`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.LineComment, `// a`],
-            [TokenKind.Identifier, `b`],
+            [TokenKind.StringLiteral, `""`],
+            [TokenKind.StringLiteral, `""""`],
         ];
         expectTokens(document, "\n", expected);
     });
-
-    it(`LineComment on last line`, () => {
-        const document = `
-a
-// b`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-            [TokenKind.LineComment, `// b`],
-        ];
-        expectTokens(document, "\n", expected);
-    });
-
 });
 
 describe(`Lexer.Simple.Whitespace`, () => {

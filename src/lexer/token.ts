@@ -64,6 +64,7 @@ export const enum TokenKind {
     LessThanEqualTo = "LessThanEqualTo",
     LineComment = "LineComment",
     Minus = "Minus",
+    MultilineComment = "MultilineComment",
     NotEqual = "NotEqual",
     NullLiteral = "NullLiteral",
     NumericLiteral = "NumericLiteral",
@@ -137,6 +138,7 @@ export const enum LineTokenKind {
     RightBracket = TokenKind.RightBracket,
     RightParenthesis = TokenKind.RightParenthesis,
     Semicolon = TokenKind.Semicolon,
+    StringLiteral = TokenKind.StringLiteral,
 
     MultilineCommentContent = LineTokenKindAdditions.MultilineCommentContent,
     MultilineCommentEnd = LineTokenKindAdditions.MultilineCommentEnd,

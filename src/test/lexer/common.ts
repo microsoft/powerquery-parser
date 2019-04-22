@@ -1,4 +1,28 @@
-// import { Lexer } from "../../lexer";
+import { Lexer, LexerState, LexerSnapshot } from "../../lexer";
+
+export function expectLexSuccess(document: string, separator: string): LexerState {
+    const state: LexerState = Lexer.fromSplit(document, separator);
+    if (Lexer.isErrorState(state)) {
+        const maybeErrorLine = Lexer.firstErrorLine(state);
+        if (maybeErrorLine === undefined) {
+            throw new Error(`AssertFailed: maybeErrorLine === undefined`);
+        }
+        const errorLine = maybeErrorLine;
+
+        const details = {
+            errorLine,
+            error: errorLine.error.message,
+        };
+        throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, null, 4)}`);
+    }
+
+    return state;
+}
+
+export function expectLexerSnapshot(document: string, separator: string): LexerSnapshot {
+    const state = expectLexSuccess(document, separator);
+    return new LexerSnapshot(state);
+}
 
 // export function touchedLexerFactory(): Lexer.TLexer {
 //     const document = "!";

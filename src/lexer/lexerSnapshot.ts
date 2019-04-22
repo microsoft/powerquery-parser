@@ -2,7 +2,7 @@ import { CommonError, Option } from "../common";
 import { TComment } from "./comment";
 import { LexerError } from "./error";
 import { LexerState } from "./lexerContracts";
-import { LexerLinePosition, LineToken, LineTokenKind, Token, tokenKindFrom } from "./token";
+import { LexerLinePosition, LineToken, LineTokenKind, Token, tokenKindFrom, TokenKind } from "./token";
 
 export class LexerSnapshot {
     public readonly text: string;
@@ -16,6 +16,7 @@ export class LexerSnapshot {
         let text = "";
 
         let flatLineTokens: FlatLineToken[] = [];
+        let flatIndex = 0;
         for (let line of lexerState.lines) {
             const tokensOnLine: ReadonlyArray<LineToken> = line.tokens;
             const numTokensOnLine: number = tokensOnLine.length;
@@ -23,9 +24,10 @@ export class LexerSnapshot {
             for (let tokenIndex = 0; tokenIndex < numTokensOnLine; tokenIndex += 1) {
                 flatLineTokens.push({
                     lineNumber: line.lineNumber,
-                    flatIndex: tokenIndex,
+                    flatIndex,
                     token: tokensOnLine[tokenIndex],
                 })
+                flatIndex += 1;
             }
         }
 
@@ -40,14 +42,14 @@ export class LexerSnapshot {
                 case LineTokenKind.MultilineCommentStart: {
                     const concatenation = LexerSnapshot.readMultilineComment(flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
-                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd;
+                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
                 }
 
                 case LineTokenKind.QuotedIdentifierStart: {
                     const concatenation = LexerSnapshot.readQuotedIdentifier(flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
-                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd;
+                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
                 }
 
@@ -88,6 +90,7 @@ export class LexerSnapshot {
         const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
             flatLineTokens,
             flatLineTokenStart,
+            TokenKind.MultilineComment,
             LineTokenKind.MultilineCommentContent,
             LineTokenKind.MultilineCommentEnd,
         )
@@ -110,6 +113,7 @@ export class LexerSnapshot {
         const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
             flatLineTokens,
             flatLineTokenStart,
+            TokenKind.Identifier,
             LineTokenKind.QuotedIdentifierContent,
             LineTokenKind.QuotedIdentifierEnd,
         )
@@ -132,6 +136,7 @@ export class LexerSnapshot {
         const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
             flatLineTokens,
             flatLineTokenStart,
+            TokenKind.StringLiteral,
             LineTokenKind.StringLiteralContent,
             LineTokenKind.StringLiteralEnd,
         )
@@ -150,6 +155,7 @@ export class LexerSnapshot {
     private static maybeReadConcatenatedToken(
         flatLineTokens: ReadonlyArray<FlatLineToken>,
         flatLineTokenStart: FlatLineToken,
+        newTokenKind: TokenKind,
         contentLineTokenKind: LineTokenKind,
         endLineTokenKind: LineTokenKind,
     ): Option<TokenConcatenation> {
@@ -171,7 +177,7 @@ export class LexerSnapshot {
 
                 return {
                     token: {
-                        kind: tokenKindFrom(flatLineToken.token.kind),
+                        kind: newTokenKind,
                         data: concatenatedData,
                         positionStart: {
                             lineNumber: flatLineTokenStart.lineNumber,
