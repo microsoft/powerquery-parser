@@ -43,7 +43,7 @@ export namespace Lexer {
 
     export function from(blob: string, separator = "\n"): LexerState {
         let newState: LexerState = {
-            lines: [lineFrom(blob, 0)],
+            lines: [lineFrom(blob, 0, LexerMultilineKind.Default)],
             separator,
         };
         return tokenizeLine(newState, 0);
@@ -69,9 +69,18 @@ export namespace Lexer {
     }
 
     export function appendNewLine(state: LexerState, blob: string): LexerState {
+        const lines = state.lines;
+        const numLines = lines.length;
+        const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];
+        const multilineKind = maybeLatestLine !== undefined
+            ? maybeLatestLine.multilineKindEnd
+            : LexerMultilineKind.Default;
+
+        const newLine = lineFrom(blob, numLines, multilineKind)
+
         let newState: LexerState = {
             ...state,
-            lines: state.lines.concat(lineFrom(blob, state.lines.length)),
+            lines: state.lines.concat(newLine),
         };
         return tokenizeLine(newState, newState.lines.length - 1);
     }
@@ -127,7 +136,7 @@ export namespace Lexer {
         return state;
     }
 
-    function lineFrom(blob: string, lineNumber: number): UntouchedLine {
+    function lineFrom(blob: string, lineNumber: number, _multilineKind: LexerMultilineKind): UntouchedLine {
         return {
             kind: LexerLineKind.Untouched,
             lineString: lexerLineStringFrom(blob),
@@ -140,16 +149,6 @@ export namespace Lexer {
             maybeLastRead: undefined,
         }
     }
-
-    // // lex one token and all comments before that token
-    // export function next(lexer: TLexer): TLexerExceptUntouched {
-    //     return lex(lexer, LexerStrategy.SingleToken);
-    // }
-
-    // // lex until EOF or an error occurs
-    // export function remaining(state: TLexer): TLexerExceptUntouched {
-    //     return lex(state, LexerStrategy.UntilEofOrError);
-    // }
 
     export function isErrorState(state: LexerState): boolean {
         const linesWithErrors: ReadonlyArray<ErrorLine | TouchedWithErrorLine> = state.lines.filter(isErrorLine);
