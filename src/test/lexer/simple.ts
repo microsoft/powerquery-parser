@@ -1,19 +1,7 @@
 import { expect } from "chai";
 import "mocha";
-import { Keywords, LexerSnapshot, TokenKind } from "../../lexer";
-import { expectLexerSnapshot } from "./common";
-
-function expectTokens(document: string, separator: string, expected: ReadonlyArray<[TokenKind, string]>): LexerSnapshot {
-    const snapshot = expectLexerSnapshot(document, separator);
-    const actual = snapshot.tokens.map(token => [token.kind, token.data]);
-    const details = {
-        actual,
-        expected,
-    };
-
-    expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
-    return snapshot;
-}
+import { Keywords, TokenKind } from "../../lexer";
+import { expectAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
     it(`HexLiteral`, () => {
@@ -24,7 +12,7 @@ describe(`Lexer.Simple.TokenKinds`, () => {
             [TokenKind.HexLiteral, `0x1`],
             [TokenKind.HexLiteral, `0X1`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`keywords`, () => {
@@ -94,7 +82,7 @@ type
             [TokenKind.KeywordHashTime, `#time`],
         ];
         expect(expected.length).to.equal(Keywords.length);
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`LineComment`, () => {
@@ -106,7 +94,7 @@ c`;
             [TokenKind.LineComment, `// b`],
             [TokenKind.Identifier, `c`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`LineComment on last line`, () => {
@@ -117,7 +105,7 @@ a
             [TokenKind.Identifier, `a`],
             [TokenKind.LineComment, `// b`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`MultilineComment`, () => {
@@ -127,13 +115,13 @@ a
             [TokenKind.MultilineComment, `/* b */`],
             [TokenKind.Identifier, `c`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`NullLiteral`, () => {
         const document = `null`;
         const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.NullLiteral, `null`]];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`NumericLiteral`, () => {
@@ -164,7 +152,7 @@ a
             [TokenKind.NumericLiteral, `0.1e-1`],
             [TokenKind.NumericLiteral, `0.1e+1`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     // TODO: look into adding `..`
@@ -218,7 +206,7 @@ a
             [TokenKind.FatArrow, `=>`],
             [TokenKind.Ellipsis, `...`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`StringLiteral`, () => {
@@ -230,7 +218,7 @@ a
             [TokenKind.StringLiteral, `""`],
             [TokenKind.StringLiteral, `""""`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 });
 
@@ -241,7 +229,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
             [TokenKind.Identifier, `a`],
             [TokenKind.Identifier, `b`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`tabs`, () => {
@@ -250,7 +238,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
             [TokenKind.Identifier, `a`],
             [TokenKind.Identifier, `b`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`trailing \\n`, () => {
@@ -258,7 +246,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`trailing \\r\\n`, () => {
@@ -266,7 +254,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, "\r\n", expected);
+        expectAbridgedTokens(document, "\r\n", expected);
     });
 
     it(`trailing space`, () => {
@@ -274,7 +262,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`leading \\n`, () => {
@@ -282,7 +270,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 
     it(`leading \\r\\n`, () => {
@@ -290,7 +278,7 @@ describe(`Lexer.Simple.Whitespace`, () => {
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, "\r\n", expected);
+        expectAbridgedTokens(document, "\r\n", expected);
     });
 
     it(`leading space`, () => {
@@ -298,6 +286,6 @@ describe(`Lexer.Simple.Whitespace`, () => {
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, "\n", expected);
+        expectAbridgedTokens(document, "\n", expected);
     });
 });
