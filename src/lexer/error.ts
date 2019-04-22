@@ -17,6 +17,7 @@ export namespace LexerError {
         | UnexpectedEofError
         | UnexpectedReadError
         | UnterminatedMultilineCommentError
+        | UnterminatedQuotedIdentierError
         | UnterminatedStringError
     )
 
@@ -86,7 +87,15 @@ export namespace LexerError {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
         ) {
-            super(Localization.Error.lexerUnterminatedString(graphemePosition));
+            super(Localization.Error.lexerUnterminatedMultilineComment(graphemePosition));
+        }
+    }
+
+    export class UnterminatedQuotedIdentierError extends Error {
+        constructor(
+            readonly graphemePosition: StringHelpers.GraphemePosition,
+        ) {
+            super(Localization.Error.lexerUnterminatedQuotedIdentifier(graphemePosition));
         }
     }
 
@@ -115,6 +124,7 @@ export namespace LexerError {
             || x instanceof UnexpectedEofError
             || x instanceof UnexpectedReadError
             || x instanceof UnterminatedMultilineCommentError
+            || x instanceof UnterminatedQuotedIdentierError
             || x instanceof UnterminatedStringError
         );
     }

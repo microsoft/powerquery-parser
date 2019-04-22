@@ -1,6 +1,8 @@
+import { CommonError, Option } from "../common";
 import { TComment } from "./comment";
-import { LexerState, TLexerLine } from "./lexerContracts";
-import { LineTokenKind, Token, tokenKindFrom, LineToken } from "./token";
+import { LexerError } from "./error";
+import { LexerState } from "./lexerContracts";
+import { LexerLinePosition, LineToken, LineTokenKind, Token, tokenKindFrom } from "./token";
 
 export class LexerSnapshot {
     public readonly text: string;
@@ -8,52 +10,205 @@ export class LexerSnapshot {
     public readonly comments: ReadonlyArray<TComment>;
 
     constructor(lexerState: LexerState) {
+        // class properties
         const tokens: Token[] = [];
         const comments: TComment[] = [];
-        const lines: ReadonlyArray<TLexerLine> = lexerState.lines;
-        const numLines = lines.length;
-
-        let lineIndex = 0;
         let text = "";
 
-        while (lineIndex < numLines) {
-            const currentLine: TLexerLine = lines[lineIndex];
-            const tokensOnLine: ReadonlyArray<LineToken> = currentLine.tokens;
+        let flatLineTokens: FlatLineToken[] = [];
+        for (let line of lexerState.lines) {
+            const tokensOnLine: ReadonlyArray<LineToken> = line.tokens;
             const numTokensOnLine: number = tokensOnLine.length;
 
-            let tokenIndex = 0;
-            while (tokenIndex < numTokensOnLine) {
-                const token: LineToken = tokensOnLine[tokenIndex];
+            for (let tokenIndex = 0; tokenIndex < numTokensOnLine; tokenIndex += 1) {
+                flatLineTokens.push({
+                    lineNumber: line.lineNumber,
+                    flatIndex: tokenIndex,
+                    token: tokensOnLine[tokenIndex],
+                })
+            }
+        }
 
-                switch (token.kind) {
-                    case LineTokenKind.MultilineCommentStart:
-                    case LineTokenKind.QuotedIdentifierStart:
-                    case LineTokenKind.StringLiteralStart:
-                        throw new Error("todo");
+        let flatLineTokenIndex = 0;
+        const numTokens = flatLineTokens.length;
+        while (flatLineTokenIndex < numTokens) {
+            const flatLineToken: FlatLineToken = flatLineTokens[flatLineTokenIndex];
+            const lineTokenKind: LineTokenKind = flatLineToken.token.kind;
 
-                    default:
-                        tokens.push({
-                            ...token,
-                            kind: tokenKindFrom(token.kind),
-                            positionStart: {
-                                lineNumber: currentLine.lineNumber,
-                                ...token.positionStart,
-                            },
-                            positionEnd: {
-                                lineNumber: currentLine.lineNumber,
-                                ...token.positionEnd,
-                            },
-                        })
+            switch (lineTokenKind) {
+
+                case LineTokenKind.MultilineCommentStart: {
+                    const concatenation = LexerSnapshot.readMultilineComment(flatLineTokens, flatLineToken);
+                    tokens.push(concatenation.token);
+                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd;
+                    break;
                 }
 
-                tokenIndex += 1;
-            }
+                case LineTokenKind.QuotedIdentifierStart: {
+                    const concatenation = LexerSnapshot.readQuotedIdentifier(flatLineTokens, flatLineToken);
+                    tokens.push(concatenation.token);
+                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd;
+                    break;
+                }
 
-            lineIndex += 1;
+                case LineTokenKind.StringLiteralStart: {
+                    const concatenation = LexerSnapshot.readStringLiteral(flatLineTokens, flatLineToken);
+                    tokens.push(concatenation.token);
+                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
+                    break;
+                }
+
+                default:
+                    const lineToken = flatLineToken.token;
+                    tokens.push({
+                        kind: tokenKindFrom(flatLineToken.token.kind),
+                        data: flatLineToken.token.data,
+                        positionStart: {
+                            lineNumber: flatLineToken.lineNumber,
+                            ...lineToken.positionStart
+                        },
+                        positionEnd: {
+                            lineNumber: flatLineToken.lineNumber,
+                            ...lineToken.positionEnd
+                        },
+                    });
+                    flatLineTokenIndex += 1;
+            }
         }
 
         this.text = text;
         this.tokens = tokens;
         this.comments = comments;
     }
+
+    private static readMultilineComment(
+        flatLineTokens: ReadonlyArray<FlatLineToken>,
+        flatLineTokenStart: FlatLineToken,
+    ): TokenConcatenation {
+        const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
+            flatLineTokens,
+            flatLineTokenStart,
+            LineTokenKind.MultilineCommentContent,
+            LineTokenKind.MultilineCommentEnd,
+        )
+        if (maybeTokenConcatenation) {
+            return maybeTokenConcatenation;
+        }
+        else {
+            const positionStart = flatLineTokenStart.token.positionStart;
+            throw new LexerError.UnterminatedMultilineCommentError({
+                lineNumber: flatLineTokenStart.lineNumber,
+                ...positionStart
+            });
+        }
+    }
+
+    private static readQuotedIdentifier(
+        flatLineTokens: ReadonlyArray<FlatLineToken>,
+        flatLineTokenStart: FlatLineToken,
+    ): TokenConcatenation {
+        const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
+            flatLineTokens,
+            flatLineTokenStart,
+            LineTokenKind.QuotedIdentifierContent,
+            LineTokenKind.QuotedIdentifierEnd,
+        )
+        if (maybeTokenConcatenation) {
+            return maybeTokenConcatenation;
+        }
+        else {
+            const positionStart = flatLineTokenStart.token.positionStart;
+            throw new LexerError.UnterminatedStringError({
+                lineNumber: flatLineTokenStart.lineNumber,
+                ...positionStart
+            });
+        }
+    }
+
+    private static readStringLiteral(
+        flatLineTokens: ReadonlyArray<FlatLineToken>,
+        flatLineTokenStart: FlatLineToken,
+    ): TokenConcatenation {
+        const maybeTokenConcatenation: Option<TokenConcatenation> = LexerSnapshot.maybeReadConcatenatedToken(
+            flatLineTokens,
+            flatLineTokenStart,
+            LineTokenKind.StringLiteralContent,
+            LineTokenKind.StringLiteralEnd,
+        )
+        if (maybeTokenConcatenation) {
+            return maybeTokenConcatenation;
+        }
+        else {
+            const positionStart = flatLineTokenStart.token.positionStart;
+            throw new LexerError.UnterminatedStringError({
+                lineNumber: flatLineTokenStart.lineNumber,
+                ...positionStart
+            });
+        }
+    }
+
+    private static maybeReadConcatenatedToken(
+        flatLineTokens: ReadonlyArray<FlatLineToken>,
+        flatLineTokenStart: FlatLineToken,
+        contentLineTokenKind: LineTokenKind,
+        endLineTokenKind: LineTokenKind,
+    ): Option<TokenConcatenation> {
+        const lineTokenStart = flatLineTokenStart.token;
+        const numTokens = flatLineTokens.length;
+
+        let concatenatedData = lineTokenStart.data;
+        let flatLineTokenIndex = flatLineTokenStart.flatIndex + 1;
+        while (flatLineTokenIndex < numTokens) {
+            const flatLineToken = flatLineTokens[flatLineTokenIndex];
+            const lineToken = flatLineToken.token;
+
+            if (lineToken.kind === contentLineTokenKind) {
+                concatenatedData += lineToken.data;
+            }
+            else if (lineToken.kind === endLineTokenKind) {
+                const linePositionEnd: LexerLinePosition = lineToken.positionEnd;
+                concatenatedData += lineToken.data;
+
+                return {
+                    token: {
+                        kind: tokenKindFrom(flatLineToken.token.kind),
+                        data: concatenatedData,
+                        positionStart: {
+                            lineNumber: flatLineTokenStart.lineNumber,
+                            ...lineTokenStart.positionStart
+                        },
+                        positionEnd: {
+                            lineNumber: flatLineToken.lineNumber,
+                            ...linePositionEnd
+                        },
+                    },
+                    flatLineTokenIndexEnd: flatLineTokenIndex,
+                }
+            }
+            else {
+                const message = "once a multiline token starts it should either reach a paired end token, or eof";
+                const details = {
+                    flatLineTokenStart,
+                    flatLineToken: flatLineToken,
+                    concatenatedData,
+                };
+                throw new CommonError.InvariantError(message, details);
+            }
+
+            flatLineTokenIndex += 1;
+        }
+
+        return undefined;
+    }
+}
+
+interface FlatLineToken {
+    readonly lineNumber: number,
+    readonly flatIndex: number,
+    readonly token: LineToken,
+}
+
+interface TokenConcatenation {
+    readonly flatLineTokenIndexEnd: number,
+    readonly token: Token,
 }

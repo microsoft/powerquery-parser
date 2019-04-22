@@ -59,6 +59,10 @@ export namespace Localization.Error {
         return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
     }
 
+    export function lexerUnterminatedQuotedIdentifier(graphemePosition: StringHelpers.GraphemePosition): string {
+        return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
+    }
+
     export function lexerUnterminatedString(graphemePosition: StringHelpers.GraphemePosition): string {
         return `Unterminated string starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
     }
