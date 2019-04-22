@@ -273,7 +273,7 @@ export namespace Lexer {
         const positionStart = line.position;
 
         let currentPosition = drainWhitespace(lineString, positionStart);
-        let continueLexing = positionStart.textIndex < textLength;
+        let continueLexing = currentPosition.textIndex < textLength;
 
         if (!continueLexing) {
             return {
@@ -395,9 +395,7 @@ export namespace Lexer {
     function readDefault(line: TLexerLine, currentPosition: LexerLinePosition): Foobar {
         const lineString = line.lineString;
         const text = lineString.text;
-        const positionStart = currentPosition;
 
-        currentPosition = drainWhitespace(lineString, positionStart);
         const chr1: string = text[currentPosition.textIndex];
         let token: LineToken;
         let multilineKind = line.multilineKindEnd;

@@ -220,8 +220,31 @@ type
     //             [TokenKind.StringLiteral, `""`],
     //             [TokenKind.StringLiteral, `""""`],
     //         ];
-    //         expectTokens(document, expected);
+    //         expectTokens(document, "\n", expected);
     //     });
+
+    it(`LineComment`, () => {
+        const document = `
+// a
+b`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.LineComment, `// a`],
+            [TokenKind.Identifier, `b`],
+        ];
+        expectTokens(document, "\n", expected);
+    });
+
+    it(`LineComment on last line`, () => {
+        const document = `
+a
+// b`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.LineComment, `// b`],
+        ];
+        expectTokens(document, "\n", expected);
+    });
+
 });
 
 describe(`Lexer.Simple.Whitespace`, () => {
