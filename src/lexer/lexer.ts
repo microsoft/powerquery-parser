@@ -41,16 +41,16 @@ export namespace Lexer {
         }
     }
 
-    export function from(blob: string, separator = "\n"): LexerState {
+    export function from(blob: string, lineSeparator = "\n"): LexerState {
         let newState: LexerState = {
             lines: [lineFrom(blob, 0, LexerMultilineKind.Default)],
-            separator,
+            lineSeparator,
         };
         return tokenizeLine(newState, 0);
     }
 
-    export function fromSplit(blob: string, separator: string): LexerState {
-        const lines = blob.split(separator);
+    export function fromSplit(blob: string, lineSeparator: string): LexerState {
+        const lines = blob.split(lineSeparator);
         const numLines = lines.length;
 
         let state = from(lines[0]);
