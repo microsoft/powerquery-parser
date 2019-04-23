@@ -416,7 +416,7 @@ export namespace Lexer {
 
         const chr1: string = text[currentPosition.textIndex];
         let token: LineToken;
-        let multilineKind = line.multilineKind;
+        let multilineKind = LexerMultilineKind.Default;
 
         if (chr1 === "!") { token = readConstant(LineTokenKind.Bang, lineString, currentPosition, 1); }
         else if (chr1 === "&") { token = readConstant(LineTokenKind.Ampersand, lineString, currentPosition, 1); }

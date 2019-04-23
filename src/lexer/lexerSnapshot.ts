@@ -33,32 +33,31 @@ export class LexerSnapshot {
             }
         }
 
-        let flatLineTokenIndex = 0;
+        flatIndex = 0;
         const numTokens = flatLineTokens.length;
-        while (flatLineTokenIndex < numTokens) {
-            const flatLineToken: FlatLineToken = flatLineTokens[flatLineTokenIndex];
+        while (flatIndex < numTokens) {
+            const flatLineToken: FlatLineToken = flatLineTokens[flatIndex];
             const lineTokenKind: LineTokenKind = flatLineToken.token.kind;
 
             switch (lineTokenKind) {
-
                 case LineTokenKind.MultilineCommentStart: {
                     const concatenation = LexerSnapshot.readMultilineComment(lineSeparator, flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
-                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
+                    flatIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
                 }
 
                 case LineTokenKind.QuotedIdentifierStart: {
                     const concatenation = LexerSnapshot.readQuotedIdentifier(lineSeparator, flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
-                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
+                    flatIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
                 }
 
                 case LineTokenKind.StringLiteralStart: {
                     const concatenation = LexerSnapshot.readStringLiteral(lineSeparator, flatLineTokens, flatLineToken);
                     tokens.push(concatenation.token);
-                    flatLineTokenIndex = concatenation.flatLineTokenIndexEnd + 1;
+                    flatIndex = concatenation.flatLineTokenIndexEnd + 1;
                     break;
                 }
 
@@ -76,7 +75,7 @@ export class LexerSnapshot {
                             ...lineToken.positionEnd
                         },
                     });
-                    flatLineTokenIndex += 1;
+                    flatIndex += 1;
             }
         }
 

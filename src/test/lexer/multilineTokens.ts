@@ -1,5 +1,5 @@
 import "mocha";
-import { TokenKind, LexerSnapshot, LineTokenKind } from "../../lexer";
+import { LexerSnapshot, TokenKind } from "../../lexer";
 import { expectAbridgedTokens } from "./common";
 
 function expectWrappedAbridgedTokens(
@@ -7,31 +7,43 @@ function expectWrappedAbridgedTokens(
     separator: string,
     expected: ReadonlyArray<[TokenKind, string]>
 ): LexerSnapshot {
-    const newDocument = `a${separator}${document}${separator}b`;
+    const newDocument = `wrapperOpen${separator}${document}${separator}wrapperClose`;
     const newExpected: ReadonlyArray<[TokenKind, string]> = [
-        [TokenKind.Identifier, "a"],
+        [TokenKind.Identifier, "wrapperOpen"],
         ...expected,
-        [TokenKind.Identifier, "b"],
+        [TokenKind.Identifier, "wrapperClose"],
     ];
-    return expectAbridgedTokens(newDocument, separator, newExpected);
+    expectAbridgedTokens(newDocument, separator, newExpected);
+    return expectAbridgedTokens(document, separator, expected);
 }
 
-describe(`Lexer.MultilineTokens`, () => {
-    it(`StringLiteral - whole line is ${LineTokenKind.StringLiteralContent}`, () => {
-        const seperator = "\n";
-        const document = `"${seperator}foo${seperator}"`;
+describe(`Lexer.MultilineTokens.StringLiteral`, () => {
+    it(`"X": `, () => {
+        const separator = "\n";
+        const document = `"X"`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.StringLiteral, `"${seperator}foo${seperator}"`],
+            [TokenKind.StringLiteral, `"X"`],
+        ];
+        expectWrappedAbridgedTokens(document, separator, expected);
+    });
+
+    it(`"X\\nX\\nX"`, () => {
+        const seperator = "\n";
+        const document = `"X${seperator}X${seperator}X"`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.StringLiteral, `"X${seperator}X${seperator}X"`],
         ];
         expectWrappedAbridgedTokens(document, seperator, expected);
     });
 
-    it(`StringLiteral - remainder of line is ${LineTokenKind.StringLiteralContent}`, () => {
-        const separator = "\n";
-        const document = `"foo"`;
+    it(`"X\\nX\\nX" abc`, () => {
+        const seperator = "\n";
+        const document = `"X${seperator}X${seperator}X" abc`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.StringLiteral, `"foo"`],
+            [TokenKind.StringLiteral, `"X${seperator}X${seperator}X"`],
+            [TokenKind.Identifier, `abc`],
         ];
-        expectWrappedAbridgedTokens(document, separator, expected);
+        expectWrappedAbridgedTokens(document, seperator, expected);
     });
+
 });
