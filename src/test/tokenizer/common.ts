@@ -1,115 +1,106 @@
-// import { Lexer } from "../../lexer";
+import { Lexer } from "../../lexer";
 
-// export class Tokenizer implements TokensProvider {
-//     public getInitialState(): IState {
-//         // TODO: what should initial state be?
-//         return new TokenizerState(Lexer.from(""));
-//     }
+export class Tokenizer implements TokensProvider {
+    constructor(private readonly lineTerminator: string) { }
 
-//     public tokenize(line: string, state: IState): ILineTokens {
-//         let lexerState: Lexer.TLexer;
+    public getInitialState(): IState {
+        const lexerState: Lexer.LexerState = {
+            lines: [],
+            lineTerminator: this.lineTerminator,
+        };
+        return new TokenizerState(lexerState);
+    }
 
-//         const tokenizerState = state as TokenizerState;
-//         if (!tokenizerState.lexer) {
-//             throw new Error("invalid state");
-//         }
+    public tokenize(line: string, state: IState): ILineTokens {
+        let lexerState: Lexer.TLexer;
 
-//         lexerState = tokenizerState.lexer;
+        const tokenizerState = state as TokenizerState;
+        if (!tokenizerState.lexer) {
+            throw new Error("invalid state");
+        }
 
-//         // TODO: do we care about the newline characters that would be removed from the line? 
-//         let endState: Lexer.TLexer = Lexer.appendToDocument(lexerState, line);
-//         endState = Lexer.remaining(endState);
+        lexerState = tokenizerState.lexer;
 
-//         const lineTokens = Tokenizer.calculateLineTokens(lexerState, endState);
+        let endState: Lexer.TLexer = Lexer.appendToDocument(lexerState, line + this._lineTerminator);
+        endState = Lexer.remaining(endState);
 
-//         return {
-//             tokens: lineTokens,
-//             endState: new TokenizerState(endState)
-//         };
-//     }
+        const lineTokens = Tokenizer.calculateLineTokens(lexerState, endState);
 
-//     private static calculateLineTokens(initial: Lexer.TLexer, end: Lexer.TLexer): IToken[] {
-//         let lineTokens: IToken[] = [];
+        return {
+            tokens: lineTokens,
+            endState: new TokenizerState(endState)
+        };
+    }
 
-//         // TODO: does this work? 
-//         const offset: number = initial.documentIndex;
+    private static calculateLineTokens(initial: Lexer.TLexer, end: Lexer.TLexer): IToken[] {
+        let lineTokens: IToken[] = [];
+        const offset: number = initial.documentIndex;
 
-//         // only consider new tokens
-//         const newTokens = end.tokens.slice(initial.tokens.length);
-//         newTokens.forEach(t => {
-//             lineTokens.push({
-//                 startIndex: t.documentStartIndex - offset,
-//                 scopes: t.kind
-//             })
-//         });
+        // only consider new tokens
+        const newTokens = end.tokens.slice(initial.tokens.length);
+        newTokens.forEach(t => {
+            lineTokens.push({
+                startIndex: t.documentStartIndex - offset,
+                scopes: t.kind
+            })
+        });
 
-//         return lineTokens;
-//     }
-// }
+        // integrate comments
+        const newComments = end.comments.slice(initial.comments.length);
+        newComments.forEach(c => {
+            lineTokens.push({
+                startIndex: c.documentStartIndex - offset,
+                scopes: c.kind
+            })
+        });
 
-// export class TokenizerState implements IState {
-//     private readonly _lexer: Lexer.TLexer;
+        // return the tokens ordered by their startIndex
+        return lineTokens.sort((a, b) => a.startIndex > b.startIndex ? 1 : ((b.startIndex > a.startIndex ? -1 : 0)));
+    }
+}
 
-//     constructor(lexer: Lexer.TLexer) {
-//         this._lexer = lexer;
-//     }
+export class TokenizerState implements IState {
+    constructor(private readonly lexerState: Lexer.LexerState) { }
 
-//     public get lexer(): Lexer.TLexer {
-//         return this._lexer;
-//     }
+    public clone(): IState {
+        return new TokenizerState(this.lexerState);
+    }
 
-//     public clone(): IState {
-//         // TODO: is there a better way to clone?
-//         let newLexer: Lexer.TLexer = Lexer.from(this.lexer.document);
-//         newLexer = Lexer.remaining(newLexer);
-//         return new TokenizerState(newLexer);
-//     }
+    public equals(other: IState): boolean {
+        return Lexer.equalStates(this.lexerState, (other as TokenizerState).lexerState);
+    }
+}
 
-//     public equals(other: IState): boolean {
-//         const otherState = other as TokenizerState;
-//         if (!otherState || !otherState.lexer) {
-//             return false;
-//         }
+// Taken from https://raw.githubusercontent.com/Microsoft/monaco-editor/master/monaco.d.ts
+export interface IState {
+    clone(): IState;
+    equals(other: IState): boolean;
+}
 
-//         const r = this.lexer;
-//         const l = otherState.lexer;
+export interface IToken {
+    startIndex: number;
+    scopes: string;
+}
 
-//         // TODO: do we want to compare tokens as well?
-//         return r.documentIndex === l.documentIndex &&
-//             r.kind === l.kind;
-//     }
-// }
+export interface ILineTokens {
+    /**
+     * The list of tokens on the line.
+     */
+    tokens: IToken[];
+    /**
+     * The tokenization end state.
+     * A pointer will be held to this and the object should not be modified by the tokenizer after the pointer is returned.
+     */
+    endState: IState;
+}
 
-// // Taken from https://raw.githubusercontent.com/Microsoft/monaco-editor/master/monaco.d.ts
-// export interface IState {
-//     clone(): IState;
-//     equals(other: IState): boolean;
-// }
-
-// export interface IToken {
-//     startIndex: number;
-//     scopes: string;
-// }
-
-// export interface ILineTokens {
-//     /**
-//      * The list of tokens on the line.
-//      */
-//     tokens: IToken[];
-//     /**
-//      * The tokenization end state.
-//      * A pointer will be held to this and the object should not be modified by the tokenizer after the pointer is returned.
-//      */
-//     endState: IState;
-// }
-
-// export interface TokensProvider {
-//     /**
-//      * The initial state of a language. Will be the state passed in to tokenize the first line.
-//      */
-//     getInitialState(): IState;
-//     /**
-//      * Tokenize a line given the state at the beginning of the line.
-//      */
-//     tokenize(line: string, state: IState): ILineTokens;
-// }
+export interface TokensProvider {
+    /**
+     * The initial state of a language. Will be the state passed in to tokenize the first line.
+     */
+    getInitialState(): IState;
+    /**
+     * Tokenize a line given the state at the beginning of the line.
+     */
+    tokenize(line: string, state: IState): ILineTokens;
+}
