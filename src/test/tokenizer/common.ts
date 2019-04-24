@@ -1,4 +1,4 @@
-import { Lexer } from "../../lexer";
+import { Lexer, LineToken } from "../../lexer";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) { }
@@ -12,55 +12,48 @@ export class Tokenizer implements TokensProvider {
     }
 
     public tokenize(line: string, state: IState): ILineTokens {
-        let lexerState: Lexer.TLexer;
+        const tokenizerState: TokenizerState = state as TokenizerState;
+        const lexerState = tokenizerState.lexerState;
+        const newLexerState = Lexer.appendNewLine(lexerState, line);
 
-        const tokenizerState = state as TokenizerState;
-        if (!tokenizerState.lexer) {
-            throw new Error("invalid state");
-        }
-
-        lexerState = tokenizerState.lexer;
-
-        let endState: Lexer.TLexer = Lexer.appendToDocument(lexerState, line + this._lineTerminator);
-        endState = Lexer.remaining(endState);
-
-        const lineTokens = Tokenizer.calculateLineTokens(lexerState, endState);
+        const lineTokens = Tokenizer.newLineTokens(lexerState, newLexerState);
 
         return {
             tokens: lineTokens,
-            endState: new TokenizerState(endState)
+            endState: new TokenizerState(newLexerState)
         };
     }
 
-    private static calculateLineTokens(initial: Lexer.TLexer, end: Lexer.TLexer): IToken[] {
-        let lineTokens: IToken[] = [];
-        const offset: number = initial.documentIndex;
+    private static newLineTokens(oldState: Lexer.LexerState, newState: Lexer.LexerState): IToken[] {
+        const newStateTokens: ReadonlyArray<LineToken> = newState.lines[newState.lines.length - 1].tokens;
+        const oldStateTokens: ReadonlyArray<LineToken> = oldState.lines[oldState.lines.length - 1].tokens;
 
-        // only consider new tokens
-        const newTokens = end.tokens.slice(initial.tokens.length);
-        newTokens.forEach(t => {
-            lineTokens.push({
-                startIndex: t.documentStartIndex - offset,
-                scopes: t.kind
-            })
-        });
+        const numNewStateTokens = newStateTokens.length;
+        for (let index = 0; index < numNewStateTokens; index++) {
+            if (Lexer.equalTokens(oldStateTokens[index], newStateTokens[index])) {
+                // unsafe action:
+                //      cast LineTokenKind into string
+                // what I'm trying to avoid:
+                //      cost of a cast
+                // why it's safe:
+                //      all variants for LineTokenKind are strings
+                return newStateTokens
+                    .slice(index)
+                    .map((token: LineToken) => {
+                        return {
+                            startIndex: token.positionStart.columnNumber,
+                            scopes: token.kind as unknown as string,
+                        };
+                    });
+            }
+        }
 
-        // integrate comments
-        const newComments = end.comments.slice(initial.comments.length);
-        newComments.forEach(c => {
-            lineTokens.push({
-                startIndex: c.documentStartIndex - offset,
-                scopes: c.kind
-            })
-        });
-
-        // return the tokens ordered by their startIndex
-        return lineTokens.sort((a, b) => a.startIndex > b.startIndex ? 1 : ((b.startIndex > a.startIndex ? -1 : 0)));
+        return [];
     }
 }
 
 export class TokenizerState implements IState {
-    constructor(private readonly lexerState: Lexer.LexerState) { }
+    constructor(public readonly lexerState: Lexer.LexerState) { }
 
     public clone(): IState {
         return new TokenizerState(this.lexerState);
