@@ -1,3 +1,4 @@
+import { ResultKind } from "./common";
 import { lexAndParse } from "./jobs";
 
 parseDocument("1 2 3");
@@ -5,14 +6,14 @@ parseDocument("1 2 3");
 // @ts-ignore
 function parseDocument(document: string) {
     console.log(JSON.stringify(lexAndParse(document, "\n"), null, 4));
-    // const parseResult = lexAndParse(document, "\n");
-    // if (parseResult.kind === ResultKind.Ok) {
-    //     console.log(JSON.stringify(parseResult.value, null, 4));
-    // }
-    // else {
-    //     console.log(parseResult.error.message);
-    //     console.log(JSON.stringify(parseResult.error, null, 4));
-    // }
+    const parseResult = lexAndParse(document, "\n");
+    if (parseResult.kind === ResultKind.Ok) {
+        console.log(JSON.stringify(parseResult.value, null, 4));
+    }
+    else {
+        console.log(parseResult.error.message);
+        console.log(JSON.stringify(parseResult.error, null, 4));
+    }
 }
 
 // // @ts-ignore

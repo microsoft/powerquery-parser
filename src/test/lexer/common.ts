@@ -1,10 +1,19 @@
 import { expect } from "chai";
-import { Lexer, LexerSnapshot, LexerState, TokenKind } from "../../lexer";
+import { Lexer, LexerSnapshot, LexerState, TokenKind, CommentKind } from "../../lexer";
+
+export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
+
+export type AbridgedTokens = ReadonlyArray<[TokenKind, string]>;
+
+export interface AbridgedSnapshot {
+    readonly tokens: AbridgedTokens;
+    readonly comments: AbridgedComments;
+}
 
 export function expectLexSuccess(document: string, separator: string): LexerState {
     const state: LexerState = Lexer.fromSplit(document, separator);
     if (Lexer.isErrorState(state)) {
-        const maybeErrorLine = Lexer.firstErrorLine(state);
+        const maybeErrorLine = Lexer.maybeFirstErrorLine(state);
         if (maybeErrorLine === undefined) {
             throw new Error(`AssertFailed: maybeErrorLine === undefined`);
         }
@@ -25,19 +34,88 @@ export function expectLexerSnapshot(document: string, separator: string): LexerS
     return new LexerSnapshot(state);
 }
 
+export function expectWrappedAbridgedTokens(
+    document: string,
+    separator: string,
+    expected: AbridgedTokens,
+): LexerSnapshot {
+    const newDocument = `wrapperOpen${separator}${document}${separator}wrapperClose`;
+    const newExpected: AbridgedTokens = [
+        [TokenKind.Identifier, "wrapperOpen"],
+        ...expected,
+        [TokenKind.Identifier, "wrapperClose"],
+    ];
+    expectAbridgedTokens(newDocument, separator, newExpected);
+    return expectAbridgedTokens(document, separator, expected);
+}
+
+export function expectWrappedAbridgedComments(
+    document: string,
+    separator: string,
+    expected: AbridgedComments,
+): LexerSnapshot {
+    const newDocument = `/*wrapperOpen*/${separator}${document}${separator}/*wrapperClose*/`;
+    const newExpected: AbridgedComments = [
+        [CommentKind.Multiline, "/*wrapperOpen*/"],
+        ...expected,
+        [CommentKind.Multiline, "/*wrapperClose*/"],
+    ];
+    expectAbridgedComments(newDocument, separator, newExpected);
+    return expectAbridgedComments(document, separator, expected);
+}
+
 export function expectAbridgedTokens(
     document: string,
     separator: string,
-    expected: ReadonlyArray<[TokenKind, string]>
+    expected: AbridgedTokens,
+): LexerSnapshot {
+    return expectAbridgedSnapshot(
+        document,
+        separator,
+        {
+            tokens: expected,
+            comments: [],
+        },
+    );
+}
+
+export function expectAbridgedComments(
+    document: string,
+    separator: string,
+    expected: AbridgedComments,
+): LexerSnapshot {
+    return expectAbridgedSnapshot(
+        document,
+        separator,
+        {
+            tokens: [],
+            comments: expected,
+        },
+    );
+}
+
+export function expectAbridgedSnapshot(
+    document: string,
+    separator: string,
+    expected: AbridgedSnapshot,
 ): LexerSnapshot {
     const snapshot = expectLexerSnapshot(document, separator);
-    const actual = snapshot.tokens.map(token => [token.kind, token.data]);
-    const details = {
-        actual,
-        expected,
-    };
+    const expectedTokens = expected.tokens;
+    const expectedComments = expected.comments;
+    const actualTokens = snapshot.tokens.map(token => [token.kind, token.data]);
+    const actualComments = snapshot.comments.map(comment => [comment.kind, comment.data]);
 
-    expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
+    const tokenDetails = {
+        actual: actualTokens,
+        expected: expectedTokens,
+    };
+    expect(actualTokens).deep.equal(expectedTokens, JSON.stringify(tokenDetails));
+
+    const commentDetails = {
+        actual: actualTokens,
+        expected: expectedTokens,
+    };
+    expect(actualComments).deep.equal(expectedComments, JSON.stringify(commentDetails));
     return snapshot;
 }
 

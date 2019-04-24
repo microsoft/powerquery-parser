@@ -1,6 +1,5 @@
-import { CommonError } from "../common";
-
 const enum LineTokenKindAdditions {
+    LineComment = "LineComment",
     MultilineCommentContent = "MultilineCommentContent",
     MultilineCommentEnd = "MultilineCommentEnd",
     MultilineCommentStart = "MultilineCommentStart",
@@ -62,9 +61,7 @@ export const enum TokenKind {
     LeftParenthesis = "LeftParenthesis",
     LessThan = "LessThan",
     LessThanEqualTo = "LessThanEqualTo",
-    LineComment = "LineComment",
     Minus = "Minus",
-    MultilineComment = "MultilineComment",
     NotEqual = "NotEqual",
     NullLiteral = "NullLiteral",
     NumericLiteral = "NumericLiteral",
@@ -127,7 +124,6 @@ export const enum LineTokenKind {
     LeftParenthesis = TokenKind.LeftParenthesis,
     LessThan = TokenKind.LessThan,
     LessThanEqualTo = TokenKind.LessThanEqualTo,
-    LineComment = TokenKind.LineComment,
     Minus = TokenKind.Minus,
     NotEqual = TokenKind.NotEqual,
     NullLiteral = TokenKind.NullLiteral,
@@ -140,6 +136,7 @@ export const enum LineTokenKind {
     Semicolon = TokenKind.Semicolon,
     StringLiteral = TokenKind.StringLiteral,
 
+    LineComment = LineTokenKindAdditions.LineComment,
     MultilineCommentContent = LineTokenKindAdditions.MultilineCommentContent,
     MultilineCommentEnd = LineTokenKindAdditions.MultilineCommentEnd,
     MultilineCommentStart = LineTokenKindAdditions.MultilineCommentStart,
@@ -178,32 +175,4 @@ export interface LexerLinePosition {
 
 export interface TokenPosition extends LexerLinePosition {
     readonly lineNumber: number,
-}
-
-// -------------------------------------
-// ---------- fromX functions ----------
-// -------------------------------------
-
-export function tokenKindFrom(lineTokenKind: LineTokenKind): TokenKind {
-    switch (lineTokenKind) {
-        case LineTokenKind.MultilineCommentContent:
-        case LineTokenKind.MultilineCommentEnd:
-        case LineTokenKind.MultilineCommentStart:
-        case LineTokenKind.QuotedIdentifierContent:
-        case LineTokenKind.QuotedIdentifierEnd:
-        case LineTokenKind.QuotedIdentifierStart:
-        case LineTokenKind.StringLiteralContent:
-        case LineTokenKind.StringLiteralEnd:
-        case LineTokenKind.StringLiteralStart:
-            const details = { lineTokenKind };
-            throw new CommonError.InvariantError("lineTokenKind should've already been stripped out", details);
-        default:
-            // unsafe action:
-            //      casting LineTokenKind into TokenKind
-            // what I'm trying to avoid:
-            //      adding a case for all remaining variants in LineTokenKind
-            // why it's safe:
-            //      set(LineTokenKind) - set(LineTokenKindAdditions) === set(TokenKind)
-            return lineTokenKind as unknown as TokenKind;
-    }
 }

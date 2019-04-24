@@ -1,10 +1,11 @@
-import { CommonError, isNever, Pattern, StringHelpers } from "../common";
+import { CommonError, isNever, Pattern, StringHelpers, Result, ResultKind } from "../common";
 import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { Keyword } from "./keywords";
 import { ErrorLine, LexerLineKind, LexerLineString, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine, TLexerLine, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
 import { LexerLinePosition, LineToken, LineTokenKind } from "./token";
+import { LexerSnapshot } from "./lexerSnapshot";
 
 // the lexer is
 //  * functional
@@ -66,6 +67,27 @@ export namespace Lexer {
         }
 
         return state;
+    }
+
+    export function trySnapshot(state: LexerState): Result<LexerSnapshot, LexerError.TLexerError> {
+        try {
+            return {
+                kind: ResultKind.Ok,
+                value: new LexerSnapshot(state),
+            }
+        } catch (e) {
+            let error: LexerError.TLexerError;
+            if (LexerError.isTInnerLexerError(e)) {
+                error = new LexerError.LexerError(e);
+            }
+            else {
+                error = CommonError.ensureCommonError(e);
+            }
+            return {
+                kind: ResultKind.Err,
+                error,
+            };
+        }
     }
 
     export function appendNewLine(state: LexerState, blob: string): LexerState {
@@ -166,7 +188,7 @@ export namespace Lexer {
         }
     }
 
-    export function firstErrorLine(state: LexerState): Option<TErrorLexerLine> {
+    export function maybeFirstErrorLine(state: LexerState): Option<TErrorLexerLine> {
         for (let line of state.lines) {
             if (isErrorLine(line)) {
                 return line;

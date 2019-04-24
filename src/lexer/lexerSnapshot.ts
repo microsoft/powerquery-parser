@@ -2,14 +2,17 @@ import { CommonError, Option } from "../common";
 import { LexerError } from "./error";
 import { LexerState, TLexerLine } from "./lexerContracts";
 import { LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
+import { TComment, CommentKind, LineComment } from "./comment";
 
 export class LexerSnapshot {
     public readonly text: string;
     public readonly tokens: ReadonlyArray<Token>;
+    public readonly comments: ReadonlyArray<TComment>;
 
     constructor(state: LexerState) {
         // class properties
         const tokens: Token[] = [];
+        const comments: TComment[] = [];
         const [text, flatTokens]: [string, ReadonlyArray<FlatLineToken>] = flattenLineTokens(state);
         const numFlatTokens = flatTokens.length;
 
@@ -18,9 +21,13 @@ export class LexerSnapshot {
             const flatToken: FlatLineToken = flatTokens[flatIndex];
 
             switch (flatToken.kind) {
+                case LineTokenKind.LineComment:
+                    comments.push(readLineComment(flatToken));
+                    break;
+
                 case LineTokenKind.MultilineCommentStart: {
                     const concatenatedTokenRead = readMultilineComment(text, flatTokens, flatToken);
-                    tokens.push(concatenatedTokenRead.token);
+                    comments.push(concatenatedTokenRead.comment);
                     flatIndex = concatenatedTokenRead.flatIndexEnd;
                     break;
                 }
@@ -64,23 +71,34 @@ export class LexerSnapshot {
 
         this.text = text;
         this.tokens = tokens;
+        this.comments = comments;
     }
+}
+
+function readLineComment(
+    flatToken: FlatLineToken
+): LineComment {
+    const positionStart = flatToken.positionStart;
+    const positionEnd = flatToken.positionEnd;
+    return {
+        kind: CommentKind.Line,
+        data: flatToken.data,
+        containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
+        positionStart,
+        positionEnd,
+    };
 }
 
 function readMultilineComment(
     text: string,
     flatTokens: ReadonlyArray<FlatLineToken>,
     tokenStart: FlatLineToken,
-): ConcatenatedTokenRead {
+): ConcatenatedCommentRead {
     const collection = collectWhileContent(flatTokens, tokenStart, LineTokenKind.MultilineCommentContent);
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedMultilineCommentError({
-            textIndex: positionStart.textIndex,
-            lineNumber: positionStart.lineNumber,
-            columnNumber: positionStart.columnNumber,
-        })
+        throw new LexerError.UnterminatedMultilineCommentError({ ...positionStart })
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.MultilineCommentEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -93,9 +111,10 @@ function readMultilineComment(
     const positionEnd = tokenEnd.positionEnd;
 
     return {
-        token: {
-            kind: TokenKind.MultilineComment,
+        comment: {
+            kind: CommentKind.Multiline,
             data: text.substring(positionStart.textIndex, positionEnd.textIndex),
+            containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
             positionStart,
             positionEnd,
         },
@@ -112,11 +131,7 @@ function readQuotedIdentifier(
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedQuotedIdentierError({
-            textIndex: positionStart.textIndex,
-            lineNumber: positionStart.lineNumber,
-            columnNumber: positionStart.columnNumber,
-        })
+        throw new LexerError.UnterminatedQuotedIdentierError({ ...positionStart })
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.QuotedIdentifierEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -143,15 +158,12 @@ function readStringLiteral(
     text: string,
     flatTokens: ReadonlyArray<FlatLineToken>,
     tokenStart: FlatLineToken,
-): ConcatenatedTokenRead {    const collection = collectWhileContent(flatTokens, tokenStart, LineTokenKind.StringLiteralContent);
+): ConcatenatedTokenRead {
+    const collection = collectWhileContent(flatTokens, tokenStart, LineTokenKind.StringLiteralContent);
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedStringError({
-            textIndex: positionStart.textIndex,
-            lineNumber: positionStart.lineNumber,
-            columnNumber: positionStart.columnNumber,
-        })
+        throw new LexerError.UnterminatedStringError({ ...positionStart })
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.StringLiteralEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -241,6 +253,11 @@ function flattenLineTokens(state: LexerState): [string, ReadonlyArray<FlatLineTo
     }
 
     return [text, flatTokens];
+}
+
+interface ConcatenatedCommentRead {
+    readonly comment: TComment,
+    readonly flatIndexEnd: number,
 }
 
 interface ConcatenatedTokenRead {

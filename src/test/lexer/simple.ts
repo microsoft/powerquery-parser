@@ -85,39 +85,6 @@ type
         expectAbridgedTokens(document, "\n", expected);
     });
 
-    it(`LineComment`, () => {
-        const document = `
-a // b
-c`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-            [TokenKind.LineComment, `// b`],
-            [TokenKind.Identifier, `c`],
-        ];
-        expectAbridgedTokens(document, "\n", expected);
-    });
-
-    it(`LineComment on last line`, () => {
-        const document = `
-a
-// b`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-            [TokenKind.LineComment, `// b`],
-        ];
-        expectAbridgedTokens(document, "\n", expected);
-    });
-
-    it(`MultilineComment`, () => {
-        const document = `a /* b */ c`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-            [TokenKind.MultilineComment, `/* b */`],
-            [TokenKind.Identifier, `c`],
-        ];
-        expectAbridgedTokens(document, "\n", expected);
-    });
-
     it(`NullLiteral`, () => {
         const document = `null`;
         const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.NullLiteral, `null`]];
