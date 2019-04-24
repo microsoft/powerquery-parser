@@ -1,7 +1,7 @@
-import { CommonError, Option } from "../common";
+import { CommonError, Option, StringHelpers } from "../common";
 import { LexerError } from "./error";
 import { LexerState, TLexerLine } from "./lexerContracts";
-import { LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
+import { LineTokenKind, Token, TokenKind } from "./token";
 import { TComment, CommentKind, LineComment } from "./comment";
 
 export class LexerSnapshot {
@@ -98,7 +98,7 @@ function readMultilineComment(
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedMultilineCommentError({ ...positionStart })
+        throw new LexerError.UnterminatedMultilineCommentError(positionStart)
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.MultilineCommentEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -131,7 +131,7 @@ function readQuotedIdentifier(
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedQuotedIdentierError({ ...positionStart })
+        throw new LexerError.UnterminatedQuotedIdentierError(positionStart)
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.QuotedIdentifierEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -163,7 +163,7 @@ function readStringLiteral(
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedStringError({ ...positionStart })
+        throw new LexerError.UnterminatedStringError(positionStart)
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.StringLiteralEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -268,8 +268,8 @@ interface ConcatenatedTokenRead {
 interface FlatLineToken {
     readonly kind: LineTokenKind,
     // range is [start, end)
-    readonly positionStart: TokenPosition,
-    readonly positionEnd: TokenPosition,
+    readonly positionStart: StringHelpers.GraphemePosition,
+    readonly positionEnd: StringHelpers.GraphemePosition,
     readonly data: string,
     readonly flatIndex: number,
 }

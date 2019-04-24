@@ -1,4 +1,4 @@
-import { TokenPosition } from "./token";
+import { StringHelpers } from "../common";
 
 export type TComment = (
     | LineComment
@@ -14,8 +14,8 @@ export interface IComment {
     readonly kind: CommentKind,
     readonly data: string,
     readonly containsNewline: boolean,
-    readonly positionStart: TokenPosition,
-    readonly positionEnd: TokenPosition,
+    readonly positionStart: StringHelpers.GraphemePosition,
+    readonly positionEnd: StringHelpers.GraphemePosition,
 }
 
 export interface LineComment extends IComment {

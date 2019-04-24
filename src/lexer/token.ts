@@ -1,3 +1,5 @@
+import { StringHelpers } from "../common";
+
 const enum LineTokenKindAdditions {
     LineComment = "LineComment",
     MultilineCommentContent = "MultilineCommentContent",
@@ -162,7 +164,7 @@ export interface IToken<Kind, Position> {
 
 export interface LineToken extends IToken<LineTokenKind, LexerLinePosition> { };
 
-export interface Token extends IToken<TokenKind, TokenPosition> { }
+export interface Token extends IToken<TokenKind, StringHelpers.GraphemePosition> { }
 
 // --------------------------------------------
 // ---------- IToken type parameters ----------
@@ -173,6 +175,3 @@ export interface LexerLinePosition {
     readonly columnNumber: number,
 }
 
-export interface TokenPosition extends LexerLinePosition {
-    readonly lineNumber: number,
-}
