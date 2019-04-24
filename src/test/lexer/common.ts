@@ -11,8 +11,8 @@ export interface AbridgedSnapshot {
     readonly comments: AbridgedComments;
 }
 
-export function expectLexSuccess(document: string, separator: string): Lexer.LexerState {
-    const state: Lexer.LexerState = Lexer.fromSplit(document, separator);
+export function expectLexSuccess(document: string, lineTerminator: string): Lexer.LexerState {
+    const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLine = Lexer.maybeFirstErrorLine(state);
         if (maybeErrorLine === undefined) {
@@ -30,8 +30,8 @@ export function expectLexSuccess(document: string, separator: string): Lexer.Lex
     return state;
 }
 
-export function expectLexerSnapshot(document: string, separator: string): LexerSnapshot {
-    const state = expectLexSuccess(document, separator);
+export function expectLexerSnapshot(document: string, lineTerminator: string): LexerSnapshot {
+    const state = expectLexSuccess(document, lineTerminator);
     const snapshotResult = LexerSnapshot.tryFrom(state);
     if (snapshotResult.kind === ResultKind.Err) {
         throw new Error("AssertFailed: snapshotResult.kind !== ResultKind.Err");
@@ -43,42 +43,42 @@ export function expectLexerSnapshot(document: string, separator: string): LexerS
 
 export function expectWrappedAbridgedTokens(
     document: string,
-    separator: string,
+    lineTerminator: string,
     expected: AbridgedTokens,
 ): LexerSnapshot {
-    const newDocument = `wrapperOpen${separator}${document}${separator}wrapperClose`;
+    const newDocument = `wrapperOpen${lineTerminator}${document}${lineTerminator}wrapperClose`;
     const newExpected: AbridgedTokens = [
         [TokenKind.Identifier, "wrapperOpen"],
         ...expected,
         [TokenKind.Identifier, "wrapperClose"],
     ];
-    expectAbridgedTokens(newDocument, separator, newExpected);
-    return expectAbridgedTokens(document, separator, expected);
+    expectAbridgedTokens(newDocument, lineTerminator, newExpected);
+    return expectAbridgedTokens(document, lineTerminator, expected);
 }
 
 export function expectWrappedAbridgedComments(
     document: string,
-    separator: string,
+    lineTerminator: string,
     expected: AbridgedComments,
 ): LexerSnapshot {
-    const newDocument = `/*wrapperOpen*/${separator}${document}${separator}/*wrapperClose*/`;
+    const newDocument = `/*wrapperOpen*/${lineTerminator}${document}${lineTerminator}/*wrapperClose*/`;
     const newExpected: AbridgedComments = [
         [CommentKind.Multiline, "/*wrapperOpen*/"],
         ...expected,
         [CommentKind.Multiline, "/*wrapperClose*/"],
     ];
-    expectAbridgedComments(newDocument, separator, newExpected);
-    return expectAbridgedComments(document, separator, expected);
+    expectAbridgedComments(newDocument, lineTerminator, newExpected);
+    return expectAbridgedComments(document, lineTerminator, expected);
 }
 
 export function expectAbridgedTokens(
     document: string,
-    separator: string,
+    lineTerminator: string,
     expected: AbridgedTokens,
 ): LexerSnapshot {
     return expectAbridgedSnapshot(
         document,
-        separator,
+        lineTerminator,
         {
             tokens: expected,
             comments: [],
@@ -88,12 +88,12 @@ export function expectAbridgedTokens(
 
 export function expectAbridgedComments(
     document: string,
-    separator: string,
+    lineTerminator: string,
     expected: AbridgedComments,
 ): LexerSnapshot {
     return expectAbridgedSnapshot(
         document,
-        separator,
+        lineTerminator,
         {
             tokens: [],
             comments: expected,
@@ -103,10 +103,10 @@ export function expectAbridgedComments(
 
 export function expectAbridgedSnapshot(
     document: string,
-    separator: string,
+    lineTerminator: string,
     expected: AbridgedSnapshot,
 ): LexerSnapshot {
-    const snapshot = expectLexerSnapshot(document, separator);
+    const snapshot = expectLexerSnapshot(document, lineTerminator);
     const expectedTokens = expected.tokens;
     const expectedComments = expected.comments;
     const actualTokens = snapshot.tokens.map(token => [token.kind, token.data]);

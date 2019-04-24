@@ -247,7 +247,7 @@ function flattenLineTokens(state: Lexer.LexerState): [string, ReadonlyArray<Flat
         let lineNumber = line.lineNumber;
         text += line.lineString.text;
         if (lineNumber !== numLines - 1) {
-            text += state.lineSeparator;
+            text += state.lineTerminator;
         }
 
         for (let lineToken of line.tokens) {
@@ -270,7 +270,7 @@ function flattenLineTokens(state: Lexer.LexerState): [string, ReadonlyArray<Flat
             flatIndex += 1;
         }
 
-        lineTextOffset += (line.lineString.text.length + state.lineSeparator.length);
+        lineTextOffset += (line.lineString.text.length + state.lineTerminator.length);
     }
 
     return [text, flatTokens];

@@ -2,104 +2,96 @@ import "mocha";
 import { CommentKind, TokenKind } from "../../lexer";
 import { AbridgedComments, expectAbridgedComments, AbridgedSnapshot, expectAbridgedSnapshot, expectAbridgedTokens, AbridgedTokens } from "./common";
 
+const LINE_TERMINATOR = "\n"
+
 describe(`Lexer`, () => {
     describe(`MultilineTokens`, () => {
         describe(`MultilineComment`, () => {
             it(`/**/`, () => {
-                const separator = "\n";
                 const document = `/**/`;
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/**/`],
                 ];
-                expectAbridgedComments(document, separator, expected);
+                expectAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`/* */`, () => {
-                const seperator = "\n";
                 const document = `/* */`;
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/* */`],
                 ];
-                expectAbridgedComments(document, seperator, expected);
+                expectAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`/* X */`, () => {
-                const seperator = "\n";
                 const document = `/* X */`;
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/* X */`],
                 ];
-                expectAbridgedComments(document, seperator, expected);
+                expectAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`/*X\\nX\\nX*/`, () => {
-                const seperator = "\n";
-                const document = `/*X${seperator}X${seperator}X*/`;
+                const document = `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`;
                 const expected: AbridgedComments = [
-                    [CommentKind.Multiline, `/*X${seperator}X${seperator}X*/`],
+                    [CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`],
                 ];
-                expectAbridgedComments(document, seperator, expected);
+                expectAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`abc /*X\\nX\\nX*/`, () => {
-                const seperator = "\n";
-                const document = `abc /*X${seperator}X${seperator}X*/`;
+                const document = `abc /*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`;
                 const expected: AbridgedSnapshot =
                 {
-                    comments: [[CommentKind.Multiline, `/*X${seperator}X${seperator}X*/`]],
+                    comments: [[CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`]],
                     tokens: [[TokenKind.Identifier, `abc`]],
                 };
-                expectAbridgedSnapshot(document, seperator, expected);
+                expectAbridgedSnapshot(document, LINE_TERMINATOR, expected);
             });
 
             it(`/*X\\nX\\nX*/ abc`, () => {
-                const seperator = "\n";
-                const document = `/*X${seperator}X${seperator}X*/ abc`;
+                const document = `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/ abc`;
                 const expected: AbridgedSnapshot = {
                     tokens: [[TokenKind.Identifier, `abc`]],
-                    comments: [[CommentKind.Multiline, `/*X${seperator}X${seperator}X*/`]]
+                    comments: [[CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`]]
                 };
-                expectAbridgedSnapshot(document, seperator, expected);
+                expectAbridgedSnapshot(document, LINE_TERMINATOR, expected);
             });
         });
 
         describe(`StringLiteral`, () => {
             it(`"X"`, () => {
-                const separator = "\n";
                 const document = `"X"`;
                 const expected: AbridgedTokens = [
                     [TokenKind.StringLiteral, `"X"`],
                 ];
-                expectAbridgedTokens(document, separator, expected);
+                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
 
             it(`"X\\nX\\nX"`, () => {
-                const seperator = "\n";
-                const document = `"X${seperator}X${seperator}X"`;
+                const document = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
                 const expected: AbridgedTokens = [
-                    [TokenKind.StringLiteral, `"X${seperator}X${seperator}X"`],
+                    [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                 ];
-                expectAbridgedTokens(document, seperator, expected);
+                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
 
             it(`abc "X\\nX\\nX"`, () => {
-                const seperator = "\n";
-                const document = `abc "X${seperator}X${seperator}X"`;
+                const document = `abc "X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
                 const expected: AbridgedTokens = [
                     [TokenKind.Identifier, `abc`],
-                    [TokenKind.StringLiteral, `"X${seperator}X${seperator}X"`],
+                    [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                 ];
-                expectAbridgedTokens(document, seperator, expected);
+                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
 
             it(`"X\\nX\\nX" abc`, () => {
-                const seperator = "\n";
-                const document = `"X${seperator}X${seperator}X" abc`;
+                const document = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X" abc`;
                 const expected: AbridgedTokens = [
-                    [TokenKind.StringLiteral, `"X${seperator}X${seperator}X"`],
+                    [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                     [TokenKind.Identifier, `abc`],
                 ];
-                expectAbridgedTokens(document, seperator, expected);
+                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
         });
     })

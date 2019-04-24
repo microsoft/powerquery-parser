@@ -46,7 +46,7 @@ export namespace Lexer {
 
     export interface LexerState {
         readonly lines: ReadonlyArray<TLexerLine>,
-        readonly lineSeparator: string,
+        readonly lineTerminator: string,
     }
 
     export interface ILexerLine {
@@ -125,19 +125,19 @@ export namespace Lexer {
         }
     }
 
-    export function from(blob: string, lineSeparator: string): LexerState {
+    export function from(blob: string, lineTerminator: string): LexerState {
         let newState: LexerState = {
             lines: [lineFrom(blob, 0, LexerLineMode.Default)],
-            lineSeparator,
+            lineTerminator,
         };
         return tokenizeLine(newState, 0);
     }
 
-    export function fromSplit(blob: string, lineSeparator: string): LexerState {
-        const lines = blob.split(lineSeparator);
+    export function fromSplit(blob: string, lineTerminator: string): LexerState {
+        const lines = blob.split(lineTerminator);
         const numLines = lines.length;
 
-        let state = from(lines[0], lineSeparator);
+        let state = from(lines[0], lineTerminator);
         if (numLines === 1) {
             return state;
         }
@@ -155,7 +155,7 @@ export namespace Lexer {
     export function equalStates(leftState: LexerState, rightState: LexerState): boolean {
         return (
             equalLines(leftState.lines, rightState.lines)
-            || (leftState.lineSeparator === rightState.lineSeparator)
+            || (leftState.lineTerminator === rightState.lineTerminator)
         );
     }
 

@@ -3,8 +3,8 @@ import "mocha";
 import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
-function expectStateInnerError(document: string, separator: string): LexerError.TInnerLexerError {
-    const state: Lexer.LexerState = Lexer.fromSplit(document, separator);
+function expectStateInnerError(document: string, lineTerminator: string): LexerError.TInnerLexerError {
+    const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
 
     const maybeErrorLine = Lexer.maybeFirstErrorLine(state);
     if (maybeErrorLine === undefined) {
@@ -15,8 +15,8 @@ function expectStateInnerError(document: string, separator: string): LexerError.
     }
 }
 
-function expectSnapshotInnerError(document: string, separator: string): LexerError.TInnerLexerError {
-    const state: Lexer.LexerState = Lexer.fromSplit(document, separator);
+function expectSnapshotInnerError(document: string, lineTerminator: string): LexerError.TInnerLexerError {
+    const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
     const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
 
     if (snapshotResult.kind !== ResultKind.Err) {
