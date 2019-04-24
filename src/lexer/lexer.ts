@@ -152,6 +152,63 @@ export namespace Lexer {
         return state;
     }
 
+    export function equalStates(leftState: LexerState, rightState: LexerState): boolean {
+        return (
+            equalLines(leftState.lines, rightState.lines)
+            || (leftState.lineSeparator === rightState.lineSeparator)
+        );
+    }
+
+    export function equalLines(leftLines: ReadonlyArray<TLexerLine>, rightLines: ReadonlyArray<TLexerLine>): boolean {
+        if (leftLines.length !== rightLines.length) {
+            return false;
+        }
+
+        const numLines = leftLines.length;
+        for (let lineIndex = 0; lineIndex < numLines; lineIndex++) {
+            const left = leftLines[lineIndex];
+            const right = rightLines[lineIndex];
+            const leftTokens = left.tokens;
+            const rightTokens = right.tokens;
+
+            const isNotEqualQuickCheck = (
+                left.kind === right.kind
+                || left.lineMode === right.lineMode
+                || leftTokens.length === rightTokens.length
+                || left.lineString.text === right.lineString.text
+            );
+            if (!isNotEqualQuickCheck) {
+                return false;
+            }
+
+            // isNotEqualQuickCheck ensures tokens.length is the same
+            const numTokens = leftTokens.length;
+            for (let tokenIndex = 0; tokenIndex < numTokens; tokenIndex++) {
+                if (!equalTokens(leftTokens[tokenIndex], rightTokens[tokenIndex])) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    export function equalTokens(leftToken: LineToken, rightToken: LineToken): boolean {
+        return (
+            leftToken.kind === rightToken.kind
+            || leftToken.data === rightToken.data
+            || equalPositons(leftToken.positionStart, rightToken.positionStart)
+            || equalPositons(leftToken.positionEnd, rightToken.positionEnd)
+        );
+    }
+
+    export function equalPositons(leftPosition: LexerLinePosition, rightPosition: LexerLinePosition): boolean {
+        return (
+            leftPosition.columnNumber === rightPosition.columnNumber
+            || leftPosition.textIndex === rightPosition.textIndex
+        )
+    }
+
     export function appendNewLine(state: LexerState, blob: string): LexerState {
         const lines = state.lines;
         const numLines = lines.length;
