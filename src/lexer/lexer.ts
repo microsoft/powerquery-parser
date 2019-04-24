@@ -125,16 +125,16 @@ export namespace Lexer {
         }
     }
 
-    export function from(blob: string, lineTerminator: string): LexerState {
+    export function from(text: string, lineTerminator: string): LexerState {
         let newState: LexerState = {
-            lines: [lineFrom(blob, 0, LexerLineMode.Default)],
+            lines: [lineFrom(text, 0, LexerLineMode.Default)],
             lineTerminator,
         };
         return tokenizeLine(newState, 0);
     }
 
-    export function fromSplit(blob: string, lineTerminator: string): LexerState {
-        const lines = blob.split(lineTerminator);
+    export function fromSplit(text: string, lineTerminator: string): LexerState {
+        const lines = text.split(lineTerminator);
         const numLines = lines.length;
 
         let state = from(lines[0], lineTerminator);
@@ -209,7 +209,7 @@ export namespace Lexer {
         )
     }
 
-    export function appendNewLine(state: LexerState, blob: string): LexerState {
+    export function appendNewLine(state: LexerState, text: string): LexerState {
         const lines = state.lines;
         const numLines = lines.length;
         const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];
@@ -217,7 +217,7 @@ export namespace Lexer {
             ? maybeLatestLine.lineMode
             : LexerLineMode.Default;
 
-        const newLine = lineFrom(blob, numLines, lineMode)
+        const newLine = lineFrom(text, numLines, lineMode)
 
         let newState: LexerState = {
             ...state,
@@ -280,10 +280,10 @@ export namespace Lexer {
         return state;
     }
 
-    function lineFrom(blob: string, lineNumber: number, lineMode: LexerLineMode): UntouchedLine {
+    function lineFrom(text: string, lineNumber: number, lineMode: LexerLineMode): UntouchedLine {
         return {
             kind: LexerLineKind.Untouched,
-            lineString: lexerLineStringFrom(blob),
+            lineString: lexerLineStringFrom(text),
             numberOfActions: 0,
             lineNumber,
             tokens: [],
