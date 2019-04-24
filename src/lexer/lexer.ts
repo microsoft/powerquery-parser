@@ -269,7 +269,7 @@ export namespace Lexer {
         }
 
         // unsafe action:
-        //      change ReadonlyArray into standard array
+        //      cast ReadonlyArray into standard array
         // what I'm trying to avoid:
         //      1-2 elements needs to be updated, avoids recreating the container/objects.
         // why it's safe:
