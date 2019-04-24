@@ -69,7 +69,7 @@ export namespace Lexer {
         return state;
     }
 
-    export function trySnapshot(state: LexerState): Result<LexerSnapshot, LexerError.TLexerError> {
+    export function trySnapshotFrom(state: LexerState): Result<LexerSnapshot, LexerError.TLexerError> {
         try {
             return {
                 kind: ResultKind.Ok,
