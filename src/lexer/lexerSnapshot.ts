@@ -1,15 +1,38 @@
-import { CommonError, Option, StringHelpers } from "../common";
+import { CommonError, Option, Result, ResultKind, StringHelpers } from "../common";
 import { CommentKind, LineComment, TComment } from "./comment";
 import { LexerError } from "./error";
 import { Lexer } from "./lexer";
 import { LineTokenKind, Token, TokenKind } from "./token";
 
 export class LexerSnapshot {
-    public readonly text: string;
-    public readonly tokens: ReadonlyArray<Token>;
-    public readonly comments: ReadonlyArray<TComment>;
+    constructor(
+        public readonly text: string,
+        public readonly tokens: ReadonlyArray<Token>,
+        public readonly comments: ReadonlyArray<TComment>,
+    ) { }
 
-    constructor(state: Lexer.LexerState) {
+    static tryFrom(state: Lexer.LexerState): Result<LexerSnapshot, LexerError.TLexerError> {
+        try {
+            return {
+                kind: ResultKind.Ok,
+                value: LexerSnapshot.factory(state),
+            }
+        } catch (e) {
+            let error: LexerError.TLexerError;
+            if (LexerError.isTInnerLexerError(e)) {
+                error = new LexerError.LexerError(e);
+            }
+            else {
+                error = CommonError.ensureCommonError(e);
+            }
+            return {
+                kind: ResultKind.Err,
+                error,
+            };
+        }
+    }
+
+    private static factory(state: Lexer.LexerState): LexerSnapshot {
         // class properties
         const tokens: Token[] = [];
         const comments: TComment[] = [];
@@ -69,9 +92,7 @@ export class LexerSnapshot {
             flatIndex += 1;
         }
 
-        this.text = text;
-        this.tokens = tokens;
-        this.comments = comments;
+        return new LexerSnapshot(text, tokens, comments);
     }
 }
 

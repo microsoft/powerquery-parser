@@ -18,7 +18,7 @@ export function lexAndParse(blob: string, separator: string): Result<LexAndParse
         }
     }
 
-    let snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = Lexer.trySnapshotFrom(state);
+    let snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
     if (snapshotResult.kind === ResultKind.Err) {
         return snapshotResult;
     }

@@ -1,9 +1,8 @@
-import { CommonError, isNever, Pattern, Result, ResultKind, StringHelpers } from "../common";
+import { CommonError, isNever, Pattern, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { Keyword } from "./keywords";
-import { LexerSnapshot } from "./lexerSnapshot";
 import { LineToken, LineTokenKind } from "./token";
 
 // the lexer is
@@ -151,27 +150,6 @@ export namespace Lexer {
         }
 
         return state;
-    }
-
-    export function trySnapshotFrom(state: LexerState): Result<LexerSnapshot, LexerError.TLexerError> {
-        try {
-            return {
-                kind: ResultKind.Ok,
-                value: new LexerSnapshot(state),
-            }
-        } catch (e) {
-            let error: LexerError.TLexerError;
-            if (LexerError.isTInnerLexerError(e)) {
-                error = new LexerError.LexerError(e);
-            }
-            else {
-                error = CommonError.ensureCommonError(e);
-            }
-            return {
-                kind: ResultKind.Err,
-                error,
-            };
-        }
     }
 
     export function appendNewLine(state: LexerState, blob: string): LexerState {

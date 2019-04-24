@@ -17,7 +17,7 @@ function expectStateInnerError(document: string, separator: string): LexerError.
 
 function expectSnapshotInnerError(document: string, separator: string): LexerError.TInnerLexerError {
     const state: Lexer.LexerState = Lexer.fromSplit(document, separator);
-    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = Lexer.trySnapshotFrom(state);
+    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
 
     if (snapshotResult.kind !== ResultKind.Err) {
         throw new Error(`AssertFailed: snapshotResult.kind !== ResultKind.Err: ${JSON.stringify(state)}`);
