@@ -176,8 +176,9 @@ export interface LexerLinePosition {
     readonly columnNumber: number,
 }
 
-export interface TokenPosition extends LexerLinePosition {
+export interface TokenPosition {
     readonly lineNumber: number,
+    readonly columnNumber: number,
 }
 
 // -------------------------------------

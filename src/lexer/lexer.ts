@@ -656,12 +656,6 @@ export namespace Lexer {
 
     function readQuotedIdentifier(_document: LexerLineString, _position: LexerLinePosition): LineToken {
         throw new Error("not supported");
-        // const stringEndIndex = maybeIndexOfStringEnd(document, documentIndex + 1);
-        // if (stringEndIndex === undefined) {
-        //     throw unterminatedStringError(document, documentIndex + 1);
-        // }
-
-        // return readTokenFromSlice(document, documentIndex, LineTokenKind.Identifier, stringEndIndex + 1);
     }
 
     // the quoted identifier case has already been taken care of

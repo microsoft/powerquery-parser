@@ -12,7 +12,7 @@ export const enum CommentKind {
 
 export interface IComment {
     readonly kind: CommentKind,
-    readonly literal: string,
+    readonly data: string,
     readonly containsNewline: boolean,
     readonly positionStart: TokenPosition,
     readonly positionEnd: TokenPosition,
