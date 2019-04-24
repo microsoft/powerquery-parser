@@ -53,16 +53,8 @@ export class LexerSnapshot {
                     tokens.push({
                         kind: flatToken.kind as unknown as TokenKind,
                         data: flatToken.data,
-                        positionStart: {
-                            textIndex: positionStart.textIndex,
-                            lineNumber: positionStart.lineNumber,
-                            columnNumber: positionStart.columnNumber,
-                        },
-                        positionEnd: {
-                            textIndex: positionEnd.textIndex,
-                            lineNumber: positionEnd.lineNumber,
-                            columnNumber: positionEnd.columnNumber,
-                        }
+                        positionStart,
+                        positionEnd,
                     });
                     break;
             }
@@ -104,16 +96,8 @@ function readMultilineComment(
         token: {
             kind: TokenKind.MultilineComment,
             data: text.substring(positionStart.textIndex, positionEnd.textIndex),
-            positionStart: {
-                textIndex: positionStart.textIndex,
-                lineNumber: positionStart.lineNumber,
-                columnNumber: positionStart.columnNumber,
-            },
-            positionEnd: {
-                textIndex: positionEnd.textIndex,
-                lineNumber: positionEnd.lineNumber,
-                columnNumber: positionEnd.columnNumber,
-            },
+            positionStart,
+            positionEnd,
         },
         flatIndexEnd: tokenEnd.flatIndex,
     }
@@ -148,16 +132,8 @@ function readQuotedIdentifier(
         token: {
             kind: TokenKind.Identifier,
             data: text.substring(positionStart.textIndex, positionEnd.textIndex),
-            positionStart: {
-                textIndex: positionStart.textIndex,
-                lineNumber: positionStart.lineNumber,
-                columnNumber: positionStart.columnNumber,
-            },
-            positionEnd: {
-                textIndex: positionEnd.textIndex,
-                lineNumber: positionEnd.lineNumber,
-                columnNumber: positionEnd.columnNumber,
-            },
+            positionStart,
+            positionEnd,
         },
         flatIndexEnd: tokenEnd.flatIndex,
     }
@@ -191,16 +167,8 @@ function readStringLiteral(
         token: {
             kind: TokenKind.StringLiteral,
             data: text.substring(positionStart.textIndex, positionEnd.textIndex),
-            positionStart: {
-                textIndex: positionStart.textIndex,
-                lineNumber: positionStart.lineNumber,
-                columnNumber: positionStart.columnNumber,
-            },
-            positionEnd: {
-                textIndex: positionEnd.textIndex,
-                lineNumber: positionEnd.lineNumber,
-                columnNumber: positionEnd.columnNumber,
-            },
+            positionStart,
+            positionEnd,
         },
         flatIndexEnd: tokenEnd.flatIndex,
     }
@@ -254,13 +222,11 @@ function flattenLineTokens(state: LexerState): [string, ReadonlyArray<FlatLineTo
                 kind: lineToken.kind,
                 data: lineToken.data,
                 positionStart: {
-                    lineTextIndex: lineToken.positionStart.textIndex,
                     textIndex: lineTextOffset + lineToken.positionStart.textIndex,
                     lineNumber,
                     columnNumber: lineToken.positionStart.columnNumber,
                 },
                 positionEnd: {
-                    lineTextIndex: lineToken.positionEnd.textIndex,
                     textIndex: lineTextOffset + lineToken.positionEnd.textIndex,
                     lineNumber,
                     columnNumber: lineToken.positionEnd.columnNumber,
@@ -285,14 +251,10 @@ interface ConcatenatedTokenRead {
 interface FlatLineToken {
     readonly kind: LineTokenKind,
     // range is [start, end)
-    readonly positionStart: FlatTokenPosition,
-    readonly positionEnd: FlatTokenPosition,
+    readonly positionStart: TokenPosition,
+    readonly positionEnd: TokenPosition,
     readonly data: string,
     readonly flatIndex: number,
-}
-
-interface FlatTokenPosition extends TokenPosition {
-    readonly lineTextIndex: number,
 }
 
 interface FlatLineCollection {
