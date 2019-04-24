@@ -61,7 +61,7 @@ describe(`Lexer`, () => {
                 };
                 expectAbridgedSnapshot(document, seperator, expected);
             });
-        })
+        });
 
         describe(`StringLiteral`, () => {
             it(`"X"`, () => {
@@ -101,6 +101,6 @@ describe(`Lexer`, () => {
                 ];
                 expectAbridgedTokens(document, seperator, expected);
             });
-        })
+        });
     })
 });
