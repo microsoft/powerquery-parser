@@ -1,8 +1,8 @@
 import { CommonError, Option, StringHelpers } from "../common";
+import { CommentKind, LineComment, TComment } from "./comment";
 import { LexerError } from "./error";
 import { LexerState, TLexerLine } from "./lexerContracts";
 import { LineTokenKind, Token, TokenKind } from "./token";
-import { TComment, CommentKind, LineComment } from "./comment";
 
 export class LexerSnapshot {
     public readonly text: string;

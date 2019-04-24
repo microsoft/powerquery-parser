@@ -1,11 +1,11 @@
-import { CommonError, isNever, Pattern, StringHelpers, Result, ResultKind } from "../common";
+import { CommonError, isNever, Pattern, Result, ResultKind, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
 import { Keyword } from "./keywords";
 import { ErrorLine, LexerLineKind, LexerLineString, LexerMultilineKind, LexerRead, LexerState, TErrorLexerLine, TLexerLine, TouchedWithErrorLine, UntouchedLine } from "./lexerContracts";
-import { LexerLinePosition, LineToken, LineTokenKind } from "./token";
 import { LexerSnapshot } from "./lexerSnapshot";
+import { LexerLinePosition, LineToken, LineTokenKind } from "./token";
 
 // the lexer is
 //  * functional
