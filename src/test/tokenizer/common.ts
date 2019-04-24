@@ -25,8 +25,19 @@ export class Tokenizer implements TokensProvider {
     }
 
     private static newLineTokens(oldState: Lexer.LexerState, newState: Lexer.LexerState): IToken[] {
+        const oldStateLines: ReadonlyArray<Lexer.TLexerLine> = oldState.lines;
+        if (!oldStateLines.length) {
+            const newTokens = newState.lines[newState.lines.length - 1].tokens;
+            return newTokens.map((token: LineToken) => {
+                return {
+                    startIndex: token.positionStart.columnNumber,
+                    scopes: token.kind as unknown as string,
+                };
+            });
+        }
+
         const newStateTokens: ReadonlyArray<LineToken> = newState.lines[newState.lines.length - 1].tokens;
-        const oldStateTokens: ReadonlyArray<LineToken> = oldState.lines[oldState.lines.length - 1].tokens;
+        const oldStateTokens: ReadonlyArray<LineToken> = oldStateLines[oldStateLines.length - 1].tokens;
 
         const numNewStateTokens = newStateTokens.length;
         for (let index = 0; index < numNewStateTokens; index++) {
