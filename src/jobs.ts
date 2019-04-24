@@ -1,5 +1,5 @@
 import { Option, Result, ResultKind } from "./common";
-import { Lexer, LexerError, LexerSnapshot, LexerState, TComment, TLexerLine } from "./lexer";
+import { Lexer, LexerError, LexerSnapshot, TComment } from "./lexer";
 import { Ast, Parser, ParserError } from "./parser";
 
 export interface LexAndParseSuccess {
@@ -8,10 +8,10 @@ export interface LexAndParseSuccess {
 }
 
 export function lexAndParse(blob: string, separator: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
-    let state: LexerState = Lexer.fromSplit(blob, separator);
-    const maybeLineError: Option<TLexerLine> = Lexer.maybeFirstErrorLine(state);
+    let state: Lexer.LexerState = Lexer.fromSplit(blob, separator);
+    const maybeLineError: Option<Lexer.TLexerLine> = Lexer.maybeFirstErrorLine(state);
     if (maybeLineError) {
-        const lineError: TLexerLine = maybeLineError;
+        const lineError: Lexer.TLexerLine = maybeLineError;
         return {
             kind: ResultKind.Err,
             error: lineError.error,

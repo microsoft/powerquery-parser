@@ -1,7 +1,7 @@
 import { CommonError, Option, StringHelpers } from "../common";
 import { CommentKind, LineComment, TComment } from "./comment";
 import { LexerError } from "./error";
-import { LexerState, TLexerLine } from "./lexerContracts";
+import { Lexer } from "./lexer";
 import { LineTokenKind, Token, TokenKind } from "./token";
 
 export class LexerSnapshot {
@@ -9,7 +9,7 @@ export class LexerSnapshot {
     public readonly tokens: ReadonlyArray<Token>;
     public readonly comments: ReadonlyArray<TComment>;
 
-    constructor(state: LexerState) {
+    constructor(state: Lexer.LexerState) {
         // class properties
         const tokens: Token[] = [];
         const comments: TComment[] = [];
@@ -212,8 +212,8 @@ function collectWhileContent<KindVariant>(
     }
 }
 
-function flattenLineTokens(state: LexerState): [string, ReadonlyArray<FlatLineToken>] {
-    const lines: ReadonlyArray<TLexerLine> = state.lines;
+function flattenLineTokens(state: Lexer.LexerState): [string, ReadonlyArray<FlatLineToken>] {
+    const lines: ReadonlyArray<Lexer.TLexerLine> = state.lines;
     const numLines = lines.length;
 
     let text = "";

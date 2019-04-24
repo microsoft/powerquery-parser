@@ -1,4 +1,5 @@
 import { StringHelpers } from "../common";
+import { Lexer } from "./lexer";
 
 const enum LineTokenKindAdditions {
     LineComment = "LineComment",
@@ -150,10 +151,6 @@ export const enum LineTokenKind {
     StringLiteralStart = LineTokenKindAdditions.StringLiteralStart,
 }
 
-// ---------------------------
-// ---------- Token ----------
-// ---------------------------
-
 export interface IToken<Kind, Position> {
     readonly kind: Kind,
     // range is [start, end)
@@ -162,16 +159,6 @@ export interface IToken<Kind, Position> {
     readonly data: string,
 }
 
-export interface LineToken extends IToken<LineTokenKind, LexerLinePosition> { };
+export interface LineToken extends IToken<LineTokenKind, Lexer.LexerLinePosition> { };
 
 export interface Token extends IToken<TokenKind, StringHelpers.GraphemePosition> { }
-
-// --------------------------------------------
-// ---------- IToken type parameters ----------
-// --------------------------------------------
-
-export interface LexerLinePosition {
-    readonly textIndex: number,
-    readonly columnNumber: number,
-}
-

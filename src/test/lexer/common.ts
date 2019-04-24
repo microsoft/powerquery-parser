@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Lexer, LexerSnapshot, LexerState, TokenKind, CommentKind } from "../../lexer";
+import { CommentKind, Lexer, LexerSnapshot, TokenKind } from "../../lexer";
 
 export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
 
@@ -10,8 +10,8 @@ export interface AbridgedSnapshot {
     readonly comments: AbridgedComments;
 }
 
-export function expectLexSuccess(document: string, separator: string): LexerState {
-    const state: LexerState = Lexer.fromSplit(document, separator);
+export function expectLexSuccess(document: string, separator: string): Lexer.LexerState {
+    const state: Lexer.LexerState = Lexer.fromSplit(document, separator);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLine = Lexer.maybeFirstErrorLine(state);
         if (maybeErrorLine === undefined) {

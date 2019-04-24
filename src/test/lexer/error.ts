@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer, LexerError, LexerState, LexerSnapshot } from "../../lexer";
 import { Result, ResultKind } from "../../common";
+import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
 function expectStateInnerError(document: string, separator: string): LexerError.TInnerLexerError {
-    const state: LexerState = Lexer.fromSplit(document, separator);
+    const state: Lexer.LexerState = Lexer.fromSplit(document, separator);
 
     const maybeErrorLine = Lexer.maybeFirstErrorLine(state);
     if (maybeErrorLine === undefined) {
@@ -16,7 +16,7 @@ function expectStateInnerError(document: string, separator: string): LexerError.
 }
 
 function expectSnapshotInnerError(document: string, separator: string): LexerError.TInnerLexerError {
-    const state: LexerState = Lexer.fromSplit(document, separator);
+    const state: Lexer.LexerState = Lexer.fromSplit(document, separator);
     const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = Lexer.trySnapshotFrom(state);
 
     if (snapshotResult.kind !== ResultKind.Err) {
