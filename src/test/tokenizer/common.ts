@@ -16,50 +16,23 @@ export class Tokenizer implements TokensProvider {
         const lexerState = tokenizerState.lexerState;
         const newLexerState = Lexer.appendNewLine(lexerState, line);
 
-        const lineTokens = Tokenizer.newLineTokens(lexerState, newLexerState);
-
         return {
-            tokens: lineTokens,
+            tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),
             endState: new TokenizerState(newLexerState)
         };
     }
 
-    private static newLineTokens(oldState: Lexer.LexerState, newState: Lexer.LexerState): IToken[] {
-        const oldStateLines: ReadonlyArray<Lexer.TLexerLine> = oldState.lines;
-        if (!oldStateLines.length) {
-            const newTokens = newState.lines[newState.lines.length - 1].tokens;
-            return newTokens.map((token: LineToken) => {
-                return {
-                    startIndex: token.positionStart.columnNumber,
-                    scopes: token.kind as unknown as string,
-                };
-            });
+    static ITokenFrom(lineToken: LineToken): IToken {
+        // unsafe action:
+        //      cast LineTokenKind into string
+        // what I'm trying to avoid:
+        //      cost of properly casting with a switch statement
+        // why it's safe:
+        //      all variants for LineTokenKind are strings
+        return {
+            startIndex: lineToken.positionStart.textIndex,
+            scopes: lineToken.kind as unknown as string,
         }
-
-        const newStateTokens: ReadonlyArray<LineToken> = newState.lines[newState.lines.length - 1].tokens;
-        const oldStateTokens: ReadonlyArray<LineToken> = oldStateLines[oldStateLines.length - 1].tokens;
-
-        const numNewStateTokens = newStateTokens.length;
-        for (let index = 0; index < numNewStateTokens; index++) {
-            if (Lexer.equalTokens(oldStateTokens[index], newStateTokens[index])) {
-                // unsafe action:
-                //      cast LineTokenKind into string
-                // what I'm trying to avoid:
-                //      cost of a cast
-                // why it's safe:
-                //      all variants for LineTokenKind are strings
-                return newStateTokens
-                    .slice(index)
-                    .map((token: LineToken) => {
-                        return {
-                            startIndex: token.positionStart.columnNumber,
-                            scopes: token.kind as unknown as string,
-                        };
-                    });
-            }
-        }
-
-        return [];
     }
 }
 
