@@ -3,6 +3,7 @@ import { Lexer } from "./lexer";
 
 const enum LineTokenKindAdditions {
     LineComment = "LineComment",
+    MultilineComment = "MultilineComment",
     MultilineCommentContent = "MultilineCommentContent",
     MultilineCommentEnd = "MultilineCommentEnd",
     MultilineCommentStart = "MultilineCommentStart",
@@ -140,6 +141,7 @@ export const enum LineTokenKind {
     StringLiteral = TokenKind.StringLiteral,
 
     LineComment = LineTokenKindAdditions.LineComment,
+    MultilineComment = LineTokenKindAdditions.MultilineComment,
     MultilineCommentContent = LineTokenKindAdditions.MultilineCommentContent,
     MultilineCommentEnd = LineTokenKindAdditions.MultilineCommentEnd,
     MultilineCommentStart = LineTokenKindAdditions.MultilineCommentStart,

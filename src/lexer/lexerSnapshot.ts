@@ -1,5 +1,5 @@
 import { CommonError, Option, Result, ResultKind, StringHelpers } from "../common";
-import { CommentKind, LineComment, TComment } from "./comment";
+import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import { LexerError } from "./error";
 import { Lexer } from "./lexer";
 import { LineTokenKind, Token, TokenKind } from "./token";
@@ -46,6 +46,10 @@ export class LexerSnapshot {
             switch (flatToken.kind) {
                 case LineTokenKind.LineComment:
                     comments.push(readLineComment(flatToken));
+                    break;
+
+                case LineTokenKind.MultilineComment:
+                    comments.push(readSingleLineMultilineComment(flatToken));
                     break;
 
                 case LineTokenKind.MultilineCommentStart: {
@@ -103,6 +107,21 @@ function readLineComment(
     const positionEnd = flatToken.positionEnd;
     return {
         kind: CommentKind.Line,
+        data: flatToken.data,
+        containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
+        positionStart,
+        positionEnd,
+    };
+}
+
+// a multiline comment that spans a single line
+function readSingleLineMultilineComment(
+    flatToken: FlatLineToken
+): MultilineComment {
+    const positionStart = flatToken.positionStart;
+    const positionEnd = flatToken.positionEnd;
+    return {
+        kind: CommentKind.Multiline,
         data: flatToken.data,
         containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
         positionStart,
