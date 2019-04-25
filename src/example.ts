@@ -1,7 +1,7 @@
 import { ResultKind } from "./common";
 import { lexAndParse } from "./jobs";
 
-parseDocument("1 2 3");
+parseDocument(`#"\nfoobar\n"`);
 
 // @ts-ignore
 function parseDocument(document: string) {

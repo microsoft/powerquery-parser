@@ -53,8 +53,7 @@ describe("Tokenizer", () => {
         tokenizeLines("/* block */ let\na = 1 // line comment\nin a", [2, 4, 2]);
     });
 
-    // TODO: multiline strings and comments don't work yet
-    xit("Multiline comment block", () => {
+    it("Multiline comment block", () => {
         tokenizeLines("1 + /* comment\nend*/ 2", [3, 2]);
     });
 

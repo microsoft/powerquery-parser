@@ -421,7 +421,8 @@ export namespace Lexer {
                         break;
 
                     case LexerLineMode.QuotedIdentifier:
-                        throw new Error("todo");
+                        readOutcome = tokenizeQuotedIdentifierContentOrEnd(line, currentPosition);
+                        break;
 
                     case LexerLineMode.String:
                         readOutcome = tokenizeStringLiteralContentOrEnd(line, currentPosition);
@@ -522,6 +523,36 @@ export namespace Lexer {
         }
     }
 
+    function tokenizeQuotedIdentifierContentOrEnd(
+        line: TLexerLine,
+        currentPosition: LexerLinePosition,
+    ): LineModeAlteringRead {
+        const read = tokenizeStringLiteralContentOrEnd(line, currentPosition);
+        switch (read.token.kind) {
+            case LineTokenKind.StringLiteralContent:
+                return {
+                    lineMode: LexerLineMode.QuotedIdentifier,
+                    token: {
+                        ...read.token,
+                        kind: LineTokenKind.QuotedIdentifierContent,
+                    }
+                };
+
+            case LineTokenKind.StringLiteralEnd:
+                return {
+                    lineMode: LexerLineMode.Default,
+                    token: {
+                        ...read.token,
+                        kind: LineTokenKind.QuotedIdentifierEnd,
+                    }
+                };
+
+            default:
+                const details = { read };
+                throw new CommonError.InvariantError("tokenizeStringLiteralContentOrEnd returned an unexpected kind", details);
+        }
+    }
+
     function tokenizeStringLiteralContentOrEnd(
         line: TLexerLine,
         currentPosition: LexerLinePosition,
@@ -531,14 +562,8 @@ export namespace Lexer {
         const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition.textIndex);
 
         if (maybeTextIndexEnd === undefined) {
-            const textLength: number = text.length;
-            const positionEnd: LexerLinePosition = {
-                textIndex: textLength,
-                columnNumber: lineString.textIndex2GraphemeIndex[textLength],
-            };
-
             return {
-                token: readTokenFrom(LineTokenKind.StringLiteralContent, lineString, currentPosition, positionEnd),
+                token: readRestOfLine(LineTokenKind.StringLiteralContent, lineString, currentPosition),
                 lineMode: LexerLineMode.String,
             }
         }
@@ -661,7 +686,7 @@ export namespace Lexer {
 
         return {
             token,
-            lineMode: lineMode,
+            lineMode,
         };
     }
 
@@ -846,7 +871,7 @@ export namespace Lexer {
         else {
             return {
                 token: readRestOfLine(LineTokenKind.QuotedIdentifierStart, lineString, positionStart),
-                lineMode: LexerLineMode.String,
+                lineMode: LexerLineMode.QuotedIdentifier,
             }
         }
     }
