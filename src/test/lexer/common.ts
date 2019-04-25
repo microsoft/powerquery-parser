@@ -41,7 +41,7 @@ export function expectLexerSnapshot(document: string, lineTerminator: string): L
     return snapshot;
 }
 
-export function expectWrappedAbridgedTokens(
+export function expectWrappedSnapshotAbridgedTokens(
     document: string,
     lineTerminator: string,
     expected: AbridgedTokens,
@@ -52,11 +52,11 @@ export function expectWrappedAbridgedTokens(
         ...expected,
         [TokenKind.Identifier, "wrapperClose"],
     ];
-    expectAbridgedTokens(newDocument, lineTerminator, newExpected);
-    return expectAbridgedTokens(document, lineTerminator, expected);
+    expectSnapshotAbridgedTokens(newDocument, lineTerminator, newExpected);
+    return expectSnapshotAbridgedTokens(document, lineTerminator, expected);
 }
 
-export function expectWrappedAbridgedComments(
+export function expectWrappedSnapshotAbridgedComments(
     document: string,
     lineTerminator: string,
     expected: AbridgedComments,
@@ -67,16 +67,16 @@ export function expectWrappedAbridgedComments(
         ...expected,
         [CommentKind.Multiline, "/*wrapperClose*/"],
     ];
-    expectAbridgedComments(newDocument, lineTerminator, newExpected);
-    return expectAbridgedComments(document, lineTerminator, expected);
+    expectSnapshotAbridgedComments(newDocument, lineTerminator, newExpected);
+    return expectSnapshotAbridgedComments(document, lineTerminator, expected);
 }
 
-export function expectAbridgedTokens(
+export function expectSnapshotAbridgedTokens(
     document: string,
     lineTerminator: string,
     expected: AbridgedTokens,
 ): LexerSnapshot {
-    return expectAbridgedSnapshot(
+    return expectSnapshotAbridgedSnapshot(
         document,
         lineTerminator,
         {
@@ -86,12 +86,12 @@ export function expectAbridgedTokens(
     );
 }
 
-export function expectAbridgedComments(
+export function expectSnapshotAbridgedComments(
     document: string,
     lineTerminator: string,
     expected: AbridgedComments,
 ): LexerSnapshot {
-    return expectAbridgedSnapshot(
+    return expectSnapshotAbridgedSnapshot(
         document,
         lineTerminator,
         {
@@ -101,7 +101,7 @@ export function expectAbridgedComments(
     );
 }
 
-export function expectAbridgedSnapshot(
+export function expectSnapshotAbridgedSnapshot(
     document: string,
     lineTerminator: string,
     expected: AbridgedSnapshot,

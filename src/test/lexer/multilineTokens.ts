@@ -1,18 +1,19 @@
 import "mocha";
 import { CommentKind, TokenKind } from "../../lexer";
-import { AbridgedComments, expectAbridgedComments, AbridgedSnapshot, expectAbridgedSnapshot, expectAbridgedTokens, AbridgedTokens } from "./common";
+import { AbridgedComments, expectSnapshotAbridgedComments, AbridgedSnapshot, expectSnapshotAbridgedSnapshot, expectSnapshotAbridgedTokens, AbridgedTokens } from "./common";
 
 const LINE_TERMINATOR = "\n"
 
 describe(`Lexer`, () => {
-    describe(`MultilineTokens`, () => {
+
+    describe(`MultilineTokens Abridged LexerSnapshot`, () => {
         describe(`MultilineComment`, () => {
             it(`/**/`, () => {
                 const document = `/**/`;
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/**/`],
                 ];
-                expectAbridgedComments(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`/* */`, () => {
@@ -20,7 +21,7 @@ describe(`Lexer`, () => {
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/* */`],
                 ];
-                expectAbridgedComments(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`/* X */`, () => {
@@ -28,7 +29,7 @@ describe(`Lexer`, () => {
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/* X */`],
                 ];
-                expectAbridgedComments(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`/*X\\nX\\nX*/`, () => {
@@ -36,7 +37,7 @@ describe(`Lexer`, () => {
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`],
                 ];
-                expectAbridgedComments(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedComments(document, LINE_TERMINATOR, expected);
             });
 
             it(`abc /*X\\nX\\nX*/`, () => {
@@ -46,7 +47,7 @@ describe(`Lexer`, () => {
                     comments: [[CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`]],
                     tokens: [[TokenKind.Identifier, `abc`]],
                 };
-                expectAbridgedSnapshot(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedSnapshot(document, LINE_TERMINATOR, expected);
             });
 
             it(`/*X\\nX\\nX*/ abc`, () => {
@@ -55,7 +56,7 @@ describe(`Lexer`, () => {
                     tokens: [[TokenKind.Identifier, `abc`]],
                     comments: [[CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`]]
                 };
-                expectAbridgedSnapshot(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedSnapshot(document, LINE_TERMINATOR, expected);
             });
         });
 
@@ -65,7 +66,7 @@ describe(`Lexer`, () => {
                 const expected: AbridgedTokens = [
                     [TokenKind.StringLiteral, `"X"`],
                 ];
-                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
 
             it(`"X\\nX\\nX"`, () => {
@@ -73,7 +74,7 @@ describe(`Lexer`, () => {
                 const expected: AbridgedTokens = [
                     [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                 ];
-                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
 
             it(`abc "X\\nX\\nX"`, () => {
@@ -82,7 +83,7 @@ describe(`Lexer`, () => {
                     [TokenKind.Identifier, `abc`],
                     [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                 ];
-                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
 
             it(`"X\\nX\\nX" abc`, () => {
@@ -91,7 +92,7 @@ describe(`Lexer`, () => {
                     [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                     [TokenKind.Identifier, `abc`],
                 ];
-                expectAbridgedTokens(document, LINE_TERMINATOR, expected);
+                expectSnapshotAbridgedTokens(document, LINE_TERMINATOR, expected);
             });
         });
     })
