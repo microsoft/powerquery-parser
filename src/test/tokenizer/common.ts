@@ -26,7 +26,7 @@ export class Tokenizer implements TokensProvider {
         // unsafe action:
         //      cast LineTokenKind into string
         // what I'm trying to avoid:
-        //      cost of properly casting with a switch statement
+        //      the cost of properly casting, aka one switch statement per LineTokenKind
         // why it's safe:
         //      all variants for LineTokenKind are strings
         return {

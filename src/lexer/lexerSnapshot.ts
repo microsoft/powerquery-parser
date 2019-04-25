@@ -77,7 +77,7 @@ export class LexerSnapshot {
                     // unsafe action:
                     //      casting TokenLineKind to TokenKind
                     // what I'm trying to avoid:
-                    //      one switch statement per LineKind
+                    //      the cost of properly casting, aka one switch statement per LineTokenKind
                     // why it's safe:
                     //      the above TokenLineKinds are taken care of, along with their Content and End variants,
                     //      leaving the rest to be a 1-to-1 match with TokenKind.
