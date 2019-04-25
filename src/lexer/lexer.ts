@@ -650,7 +650,7 @@ export namespace Lexer {
             const chr2 = text[currentPosition.textIndex + 1];
 
             if (chr2 === "\"") {
-                const read: LineModeAlteringRead = readQuotedIdentifier(lineString, currentPosition);
+                const read: LineModeAlteringRead = readQuotedIdentifierOrStart(lineString, currentPosition);
                 token = read.token;
                 lineMode = read.lineMode;
             }
@@ -705,13 +705,8 @@ export namespace Lexer {
             };
         }
         else {
-            const textIndexEnd: number = lineString.text.length;
-            const positionEnd: LexerLinePosition = {
-                textIndex: textIndexEnd,
-                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-            };
             return {
-                token: readTokenFrom(LineTokenKind.StringLiteralStart, lineString, positionStart, positionEnd),
+                token: readRestOfLine(LineTokenKind.StringLiteralStart, lineString, positionStart),
                 lineMode: LexerLineMode.String,
             }
         }
@@ -770,12 +765,8 @@ export namespace Lexer {
     ): LineModeAlteringRead {
         const indexOfCloseComment = lineString.text.indexOf("*/", positionStart.textIndex);
         if (indexOfCloseComment === -1) {
-            const positionEnd: LexerLinePosition = {
-                textIndex: positionStart.textIndex + 2,
-                columnNumber: positionStart.columnNumber + 2,
-            }
             return {
-                token: readTokenFrom(LineTokenKind.MultilineCommentStart, lineString, positionStart, positionEnd),
+                token: readRestOfLine(LineTokenKind.MultilineCommentStart, lineString, positionStart),
                 lineMode: LexerLineMode.Comment,
             }
         }
@@ -835,8 +826,29 @@ export namespace Lexer {
         }
     }
 
-    function readQuotedIdentifier(_document: LexerLineString, _position: LexerLinePosition): LineModeAlteringRead {
-        throw new Error("not supported");
+    function readQuotedIdentifierOrStart(
+        lineString: LexerLineString,
+        positionStart: LexerLinePosition,
+    ): LineModeAlteringRead {
+        const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(lineString.text, positionStart.textIndex + 2);
+        if (maybeTextIndexEnd !== undefined) {
+            const textIndexEnd: number = maybeTextIndexEnd + 1;
+            const positionEnd: LexerLinePosition = {
+                textIndex: textIndexEnd,
+                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
+            };
+
+            return {
+                token: readTokenFrom(LineTokenKind.Identifier, lineString, positionStart, positionEnd),
+                lineMode: LexerLineMode.Default,
+            };
+        }
+        else {
+            return {
+                token: readRestOfLine(LineTokenKind.QuotedIdentifierStart, lineString, positionStart),
+                lineMode: LexerLineMode.String,
+            }
+        }
     }
 
     // the quoted identifier case has already been taken care of
@@ -909,6 +921,19 @@ export namespace Lexer {
             positionEnd,
             data: lineString.text.substring(positionStart.textIndex, positionEnd.textIndex),
         };
+    }
+
+    function readRestOfLine(
+        lineTokenKind: LineTokenKind,
+        lineString: LexerLineString,
+        positionStart: LexerLinePosition,
+    ): LineToken {
+        const textLength = lineString.text.length;
+        const positionEnd: LexerLinePosition = {
+            textIndex: textLength,
+            columnNumber: lineString.textIndex2GraphemeIndex[textLength],
+        };
+        return readTokenFrom(lineTokenKind, lineString, positionStart, positionEnd);
     }
 
     function maybeIndexOfRegexEnd(
