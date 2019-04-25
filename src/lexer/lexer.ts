@@ -268,16 +268,13 @@ export namespace Lexer {
                 throw isNever(line);
         }
 
-        // unsafe action:
-        //      cast ReadonlyArray into standard array
-        // what I'm trying to avoid:
-        //      1-2 elements needs to be updated, avoids recreating the container/objects.
-        // why it's safe:
-        //      same as re-creating the array
-        const lines: TLexerLine[] = state.lines as TLexerLine[];
-        lines[lineNumber] = line;
+        const newLines: TLexerLine[] = [...state.lines];
+        newLines[lineNumber] = line;
 
-        return state;
+        return {
+            ...state,
+            lines: newLines,
+        }
     }
 
     function lineFrom(text: string, lineNumber: number, lineMode: LexerLineMode): UntouchedLine {
