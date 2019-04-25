@@ -713,7 +713,7 @@ export class Parser {
         const isTableTypeNext = (
             this.isOnIdentifierConstant(Ast.IdentifierConstant.Table)
             && (
-                this.isNextTokenKind(TokenKind.LeftBracket)
+                this.isNextTokenKind(TokenKind.LeftParenthesis)
                 || this.isNextTokenKind(TokenKind.AtSign)
                 || this.isNextTokenKind(TokenKind.Identifier)
             )
