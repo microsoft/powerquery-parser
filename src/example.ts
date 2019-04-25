@@ -1,12 +1,13 @@
 import { ResultKind } from "./common";
 import { lexAndParse } from "./jobs";
+import { Lexer } from "./lexer";
 
-parseDocument(`#"\nfoobar\n"`);
+parseDocument(`if true then 1 else 2`);
 
 // @ts-ignore
-function parseDocument(document: string) {
-    console.log(JSON.stringify(lexAndParse(document, "\n"), null, 4));
-    const parseResult = lexAndParse(document, "\n");
+function parseDocument(document: string, lineTerminator = "\n") {
+    console.log(JSON.stringify(lexAndParse(document, lineTerminator), null, 4));
+    const parseResult = lexAndParse(document, lineTerminator);
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, null, 4));
     }
@@ -16,85 +17,18 @@ function parseDocument(document: string) {
     }
 }
 
-// // @ts-ignore
-// function lexDocument(document: string) {
-//     // state isn't const as calling Lexer functions return a new state object.
-//     let state: Lexer.TLexer = Lexer.from(document);
-//     state = Lexer.remaining(state);
+// @ts-ignore
+function lexDocument(document: string, lineTerminator = "\n") {
+    // state isn't const as calling Lexer functions return a new state object.
 
-//     switch (state.kind) {
-//         // nothing was read and an error was encountered, such as an unterminated string.
-//         case Lexer.LexerKind.Error:
-//             // handle the error, find it on state.error.
-//             break;
+    // the returned state will be in an error state if `text` can't be lex'd.
+    // use Lexer.isErrorState to validate if needed
+    let state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
 
-//         // reached EOF without any errors.
-//         // it's possible that no tokens or comments were read,
-//         // eg. only whitespace being consumed.
-//         case Lexer.LexerKind.Touched:
-//             // state.tokens and state.comments hold all tokens and comments ever read,
-//             // where state.lastRead holds what was read in the last call.
-//             break;
-
-//         // some tokens or comments were read,
-//         // but then an error was encountered such as an unterminated string.
-//         case Lexer.LexerKind.TouchedWithError:
-//             // state.tokens and state.comments hold all tokens and comments ever read,
-//             // where state.lastRead holds what was read in the last call.
-//             break;
-
-//         default:
-//             throw isNever(state);
-//     }
-// }
-
-// // @ts-ignore
-// function iterativeLexDocument(document: string, chunkSeperator: string) {
-//     // for brevity's sake I'll be asserting:
-//     //  * document.split(chunkSeperator).length > 1
-//     //  * the first chunk from the split won't result in a lexer error
-
-//     const documentChunks = document.split(chunkSeperator);
-//     if (documentChunks.length === 1) {
-//         throw new Error(`AssertFailed: document.split(chunkSeperator).length > 1`)
-//     }
-
-//     // state isn't const as calling Lexer functions return a new state object.
-//     let state: Lexer.TLexer = Lexer.from(documentChunks[0]);
-//     state = Lexer.remaining(state);
-
-//     if (Lexer.hasError(state)) {
-//         throw new Error(`AssertFailed: the first chunk from the split won't result in a lexer error`);
-//     }
-
-//     for (let index = 1; index < documentChunks.length; index++) {
-//         const chunk = documentChunks[index];
-//         state = Lexer.appendToDocument(state, `${chunkSeperator} ${chunk}`);
-//         state = Lexer.remaining(state);
-
-//         switch (state.kind) {
-//             // nothing was read and an error was encountered, such as an unterminated string.
-//             case Lexer.LexerKind.Error:
-//                 // handle the error, find it on state.error.
-//                 break;
-
-//             // reached EOF without any errors.
-//             // it's possible that no tokens or comments were read,
-//             // eg. only whitespace being consumed.
-//             case Lexer.LexerKind.Touched:
-//                 // state.tokens and state.comments hold all tokens and comments ever read,
-//                 // where state.lastRead holds what was read in the last call.
-//                 break;
-
-//             // some tokens or comments were read,
-//             // but then an error was encountered such as an unterminated string.
-//             case Lexer.LexerKind.TouchedWithError:
-//                 // state.tokens and state.comments hold all tokens and comments ever read,
-//                 // where state.lastRead holds what was read in the last call.
-//                 break;
-
-//             default:
-//                 throw isNever(state);
-//         }
-//     }
-// }
+    if (Lexer.isErrorState(state)) {
+        // handle the error state
+    }
+    else {
+        // you're good to go
+    }
+}
