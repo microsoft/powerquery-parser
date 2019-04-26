@@ -370,17 +370,14 @@ export namespace Lexer {
             currentPosition = drainWhitespace(lineString, currentPosition);
         }
 
-        let continueLexing = currentPosition.textIndex < textLength;
-        if (!continueLexing) {
-            let partialTokenizeResult: PartialResult<TokenizeChanges, LexerError.TLexerError> = {
-                kind: PartialResultKind.Err,
-                error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
-            };
-            return updateLineState(line, partialTokenizeResult);
-        }
-
         const newTokens: LineToken[] = [];
+        let continueLexing = true;
         let maybeError: Option<LexerError.TLexerError>;
+
+        // while neither eof or having encountered an error:
+        //  * lex according to lineMode, starting from currentPosition
+        //  * update currentPosition and lineMode
+        //  * drain whitespace
         while (continueLexing) {
             try {
                 let readOutcome: LineModeAlteringRead;
@@ -465,6 +462,7 @@ export namespace Lexer {
         return updateLineState(line, partialTokenizeResult);
     }
 
+    // read either "*/" or eof
     function tokenizeMultilineCommentContentOrEnd(
         line: TLexerLine,
         currentPosition: LexerLinePosition,
@@ -499,6 +497,7 @@ export namespace Lexer {
         }
     }
 
+    // read either string literal end or eof
     function tokenizeQuotedIdentifierContentOrEnd(
         line: TLexerLine,
         currentPosition: LexerLinePosition,
@@ -529,6 +528,7 @@ export namespace Lexer {
         }
     }
 
+    // read either string literal end or eof
     function tokenizeStringLiteralContentOrEnd(
         line: TLexerLine,
         currentPosition: LexerLinePosition,
@@ -600,8 +600,8 @@ export namespace Lexer {
             const chr2 = text[currentPosition.textIndex + 1];
 
             if (chr2 === undefined) {
-                const LexerLinePosition = StringHelpers.graphemePositionAt(text, currentPosition.textIndex);
-                throw new LexerError.UnexpectedEofError(LexerLinePosition);
+                const lexerLinePosition = StringHelpers.graphemePositionAt(text, currentPosition.textIndex);
+                throw new LexerError.UnexpectedEofError(lexerLinePosition);
             }
             else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(lineString, currentPosition); }
             else if (chr2 === ".") {
