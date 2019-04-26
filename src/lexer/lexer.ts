@@ -5,18 +5,15 @@ import { LexerError } from "./error";
 import { Keyword } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
-// the lexer is
-//  * functional
-//  * represented by a discriminate union (TLexer which are implementations for ILexer)
-//  * incremental, allowing line-by-line lexing
+// the lexer
+//  * is mostly functional based, with a few throws to propagate errors
+//  * splits up text by line terminator, allowing line-by-line lexing
 
-// instantiate an instance using Lexer.from
-// calling Lexer.appendToDocument, Lexer.next, Lexer.remaining returns an updated lexer state
-// Lexer.snapshot creates a frozen copy of a lexer state
+// call Lexer.from to instantiate a state instance
+// calls to lexer functions returns a new state object
+// call Lexer.snapshot creates a frozen copy of a lexer state
 
 export namespace Lexer {
-
-    export type TLexerLineExceptUntouched = Exclude<TLexerLine, UntouchedLine>;
 
     export type TLexerLine = (
         | TouchedLine
@@ -37,6 +34,10 @@ export namespace Lexer {
         Untouched = "Untouched",
     }
 
+    // tokenizing a TLexerLine is done in one of the following contexts,
+    // which is really either:
+    //  * tokenize the entire line as usual
+    //  * the line is a contiuation of a multiline token, eg. `"foo \n bar"`
     export const enum LexerLineMode {
         Comment = "Comment",
         Default = "Default",
@@ -51,8 +52,8 @@ export namespace Lexer {
 
     export interface ILexerLine {
         readonly kind: LexerLineKind,
-        readonly lineString: LexerLineString,               // text representation for the line
-        readonly tokens: ReadonlyArray<LineToken>,          // LineTokens lexed so far
+        readonly lineString: LexerLineString,
+        readonly tokens: ReadonlyArray<LineToken>,
         readonly lineMode: LexerLineMode,
     }
 
@@ -88,11 +89,6 @@ export namespace Lexer {
     export interface LexerLinePosition {
         readonly textIndex: number,
         readonly columnNumber: number,
-    }
-
-    export interface LexerRead {
-        readonly tokens: ReadonlyArray<LineToken>,
-        readonly lineMode: LexerLineMode,
     }
 
 
@@ -223,6 +219,11 @@ export namespace Lexer {
         };
     }
 
+    interface TokenizeChanges {
+        readonly tokens: ReadonlyArray<LineToken>,
+        readonly lineMode: LexerLineMode,
+    }
+
     interface LineModeAlteringRead {
         readonly token: LineToken,
         readonly lineMode: LexerLineMode,
@@ -270,31 +271,31 @@ export namespace Lexer {
     // takes the return from tokenizeX functions and updates the line's state
     function updateLineState(
         line: TLexerLine,
-        lexPartialResult: PartialResult<LexerRead, LexerError.TLexerError>,
-    ): TLexerLineExceptUntouched {
-        switch (lexPartialResult.kind) {
+        tokenizePartialResult: PartialResult<TokenizeChanges, LexerError.TLexerError>,
+    ): TLexerLine {
+        switch (tokenizePartialResult.kind) {
             case PartialResultKind.Ok: {
-                const lexerRead: LexerRead = lexPartialResult.value;
-                const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(lexerRead.tokens);
+                const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+                const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
                 return {
                     kind: LexerLineKind.Touched,
                     lineString: line.lineString,
                     tokens: newTokens,
-                    lineMode: lexerRead.lineMode,
+                    lineMode: tokenizeChanges.lineMode,
                 }
             }
 
             case PartialResultKind.Partial: {
-                const lexerRead: LexerRead = lexPartialResult.value;
-                const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(lexerRead.tokens);
+                const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+                const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
                 return {
                     kind: LexerLineKind.TouchedWithError,
                     lineString: line.lineString,
                     tokens: newTokens,
-                    lineMode: lexerRead.lineMode,
-                    error: lexPartialResult.error,
+                    lineMode: tokenizeChanges.lineMode,
+                    error: tokenizePartialResult.error,
                 }
             }
 
@@ -304,18 +305,18 @@ export namespace Lexer {
                     lineString: line.lineString,
                     tokens: line.tokens,
                     lineMode: line.lineMode,
-                    error: lexPartialResult.error,
+                    error: tokenizePartialResult.error,
                 }
 
             default:
-                throw isNever(lexPartialResult);
+                throw isNever(tokenizePartialResult);
         }
     }
 
     // the main function of the lexer's tokenizer
     function tokenize(line: TLexerLine): TLexerLine {
         switch (line.kind) {
-            // cannot tokenize something that ended with an error as
+            // cannot tokenize something that ended with an error,
             // nothing has changed since the last tokenize.
             // update the line's text before trying again.
             case LexerLineKind.Error:
@@ -323,15 +324,15 @@ export namespace Lexer {
 
             case LexerLineKind.Touched:
                 // the line was already fully lexed once.
-                // without any text changes it should throw eof to help diagnose why
-                // it's trying to re-tokenize
+                // without any text changes it should throw eof to help diagnose
+                // why it's trying to re-tokenize
                 return {
                     ...line,
                     kind: LexerLineKind.Error,
                     error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
                 }
 
-            // cannot tokenize something that ended with an error as
+            // cannot tokenize something that ended with an error,
             // nothing has changed since the last tokenize.
             // update the line's text before trying again.
             case LexerLineKind.TouchedWithError:
@@ -345,7 +346,7 @@ export namespace Lexer {
         }
 
         const untouchedLine: UntouchedLine = line;
-        const lineString = untouchedLine.lineString;
+        const lineString: LexerLineString = untouchedLine.lineString;
         const text = lineString.text;
         const textLength = text.length;
 
@@ -359,7 +360,7 @@ export namespace Lexer {
             }
         }
 
-        let lineMode = line.lineMode;
+        let lineMode: LexerLineMode = line.lineMode;
         let currentPosition: LexerLinePosition = {
             textIndex: 0,
             columnNumber: 0,
@@ -371,7 +372,7 @@ export namespace Lexer {
 
         let continueLexing = currentPosition.textIndex < textLength;
         if (!continueLexing) {
-            let partialTokenizeResult: PartialResult<LexerRead, LexerError.TLexerError> = {
+            let partialTokenizeResult: PartialResult<TokenizeChanges, LexerError.TLexerError> = {
                 kind: PartialResultKind.Err,
                 error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
             };
@@ -432,7 +433,7 @@ export namespace Lexer {
             }
         }
 
-        let partialTokenizeResult: PartialResult<LexerRead, LexerError.TLexerError>;
+        let partialTokenizeResult: PartialResult<TokenizeChanges, LexerError.TLexerError>;
         if (maybeError) {
             if (newTokens.length) {
                 partialTokenizeResult = {
