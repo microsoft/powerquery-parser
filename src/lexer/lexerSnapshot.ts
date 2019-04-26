@@ -262,9 +262,10 @@ function flattenLineTokens(state: Lexer.LexerState): [string, ReadonlyArray<Flat
     let lineTextOffset = 0;
     let flatIndex = 0;
 
-    for (let line of lines) {
-        let lineNumber = line.lineNumber;
+    for (let lineNumber = 0; lineNumber < numLines; lineNumber++) {
+        const line = lines[lineNumber];
         text += line.lineString.text;
+
         if (lineNumber !== numLines - 1) {
             text += state.lineTerminator;
         }

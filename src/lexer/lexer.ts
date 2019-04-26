@@ -52,8 +52,6 @@ export namespace Lexer {
     export interface ILexerLine {
         readonly kind: LexerLineKind,
         readonly lineString: LexerLineString,               // text representation for the line
-        readonly numberOfActions: number,                   // allows for quick LexerLine equality comparisons
-        readonly lineNumber: number,                        // what line number is this
         readonly tokens: ReadonlyArray<LineToken>,          // LineTokens lexed so far
         readonly lineMode: LexerLineMode,
     }
@@ -74,20 +72,17 @@ export namespace Lexer {
     // possible that only whitespace was consumed.
     export interface TouchedLine extends ILexerLine {
         readonly kind: LexerLineKind.Touched,
-        readonly lastRead: LexerRead,
     }
 
     // the last read attempt read at least one token or comment before encountering an error
     export interface TouchedWithErrorLine extends ILexerLine {
         readonly kind: LexerLineKind.TouchedWithError,
         readonly error: LexerError.TLexerError,
-        readonly lastRead: LexerRead,
     }
 
     // a call to appendtToDocument clears existing state marking it ready to be lexed
     export interface UntouchedLine extends ILexerLine {
         readonly kind: LexerLineKind.Untouched,
-        readonly maybeLastRead: Option<LexerRead>,
     }
 
     export interface LexerLinePosition {
@@ -126,11 +121,13 @@ export namespace Lexer {
     }
 
     export function from(text: string, lineTerminator: string): LexerState {
-        let newState: LexerState = {
-            lines: [lineFrom(text, 0, LexerLineMode.Default)],
+        let newLine: TLexerLine = lineFrom(text, LexerLineMode.Default);
+        newLine = tokenize(newLine);
+
+        return {
+            lines: [newLine],
             lineTerminator,
         };
-        return tokenizeLine(newState, 0);
     }
 
     export function fromSplit(text: string, lineTerminator: string): LexerState {
@@ -217,13 +214,13 @@ export namespace Lexer {
             ? maybeLatestLine.lineMode
             : LexerLineMode.Default;
 
-        const newLine = lineFrom(text, numLines, lineMode)
+        let newLine: TLexerLine = lineFrom(text, lineMode)
+        newLine = tokenize(newLine);
 
-        let newState: LexerState = {
+        return {
             ...state,
             lines: state.lines.concat(newLine),
         };
-        return tokenizeLine(newState, newState.lines.length - 1);
     }
 
     interface LineModeAlteringRead {
@@ -231,61 +228,12 @@ export namespace Lexer {
         readonly lineMode: LexerLineMode,
     }
 
-    function tokenizeLine(state: LexerState, lineNumber: number): LexerState {
-        const maybeLine = state.lines[lineNumber];
-        if (maybeLine === undefined) {
-            throw new Error("invalid line number");
-        }
-
-        let line: TLexerLine = maybeLine;
-        switch (line.kind) {
-            case LexerLineKind.Touched:
-            case LexerLineKind.Untouched:
-                const lexResult = tokenize(line);
-                line = updateLineState(line, lexResult);
-                break;
-
-            case LexerLineKind.Error:
-                line = {
-                    ...line,
-                    numberOfActions: line.numberOfActions + 1,
-                };
-                break;
-
-            case LexerLineKind.TouchedWithError:
-                line = {
-                    kind: LexerLineKind.Error,
-                    lineString: line.lineString,
-                    numberOfActions: line.numberOfActions + 1,
-                    lineNumber: line.lineNumber,
-                    tokens: line.tokens,
-                    lineMode: line.lineMode,
-                    error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
-                };
-                break;
-
-            default:
-                throw isNever(line);
-        }
-
-        const newLines: TLexerLine[] = [...state.lines];
-        newLines[lineNumber] = line;
-
-        return {
-            ...state,
-            lines: newLines,
-        }
-    }
-
-    function lineFrom(text: string, lineNumber: number, lineMode: LexerLineMode): UntouchedLine {
+    function lineFrom(text: string, lineMode: LexerLineMode): UntouchedLine {
         return {
             kind: LexerLineKind.Untouched,
             lineString: lexerLineStringFrom(text),
-            numberOfActions: 0,
-            lineNumber,
             tokens: [],
             lineMode,
-            maybeLastRead: undefined,
         }
     }
 
@@ -331,11 +279,8 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.Touched,
                     lineString: originalState.lineString,
-                    numberOfActions: originalState.numberOfActions + 1,
-                    lineNumber: originalState.lineNumber,
                     tokens: newTokens,
                     lineMode: lexerRead.lineMode,
-                    lastRead: lexerRead,
                 }
             }
 
@@ -346,12 +291,9 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.TouchedWithError,
                     lineString: originalState.lineString,
-                    numberOfActions: originalState.numberOfActions + 1,
-                    lineNumber: originalState.lineNumber,
                     tokens: newTokens,
                     lineMode: lexerRead.lineMode,
                     error: lexPartialResult.error,
-                    lastRead: lexerRead,
                 }
             }
 
@@ -359,9 +301,7 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.Error,
                     lineString: originalState.lineString,
-                    numberOfActions: originalState.numberOfActions,
                     tokens: originalState.tokens,
-                    lineNumber: originalState.lineNumber,
                     lineMode: originalState.lineMode,
                     error: lexPartialResult.error,
                 }
@@ -371,20 +311,44 @@ export namespace Lexer {
         }
     }
 
-    function tokenize(line: TLexerLine): PartialResult<LexerRead, LexerError.TLexerError> {
-        if (!line.lineString.text) {
-            return {
-                kind: PartialResultKind.Ok,
-                value: {
-                    tokens: [],
-                    lineMode: LexerLineMode.Default,
+    function tokenize(line: TLexerLine): TLexerLine {
+        switch (line.kind) {
+            case LexerLineKind.Error:
+                return line;
+
+            case LexerLineKind.Touched:
+                // assumes Touched means the entire line was consumed
+                return {
+                    ...line,
+                    kind: LexerLineKind.Error,
+                    error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
+
                 }
-            };
+
+            case LexerLineKind.TouchedWithError:
+                return {
+                    kind: LexerLineKind.Error,
+                    lineString: line.lineString,
+                    tokens: line.tokens,
+                    lineMode: line.lineMode,
+                    error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
+                };
         }
 
-        const lineString = line.lineString;
+        const untouchedLine: UntouchedLine = line;
+        const lineString = untouchedLine.lineString;
         const text = lineString.text;
         const textLength = text.length;
+
+        if (textLength === 0) {
+            return {
+                kind: LexerLineKind.Touched,
+                lineString: line.lineString,
+                tokens: [],
+                lineMode: line.lineMode,
+            }
+        }
+
         let lineMode = line.lineMode;
         let currentPosition: LexerLinePosition = {
             textIndex: 0,
@@ -397,10 +361,11 @@ export namespace Lexer {
 
         let continueLexing = currentPosition.textIndex < textLength;
         if (!continueLexing) {
-            return {
+            let partialTokenizeResult: PartialResult<LexerRead, LexerError.TLexerError> = {
                 kind: PartialResultKind.Err,
                 error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
-            }
+            };
+            return updateLineState(line, partialTokenizeResult);
         }
 
         const newTokens: LineToken[] = [];
@@ -457,9 +422,10 @@ export namespace Lexer {
             }
         }
 
+        let partialTokenizeResult: PartialResult<LexerRead, LexerError.TLexerError>;
         if (maybeError) {
             if (newTokens.length) {
-                return {
+                partialTokenizeResult = {
                     kind: PartialResultKind.Partial,
                     value: {
                         tokens: newTokens,
@@ -469,14 +435,14 @@ export namespace Lexer {
                 };
             }
             else {
-                return {
+                partialTokenizeResult = {
                     kind: PartialResultKind.Err,
                     error: maybeError,
                 }
             }
         }
         else {
-            return {
+            partialTokenizeResult = {
                 kind: PartialResultKind.Ok,
                 value: {
                     tokens: newTokens,
@@ -484,6 +450,8 @@ export namespace Lexer {
                 }
             }
         }
+
+        return updateLineState(line, partialTokenizeResult);
     }
 
     function tokenizeMultilineCommentContentOrEnd(
