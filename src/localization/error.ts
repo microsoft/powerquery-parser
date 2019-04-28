@@ -1,5 +1,5 @@
 import { Option } from "../common/option";
-import { TokenKind, Token } from "../lexer";
+import { TokenKind, Token, Lexer } from "../lexer";
 import { Ast } from "../parser";
 import { StringHelpers } from "../common";
 
@@ -45,6 +45,10 @@ export namespace Localization.Error {
 
     export function lexerExpectedNumericLiteral(graphemePosition: StringHelpers.GraphemePosition): string {
         return `Expected numeric literal on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
+    }
+
+    export function lexerLineError(errors: ReadonlyArray<Lexer.TErrorLexerLine>): string {
+        return `Error on line(s): ${errors.map((line: Lexer.TErrorLexerLine) => line.lineNumber).join(", ")}`;
     }
 
     export function lexerUnexpectedEof(graphemePosition: StringHelpers.GraphemePosition): string {

@@ -124,16 +124,13 @@ export function expectSnapshotAbridgedComments(
 function expectLexSuccess(document: string, lineTerminator: string): Lexer.LexerState {
     const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
     if (Lexer.isErrorState(state)) {
-        const maybeErrorLine = Lexer.maybeFirstErrorLine(state);
-        if (maybeErrorLine === undefined) {
+        const maybeErrorLines = Lexer.maybeErrorLines(state);
+        if (maybeErrorLines === undefined) {
             throw new Error(`AssertFailed: maybeErrorLine === undefined`);
         }
-        const errorLine = maybeErrorLine;
+        const errorLines = maybeErrorLines;
 
-        const details = {
-            errorLine,
-            error: errorLine.error.message,
-        };
+        const details = { errorLines };
         throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, null, 4)}`);
     }
 

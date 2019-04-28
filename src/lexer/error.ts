@@ -1,5 +1,6 @@
 import { CommonError, StringHelpers } from "../common";
 import { Localization } from "../localization/error";
+import { Lexer } from "./lexer";
 
 export namespace LexerError {
 
@@ -14,6 +15,7 @@ export namespace LexerError {
         | ExpectedHexLiteralError
         | ExpectedKeywordOrIdentifierError
         | ExpectedNumericLiteralError
+        | LineError
         | UnexpectedEofError
         | UnexpectedReadError
         | UnterminatedMultilineCommentError
@@ -64,6 +66,14 @@ export namespace LexerError {
             readonly graphemePosition: StringHelpers.GraphemePosition,
         ) {
             super(Localization.Error.lexerExpectedNumericLiteral(graphemePosition));
+        }
+    }
+
+    export class LineError extends Error {
+        constructor(
+            readonly errors: ReadonlyArray<Lexer.TErrorLexerLine>,
+        ) {
+            super(Localization.Error.lexerLineError(errors));
         }
     }
 

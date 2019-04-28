@@ -270,14 +270,17 @@ export namespace Lexer {
         }
     }
 
-    export function maybeFirstErrorLine(state: LexerState): Option<TErrorLexerLine> {
+    export function maybeErrorLines(state: LexerState): Option<ReadonlyArray<TErrorLexerLine>> {
+        const errorLines: TErrorLexerLine[] = [];
         for (let line of state.lines) {
             if (isErrorLine(line)) {
-                return line;
+                errorLines.push(line);
             }
         }
 
-        return undefined;
+        return errorLines.length
+            ? errorLines
+            : undefined;
     }
 
     // takes the return from tokenizeX functions and updates the line's state
