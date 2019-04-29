@@ -138,7 +138,7 @@ export namespace Lexer {
         }
 
         for (let index = 1; index < numLines; index++) {
-            state = appendNewLine(state, lines[index]);
+            state = appendLine(state, lines[index]);
             if (isErrorLine(state.lines[index])) {
                 return state;
             }
@@ -204,7 +204,7 @@ export namespace Lexer {
         )
     }
 
-    export function appendNewLine(state: LexerState, text: string): LexerState {
+    export function appendLine(state: LexerState, text: string): LexerState {
         const lines = state.lines;
         const numLines = lines.length;
         const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];

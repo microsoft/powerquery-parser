@@ -1,11 +1,11 @@
-import { ResultKind } from "./common";
+import { ResultKind, Option, Result } from "./common";
 import { lexAndParse } from "./jobs";
-import { Lexer } from "./lexer";
+import { Lexer, LexerSnapshot, LexerError } from "./lexer";
 
 parseDocument(`if true then 1 else 2`);
 
 // @ts-ignore
-function parseDocument(document: string, lineTerminator = "\n") {
+function parseDocument(document: string, lineTerminator = "\n"): Lexer.LexerState {
     console.log(JSON.stringify(lexAndParse(document, lineTerminator), null, 4));
     const parseResult = lexAndParse(document, lineTerminator);
     if (parseResult.kind === ResultKind.Ok) {
@@ -25,10 +25,42 @@ function lexDocument(document: string, lineTerminator = "\n") {
     // use Lexer.isErrorState to validate if needed
     let state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
 
-    if (Lexer.isErrorState(state)) {
-        // handle the error state
+    const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
+    if (maybeErrorLines) {
+        // handle the error(s).
+        //
+        // note: these are errors isolated to indiviudal lines,
+        //       meaning multiline errors such as an unterminated string are not
+        //       considered an error at this stage.
+        const errorLines: Lexer.TErrorLines = maybeErrorLines;
+
+        for (let lineNumber of Object.keys(errorLines)) {
+            const errorLine = errorLines[Number.parseInt(lineNumber)];
+            console.log(errorLine);
+        }
+    }
+
+    // let's add one extra line.
+    // note: adding new lines can introduce new errors,
+    //       meaning you might want to check for them using maybeErrorLines again
+    state = Lexer.appendLine(state, "// hello world");
+
+    // a snapshot should be created once no more text is to be added.
+    // a snapshot is an immutable copy which:
+    //      * combines multiline tokens together
+    //        (eg. StringLiteralStart + StringLiteralContent + StringLiteralEnd)
+    //      * checks for multiline errors
+    //        (eg. unterminated string error)
+    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+    if (snapshotResult.kind === ResultKind.Err) {
+        // a multiline error was found
+        const error: LexerError.LexerError = snapshotResult.error;
+        console.log(error.innerError.message);
+        console.log(JSON.stringify(error.innerError, null, 4));
     }
     else {
-        // you're good to go
+        const snapshot: LexerSnapshot = snapshotResult.value;
+        console.log(`numTokens: ${snapshot.tokens}`);
+        console.log(`numComments: ${snapshot.comments}`);
     }
 }

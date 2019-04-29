@@ -14,7 +14,7 @@ export class Tokenizer implements TokensProvider {
     public tokenize(line: string, state: IState): ILineTokens {
         const tokenizerState: TokenizerState = state as TokenizerState;
         const lexerState = tokenizerState.lexerState;
-        const newLexerState = Lexer.appendNewLine(lexerState, line);
+        const newLexerState = Lexer.appendLine(lexerState, line);
 
         return {
             tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),
