@@ -10,12 +10,12 @@ export interface LexAndParseSuccess {
 export function lexAndParse(text: string, lineTerminator: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
     let state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
 
-    const maybeErrorLines: Option<ReadonlyArray<Lexer.TErrorLexerLine>> = Lexer.maybeErrorLines(state);
+    const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
     if (maybeErrorLines) {
-        const errorLines: ReadonlyArray<Lexer.TErrorLexerLine> = maybeErrorLines;
+        const errorLines: Lexer.TErrorLines = maybeErrorLines;
         return {
             kind: ResultKind.Err,
-            error: new LexerError.LexerError(new LexerError.LineError(errorLines)),
+            error: new LexerError.LexerError(new LexerError.ErrorLineError(errorLines)),
         }
     }
 

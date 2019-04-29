@@ -47,8 +47,8 @@ export namespace Localization.Error {
         return `Expected numeric literal on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
     }
 
-    export function lexerLineError(errors: ReadonlyArray<Lexer.TErrorLexerLine>): string {
-        return `Error on line(s): ${errors.map((line: Lexer.TErrorLexerLine) => line.lineNumber).join(", ")}`;
+    export function lexerLineError(errors: Lexer.TErrorLines): string {
+        return `Error on line(s): ${Object.keys(errors).join(", ")}`;
     }
 
     export function lexerUnexpectedEof(graphemePosition: StringHelpers.GraphemePosition): string {

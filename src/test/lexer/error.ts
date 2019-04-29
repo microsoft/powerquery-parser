@@ -3,18 +3,33 @@ import "mocha";
 import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
-function expectStateInnerError(document: string, lineTerminator: string): LexerError.TInnerLexerError {
+interface StateErrorLinesPair {
+    readonly state: Lexer.LexerState,
+    readonly errorLines: Lexer.TErrorLines,
+}
+
+function expectStateErrorLines(document: string, lineTerminator: string, numErrorLines: number): StateErrorLinesPair {
     const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
 
     const maybeErrorLines = Lexer.maybeErrorLines(state);
     if (!(maybeErrorLines !== undefined)) {
         throw new Error(`AssertFailed: Lexer.maybeFirstErrorLine(state) !== undefined: ${JSON.stringify(state)}`);
     }
-    else if (!(maybeErrorLines.length === 1)) {
-        throw new Error(`AssertFailed: maybeErrorLines.length === 1: ${JSON.stringify(state)}`);
+    else if (!(maybeErrorLines !== undefined)) {
+        throw new Error(`AssertFailed: maybeErrorLines !== undefined: ${JSON.stringify(state)}`);
+    }
+    else if (!(numErrorLines === Object.keys(maybeErrorLines).length)) {
+        const details = {
+            "Object.keys(maybeErrorLines).length": Object.keys(maybeErrorLines).length,
+            numErrorLines,
+        };
+        throw new Error(`AssertFailed: numErrorLines === Object.keys(maybeErrorLines).length): ${JSON.stringify(details)}`);
     }
     else {
-        return maybeErrorLines[0].error.innerError;
+        return {
+            state,
+            errorLines: maybeErrorLines,
+        };
     }
 }
 
@@ -32,8 +47,18 @@ function expectSnapshotInnerError(document: string, lineTerminator: string): Lex
 
 describe("Lexer.Error", () => {
     it("ExpectedHexLiteralError: 0x", () => {
-        const innerError = expectStateInnerError("0x", "\n");
+        const stateErrorLinesPair = expectStateErrorLines("0x", "\n", 1);
+        const innerError = stateErrorLinesPair.errorLines[0].error.innerError;
         expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
+    });
+
+    it("lexerLineError: 0x \\n 0x", () => {
+        const stateErrorLinesPair = expectStateErrorLines("0x \n 0x", "\n", 2);
+        const firstInnerError = stateErrorLinesPair.errorLines[0].error.innerError;
+        expect(firstInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, firstInnerError.message);
+
+        const secondInnerError = stateErrorLinesPair.errorLines[1].error.innerError;
+        expect(secondInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, secondInnerError.message);
     });
 
     it("UnterminatedMultilineCommentError: /*", () => {

@@ -12,10 +12,10 @@ export namespace LexerError {
     export type TInnerLexerError = (
         | BadStateError
         | EndOfStreamError
+        | ErrorLineError
         | ExpectedHexLiteralError
         | ExpectedKeywordOrIdentifierError
         | ExpectedNumericLiteralError
-        | LineError
         | UnexpectedEofError
         | UnexpectedReadError
         | UnterminatedMultilineCommentError
@@ -36,6 +36,14 @@ export namespace LexerError {
             readonly innerError: TLexerError,
         ) {
             super(Localization.Error.lexerBadState());
+        }
+    }
+
+    export class ErrorLineError extends Error {
+        constructor(
+            readonly errors: Lexer.TErrorLines,
+        ) {
+            super(Localization.Error.lexerLineError(errors));
         }
     }
 
@@ -66,14 +74,6 @@ export namespace LexerError {
             readonly graphemePosition: StringHelpers.GraphemePosition,
         ) {
             super(Localization.Error.lexerExpectedNumericLiteral(graphemePosition));
-        }
-    }
-
-    export class LineError extends Error {
-        constructor(
-            readonly errors: ReadonlyArray<Lexer.TErrorLexerLine>,
-        ) {
-            super(Localization.Error.lexerLineError(errors));
         }
     }
 
@@ -128,6 +128,7 @@ export namespace LexerError {
         return (
             x instanceof BadStateError
             || x instanceof EndOfStreamError
+            || x instanceof ErrorLineError
             || x instanceof ExpectedHexLiteralError
             || x instanceof ExpectedKeywordOrIdentifierError
             || x instanceof ExpectedNumericLiteralError
