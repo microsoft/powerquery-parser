@@ -125,8 +125,8 @@ function expectLexSuccess(document: string, lineTerminator: string): Lexer.Lexer
     const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLines = Lexer.maybeErrorLines(state);
-        if (maybeErrorLines === undefined) {
-            throw new Error(`AssertFailed: maybeErrorLine === undefined`);
+        if (!(maybeErrorLines !== undefined)) {
+            throw new Error(`AssertFailed: maybeErrorLines !== undefined`);
         }
         const errorLines = maybeErrorLines;
 
@@ -140,8 +140,8 @@ function expectLexSuccess(document: string, lineTerminator: string): Lexer.Lexer
 function expectLexerSnapshot(document: string, lineTerminator: string): LexerSnapshot {
     const state = expectLexSuccess(document, lineTerminator);
     const snapshotResult = LexerSnapshot.tryFrom(state);
-    if (snapshotResult.kind === ResultKind.Err) {
-        throw new Error("AssertFailed: snapshotResult.kind !== ResultKind.Err");
+    if (!(snapshotResult.kind === ResultKind.Ok)) {
+        throw new Error("AssertFailed: snapshotResult.kind === ResultKind.Ok");
     }
     const snapshot = snapshotResult.value;
 

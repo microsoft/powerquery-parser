@@ -7,10 +7,10 @@ function expectStateInnerError(document: string, lineTerminator: string): LexerE
     const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
 
     const maybeErrorLines = Lexer.maybeErrorLines(state);
-    if (maybeErrorLines === undefined) {
+    if (!(maybeErrorLines !== undefined)) {
         throw new Error(`AssertFailed: Lexer.maybeFirstErrorLine(state) !== undefined: ${JSON.stringify(state)}`);
     }
-    else if (maybeErrorLines.length !== 1) {
+    else if (!(maybeErrorLines.length === 1)) {
         throw new Error(`AssertFailed: maybeErrorLines.length === 1: ${JSON.stringify(state)}`);
     }
     else {
@@ -22,7 +22,7 @@ function expectSnapshotInnerError(document: string, lineTerminator: string): Lex
     const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
     const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
 
-    if (snapshotResult.kind !== ResultKind.Err) {
+    if (!(snapshotResult.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
     }
     else {
