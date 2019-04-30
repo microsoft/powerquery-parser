@@ -1,51 +1,59 @@
-// import { expect } from "chai";
-// import "mocha";
-// import { ResultKind } from "../../common";
-// import { lexAndParse } from "../../jobs";
-// import { ParserError } from "../../parser";
+import { expect } from "chai";
+import "mocha";
+import { ResultKind } from "../../common";
+import { lexAndParse } from "../../jobs";
+import { ParserError } from "../../parser";
 
-// function expectParserInnerError(document: string): ParserError.TInnerParserError {
-//     const parseResult = lexAndParse(document);
+const LINE_TERMINATOR: string = "\n";
 
-//     if (parseResult.kind !== ResultKind.Err) {
-//         throw new Error(`parseResult.kind !== ResultKind.Err: ${JSON.stringify(parseResult)}`);
-//     }
-//     else if (!(parseResult.error instanceof ParserError.ParserError)) {
-//         throw new Error(`!(parseResult.error instanceof ParserError): ${parseResult.error.message}`);
-//     }
-//     else {
-//         return parseResult.error.innerError;
-//     }
-// }
+function expectParserInnerError(document: string, lineTerminator: string): ParserError.TInnerParserError {
+    const parseResult = lexAndParse(document, lineTerminator);
 
-// describe("Parser.Error", () => {
-//     it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
-//         const innerError = expectParserInnerError("(optional x, y) => x");
-//         expect(innerError instanceof ParserError.RequiredParameterAfterOptionalParameterError).to.equal(true, innerError.message);
-//     });
+    if (!(parseResult.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: parseResult.kind === ResultKind.Err ${JSON.stringify(parseResult)}`);
+    }
+    else if (!(parseResult.error instanceof ParserError.ParserError)) {
+        throw new Error(`AssertFailed: parseResult.error instanceof ParserError: ${parseResult.error.message}`);
+    }
+    else {
+        return parseResult.error.innerError;
+    }
+}
 
-//     it("UnterminatedBracketError: [", () => {
-//         const innerError = expectParserInnerError("[");
-//         expect(innerError instanceof ParserError.UnterminatedBracketError).to.equal(true, innerError.message);
-//     });
+describe("Parser.Error", () => {
+    it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
+        const text = "(optional x, y) => x";
+        const innerError = expectParserInnerError(text, LINE_TERMINATOR);
+        expect(innerError instanceof ParserError.RequiredParameterAfterOptionalParameterError).to.equal(true, innerError.message);
+    });
 
-//     it("UnterminatedParenthesesError: (", () => {
-//         const innerError = expectParserInnerError("(");
-//         expect(innerError instanceof ParserError.UnterminatedParenthesesError).to.equal(true, innerError.message);
-//     });
+    it("UnterminatedBracketError: [", () => {
+        const text = "[";
+        const innerError = expectParserInnerError(text, LINE_TERMINATOR);
+        expect(innerError instanceof ParserError.UnterminatedBracketError).to.equal(true, innerError.message);
+    });
 
-//     it("UnusedTokensRemainError: 1 1", () => {
-//         const innerError = expectParserInnerError("1 1");
-//         expect(innerError instanceof ParserError.UnusedTokensRemainError).to.equal(true, innerError.message);
-//     });
+    it("UnterminatedParenthesesError: (", () => {
+        const text = "(";
+        const innerError = expectParserInnerError(text, LINE_TERMINATOR);
+        expect(innerError instanceof ParserError.UnterminatedParenthesesError).to.equal(true, innerError.message);
+    });
 
-//     it("LetExpression requires at least one parameter: let in 1", () => {
-//         const innerError = expectParserInnerError("let in 1");
-//         expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
-//     });
+    it("UnusedTokensRemainError: 1 1", () => {
+        const text = "1 1";
+        const innerError = expectParserInnerError(text, LINE_TERMINATOR);
+        expect(innerError instanceof ParserError.UnusedTokensRemainError).to.equal(true, innerError.message);
+    });
 
-//     it("ListType requires at least one parameter: type list {}", () => {
-//         const innerError = expectParserInnerError("let in 1");
-//         expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
-//     });
-// });
+    it("LetExpression requires at least one parameter: let in 1", () => {
+        const text = "let in 1";
+        const innerError = expectParserInnerError(text, LINE_TERMINATOR);
+        expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
+    });
+
+    it("ListType requires at least one parameter: type list {}", () => {
+        const text = "let in 1";
+        const innerError = expectParserInnerError(text, LINE_TERMINATOR);
+        expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
+    });
+});
