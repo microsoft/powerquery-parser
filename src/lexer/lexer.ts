@@ -6,7 +6,7 @@ import { Keyword } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
 // the lexer
-//  * is mostly functional based, with a few throws to propagate errors
+//  * takes a mostly functional approach, plus a few throws to propagate errors
 //  * splits up text by line terminator, allowing line-by-line lexing
 
 // call Lexer.from to instantiate a state instance
@@ -36,10 +36,11 @@ export namespace Lexer {
         Untouched = "Untouched",
     }
 
-    // tokenizing a TLexerLine is done in one of the following contexts,
-    // which is really either:
+    // there are two contexts for line tokenization:
     //  * tokenize the entire line as usual
     //  * the line is a contiuation of a multiline token, eg. `"foo \n bar"`
+    //
+    // comment, quoted identifier, and string are all multiline contexts
     export const enum LexerLineMode {
         Comment = "Comment",
         Default = "Default",
@@ -59,6 +60,7 @@ export namespace Lexer {
         readonly tokens: ReadonlyArray<LineToken>,
     }
 
+    // an extension to the string type, allows column numbering by using graphemes
     export interface LexerLineString {
         readonly text: string,
         readonly graphemes: ReadonlyArray<string>,
@@ -66,24 +68,24 @@ export namespace Lexer {
         readonly graphemeIndex2TextIndex: { [graphemeIndex: number]: number; }
     }
 
+    // an error was thrown immediately, nothing was tokenized
     export interface ErrorLine extends ILexerLine {
         readonly kind: LexerLineKind.Error,
         readonly error: LexerError.TLexerError,
     }
 
-    // the last read attempt succeeded without encountering an error.
-    // possible that only whitespace was consumed.
+    // the entire line was tokenized without issue
     export interface TouchedLine extends ILexerLine {
         readonly kind: LexerLineKind.Touched,
     }
 
-    // the last read attempt read at least one token or comment before encountering an error
+    // some tokens were read, but before eof was reached an error was thrown
     export interface TouchedWithErrorLine extends ILexerLine {
         readonly kind: LexerLineKind.TouchedWithError,
         readonly error: LexerError.TLexerError,
     }
 
-    // a call to appendtToDocument clears existing state marking it ready to be lexed
+    // an line that has yet to be lexed
     export interface UntouchedLine extends ILexerLine {
         readonly kind: LexerLineKind.Untouched,
     }
@@ -91,31 +93,6 @@ export namespace Lexer {
     export interface LexerLinePosition {
         readonly textIndex: number,
         readonly columnNumber: number,
-    }
-
-
-    export function lexerLineStringFrom(text: string): LexerLineString {
-        const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(text);
-        const numGraphemes = graphemes.length;
-        const textIndex2GraphemeIndex: { [textIndex: number]: number; } = {};
-        const graphemeIndex2TextIndex: { [graphemeIndex: number]: number; } = {};
-
-        let summedCodeUnits = 0;
-        for (let index = 0; index < numGraphemes; index++) {
-            graphemeIndex2TextIndex[index] = summedCodeUnits;
-            textIndex2GraphemeIndex[summedCodeUnits] = index;
-            summedCodeUnits += graphemes[index].length;
-        }
-
-        graphemeIndex2TextIndex[numGraphemes] = text.length;
-        textIndex2GraphemeIndex[text.length] = numGraphemes;
-
-        return {
-            text,
-            graphemes,
-            textIndex2GraphemeIndex,
-            graphemeIndex2TextIndex
-        }
     }
 
     export function from(text: string, lineTerminator: string): LexerState {
@@ -147,6 +124,7 @@ export namespace Lexer {
         return state;
     }
 
+    // deep state comparison
     export function equalStates(leftState: LexerState, rightState: LexerState): boolean {
         return (
             equalLines(leftState.lines, rightState.lines)
@@ -154,6 +132,7 @@ export namespace Lexer {
         );
     }
 
+    // deep line comparison
     export function equalLines(leftLines: ReadonlyArray<TLexerLine>, rightLines: ReadonlyArray<TLexerLine>): boolean {
         if (leftLines.length !== rightLines.length) {
             return false;
@@ -188,6 +167,7 @@ export namespace Lexer {
         return true;
     }
 
+    // deep token comparison
     export function equalTokens(leftToken: LineToken, rightToken: LineToken): boolean {
         return (
             leftToken.kind === rightToken.kind
@@ -280,7 +260,31 @@ export namespace Lexer {
             : undefined;
     }
 
-    // takes the return from tokenizeX functions and updates the line's state
+    function lexerLineStringFrom(text: string): LexerLineString {
+        const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(text);
+        const numGraphemes = graphemes.length;
+        const textIndex2GraphemeIndex: { [textIndex: number]: number; } = {};
+        const graphemeIndex2TextIndex: { [graphemeIndex: number]: number; } = {};
+
+        let summedCodeUnits = 0;
+        for (let index = 0; index < numGraphemes; index++) {
+            graphemeIndex2TextIndex[index] = summedCodeUnits;
+            textIndex2GraphemeIndex[summedCodeUnits] = index;
+            summedCodeUnits += graphemes[index].length;
+        }
+
+        graphemeIndex2TextIndex[numGraphemes] = text.length;
+        textIndex2GraphemeIndex[text.length] = numGraphemes;
+
+        return {
+            text,
+            graphemes,
+            textIndex2GraphemeIndex,
+            graphemeIndex2TextIndex
+        }
+    }
+
+    // takes the return from a tokenizeX function to updates the line's state
     function updateLineState(
         line: TLexerLine,
         tokenizePartialResult: PartialResult<TokenizeChanges, LexerError.TLexerError>,
