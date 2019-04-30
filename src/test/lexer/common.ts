@@ -14,14 +14,14 @@ export interface AbridgedSnapshot {
 export type AbridgedLineTokens = ReadonlyArray<[LineTokenKind, string]>;
 
 export function expectAbridgedSnapshotMatch(
-    document: string,
+    text: string,
     lineTerminator: string,
     expected: AbridgedSnapshot,
     wrapped: boolean,
 ): LexerSnapshot {
     if (wrapped) {
-        const newDocument = `wrapperOpen${lineTerminator}${document}${lineTerminator}wrapperClose`;
-        const newExpected: AbridgedSnapshot = {
+        const wrappedText = `wrapperOpen${lineTerminator}${text}${lineTerminator}wrapperClose`;
+        const wrappedExpected: AbridgedSnapshot = {
             tokens: [
                 [TokenKind.Identifier, "wrapperOpen"],
                 ...expected.tokens,
@@ -29,10 +29,10 @@ export function expectAbridgedSnapshotMatch(
             ],
             comments: expected.comments,
         };
-        expectAbridgedSnapshotMatch(newDocument, lineTerminator, newExpected, false);
+        expectAbridgedSnapshotMatch(wrappedText, lineTerminator, wrappedExpected, false);
     }
 
-    const snapshot = expectLexerSnapshot(document, lineTerminator);
+    const snapshot = expectLexerSnapshot(text, lineTerminator);
     const expectedTokens = expected.tokens;
     const expectedComments = expected.comments;
     const actualTokens = snapshot.tokens.map(token => [token.kind, token.data]);
@@ -54,22 +54,22 @@ export function expectAbridgedSnapshotMatch(
 }
 
 export function expectLineTokenMatch(
-    document: string,
+    text: string,
     lineTerminator: string,
     expected: AbridgedLineTokens,
     wrapped: boolean,
 ): Lexer.LexerState {
     if (wrapped) {
-        const newDocument = `wrapperOpen${lineTerminator}${document}${lineTerminator}wrapperClose`;
-        const newExpected: AbridgedLineTokens = [
+        const wrappedText = `wrapperOpen${lineTerminator}${text}${lineTerminator}wrapperClose`;
+        const wrappedExpected: AbridgedLineTokens = [
             [LineTokenKind.Identifier, "wrapperOpen"],
             ...expected,
             [LineTokenKind.Identifier, "wrapperClose"],
         ];
-        expectLineTokenMatch(newDocument, lineTerminator, newExpected, false);
+        expectLineTokenMatch(wrappedText, lineTerminator, wrappedExpected, false);
     }
 
-    const state = expectLexSuccess(document, lineTerminator);
+    const state = expectLexSuccess(text, lineTerminator);
 
     const tmp: [LineTokenKind, string][] = [];
     for (let line of state.lines) {
@@ -88,13 +88,13 @@ export function expectLineTokenMatch(
 }
 
 export function expectSnapshotAbridgedTokens(
-    document: string,
+    text: string,
     lineTerminator: string,
     expected: AbridgedTokens,
     wrapped: boolean,
 ): LexerSnapshot {
     return expectAbridgedSnapshotMatch(
-        document,
+        text,
         lineTerminator,
         {
             tokens: expected,
@@ -105,13 +105,13 @@ export function expectSnapshotAbridgedTokens(
 }
 
 export function expectSnapshotAbridgedComments(
-    document: string,
+    text: string,
     lineTerminator: string,
     expected: AbridgedComments,
     wrapped: boolean,
 ): LexerSnapshot {
     return expectAbridgedSnapshotMatch(
-        document,
+        text,
         lineTerminator,
         {
             tokens: [],
@@ -121,8 +121,8 @@ export function expectSnapshotAbridgedComments(
     );
 }
 
-function expectLexSuccess(document: string, lineTerminator: string): Lexer.LexerState {
-    const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
+function expectLexSuccess(text: string, lineTerminator: string): Lexer.LexerState {
+    const state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLines = Lexer.maybeErrorLines(state);
         if (!(maybeErrorLines !== undefined)) {
@@ -137,8 +137,8 @@ function expectLexSuccess(document: string, lineTerminator: string): Lexer.Lexer
     return state;
 }
 
-function expectLexerSnapshot(document: string, lineTerminator: string): LexerSnapshot {
-    const state = expectLexSuccess(document, lineTerminator);
+function expectLexerSnapshot(text: string, lineTerminator: string): LexerSnapshot {
+    const state = expectLexSuccess(text, lineTerminator);
     const snapshotResult = LexerSnapshot.tryFrom(state);
     if (!(snapshotResult.kind === ResultKind.Ok)) {
         throw new Error("AssertFailed: snapshotResult.kind === ResultKind.Ok");

@@ -6,8 +6,8 @@ import { ParserError } from "../../parser";
 
 const LINE_TERMINATOR: string = "\n";
 
-function expectParserInnerError(document: string, lineTerminator: string): ParserError.TInnerParserError {
-    const parseResult = lexAndParse(document, lineTerminator);
+function expectParserInnerError(text: string, lineTerminator: string): ParserError.TInnerParserError {
+    const parseResult = lexAndParse(text, lineTerminator);
 
     if (!(parseResult.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: parseResult.kind === ResultKind.Err ${JSON.stringify(parseResult)}`);

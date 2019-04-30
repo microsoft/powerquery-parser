@@ -5,18 +5,18 @@ import { expectSnapshotAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
     it(`HexLiteral`, () => {
-        const document = `
+        const text = `
 0x1
 0X1`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.HexLiteral, `0x1`],
             [TokenKind.HexLiteral, `0X1`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`keywords`, () => {
-        const document = `
+        const text = `
 and
 as
 each
@@ -82,17 +82,17 @@ type
             [TokenKind.KeywordHashTime, `#time`],
         ];
         expect(expected.length).to.equal(Keywords.length);
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`NullLiteral`, () => {
-        const document = `null`;
+        const text = `null`;
         const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.NullLiteral, `null`]];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`NumericLiteral`, () => {
-        const document = `
+        const text = `
 1
 1e1
 1e-1
@@ -119,12 +119,12 @@ type
             [TokenKind.NumericLiteral, `0.1e-1`],
             [TokenKind.NumericLiteral, `0.1e+1`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     // TODO: look into adding `..`
     it(`operator-or-punctuator`, () => {
-        const document = `
+        const text = `
 ,
 ;
 =
@@ -173,11 +173,11 @@ type
             [TokenKind.FatArrow, `=>`],
             [TokenKind.Ellipsis, `...`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`StringLiteral`, () => {
-        const document = `
+        const text = `
 ""
 """"
 `;
@@ -185,74 +185,74 @@ type
             [TokenKind.StringLiteral, `""`],
             [TokenKind.StringLiteral, `""""`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 });
 
 describe(`Lexer.Simple.Whitespace`, () => {
     it(`spaces`, () => {
-        const document = ` a b `;
+        const text = ` a b `;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
             [TokenKind.Identifier, `b`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`tabs`, () => {
-        const document = `\ta\tb\t`;
+        const text = `\ta\tb\t`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
             [TokenKind.Identifier, `b`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`trailing \\n`, () => {
-        const document = `a\n`;
+        const text = `a\n`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`trailing \\r\\n`, () => {
-        const document = `a\r\n`;
+        const text = `a\r\n`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectSnapshotAbridgedTokens(document, "\r\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\r\n", expected, true);
     });
 
     it(`trailing space`, () => {
-        const document = `a `;
+        const text = `a `;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`leading \\n`, () => {
-        const document = `\na`;
+        const text = `\na`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`leading \\r\\n`, () => {
-        const document = `\r\na`;
+        const text = `\r\na`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectSnapshotAbridgedTokens(document, "\r\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\r\n", expected, true);
     });
 
     it(`leading space`, () => {
-        const document = ` a`;
+        const text = ` a`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectSnapshotAbridgedTokens(document, "\n", expected, true);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 });

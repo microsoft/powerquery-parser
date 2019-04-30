@@ -8,8 +8,8 @@ interface StateErrorLinesPair {
     readonly errorLines: Lexer.TErrorLines,
 }
 
-function expectStateErrorLines(document: string, lineTerminator: string, numErrorLines: number): StateErrorLinesPair {
-    const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
+function expectStateErrorLines(text: string, lineTerminator: string, numErrorLines: number): StateErrorLinesPair {
+    const state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
 
     const maybeErrorLines = Lexer.maybeErrorLines(state);
     if (!(maybeErrorLines !== undefined)) {
@@ -33,8 +33,8 @@ function expectStateErrorLines(document: string, lineTerminator: string, numErro
     }
 }
 
-function expectSnapshotInnerError(document: string, lineTerminator: string): LexerError.TInnerLexerError {
-    const state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
+function expectSnapshotInnerError(text: string, lineTerminator: string): LexerError.TInnerLexerError {
+    const state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
     const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
 
     if (!(snapshotResult.kind === ResultKind.Err)) {

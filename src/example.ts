@@ -2,12 +2,12 @@ import { ResultKind, Option, Result } from "./common";
 import { lexAndParse } from "./jobs";
 import { Lexer, LexerSnapshot, LexerError } from "./lexer";
 
-parseDocument(`if true then 1 else 2`);
+parseText(`if true then 1 else 2`);
 
 // @ts-ignore
-function parseDocument(document: string, lineTerminator = "\n"): Lexer.LexerState {
-    console.log(JSON.stringify(lexAndParse(document, lineTerminator), null, 4));
-    const parseResult = lexAndParse(document, lineTerminator);
+function parseText(text: string, lineTerminator = "\n"): Lexer.LexerState {
+    console.log(JSON.stringify(lexAndParse(text, lineTerminator), null, 4));
+    const parseResult = lexAndParse(text, lineTerminator);
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, null, 4));
     }
@@ -18,12 +18,12 @@ function parseDocument(document: string, lineTerminator = "\n"): Lexer.LexerStat
 }
 
 // @ts-ignore
-function lexDocument(document: string, lineTerminator = "\n") {
+function lexText(text: string, lineTerminator = "\n") {
     // state isn't const as calling Lexer functions return a new state object.
 
     // the returned state will be in an error state if `text` can't be lex'd.
     // use Lexer.isErrorState to validate if needed
-    let state: Lexer.LexerState = Lexer.fromSplit(document, lineTerminator);
+    let state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
 
     const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
     if (maybeErrorLines) {
