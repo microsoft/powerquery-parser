@@ -275,30 +275,6 @@ export namespace Lexer {
         )
     }
 
-    interface TokenizeChanges {
-        readonly tokens: ReadonlyArray<LineToken>,
-        readonly lineModeEnd: LineMode,
-    }
-
-    interface LineModeAlteringRead {
-        readonly token: LineToken,
-        readonly lineMode: LineMode,
-    }
-
-    function lineFromText(text: string, lineModeStart: LineMode): UntouchedLine {
-        return lineFromLineString(lineStringFrom(text), lineModeStart);
-    }
-
-    function lineFromLineString(lineString: LineString, lineModeStart: LineMode): UntouchedLine {
-        return {
-            kind: LineKind.Untouched,
-            lineString,
-            lineModeStart,
-            lineModeEnd: LineMode.Default,
-            tokens: [],
-        };
-    }
-
     export function isErrorState(state: State): boolean {
         const linesWithErrors: ReadonlyArray<ErrorLine | TouchedWithErrorLine> = state.lines.filter(isErrorLine);
         return linesWithErrors.length !== 0;
@@ -336,6 +312,30 @@ export namespace Lexer {
         return errorsExist
             ? errorLines
             : undefined;
+    }
+
+    interface TokenizeChanges {
+        readonly tokens: ReadonlyArray<LineToken>,
+        readonly lineModeEnd: LineMode,
+    }
+
+    interface LineModeAlteringRead {
+        readonly token: LineToken,
+        readonly lineMode: LineMode,
+    }
+
+    function lineFromText(text: string, lineModeStart: LineMode): UntouchedLine {
+        return lineFromLineString(lineStringFrom(text), lineModeStart);
+    }
+
+    function lineFromLineString(lineString: LineString, lineModeStart: LineMode): UntouchedLine {
+        return {
+            kind: LineKind.Untouched,
+            lineString,
+            lineModeStart,
+            lineModeEnd: LineMode.Default,
+            tokens: [],
+        };
     }
 
     function lineStringFrom(text: string): LineString {
