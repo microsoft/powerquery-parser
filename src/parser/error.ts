@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { CommonError } from "../common";
 import { Option } from "../common/option";
 import { TokenKind, Token } from "../lexer/token";

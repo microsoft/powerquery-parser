@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 export const enum Keyword {
     And = "and",
     As = "as",

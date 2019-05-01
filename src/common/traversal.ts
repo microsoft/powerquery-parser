@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Ast } from "../parser";
 import { isNever } from "./assert";
 import { CommonError } from "./error";

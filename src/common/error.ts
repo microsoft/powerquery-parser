@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Localization } from "../localization/error";
 import { Option } from "./option";
 

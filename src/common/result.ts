@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 export type Result<T, E> = (
     | Ok<T>
     | Err<E>

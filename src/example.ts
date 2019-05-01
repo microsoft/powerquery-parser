@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { ResultKind, Option, Result } from "./common";
 import { lexAndParse } from "./jobs";
 import { Lexer, LexerSnapshot, LexerError } from "./lexer";
@@ -64,3 +66,5 @@ function lexText(text: string, lineTerminator = "\n") {
         console.log(`numComments: ${snapshot.comments}`);
     }
 }
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.

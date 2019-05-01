@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import GraphemeSplitter = require('grapheme-splitter')
 import { Option } from './option';
 import { Pattern } from './patterns';
