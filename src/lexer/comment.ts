@@ -1,3 +1,5 @@
+import { StringHelpers } from "../common";
+
 export type TComment = (
     | LineComment
     | MultilineComment
@@ -10,16 +12,14 @@ export const enum CommentKind {
 
 export interface IComment {
     readonly kind: CommentKind,
-    readonly literal: string,
+    readonly data: string,
     readonly containsNewline: boolean,
-    readonly phantomTokenIndex: number,
-    readonly documentStartIndex: number,
-    readonly documentEndIndex: number,
+    readonly positionStart: StringHelpers.GraphemePosition,
+    readonly positionEnd: StringHelpers.GraphemePosition,
 }
 
 export interface LineComment extends IComment {
     readonly kind: CommentKind.Line,
-    readonly containsNewline: true,
 }
 
 export interface MultilineComment extends IComment {

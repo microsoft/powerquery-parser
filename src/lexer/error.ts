@@ -1,5 +1,6 @@
 import { CommonError, StringHelpers } from "../common";
 import { Localization } from "../localization/error";
+import { Lexer } from "./lexer";
 
 export namespace LexerError {
 
@@ -11,12 +12,14 @@ export namespace LexerError {
     export type TInnerLexerError = (
         | BadStateError
         | EndOfStreamError
+        | ErrorLineError
         | ExpectedHexLiteralError
         | ExpectedKeywordOrIdentifierError
         | ExpectedNumericLiteralError
         | UnexpectedEofError
         | UnexpectedReadError
         | UnterminatedMultilineCommentError
+        | UnterminatedQuotedIdentierError
         | UnterminatedStringError
     )
 
@@ -33,6 +36,14 @@ export namespace LexerError {
             readonly innerError: TLexerError,
         ) {
             super(Localization.Error.lexerBadState());
+        }
+    }
+
+    export class ErrorLineError extends Error {
+        constructor(
+            readonly errors: Lexer.TErrorLines,
+        ) {
+            super(Localization.Error.lexerLineError(errors));
         }
     }
 
@@ -86,7 +97,15 @@ export namespace LexerError {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
         ) {
-            super(Localization.Error.lexerUnterminatedString(graphemePosition));
+            super(Localization.Error.lexerUnterminatedMultilineComment(graphemePosition));
+        }
+    }
+
+    export class UnterminatedQuotedIdentierError extends Error {
+        constructor(
+            readonly graphemePosition: StringHelpers.GraphemePosition,
+        ) {
+            super(Localization.Error.lexerUnterminatedQuotedIdentifier(graphemePosition));
         }
     }
 
@@ -109,12 +128,14 @@ export namespace LexerError {
         return (
             x instanceof BadStateError
             || x instanceof EndOfStreamError
+            || x instanceof ErrorLineError
             || x instanceof ExpectedHexLiteralError
             || x instanceof ExpectedKeywordOrIdentifierError
             || x instanceof ExpectedNumericLiteralError
             || x instanceof UnexpectedEofError
             || x instanceof UnexpectedReadError
             || x instanceof UnterminatedMultilineCommentError
+            || x instanceof UnterminatedQuotedIdentierError
             || x instanceof UnterminatedStringError
         );
     }

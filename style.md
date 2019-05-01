@@ -5,6 +5,7 @@
 * Always format use Visual Studio Code's default formatter.
 * Line limit should be less than 120, except in the case of generics.
   * prefer descriptive names for generics, which tends to make things verbose.
+* "abstract" interfaces should start with an "I" prefix.
 
 ## Exports
 
