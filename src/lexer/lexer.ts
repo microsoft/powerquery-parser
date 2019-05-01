@@ -174,19 +174,13 @@ export namespace Lexer {
         newLine = tokenize(newLine, numLines);
 
         let newLines: ReadonlyArray<TLine>;
-        if (originalLine.lineModeEnd !== newLine.lineModeEnd) {
+        if (originalLine.lineModeEnd !== newLine.lineModeEnd && lineNumber !== numLines) {
             const changedLines: TLine[] = [newLine];
             let offsetLineNumber = lineNumber + 1;
+            let previousOffsetLine: TLine = newLine;
+            let currentOffsetLine: Option<TLine> = lines[offsetLineNumber];
 
-            while (true) {
-                const previousOffsetLine: TLine = lines[offsetLineNumber - 1];
-                const currentOffsetLine: Option<TLine> = lines[offsetLineNumber];
-
-                // no more lines exist
-                if (currentOffsetLine === undefined) {
-                    break;
-                }
-
+            while (currentOffsetLine !== undefined) {
                 let newOffsetLine: TLine = lineFrom(currentOffsetLine.lineString.text, previousOffsetLine.lineModeEnd);
                 newOffsetLine = tokenize(newOffsetLine, offsetLineNumber);
 
@@ -196,6 +190,8 @@ export namespace Lexer {
                 }
 
                 offsetLineNumber += 1;
+                previousOffsetLine = newOffsetLine;
+                currentOffsetLine = lines[offsetLineNumber];
             }
 
             newLines = [
