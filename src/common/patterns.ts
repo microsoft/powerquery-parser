@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 export namespace Pattern {
 
     export const RegExpIdentifier = RegExp(

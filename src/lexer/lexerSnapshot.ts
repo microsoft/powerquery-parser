@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { CommonError, Option, Result, ResultKind, StringHelpers } from "../common";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import { LexerError } from "./error";

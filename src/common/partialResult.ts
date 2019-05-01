@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 // similar to Result, except there's a third in-between state
 // representing when a job was partially completed before an error occured
 export type PartialResult<T, E> = (

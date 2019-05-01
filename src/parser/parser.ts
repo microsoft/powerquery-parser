@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { CommonError, StringHelpers } from "../common";
 import { isNever } from "../common/assert";
 import { Option } from "../common/option";

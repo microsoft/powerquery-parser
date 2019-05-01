@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { StringHelpers } from "../common";
 
 export type TComment = (

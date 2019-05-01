@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { CommonError, StringHelpers } from "../common";
 import { Localization } from "../localization/error";
 import { Lexer } from "./lexer";
