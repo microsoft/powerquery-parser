@@ -6,6 +6,9 @@
 trigger:
 - master
 
+pr:
+- master
+
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -18,11 +21,25 @@ steps:
 - script: |
     npm install
     npm run-script build-all
-    npm test
   displayName: 'npm install and build'
+
+- script: npm test
+  displayName: 'run tests'
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
     testRunner: JUnit
     testResultsFiles: '**/test-results.xml'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
+    ArtifactName: lib
+  displayName: 'publish lib'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/bundle'
+    ArtifactName: bundle
+  displayName: 'publish webpack bundles'
