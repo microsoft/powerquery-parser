@@ -12,7 +12,7 @@
     "@types/mocha": "^5.2.5",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
-    "mocha-multi-reporters": "^1.1.7",
+    "mocha-junit-reporter": "^1.22.0",
     "ts-loader": "^5.3.3",
     "ts-node": "^7.0.1",
     "typescript": "^3.3.3",
@@ -38,7 +38,7 @@
     "build-webpack": "npm run-script build-webpack-prod & npm run-script build-webpack-dev",
     "build-webpack-prod": "webpack --config webpack/prod.config.js",
     "build-webpack-dev": "webpack --config webpack/dev.config.js",
-    "test": "mocha --reporter mocha-multi-reporters -r ts-node/register src/test/**/*.ts"
+    "test": "mocha --reporter mocha-junit-reporter -r ts-node/register src/test/**/*.ts"
   },
   "repository": {
     "type": "git",
