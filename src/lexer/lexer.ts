@@ -220,11 +220,12 @@ export namespace Lexer {
     export function equalStates(leftState: State, rightState: State): boolean {
         return (
             equalLines(leftState.lines, rightState.lines)
-            || (leftState.lineTerminator === rightState.lineTerminator)
+            && (leftState.lineTerminator === rightState.lineTerminator)
         );
     }
 
     // deep line comparison
+    // checks partial equality as it does not do lineString comparison
     export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: ReadonlyArray<TLine>): boolean {
         if (leftLines.length !== rightLines.length) {
             return false;
@@ -238,13 +239,13 @@ export namespace Lexer {
             const rightTokens = right.tokens;
 
             const isNotEqualQuickCheck = (
-                left.kind === right.kind
-                || left.lineModeStart === right.lineModeStart
-                || left.lineModeEnd === right.lineModeEnd
-                || leftTokens.length === rightTokens.length
-                || left.lineString.text === right.lineString.text
+                left.kind !== right.kind
+                || left.lineModeStart !== right.lineModeStart
+                || left.lineModeEnd !== right.lineModeEnd
+                || leftTokens.length !== rightTokens.length
             );
-            if (!isNotEqualQuickCheck) {
+
+            if (isNotEqualQuickCheck) {
                 return false;
             }
 

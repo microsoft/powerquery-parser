@@ -83,24 +83,34 @@ describe("Incremental updates", () => {
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 
-    // TODO: tokenizer needs to support multiline strings
-    xit("Reparse with unterminated string", () => {
+    it("Reparse with unterminated string", () => {
+        const lineNumber = 4;
         const document = new MockDocument(OriginalQuery);
-        const modified = document.lines[4].replace(`"text",`, `"text`);
-        const count = document.applyChangeAndTokenize(modified, 4);
-        expect(count).equals(document.lines.length - 4, "remaining lines should have been tokenized");
+        const modified = document.lines[lineNumber].replace(`"text",`, `"text`);
+        const count = document.applyChangeAndTokenize(modified, lineNumber);
+        expect(count).equals(document.lines.length - lineNumber, "remaining lines should have been tokenized");
 
-        // TODO: check that tokens were all changed to string
+        for (let i = lineNumber + 1; i < document.lineTokens.length; i++) {
+            const lineTokens = document.lineTokens[i];
+            lineTokens.forEach(token => {
+                expect(token.scopes).equals("StringContent", "expecting remaining tokens to be strings");
+            });
+        }
     });
 
-    // TODO: tokenizer needs to support multiline comments
-    xit("Reparse with unterminated block comment", () => {
+    it("Reparse with unterminated block comment", () => {
+        const lineNumber = 3;
         const document = new MockDocument(OriginalQuery);
-        const modified = document.lines[3].replace(`rce),`, `rce), /* my open comment`);
-        const count = document.applyChangeAndTokenize(modified, 3);
-        expect(count).equals(document.lines.length - 3, "remaining lines should have been tokenized");
+        const modified = document.lines[lineNumber].replace(`rce),`, `rce), /* my open comment`);
+        const count = document.applyChangeAndTokenize(modified, lineNumber);
+        expect(count).equals(document.lines.length - lineNumber, "remaining lines should have been tokenized");
 
-        // TODO: check that tokens were all changed to comment
+        for (let i = lineNumber + 1; i < document.lineTokens.length; i++) {
+            const lineTokens = document.lineTokens[i];
+            lineTokens.forEach(token => {
+                expect(token.scopes).equals("MultilineCommentContent", "expecting remaining tokens to be comments");
+            });
+        }
     });
 
     // TODO: add tests that insert newlines into the original query
