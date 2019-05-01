@@ -1,12 +1,13 @@
-import { isNever, ResultKind } from "./common";
+import { ResultKind, Option, Result } from "./common";
 import { lexAndParse } from "./jobs";
-import { Lexer } from "./lexer";
+import { Lexer, LexerSnapshot, LexerError } from "./lexer";
 
-parseDocument("if true then x else y");
+parseText(`if true then 1 else 2`);
 
 // @ts-ignore
-function parseDocument(document: string) {
-    const parseResult = lexAndParse(document);
+function parseText(text: string, lineTerminator = "\n"): Lexer.State {
+    console.log(JSON.stringify(lexAndParse(text, lineTerminator), null, 4));
+    const parseResult = lexAndParse(text, lineTerminator);
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, null, 4));
     }
@@ -17,84 +18,49 @@ function parseDocument(document: string) {
 }
 
 // @ts-ignore
-function lexDocument(document: string) {
+function lexText(text: string, lineTerminator = "\n") {
     // state isn't const as calling Lexer functions return a new state object.
-    let state: Lexer.TLexer = Lexer.from(document);
-    state = Lexer.remaining(state);
 
-    switch (state.kind) {
-        // nothing was read and an error was encountered, such as an unterminated string.
-        case Lexer.LexerKind.Error:
-            // handle the error, find it on state.error.
-            break;
+    // the returned state will be in an error state if `text` can't be lex'd.
+    // use Lexer.isErrorState to validate if needed
+    let state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
 
-        // reached EOF without any errors.
-        // it's possible that no tokens or comments were read,
-        // eg. only whitespace being consumed.
-        case Lexer.LexerKind.Touched:
-            // state.tokens and state.comments hold all tokens and comments ever read,
-            // where state.lastRead holds what was read in the last call.
-            break;
+    const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
+    if (maybeErrorLines) {
+        // handle the error(s).
+        //
+        // note: these are errors isolated to indiviudal lines,
+        //       meaning multiline errors such as an unterminated string are not
+        //       considered an error at this stage.
+        const errorLines: Lexer.TErrorLines = maybeErrorLines;
 
-        // some tokens or comments were read,
-        // but then an error was encountered such as an unterminated string.
-        case Lexer.LexerKind.TouchedWithError:
-            // state.tokens and state.comments hold all tokens and comments ever read,
-            // where state.lastRead holds what was read in the last call.
-            break;
-
-        default:
-            throw isNever(state);
-    }
-}
-
-// @ts-ignore
-function iterativeLexDocument(document: string, chunkSeperator: string) {
-    // for brevity's sake I'll be asserting:
-    //  * document.split(chunkSeperator).length > 1
-    //  * the first chunk from the split won't result in a lexer error
-
-    const documentChunks = document.split(chunkSeperator);
-    if (documentChunks.length === 1) {
-        throw new Error(`AssertFailed: document.split(chunkSeperator).length > 1`)
-    }
-
-    // state isn't const as calling Lexer functions return a new state object.
-    let state: Lexer.TLexer = Lexer.from(documentChunks[0]);
-    state = Lexer.remaining(state);
-
-    if (Lexer.hasError(state)) {
-        throw new Error(`AssertFailed: the first chunk from the split won't result in a lexer error`);
-    }
-
-    for (let index = 1; index < documentChunks.length; index++) {
-        const chunk = documentChunks[index];
-        state = Lexer.appendToDocument(state, `${chunkSeperator} ${chunk}`);
-        state = Lexer.remaining(state);
-
-        switch (state.kind) {
-            // nothing was read and an error was encountered, such as an unterminated string.
-            case Lexer.LexerKind.Error:
-                // handle the error, find it on state.error.
-                break;
-
-            // reached EOF without any errors.
-            // it's possible that no tokens or comments were read,
-            // eg. only whitespace being consumed.
-            case Lexer.LexerKind.Touched:
-                // state.tokens and state.comments hold all tokens and comments ever read,
-                // where state.lastRead holds what was read in the last call.
-                break;
-
-            // some tokens or comments were read,
-            // but then an error was encountered such as an unterminated string.
-            case Lexer.LexerKind.TouchedWithError:
-                // state.tokens and state.comments hold all tokens and comments ever read,
-                // where state.lastRead holds what was read in the last call.
-                break;
-
-            default:
-                throw isNever(state);
+        for (let lineNumber of Object.keys(errorLines)) {
+            const errorLine = errorLines[Number.parseInt(lineNumber)];
+            console.log(errorLine);
         }
+    }
+
+    // let's add one extra line.
+    // note: adding new lines can introduce new errors,
+    //       meaning you might want to check for them using maybeErrorLines again
+    state = Lexer.appendLine(state, "// hello world");
+
+    // a snapshot should be created once no more text is to be added.
+    // a snapshot is an immutable copy which:
+    //      * combines multiline tokens together
+    //        (eg. StringLiteralStart + StringLiteralContent + StringLiteralEnd)
+    //      * checks for multiline errors
+    //        (eg. unterminated string error)
+    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+    if (snapshotResult.kind === ResultKind.Err) {
+        // a multiline error was found
+        const error: LexerError.LexerError = snapshotResult.error;
+        console.log(error.innerError.message);
+        console.log(JSON.stringify(error.innerError, null, 4));
+    }
+    else {
+        const snapshot: LexerSnapshot = snapshotResult.value;
+        console.log(`numTokens: ${snapshot.tokens}`);
+        console.log(`numComments: ${snapshot.comments}`);
     }
 }

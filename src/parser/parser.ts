@@ -1,15 +1,16 @@
-import { CommonError } from "../common";
+import { CommonError, StringHelpers } from "../common";
 import { isNever } from "../common/assert";
 import { Option } from "../common/option";
 import { Result, ResultKind } from "../common/result";
 import { Keyword } from "../lexer/keywords";
-import { LexerSnapshot, TokenPosition } from "../lexer/lexerSnapshot";
+import { LexerSnapshot } from "../lexer/lexerSnapshot";
 import { Token, TokenKind } from "../lexer/token";
 import { Ast } from "./ast";
 import { ParserError } from "./error";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 
 export class Parser {
+    private currentToken: Option<Token>;
     private currentTokenKind: Option<TokenKind>;
 
     private constructor(
@@ -18,7 +19,8 @@ export class Parser {
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
     ) {
         if (this.lexerSnapshot.tokens.length) {
-            this.currentTokenKind = this.lexerSnapshot.tokens[0].kind;
+            this.currentToken = this.lexerSnapshot.tokens[0];
+            this.currentTokenKind = this.currentToken.kind;
         }
     }
 
@@ -712,6 +714,7 @@ export class Parser {
             this.isOnIdentifierConstant(Ast.IdentifierConstant.Table)
             && (
                 this.isNextTokenKind(TokenKind.LeftBracket)
+                || this.isNextTokenKind(TokenKind.LeftParenthesis)
                 || this.isNextTokenKind(TokenKind.AtSign)
                 || this.isNextTokenKind(TokenKind.Identifier)
             )
@@ -1035,8 +1038,8 @@ export class Parser {
             const maybeOptionalConstant = this.maybeReadIdentifierConstantAsConstant(Ast.IdentifierConstant.Optional);
 
             if (reachedOptionalParameter && !maybeOptionalConstant) {
-                const currentTokenPosition = this.requireTokenPosition(this.tokenIndex);
-                throw new ParserError.RequiredParameterAfterOptionalParameterError(currentTokenPosition);
+                const token = this.expectTokenAt(this.tokenIndex);
+                throw new ParserError.RequiredParameterAfterOptionalParameterError(token);
             }
             else if (maybeOptionalConstant) {
                 reachedOptionalParameter = true;
@@ -1105,7 +1108,7 @@ export class Parser {
     }
 
     private readRecursivePrimaryExpression(head: Ast.TPrimaryExpression): Ast.RecursivePrimaryExpression {
-        const tokenRangeStart = head.tokenRange.tokenStartIndex;
+        const tokenRangeStart = head.tokenRange.startTokenIndex;
         this.startTokenRangeAt(Ast.NodeKind.RecursivePrimaryExpression, tokenRangeStart);
 
         const recursiveExpressions = [];
@@ -1205,9 +1208,9 @@ export class Parser {
 
             const lexerSnapshot = this.lexerSnapshot;
             const tokens = lexerSnapshot.tokens;
-            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].documentStartIndex;
-            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].documentEndIndex;
-            literal = lexerSnapshot.document.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].positionStart.textIndex;
+            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].positionEnd.textIndex;
+            literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
         }
 
         return {
@@ -1264,11 +1267,11 @@ export class Parser {
                     break;
 
                 default:
-                    const currentTokenPosition = this.requireTokenPosition(this.tokenIndex);
+                    const token = this.expectTokenAt(this.tokenIndex);
                     this.restore(state);
                     return {
                         kind: ResultKind.Err,
-                        error: new ParserError.InvalidPrimitiveTypeError(currentTokenData, currentTokenPosition),
+                        error: new ParserError.InvalidPrimitiveTypeError(token),
                     }
             }
         }
@@ -1353,7 +1356,8 @@ export class Parser {
             this.currentTokenKind = undefined;
         }
         else {
-            this.currentTokenKind = tokens[this.tokenIndex].kind;
+            this.currentToken = tokens[this.tokenIndex];
+            this.currentTokenKind = this.currentToken.kind;
         }
 
         return data;
@@ -1489,8 +1493,8 @@ export class Parser {
 
     private expectNoMoreTokens(): Option<ParserError.UnusedTokensRemainError> {
         if (this.tokenIndex !== this.lexerSnapshot.tokens.length) {
-            const currentTokenPosition = this.requireTokenPosition(this.tokenIndex);
-            return new ParserError.UnusedTokensRemainError(currentTokenPosition);
+            const token = this.expectTokenAt(this.tokenIndex);
+            return new ParserError.UnusedTokensRemainError(token);
         }
         else {
             return undefined;
@@ -1499,11 +1503,7 @@ export class Parser {
 
     private expectTokenKind(expectedTokenKind: TokenKind): Option<ParserError.ExpectedTokenKindError> {
         if (expectedTokenKind !== this.currentTokenKind) {
-            const maybeFoundTokenPosition = this.currentTokenPosition();
-            return new ParserError.ExpectedTokenKindError(
-                expectedTokenKind,
-                maybeFoundTokenPosition,
-            );
+            return new ParserError.ExpectedTokenKindError(expectedTokenKind, this.currentToken);
         }
         else {
             return undefined;
@@ -1519,11 +1519,7 @@ export class Parser {
         )
 
         if (isError) {
-            const maybeFoundTokenPosition = this.currentTokenPosition();
-            return new ParserError.ExpectedAnyTokenKindError(
-                expectedAnyTokenKind,
-                maybeFoundTokenPosition,
-            );
+            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, this.currentToken);
         }
         else {
             return undefined;
@@ -1767,8 +1763,8 @@ export class Parser {
     }
 
     private unterminatedParenthesesError(openTokenIndex: number): ParserError.UnterminatedParenthesesError {
-        const openTokenPosition = this.requireTokenPosition(openTokenIndex);
-        return new ParserError.UnterminatedParenthesesError(openTokenPosition);
+        const token = this.expectTokenAt(openTokenIndex);
+        return new ParserError.UnterminatedParenthesesError(token);
     }
 
     private disambiguateBracket(): BracketDisambiguation {
@@ -1810,24 +1806,25 @@ export class Parser {
     }
 
     private unterminatedBracketError(openTokenIndex: number): ParserError.UnterminatedBracketError {
-        const openTokenPosition = this.requireTokenPosition(openTokenIndex);
-        return new ParserError.UnterminatedBracketError(openTokenPosition);
+        const token = this.expectTokenAt(openTokenIndex);
+        return new ParserError.UnterminatedBracketError(token);
     }
 
     private startTokenRange(nodeKind: Ast.NodeKind) {
         return this.startTokenRangeAt(nodeKind, this.tokenIndex);
     }
 
-    private startTokenRangeAt(nodeKind: Ast.NodeKind, tokenStartIndex: number) {
-        if (tokenStartIndex >= this.lexerSnapshot.tokens.length) {
+    private startTokenRangeAt(nodeKind: Ast.NodeKind, tokenIndex: number) {
+        if (tokenIndex >= this.lexerSnapshot.tokens.length) {
             const topOfTokenRangeStack = this.tokenRangeStack[this.tokenRangeStack.length - 1].nodeKind;
             throw new ParserError.UnexpectedEndOfTokensError(topOfTokenRangeStack);
         }
 
+        const currentToken = this.lexerSnapshot.tokens[tokenIndex];
         this.tokenRangeStack.push({
             nodeKind,
-            tokenStartIndex,
-            documentStartIndex: this.lexerSnapshot.tokens[tokenStartIndex].documentStartIndex,
+            tokenIndexStart: tokenIndex,
+            positionStart: currentToken.positionStart,
         });
     }
 
@@ -1839,30 +1836,22 @@ export class Parser {
     }
 
     private popTokenRange(): TokenRange {
-        const lexerSnapshot = this.lexerSnapshot;
-        const element = this.tokenRangeStack.pop();
-        if (!element) {
+        const maybeElement: Option<TokenRangeStackElement> = this.tokenRangeStack.pop();
+        if (maybeElement === undefined) {
             throw new CommonError.InvariantError("tried to pop from an empty stack");
         }
 
-        const tokenStartIndex = element.tokenStartIndex;
-        const tokenEndIndex = this.tokenIndex;
-        const maybeLastInclusiveToken: Option<Token> = lexerSnapshot.tokens[tokenEndIndex - 1];
-
-        let documentEndIndex;
-        if (maybeLastInclusiveToken) {
-            documentEndIndex = maybeLastInclusiveToken.documentEndIndex;
-        }
-        else {
-            documentEndIndex = lexerSnapshot.document.length;
-        }
+        const element: TokenRangeStackElement = maybeElement;
+        const positionStart = element.positionStart;
+        const endTokenIndex = this.tokenIndex;
+        const lastInclusiveToken = this.lexerSnapshot.tokens[endTokenIndex - 1];
 
         return {
-            tokenStartIndex,
-            tokenEndIndex,
-            documentStartIndex: element.documentStartIndex,
-            documentEndIndex,
-            hash: tokenRangeHashFrom(element.nodeKind, tokenStartIndex, tokenEndIndex),
+            startTokenIndex: element.tokenIndexStart,
+            endTokenIndex,
+            positionStart: element.positionStart,
+            positionEnd: lastInclusiveToken.positionEnd,
+            hash: tokenRangeHashFrom(maybeElement.nodeKind, positionStart, positionStart),
         };
     }
 
@@ -1872,13 +1861,15 @@ export class Parser {
     ): TokenRange {
         const tokenIndex = this.tokenIndex;
         const token = this.lexerSnapshot.tokens[tokenIndex];
+        const positionStart = token.positionStart;
+        const positionEnd = token.positionEnd;
 
         return {
-            tokenStartIndex: tokenIndex,
-            tokenEndIndex: tokenIndex + 1,
-            documentStartIndex: token.documentStartIndex,
-            documentEndIndex: token.documentEndIndex,
-            hash: tokenRangeHashFrom(tag, tokenIndex, tokenIndex + 1),
+            startTokenIndex: tokenIndex,
+            endTokenIndex: tokenIndex + 1,
+            positionStart,
+            positionEnd,
+            hash: tokenRangeHashFrom(tag, positionStart, positionEnd),
         }
     }
 
@@ -1917,26 +1908,15 @@ export class Parser {
         }
     }
 
-    private currentTokenPosition(): Option<TokenPosition> {
-        const lexerSnapshot = this.lexerSnapshot;
-        const maybeToken: Option<Token> = lexerSnapshot.tokens[this.tokenIndex];
-
-        if (maybeToken) {
-            return lexerSnapshot.tokenPosition(maybeToken);
-        }
-        else {
-            return undefined;
-        }
-    }
-
-    private requireTokenPosition(tokenIndex: number): TokenPosition {
+    private expectTokenAt(tokenIndex: number): Token {
         const lexerSnapshot = this.lexerSnapshot;
         const maybeToken = lexerSnapshot.tokens[tokenIndex];
-        if (!maybeToken) {
-            throw new CommonError.InvariantError(`this.tokens[${tokenIndex}] is falsey`)
+
+        if (maybeToken) {
+            return maybeToken;
         }
         else {
-            return lexerSnapshot.tokenPosition(maybeToken);
+            throw new CommonError.InvariantError(`this.tokens[${tokenIndex}] is falsey`)
         }
     }
 
@@ -1948,7 +1928,12 @@ export class Parser {
         this.tokenIndex = tokenIndex;
 
         if (tokenIndex < tokens.length) {
-            this.currentTokenKind = tokens[tokenIndex].kind;
+            this.currentToken = tokens[tokenIndex];
+            this.currentTokenKind = this.currentToken.kind;
+        }
+        else {
+            this.currentToken = undefined;
+            this.currentTokenKind = undefined;
         }
     }
 
@@ -1956,14 +1941,16 @@ export class Parser {
         return {
             tokenIndex: this.tokenIndex,
             tokenRangeStackLength: this.tokenRangeStack.length,
-            currentTokenKind: this.currentTokenKind,
         };
     }
 
     private restore(state: ParserState) {
-        this.tokenIndex = state.tokenIndex;
         this.tokenRangeStack.length = state.tokenRangeStackLength;
-        this.currentTokenKind = state.currentTokenKind;
+        this.tokenIndex = state.tokenIndex;
+        this.currentToken = this.lexerSnapshot.tokens[this.tokenIndex]
+        this.currentTokenKind = this.currentToken !== undefined
+            ? this.currentToken.kind
+            : undefined;
     }
 }
 
@@ -1980,12 +1967,11 @@ const enum BracketDisambiguation {
 
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind,
-    readonly tokenStartIndex: number,
-    readonly documentStartIndex: number,
+    readonly tokenIndexStart: number,
+    readonly positionStart: StringHelpers.GraphemePosition,
 }
 
 interface ParserState {
-    readonly tokenIndex: number,
     readonly tokenRangeStackLength: number,
-    readonly currentTokenKind: Option<TokenKind>,
+    readonly tokenIndex: number,
 }

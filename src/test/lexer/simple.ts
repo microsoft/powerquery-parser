@@ -1,46 +1,22 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer, TokenKind, Keywords } from "../../lexer";
-
-function expectLexSuccess(document: string): Lexer.TouchedLexer {
-    let lexer: Lexer.TLexer = Lexer.from(document);
-    lexer = Lexer.remaining(lexer);
-
-    if (lexer.kind !== Lexer.LexerKind.Touched) {
-        const details = { lexer };
-        throw new Error(`lexer.kind !== Lexer.LexerKind.Touched: ${JSON.stringify(details, null, 4)}`);
-    }
-
-    return lexer;
-}
-
-function expectTokens(document: string, expected: ReadonlyArray<[TokenKind, string]>): Lexer.TouchedLexer {
-    const touchedLexer = expectLexSuccess(document);
-    const actual = touchedLexer.tokens.map(token => [token.kind, token.data]);
-    const details = {
-        actual,
-        expected,
-    };
-
-    expect(actual).deep.equal(expected, JSON.stringify(details, null, 4));
-
-    return touchedLexer;
-}
+import { Keywords, TokenKind } from "../../lexer";
+import { expectSnapshotAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
     it(`HexLiteral`, () => {
-        const document = `
+        const text = `
 0x1
 0X1`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.HexLiteral, `0x1`],
             [TokenKind.HexLiteral, `0X1`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`keywords`, () => {
-        const document = `
+        const text = `
 and
 as
 each
@@ -106,17 +82,17 @@ type
             [TokenKind.KeywordHashTime, `#time`],
         ];
         expect(expected.length).to.equal(Keywords.length);
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`NullLiteral`, () => {
-        const document = `null`;
+        const text = `null`;
         const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.NullLiteral, `null`]];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`NumericLiteral`, () => {
-        const document = `
+        const text = `
 1
 1e1
 1e-1
@@ -143,11 +119,12 @@ type
             [TokenKind.NumericLiteral, `0.1e-1`],
             [TokenKind.NumericLiteral, `0.1e+1`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
+    // TODO: look into adding `..`
     it(`operator-or-punctuator`, () => {
-        const document = `
+        const text = `
 ,
 ;
 =
@@ -170,7 +147,6 @@ type
 @
 ?
 =>
-// TODO look into adding ..
 ...`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Comma, `,`],
@@ -197,11 +173,11 @@ type
             [TokenKind.FatArrow, `=>`],
             [TokenKind.Ellipsis, `...`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`StringLiteral`, () => {
-        const document = `
+        const text = `
 ""
 """"
 `;
@@ -209,74 +185,74 @@ type
             [TokenKind.StringLiteral, `""`],
             [TokenKind.StringLiteral, `""""`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 });
 
 describe(`Lexer.Simple.Whitespace`, () => {
     it(`spaces`, () => {
-        const document = ` a a `;
+        const text = ` a b `;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
-            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `b`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`tabs`, () => {
-        const document = `\ta\ta\t`;
+        const text = `\ta\tb\t`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
-            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `b`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`trailing \\n`, () => {
-        const document = `a\n`;
+        const text = `a\n`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`trailing \\r\\n`, () => {
-        const document = `a\r\n`;
+        const text = `a\r\n`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\r\n", expected, true);
     });
 
     it(`trailing space`, () => {
-        const document = `a `;
+        const text = `a `;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`leading \\n`, () => {
-        const document = `\na`;
+        const text = `\na`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 
     it(`leading \\r\\n`, () => {
-        const document = `\r\na`;
+        const text = `\r\na`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\r\n", expected, true);
     });
 
     it(`leading space`, () => {
-        const document = ` a`;
+        const text = ` a`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Identifier, `a`],
         ];
-        expectTokens(document, expected);
+        expectSnapshotAbridgedTokens(text, "\n", expected, true);
     });
 });

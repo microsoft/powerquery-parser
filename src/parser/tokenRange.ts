@@ -1,11 +1,13 @@
+import { StringHelpers } from "../common";
+
 export type TokenRangeMap<T> = { [key: string]: T; }
 
 // keep track of how many tokens and code units make up a TNode in the range of [start, end).
 export interface TokenRange {
-    readonly tokenStartIndex: number,
-    readonly tokenEndIndex: number // exclusive
-    readonly documentStartIndex: number,
-    readonly documentEndIndex: number, // exclusive
+    readonly startTokenIndex: number,
+    readonly endTokenIndex: number // exclusive
+    readonly positionStart: StringHelpers.GraphemePosition,
+    readonly positionEnd: StringHelpers.GraphemePosition,
     readonly hash: string,
 }
 
@@ -15,8 +17,8 @@ export interface TokenRange {
 // has the same TokenRange as its child, Identifier.
 export function tokenRangeHashFrom(
     tag: string,
-    tokenStartIndex: number,
-    tokenEndIndex: number,
+    positionStart: StringHelpers.GraphemePosition,
+    positionEnd: StringHelpers.GraphemePosition,
 ): string {
-    return `${tag}:${tokenStartIndex}:${tokenEndIndex}`;
+    return `${tag}:${positionStart.lineNumber},${positionStart.columnNumber}:${positionEnd.lineNumber},${positionEnd.columnNumber}`;
 }

@@ -1,60 +1,73 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer, LexerError } from "../../lexer";
-import { touchedWithErrorLexerFactory } from "./common";
+import { Result, ResultKind } from "../../common";
+import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
-function expectLexerInnerError(document: string): LexerError.TInnerLexerError {
-    let lexer: Lexer.TLexer = Lexer.from(document);
-    lexer = Lexer.remaining(lexer);
+interface StateErrorLinesPair {
+    readonly state: Lexer.State,
+    readonly errorLines: Lexer.TErrorLines,
+}
 
-    if (!Lexer.hasError(lexer)) {
-        throw new Error(`expected !Lexer.hasError(lexer): ${JSON.stringify(lexer)}`);
+function expectStateErrorLines(text: string, lineTerminator: string, numErrorLines: number): StateErrorLinesPair {
+    const state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
+
+    const maybeErrorLines = Lexer.maybeErrorLines(state);
+    if (!(maybeErrorLines !== undefined)) {
+        throw new Error(`AssertFailed: Lexer.maybeFirstErrorLine(state) !== undefined: ${JSON.stringify(state)}`);
     }
-    else if (!(lexer.error instanceof LexerError.LexerError)) {
-        throw new Error(`!(lexer.error instanceof LexerError): ${lexer.error.message}`);
+    else if (!(maybeErrorLines !== undefined)) {
+        throw new Error(`AssertFailed: maybeErrorLines !== undefined: ${JSON.stringify(state)}`);
+    }
+    else if (!(numErrorLines === Object.keys(maybeErrorLines).length)) {
+        const details = {
+            "Object.keys(maybeErrorLines).length": Object.keys(maybeErrorLines).length,
+            numErrorLines,
+        };
+        throw new Error(`AssertFailed: numErrorLines === Object.keys(maybeErrorLines).length): ${JSON.stringify(details)}`);
     }
     else {
-        return lexer.error.innerError;
+        return {
+            state,
+            errorLines: maybeErrorLines,
+        };
+    }
+}
+
+function expectSnapshotInnerError(text: string, lineTerminator: string): LexerError.TInnerLexerError {
+    const state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
+    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+
+    if (!(snapshotResult.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    }
+    else {
+        return snapshotResult.error.innerError;
     }
 }
 
 describe("Lexer.Error", () => {
-    it("EndOfStream: ''", () => {
-        const innerError = expectLexerInnerError("");
-        expect(innerError instanceof LexerError.EndOfStreamError).to.equal(true, innerError.message);
-    });
-
     it("ExpectedHexLiteralError: 0x", () => {
-        const innerError = expectLexerInnerError("0x");
+        const stateErrorLinesPair = expectStateErrorLines("0x", "\n", 1);
+        const innerError = stateErrorLinesPair.errorLines[0].error.innerError;
         expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
     });
 
+    it("lexerLineError: 0x \\n 0x", () => {
+        const stateErrorLinesPair = expectStateErrorLines("0x \n 0x", "\n", 2);
+        const firstInnerError = stateErrorLinesPair.errorLines[0].error.innerError;
+        expect(firstInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, firstInnerError.message);
+
+        const secondInnerError = stateErrorLinesPair.errorLines[1].error.innerError;
+        expect(secondInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, secondInnerError.message);
+    });
+
     it("UnterminatedMultilineCommentError: /*", () => {
-        const innerError = expectLexerInnerError("/*");
+        const innerError = expectSnapshotInnerError("/*", "\n");
         expect(innerError instanceof LexerError.UnterminatedMultilineCommentError).to.equal(true, innerError.message);
     });
 
     it("UnterminatedStringError: \"", () => {
-        const innerError = expectLexerInnerError("\"");
+        const innerError = expectSnapshotInnerError("\"", "\n");
         expect(innerError instanceof LexerError.UnterminatedStringError).to.equal(true, innerError.message);
-    });
-
-    it("BadStateError", () => {
-        let lexer = touchedWithErrorLexerFactory("1 0x");
-
-        if (lexer.kind !== Lexer.LexerKind.TouchedWithError) {
-            const details = JSON.stringify(lexer, null, 4);
-            throw new Error(`expected lexer.kind === Lexer.LexerKind.TouchedWithError: ${details}`);
-        }
-        let innerError = lexer.error.innerError;
-        expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
-
-        lexer = Lexer.remaining(lexer);
-        if (lexer.kind !== Lexer.LexerKind.Error) {
-            const details = JSON.stringify(lexer, null, 4);
-            throw new Error(`expected lexer.kind === Lexer.LexerKind.Error: ${details}`);
-        }
-        innerError = lexer.error.innerError;
-        expect(innerError instanceof LexerError.BadStateError).to.equal(true, innerError.message);
     });
 });

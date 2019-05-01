@@ -1,82 +1,52 @@
-import { Lexer } from "../../lexer";
+import { Lexer, LineToken } from "../../lexer";
 
 export class Tokenizer implements TokensProvider {
+    constructor(private readonly lineTerminator: string) { }
+
     public getInitialState(): IState {
-        // TODO: what should initial state be?
-        return new TokenizerState(Lexer.from(""));
+        const lexerState: Lexer.State = {
+            lines: [],
+            lineTerminator: this.lineTerminator,
+        };
+        return new TokenizerState(lexerState);
     }
 
     public tokenize(line: string, state: IState): ILineTokens {
-        let lexerState: Lexer.TLexer;
-
-        const tokenizerState = state as TokenizerState;
-        if (!tokenizerState.lexer) {
-            throw new Error("invalid state");
-        }
-
-        lexerState = tokenizerState.lexer;
-
-        // TODO: do we care about the newline characters that would be removed from the line? 
-        let endState: Lexer.TLexer = Lexer.appendToDocument(lexerState, line);
-        endState = Lexer.remaining(endState);
-
-        const lineTokens = Tokenizer.calculateLineTokens(lexerState, endState);
+        const tokenizerState: TokenizerState = state as TokenizerState;
+        const lexerState = tokenizerState.lexerState;
+        const newLexerState = Lexer.appendLine(lexerState, line);
 
         return {
-            tokens: lineTokens,
-            endState: new TokenizerState(endState)
+            tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),
+            endState: new TokenizerState(newLexerState)
         };
     }
 
-    private static calculateLineTokens(initial: Lexer.TLexer, end: Lexer.TLexer): IToken[] {
-        let lineTokens: IToken[] = [];
-
-        // TODO: does this work? 
-        const offset: number = initial.documentIndex;
-
-        // only consider new tokens
-        const newTokens = end.tokens.slice(initial.tokens.length);
-        newTokens.forEach(t => {
-            lineTokens.push({
-                startIndex: t.documentStartIndex - offset,
-                scopes: t.kind
-            })
-        });
-
-        return lineTokens;
+    static ITokenFrom(lineToken: LineToken): IToken {
+        // unsafe action:
+        //      cast LineTokenKind into string
+        // what I'm trying to avoid:
+        //      the cost of properly casting, aka one switch statement per LineTokenKind
+        // why it's safe:
+        //      all variants for LineTokenKind are strings
+        return {
+            startIndex: lineToken.positionStart.textIndex,
+            scopes: lineToken.kind as unknown as string,
+        }
     }
 }
 
 export class TokenizerState implements IState {
-    private readonly _lexer: Lexer.TLexer;
-
-    constructor(lexer: Lexer.TLexer) {
-        this._lexer = lexer;
-    }
-
-    public get lexer(): Lexer.TLexer {
-        return this._lexer;
-    }
+    constructor(public readonly lexerState: Lexer.State) { }
 
     public clone(): IState {
-        // TODO: is there a better way to clone?
-        let newLexer: Lexer.TLexer = Lexer.from(this.lexer.document);
-        newLexer = Lexer.remaining(newLexer);
-        return new TokenizerState(newLexer);
+        return new TokenizerState(this.lexerState);
     }
 
     public equals(other: IState): boolean {
-        const otherState = other as TokenizerState;
-        if (!otherState || !otherState.lexer) {
-            return false;
-        }
-
-        const r = this.lexer;
-        const l = otherState.lexer;
-
-        // TODO: do we want to compare tokens as well?
-        return r.documentIndex === l.documentIndex &&
-            r.kind === l.kind;
+        return other !== undefined
+            ? Lexer.equalStates(this.lexerState, (other as TokenizerState).lexerState)
+            : false;
     }
 }
 

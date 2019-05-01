@@ -1,3 +1,20 @@
+import { StringHelpers } from "../common";
+import { Lexer } from "./lexer";
+
+const enum LineTokenKindAdditions {
+    LineComment = "LineComment",
+    MultilineComment = "MultilineComment",
+    MultilineCommentContent = "MultilineCommentContent",
+    MultilineCommentEnd = "MultilineCommentEnd",
+    MultilineCommentStart = "MultilineCommentStart",
+    QuotedIdentifierContent = "QuotedIdentifierContent",
+    QuotedIdentifierEnd = "QuotedIdentifierEnd",
+    QuotedIdentifierStart = "QuotedIdentifierStart",
+    StringLiteralContent = "StringContent",
+    StringLiteralEnd = "StringLiteralEnd",
+    StringLiteralStart = "StringLiteralStart",
+}
+
 export const enum TokenKind {
     Ampersand = "Ampersand",
     Asterisk = "Asterisk",
@@ -61,9 +78,89 @@ export const enum TokenKind {
     StringLiteral = "StringLiteral",
 }
 
-export interface Token {
-    readonly kind: TokenKind,
-    readonly documentStartIndex: number,
-    readonly documentEndIndex: number, // exclusive
+export const enum LineTokenKind {
+    Ampersand = TokenKind.Ampersand,
+    Asterisk = TokenKind.Asterisk,
+    AtSign = TokenKind.AtSign,
+    Bang = TokenKind.Bang,
+    Comma = TokenKind.Comma,
+    Division = TokenKind.Division,
+    Ellipsis = TokenKind.Ellipsis,
+    Equal = TokenKind.Equal,
+    FatArrow = TokenKind.FatArrow,
+    GreaterThan = TokenKind.GreaterThan,
+    GreaterThanEqualTo = TokenKind.GreaterThanEqualTo,
+    HexLiteral = TokenKind.HexLiteral,
+    Identifier = TokenKind.Identifier,
+    KeywordAnd = TokenKind.KeywordAnd,
+    KeywordAs = TokenKind.KeywordAs,
+    KeywordEach = TokenKind.KeywordEach,
+    KeywordElse = TokenKind.KeywordElse,
+    KeywordError = TokenKind.KeywordError,
+    KeywordFalse = TokenKind.KeywordFalse,
+    KeywordHashBinary = TokenKind.KeywordHashBinary,
+    KeywordHashDate = TokenKind.KeywordHashDate,
+    KeywordHashDateTime = TokenKind.KeywordHashDateTime,
+    KeywordHashDateTimeZone = TokenKind.KeywordHashDateTimeZone,
+    KeywordHashDuration = TokenKind.KeywordHashDuration,
+    KeywordHashInfinity = TokenKind.KeywordHashInfinity,
+    KeywordHashNan = TokenKind.KeywordHashNan,
+    KeywordHashSections = TokenKind.KeywordHashSections,
+    KeywordHashShared = TokenKind.KeywordHashShared,
+    KeywordHashTable = TokenKind.KeywordHashTable,
+    KeywordHashTime = TokenKind.KeywordHashTime,
+    KeywordIf = TokenKind.KeywordIf,
+    KeywordIn = TokenKind.KeywordIn,
+    KeywordIs = TokenKind.KeywordIs,
+    KeywordLet = TokenKind.KeywordLet,
+    KeywordMeta = TokenKind.KeywordMeta,
+    KeywordNot = TokenKind.KeywordNot,
+    KeywordOr = TokenKind.KeywordOr,
+    KeywordOtherwise = TokenKind.KeywordOtherwise,
+    KeywordSection = TokenKind.KeywordSection,
+    KeywordShared = TokenKind.KeywordShared,
+    KeywordThen = TokenKind.KeywordThen,
+    KeywordTrue = TokenKind.KeywordTrue,
+    KeywordTry = TokenKind.KeywordTry,
+    KeywordType = TokenKind.KeywordType,
+    LeftBrace = TokenKind.LeftBrace,
+    LeftBracket = TokenKind.LeftBracket,
+    LeftParenthesis = TokenKind.LeftParenthesis,
+    LessThan = TokenKind.LessThan,
+    LessThanEqualTo = TokenKind.LessThanEqualTo,
+    Minus = TokenKind.Minus,
+    NotEqual = TokenKind.NotEqual,
+    NullLiteral = TokenKind.NullLiteral,
+    NumericLiteral = TokenKind.NumericLiteral,
+    Plus = TokenKind.Plus,
+    QuestionMark = TokenKind.QuestionMark,
+    RightBrace = TokenKind.RightBrace,
+    RightBracket = TokenKind.RightBracket,
+    RightParenthesis = TokenKind.RightParenthesis,
+    Semicolon = TokenKind.Semicolon,
+    StringLiteral = TokenKind.StringLiteral,
+
+    LineComment = LineTokenKindAdditions.LineComment,
+    MultilineComment = LineTokenKindAdditions.MultilineComment,
+    MultilineCommentContent = LineTokenKindAdditions.MultilineCommentContent,
+    MultilineCommentEnd = LineTokenKindAdditions.MultilineCommentEnd,
+    MultilineCommentStart = LineTokenKindAdditions.MultilineCommentStart,
+    QuotedIdentifierContent = LineTokenKindAdditions.QuotedIdentifierContent,
+    QuotedIdentifierEnd = LineTokenKindAdditions.QuotedIdentifierEnd,
+    QuotedIdentifierStart = LineTokenKindAdditions.QuotedIdentifierStart,
+    StringLiteralContent = LineTokenKindAdditions.StringLiteralContent,
+    StringLiteralEnd = LineTokenKindAdditions.StringLiteralEnd,
+    StringLiteralStart = LineTokenKindAdditions.StringLiteralStart,
+}
+
+export interface IToken<Kind, Position> {
+    readonly kind: Kind,
+    // range is [start, end)
+    readonly positionStart: Position,
+    readonly positionEnd: Position,
     readonly data: string,
 }
+
+export interface LineToken extends IToken<LineTokenKind, Lexer.LinePosition> { };
+
+export interface Token extends IToken<TokenKind, StringHelpers.GraphemePosition> { }
