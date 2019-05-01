@@ -26,3 +26,7 @@ steps:
   inputs:
     testRunner: JUnit
     testResultsFiles: '**/test-results.xml'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)'
