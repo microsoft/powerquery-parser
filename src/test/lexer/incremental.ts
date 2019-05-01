@@ -5,10 +5,10 @@ import { expectLexSuccess } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
 
-type AbridgedTLexerLine = ReadonlyArray<[Lexer.LexerLineKind, Lexer.LexerLineMode, string]>;
+type AbridgedTLexerLine = ReadonlyArray<[Lexer.LineKind, Lexer.LineMode, string]>;
 
-function expectAbridgedTLexerLine(state: Lexer.LexerState, expected: AbridgedTLexerLine) {
-    const actual = state.lines.map(line => [line.kind, line.lineMode, line.lineString.text]);
+function expectAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLine) {
+    const actual = state.lines.map(line => [line.kind, line.lineModeStart, line.lineString.text]);
     expect(actual).deep.equal(expected);
 }
 
@@ -34,13 +34,13 @@ describe(`Lexer.Incremental`, () => {
         it(`update solo line`, () => {
             let state = expectLexSuccess(`foo`, LINE_TERMINATOR);
             let expected: AbridgedTLexerLine = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `foo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `foo`],
             ];
             expectAbridgedTLexerLine(state, expected);
 
             state = Lexer.updateLine(state, `foobar`, 0, undefined);
             expected = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `foobar`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `foobar`],
             ];
             expectAbridgedTLexerLine(state, expected);
         });
@@ -48,17 +48,17 @@ describe(`Lexer.Incremental`, () => {
         it(`update multiline - first`, () => {
             let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
             let expected: AbridgedTLexerLine = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
 
             state = Lexer.updateLine(state, `foobar`, 0, undefined);
             expected = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `foobar`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `foobar`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
         });
@@ -66,17 +66,17 @@ describe(`Lexer.Incremental`, () => {
         it(`update multiline - middle`, () => {
             let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
             let expected: AbridgedTLexerLine = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
 
             state = Lexer.updateLine(state, `foobar`, 1, undefined);
             expected = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `foobar`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `foobar`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
         });
@@ -84,17 +84,17 @@ describe(`Lexer.Incremental`, () => {
         it(`update multiline - last`, () => {
             let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
             let expected: AbridgedTLexerLine = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
 
             state = Lexer.updateLine(state, `foobar`, 2, undefined);
             expected = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `foobar`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `foobar`],
             ];
             expectAbridgedTLexerLine(state, expected);
         });
@@ -102,17 +102,17 @@ describe(`Lexer.Incremental`, () => {
         it(`update multiline - mode change - first`, () => {
             let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
             let expected: AbridgedTLexerLine = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
 
             state = Lexer.updateLine(state, `"`, 0, undefined);
             expected = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.String, `"`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.String, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.String, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.String, `"`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.String, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.String, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
         });
@@ -120,17 +120,17 @@ describe(`Lexer.Incremental`, () => {
         it(`update multiline - mode change - middle`, () => {
             let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
             let expected: AbridgedTLexerLine = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
 
             state = Lexer.updateLine(state, `"`, 1, undefined);
             expected = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.String, `"`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.String, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.String, `"`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.String, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
         });
@@ -138,17 +138,17 @@ describe(`Lexer.Incremental`, () => {
         it(`update multiline - mode change - last`, () => {
             let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
             let expected: AbridgedTLexerLine = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `charlie`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `charlie`],
             ];
             expectAbridgedTLexerLine(state, expected);
 
             state = Lexer.updateLine(state, `"`, 2, undefined);
             expected = [
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `alpha`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.Default, `bravo`],
-                [Lexer.LexerLineKind.Touched, Lexer.LexerLineMode.String, `"`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `alpha`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.Default, `bravo`],
+                [Lexer.LineKind.Touched, Lexer.LineMode.String, `"`],
             ];
             expectAbridgedTLexerLine(state, expected);
         });

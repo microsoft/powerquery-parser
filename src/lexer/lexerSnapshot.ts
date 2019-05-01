@@ -11,7 +11,7 @@ export class LexerSnapshot {
         public readonly comments: ReadonlyArray<TComment>,
     ) { }
 
-    static tryFrom(state: Lexer.LexerState): Result<LexerSnapshot, LexerError.TLexerError> {
+    static tryFrom(state: Lexer.State): Result<LexerSnapshot, LexerError.TLexerError> {
         try {
             return {
                 kind: ResultKind.Ok,
@@ -32,7 +32,7 @@ export class LexerSnapshot {
         }
     }
 
-    private static factory(state: Lexer.LexerState): LexerSnapshot {
+    private static factory(state: Lexer.State): LexerSnapshot {
         // class properties
         const tokens: Token[] = [];
         const comments: TComment[] = [];
@@ -252,8 +252,8 @@ function collectWhileContent<KindVariant>(
     }
 }
 
-function flattenLineTokens(state: Lexer.LexerState): [string, ReadonlyArray<FlatLineToken>] {
-    const lines: ReadonlyArray<Lexer.TLexerLine> = state.lines;
+function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineToken>] {
+    const lines: ReadonlyArray<Lexer.TLine> = state.lines;
     const numLines = lines.length;
 
     let text = "";

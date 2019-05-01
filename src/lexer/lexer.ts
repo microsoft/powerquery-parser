@@ -15,21 +15,21 @@ import { LineToken, LineTokenKind } from "./token";
 
 export namespace Lexer {
 
-    export type TErrorLines = { [lineNumber: number]: TErrorLexerLine; }
+    export type TErrorLines = { [lineNumber: number]: TErrorLine; }
 
-    export type TLexerLine = (
+    export type TLine = (
         | TouchedLine
         | UntouchedLine
         | TouchedWithErrorLine
         | ErrorLine
     )
 
-    export type TErrorLexerLine = (
+    export type TErrorLine = (
         | ErrorLine
         | TouchedWithErrorLine
     )
 
-    export const enum LexerLineKind {
+    export const enum LineKind {
         Error = "Error",
         Touched = "Touched",
         TouchedWithError = "TouchedWithError",
@@ -41,28 +41,28 @@ export namespace Lexer {
     //  * the line is a contiuation of a multiline token, eg. `"foo \n bar"`
     //
     // comment, quoted identifier, and string are all multiline contexts
-    export const enum LexerLineMode {
+    export const enum LineMode {
         Comment = "Comment",
         Default = "Default",
         QuotedIdentifier = "QuotedIdentifier",
         String = "String",
     }
 
-    export interface LexerState {
-        readonly lines: ReadonlyArray<TLexerLine>,
+    export interface State {
+        readonly lines: ReadonlyArray<TLine>,
         readonly lineTerminator: string,
     }
 
     export interface ILexerLine {
-        readonly kind: LexerLineKind,
-        readonly lineString: LexerLineString,
-        readonly lineModeStart: LexerLineMode,
-        readonly lineModeEnd: LexerLineMode,
+        readonly kind: LineKind,
+        readonly lineString: LineString,
+        readonly lineModeStart: LineMode,
+        readonly lineModeEnd: LineMode,
         readonly tokens: ReadonlyArray<LineToken>,
     }
 
     // an extension to the string type, allows column numbering by using graphemes
-    export interface LexerLineString {
+    export interface LineString {
         readonly text: string,
         readonly graphemes: ReadonlyArray<string>,
         readonly textIndex2GraphemeIndex: { [textIndex: number]: number; }
@@ -71,33 +71,33 @@ export namespace Lexer {
 
     // an error was thrown immediately, nothing was tokenized
     export interface ErrorLine extends ILexerLine {
-        readonly kind: LexerLineKind.Error,
+        readonly kind: LineKind.Error,
         readonly error: LexerError.TLexerError,
     }
 
     // the entire line was tokenized without issue
     export interface TouchedLine extends ILexerLine {
-        readonly kind: LexerLineKind.Touched,
+        readonly kind: LineKind.Touched,
     }
 
     // some tokens were read, but before eof was reached an error was thrown
     export interface TouchedWithErrorLine extends ILexerLine {
-        readonly kind: LexerLineKind.TouchedWithError,
+        readonly kind: LineKind.TouchedWithError,
         readonly error: LexerError.TLexerError,
     }
 
     // an line that has yet to be lexed
     export interface UntouchedLine extends ILexerLine {
-        readonly kind: LexerLineKind.Untouched,
+        readonly kind: LineKind.Untouched,
     }
 
-    export interface LexerLinePosition {
+    export interface LinePosition {
         readonly textIndex: number,
         readonly columnNumber: number,
     }
 
-    export function from(text: string, lineTerminator: string): LexerState {
-        let newLine: TLexerLine = lineFrom(text, LexerLineMode.Default);
+    export function from(text: string, lineTerminator: string): State {
+        let newLine: TLine = lineFrom(text, LineMode.Default);
         newLine = tokenize(newLine, 0);
 
         return {
@@ -106,7 +106,7 @@ export namespace Lexer {
         };
     }
 
-    export function fromSplit(text: string, lineTerminator: string): LexerState {
+    export function fromSplit(text: string, lineTerminator: string): State {
         const lines = text.split(lineTerminator);
         const numLines = lines.length;
 
@@ -122,16 +122,16 @@ export namespace Lexer {
         return state;
     }
 
-    export function appendLine(state: LexerState, text: string): LexerState {
+    export function appendLine(state: State, text: string): State {
         const lines = state.lines;
         const numLines = lines.length;
-        const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];
+        const maybeLatestLine: Option<TLine> = lines[numLines - 1];
 
-        let lineModeStart: LexerLineMode = maybeLatestLine
+        let lineModeStart: LineMode = maybeLatestLine
             ? maybeLatestLine.lineModeEnd
-            : LexerLineMode.Default;
+            : LineMode.Default;
 
-        let newLine: TLexerLine = lineFrom(text, lineModeStart)
+        let newLine: TLine = lineFrom(text, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
         return {
@@ -141,11 +141,11 @@ export namespace Lexer {
     }
 
     export function updateLine(
-        state: LexerState,
+        state: State,
         text: string,
         lineNumber: number,
-        maybeLineModeStart: Option<LexerLineMode>,
-    ): LexerState {
+        maybeLineModeStart: Option<LineMode>,
+    ): State {
         if (lineNumber < 0) {
             throw new CommonError.InvariantError(`lineNumber < 0 : ${lineNumber} < 0`);
         }
@@ -157,37 +157,37 @@ export namespace Lexer {
             throw new CommonError.InvariantError(`lineNumber >= numLines : ${lineNumber} >= ${numLines}`)
         }
 
-        let lineModeStart: LexerLineMode;
+        let lineModeStart: LineMode;
         if (maybeLineModeStart === undefined) {
-            const maybePreviousLine: Option<TLexerLine> = lines[lineNumber - 1];
+            const maybePreviousLine: Option<TLine> = lines[lineNumber - 1];
 
             lineModeStart = maybePreviousLine !== undefined
                 ? maybePreviousLine.lineModeStart
-                : LexerLineMode.Default;
+                : LineMode.Default;
         }
         else {
             lineModeStart = maybeLineModeStart;
         }
 
         const originalLine = lines[lineNumber];
-        let newLine: TLexerLine = lineFrom(text, lineModeStart)
+        let newLine: TLine = lineFrom(text, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
-        let newLines: ReadonlyArray<TLexerLine>;
+        let newLines: ReadonlyArray<TLine>;
         if (originalLine.lineModeEnd !== newLine.lineModeEnd) {
-            const changedLines: TLexerLine[] = [newLine];
+            const changedLines: TLine[] = [newLine];
             let offsetLineNumber = lineNumber + 1;
 
             while (true) {
-                const previousOffsetLine: TLexerLine = lines[offsetLineNumber - 1];
-                const currentOffsetLine: Option<TLexerLine> = lines[offsetLineNumber];
+                const previousOffsetLine: TLine = lines[offsetLineNumber - 1];
+                const currentOffsetLine: Option<TLine> = lines[offsetLineNumber];
 
                 // no more lines exist
                 if (currentOffsetLine === undefined) {
                     break;
                 }
 
-                let newOffsetLine: TLexerLine = lineFrom(currentOffsetLine.lineString.text, previousOffsetLine.lineModeEnd);
+                let newOffsetLine: TLine = lineFrom(currentOffsetLine.lineString.text, previousOffsetLine.lineModeEnd);
                 newOffsetLine = tokenize(newOffsetLine, offsetLineNumber);
 
                 changedLines.push(newOffsetLine);
@@ -219,7 +219,7 @@ export namespace Lexer {
     }
 
     // deep state comparison
-    export function equalStates(leftState: LexerState, rightState: LexerState): boolean {
+    export function equalStates(leftState: State, rightState: State): boolean {
         return (
             equalLines(leftState.lines, rightState.lines)
             || (leftState.lineTerminator === rightState.lineTerminator)
@@ -227,7 +227,7 @@ export namespace Lexer {
     }
 
     // deep line comparison
-    export function equalLines(leftLines: ReadonlyArray<TLexerLine>, rightLines: ReadonlyArray<TLexerLine>): boolean {
+    export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: ReadonlyArray<TLine>): boolean {
         if (leftLines.length !== rightLines.length) {
             return false;
         }
@@ -272,7 +272,7 @@ export namespace Lexer {
         );
     }
 
-    export function equalPositons(leftPosition: LexerLinePosition, rightPosition: LexerLinePosition): boolean {
+    export function equalPositons(leftPosition: LinePosition, rightPosition: LinePosition): boolean {
         return (
             leftPosition.columnNumber === rightPosition.columnNumber
             || leftPosition.textIndex === rightPosition.textIndex
@@ -281,37 +281,37 @@ export namespace Lexer {
 
     interface TokenizeChanges {
         readonly tokens: ReadonlyArray<LineToken>,
-        readonly lineModeEnd: LexerLineMode,
+        readonly lineModeEnd: LineMode,
     }
 
     interface LineModeAlteringRead {
         readonly token: LineToken,
-        readonly lineMode: LexerLineMode,
+        readonly lineMode: LineMode,
     }
 
-    function lineFrom(text: string, lineModeStart: LexerLineMode): UntouchedLine {
+    function lineFrom(text: string, lineModeStart: LineMode): UntouchedLine {
         return {
-            kind: LexerLineKind.Untouched,
+            kind: LineKind.Untouched,
             lineString: lexerLineStringFrom(text),
             lineModeStart,
-            lineModeEnd: LexerLineMode.Default,
+            lineModeEnd: LineMode.Default,
             tokens: [],
         }
     }
 
-    export function isErrorState(state: LexerState): boolean {
+    export function isErrorState(state: State): boolean {
         const linesWithErrors: ReadonlyArray<ErrorLine | TouchedWithErrorLine> = state.lines.filter(isErrorLine);
         return linesWithErrors.length !== 0;
     }
 
-    export function isErrorLine(line: TLexerLine): line is TErrorLexerLine {
+    export function isErrorLine(line: TLine): line is TErrorLine {
         switch (line.kind) {
-            case LexerLineKind.Error:
-            case LexerLineKind.TouchedWithError:
+            case LineKind.Error:
+            case LineKind.TouchedWithError:
                 return true;
 
-            case LexerLineKind.Touched:
-            case LexerLineKind.Untouched:
+            case LineKind.Touched:
+            case LineKind.Untouched:
                 return false;
 
             default:
@@ -319,7 +319,7 @@ export namespace Lexer {
         }
     }
 
-    export function maybeErrorLines(state: LexerState): Option<TErrorLines> {
+    export function maybeErrorLines(state: State): Option<TErrorLines> {
         const errorLines: TErrorLines = {};
 
         const lines = state.lines;
@@ -338,7 +338,7 @@ export namespace Lexer {
             : undefined;
     }
 
-    function lexerLineStringFrom(text: string): LexerLineString {
+    function lexerLineStringFrom(text: string): LineString {
         const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(text);
         const numGraphemes = graphemes.length;
         const textIndex2GraphemeIndex: { [textIndex: number]: number; } = {};
@@ -364,16 +364,16 @@ export namespace Lexer {
 
     // takes the return from a tokenizeX function to updates the line's state
     function updateLineState(
-        line: TLexerLine,
+        line: TLine,
         tokenizePartialResult: PartialResult<TokenizeChanges, LexerError.TLexerError>,
-    ): TLexerLine {
+    ): TLine {
         switch (tokenizePartialResult.kind) {
             case PartialResultKind.Ok: {
                 const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
                 const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
                 return {
-                    kind: LexerLineKind.Touched,
+                    kind: LineKind.Touched,
                     lineString: line.lineString,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: tokenizeChanges.lineModeEnd,
@@ -386,7 +386,7 @@ export namespace Lexer {
                 const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
                 return {
-                    kind: LexerLineKind.TouchedWithError,
+                    kind: LineKind.TouchedWithError,
                     lineString: line.lineString,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: tokenizeChanges.lineModeEnd,
@@ -397,7 +397,7 @@ export namespace Lexer {
 
             case PartialResultKind.Err:
                 return {
-                    kind: LexerLineKind.Error,
+                    kind: LineKind.Error,
                     lineString: line.lineString,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: line.lineModeEnd,
@@ -411,30 +411,30 @@ export namespace Lexer {
     }
 
     // the main function of the lexer's tokenizer
-    function tokenize(line: TLexerLine, lineNumber: number): TLexerLine {
+    function tokenize(line: TLine, lineNumber: number): TLine {
         switch (line.kind) {
             // cannot tokenize something that ended with an error,
             // nothing has changed since the last tokenize.
             // update the line's text before trying again.
-            case LexerLineKind.Error:
+            case LineKind.Error:
                 return line;
 
-            case LexerLineKind.Touched:
+            case LineKind.Touched:
                 // the line was already fully lexed once.
                 // without any text changes it should throw eof to help diagnose
                 // why it's trying to re-tokenize
                 return {
                     ...line,
-                    kind: LexerLineKind.Error,
+                    kind: LineKind.Error,
                     error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
                 }
 
             // cannot tokenize something that ended with an error,
             // nothing has changed since the last tokenize.
             // update the line's text before trying again.
-            case LexerLineKind.TouchedWithError:
+            case LineKind.TouchedWithError:
                 return {
-                    kind: LexerLineKind.Error,
+                    kind: LineKind.Error,
                     lineString: line.lineString,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: line.lineModeEnd,
@@ -444,28 +444,28 @@ export namespace Lexer {
         }
 
         const untouchedLine: UntouchedLine = line;
-        const lineString: LexerLineString = untouchedLine.lineString;
+        const lineString: LineString = untouchedLine.lineString;
         const text = lineString.text;
         const textLength = text.length;
 
         // sanity check that there's something to tokenize
         if (textLength === 0) {
             return {
-                kind: LexerLineKind.Touched,
+                kind: LineKind.Touched,
                 lineString: line.lineString,
                 lineModeStart: line.lineModeStart,
-                lineModeEnd: LexerLineMode.Default,
+                lineModeEnd: LineMode.Default,
                 tokens: [],
             }
         }
 
-        let lineMode: LexerLineMode = line.lineModeStart;
-        let currentPosition: LexerLinePosition = {
+        let lineMode: LineMode = line.lineModeStart;
+        let currentPosition: LinePosition = {
             textIndex: 0,
             columnNumber: 0,
         };
 
-        if (lineMode === LexerLineMode.Default) {
+        if (lineMode === LineMode.Default) {
             currentPosition = drainWhitespace(lineString, currentPosition);
         }
 
@@ -481,19 +481,19 @@ export namespace Lexer {
             try {
                 let readOutcome: LineModeAlteringRead;
                 switch (lineMode) {
-                    case LexerLineMode.Comment:
+                    case LineMode.Comment:
                         readOutcome = tokenizeMultilineCommentContentOrEnd(line, currentPosition);
                         break;
 
-                    case LexerLineMode.Default:
+                    case LineMode.Default:
                         readOutcome = tokenizeDefault(line, lineNumber, currentPosition);
                         break;
 
-                    case LexerLineMode.QuotedIdentifier:
+                    case LineMode.QuotedIdentifier:
                         readOutcome = tokenizeQuotedIdentifierContentOrEnd(line, currentPosition);
                         break;
 
-                    case LexerLineMode.String:
+                    case LineMode.String:
                         readOutcome = tokenizeStringLiteralContentOrEnd(line, currentPosition);
                         break;
 
@@ -505,7 +505,7 @@ export namespace Lexer {
                 const token = readOutcome.token;
                 newTokens.push(token);
 
-                if (lineMode === LexerLineMode.Default) {
+                if (lineMode === LineMode.Default) {
                     currentPosition = drainWhitespace(lineString, token.positionEnd);
                 }
                 else {
@@ -563,49 +563,49 @@ export namespace Lexer {
 
     // read either "*/" or eof
     function tokenizeMultilineCommentContentOrEnd(
-        line: TLexerLine,
-        currentPosition: LexerLinePosition,
+        line: TLine,
+        currentPosition: LinePosition,
     ): LineModeAlteringRead {
-        const lineString: LexerLineString = line.lineString;
+        const lineString: LineString = line.lineString;
         const text = lineString.text;
         const indexOfCloseComment = text.indexOf("*/", currentPosition.textIndex);
 
         if (indexOfCloseComment === -1) {
             const textLength = text.length;
-            const positionEnd: LexerLinePosition = {
+            const positionEnd: LinePosition = {
                 textIndex: textLength,
                 columnNumber: lineString.textIndex2GraphemeIndex[textLength],
             };
 
             return {
                 token: readTokenFrom(LineTokenKind.MultilineCommentContent, lineString, currentPosition, positionEnd),
-                lineMode: LexerLineMode.Comment,
+                lineMode: LineMode.Comment,
             }
         }
         else {
             const textIndexEnd = indexOfCloseComment + 2;
-            const positionEnd: LexerLinePosition = {
+            const positionEnd: LinePosition = {
                 textIndex: textIndexEnd,
                 columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
             };
 
             return {
                 token: readTokenFrom(LineTokenKind.MultilineCommentEnd, lineString, currentPosition, positionEnd),
-                lineMode: LexerLineMode.Default,
+                lineMode: LineMode.Default,
             }
         }
     }
 
     // read either string literal end or eof
     function tokenizeQuotedIdentifierContentOrEnd(
-        line: TLexerLine,
-        currentPosition: LexerLinePosition,
+        line: TLine,
+        currentPosition: LinePosition,
     ): LineModeAlteringRead {
         const read = tokenizeStringLiteralContentOrEnd(line, currentPosition);
         switch (read.token.kind) {
             case LineTokenKind.StringLiteralContent:
                 return {
-                    lineMode: LexerLineMode.QuotedIdentifier,
+                    lineMode: LineMode.QuotedIdentifier,
                     token: {
                         ...read.token,
                         kind: LineTokenKind.QuotedIdentifierContent,
@@ -614,7 +614,7 @@ export namespace Lexer {
 
             case LineTokenKind.StringLiteralEnd:
                 return {
-                    lineMode: LexerLineMode.Default,
+                    lineMode: LineMode.Default,
                     token: {
                         ...read.token,
                         kind: LineTokenKind.QuotedIdentifierEnd,
@@ -629,40 +629,40 @@ export namespace Lexer {
 
     // read either string literal end or eof
     function tokenizeStringLiteralContentOrEnd(
-        line: TLexerLine,
-        currentPosition: LexerLinePosition,
+        line: TLine,
+        currentPosition: LinePosition,
     ): LineModeAlteringRead {
-        const lineString: LexerLineString = line.lineString;
+        const lineString: LineString = line.lineString;
         const text: string = lineString.text;
         const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition.textIndex);
 
         if (maybeTextIndexEnd === undefined) {
             return {
                 token: readRestOfLine(LineTokenKind.StringLiteralContent, lineString, currentPosition),
-                lineMode: LexerLineMode.String,
+                lineMode: LineMode.String,
             }
         }
         else {
             const textIndexEnd: number = maybeTextIndexEnd + 1;
-            const positionEnd: LexerLinePosition = {
+            const positionEnd: LinePosition = {
                 textIndex: textIndexEnd,
                 columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
             };
 
             return {
                 token: readTokenFrom(LineTokenKind.StringLiteralEnd, lineString, currentPosition, positionEnd),
-                lineMode: LexerLineMode.Default,
+                lineMode: LineMode.Default,
             }
         }
     }
 
-    function tokenizeDefault(line: TLexerLine, lineNumber: number, positionStart: LexerLinePosition): LineModeAlteringRead {
+    function tokenizeDefault(line: TLine, lineNumber: number, positionStart: LinePosition): LineModeAlteringRead {
         const lineString = line.lineString;
         const text = lineString.text;
 
         const chr1: string = text[positionStart.textIndex];
         let token: LineToken;
-        let lineMode = LexerLineMode.Default;
+        let lineMode = LineMode.Default;
 
         if (chr1 === "!") { token = readConstant(LineTokenKind.Bang, lineString, positionStart, 1); }
         else if (chr1 === "&") { token = readConstant(LineTokenKind.Ampersand, lineString, positionStart, 1); }
@@ -768,9 +768,9 @@ export namespace Lexer {
     }
 
     function drainWhitespace(
-        lineString: LexerLineString,
-        position: LexerLinePosition,
-    ): LexerLinePosition {
+        lineString: LineString,
+        position: LinePosition,
+    ): LinePosition {
         let textIndexEnd = position.textIndex;
         let continueDraining = lineString.text[textIndexEnd] !== undefined;
 
@@ -791,33 +791,33 @@ export namespace Lexer {
     }
 
     function readStringLiteralOrStart(
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
     ): LineModeAlteringRead {
         const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(lineString.text, positionStart.textIndex + 1);
         if (maybeTextIndexEnd !== undefined) {
             const textIndexEnd: number = maybeTextIndexEnd + 1;
-            const positionEnd: LexerLinePosition = {
+            const positionEnd: LinePosition = {
                 textIndex: textIndexEnd,
                 columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
             };
             return {
                 token: readTokenFrom(LineTokenKind.StringLiteral, lineString, positionStart, positionEnd),
-                lineMode: LexerLineMode.Default,
+                lineMode: LineMode.Default,
             };
         }
         else {
             return {
                 token: readRestOfLine(LineTokenKind.StringLiteralStart, lineString, positionStart),
-                lineMode: LexerLineMode.String,
+                lineMode: LineMode.String,
             }
         }
     }
 
     function readHexLiteral(
-        lineString: LexerLineString,
+        lineString: LineString,
         lineNumber: number,
-        positionStart: LexerLinePosition,
+        positionStart: LinePosition,
     ): LineToken {
         const maybeTextIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, lineString.text, positionStart.textIndex);
         if (maybeTextIndexEnd === undefined) {
@@ -828,7 +828,7 @@ export namespace Lexer {
         }
         const textIndexEnd: number = maybeTextIndexEnd;
 
-        const positionEnd: LexerLinePosition = {
+        const positionEnd: LinePosition = {
             textIndex: textIndexEnd,
             columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
         }
@@ -836,9 +836,9 @@ export namespace Lexer {
     }
 
     function readNumericLiteral(
-        lineString: LexerLineString,
+        lineString: LineString,
         lineNumber: number,
-        positionStart: LexerLinePosition,
+        positionStart: LinePosition,
     ): LineToken {
         const maybeTextIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, lineString.text, positionStart.textIndex);
         if (maybeTextIndexEnd === undefined) {
@@ -849,7 +849,7 @@ export namespace Lexer {
         }
         const textEndIndex: number = maybeTextIndexEnd;
 
-        const positionEnd: LexerLinePosition = {
+        const positionEnd: LinePosition = {
             textIndex: textEndIndex,
             columnNumber: lineString.textIndex2GraphemeIndex[textEndIndex],
         }
@@ -857,13 +857,13 @@ export namespace Lexer {
     }
 
     function readLineComment(
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
     ): LineToken {
         // LexerLineString is already split on newline,
         // so the remainder of the line is a line comment
         const commentTextIndexEnd = lineString.text.length;
-        const positionEnd: LexerLinePosition = {
+        const positionEnd: LinePosition = {
             textIndex: commentTextIndexEnd,
             columnNumber: lineString.textIndex2GraphemeIndex[commentTextIndexEnd],
         }
@@ -871,30 +871,30 @@ export namespace Lexer {
     }
 
     function readMultilineCommentOrStartStart(
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
     ): LineModeAlteringRead {
         const indexOfCloseComment = lineString.text.indexOf("*/", positionStart.textIndex);
         if (indexOfCloseComment === -1) {
             return {
                 token: readRestOfLine(LineTokenKind.MultilineCommentStart, lineString, positionStart),
-                lineMode: LexerLineMode.Comment,
+                lineMode: LineMode.Comment,
             }
         }
         else {
             const textIndexEnd = indexOfCloseComment + 2;
-            const positionEnd: LexerLinePosition = {
+            const positionEnd: LinePosition = {
                 textIndex: textIndexEnd,
                 columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
             }
             return {
                 token: readTokenFrom(LineTokenKind.MultilineComment, lineString, positionStart, positionEnd),
-                lineMode: LexerLineMode.Default,
+                lineMode: LineMode.Default,
             }
         }
     }
 
-    function readKeyword(lineString: LexerLineString, lineNumber: number, positionStart: LexerLinePosition): LineToken {
+    function readKeyword(lineString: LineString, lineNumber: number, positionStart: LinePosition): LineToken {
         const maybeToken: Option<LineToken> = maybeReadKeyword(lineString, positionStart);
         if (maybeToken) {
             return maybeToken;
@@ -905,8 +905,8 @@ export namespace Lexer {
     }
 
     function maybeReadKeyword(
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
     ): Option<LineToken> {
         const text = lineString.text;
 
@@ -941,26 +941,26 @@ export namespace Lexer {
     }
 
     function readQuotedIdentifierOrStart(
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
     ): LineModeAlteringRead {
         const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(lineString.text, positionStart.textIndex + 2);
         if (maybeTextIndexEnd !== undefined) {
             const textIndexEnd: number = maybeTextIndexEnd + 1;
-            const positionEnd: LexerLinePosition = {
+            const positionEnd: LinePosition = {
                 textIndex: textIndexEnd,
                 columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
             };
 
             return {
                 token: readTokenFrom(LineTokenKind.Identifier, lineString, positionStart, positionEnd),
-                lineMode: LexerLineMode.Default,
+                lineMode: LineMode.Default,
             };
         }
         else {
             return {
                 token: readRestOfLine(LineTokenKind.QuotedIdentifierStart, lineString, positionStart),
-                lineMode: LexerLineMode.QuotedIdentifier,
+                lineMode: LineMode.QuotedIdentifier,
             }
         }
     }
@@ -968,9 +968,9 @@ export namespace Lexer {
     // the quoted identifier case has already been taken care of
     // null-literal is also read here
     function readKeywordOrIdentifier(
-        lineString: LexerLineString,
+        lineString: LineString,
         lineNumber: number,
-        positionStart: LexerLinePosition,
+        positionStart: LinePosition,
     ): LineToken {
         const text = lineString.text;
         const textIndexStart = positionStart.textIndex;
@@ -1015,12 +1015,12 @@ export namespace Lexer {
 
     function readConstant(
         lineTokenKind: LineTokenKind,
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
         length: number,
     ): LineToken {
         const textIndexEnd = positionStart.textIndex + length;
-        const positionEnd: LexerLinePosition = {
+        const positionEnd: LinePosition = {
             textIndex: positionStart.textIndex + length,
             columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd]
         }
@@ -1029,9 +1029,9 @@ export namespace Lexer {
 
     function readTokenFrom(
         lineTokenKind: LineTokenKind,
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
-        positionEnd: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
+        positionEnd: LinePosition,
     ): LineToken {
         return {
             kind: lineTokenKind,
@@ -1043,11 +1043,11 @@ export namespace Lexer {
 
     function readRestOfLine(
         lineTokenKind: LineTokenKind,
-        lineString: LexerLineString,
-        positionStart: LexerLinePosition,
+        lineString: LineString,
+        positionStart: LinePosition,
     ): LineToken {
         const textLength = lineString.text.length;
-        const positionEnd: LexerLinePosition = {
+        const positionEnd: LinePosition = {
             textIndex: textLength,
             columnNumber: lineString.textIndex2GraphemeIndex[textLength],
         };
@@ -1157,7 +1157,7 @@ export namespace Lexer {
 
     function unexpectedReadError(
         lineNumber: number,
-        position: LexerLinePosition,
+        position: LinePosition,
     ): LexerError.UnexpectedReadError {
         return new LexerError.UnexpectedReadError({
             lineNumber,

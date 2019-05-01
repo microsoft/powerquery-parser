@@ -58,7 +58,7 @@ export function expectLineTokenMatch(
     lineTerminator: string,
     expected: AbridgedLineTokens,
     wrapped: boolean,
-): Lexer.LexerState {
+): Lexer.State {
     if (wrapped) {
         const wrappedText = `wrapperOpen${lineTerminator}${text}${lineTerminator}wrapperClose`;
         const wrappedExpected: AbridgedLineTokens = [
@@ -121,8 +121,8 @@ export function expectSnapshotAbridgedComments(
     );
 }
 
-export function expectLexSuccess(text: string, lineTerminator: string): Lexer.LexerState {
-    const state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
+export function expectLexSuccess(text: string, lineTerminator: string): Lexer.State {
+    const state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLines = Lexer.maybeErrorLines(state);
         if (!(maybeErrorLines !== undefined)) {

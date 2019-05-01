@@ -4,12 +4,12 @@ import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
 interface StateErrorLinesPair {
-    readonly state: Lexer.LexerState,
+    readonly state: Lexer.State,
     readonly errorLines: Lexer.TErrorLines,
 }
 
 function expectStateErrorLines(text: string, lineTerminator: string, numErrorLines: number): StateErrorLinesPair {
-    const state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
+    const state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
 
     const maybeErrorLines = Lexer.maybeErrorLines(state);
     if (!(maybeErrorLines !== undefined)) {
@@ -34,7 +34,7 @@ function expectStateErrorLines(text: string, lineTerminator: string, numErrorLin
 }
 
 function expectSnapshotInnerError(text: string, lineTerminator: string): LexerError.TInnerLexerError {
-    const state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
+    const state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
     const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
 
     if (!(snapshotResult.kind === ResultKind.Err)) {

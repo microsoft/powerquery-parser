@@ -161,6 +161,6 @@ export interface IToken<Kind, Position> {
     readonly data: string,
 }
 
-export interface LineToken extends IToken<LineTokenKind, Lexer.LexerLinePosition> { };
+export interface LineToken extends IToken<LineTokenKind, Lexer.LinePosition> { };
 
 export interface Token extends IToken<TokenKind, StringHelpers.GraphemePosition> { }

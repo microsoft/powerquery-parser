@@ -5,7 +5,7 @@ import { Lexer, LexerSnapshot, LexerError } from "./lexer";
 parseText(`if true then 1 else 2`);
 
 // @ts-ignore
-function parseText(text: string, lineTerminator = "\n"): Lexer.LexerState {
+function parseText(text: string, lineTerminator = "\n"): Lexer.State {
     console.log(JSON.stringify(lexAndParse(text, lineTerminator), null, 4));
     const parseResult = lexAndParse(text, lineTerminator);
     if (parseResult.kind === ResultKind.Ok) {
@@ -23,7 +23,7 @@ function lexText(text: string, lineTerminator = "\n") {
 
     // the returned state will be in an error state if `text` can't be lex'd.
     // use Lexer.isErrorState to validate if needed
-    let state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
+    let state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
 
     const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
     if (maybeErrorLines) {

@@ -4,7 +4,7 @@ export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) { }
 
     public getInitialState(): IState {
-        const lexerState: Lexer.LexerState = {
+        const lexerState: Lexer.State = {
             lines: [],
             lineTerminator: this.lineTerminator,
         };
@@ -37,7 +37,7 @@ export class Tokenizer implements TokensProvider {
 }
 
 export class TokenizerState implements IState {
-    constructor(public readonly lexerState: Lexer.LexerState) { }
+    constructor(public readonly lexerState: Lexer.State) { }
 
     public clone(): IState {
         return new TokenizerState(this.lexerState);

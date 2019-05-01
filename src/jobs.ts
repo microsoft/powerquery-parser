@@ -8,7 +8,7 @@ export interface LexAndParseSuccess {
 }
 
 export function lexAndParse(text: string, lineTerminator: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
-    let state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
+    let state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
 
     const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
     if (maybeErrorLines) {
