@@ -56,7 +56,8 @@ export namespace Lexer {
     export interface ILexerLine {
         readonly kind: LexerLineKind,
         readonly lineString: LexerLineString,
-        readonly lineMode: LexerLineMode,
+        readonly lineModeStart: LexerLineMode,
+        readonly lineModeEnd: LexerLineMode,
         readonly tokens: ReadonlyArray<LineToken>,
     }
 
@@ -126,11 +127,11 @@ export namespace Lexer {
         const numLines = lines.length;
         const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];
 
-        let lineMode: LexerLineMode = maybeLatestLine
-            ? maybeLatestLine.lineMode
+        let lineModeStart: LexerLineMode = maybeLatestLine
+            ? maybeLatestLine.lineModeEnd
             : LexerLineMode.Default;
 
-        let newLine: TLexerLine = lineFrom(text, lineMode)
+        let newLine: TLexerLine = lineFrom(text, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
         return {
@@ -143,7 +144,7 @@ export namespace Lexer {
         state: LexerState,
         text: string,
         lineNumber: number,
-        maybeLineMode: Option<LexerLineMode>,
+        maybeLineModeStart: Option<LexerLineMode>,
     ): LexerState {
         if (lineNumber < 0) {
             throw new CommonError.InvariantError(`lineNumber < 0 : ${lineNumber} < 0`);
@@ -156,24 +157,24 @@ export namespace Lexer {
             throw new CommonError.InvariantError(`lineNumber >= numLines : ${lineNumber} >= ${numLines}`)
         }
 
-        let lineMode: LexerLineMode;
-        if (maybeLineMode === undefined) {
+        let lineModeStart: LexerLineMode;
+        if (maybeLineModeStart === undefined) {
             const maybePreviousLine: Option<TLexerLine> = lines[lineNumber - 1];
 
-            lineMode = maybePreviousLine !== undefined
-                ? maybePreviousLine.lineMode
+            lineModeStart = maybePreviousLine !== undefined
+                ? maybePreviousLine.lineModeStart
                 : LexerLineMode.Default;
         }
         else {
-            lineMode = maybeLineMode;
+            lineModeStart = maybeLineModeStart;
         }
 
         const originalLine = lines[lineNumber];
-        let newLine: TLexerLine = lineFrom(text, lineMode)
+        let newLine: TLexerLine = lineFrom(text, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
         let newLines: ReadonlyArray<TLexerLine>;
-        if (originalLine.lineMode !== newLine.lineMode) {
+        if (originalLine.lineModeEnd !== newLine.lineModeEnd) {
             const changedLines: TLexerLine[] = [newLine];
             let offsetLineNumber = lineNumber + 1;
 
@@ -186,14 +187,14 @@ export namespace Lexer {
                     break;
                 }
 
-                let newOffsetLine: TLexerLine = lineFrom(currentOffsetLine.lineString.text, previousOffsetLine.lineMode);
+                let newOffsetLine: TLexerLine = lineFrom(currentOffsetLine.lineString.text, previousOffsetLine.lineModeEnd);
                 newOffsetLine = tokenize(newOffsetLine, offsetLineNumber);
 
-                if (currentOffsetLine.lineMode === newOffsetLine.lineMode) {
+                changedLines.push(newOffsetLine);
+                if (currentOffsetLine.lineModeEnd === newOffsetLine.lineModeEnd) {
                     break;
                 }
 
-                changedLines.push(newOffsetLine);
                 offsetLineNumber += 1;
             }
 
@@ -240,7 +241,8 @@ export namespace Lexer {
 
             const isNotEqualQuickCheck = (
                 left.kind === right.kind
-                || left.lineMode === right.lineMode
+                || left.lineModeStart === right.lineModeStart
+                || left.lineModeEnd === right.lineModeEnd
                 || leftTokens.length === rightTokens.length
                 || left.lineString.text === right.lineString.text
             );
@@ -287,11 +289,12 @@ export namespace Lexer {
         readonly lineMode: LexerLineMode,
     }
 
-    function lineFrom(text: string, lineMode: LexerLineMode): UntouchedLine {
+    function lineFrom(text: string, lineModeStart: LexerLineMode): UntouchedLine {
         return {
             kind: LexerLineKind.Untouched,
             lineString: lexerLineStringFrom(text),
-            lineMode,
+            lineModeStart,
+            lineModeEnd: LexerLineMode.Default,
             tokens: [],
         }
     }
@@ -372,7 +375,8 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.Touched,
                     lineString: line.lineString,
-                    lineMode: tokenizeChanges.lineMode,
+                    lineModeStart: line.lineModeStart,
+                    lineModeEnd: tokenizeChanges.lineMode,
                     tokens: newTokens,
                 }
             }
@@ -384,7 +388,8 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.TouchedWithError,
                     lineString: line.lineString,
-                    lineMode: tokenizeChanges.lineMode,
+                    lineModeStart: line.lineModeStart,
+                    lineModeEnd: tokenizeChanges.lineMode,
                     tokens: newTokens,
                     error: tokenizePartialResult.error,
                 }
@@ -394,7 +399,8 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.Error,
                     lineString: line.lineString,
-                    lineMode: line.lineMode,
+                    lineModeStart: line.lineModeStart,
+                    lineModeEnd: line.lineModeEnd,
                     tokens: line.tokens,
                     error: tokenizePartialResult.error,
                 }
@@ -430,7 +436,8 @@ export namespace Lexer {
                 return {
                     kind: LexerLineKind.Error,
                     lineString: line.lineString,
-                    lineMode: line.lineMode,
+                    lineModeStart: line.lineModeStart,
+                    lineModeEnd: line.lineModeEnd,
                     tokens: line.tokens,
                     error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
                 };
@@ -446,12 +453,13 @@ export namespace Lexer {
             return {
                 kind: LexerLineKind.Touched,
                 lineString: line.lineString,
-                lineMode: line.lineMode,
+                lineModeStart: line.lineModeStart,
+                lineModeEnd: LexerLineMode.Default,
                 tokens: [],
             }
         }
 
-        let lineMode: LexerLineMode = line.lineMode;
+        let lineMode: LexerLineMode = line.lineModeStart;
         let currentPosition: LexerLinePosition = {
             textIndex: 0,
             columnNumber: 0,
