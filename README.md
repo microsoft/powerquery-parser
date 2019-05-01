@@ -10,11 +10,11 @@ A minimal example can be found in [example.ts](src/example.ts) which uses the `l
 
 ## Things to note
 
-##### Language Specification
+### Language Specification
 
 The Power Query/M language has an [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) which was used. A few differences were found between the specification used (October 2016) and by the internal parser. These differences are were marked down in [spec/notes.md](spec/notes.md)
 
-##### Error Handling
+### Error Handling
 
 The project tries avoiding using `try/catch` blocks. Instead it prefers to use the `Result` type to carry exceptions between boundaries, and `Option` for explicit nullability. This means library users should assume public functions won't throw an uncaught exception.
 
