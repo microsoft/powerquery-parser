@@ -1,5 +1,5 @@
-import { Result, ResultKind } from "./common";
-import { Lexer, LexerError, TComment } from "./lexer";
+import { Option, Result, ResultKind } from "./common";
+import { Lexer, LexerError, LexerSnapshot, TComment } from "./lexer";
 import { Ast, Parser, ParserError } from "./parser";
 
 export interface LexAndParseSuccess {
@@ -7,17 +7,25 @@ export interface LexAndParseSuccess {
     readonly comments: ReadonlyArray<TComment>,
 }
 
-export function lexAndParse(document: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
-    let lexer: Lexer.TLexer = Lexer.from(document);
-    lexer = Lexer.remaining(lexer);
-    if (Lexer.hasError(lexer)) {
+export function lexAndParse(text: string, lineTerminator: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
+    let state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
+
+    const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
+    if (maybeErrorLines) {
+        const errorLines: Lexer.TErrorLines = maybeErrorLines;
         return {
             kind: ResultKind.Err,
-            error: lexer.error,
-        };
+            error: new LexerError.LexerError(new LexerError.ErrorLineError(errorLines)),
+        }
     }
 
-    const parseResult = Parser.run(Lexer.snapshot(lexer));
+    let snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+    if (snapshotResult.kind === ResultKind.Err) {
+        return snapshotResult;
+    }
+    const snapshot: LexerSnapshot = snapshotResult.value;
+
+    const parseResult = Parser.run(snapshot);
     if (parseResult.kind === ResultKind.Err) {
         return parseResult;
     }
@@ -26,7 +34,7 @@ export function lexAndParse(document: string): Result<LexAndParseSuccess, LexerE
         kind: ResultKind.Ok,
         value: {
             ast: parseResult.value,
-            comments: lexer.comments,
+            comments: snapshot.comments,
         }
     }
 }

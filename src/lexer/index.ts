@@ -4,4 +4,3 @@ export * from "./keywords";
 export * from "./lexer";
 export * from "./lexerSnapshot";
 export * from "./token";
-
