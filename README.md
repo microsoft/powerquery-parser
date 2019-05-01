@@ -1,5 +1,7 @@
 # powerquery-parser
 
+[![Build Status](https://dev.azure.com/ms/powerquery-parser/_apis/build/status/Microsoft.powerquery-parser?branchName=master)](https://dev.azure.com/ms/powerquery-parser/_build/latest?definitionId=134&branchName=master)
+
 A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) language, written in TypeScript. Designed to be consumed by other projects.
 
 ## How to use
@@ -18,19 +20,19 @@ The project tries avoiding using `try/catch` blocks. Instead it prefers to use t
 
 ## How to build
 
-* Install NodeJS
-* `npm install`
-* `npm run-script build`
+- Install NodeJS
+- `npm install`
+- `npm run-script build`
 
 ## How to run tests
 
-* Install NodeJS
-* `npm install`
-* `npm test`
+- Install NodeJS
+- `npm install`
+- `npm test`
 
 ## Contributing
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.microsoft.com.
 
