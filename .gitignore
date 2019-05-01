@@ -331,3 +331,5 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+xunit.xml
+test-results.xml
