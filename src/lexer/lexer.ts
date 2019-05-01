@@ -281,7 +281,7 @@ export namespace Lexer {
 
     interface TokenizeChanges {
         readonly tokens: ReadonlyArray<LineToken>,
-        readonly lineMode: LexerLineMode,
+        readonly lineModeEnd: LexerLineMode,
     }
 
     interface LineModeAlteringRead {
@@ -376,7 +376,7 @@ export namespace Lexer {
                     kind: LexerLineKind.Touched,
                     lineString: line.lineString,
                     lineModeStart: line.lineModeStart,
-                    lineModeEnd: tokenizeChanges.lineMode,
+                    lineModeEnd: tokenizeChanges.lineModeEnd,
                     tokens: newTokens,
                 }
             }
@@ -389,7 +389,7 @@ export namespace Lexer {
                     kind: LexerLineKind.TouchedWithError,
                     lineString: line.lineString,
                     lineModeStart: line.lineModeStart,
-                    lineModeEnd: tokenizeChanges.lineMode,
+                    lineModeEnd: tokenizeChanges.lineModeEnd,
                     tokens: newTokens,
                     error: tokenizePartialResult.error,
                 }
@@ -536,7 +536,7 @@ export namespace Lexer {
                     kind: PartialResultKind.Partial,
                     value: {
                         tokens: newTokens,
-                        lineMode: lineMode,
+                        lineModeEnd: lineMode,
                     },
                     error: maybeError,
                 };
@@ -553,7 +553,7 @@ export namespace Lexer {
                 kind: PartialResultKind.Ok,
                 value: {
                     tokens: newTokens,
-                    lineMode: lineMode,
+                    lineModeEnd: lineMode,
                 }
             }
         }
