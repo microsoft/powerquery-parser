@@ -97,7 +97,7 @@ export namespace Lexer {
     }
 
     export function from(text: string, lineTerminator: string): State {
-        let newLine: TLine = lineFrom(text, LineMode.Default);
+        let newLine: TLine = lineFromText(text, LineMode.Default);
         newLine = tokenize(newLine, 0);
 
         return {
@@ -131,7 +131,7 @@ export namespace Lexer {
             ? maybeLatestLine.lineModeEnd
             : LineMode.Default;
 
-        let newLine: TLine = lineFrom(text, lineModeStart)
+        let newLine: TLine = lineFromText(text, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
         return {
@@ -170,7 +170,7 @@ export namespace Lexer {
         }
 
         const originalLine = lines[lineNumber];
-        let newLine: TLine = lineFrom(text, lineModeStart)
+        let newLine: TLine = lineFromText(text, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
         let newLines: ReadonlyArray<TLine>;
@@ -181,7 +181,7 @@ export namespace Lexer {
             let currentOffsetLine: Option<TLine> = lines[offsetLineNumber];
 
             while (currentOffsetLine !== undefined) {
-                let newOffsetLine: TLine = lineFrom(currentOffsetLine.lineString.text, previousOffsetLine.lineModeEnd);
+                let newOffsetLine: TLine = lineFromLineString(currentOffsetLine.lineString, previousOffsetLine.lineModeEnd);
                 newOffsetLine = tokenize(newOffsetLine, offsetLineNumber);
 
                 changedLines.push(newOffsetLine);
@@ -285,14 +285,18 @@ export namespace Lexer {
         readonly lineMode: LineMode,
     }
 
-    function lineFrom(text: string, lineModeStart: LineMode): UntouchedLine {
+    function lineFromText(text: string, lineModeStart: LineMode): UntouchedLine {
+        return lineFromLineString(lineStringFrom(text), lineModeStart);
+    }
+
+    function lineFromLineString(lineString: LineString, lineModeStart: LineMode): UntouchedLine {
         return {
             kind: LineKind.Untouched,
-            lineString: lexerLineStringFrom(text),
+            lineString,
             lineModeStart,
             lineModeEnd: LineMode.Default,
             tokens: [],
-        }
+        };
     }
 
     export function isErrorState(state: State): boolean {
@@ -334,7 +338,7 @@ export namespace Lexer {
             : undefined;
     }
 
-    function lexerLineStringFrom(text: string): LineString {
+    function lineStringFrom(text: string): LineString {
         const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(text);
         const numGraphemes = graphemes.length;
         const textIndex2GraphemeIndex: { [textIndex: number]: number; } = {};
