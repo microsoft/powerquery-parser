@@ -121,7 +121,7 @@ export function expectSnapshotAbridgedComments(
     );
 }
 
-function expectLexSuccess(text: string, lineTerminator: string): Lexer.LexerState {
+export function expectLexSuccess(text: string, lineTerminator: string): Lexer.LexerState {
     const state: Lexer.LexerState = Lexer.fromSplit(text, lineTerminator);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLines = Lexer.maybeErrorLines(state);
@@ -137,7 +137,7 @@ function expectLexSuccess(text: string, lineTerminator: string): Lexer.LexerStat
     return state;
 }
 
-function expectLexerSnapshot(text: string, lineTerminator: string): LexerSnapshot {
+export function expectLexerSnapshot(text: string, lineTerminator: string): LexerSnapshot {
     const state = expectLexSuccess(text, lineTerminator);
     const snapshotResult = LexerSnapshot.tryFrom(state);
     if (!(snapshotResult.kind === ResultKind.Ok)) {

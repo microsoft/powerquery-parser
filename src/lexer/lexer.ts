@@ -116,12 +116,105 @@ export namespace Lexer {
 
         for (let index = 1; index < numLines; index++) {
             state = appendLine(state, lines[index]);
-            if (isErrorLine(state.lines[index])) {
-                return state;
-            }
         }
 
         return state;
+    }
+
+    export function appendLine(state: LexerState, text: string): LexerState {
+        const lines = state.lines;
+        const numLines = lines.length;
+        const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];
+
+        let lineMode: LexerLineMode = maybeLatestLine
+            ? maybeLatestLine.lineMode
+            : LexerLineMode.Default;
+
+        let newLine: TLexerLine = lineFrom(text, lineMode)
+        newLine = tokenize(newLine, numLines);
+
+        return {
+            ...state,
+            lines: state.lines.concat(newLine),
+        };
+    }
+
+    export function updateLine(
+        state: LexerState,
+        text: string,
+        lineNumber: number,
+        maybeLineMode: Option<LexerLineMode>,
+    ): LexerState {
+        if (lineNumber < 0) {
+            throw new CommonError.InvariantError(`lineNumber < 0 : ${lineNumber} < 0`);
+        }
+
+        const lines = state.lines;
+        const numLines = lines.length;
+
+        if (lineNumber >= numLines) {
+            throw new CommonError.InvariantError(`lineNumber >= numLines : ${lineNumber} >= ${numLines}`)
+        }
+
+        let lineMode: LexerLineMode;
+        if (maybeLineMode === undefined) {
+            const maybePreviousLine: Option<TLexerLine> = lines[lineNumber - 1];
+
+            lineMode = maybePreviousLine !== undefined
+                ? maybePreviousLine.lineMode
+                : LexerLineMode.Default;
+        }
+        else {
+            lineMode = maybeLineMode;
+        }
+
+        const originalLine = lines[lineNumber];
+        let newLine: TLexerLine = lineFrom(text, lineMode)
+        newLine = tokenize(newLine, numLines);
+
+        let newLines: ReadonlyArray<TLexerLine>;
+        if (originalLine.lineMode !== newLine.lineMode) {
+            const changedLines: TLexerLine[] = [newLine];
+            let offsetLineNumber = lineNumber + 1;
+
+            while (true) {
+                const previousOffsetLine: TLexerLine = lines[offsetLineNumber - 1];
+                const currentOffsetLine: Option<TLexerLine> = lines[offsetLineNumber];
+
+                // no more lines exist
+                if (currentOffsetLine === undefined) {
+                    break;
+                }
+
+                let newOffsetLine: TLexerLine = lineFrom(currentOffsetLine.lineString.text, previousOffsetLine.lineMode);
+                newOffsetLine = tokenize(newOffsetLine, offsetLineNumber);
+
+                if (currentOffsetLine.lineMode === newOffsetLine.lineMode) {
+                    break;
+                }
+
+                changedLines.push(newOffsetLine);
+                offsetLineNumber += 1;
+            }
+
+            newLines = [
+                ...lines.slice(0, lineNumber),
+                ...changedLines,
+                ...lines.slice(offsetLineNumber),
+            ]
+        }
+        else {
+            newLines = [
+                ...lines.slice(0, lineNumber),
+                newLine,
+                ...lines.slice(lineNumber + 1)
+            ];
+        }
+
+        return {
+            lines: newLines,
+            lineTerminator: state.lineTerminator,
+        }
     }
 
     // deep state comparison
@@ -182,24 +275,6 @@ export namespace Lexer {
             leftPosition.columnNumber === rightPosition.columnNumber
             || leftPosition.textIndex === rightPosition.textIndex
         )
-    }
-
-    export function appendLine(state: LexerState, text: string): LexerState {
-        const lines = state.lines;
-        const numLines = lines.length;
-        const maybeLatestLine: Option<TLexerLine> = lines[numLines - 1];
-
-        let lineMode: LexerLineMode = maybeLatestLine
-            ? maybeLatestLine.lineMode
-            : LexerLineMode.Default;
-
-        let newLine: TLexerLine = lineFrom(text, lineMode)
-        newLine = tokenize(newLine, numLines);
-
-        return {
-            ...state,
-            lines: state.lines.concat(newLine),
-        };
     }
 
     interface TokenizeChanges {

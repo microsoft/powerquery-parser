@@ -56,47 +56,50 @@
 //             // If the new end state matches the previous state, we can stop tokenizing
 //             if (result.endState.equals(this.lineEndStates[i])) {
 //                 break;
-//             } else {
-//                 // Update line end state and pass on new state value
-//                 state = result.endState.clone();
-//                 this.lineEndStates[i] = state;
 //             }
+
+//             // Update line end state and pass on new state value
+//             state = result.endState.clone();
+//             this.lineEndStates[i] = state;
 //         }
 
 //         return tokenizedLineCount;
 //     }
 // }
 
-// const DefaultDocument = new MockDocument(OriginalQuery);
 
 // describe("Incremental updates", () => {
 //     it("Reparse with no change", () => {
-//         const originalLine = DefaultDocument.lines[2];
-//         const count = DefaultDocument.applyChangeAndTokenize(originalLine, 2);
+//         const document = new MockDocument(OriginalQuery);
+//         const originalLine = document.lines[2];
+//         const count = document.applyChangeAndTokenize(originalLine, 2);
 //         expect(count).equals(1, "we should not have tokenized more than one line");
 //     });
 
 //     // TODO: Remainining document is tokenized even though single line was changed
 //     xit("Reparse with simple change", () => {
-//         const modified = DefaultDocument.lines[2].replace("source", "source123");
-//         const count = DefaultDocument.applyChangeAndTokenize(modified, 2);
+//         const document = new MockDocument(OriginalQuery);
+//         const modified = document.lines[2].replace("source", "source123");
+//         const count = document.applyChangeAndTokenize(modified, 2);
 //         expect(count).equals(1, "we should not have tokenized more than one line");
 //     });
 
 //     // TODO: tokenizer needs to support multiline strings
 //     xit("Reparse with unterminated string", () => {
-//         const modified = DefaultDocument.lines[4].replace(`"text",`, `"text`);
-//         const count = DefaultDocument.applyChangeAndTokenize(modified, 4);
-//         expect(count).equals(DefaultDocument.lines.length - 4, "remaining lines should have been tokenized");
+//         const document = new MockDocument(OriginalQuery);
+//         const modified = document.lines[4].replace(`"text",`, `"text`);
+//         const count = document.applyChangeAndTokenize(modified, 4);
+//         expect(count).equals(document.lines.length - 4, "remaining lines should have been tokenized");
 
 //         // TODO: check that tokens were all changed to string
 //     });
 
 //     // TODO: tokenizer needs to support multiline comments
 //     xit("Reparse with unterminated block comment", () => {
-//         const modified = DefaultDocument.lines[3].replace(`rce),`, `rce), /* my open comment`);
-//         const count = DefaultDocument.applyChangeAndTokenize(modified, 3);
-//         expect(count).equals(DefaultDocument.lines.length - 3, "remaining lines should have been tokenized");
+//         const document = new MockDocument(OriginalQuery);
+//         const modified = document.lines[3].replace(`rce),`, `rce), /* my open comment`);
+//         const count = document.applyChangeAndTokenize(modified, 3);
+//         expect(count).equals(document.lines.length - 3, "remaining lines should have been tokenized");
 
 //         // TODO: check that tokens were all changed to comment
 //     });

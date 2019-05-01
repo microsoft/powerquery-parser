@@ -44,7 +44,9 @@ export class TokenizerState implements IState {
     }
 
     public equals(other: IState): boolean {
-        return Lexer.equalStates(this.lexerState, (other as TokenizerState).lexerState);
+        return other !== undefined
+            ? Lexer.equalStates(this.lexerState, (other as TokenizerState).lexerState)
+            : false;
     }
 }
 
