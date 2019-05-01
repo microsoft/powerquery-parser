@@ -29,4 +29,12 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)'
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
+    ArtifactName: lib
+  displayName: 'publish lib'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/bundle'
+    ArtifactName: bundle
+  displayName: 'publish webpack bundles'
