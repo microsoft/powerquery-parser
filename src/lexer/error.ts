@@ -12,6 +12,7 @@ export namespace LexerError {
     )
 
     export type TInnerLexerError = (
+        | BadRangeError
         | BadStateError
         | EndOfStreamError
         | ErrorLineError
@@ -30,6 +31,15 @@ export namespace LexerError {
             readonly innerError: TInnerLexerError,
         ) {
             super(innerError.message);
+        }
+    }
+
+    export class BadRangeError extends Error {
+        constructor(
+            readonly range: Lexer.StateRange,
+            readonly numLines: number,
+        ) {
+            super(Localization.Error.lexerBadRange(range, numLines));
         }
     }
 
@@ -128,7 +138,8 @@ export namespace LexerError {
 
     export function isTInnerLexerError(x: any): x is TInnerLexerError {
         return (
-            x instanceof BadStateError
+            x instanceof BadRangeError
+            || x instanceof BadStateError
             || x instanceof EndOfStreamError
             || x instanceof ErrorLineError
             || x instanceof ExpectedHexLiteralError

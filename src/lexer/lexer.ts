@@ -93,6 +93,16 @@ export namespace Lexer {
         readonly kind: LineKind.Untouched,
     }
 
+    export interface StateRange {
+        readonly start: StatePosition,
+        readonly end: StatePosition,
+    }
+
+    export interface StatePosition {
+        readonly lineNumber: number,
+        readonly columnNumber: number,
+    }
+
     export interface LinePosition {
         readonly textIndex: number,
         readonly columnNumber: number,
@@ -1165,6 +1175,33 @@ export namespace Lexer {
             lineNumber,
             ...position,
         });
+    }
+
+    function maybeRangeError(state: State, range: StateRange): Option<LexerError.BadRangeError> {
+        const start: StatePosition = range.start;
+        const end: StatePosition = range.end;
+        const numLines = state.lines.length;
+
+        const isBadRange = (
+            (
+                start.lineNumber === end.lineNumber
+                && start.columnNumber < end.columnNumber
+            )
+            || start.lineNumber < end.lineNumber
+            || start.lineNumber > end.lineNumber
+            || start.lineNumber < 0
+            || end.lineNumber < 0
+            || start.lineNumber > numLines
+            || end.lineNumber > numLines
+        );
+
+        if (isBadRange) {
+            return new LexerError.BadRangeError(range, numLines);
+        }
+        else {
+            return undefined;
+        }
+
     }
 
 }
