@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError, isNever, Pattern, StringHelpers } from "../common";
+import { CommonError, isNever, Pattern, StringHelpers, Result, ResultKind } from "../common";
 import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import { LexerError } from "./error";
@@ -1175,6 +1175,30 @@ export namespace Lexer {
             lineNumber,
             ...position,
         });
+    }
+
+    export function updateRange(
+        state: State,
+        range: StateRange,
+        text: number,
+    ): Result<State, LexerError.LexerError> {
+        const maybeError = maybeRangeError(state, range);
+        if (maybeError) {
+            return {
+                kind: ResultKind.Err,
+                error: new LexerError.LexerError(maybeError),
+            };
+        }
+
+
+    }
+
+    // assumes maybeRangeError has already validated range
+    export function linesInRange(
+        state: State,
+        range: StateRange,
+    ): ReadonlyArray<TLine> {
+        return state.lines.slice(range.start.lineNumber, range.start.lineNumber + 1);
     }
 
     function maybeRangeError(state: State, range: StateRange): Option<LexerError.BadRangeError> {
