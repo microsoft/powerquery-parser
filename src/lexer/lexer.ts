@@ -1198,39 +1198,35 @@ export namespace Lexer {
         const numTextChunks = textChunks.length;
         const lastTextChunksIndex = numTextChunks - 1;
 
-        let maybeLine: Option<TLine> = state.lines[lineNumberStart];
+        const maybeLine: Option<TLine> = state.lines[lineNumberStart];
         let lineMode: LineMode = maybeLine !== undefined
             ? maybeLine.lineModeEnd
             : LineMode.Default;
 
-        for (let index: number = 0; index < numTextChunks; index += 1) {
-            const lineNumber = lineNumberStart + index;
-            let newLineText: string = textChunks[index];
+        for (let textChunkIndex: number = 0; textChunkIndex < numTextChunks; textChunkIndex += 1) {
+            const lineNumber = lineNumberStart + textChunkIndex;
+            let newLineText: string = textChunks[textChunkIndex];
 
-            if (index === 0 || lastTextChunksIndex) {
+            if (textChunkIndex === 0 || lastTextChunksIndex) {
 
-                if (maybeLine) {
-                    const lineString: LineString = maybeLine.lineString;
-                    const existingText: string = lineString.text;
+                // prepend existing text
+                if (textChunkIndex === 0) {
+                    const lineStart = state.lines[rangeStart.lineNumber];
+                    const lineStringStart = lineStart.lineString;
+                    const textIndexStart = lineStringStart.graphemeIndex2TextIndex[rangeStart.columnNumber];
+                    newLineText = (lineStringStart.text.substring(0, textIndexStart)) + newLineText;
+                }
 
-                    // prepend existing text
-                    if (rangeStart.lineNumber === lineNumber) {
-                        const end = lineString.graphemeIndex2TextIndex[rangeStart.columnNumber];
-                        newLineText = (existingText.substring(0, end)) + newLineText;
-                    }
-
-                    // append existing text
-                    if (rangeEnd.lineNumber === lineNumber) {
-                        const start = lineString.graphemeIndex2TextIndex[rangeEnd.columnNumber + 1];
-                        newLineText += existingText.substring(start)
-                    }
+                // append existing text
+                if (textChunkIndex === lastTextChunksIndex) {
+                    const lineEnd = state.lines[rangeEnd.lineNumber];
+                    const lineStringEnd = lineEnd.lineString;
+                    newLineText += lineStringEnd.text.substring(lineStringEnd.graphemeIndex2TextIndex[rangeEnd.columnNumber + 1])
                 }
             }
 
             const newLine: TLine = tokenize(lineFromText(newLineText, lineMode), lineNumber);
             newLines.push(newLine);
-
-            maybeLine = state.lines[lineNumber + 1]
             lineMode = newLine.lineModeEnd;
         }
 
