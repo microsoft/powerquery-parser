@@ -1180,7 +1180,7 @@ export namespace Lexer {
     export function updateRange(
         state: State,
         range: StateRange,
-        text: number,
+        text: string,
     ): Result<State, LexerError.LexerError> {
         const maybeError = maybeRangeError(state, range);
         if (maybeError) {
@@ -1190,15 +1190,63 @@ export namespace Lexer {
             };
         }
 
+        const newLines: TLine[] = [];
+        const rangeStart = range.start;
+        const rangeEnd = range.end;
+        const lineNumberStart: number = rangeStart.lineNumber;
+        const textChunks = text.split(state.lineTerminator);
+        const numTextChunks = textChunks.length;
+        const lastTextChunksIndex = numTextChunks - 1;
 
-    }
+        let maybeLine: Option<TLine> = state.lines[lineNumberStart];
+        let lineMode: LineMode = maybeLine !== undefined
+            ? maybeLine.lineModeEnd
+            : LineMode.Default;
 
-    // assumes maybeRangeError has already validated range
-    export function linesInRange(
-        state: State,
-        range: StateRange,
-    ): ReadonlyArray<TLine> {
-        return state.lines.slice(range.start.lineNumber, range.start.lineNumber + 1);
+        for (let index: number = 0; index < numTextChunks; index += 1) {
+            const lineNumber = lineNumberStart + index;
+            let newLineText: string = textChunks[index];
+
+            if (index === 0 || lastTextChunksIndex) {
+
+                if (maybeLine) {
+                    const lineString: LineString = maybeLine.lineString;
+                    const existingText: string = lineString.text;
+
+                    // prepend existing text
+                    if (rangeStart.lineNumber === lineNumber) {
+                        const end = lineString.graphemeIndex2TextIndex[rangeStart.columnNumber];
+                        newLineText = (existingText.substring(0, end)) + newLineText;
+                    }
+
+                    // append existing text
+                    if (rangeEnd.lineNumber === lineNumber) {
+                        const start = lineString.graphemeIndex2TextIndex[rangeEnd.columnNumber + 1];
+                        newLineText += existingText.substring(start)
+                    }
+                }
+            }
+
+            const newLine: TLine = tokenize(lineFromText(newLineText, lineMode), lineNumber);
+            newLines.push(newLine);
+
+            maybeLine = state.lines[lineNumber + 1]
+            lineMode = newLine.lineModeEnd;
+        }
+
+        const lines: ReadonlyArray<TLine> = [
+            ...state.lines.slice(0, rangeStart.lineNumber),
+            ...newLines,
+            ...state.lines.slice(rangeEnd.lineNumber + 1),
+        ];
+
+        return {
+            kind: ResultKind.Ok,
+            value: {
+                ...state,
+                lines,
+            }
+        };
     }
 
     function maybeRangeError(state: State, range: StateRange): Option<LexerError.BadRangeError> {
