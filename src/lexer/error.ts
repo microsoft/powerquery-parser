@@ -36,7 +36,7 @@ export namespace LexerError {
 
     export class BadRangeError extends Error {
         constructor(
-            readonly range: Lexer.StateRange,
+            readonly range: Lexer.Range,
             readonly numLines: number,
         ) {
             super(Localization.Error.lexerBadRange(range, numLines));

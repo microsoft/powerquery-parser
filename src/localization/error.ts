@@ -29,27 +29,21 @@ export namespace Localization.Error {
         return `An unknown error was encountered, innerError: ${innerError}`
     }
 
-    export function lexerBadRange(range: Lexer.StateRange, numLines: number): string {
-        const start: Lexer.StatePosition = range.start;
-        const end: Lexer.StatePosition = range.end;
+    export function lexerBadRange(range: Lexer.Range, numLines: number): string {
+        const start: Lexer.RangePosition = range.start;
+        const end: Lexer.RangePosition = range.end;
 
-        if (start.lineNumber === end.lineNumber && start.columnNumber < end.columnNumber) {
-            return `Start and end shared the same line, but start.columnNumber was higher than start.LineNumber.`;
+        if (start.lineNumber === end.lineNumber && start.columnNumber > end.columnNumber) {
+            return `Start and end shared the same line, but start.columnNumber was higher than end.columnNumber.`;
         }
-        else if (start.lineNumber < end.lineNumber) {
-            return `start's line number is higher than end's line number.`;
+        else if (start.lineNumber > end.lineNumber) {
+            return `start.lineNumber is larger than end.lineNumber.`;
         }
         else if (start.lineNumber < 0) {
-            return `start's lineNumber was less than 0.`;
-        }
-        else if (end.lineNumber < 0) {
-            return `end's lineNumber was less than 0.`;
+            return `start.lineNumber is less than 0.`;
         }
         else if (start.lineNumber > numLines) {
-            return `start's lineNumber was higher than State's number of lines.`;
-        }
-        else if (end.lineNumber > numLines) {
-            return `end's lineNumber was higher than State's number of lines.`;
+            return `start.lineNumber is higher than State's number of lines.`;
         }
         else {
             throw new CommonError.InvariantError("Localization.Error.lexerBadRange reached an unknown state");
