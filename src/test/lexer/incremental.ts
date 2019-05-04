@@ -2,6 +2,7 @@ import { expect } from "chai";
 import "mocha";
 import { Lexer } from "../../lexer";
 import { expectLexSuccess } from "./common";
+import { ResultKind } from "../../common";
 
 const LINE_TERMINATOR: string = `\n`;
 
@@ -10,6 +11,22 @@ type AbridgedTLexerLine = ReadonlyArray<[Lexer.LineKind, Lexer.LineMode, Lexer.L
 function expectAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLine) {
     const actual = state.lines.map((line: Lexer.TLine) => [line.kind, line.lineModeStart, line.lineModeEnd, line.lineString.text]);
     expect(actual).deep.equal(expected);
+}
+
+function expectLexerUpdateRangeOk(
+    originalText: string,
+    lineTerminator: string,
+    newText: string,
+    range: Lexer.Range,
+): Lexer.State {
+    let state = expectLexSuccess(originalText, lineTerminator);
+
+    const stateResult = Lexer.updateRange(state, range, newText);
+    if (!(stateResult.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, null, 4)}`);
+    }
+
+    return stateResult.value;
 }
 
 describe(`Lexer.Incremental`, () => {
@@ -27,6 +44,92 @@ describe(`Lexer.Incremental`, () => {
         it(`Lexer.UpdateLine(>= state.lines.length)`, () => {
             const state = expectLexSuccess(``, LINE_TERMINATOR);
             expect(() => Lexer.updateLine(state, ``, 2, undefined)).to.throw(`InvariantError: lineNumber >= numLines : 2 >= 1`);
+        });
+    });
+
+    describe(`Lexer.updateRange`, () => {
+        it(`foobar -> Xoobar`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    columnNumber: 0,
+                },
+                end: {
+                    lineNumber: 0,
+                    columnNumber: 0,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foobar`,
+                LINE_TERMINATOR,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].lineString.text).to.equal("Xoobar");
+        });
+
+        it(`foobar -> X`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    columnNumber: 0,
+                },
+                end: {
+                    lineNumber: 0,
+                    columnNumber: 5,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foobar`,
+                LINE_TERMINATOR,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].lineString.text).to.equal("X");
+        });
+
+        it(`foo\\nbar -> X`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    columnNumber: 0,
+                },
+                end: {
+                    lineNumber: 1,
+                    columnNumber: 2,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foo\nbar`,
+                LINE_TERMINATOR,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].lineString.text).to.equal("X");
+        });
+
+        it(`foo\\nbar -> fXr`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    columnNumber: 1,
+                },
+                end: {
+                    lineNumber: 1,
+                    columnNumber: 1,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foo\nbar`,
+                LINE_TERMINATOR,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].lineString.text).to.equal("fXr");
         });
     });
 
