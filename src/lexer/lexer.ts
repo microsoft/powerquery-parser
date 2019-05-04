@@ -1283,10 +1283,10 @@ export namespace Lexer {
         const lineStart: TLine = lines[rangeStart.lineNumber];
         const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
-        if (lineStart.lineString.graphemes.length >= rangeStart.columnNumber) {
+        if (rangeStart.columnNumber >= lineStart.lineString.graphemes.length) {
             maybeKind = LexerError.BadRangeKind.ColumnNumberStart_GreaterThan_LineLength;
         }
-        else if (lineEnd.lineString.graphemes.length >= rangeEnd.columnNumber) {
+        else if (rangeEnd.columnNumber >= lineEnd.lineString.graphemes.length) {
             maybeKind = LexerError.BadRangeKind.ColumnNumberEnd_GreaterThan_LineLength;
         }
 

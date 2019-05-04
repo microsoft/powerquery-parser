@@ -54,7 +54,7 @@ function expectBadRangeKind(
     expectedKind: LexerError.BadRangeKind,
 ) {
     let state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
-    const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateRange(state, range, "");
+    const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateRange(state, range, `foobar`);
     if (!(updateRangeResult.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: updateRangeResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
     }
@@ -70,15 +70,15 @@ function expectBadRangeKind(
     }
 }
 
-describe("Lexer.Error", () => {
-    it("ExpectedHexLiteralError: 0x", () => {
-        const stateErrorLinesPair = expectStateErrorLines("0x", "\n", 1);
+describe(`Lexer.Error`, () => {
+    it(`ExpectedHexLiteralError: 0x`, () => {
+        const stateErrorLinesPair = expectStateErrorLines(`0x`, `\n`, 1);
         const innerError = stateErrorLinesPair.errorLines[0].error.innerError;
         expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
     });
 
-    it("lexerLineError: 0x \\n 0x", () => {
-        const stateErrorLinesPair = expectStateErrorLines("0x \n 0x", "\n", 2);
+    it(`lexerLineError: 0x \\n 0x`, () => {
+        const stateErrorLinesPair = expectStateErrorLines(`0x \n 0x`, `\n`, 2);
         const firstInnerError = stateErrorLinesPair.errorLines[0].error.innerError;
         expect(firstInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, firstInnerError.message);
 
@@ -86,30 +86,30 @@ describe("Lexer.Error", () => {
         expect(secondInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, secondInnerError.message);
     });
 
-    it("UnterminatedMultilineCommentError: /*", () => {
-        const innerError = expectSnapshotInnerError("/*", "\n");
+    it(`UnterminatedMultilineCommentError: /*`, () => {
+        const innerError = expectSnapshotInnerError(`/*`, `\n`);
         expect(innerError instanceof LexerError.UnterminatedMultilineCommentError).to.equal(true, innerError.message);
     });
 
-    it("UnterminatedStringError: \"", () => {
-        const innerError = expectSnapshotInnerError("\"", "\n");
+    it(`UnterminatedStringError: "`, () => {
+        const innerError = expectSnapshotInnerError(`"`, `\n`);
         expect(innerError instanceof LexerError.UnterminatedStringError).to.equal(true, innerError.message);
     });
 
     describe(`BadRange`, () => {
-        // it(`start.lineNumber === end.lineNumber && start.columnNumber > end.columnNumber`, () => {
-        //     const range: Lexer.Range = {
-        //         start: {
-        //             lineNumber: 0,
-        //             columnNumber: 1,
-        //         },
-        //         end: {
-        //             lineNumber: 0,
-        //             columnNumber: 0,
-        //         },
-        //     };
-        //     expectBadRangeKind("", LINE_TERMINATOR, range, LexerError.BadRangeKind.SameLine_ColumnNumberStart_Higher);
-        // });
+        it(`start.lineNumber === end.lineNumber && start.columnNumber > end.columnNumber`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    columnNumber: 1,
+                },
+                end: {
+                    lineNumber: 0,
+                    columnNumber: 0,
+                },
+            };
+            expectBadRangeKind(`foobar`, LINE_TERMINATOR, range, LexerError.BadRangeKind.SameLine_ColumnNumberStart_Higher);
+        });
 
         it(`start.lineNumber > end.lineNumber`, () => {
             const range: Lexer.Range = {
@@ -122,7 +122,7 @@ describe("Lexer.Error", () => {
                     columnNumber: 0,
                 },
             };
-            expectBadRangeKind("", LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd);
+            expectBadRangeKind(`foobar`, LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd);
         });
 
         it(`start.lineNumber < 0`, () => {
@@ -136,7 +136,7 @@ describe("Lexer.Error", () => {
                     columnNumber: 0,
                 },
             };
-            expectBadRangeKind("", LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberStart_LessThan_Zero);
+            expectBadRangeKind(`foobar`, LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberStart_LessThan_Zero);
         });
 
         it(`start.lineNumber >= numLines`, () => {
@@ -150,7 +150,7 @@ describe("Lexer.Error", () => {
                     columnNumber: 0,
                 },
             };
-            expectBadRangeKind("", LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberStart_GreaterThan_NumLines);
+            expectBadRangeKind(`foobar`, LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberStart_GreaterThan_NumLines);
         });
 
         it(`end.lineNumber >= numLines`, () => {
@@ -164,22 +164,35 @@ describe("Lexer.Error", () => {
                     columnNumber: 0,
                 },
             };
-            expectBadRangeKind("", LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines);
+            expectBadRangeKind(`foobar`, LINE_TERMINATOR, range, LexerError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines);
         });
 
-        // it(`start.columnNumber >= lines[start.lineNumber].lineString.text.length`, () => {
-        //     const range: Lexer.Range = {
-        //         start: {
-        //             lineNumber: 0,
-        //             columnNumber: 100,
-        //         },
-        //         end: {
-        //             lineNumber: 0,
-        //             columnNumber: 0,
-        //         },
-        //     };
-        //     let innerError = expectUpdateRangeInnerError("", LINE_TERMINATOR, range);
-        //     expect(innerError instanceof LexerError.BadRangeError).to.equal(true, innerError.message);
-        // });
+        it(`start.columnNumber >= lines[start.lineNumber].lineString.text.length`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    columnNumber: 100,
+                },
+                end: {
+                    lineNumber: 0,
+                    columnNumber: 200,
+                },
+            };
+            expectBadRangeKind(`foobar`, LINE_TERMINATOR, range, LexerError.BadRangeKind.ColumnNumberStart_GreaterThan_LineLength);
+        });
+
+        it(`end.columnNumber >= lines[end.lineNumber].lineString.text.length`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    columnNumber: 0,
+                },
+                end: {
+                    lineNumber: 0,
+                    columnNumber: 200,
+                },
+            };
+            expectBadRangeKind(`foobar`, LINE_TERMINATOR, range, LexerError.BadRangeKind.ColumnNumberEnd_GreaterThan_LineLength);
+        });
     });
 });

@@ -53,7 +53,7 @@ export namespace Localization.Error {
                 return `end.columnNumber is higher than line's length.`;
 
             default:
-                throw isNever(kind)
+                throw isNever(kind);
         }
     }
 
