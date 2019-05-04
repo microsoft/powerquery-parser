@@ -26,6 +26,18 @@ export namespace LexerError {
         | UnterminatedStringError
     )
 
+    // do not these sort variants,
+    // they are in order that logical checks are made, which in turn help create logical variants
+    export const enum BadRangeKind {
+        SameLine_ColumnNumberStart_Higher = "SameLine_ColumnNumberStart_Higher",
+        LineNumberStart_GreaterThan_LineNumberEnd = "LineNumberStart_GreaterThan_LineNumberEnd",
+        LineNumberStart_LessThan_Zero = "LineNumberStart_LessThan_Zero",
+        LineNumberStart_GreaterThan_NumLines = "LineNumberStart_GreaterThan_NumLines",
+        LineNumberEnd_GreaterThan_NumLines = "LineNumberEnd_GreaterThan_NumLines",
+        ColumnNumberStart_GreaterThan_LineLength = "ColumnNumberStart_GreaterThan_LineLength",
+        ColumnNumberEnd_GreaterThan_LineLength = "ColumnNumberEnd_GreaterThan_LineLength",
+    }
+
     export class LexerError extends Error {
         constructor(
             readonly innerError: TInnerLexerError,
@@ -37,9 +49,9 @@ export namespace LexerError {
     export class BadRangeError extends Error {
         constructor(
             readonly range: Lexer.Range,
-            readonly numLines: number,
+            readonly kind: BadRangeKind,
         ) {
-            super(Localization.Error.lexerBadRange(range, numLines));
+            super(Localization.Error.lexerBadRange(kind));
         }
     }
 

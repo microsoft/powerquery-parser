@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+import { isNever, StringHelpers } from "../common";
 import { Option } from "../common/option";
-import { TokenKind, Token, Lexer } from "../lexer";
+import { Lexer, LexerError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
-import { StringHelpers, CommonError } from "../common";
 
 export namespace Localization.Error {
 
@@ -29,24 +29,31 @@ export namespace Localization.Error {
         return `An unknown error was encountered, innerError: ${innerError}`
     }
 
-    export function lexerBadRange(range: Lexer.Range, numLines: number): string {
-        const start: Lexer.RangePosition = range.start;
-        const end: Lexer.RangePosition = range.end;
+    export function lexerBadRange(kind: LexerError.BadRangeKind): string {
+        switch (kind) {
+            case LexerError.BadRangeKind.SameLine_ColumnNumberStart_Higher:
+                return `Start and end shared the same line, but start.columnNumber was higher than end.columnNumber.`;
 
-        if (start.lineNumber === end.lineNumber && start.columnNumber > end.columnNumber) {
-            return `Start and end shared the same line, but start.columnNumber was higher than end.columnNumber.`;
-        }
-        else if (start.lineNumber > end.lineNumber) {
-            return `start.lineNumber is larger than end.lineNumber.`;
-        }
-        else if (start.lineNumber < 0) {
-            return `start.lineNumber is less than 0.`;
-        }
-        else if (start.lineNumber > numLines) {
-            return `start.lineNumber is higher than State's number of lines.`;
-        }
-        else {
-            throw new CommonError.InvariantError("Localization.Error.lexerBadRange reached an unknown state");
+            case LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd:
+                return `start.lineNumber is larger than end.lineNumber.`;
+
+            case LexerError.BadRangeKind.LineNumberStart_LessThan_Zero:
+                return `start.lineNumber is less than 0.`;
+
+            case LexerError.BadRangeKind.LineNumberStart_GreaterThan_NumLines:
+                return `start.lineNumber is higher than State's number of lines.`;
+
+            case LexerError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines:
+                return `end.lineNumber is higher than State's number of lines.`;
+
+            case LexerError.BadRangeKind.ColumnNumberStart_GreaterThan_LineLength:
+                return `start.columnNumber is higher than line's length.`;
+
+            case LexerError.BadRangeKind.ColumnNumberEnd_GreaterThan_LineLength:
+                return `end.columnNumber is higher than line's length.`;
+
+            default:
+                throw isNever(kind)
         }
     }
 

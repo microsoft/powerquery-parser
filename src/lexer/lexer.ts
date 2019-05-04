@@ -1254,23 +1254,47 @@ export namespace Lexer {
         const end: RangePosition = range.end;
         const numLines = state.lines.length;
 
-        const isBadRange = (
-            (
-                start.lineNumber === end.lineNumber
-                && start.columnNumber > end.columnNumber
-            )
-            || start.lineNumber > end.lineNumber
-            || start.lineNumber < 0
-            || start.lineNumber > numLines
-        );
-
-        if (isBadRange) {
-            return new LexerError.BadRangeError(range, numLines);
+        let maybeKind: Option<LexerError.BadRangeKind>;
+        if (start.lineNumber === end.lineNumber && start.columnNumber > end.columnNumber) {
+            maybeKind = LexerError.BadRangeKind.SameLine_ColumnNumberStart_Higher;
         }
-        else {
-            return undefined;
+        else if (start.lineNumber > end.lineNumber) {
+            maybeKind = LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd;
+        }
+        else if (start.lineNumber < 0) {
+            maybeKind = LexerError.BadRangeKind.LineNumberStart_LessThan_Zero;
+        }
+        else if (start.lineNumber >= numLines) {
+            maybeKind = LexerError.BadRangeKind.LineNumberStart_GreaterThan_NumLines;
+        }
+        else if (end.lineNumber >= numLines) {
+            maybeKind = LexerError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines;
         }
 
+        if (maybeKind) {
+            const kind: LexerError.BadRangeKind = maybeKind;
+            return new LexerError.BadRangeError(range, kind);
+        }
+
+        const lines: ReadonlyArray<TLine> = state.lines;
+        const rangeStart: RangePosition = range.start;
+        const rangeEnd: RangePosition = range.end;
+
+        const lineStart: TLine = lines[rangeStart.lineNumber];
+        const lineEnd: TLine = lines[rangeEnd.lineNumber];
+
+        if (lineStart.lineString.graphemes.length >= rangeStart.columnNumber) {
+            maybeKind = LexerError.BadRangeKind.ColumnNumberStart_GreaterThan_LineLength;
+        }
+        else if (lineEnd.lineString.graphemes.length >= rangeEnd.columnNumber) {
+            maybeKind = LexerError.BadRangeKind.ColumnNumberEnd_GreaterThan_LineLength;
+        }
+
+        if (maybeKind) {
+            return new LexerError.BadRangeError(range, maybeKind);
+        }
+
+        return undefined;
     }
 
 }
