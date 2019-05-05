@@ -156,73 +156,32 @@ export namespace Lexer {
         state: State,
         text: string,
         lineNumber: number,
-        maybeLineModeStart: Option<LineMode>,
-    ): State {
-        if (lineNumber < 0) {
-            throw new CommonError.InvariantError(`lineNumber < 0 : ${lineNumber} < 0`);
-        }
+    ): Result<State, LexerError.LexerError> {
+        const lines: ReadonlyArray<TLine> = state.lines;
 
-        const lines = state.lines;
-        const numLines = lines.length;
-
-        if (lineNumber >= numLines) {
-            throw new CommonError.InvariantError(`lineNumber >= numLines : ${lineNumber} >= ${numLines}`)
-        }
-
-        let lineModeStart: LineMode;
-        if (maybeLineModeStart === undefined) {
-            const maybePreviousLine: Option<TLine> = lines[lineNumber - 1];
-
-            lineModeStart = maybePreviousLine !== undefined
-                ? maybePreviousLine.lineModeStart
-                : LineMode.Default;
+        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+            lineNumber,
+            lines,
+        );
+        if (maybeError) {
+            return {
+                kind: ResultKind.Err,
+                error: new LexerError.LexerError(maybeError),
+            };
         }
         else {
-            lineModeStart = maybeLineModeStart;
-        }
-
-        const originalLine = lines[lineNumber];
-        let newLine: TLine = lineFromText(text, lineModeStart)
-        newLine = tokenize(newLine, numLines);
-
-        let newLines: ReadonlyArray<TLine>;
-        if (originalLine.lineModeEnd !== newLine.lineModeEnd && lineNumber !== numLines) {
-            const changedLines: TLine[] = [newLine];
-            let offsetLineNumber = lineNumber + 1;
-            let previousOffsetLine: TLine = newLine;
-            let currentOffsetLine: Option<TLine> = lines[offsetLineNumber];
-
-            while (currentOffsetLine !== undefined) {
-                let newOffsetLine: TLine = lineFromLineString(currentOffsetLine.lineString, previousOffsetLine.lineModeEnd);
-                newOffsetLine = tokenize(newOffsetLine, offsetLineNumber);
-
-                changedLines.push(newOffsetLine);
-                if (currentOffsetLine.lineModeEnd === newOffsetLine.lineModeEnd) {
-                    break;
+            const line: TLine = lines[lineNumber];
+            const range: Range = {
+                start: {
+                    lineNumber,
+                    columnNumber: 0,
+                },
+                end: {
+                    lineNumber,
+                    columnNumber: line.lineString.text.length - 1,
                 }
-
-                offsetLineNumber += 1;
-                previousOffsetLine = newOffsetLine;
-                currentOffsetLine = lines[offsetLineNumber];
-            }
-
-            newLines = [
-                ...lines.slice(0, lineNumber),
-                ...changedLines,
-                ...lines.slice(offsetLineNumber),
-            ]
-        }
-        else {
-            newLines = [
-                ...lines.slice(0, lineNumber),
-                newLine,
-                ...lines.slice(lineNumber + 1)
-            ];
-        }
-
-        return {
-            lines: newLines,
-            lineTerminator: state.lineTerminator,
+            };
+            return updateRange(state, range, text);
         }
     }
 
@@ -1182,7 +1141,7 @@ export namespace Lexer {
         range: Range,
         text: string,
     ): Result<State, LexerError.LexerError> {
-        const maybeError = maybeRangeError(state, range);
+        const maybeError = maybeBadRangeError(state, range);
         if (maybeError) {
             return {
                 kind: ResultKind.Err,
@@ -1198,7 +1157,7 @@ export namespace Lexer {
         const numTextChunks = textChunks.length;
         const lastTextChunksIndex = numTextChunks - 1;
 
-        const maybeLine: Option<TLine> = state.lines[lineNumberStart];
+        const maybeLine: Option<TLine> = state.lines[lineNumberStart - 1];
         let lineMode: LineMode = maybeLine !== undefined
             ? maybeLine.lineModeEnd
             : LineMode.Default;
@@ -1245,7 +1204,31 @@ export namespace Lexer {
         };
     }
 
-    function maybeRangeError(state: State, range: Range): Option<LexerError.BadRangeError> {
+    function maybeBadLineNumberError(
+        lineNumber: number,
+        lines: ReadonlyArray<TLine>,
+    ): Option<LexerError.BadLineNumber> {
+        const numLines = lines.length;
+        if (lineNumber >= numLines) {
+            return new LexerError.BadLineNumber(
+                LexerError.BadLineNumberKind.GreaterThanNumLines,
+                lineNumber,
+                numLines,
+            );
+        }
+        else if (lineNumber < 0) {
+            return new LexerError.BadLineNumber(
+                LexerError.BadLineNumberKind.LessThanZero,
+                lineNumber,
+                numLines,
+            );
+        }
+        else {
+            return undefined;
+        }
+    }
+
+    function maybeBadRangeError(state: State, range: Range): Option<LexerError.BadRangeError> {
         const start: RangePosition = range.start;
         const end: RangePosition = range.end;
         const numLines = state.lines.length;

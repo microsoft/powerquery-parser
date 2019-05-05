@@ -12,6 +12,7 @@ export namespace LexerError {
     )
 
     export type TInnerLexerError = (
+        | BadLineNumber
         | BadRangeError
         | BadStateError
         | EndOfStreamError
@@ -38,11 +39,26 @@ export namespace LexerError {
         ColumnNumberEnd_GreaterThan_LineLength = "ColumnNumberEnd_GreaterThan_LineLength",
     }
 
+    export const enum BadLineNumberKind {
+        LessThanZero = "LessThanZero",
+        GreaterThanNumLines = "GreaterThanNumLines",
+    }
+
     export class LexerError extends Error {
         constructor(
             readonly innerError: TInnerLexerError,
         ) {
             super(innerError.message);
+        }
+    }
+
+    export class BadLineNumber extends Error {
+        constructor(
+            readonly kind: BadLineNumberKind,
+            readonly lineNumber: number,
+            readonly numLines: number,
+        ) {
+            super(Localization.Error.lexerBadLineNumber(kind, lineNumber, numLines));
         }
     }
 
@@ -150,7 +166,8 @@ export namespace LexerError {
 
     export function isTInnerLexerError(x: any): x is TInnerLexerError {
         return (
-            x instanceof BadRangeError
+            x instanceof BadLineNumber
+            || x instanceof BadRangeError
             || x instanceof BadStateError
             || x instanceof EndOfStreamError
             || x instanceof ErrorLineError

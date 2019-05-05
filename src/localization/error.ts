@@ -29,6 +29,19 @@ export namespace Localization.Error {
         return `An unknown error was encountered, innerError: ${innerError}`
     }
 
+    export function lexerBadLineNumber(kind: LexerError.BadLineNumberKind, lineNumber: number, numLines: number): string {
+        switch (kind) {
+            case LexerError.BadLineNumberKind.GreaterThanNumLines:
+                return `lineNumber (${lineNumber}) is greater than or equal to number of lines (${numLines}).`;
+
+            case LexerError.BadLineNumberKind.LessThanZero:
+                return `lineNumber (${lineNumber}) is less than zero.`;
+
+            default:
+                throw isNever(kind);
+        }
+    }
+
     export function lexerBadRange(kind: LexerError.BadRangeKind): string {
         switch (kind) {
             case LexerError.BadRangeKind.SameLine_ColumnNumberStart_Higher:
