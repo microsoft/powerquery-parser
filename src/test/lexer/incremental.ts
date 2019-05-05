@@ -282,7 +282,7 @@ describe(`Lexer.Incremental`, () => {
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-                    ]
+                    ],
                 );
             });
 
@@ -311,61 +311,43 @@ describe(`Lexer.Incremental`, () => {
             });
         });
 
-        // describe(`multiple lines, default mode to string mode`, () => {
-        //     it(`first`, () => {
-        //         let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
-        //         let expected: AbridgedTLexerLine = [
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-        //         ];
-        //         expectAbridgedTLexerLine(state, expected);
+        describe(`multiple lines, default mode to string mode`, () => {
+            it(`first`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `"`,
+                    0,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
+                    ],
+                );
+            });
 
-        //         state = Lexer.updateLine(state, `"`, 0, undefined);
-        //         expected = [
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `bravo`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
-        //         ];
-        //         expectAbridgedTLexerLine(state, expected);
-        //     });
+            it(`middle`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `"`,
+                    1,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
+                    ],
+                );
+            });
 
-        //     it(`middle`, () => {
-        //         let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
-        //         let expected: AbridgedTLexerLine = [
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-        //         ];
-        //         expectAbridgedTLexerLine(state, expected);
-
-        //         state = Lexer.updateLine(state, `"`, 1, undefined);
-        //         expected = [
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
-        //         ];
-        //         expectAbridgedTLexerLine(state, expected);
-        //     });
-
-        //     it(`last`, () => {
-        //         let state = expectLexSuccess(`alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`, LINE_TERMINATOR);
-        //         let expected: AbridgedTLexerLine = [
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-        //         ];
-        //         expectAbridgedTLexerLine(state, expected);
-
-        //         state = Lexer.updateLine(state, `"`, 2, undefined);
-        //         expected = [
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-        //             [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-        //         ];
-        //         expectAbridgedTLexerLine(state, expected);
-        //     });
-        // });
+            it(`last`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `"`,
+                    2,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                    ],
+                );
+            });
+        });
 
         // describe(`multiple lines, string mode to default mode`, () => {
         //     it(`first`, () => {
