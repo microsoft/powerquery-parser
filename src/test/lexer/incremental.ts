@@ -131,6 +131,52 @@ describe(`Lexer.Incremental`, () => {
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].lineString.text).to.equal("fXr");
         });
+
+        it(`foo\\nbar\\baz -> foo\\nX\\nbaz`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 1,
+                    columnNumber: 0,
+                },
+                end: {
+                    lineNumber: 1,
+                    columnNumber: 2,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foo\nbar\nbaz`,
+                LINE_TERMINATOR,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(3);
+            expect(state.lines[0].lineString.text).to.equal("foo");
+            expect(state.lines[1].lineString.text).to.equal("X");
+            expect(state.lines[2].lineString.text).to.equal("baz");
+        });
+
+        it(`foo\\nbar\\baz -> foo\\nbXr\\nbaz`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 1,
+                    columnNumber: 1,
+                },
+                end: {
+                    lineNumber: 1,
+                    columnNumber: 1,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foo\nbar\nbaz`,
+                LINE_TERMINATOR,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(3);
+            expect(state.lines[0].lineString.text).to.equal("foo");
+            expect(state.lines[1].lineString.text).to.equal("bXr");
+            expect(state.lines[2].lineString.text).to.equal("baz");
+        });
     });
 
     describe(`Lexer.updateLine`, () => {
