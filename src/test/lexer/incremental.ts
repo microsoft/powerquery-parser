@@ -32,14 +32,14 @@ function expectLexerUpdateRangeOk(
 function expectLexerUpdateLine(
     originalText: string,
     expectedOriginal: AbridgedTLexerLine,
-    newText: string,
     lineNumber: number,
+    newText: string,
     expectedUpdate: AbridgedTLexerLine,
 ): Lexer.State {
     let state = expectLexSuccess(originalText, LINE_TERMINATOR);
     expectAbridgedTLexerLine(state, expectedOriginal);
 
-    const stateResult = Lexer.updateLine(state, newText, lineNumber);
+    const stateResult = Lexer.updateLine(state, lineNumber, newText);
     if (!(stateResult.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, null, 4)}`);
     };
@@ -61,7 +61,7 @@ function expectLexerUpdateLineAlphaBravoCharlie(
         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
     ];
-    return expectLexerUpdateLine(originalText, originalExpected, newText, lineNumber, expectedUpdate);
+    return expectLexerUpdateLine(originalText, originalExpected, lineNumber, newText, expectedUpdate);
 }
 
 describe(`Lexer.Incremental`, () => {
@@ -206,8 +206,8 @@ describe(`Lexer.Incremental`, () => {
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`],
                     ],
-                    `foobar`,
                     0,
+                    `foobar`,
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                     ],
@@ -220,8 +220,8 @@ describe(`Lexer.Incremental`, () => {
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`],
                     ],
-                    `"`,
                     0,
+                    `"`,
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
                     ],
@@ -234,8 +234,8 @@ describe(`Lexer.Incremental`, () => {
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
                     ],
-                    `foobar`,
                     0,
+                    `foobar`,
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                     ],
@@ -250,8 +250,8 @@ describe(`Lexer.Incremental`, () => {
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
                     ],
-                    `foobar`,
                     0,
+                    `foobar`,
                     [
                         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                     ],

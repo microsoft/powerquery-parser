@@ -154,8 +154,8 @@ export namespace Lexer {
 
     export function updateLine(
         state: State,
-        text: string,
         lineNumber: number,
+        text: string,
     ): Result<State, LexerError.LexerError> {
         const lines: ReadonlyArray<TLine> = state.lines;
 
