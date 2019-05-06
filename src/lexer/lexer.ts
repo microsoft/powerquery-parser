@@ -169,20 +169,10 @@ export namespace Lexer {
                 error: new LexerError.LexerError(maybeError),
             };
         }
-        else {
-            const line: TLine = lines[lineNumber];
-            const range: Range = {
-                start: {
-                    lineNumber,
-                    columnNumber: 0,
-                },
-                end: {
-                    lineNumber,
-                    columnNumber: line.lineString.text.length - 1,
-                }
-            };
-            return updateRange(state, range, text);
-        }
+
+        const line: TLine = lines[lineNumber];
+        const range: Range = rangeFrom(line, lineNumber);
+        return updateRange(state, range, text);
     }
 
     export function updateRange(
@@ -196,6 +186,10 @@ export namespace Lexer {
                 kind: ResultKind.Err,
                 error: new LexerError.LexerError(maybeError),
             };
+        }
+
+        if (text === "") {
+            return deleteRange(state, range);
         }
 
         const lines: ReadonlyArray<TLine> = state.lines;
@@ -266,6 +260,41 @@ export namespace Lexer {
             }
         };
     }
+
+    export function deleteLine(state: State, lineNumber: number): Result<State, LexerError.LexerError> {
+        const lines: ReadonlyArray<TLine> = state.lines;
+
+        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+            lineNumber,
+            lines,
+        );
+        if (maybeError) {
+            return {
+                kind: ResultKind.Err,
+                error: new LexerError.LexerError(maybeError),
+            };
+        }
+
+        const line: TLine = lines[lineNumber];
+        const range: Range = rangeFrom(line, lineNumber);
+        return deleteRange(state, range);
+    }
+
+    export function deleteRange(
+        state: State,
+        range: Range,
+    ): Result<State, LexerError.LexerError> {
+        const maybeError = maybeBadRangeError(state, range);
+        if (maybeError) {
+            return {
+                kind: ResultKind.Err,
+                error: new LexerError.LexerError(maybeError),
+            };
+        }
+
+
+    }
+
 
     // deep state comparison
     export function equalStates(leftState: State, rightState: State): boolean {
@@ -412,6 +441,19 @@ export namespace Lexer {
             graphemes,
             textIndex2GraphemeIndex,
             graphemeIndex2TextIndex
+        }
+    }
+
+    function rangeFrom(line: TLine, lineNumber: number): Range {
+        return {
+            start: {
+                lineNumber,
+                columnNumber: 0,
+            },
+            end: {
+                lineNumber,
+                columnNumber: line.lineString.text.length - 1,
+            }
         }
     }
 
