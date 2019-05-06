@@ -275,9 +275,16 @@ export namespace Lexer {
             };
         }
 
-        const line: TLine = lines[lineNumber];
-        const range: Range = rangeFrom(line, lineNumber);
-        return deleteRange(state, range);
+        return {
+            kind: ResultKind.Ok,
+            value: {
+                ...state,
+                lines: [
+                    ...lines.slice(0, lineNumber),
+                    ...lines.slice(lineNumber + 1),
+                ],
+            }
+        }
     }
 
     export function deleteRange(
