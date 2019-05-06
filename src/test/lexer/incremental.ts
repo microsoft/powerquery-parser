@@ -65,22 +65,6 @@ function expectLexerUpdateLineAlphaBravoCharlie(
 }
 
 describe(`Lexer.Incremental`, () => {
-    // describe(`Error`, () => {
-    //     it(`Lexer.UpdateLine(less than 0)`, () => {
-    //         const state = expectLexSuccess(``, LINE_TERMINATOR);
-    //         expect(() => Lexer.updateLine(state, ``, -1, undefined)).to.throw(`InvariantError: lineNumber < 0 : -1 < 0`);
-    //     });
-
-    //     it(`Lexer.UpdateLine(=== state.lines.length)`, () => {
-    //         const state = expectLexSuccess(``, LINE_TERMINATOR);
-    //         expect(() => Lexer.updateLine(state, ``, 1, undefined)).to.throw(`InvariantError: lineNumber >= numLines : 1 >= 1`);
-    //     });
-
-    //     it(`Lexer.UpdateLine(>= state.lines.length)`, () => {
-    //         const state = expectLexSuccess(``, LINE_TERMINATOR);
-    //         expect(() => Lexer.updateLine(state, ``, 2, undefined)).to.throw(`InvariantError: lineNumber >= numLines : 2 >= 1`);
-    //     });
-    // });
 
     describe(`Lexer.updateRange`, () => {
         it(`foobar -> Xoobar`, () => {
