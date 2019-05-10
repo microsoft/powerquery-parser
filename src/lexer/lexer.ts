@@ -57,7 +57,7 @@ export namespace Lexer {
 
     export interface ILexerLine {
         readonly kind: LineKind,
-        readonly lineString: LineString,
+        readonly text: string,
         readonly lineModeStart: LineMode,
         readonly lineModeEnd: LineMode,
         readonly tokens: ReadonlyArray<LineToken>,
@@ -103,13 +103,8 @@ export namespace Lexer {
         readonly columnNumber: number,
     }
 
-    export interface LinePosition {
-        readonly textIndex: number,
-        readonly columnNumber: number,
-    }
-
     export function from(text: string, lineTerminator: string): State {
-        let newLine: TLine = lineFromText(text, LineMode.Default);
+        let newLine: TLine = lineFrom(text, LineMode.Default);
         newLine = tokenize(newLine, 0);
 
         return {
@@ -143,7 +138,7 @@ export namespace Lexer {
             ? maybeLatestLine.lineModeEnd
             : LineMode.Default;
 
-        let newLine: TLine = lineFromText(text, lineModeStart)
+        let newLine: TLine = lineFrom(text, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
         return {
@@ -228,7 +223,7 @@ export namespace Lexer {
                 }
             }
 
-            const newLine: TLine = tokenize(lineFromText(newLineText, lineMode), lineNumber);
+            const newLine: TLine = tokenize(lineFrom(newLineText, lineMode), lineNumber);
             newLines.push(newLine);
             lineMode = newLine.lineModeEnd;
         }
@@ -324,14 +319,13 @@ export namespace Lexer {
             const leftTokens = left.tokens;
             const rightTokens = right.tokens;
 
-            const isNotEqualQuickCheck = (
+            const isEqualQuickCheck = (
                 left.kind === right.kind
-                || left.lineModeStart === right.lineModeStart
-                || left.lineModeEnd === right.lineModeEnd
-                || leftTokens.length === rightTokens.length
-                || left.lineString.text === right.lineString.text
+                && left.lineModeStart === right.lineModeStart
+                && left.lineModeEnd === right.lineModeEnd
+                && leftTokens.length === rightTokens.length
             );
-            if (!isNotEqualQuickCheck) {
+            if (!isEqualQuickCheck) {
                 return false;
             }
 
@@ -351,17 +345,10 @@ export namespace Lexer {
     export function equalTokens(leftToken: LineToken, rightToken: LineToken): boolean {
         return (
             leftToken.kind === rightToken.kind
-            || leftToken.data === rightToken.data
-            || equalPositons(leftToken.positionStart, rightToken.positionStart)
-            || equalPositons(leftToken.positionEnd, rightToken.positionEnd)
+            && leftToken.data === rightToken.data
+            && leftToken.positionStart === rightToken.positionStart
+            && leftToken.positionEnd === rightToken.positionEnd
         );
-    }
-
-    export function equalPositons(leftPosition: LinePosition, rightPosition: LinePosition): boolean {
-        return (
-            leftPosition.columnNumber === rightPosition.columnNumber
-            || leftPosition.textIndex === rightPosition.textIndex
-        )
     }
 
     export function isErrorState(state: State): boolean {
@@ -413,19 +400,25 @@ export namespace Lexer {
         readonly lineMode: LineMode,
     }
 
-    function lineFromText(text: string, lineModeStart: LineMode): UntouchedLine {
-        return lineFromLineString(lineStringFrom(text), lineModeStart);
-    }
-
-    function lineFromLineString(lineString: LineString, lineModeStart: LineMode): UntouchedLine {
+    function lineFrom(text: string, lineModeStart: LineMode): UntouchedLine {
         return {
             kind: LineKind.Untouched,
-            lineString,
+            text,
             lineModeStart,
             lineModeEnd: LineMode.Default,
             tokens: [],
         };
     }
+
+    // function lineFromLineString(lineString: LineString, lineModeStart: LineMode): UntouchedLine {
+    //     return {
+    //         kind: LineKind.Untouched,
+    //         lineString,
+    //         lineModeStart,
+    //         lineModeEnd: LineMode.Default,
+    //         tokens: [],
+    //     };
+    // }
 
     function lineStringFrom(text: string): LineString {
         const graphemes = StringHelpers.graphemeSplitter.splitGraphemes(text);
@@ -459,7 +452,7 @@ export namespace Lexer {
             },
             end: {
                 lineNumber,
-                columnNumber: line.lineString.text.length - 1,
+                columnNumber: line.text.length - 1,
             }
         }
     }
@@ -476,7 +469,7 @@ export namespace Lexer {
 
                 return {
                     kind: LineKind.Touched,
-                    lineString: line.lineString,
+                    text: line.text,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: tokenizeChanges.lineModeEnd,
                     tokens: newTokens,
@@ -489,7 +482,7 @@ export namespace Lexer {
 
                 return {
                     kind: LineKind.TouchedWithError,
-                    lineString: line.lineString,
+                    text: line.text,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: tokenizeChanges.lineModeEnd,
                     tokens: newTokens,
@@ -500,7 +493,7 @@ export namespace Lexer {
             case PartialResultKind.Err:
                 return {
                     kind: LineKind.Error,
-                    lineString: line.lineString,
+                    text: line.text,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: line.lineModeEnd,
                     tokens: line.tokens,
@@ -527,7 +520,7 @@ export namespace Lexer {
                 const line: TLine = maybeCurrentLine;
 
                 if (previousLineModeEnd !== line.lineModeStart) {
-                    const retokenizedLine: TLine = tokenize(lineFromLineString(line.lineString, previousLineModeEnd), offsetLineNumber);
+                    const retokenizedLine: TLine = tokenize(lineFrom(line.text, previousLineModeEnd), offsetLineNumber);
                     retokenizedLines.push(retokenizedLine);
                     previousLineModeEnd = retokenizedLine.lineModeEnd;
                     lineNumber += 1;
@@ -571,7 +564,7 @@ export namespace Lexer {
             case LineKind.TouchedWithError:
                 return {
                     kind: LineKind.Error,
-                    lineString: line.lineString,
+                    text: line.text,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: line.lineModeEnd,
                     tokens: line.tokens,
@@ -580,15 +573,14 @@ export namespace Lexer {
         }
 
         const untouchedLine: UntouchedLine = line;
-        const lineString: LineString = untouchedLine.lineString;
-        const text = lineString.text;
+        const text = untouchedLine.text;
         const textLength = text.length;
 
         // sanity check that there's something to tokenize
         if (textLength === 0) {
             return {
                 kind: LineKind.Touched,
-                lineString: line.lineString,
+                text: line.text,
                 lineModeStart: line.lineModeStart,
                 lineModeEnd: LineMode.Default,
                 tokens: [],
@@ -596,13 +588,10 @@ export namespace Lexer {
         }
 
         let lineMode: LineMode = line.lineModeStart;
-        let currentPosition: LinePosition = {
-            textIndex: 0,
-            columnNumber: 0,
-        };
+        let currentPosition: number = 0;
 
         if (lineMode === LineMode.Default) {
-            currentPosition = drainWhitespace(lineString, currentPosition);
+            currentPosition = drainWhitespace(text, currentPosition);
         }
 
         const newTokens: LineToken[] = [];
@@ -642,13 +631,13 @@ export namespace Lexer {
                 newTokens.push(token);
 
                 if (lineMode === LineMode.Default) {
-                    currentPosition = drainWhitespace(lineString, token.positionEnd);
+                    currentPosition = drainWhitespace(text, currentPosition);
                 }
                 else {
                     currentPosition = token.positionEnd;
                 }
 
-                if (currentPosition.textIndex === textLength) {
+                if (currentPosition === textLength) {
                     continueLexing = false;
                 }
             }
@@ -904,26 +893,22 @@ export namespace Lexer {
     }
 
     function drainWhitespace(
-        lineString: LineString,
-        position: LinePosition,
-    ): LinePosition {
-        let textIndexEnd = position.textIndex;
-        let continueDraining = lineString.text[textIndexEnd] !== undefined;
+        text: string,
+        position: number,
+    ): number {
+        let continueDraining = text[position] !== undefined;
 
         while (continueDraining) {
-            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, lineString.text, textIndexEnd);
+            const maybeLength = StringHelpers.maybeRegexMatchLength(Pattern.RegExpWhitespace, text, position);
             if (maybeLength) {
-                textIndexEnd += maybeLength;
+                position += maybeLength;
             }
             else {
                 continueDraining = false;
             }
         }
 
-        return {
-            textIndex: textIndexEnd,
-            columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-        };
+        return position;
     }
 
     function readStringLiteralOrStart(
