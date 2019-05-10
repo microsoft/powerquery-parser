@@ -266,8 +266,8 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
 
     for (let lineNumber = 0; lineNumber < numLines; lineNumber++) {
         const line = lines[lineNumber];
-        text += line.text;
 
+        text += line.text;
         if (lineNumber !== numLines - 1) {
             text += state.lineTerminator;
         }
@@ -282,13 +282,13 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
                 kind: lineToken.kind,
                 data: lineToken.data,
                 positionStart: {
-                    codeUnit: text.length,
+                    codeUnit: lineTextOffset + linePositionStart,
                     lineCodeUnit: linePositionStart,
                     lineNumber,
                     columnNumber: columnNumberMap[linePositionStart],
                 },
                 positionEnd: {
-                    codeUnit: text.length + lineToken.data.length,
+                    codeUnit: lineTextOffset + linePositionEnd,
                     lineCodeUnit: linePositionEnd,
                     lineNumber,
                     columnNumber: columnNumberMap[linePositionEnd],

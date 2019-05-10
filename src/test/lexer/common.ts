@@ -38,17 +38,8 @@ export function expectAbridgedSnapshotMatch(
     const actualTokens = snapshot.tokens.map(token => [token.kind, token.data]);
     const actualComments = snapshot.comments.map(comment => [comment.kind, comment.data]);
 
-    const tokenDetails = {
-        actual: actualTokens,
-        expected: expectedTokens,
-    };
-    expect(actualTokens).deep.equal(expectedTokens, JSON.stringify(tokenDetails));
-
-    const commentDetails = {
-        actual: actualTokens,
-        expected: expectedTokens,
-    };
-    expect(actualComments).deep.equal(expectedComments, JSON.stringify(commentDetails));
+    expect(actualTokens).deep.equal(expectedTokens);
+    expect(actualComments).deep.equal(expectedComments);
 
     return snapshot;
 }

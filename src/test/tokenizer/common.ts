@@ -30,7 +30,7 @@ export class Tokenizer implements TokensProvider {
         // why it's safe:
         //      all variants for LineTokenKind are strings
         return {
-            startIndex: lineToken.positionStart.textIndex,
+            startIndex: lineToken.positionStart,
             scopes: lineToken.kind as unknown as string,
         }
     }

@@ -415,11 +415,11 @@ export namespace Lexer {
         let summedLength = 0;
         let maybeColumnNumber: Option<number>;
         for (let index = 0; index < numGraphemes; index += 1) {
-            summedLength += graphemes[index].length;
             if (summedLength === lineCodeUnit) {
                 maybeColumnNumber = index;
                 break;
             }
+            summedLength += graphemes[index].length;
         }
 
         if (maybeColumnNumber === undefined) {
