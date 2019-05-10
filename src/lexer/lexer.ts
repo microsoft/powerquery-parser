@@ -147,114 +147,112 @@ export namespace Lexer {
         };
     }
 
-    export function updateLine(
-        state: State,
-        lineNumber: number,
-        text: string,
-    ): Result<State, LexerError.LexerError> {
-        const lines: ReadonlyArray<TLine> = state.lines;
+    // export function updateLine(
+    //     state: State,
+    //     lineNumber: number,
+    //     text: string,
+    // ): Result<State, LexerError.LexerError> {
+    //     const lines: ReadonlyArray<TLine> = state.lines;
 
-        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
-            lineNumber,
-            lines,
-        );
-        if (maybeError) {
-            return {
-                kind: ResultKind.Err,
-                error: new LexerError.LexerError(maybeError),
-            };
-        }
+    //     const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+    //         lineNumber,
+    //         lines,
+    //     );
+    //     if (maybeError) {
+    //         return {
+    //             kind: ResultKind.Err,
+    //             error: new LexerError.LexerError(maybeError),
+    //         };
+    //     }
 
-        const line: TLine = lines[lineNumber];
-        const range: Range = rangeFrom(line, lineNumber);
-        return updateRange(state, range, text);
-    }
+    //     const line: TLine = lines[lineNumber];
+    //     const range: Range = rangeFrom(line, lineNumber);
+    //     return updateRange(state, range, text);
+    // }
 
-    export function updateRange(
-        state: State,
-        range: Range,
-        text: string,
-    ): Result<State, LexerError.LexerError> {
-        const maybeError = maybeBadRangeError(state, range);
-        if (maybeError) {
-            return {
-                kind: ResultKind.Err,
-                error: new LexerError.LexerError(maybeError),
-            };
-        }
+    // export function updateRange(
+    //     state: State,
+    //     range: Range,
+    //     text: string,
+    // ): Result<State, LexerError.LexerError> {
+    //     const maybeError = maybeBadRangeError(state, range);
+    //     if (maybeError) {
+    //         return {
+    //             kind: ResultKind.Err,
+    //             error: new LexerError.LexerError(maybeError),
+    //         };
+    //     }
 
-        if (text === "") {
-            return deleteRange(state, range);
-        }
+    //     if (text === "") {
+    //         return deleteRange(state, range);
+    //     }
 
-        const lines: ReadonlyArray<TLine> = state.lines;
-        const newLines: TLine[] = [];
-        const rangeStart = range.start;
-        const rangeEnd = range.end;
-        const lineNumberStart: number = rangeStart.lineNumber;
-        const textChunks = text.split(state.lineTerminator);
-        const numTextChunks = textChunks.length;
-        const lastTextChunksIndex = numTextChunks - 1;
+    //     const lines: ReadonlyArray<TLine> = state.lines;
+    //     const newLines: TLine[] = [];
+    //     const rangeStart = range.start;
+    //     const rangeEnd = range.end;
+    //     const lineNumberStart: number = rangeStart.lineNumber;
+    //     const textChunks = text.split(state.lineTerminator);
+    //     const numTextChunks = textChunks.length;
+    //     const lastTextChunksIndex = numTextChunks - 1;
 
-        const maybeLine: Option<TLine> = lines[lineNumberStart - 1];
-        let lineMode: LineMode = maybeLine !== undefined
-            ? maybeLine.lineModeEnd
-            : LineMode.Default;
+    //     const maybeLine: Option<TLine> = lines[lineNumberStart - 1];
+    //     let lineMode: LineMode = maybeLine !== undefined
+    //         ? maybeLine.lineModeEnd
+    //         : LineMode.Default;
 
-        for (let textChunkIndex: number = 0; textChunkIndex < numTextChunks; textChunkIndex += 1) {
-            const lineNumber = lineNumberStart + textChunkIndex;
-            let newLineText: string = textChunks[textChunkIndex];
+    //     for (let textChunkIndex: number = 0; textChunkIndex < numTextChunks; textChunkIndex += 1) {
+    //         const lineNumber = lineNumberStart + textChunkIndex;
+    //         let newLineText: string = textChunks[textChunkIndex];
 
-            if (textChunkIndex === 0 || lastTextChunksIndex) {
+    //         if (textChunkIndex === 0 || lastTextChunksIndex) {
 
-                // prepend existing text
-                if (textChunkIndex === 0) {
-                    const lineStart = lines[rangeStart.lineNumber];
-                    const lineStringStart = lineStart.lineString;
-                    const textIndexStart = lineStringStart.graphemeIndex2TextIndex[rangeStart.columnNumber];
-                    newLineText = (lineStringStart.text.substring(0, textIndexStart)) + newLineText;
-                }
+    //             // prepend existing text
+    //             if (textChunkIndex === 0) {
+    //                 const lineStart = lines[rangeStart.lineNumber];
+    //                 newLineText = (lineStart.text.substring(0, rangeStart.columnNumber)) + newLineText;
+    //             }
 
-                // append existing text
-                if (textChunkIndex === lastTextChunksIndex) {
-                    const lineEnd = lines[rangeEnd.lineNumber];
-                    const lineStringEnd = lineEnd.lineString;
-                    newLineText += lineStringEnd.text.substring(lineStringEnd.graphemeIndex2TextIndex[rangeEnd.columnNumber + 1])
-                }
-            }
+    //             // append existing text
+    //             if (textChunkIndex === lastTextChunksIndex) {
+    //                 const lineEnd = lines[rangeEnd.lineNumber];
+    //                 const lineStringEnd = lineEnd.lineString;
+    //                 newLineText += lineStringEnd.text.substring(lineStringEnd.graphemeIndex2TextIndex[rangeEnd.columnNumber + 1])
+    //             }
+    //         }
 
-            const newLine: TLine = tokenize(lineFrom(newLineText, lineMode), lineNumber);
-            newLines.push(newLine);
-            lineMode = newLine.lineModeEnd;
-        }
+    //         const newLine: TLine = tokenize(lineFrom(newLineText, lineMode), lineNumber);
+    //         newLines.push(newLine);
+    //         lineMode = newLine.lineModeEnd;
+    //     }
 
-        let trailingLines: ReadonlyArray<TLine>;
-        const retokenizeLineNumberStart = rangeEnd.lineNumber + 1;
-        if (lines.length > retokenizeLineNumberStart) {
-            const lastNewLineModeEnd = newLines[newLines.length - 1].lineModeEnd;
-            const retokenizedLines: ReadonlyArray<TLine> = retokenizeLines(lines, retokenizeLineNumberStart, lastNewLineModeEnd);
+    //     let trailingLines: ReadonlyArray<TLine>;
+    //     const retokenizeLineNumberStart = rangeEnd.lineNumber + 1;
+    //     if (lines.length > retokenizeLineNumberStart) {
+    //         const lastNewLineModeEnd = newLines[newLines.length - 1].lineModeEnd;
+    //         const retokenizedLines: ReadonlyArray<TLine> = retokenizeLines(lines, retokenizeLineNumberStart, lastNewLineModeEnd);
 
-            trailingLines = [
-                ...retokenizedLines,
-                ...lines.slice(retokenizeLineNumberStart + retokenizedLines.length),
-            ]
-        }
-        else {
-            trailingLines = [];
-        }
+    //         trailingLines = [
+    //             ...retokenizedLines,
+    //             ...lines.slice(retokenizeLineNumberStart + retokenizedLines.length),
+    //         ]
+    //     }
+    //     else {
+    //         trailingLines = [];
+    //     }
 
-        return {
-            kind: ResultKind.Ok,
-            value: {
-                ...state,
-                lines: [
-                    ...state.lines.slice(0, rangeStart.lineNumber),
-                    ...newLines,
-                    ...trailingLines,
-                ],
-            }
-        };
-    }
+    //     return {
+    //         kind: ResultKind.Ok,
+    //         value: {
+    //             ...state,
+    //             lines: [
+    //                 ...state.lines.slice(0, rangeStart.lineNumber),
+    //                 ...newLines,
+    //                 ...trailingLines,
+    //             ],
+    //         }
+    //     };
+    // }
 
     export function deleteLine(state: State, lineNumber: number): Result<State, LexerError.LexerError> {
         const lines: ReadonlyArray<TLine> = state.lines;
@@ -410,7 +408,7 @@ export namespace Lexer {
         };
     }
 
-    function graphemePositionFrom(text: string, lineNumber: number, lineCodePoint: number): StringHelpers.GraphemePosition {
+    function graphemePositionFrom(text: string, lineNumber: number, lineCodeUnit: number): StringHelpers.GraphemePosition {
         const graphemes: ReadonlyArray<string> = StringHelpers.graphemeSplitter.splitGraphemes(text);
         const numGraphemes = graphemes.length;
         
@@ -418,7 +416,7 @@ export namespace Lexer {
         let maybeColumnNumber: Option<number>;
         for (let index = 0; index < numGraphemes; index += 1) {
             summedLength += graphemes[index].length;
-            if (summedLength === lineCodePoint) {
+            if (summedLength === lineCodeUnit) {
                 maybeColumnNumber = index;
                 break;
             }
@@ -427,7 +425,7 @@ export namespace Lexer {
         if (maybeColumnNumber === undefined) {
             const details = {
                 lineNumber,
-                codePoint: lineCodePoint,
+                lineCodeUnit,
                 text,
             }
             throw new CommonError.InvariantError("graphemePositionFrom failed to find the columnNumber", details);
@@ -435,7 +433,7 @@ export namespace Lexer {
         const columnNumber = maybeColumnNumber;
 
         return {
-            lineCodePoint,
+            lineCodeUnit,
             lineNumber,
             columnNumber,
         }
@@ -720,33 +718,21 @@ export namespace Lexer {
     // read either "*/" or eof
     function tokenizeMultilineCommentContentOrEnd(
         line: TLine,
-        currentPosition: LinePosition,
+        positionStart: number,
     ): LineModeAlteringRead {
-        const lineString: LineString = line.lineString;
-        const text = lineString.text;
-        const indexOfCloseComment = text.indexOf("*/", currentPosition.textIndex);
+        const text: string = line.text;
+        const indexOfCloseComment = text.indexOf("*/", positionStart);
 
         if (indexOfCloseComment === -1) {
-            const textLength = text.length;
-            const positionEnd: LinePosition = {
-                textIndex: textLength,
-                columnNumber: lineString.textIndex2GraphemeIndex[textLength],
-            };
-
             return {
-                token: readTokenFrom(LineTokenKind.MultilineCommentContent, lineString, currentPosition, positionEnd),
+                token: readRestOfLine(LineTokenKind.MultilineCommentContent, text, positionStart),
                 lineMode: LineMode.Comment,
-            }
+            };
         }
         else {
-            const textIndexEnd = indexOfCloseComment + 2;
-            const positionEnd: LinePosition = {
-                textIndex: textIndexEnd,
-                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-            };
-
+            const positionEnd = indexOfCloseComment + 2;
             return {
-                token: readTokenFrom(LineTokenKind.MultilineCommentEnd, lineString, currentPosition, positionEnd),
+                token: readTokenFrom(LineTokenKind.MultilineCommentEnd, text, positionStart, positionEnd),
                 lineMode: LineMode.Default,
             }
         }
@@ -755,7 +741,7 @@ export namespace Lexer {
     // read either string literal end or eof
     function tokenizeQuotedIdentifierContentOrEnd(
         line: TLine,
-        currentPosition: LinePosition,
+        currentPosition: number,
     ): LineModeAlteringRead {
         const read = tokenizeStringLiteralContentOrEnd(line, currentPosition);
         switch (read.token.kind) {
@@ -786,34 +772,28 @@ export namespace Lexer {
     // read either string literal end or eof
     function tokenizeStringLiteralContentOrEnd(
         line: TLine,
-        currentPosition: LinePosition,
+        currentPosition: number,
     ): LineModeAlteringRead {
-        const lineString: LineString = line.lineString;
-        const text: string = lineString.text;
-        const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition.textIndex);
+        const text: string = line.text;
+        const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition);
 
-        if (maybeTextIndexEnd === undefined) {
+        if (maybePositionEnd === undefined) {
             return {
-                token: readRestOfLine(LineTokenKind.StringLiteralContent, lineString, currentPosition),
+                token: readRestOfLine(LineTokenKind.StringLiteralContent, text, currentPosition),
                 lineMode: LineMode.String,
             }
         }
         else {
-            const textIndexEnd: number = maybeTextIndexEnd + 1;
-            const positionEnd: LinePosition = {
-                textIndex: textIndexEnd,
-                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-            };
-
+            const positionEnd: number = maybePositionEnd + 1;
             return {
-                token: readTokenFrom(LineTokenKind.StringLiteralEnd, lineString, currentPosition, positionEnd),
+                token: readTokenFrom(LineTokenKind.StringLiteralEnd, text, currentPosition, positionEnd),
                 lineMode: LineMode.Default,
             }
         }
     }
 
     function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number): LineModeAlteringRead {
-        const text = line.text;
+        const text: string = line.text;
 
         const chr1: string = text[positionStart];
         let token: LineToken;
@@ -1255,9 +1235,9 @@ export namespace Lexer {
     function unexpectedReadError(
         text: string,
         lineNumber: number,
-        lineCodePoint: number,
+        lineCodeUnit: number,
     ): LexerError.UnexpectedReadError {
-        return new LexerError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, lineCodePoint));
+        return new LexerError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, lineCodeUnit));
     }
 
     function maybeBadLineNumberError(

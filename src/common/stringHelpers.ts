@@ -14,7 +14,7 @@ export namespace StringHelpers {
     }
 
     export interface GraphemePosition {
-        readonly lineCodePoint: number,
+        readonly lineCodeUnit: number,
         readonly lineNumber: number,
         readonly columnNumber: number,
     }

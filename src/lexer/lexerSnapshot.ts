@@ -266,25 +266,30 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
 
     for (let lineNumber = 0; lineNumber < numLines; lineNumber++) {
         const line = lines[lineNumber];
-        text += line.lineString.text;
+        text += line.text;
 
         if (lineNumber !== numLines - 1) {
             text += state.lineTerminator;
         }
 
+        const columnNumberMap: ColumnNumberMap = getColumnNumberMap(text);
+
         for (let lineToken of line.tokens) {
+            const linePositionStart = lineToken.positionStart;
+            const linePositionEnd = lineToken.positionEnd;
+
             flatTokens.push({
                 kind: lineToken.kind,
                 data: lineToken.data,
                 positionStart: {
-                    textIndex: lineTextOffset + lineToken.positionStart.textIndex,
+                    lineCodeUnit: linePositionStart,
                     lineNumber,
-                    columnNumber: lineToken.positionStart.columnNumber,
+                    columnNumber: columnNumberMap[linePositionStart],
                 },
                 positionEnd: {
-                    textIndex: lineTextOffset + lineToken.positionEnd.textIndex,
+                    lineCodeUnit: linePositionEnd,
                     lineNumber,
-                    columnNumber: lineToken.positionEnd.columnNumber,
+                    columnNumber: columnNumberMap[linePositionEnd],
                 },
                 flatIndex,
             });
@@ -297,6 +302,25 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
 
     return [text, flatTokens];
 }
+
+function getColumnNumberMap(text: string): ColumnNumberMap {
+    const graphemes: ReadonlyArray<string> = StringHelpers.graphemeSplitter.splitGraphemes(text);
+    const numGraphemes = graphemes.length;
+    const map: ColumnNumberMap = {};
+
+    let summedCodeUnits = 0;
+    for (let index = 0; index < numGraphemes; index += 1) {
+        map[summedCodeUnits] = index;
+        const grapheme: string = graphemes[index];
+        summedCodeUnits += grapheme.length;
+    }
+
+    map[numGraphemes] = text.length;
+
+    return map;
+}
+
+type ColumnNumberMap = {[codeUnit: number]: number};
 
 interface ConcatenatedCommentRead {
     readonly comment: TComment,
