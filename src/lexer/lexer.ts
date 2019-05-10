@@ -940,19 +940,19 @@ export namespace Lexer {
 
     function readStringLiteralOrStart(
         text: string,
-        positionStart: number,
+        currentPosition: number,
     ): LineModeAlteringRead {
-        const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, positionStart + 1);
+        const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 1);
         if (maybePositionEnd !== undefined) {
             const positionEnd: number = maybePositionEnd + 1;
             return {
-                token: readTokenFrom(LineTokenKind.StringLiteral, text, positionStart, positionEnd),
+                token: readTokenFrom(LineTokenKind.StringLiteral, text, currentPosition, positionEnd),
                 lineMode: LineMode.Default,
             };
         }
         else {
             return {
-                token: readRestOfLine(LineTokenKind.StringLiteralStart, text, positionStart),
+                token: readRestOfLine(LineTokenKind.StringLiteralStart, text, currentPosition),
                 lineMode: LineMode.String,
             }
         }
@@ -1029,11 +1029,11 @@ export namespace Lexer {
 
     function maybeReadKeyword(
         text: string,
-        positionStart: number,
+        currentPosition: number,
     ): Option<LineToken> {
-        const identifierPositionStart = text[positionStart] === "#"
-            ? positionStart + 1
-            : positionStart;
+        const identifierPositionStart = text[currentPosition] === "#"
+            ? currentPosition + 1
+            : currentPosition;
 
         const maybeIdentifierPositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, identifierPositionStart);
         if (maybeIdentifierPositionEnd === undefined) {
@@ -1041,7 +1041,7 @@ export namespace Lexer {
         }
         const identifierPositionEnd: number = maybeIdentifierPositionEnd;
 
-        const data = text.substring(positionStart, identifierPositionEnd);
+        const data = text.substring(currentPosition, identifierPositionEnd);
         const maybeKeywordTokenKind = maybeKeywordLineTokenKindFrom(data);
         if (maybeKeywordTokenKind === undefined) {
             return undefined;
@@ -1049,7 +1049,7 @@ export namespace Lexer {
         else {
             return {
                 kind: maybeKeywordTokenKind,
-                positionStart,
+                positionStart: currentPosition,
                 positionEnd: identifierPositionEnd,
                 data,
             }
@@ -1058,20 +1058,20 @@ export namespace Lexer {
 
     function readQuotedIdentifierOrStart(
         text: string,
-        positionStart: number,
+        currentPosition: number,
     ): LineModeAlteringRead {
-        const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, positionStart + 2);
+        const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 2);
         if (maybePositionEnd !== undefined) {
             const positionEnd: number = maybePositionEnd + 1;
 
             return {
-                token: readTokenFrom(LineTokenKind.Identifier, text, positionStart, positionEnd),
+                token: readTokenFrom(LineTokenKind.Identifier, text, currentPosition, positionEnd),
                 lineMode: LineMode.Default,
             };
         }
         else {
             return {
-                token: readRestOfLine(LineTokenKind.QuotedIdentifierStart, text, positionStart),
+                token: readRestOfLine(LineTokenKind.QuotedIdentifierStart, text, currentPosition),
                 lineMode: LineMode.QuotedIdentifier,
             }
         }
