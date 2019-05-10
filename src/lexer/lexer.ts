@@ -660,7 +660,7 @@ export namespace Lexer {
                 newTokens.push(token);
 
                 if (lineMode === LineMode.Default) {
-                    currentPosition = drainWhitespace(text, currentPosition);
+                    currentPosition = drainWhitespace(text, token.positionEnd);
                 }
                 else {
                     currentPosition = token.positionEnd;
