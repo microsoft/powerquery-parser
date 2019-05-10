@@ -410,6 +410,37 @@ export namespace Lexer {
         };
     }
 
+    function graphemePositionFrom(text: string, lineNumber: number, lineCodePoint: number): StringHelpers.GraphemePosition {
+        const graphemes: ReadonlyArray<string> = StringHelpers.graphemeSplitter.splitGraphemes(text);
+        const numGraphemes = graphemes.length;
+        
+        let summedLength = 0;
+        let maybeColumnNumber: Option<number>;
+        for (let index = 0; index < numGraphemes; index += 1) {
+            summedLength += graphemes[index].length;
+            if (summedLength === lineCodePoint) {
+                maybeColumnNumber = index;
+                break;
+            }
+        }
+
+        if (maybeColumnNumber === undefined) {
+            const details = {
+                lineNumber,
+                codePoint: lineCodePoint,
+                text,
+            }
+            throw new CommonError.InvariantError("graphemePositionFrom failed to find the columnNumber", details);
+        }
+        const columnNumber = maybeColumnNumber;
+
+        return {
+            lineCodePoint,
+            lineNumber,
+            columnNumber,
+        }
+    }
+
     // function lineFromLineString(lineString: LineString, lineModeStart: LineMode): UntouchedLine {
     //     return {
     //         kind: LineKind.Untouched,
@@ -811,7 +842,7 @@ export namespace Lexer {
         }
 
         else if (chr1 === "0") {
-            const chr2 = text[positionStart.textIndex + 1];
+            const chr2 = text[positionStart + 1];
 
             if (chr2 === "x" || chr2 === "X") { token = readHexLiteral(text, lineNumber, positionStart); }
             else { token = readNumericLiteral(text, lineNumber, positionStart); }
@@ -820,7 +851,7 @@ export namespace Lexer {
         else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(text, lineNumber, positionStart); }
 
         else if (chr1 === ".") {
-            const chr2 = text[positionStart.textIndex + 1];
+            const chr2 = text[positionStart + 1];
 
             if (chr2 === undefined) {
                 throw new LexerError.UnexpectedEofError({
@@ -830,7 +861,7 @@ export namespace Lexer {
             }
             else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(text, lineNumber, positionStart); }
             else if (chr2 === ".") {
-                const chr3 = text[positionStart.textIndex + 2];
+                const chr3 = text[positionStart + 2];
 
                 if (chr3 === ".") { token = readConstant(LineTokenKind.Ellipsis, text, positionStart, 3); }
                 else { throw unexpectedReadError(lineNumber, positionStart) }
@@ -839,14 +870,14 @@ export namespace Lexer {
         }
 
         else if (chr1 === ">") {
-            const chr2 = text[positionStart.textIndex + 1];
+            const chr2 = text[positionStart + 1];
 
             if (chr2 === "=") { token = readConstant(LineTokenKind.GreaterThanEqualTo, text, positionStart, 2); }
             else { token = readConstant(LineTokenKind.GreaterThan, text, positionStart, 1); }
         }
 
         else if (chr1 === "<") {
-            const chr2 = text[positionStart.textIndex + 1];
+            const chr2 = text[positionStart + 1];
 
             if (chr2 === "=") { token = readConstant(LineTokenKind.LessThanEqualTo, text, positionStart, 2); }
             else if (chr2 === ">") { token = readConstant(LineTokenKind.NotEqual, text, positionStart, 2); }
@@ -854,14 +885,14 @@ export namespace Lexer {
         }
 
         else if (chr1 === "=") {
-            const chr2 = text[positionStart.textIndex + 1];
+            const chr2 = text[positionStart + 1];
 
             if (chr2 === ">") { token = readConstant(LineTokenKind.FatArrow, text, positionStart, 2); }
             else { token = readConstant(LineTokenKind.Equal, text, positionStart, 1); }
         }
 
         else if (chr1 === "/") {
-            const chr2 = text[positionStart.textIndex + 1];
+            const chr2 = text[positionStart + 1];
 
             if (chr2 === "/") { token = readLineComment(text, positionStart); }
             else if (chr2 === "*") {
@@ -873,7 +904,7 @@ export namespace Lexer {
         }
 
         else if (chr1 === "#") {
-            const chr2 = text[positionStart.textIndex + 1];
+            const chr2 = text[positionStart + 1];
 
             if (chr2 === "\"") {
                 const read: LineModeAlteringRead = readQuotedIdentifierOrStart(text, positionStart);
@@ -931,24 +962,17 @@ export namespace Lexer {
     }
 
     function readHexLiteral(
-        lineString: LineString,
+        text: string,
         lineNumber: number,
-        positionStart: LinePosition,
+        positionStart: number,
     ): LineToken {
-        const maybeTextIndexEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, lineString.text, positionStart.textIndex);
-        if (maybeTextIndexEnd === undefined) {
-            throw new LexerError.ExpectedHexLiteralError({
-                lineNumber,
-                ...positionStart,
-            });
+        const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
+        if (maybePositionEnd === undefined) {
+            throw new LexerError.ExpectedHexLiteralError(graphemePositionFrom(text, lineNumber, positionStart));
         }
-        const textIndexEnd: number = maybeTextIndexEnd;
+        const positionEnd: number = maybePositionEnd;
 
-        const positionEnd: LinePosition = {
-            textIndex: textIndexEnd,
-            columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-        }
-        return readTokenFrom(LineTokenKind.HexLiteral, lineString, positionStart, positionEnd);
+        return readTokenFrom(LineTokenKind.HexLiteral, text, positionStart, positionEnd);
     }
 
     function readNumericLiteral(
