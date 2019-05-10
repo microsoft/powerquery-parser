@@ -155,7 +155,7 @@ function readMultilineComment(
     return {
         comment: {
             kind: CommentKind.Multiline,
-            data: text.substring(positionStart.textIndex, positionEnd.textIndex),
+            data: text.substring(positionStart.codeUnit, positionEnd.codeUnit),
             containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
             positionStart,
             positionEnd,
@@ -188,7 +188,7 @@ function readQuotedIdentifier(
     return {
         token: {
             kind: TokenKind.Identifier,
-            data: text.substring(positionStart.textIndex, positionEnd.textIndex),
+            data: text.substring(positionStart.codeUnit, positionEnd.codeUnit),
             positionStart,
             positionEnd,
         },
@@ -220,7 +220,7 @@ function readStringLiteral(
     return {
         token: {
             kind: TokenKind.StringLiteral,
-            data: text.substring(positionStart.textIndex, positionEnd.textIndex),
+            data: text.substring(positionStart.codeUnit, positionEnd.codeUnit),
             positionStart,
             positionEnd,
         },
@@ -282,11 +282,13 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
                 kind: lineToken.kind,
                 data: lineToken.data,
                 positionStart: {
+                    codeUnit: text.length,
                     lineCodeUnit: linePositionStart,
                     lineNumber,
                     columnNumber: columnNumberMap[linePositionStart],
                 },
                 positionEnd: {
+                    codeUnit: text.length + lineToken.data.length,
                     lineCodeUnit: linePositionEnd,
                     lineNumber,
                     columnNumber: columnNumberMap[linePositionEnd],
@@ -297,7 +299,7 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
             flatIndex += 1;
         }
 
-        lineTextOffset += (line.lineString.text.length + state.lineTerminator.length);
+        lineTextOffset += (line.text.length + state.lineTerminator.length);
     }
 
     return [text, flatTokens];
@@ -335,8 +337,8 @@ interface ConcatenatedTokenRead {
 interface FlatLineToken {
     readonly kind: LineTokenKind,
     // range is [start, end)
-    readonly positionStart: StringHelpers.GraphemePosition,
-    readonly positionEnd: StringHelpers.GraphemePosition,
+    readonly positionStart: StringHelpers.ExtendedGraphemePosition,
+    readonly positionEnd: StringHelpers.ExtendedGraphemePosition,
     readonly data: string,
     readonly flatIndex: number,
 }

@@ -165,4 +165,4 @@ export interface IToken<Kind, Position> {
 
 export interface LineToken extends IToken<LineTokenKind, number> { };
 
-export interface Token extends IToken<TokenKind, StringHelpers.GraphemePosition> { }
+export interface Token extends IToken<TokenKind, StringHelpers.ExtendedGraphemePosition> { }

@@ -19,6 +19,10 @@ export namespace StringHelpers {
         readonly columnNumber: number,
     }
 
+    export interface ExtendedGraphemePosition extends GraphemePosition {
+        readonly codeUnit: number,
+    }
+
     export function containsNewline(str: string): boolean {
         const strLength = str.length;
         let containsNewline = false;
