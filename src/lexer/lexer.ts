@@ -861,9 +861,9 @@ export namespace Lexer {
                 const chr3 = text[positionStart + 2];
 
                 if (chr3 === ".") { token = readConstant(LineTokenKind.Ellipsis, text, positionStart, 3); }
-                else { throw unexpectedReadError(lineNumber, positionStart) }
+                else { throw unexpectedReadError(text, lineNumber, positionStart) }
             }
-            else { throw unexpectedReadError(lineNumber, positionStart) }
+            else { throw unexpectedReadError(text, lineNumber, positionStart) }
         }
 
         else if (chr1 === ">") {
@@ -994,24 +994,20 @@ export namespace Lexer {
     }
 
     function readMultilineCommentOrStartStart(
-        lineString: LineString,
-        positionStart: LinePosition,
+        text: string,
+        positionStart: number,
     ): LineModeAlteringRead {
-        const indexOfCloseComment = lineString.text.indexOf("*/", positionStart.textIndex);
+        const indexOfCloseComment = text.indexOf("*/", positionStart);
         if (indexOfCloseComment === -1) {
             return {
-                token: readRestOfLine(LineTokenKind.MultilineCommentStart, lineString, positionStart),
+                token: readRestOfLine(LineTokenKind.MultilineCommentStart, text, positionStart),
                 lineMode: LineMode.Comment,
             }
         }
         else {
-            const textIndexEnd = indexOfCloseComment + 2;
-            const positionEnd: LinePosition = {
-                textIndex: textIndexEnd,
-                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-            }
+            const positionEnd = indexOfCloseComment + 2;
             return {
-                token: readTokenFrom(LineTokenKind.MultilineComment, lineString, positionStart, positionEnd),
+                token: readTokenFrom(LineTokenKind.MultilineComment, text, positionStart, positionEnd),
                 lineMode: LineMode.Default,
             }
         }
@@ -1027,7 +1023,7 @@ export namespace Lexer {
             return maybeLineToken;
         }
         else {
-            throw unexpectedReadError(lineNumber, positionStart);
+            throw unexpectedReadError(text, lineNumber, positionStart);
         }
     }
 
@@ -1061,25 +1057,21 @@ export namespace Lexer {
     }
 
     function readQuotedIdentifierOrStart(
-        lineString: LineString,
-        positionStart: LinePosition,
+        text: string,
+        positionStart: number,
     ): LineModeAlteringRead {
-        const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(lineString.text, positionStart.textIndex + 2);
-        if (maybeTextIndexEnd !== undefined) {
-            const textIndexEnd: number = maybeTextIndexEnd + 1;
-            const positionEnd: LinePosition = {
-                textIndex: textIndexEnd,
-                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-            };
+        const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, positionStart + 2);
+        if (maybePositionEnd !== undefined) {
+            const positionEnd: number = maybePositionEnd + 1;
 
             return {
-                token: readTokenFrom(LineTokenKind.Identifier, lineString, positionStart, positionEnd),
+                token: readTokenFrom(LineTokenKind.Identifier, text, positionStart, positionEnd),
                 lineMode: LineMode.Default,
             };
         }
         else {
             return {
-                token: readRestOfLine(LineTokenKind.QuotedIdentifierStart, lineString, positionStart),
+                token: readRestOfLine(LineTokenKind.QuotedIdentifierStart, text, positionStart),
                 lineMode: LineMode.QuotedIdentifier,
             }
         }
@@ -1088,33 +1080,29 @@ export namespace Lexer {
     // the quoted identifier case has already been taken care of
     // null-literal is also read here
     function readKeywordOrIdentifier(
-        lineString: LineString,
+        text: string,
         lineNumber: number,
-        positionStart: LinePosition,
+        positionStart: number,
     ): LineToken {
-        const text = lineString.text;
-        const textIndexStart = positionStart.textIndex;
-
         // keyword
-        if (text[textIndexStart] === "#") {
-            return readKeyword(lineString, lineNumber, positionStart);
+        if (text[positionStart] === "#") {
+            return readKeyword(text, lineNumber, positionStart);
         }
         // either keyword or identifier
         else {
-            const maybeTextIndexEnd = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, textIndexStart);
-            if (maybeTextIndexEnd === undefined) {
-                throw unexpectedReadError(lineNumber, positionStart);
+            const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, positionStart);
+            if (maybePositionEnd === undefined) {
+                throw unexpectedReadError(text, lineNumber, positionStart);
             }
-            const textIndexEnd = maybeTextIndexEnd;
-            const substring = text.substring(textIndexStart, textIndexEnd);
-
-            const maybeKeywordTokenKind = maybeKeywordLineTokenKindFrom(substring);
+            const positionEnd: number = maybePositionEnd;
+            const data = text.substring(positionStart, positionEnd);
+            const maybeKeywordTokenKind: Option<LineTokenKind> = maybeKeywordLineTokenKindFrom(data);
 
             let tokenKind;
             if (maybeKeywordTokenKind !== undefined) {
                 tokenKind = maybeKeywordTokenKind;
             }
-            else if (substring === "null") {
+            else if (data === "null") {
                 tokenKind = LineTokenKind.NullLiteral;
             }
             else {
@@ -1124,11 +1112,8 @@ export namespace Lexer {
             return {
                 kind: tokenKind,
                 positionStart,
-                positionEnd: {
-                    textIndex: textIndexEnd,
-                    columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-                },
-                data: substring,
+                positionEnd,
+                data,
             }
         }
     }
@@ -1268,13 +1253,11 @@ export namespace Lexer {
     }
 
     function unexpectedReadError(
+        text: string,
         lineNumber: number,
-        position: LinePosition,
+        lineCodePoint: number,
     ): LexerError.UnexpectedReadError {
-        return new LexerError.UnexpectedReadError({
-            lineNumber,
-            ...position,
-        });
+        return new LexerError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, lineCodePoint));
     }
 
     function maybeBadLineNumberError(
@@ -1335,10 +1318,10 @@ export namespace Lexer {
         const lineStart: TLine = lines[rangeStart.lineNumber];
         const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
-        if (rangeStart.columnNumber >= lineStart.lineString.graphemes.length) {
+        if (rangeStart.columnNumber >= lineStart.text.length) {
             maybeKind = LexerError.BadRangeKind.ColumnNumberStart_GreaterThan_LineLength;
         }
-        else if (rangeEnd.columnNumber >= lineEnd.lineString.graphemes.length) {
+        else if (rangeEnd.columnNumber >= lineEnd.text.length) {
             maybeKind = LexerError.BadRangeKind.ColumnNumberEnd_GreaterThan_LineLength;
         }
 
