@@ -781,32 +781,31 @@ export namespace Lexer {
         }
     }
 
-    function tokenizeDefault(line: TLine, lineNumber: number, positionStart: LinePosition): LineModeAlteringRead {
-        const lineString = line.lineString;
-        const text = lineString.text;
+    function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number): LineModeAlteringRead {
+        const text = line.text;
 
-        const chr1: string = text[positionStart.textIndex];
+        const chr1: string = text[positionStart];
         let token: LineToken;
         let lineMode = LineMode.Default;
 
-        if (chr1 === "!") { token = readConstant(LineTokenKind.Bang, lineString, positionStart, 1); }
-        else if (chr1 === "&") { token = readConstant(LineTokenKind.Ampersand, lineString, positionStart, 1); }
-        else if (chr1 === "(") { token = readConstant(LineTokenKind.LeftParenthesis, lineString, positionStart, 1); }
-        else if (chr1 === ")") { token = readConstant(LineTokenKind.RightParenthesis, lineString, positionStart, 1); }
-        else if (chr1 === "*") { token = readConstant(LineTokenKind.Asterisk, lineString, positionStart, 1); }
-        else if (chr1 === "+") { token = readConstant(LineTokenKind.Plus, lineString, positionStart, 1); }
-        else if (chr1 === ",") { token = readConstant(LineTokenKind.Comma, lineString, positionStart, 1); }
-        else if (chr1 === "-") { token = readConstant(LineTokenKind.Minus, lineString, positionStart, 1); }
-        else if (chr1 === ";") { token = readConstant(LineTokenKind.Semicolon, lineString, positionStart, 1); }
-        else if (chr1 === "?") { token = readConstant(LineTokenKind.QuestionMark, lineString, positionStart, 1); }
-        else if (chr1 === "@") { token = readConstant(LineTokenKind.AtSign, lineString, positionStart, 1); }
-        else if (chr1 === "[") { token = readConstant(LineTokenKind.LeftBracket, lineString, positionStart, 1); }
-        else if (chr1 === "]") { token = readConstant(LineTokenKind.RightBracket, lineString, positionStart, 1); }
-        else if (chr1 === "{") { token = readConstant(LineTokenKind.LeftBrace, lineString, positionStart, 1); }
-        else if (chr1 === "}") { token = readConstant(LineTokenKind.RightBrace, lineString, positionStart, 1); }
+        if (chr1 === "!") { token = readConstant(LineTokenKind.Bang, text, positionStart, 1); }
+        else if (chr1 === "&") { token = readConstant(LineTokenKind.Ampersand, text, positionStart, 1); }
+        else if (chr1 === "(") { token = readConstant(LineTokenKind.LeftParenthesis, text, positionStart, 1); }
+        else if (chr1 === ")") { token = readConstant(LineTokenKind.RightParenthesis, text, positionStart, 1); }
+        else if (chr1 === "*") { token = readConstant(LineTokenKind.Asterisk, text, positionStart, 1); }
+        else if (chr1 === "+") { token = readConstant(LineTokenKind.Plus, text, positionStart, 1); }
+        else if (chr1 === ",") { token = readConstant(LineTokenKind.Comma, text, positionStart, 1); }
+        else if (chr1 === "-") { token = readConstant(LineTokenKind.Minus, text, positionStart, 1); }
+        else if (chr1 === ";") { token = readConstant(LineTokenKind.Semicolon, text, positionStart, 1); }
+        else if (chr1 === "?") { token = readConstant(LineTokenKind.QuestionMark, text, positionStart, 1); }
+        else if (chr1 === "@") { token = readConstant(LineTokenKind.AtSign, text, positionStart, 1); }
+        else if (chr1 === "[") { token = readConstant(LineTokenKind.LeftBracket, text, positionStart, 1); }
+        else if (chr1 === "]") { token = readConstant(LineTokenKind.RightBracket, text, positionStart, 1); }
+        else if (chr1 === "{") { token = readConstant(LineTokenKind.LeftBrace, text, positionStart, 1); }
+        else if (chr1 === "}") { token = readConstant(LineTokenKind.RightBrace, text, positionStart, 1); }
 
         else if (chr1 === "\"") {
-            const read: LineModeAlteringRead = readStringLiteralOrStart(lineString, positionStart);
+            const read: LineModeAlteringRead = readStringLiteralOrStart(text, positionStart);
             token = read.token;
             lineMode = read.lineMode;
         }
@@ -814,11 +813,11 @@ export namespace Lexer {
         else if (chr1 === "0") {
             const chr2 = text[positionStart.textIndex + 1];
 
-            if (chr2 === "x" || chr2 === "X") { token = readHexLiteral(lineString, lineNumber, positionStart); }
-            else { token = readNumericLiteral(lineString, lineNumber, positionStart); }
+            if (chr2 === "x" || chr2 === "X") { token = readHexLiteral(text, lineNumber, positionStart); }
+            else { token = readNumericLiteral(text, lineNumber, positionStart); }
         }
 
-        else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(lineString, lineNumber, positionStart); }
+        else if ("1" <= chr1 && chr1 <= "9") { token = readNumericLiteral(text, lineNumber, positionStart); }
 
         else if (chr1 === ".") {
             const chr2 = text[positionStart.textIndex + 1];
@@ -829,11 +828,11 @@ export namespace Lexer {
                     ...positionStart
                 });
             }
-            else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(lineString, lineNumber, positionStart); }
+            else if ("1" <= chr2 && chr2 <= "9") { token = readNumericLiteral(text, lineNumber, positionStart); }
             else if (chr2 === ".") {
                 const chr3 = text[positionStart.textIndex + 2];
 
-                if (chr3 === ".") { token = readConstant(LineTokenKind.Ellipsis, lineString, positionStart, 3); }
+                if (chr3 === ".") { token = readConstant(LineTokenKind.Ellipsis, text, positionStart, 3); }
                 else { throw unexpectedReadError(lineNumber, positionStart) }
             }
             else { throw unexpectedReadError(lineNumber, positionStart) }
@@ -842,49 +841,49 @@ export namespace Lexer {
         else if (chr1 === ">") {
             const chr2 = text[positionStart.textIndex + 1];
 
-            if (chr2 === "=") { token = readConstant(LineTokenKind.GreaterThanEqualTo, lineString, positionStart, 2); }
-            else { token = readConstant(LineTokenKind.GreaterThan, lineString, positionStart, 1); }
+            if (chr2 === "=") { token = readConstant(LineTokenKind.GreaterThanEqualTo, text, positionStart, 2); }
+            else { token = readConstant(LineTokenKind.GreaterThan, text, positionStart, 1); }
         }
 
         else if (chr1 === "<") {
             const chr2 = text[positionStart.textIndex + 1];
 
-            if (chr2 === "=") { token = readConstant(LineTokenKind.LessThanEqualTo, lineString, positionStart, 2); }
-            else if (chr2 === ">") { token = readConstant(LineTokenKind.NotEqual, lineString, positionStart, 2); }
-            else { token = readConstant(LineTokenKind.LessThan, lineString, positionStart, 1) }
+            if (chr2 === "=") { token = readConstant(LineTokenKind.LessThanEqualTo, text, positionStart, 2); }
+            else if (chr2 === ">") { token = readConstant(LineTokenKind.NotEqual, text, positionStart, 2); }
+            else { token = readConstant(LineTokenKind.LessThan, text, positionStart, 1) }
         }
 
         else if (chr1 === "=") {
             const chr2 = text[positionStart.textIndex + 1];
 
-            if (chr2 === ">") { token = readConstant(LineTokenKind.FatArrow, lineString, positionStart, 2); }
-            else { token = readConstant(LineTokenKind.Equal, lineString, positionStart, 1); }
+            if (chr2 === ">") { token = readConstant(LineTokenKind.FatArrow, text, positionStart, 2); }
+            else { token = readConstant(LineTokenKind.Equal, text, positionStart, 1); }
         }
 
         else if (chr1 === "/") {
             const chr2 = text[positionStart.textIndex + 1];
 
-            if (chr2 === "/") { token = readLineComment(lineString, positionStart); }
+            if (chr2 === "/") { token = readLineComment(text, positionStart); }
             else if (chr2 === "*") {
-                const read: LineModeAlteringRead = readMultilineCommentOrStartStart(lineString, positionStart);
+                const read: LineModeAlteringRead = readMultilineCommentOrStartStart(text, positionStart);
                 token = read.token;
                 lineMode = read.lineMode;
             }
-            else { token = readConstant(LineTokenKind.Division, lineString, positionStart, 1); }
+            else { token = readConstant(LineTokenKind.Division, text, positionStart, 1); }
         }
 
         else if (chr1 === "#") {
             const chr2 = text[positionStart.textIndex + 1];
 
             if (chr2 === "\"") {
-                const read: LineModeAlteringRead = readQuotedIdentifierOrStart(lineString, positionStart);
+                const read: LineModeAlteringRead = readQuotedIdentifierOrStart(text, positionStart);
                 token = read.token;
                 lineMode = read.lineMode;
             }
-            else { token = readKeyword(lineString, lineNumber, positionStart); }
+            else { token = readKeyword(text, lineNumber, positionStart); }
         }
 
-        else { token = readKeywordOrIdentifier(lineString, lineNumber, positionStart); }
+        else { token = readKeywordOrIdentifier(text, lineNumber, positionStart); }
 
         return {
             token,
@@ -1136,29 +1135,25 @@ export namespace Lexer {
 
     function readConstant(
         lineTokenKind: LineTokenKind,
-        lineString: LineString,
-        positionStart: LinePosition,
+        text: string,
+        positionStart: number,
         length: number,
     ): LineToken {
-        const textIndexEnd = positionStart.textIndex + length;
-        const positionEnd: LinePosition = {
-            textIndex: positionStart.textIndex + length,
-            columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd]
-        }
-        return readTokenFrom(lineTokenKind, lineString, positionStart, positionEnd);
+        const positionEnd = positionStart + length;
+        return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
     }
 
     function readTokenFrom(
         lineTokenKind: LineTokenKind,
-        lineString: LineString,
-        positionStart: LinePosition,
-        positionEnd: LinePosition,
+        text: string,
+        positionStart: number,
+        positionEnd: number,
     ): LineToken {
         return {
             kind: lineTokenKind,
             positionStart,
             positionEnd,
-            data: lineString.text.substring(positionStart.textIndex, positionEnd.textIndex),
+            data: text.substring(positionStart, positionEnd),
         };
     }
 
