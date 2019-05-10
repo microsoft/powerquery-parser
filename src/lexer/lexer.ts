@@ -911,24 +911,20 @@ export namespace Lexer {
     }
 
     function readStringLiteralOrStart(
-        lineString: LineString,
-        positionStart: LinePosition,
+        text: string,
+        positionStart: number,
     ): LineModeAlteringRead {
-        const maybeTextIndexEnd: Option<number> = maybeIndexOfStringEnd(lineString.text, positionStart.textIndex + 1);
-        if (maybeTextIndexEnd !== undefined) {
-            const textIndexEnd: number = maybeTextIndexEnd + 1;
-            const positionEnd: LinePosition = {
-                textIndex: textIndexEnd,
-                columnNumber: lineString.textIndex2GraphemeIndex[textIndexEnd],
-            };
+        const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, positionStart + 1);
+        if (maybePositionEnd !== undefined) {
+            const positionEnd: number = maybePositionEnd + 1;
             return {
-                token: readTokenFrom(LineTokenKind.StringLiteral, lineString, positionStart, positionEnd),
+                token: readTokenFrom(LineTokenKind.StringLiteral, text, positionStart, positionEnd),
                 lineMode: LineMode.Default,
             };
         }
         else {
             return {
-                token: readRestOfLine(LineTokenKind.StringLiteralStart, lineString, positionStart),
+                token: readRestOfLine(LineTokenKind.StringLiteralStart, text, positionStart),
                 lineMode: LineMode.String,
             }
         }
@@ -1159,15 +1155,11 @@ export namespace Lexer {
 
     function readRestOfLine(
         lineTokenKind: LineTokenKind,
-        lineString: LineString,
-        positionStart: LinePosition,
+        text: string,
+        positionStart: number,
     ): LineToken {
-        const textLength = lineString.text.length;
-        const positionEnd: LinePosition = {
-            textIndex: textLength,
-            columnNumber: lineString.textIndex2GraphemeIndex[textLength],
-        };
-        return readTokenFrom(lineTokenKind, lineString, positionStart, positionEnd);
+        const positionEnd = text.length;
+        return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
     }
 
     function maybeIndexOfRegexEnd(
@@ -1253,18 +1245,18 @@ export namespace Lexer {
 
     function maybeIndexOfStringEnd(
         text: string,
-        textIndexStart: number,
+        positionStart: number,
     ): Option<number> {
-        let indexLow = textIndexStart;
-        let indexHigh = text.indexOf("\"", indexLow)
+        let indexLow = positionStart;
+        let positionEnd = text.indexOf("\"", indexLow)
 
-        while (indexHigh !== -1) {
-            if (text[indexHigh + 1] === "\"") {
-                indexLow = indexHigh + 2;
-                indexHigh = text.indexOf("\"", indexLow);
+        while (positionEnd !== -1) {
+            if (text[positionEnd + 1] === "\"") {
+                indexLow = positionEnd + 2;
+                positionEnd = text.indexOf("\"", indexLow);
             }
             else {
-                return indexHigh;
+                return positionEnd;
             }
         }
 
