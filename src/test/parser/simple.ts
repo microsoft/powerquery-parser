@@ -4,8 +4,6 @@ import { ResultKind, Traverse, Option } from "../../common";
 import { lexAndParse } from "../../jobs";
 import { Ast } from "../../parser";
 
-const LINE_TERMINATOR: string = "\n";
-
 interface CollectAllNodeKindState extends Traverse.IState<Ast.NodeKind[]> { }
 interface CollectAllNodeKindRequest extends Traverse.IRequest<CollectAllNodeKindState, Ast.NodeKind[]> { }
 
@@ -16,8 +14,8 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
 }
 interface NthNodeOfKindRequest extends Traverse.IRequest<NthNodeOfKindState, Option<Ast.TNode>> { }
 
-function astFromText(text: string, lineTerminator: string): Ast.TDocument {
-    const parseResult = lexAndParse(text, lineTerminator);
+function astFromText(text: string): Ast.TDocument {
+    const parseResult = lexAndParse(text);
     if (parseResult.kind === ResultKind.Err) {
         throw new Error(`parseResult.kind === ResultKind.Err: ${JSON.stringify(parseResult)}`);
     }
@@ -25,8 +23,8 @@ function astFromText(text: string, lineTerminator: string): Ast.TDocument {
     return parseResult.value.ast;
 }
 
-function collectNodeKindsFromAst(text: string, lineTerminator: string): ReadonlyArray<Ast.NodeKind> {
-    const ast = astFromText(text, lineTerminator);
+function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
+    const ast = astFromText(text);
     const request: CollectAllNodeKindRequest = {
         ast,
         state: {
@@ -47,11 +45,10 @@ function collectNodeKindsFromAst(text: string, lineTerminator: string): Readonly
 
 function expectNthNodeOfKind<T>(
     text: string,
-    lineTerminator: string,
     nodeKind: Ast.NodeKind,
     nthRequired: number,
 ): T & Ast.TNode {
-    const ast = astFromText(text, lineTerminator);
+    const ast = astFromText(text);
     const request: NthNodeOfKindRequest = {
         ast,
         state: {
@@ -96,10 +93,9 @@ function nthNodeEarlyExit(_: Ast.TNode, state: NthNodeOfKindState) {
 
 function expectNodeKinds(
     text: string,
-    lineTerminator: string,
     expectedNodeKinds: ReadonlyArray<Ast.NodeKind>,
 ) {
-    const actualNodeKinds = collectNodeKindsFromAst(text, lineTerminator);
+    const actualNodeKinds = collectNodeKindsFromAst(text);
     const details = {
         actualNodeKinds,
         expectedNodeKinds,
@@ -117,10 +113,10 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds)
+        expectNodeKinds(text, expectedNodeKinds)
 
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Addition, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -133,9 +129,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.And, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -148,9 +144,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Division, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -163,9 +159,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Multiplication, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -178,9 +174,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Subtraction, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -199,7 +195,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.AsExpression, () => {
@@ -211,7 +207,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.AsNullablePrimitiveType, () => {
@@ -225,7 +221,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.AsType, () => {
@@ -250,7 +246,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.Constant covered by many
@@ -264,7 +260,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.EqualityExpression} ${Ast.EqualityOperator.EqualTo}`, () => {
@@ -276,9 +272,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.EqualityOperator.EqualTo, JSON.stringify(operatorNode.literal, null, 4));
 
     });
@@ -292,9 +288,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.EqualityOperator.NotEqualTo, JSON.stringify(operatorNode.literal, null, 4));
 
     });
@@ -306,7 +302,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ErrorHandlingExpression} otherwise`, () => {
@@ -319,7 +315,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ErrorRaisingExpression, () => {
@@ -329,7 +325,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldProjection, () => {
@@ -347,7 +343,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldProjection}multiple`, () => {
@@ -371,7 +367,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldProjection} optional`, () => {
@@ -390,7 +386,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldSelector, () => {
@@ -401,7 +397,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSelector} optional`, () => {
@@ -413,7 +409,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldSpecification, () => {
@@ -429,7 +425,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSpecification} optional`, () => {
@@ -446,7 +442,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSpecification} FieldTypeSpecification`, () => {
@@ -466,7 +462,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.FieldSpecificationList, () => {
@@ -482,7 +478,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FieldSpecificationList}`, () => {
@@ -500,7 +496,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.FieldTypeSpecification covered by FieldSpecification
@@ -515,7 +511,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList`, () => {
@@ -531,7 +527,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} multiple ParameterList`, () => {
@@ -555,7 +551,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList with optional`, () => {
@@ -572,7 +568,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList with AsNullablePrimitiveType`, () => {
@@ -594,7 +590,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.FieldTypeSpecification covered by AsType
@@ -607,7 +603,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, () => {
@@ -625,7 +621,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.GeneralizedIdentifierPairedExpression, () => {
@@ -640,7 +636,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.Identifier covered by many
@@ -652,7 +648,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Identifier,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.IdentifierExpressionPairedExpression covered by LetExpression
@@ -670,7 +666,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.IfExpression, () => {
@@ -687,7 +683,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.InvokeExpression, () => {
@@ -700,7 +696,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.IsExpression, () => {
@@ -712,7 +708,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ItemAccessExpression, () => {
@@ -726,7 +722,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ItemAccessExpression} optional`, () => {
@@ -741,7 +737,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.LetExpression, () => {
@@ -758,7 +754,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.IdentifierExpression,
             Ast.NodeKind.Identifier,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ListExpression, () => {
@@ -773,7 +769,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ListExpression} empty`, () => {
@@ -783,7 +779,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ListLiteral, () => {
@@ -805,7 +801,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.ListLiteral} empty`, () => {
@@ -825,7 +821,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.ListType, () => {
@@ -839,55 +835,55 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Logical} true`, () => {
         const text = `true`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Logical} false`, () => {
         const text = `false`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Numeric} decimal`, () => {
         const text = `1`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Numeric} hex`, () => {
         const text = `0x1`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Numeric} float`, () => {
         const text = `1.1`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Str}`, () => {
         const text = `""`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Str} double quote escape`, () => {
         const text = `""""`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Null}`, () => {
         const text = `null`;
         const expectedNodeKinds = [Ast.NodeKind.LiteralExpression];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LogicalExpression} and`, () => {
@@ -899,7 +895,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.LogicalExpression} or`, () => {
@@ -911,7 +907,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.MetadataExpression, () => {
@@ -922,7 +918,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.NotImplementedExpression, () => {
@@ -931,7 +927,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.NotImplementedExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.NullablePrimitiveType, () => {
@@ -946,7 +942,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(Ast.NodeKind.NullableType, () => {
@@ -959,7 +955,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.PrimitiveType,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.OtherwiseExpression covered by `${Ast.NodeKind.ErrorHandlingExpression} otherwise`
@@ -976,7 +972,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.PrimitiveType covered by many
@@ -993,7 +989,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.RecordExpression} empty`, () => {
@@ -1003,7 +999,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.RecordLiteral covered by many
@@ -1021,7 +1017,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.RecordType} open record marker`, () => {
@@ -1039,7 +1035,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.RecursivePrimaryExpression covered by many
@@ -1053,9 +1049,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.RelationalOperator.GreaterThan, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -1068,9 +1064,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.RelationalOperator.GreaterThanEqualTo, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -1083,9 +1079,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.RelationalOperator.LessThan, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -1098,9 +1094,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.RelationalOperator.LessThanEqualTo, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -1111,7 +1107,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} attributes`, () => {
@@ -1124,7 +1120,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} name`, () => {
@@ -1135,7 +1131,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Identifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} member`, () => {
@@ -1151,7 +1147,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.Section} members`, () => {
@@ -1173,7 +1169,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.SectionMember}`, () => {
@@ -1189,7 +1185,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.SectionMember} attributes`, () => {
@@ -1208,7 +1204,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.SectionMember} shared`, () => {
@@ -1225,7 +1221,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.LiteralExpression,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.TableType} - type table [x]`, () => {
@@ -1242,7 +1238,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.GeneralizedIdentifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     it(`${Ast.NodeKind.TableType} - type table (x)`, () => {
@@ -1258,7 +1254,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Identifier,
             Ast.NodeKind.Constant,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
     });
 
     // Ast.NodeKind.TypePrimaryType covered by many
@@ -1271,9 +1267,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Negative, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -1285,9 +1281,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Not, JSON.stringify(operatorNode.literal, null, 4));
     });
 
@@ -1299,9 +1295,9 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.LiteralExpression,
         ];
-        expectNodeKinds(text, LINE_TERMINATOR, expectedNodeKinds);
+        expectNodeKinds(text, expectedNodeKinds);
 
-        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, LINE_TERMINATOR, Ast.NodeKind.Constant, 1);
+        const operatorNode = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
         expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Positive, JSON.stringify(operatorNode.literal, null, 4));
     });
 });

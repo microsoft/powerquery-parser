@@ -3,15 +3,13 @@ import "mocha";
 import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
-const LINE_TERMINATOR: string = `\n`;
-
 interface StateErrorLinesPair {
     readonly state: Lexer.State,
     readonly errorLines: Lexer.TErrorLines,
 }
 
-function expectStateErrorLines(text: string, lineTerminator: string, numErrorLines: number): StateErrorLinesPair {
-    const state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
+function expectStateErrorLines(text: string, numErrorLines: number): StateErrorLinesPair {
+    const state: Lexer.State = Lexer.stateFrom(text);
 
     const maybeErrorLines = Lexer.maybeErrorLines(state);
     if (!(maybeErrorLines !== undefined)) {
@@ -35,8 +33,8 @@ function expectStateErrorLines(text: string, lineTerminator: string, numErrorLin
     }
 }
 
-function expectSnapshotInnerError(text: string, lineTerminator: string): LexerError.TInnerLexerError {
-    const state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
+function expectSnapshotInnerError(text: string): LexerError.TInnerLexerError {
+    const state: Lexer.State = Lexer.stateFrom(text);
     const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
 
     if (!(snapshotResult.kind === ResultKind.Err)) {
@@ -51,7 +49,7 @@ function expectSnapshotInnerError(text: string, lineTerminator: string): LexerEr
 //     range: Lexer.Range,
 //     expectedKind: LexerError.BadRangeKind,
 // ) {
-//     let state: Lexer.State = Lexer.fromSplit(`foo`, LINE_TERMINATOR);
+//     let state: Lexer.State = Lexer.stateFrom(`foo`, LINE_TERMINATOR);
 //     const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateRange(state, range, `bar`);
 //     if (!(updateRangeResult.kind === ResultKind.Err)) {
 //         throw new Error(`AssertFailed: updateRangeResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
@@ -72,7 +70,7 @@ function expectSnapshotInnerError(text: string, lineTerminator: string): LexerEr
 //     lineNumber: number,
 //     expectedKind: LexerError.BadLineNumberKind,
 // ) {
-//     let state: Lexer.State = Lexer.fromSplit(`foo`, LINE_TERMINATOR);
+//     let state: Lexer.State = Lexer.stateFrom(`foo`, LINE_TERMINATOR);
 //     const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateLine(state, lineNumber, `bar`);
 //     if (!(updateRangeResult.kind === ResultKind.Err)) {
 //         throw new Error(`AssertFailed: updateRangeResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
@@ -91,13 +89,13 @@ function expectSnapshotInnerError(text: string, lineTerminator: string): LexerEr
 
 describe(`Lexer.Error`, () => {
     it(`ExpectedHexLiteralError: 0x`, () => {
-        const stateErrorLinesPair = expectStateErrorLines(`0x`, `\n`, 1);
+        const stateErrorLinesPair = expectStateErrorLines(`0x`, 1);
         const innerError = stateErrorLinesPair.errorLines[0].error.innerError;
         expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
     });
 
     it(`lexerLineError: 0x \\n 0x`, () => {
-        const stateErrorLinesPair = expectStateErrorLines(`0x \n 0x`, `\n`, 2);
+        const stateErrorLinesPair = expectStateErrorLines(`0x \n 0x`, 2);
         const firstInnerError = stateErrorLinesPair.errorLines[0].error.innerError;
         expect(firstInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, firstInnerError.message);
 
@@ -106,12 +104,12 @@ describe(`Lexer.Error`, () => {
     });
 
     it(`UnterminatedMultilineCommentError: /*`, () => {
-        const innerError = expectSnapshotInnerError(`/*`, `\n`);
+        const innerError = expectSnapshotInnerError(`/*`);
         expect(innerError instanceof LexerError.UnterminatedMultilineCommentError).to.equal(true, innerError.message);
     });
 
     it(`UnterminatedStringError: "`, () => {
-        const innerError = expectSnapshotInnerError(`"`, `\n`);
+        const innerError = expectSnapshotInnerError(`"`);
         expect(innerError instanceof LexerError.UnterminatedStringError).to.equal(true, innerError.message);
     });
 

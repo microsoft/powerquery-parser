@@ -52,12 +52,12 @@ export namespace Lexer {
 
     export interface State {
         readonly lines: ReadonlyArray<TLine>,
-        readonly lineTerminator: string,
     }
 
     export interface ILexerLine {
         readonly kind: LineKind,
         readonly text: string,
+        readonly lineTerminator: string,
         readonly lineModeStart: LineMode,
         readonly lineModeEnd: LineMode,
         readonly tokens: ReadonlyArray<LineToken>,
@@ -103,33 +103,26 @@ export namespace Lexer {
         readonly lineCodeUnit: number,
     }
 
-    export function from(text: string, lineTerminator: string): State {
-        let newLine: TLine = lineFrom(text, LineMode.Default);
-        newLine = tokenize(newLine, 0);
+    export function stateFrom(text: string): State {
+        const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
+        const numLines = splitLines.length;
+        const tokenizedLines: TLine[] = [];
 
-        return {
-            lines: [newLine],
-            lineTerminator,
-        };
-    }
+        for (let lineNumber = 0; lineNumber < numLines; lineNumber += 1) {
+            const splitLine: SplitLine = splitLines[lineNumber];
+            const maybePreviousLine: Option<TLine> = tokenizedLines[lineNumber - 1];
+            const lineModeStart: LineMode = maybePreviousLine !== undefined
+                ? maybePreviousLine.lineModeEnd
+                : LineMode.Default;
 
-    export function fromSplit(text: string, lineTerminator: string): State {
-        const lines = text.split(lineTerminator);
-        const numLines = lines.length;
-
-        let state = from(lines[0], lineTerminator);
-        if (numLines === 1) {
-            return state;
+            const untokenizedLine = lineFrom(splitLine.text, splitLine.lineTerminator, lineModeStart);
+            tokenizedLines.push(tokenize(untokenizedLine, lineNumber));
         }
 
-        for (let index = 1; index < numLines; index++) {
-            state = appendLine(state, lines[index]);
-        }
-
-        return state;
+        return { lines: tokenizedLines };
     }
 
-    export function appendLine(state: State, text: string): State {
+    export function appendLine(state: State, text: string, lineTerminator: string): State {
         const lines = state.lines;
         const numLines = lines.length;
         const maybeLatestLine: Option<TLine> = lines[numLines - 1];
@@ -138,7 +131,7 @@ export namespace Lexer {
             ? maybeLatestLine.lineModeEnd
             : LineMode.Default;
 
-        let newLine: TLine = lineFrom(text, lineModeStart)
+        let newLine: TLine = lineFrom(text, lineTerminator, lineModeStart)
         newLine = tokenize(newLine, numLines);
 
         return {
@@ -183,7 +176,7 @@ export namespace Lexer {
             };
         }
 
-        const textChunks: string[] = text.split(state.lineTerminator);
+        // const textChunks: string[] = text.split(state.lineTerminator);
 
 
 
@@ -299,13 +292,9 @@ export namespace Lexer {
 
     }
 
-
     // deep state comparison
     export function equalStates(leftState: State, rightState: State): boolean {
-        return (
-            equalLines(leftState.lines, rightState.lines)
-            || (leftState.lineTerminator === rightState.lineTerminator)
-        );
+        return equalLines(leftState.lines, rightState.lines);
     }
 
     // deep line comparison
@@ -402,13 +391,13 @@ export namespace Lexer {
         readonly lineMode: LineMode,
     }
 
-    interface SplitString {
+    interface SplitLine {
         text: string,
         lineTerminator: string,
     }
 
-    function splitOnLineTerminators(text: string): ReadonlyArray<SplitString> {
-        let lines: SplitString[] = text
+    function splitOnLineTerminators(text: string): ReadonlyArray<SplitLine> {
+        let lines: SplitLine[] = text
             .split("\r\n")
             .map((text: string) => {
                 return {
@@ -459,10 +448,11 @@ export namespace Lexer {
         return lines
     }
 
-    function lineFrom(text: string, lineModeStart: LineMode): UntouchedLine {
+    function lineFrom(text: string, lineTerminator: string, lineModeStart: LineMode): UntouchedLine {
         return {
             kind: LineKind.Untouched,
             text,
+            lineTerminator,
             lineModeStart,
             lineModeEnd: LineMode.Default,
             tokens: [],
@@ -560,6 +550,7 @@ export namespace Lexer {
                 return {
                     kind: LineKind.Touched,
                     text: line.text,
+                    lineTerminator: line.lineTerminator,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: tokenizeChanges.lineModeEnd,
                     tokens: newTokens,
@@ -573,6 +564,7 @@ export namespace Lexer {
                 return {
                     kind: LineKind.TouchedWithError,
                     text: line.text,
+                    lineTerminator: line.lineTerminator,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: tokenizeChanges.lineModeEnd,
                     tokens: newTokens,
@@ -585,6 +577,7 @@ export namespace Lexer {
                     kind: LineKind.Error,
                     text: line.text,
                     lineModeStart: line.lineModeStart,
+                    lineTerminator: line.lineTerminator,
                     lineModeEnd: line.lineModeEnd,
                     tokens: line.tokens,
                     error: tokenizePartialResult.error,
@@ -595,6 +588,10 @@ export namespace Lexer {
         }
     }
 
+    // If an earlier line changed its lineModeEnd, eg. inserting a multiline line comment start,
+    // then the proceeding tokens would need to be retokenized.
+    // Exits when previous.lineModeEnd !== current.lineModeStart.
+    // Returns only tokens which were retokenized.
     function retokenizeLines(
         lines: ReadonlyArray<TLine>,
         lineNumber: number,
@@ -610,7 +607,7 @@ export namespace Lexer {
                 const line: TLine = maybeCurrentLine;
 
                 if (previousLineModeEnd !== line.lineModeStart) {
-                    const retokenizedLine: TLine = tokenize(lineFrom(line.text, previousLineModeEnd), offsetLineNumber);
+                    const retokenizedLine: TLine = tokenize(lineFrom(line.text, line.lineTerminator, previousLineModeEnd), offsetLineNumber);
                     retokenizedLines.push(retokenizedLine);
                     previousLineModeEnd = retokenizedLine.lineModeEnd;
                     lineNumber += 1;
@@ -655,6 +652,7 @@ export namespace Lexer {
                 return {
                     kind: LineKind.Error,
                     text: line.text,
+                    lineTerminator: line.lineTerminator,
                     lineModeStart: line.lineModeStart,
                     lineModeEnd: line.lineModeEnd,
                     tokens: line.tokens,
@@ -671,6 +669,7 @@ export namespace Lexer {
             return {
                 kind: LineKind.Touched,
                 text: line.text,
+                lineTerminator: line.lineTerminator,
                 lineModeStart: line.lineModeStart,
                 lineModeEnd: LineMode.Default,
                 tokens: [],

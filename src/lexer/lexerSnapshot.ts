@@ -269,7 +269,7 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
 
         text += line.text;
         if (lineNumber !== numLines - 1) {
-            text += state.lineTerminator;
+            text += line.lineTerminator;
         }
 
         const columnNumberMap: ColumnNumberMap = getColumnNumberMap(text);
@@ -299,7 +299,7 @@ function flattenLineTokens(state: Lexer.State): [string, ReadonlyArray<FlatLineT
             flatIndex += 1;
         }
 
-        lineTextOffset += (line.text.length + state.lineTerminator.length);
+        lineTextOffset += (line.text.length + line.lineTerminator.length);
     }
 
     return [text, flatTokens];
