@@ -66,5 +66,3 @@ function lexText(text: string) {
         console.log(`numComments: ${snapshot.comments}`);
     }
 }
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
