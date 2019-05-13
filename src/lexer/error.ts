@@ -30,13 +30,13 @@ export namespace LexerError {
     // do not these sort variants,
     // they are in order that logical checks are made, which in turn help create logical variants
     export const enum BadRangeKind {
-        SameLine_ColumnNumberStart_Higher = "SameLine_ColumnNumberStart_Higher",
+        SameLine_LineCodeUnitStart_Higher = "SameLine_LineCodeUnitStart_Higher",
         LineNumberStart_GreaterThan_LineNumberEnd = "LineNumberStart_GreaterThan_LineNumberEnd",
         LineNumberStart_LessThan_Zero = "LineNumberStart_LessThan_Zero",
         LineNumberStart_GreaterThan_NumLines = "LineNumberStart_GreaterThan_NumLines",
         LineNumberEnd_GreaterThan_NumLines = "LineNumberEnd_GreaterThan_NumLines",
-        ColumnNumberStart_GreaterThan_LineLength = "ColumnNumberStart_GreaterThan_LineLength",
-        ColumnNumberEnd_GreaterThan_LineLength = "ColumnNumberEnd_GreaterThan_LineLength",
+        LineCodeUnitStart_GreaterThan_LineLength = "LineCodeUnitStart_GreaterThan_LineLength",
+        LineCodeUnitEnd_GreaterThan_LineLength = "LineCodeUnitEnd_GreaterThan_LineLength",
     }
 
     export const enum BadLineNumberKind {

@@ -44,8 +44,8 @@ export namespace Localization.Error {
 
     export function lexerBadRange(kind: LexerError.BadRangeKind): string {
         switch (kind) {
-            case LexerError.BadRangeKind.SameLine_ColumnNumberStart_Higher:
-                return `Start and end shared the same line, but start.columnNumber was higher than end.columnNumber.`;
+            case LexerError.BadRangeKind.SameLine_LineCodeUnitStart_Higher:
+                return `Start and end shared the same line, but start.lineCodeUnit was higher than end.lineCodeUnit.`;
 
             case LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd:
                 return `start.lineNumber is larger than end.lineNumber.`;
@@ -59,11 +59,11 @@ export namespace Localization.Error {
             case LexerError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines:
                 return `end.lineNumber is higher than State's number of lines.`;
 
-            case LexerError.BadRangeKind.ColumnNumberStart_GreaterThan_LineLength:
-                return `start.columnNumber is higher than line's length.`;
+            case LexerError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength:
+                return `start.lineCodeUnit is higher than line's length.`;
 
-            case LexerError.BadRangeKind.ColumnNumberEnd_GreaterThan_LineLength:
-                return `end.columnNumber is higher than line's length.`;
+            case LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength:
+                return `end.lineCodeUnit is higher than line's length.`;
 
             default:
                 throw isNever(kind);

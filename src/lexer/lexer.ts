@@ -1303,7 +1303,7 @@ export namespace Lexer {
 
         let maybeKind: Option<LexerError.BadRangeKind>;
         if (start.lineNumber === end.lineNumber && start.lineCodeUnit > end.lineCodeUnit) {
-            maybeKind = LexerError.BadRangeKind.SameLine_ColumnNumberStart_Higher;
+            maybeKind = LexerError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
         }
         else if (start.lineNumber > end.lineNumber) {
             maybeKind = LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd;
@@ -1331,10 +1331,10 @@ export namespace Lexer {
         const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
         if (rangeStart.lineCodeUnit >= lineStart.text.length) {
-            maybeKind = LexerError.BadRangeKind.ColumnNumberStart_GreaterThan_LineLength;
+            maybeKind = LexerError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
         }
         else if (rangeEnd.lineCodeUnit >= lineEnd.text.length) {
-            maybeKind = LexerError.BadRangeKind.ColumnNumberEnd_GreaterThan_LineLength;
+            maybeKind = LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
         }
 
         if (maybeKind) {
