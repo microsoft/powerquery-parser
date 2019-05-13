@@ -14,11 +14,11 @@ function expectBadLineNumberKind(
     }
 
     const error: LexerError.LexerError = updateRangeResult.error;
-    if (!(error.innerError instanceof LexerError.BadLineNumber)) {
+    if (!(error.innerError instanceof LexerError.BadLineNumberError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexerError.BadLineNumber: ${JSON.stringify(error)}`);
     }
 
-    const innerError: LexerError.BadLineNumber = error.innerError;
+    const innerError: LexerError.BadLineNumberError = error.innerError;
     if (!(innerError.kind === expectedKind)) {
         throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
     }
@@ -82,7 +82,7 @@ function expectUnterminatedMultilineTokenKind(
     const error: LexerError.TLexerError = snapshotResult.error;
     if (!(error.innerError instanceof LexerError.UnterminatedMultilineTokenError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexerError.UnterminatedMultilineTokenError: ${JSON.stringify(error)}`);
-    }
+}
 
     const innerError: LexerError.UnterminatedMultilineTokenError = error.innerError;
     if (!(innerError.kind === expectedKind)) {
@@ -92,7 +92,7 @@ function expectUnterminatedMultilineTokenKind(
 
 describe(`Lexer.Error`, () => {
 
-    describe(`${LexerError.BadLineNumber.name}`, () => {
+    describe(`${LexerError.BadLineNumberError.name}`, () => {
         it(`${LexerError.BadLineNumberKind.LessThanZero}`, () => {
             expectBadLineNumberKind(-1, LexerError.BadLineNumberKind.LessThanZero)
         });

@@ -134,7 +134,7 @@ export namespace Lexer {
     ): Result<State, LexerError.LexerError> {
         const lines: ReadonlyArray<TLine> = state.lines;
 
-        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+        const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(
             lineNumber,
             lines,
         );
@@ -208,7 +208,7 @@ export namespace Lexer {
     export function deleteLine(state: State, lineNumber: number): Result<State, LexerError.LexerError> {
         const lines: ReadonlyArray<TLine> = state.lines;
 
-        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+        const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(
             lineNumber,
             lines,
         );
@@ -1248,17 +1248,17 @@ export namespace Lexer {
     function maybeBadLineNumberError(
         lineNumber: number,
         lines: ReadonlyArray<TLine>,
-    ): Option<LexerError.BadLineNumber> {
+    ): Option<LexerError.BadLineNumberError> {
         const numLines: number = lines.length;
         if (lineNumber >= numLines) {
-            return new LexerError.BadLineNumber(
+            return new LexerError.BadLineNumberError(
                 LexerError.BadLineNumberKind.GreaterThanNumLines,
                 lineNumber,
                 numLines,
             );
         }
         else if (lineNumber < 0) {
-            return new LexerError.BadLineNumber(
+            return new LexerError.BadLineNumberError(
                 LexerError.BadLineNumberKind.LessThanZero,
                 lineNumber,
                 numLines,

@@ -12,7 +12,7 @@ export namespace LexerError {
     )
 
     export type TInnerLexerError = (
-        | BadLineNumber
+        | BadLineNumberError
         | BadRangeError
         | BadStateError
         | EndOfStreamError
@@ -60,7 +60,7 @@ export namespace LexerError {
         }
     }
 
-    export class BadLineNumber extends Error {
+    export class BadLineNumberError extends Error {
         constructor(
             readonly kind: BadLineNumberKind,
             readonly lineNumber: number,
@@ -144,7 +144,7 @@ export namespace LexerError {
 
     export function isTInnerLexerError(x: any): x is TInnerLexerError {
         return (
-            x instanceof BadLineNumber
+            x instanceof BadLineNumberError
             || x instanceof BadRangeError
             || x instanceof BadStateError
             || x instanceof EndOfStreamError
