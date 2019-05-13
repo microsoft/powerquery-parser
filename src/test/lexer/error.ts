@@ -3,35 +3,35 @@ import "mocha";
 import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
-interface StateErrorLinesPair {
-    readonly state: Lexer.State,
-    readonly errorLines: Lexer.TErrorLines,
-}
+// interface StateErrorLinesPair {
+//     readonly state: Lexer.State,
+//     readonly errorLines: Lexer.TErrorLines,
+// }
 
-function expectStateErrorLines(text: string, numErrorLines: number): StateErrorLinesPair {
-    const state: Lexer.State = Lexer.stateFrom(text);
+// function expectStateErrorLines(text: string, numErrorLines: number): StateErrorLinesPair {
+//     const state: Lexer.State = Lexer.stateFrom(text);
 
-    const maybeErrorLines = Lexer.maybeErrorLines(state);
-    if (!(maybeErrorLines !== undefined)) {
-        throw new Error(`AssertFailed: Lexer.maybeFirstErrorLine(state) !== undefined: ${JSON.stringify(state)}`);
-    }
-    else if (!(maybeErrorLines !== undefined)) {
-        throw new Error(`AssertFailed: maybeErrorLines !== undefined: ${JSON.stringify(state)}`);
-    }
-    else if (!(numErrorLines === Object.keys(maybeErrorLines).length)) {
-        const details = {
-            "Object.keys(maybeErrorLines).length": Object.keys(maybeErrorLines).length,
-            numErrorLines,
-        };
-        throw new Error(`AssertFailed: numErrorLines === Object.keys(maybeErrorLines).length): ${JSON.stringify(details)}`);
-    }
-    else {
-        return {
-            state,
-            errorLines: maybeErrorLines,
-        };
-    }
-}
+//     const maybeErrorLines = Lexer.maybeErrorLines(state);
+//     if (!(maybeErrorLines !== undefined)) {
+//         throw new Error(`AssertFailed: Lexer.maybeFirstErrorLine(state) !== undefined: ${JSON.stringify(state)}`);
+//     }
+//     else if (!(maybeErrorLines !== undefined)) {
+//         throw new Error(`AssertFailed: maybeErrorLines !== undefined: ${JSON.stringify(state)}`);
+//     }
+//     else if (!(numErrorLines === Object.keys(maybeErrorLines).length)) {
+//         const details = {
+//             "Object.keys(maybeErrorLines).length": Object.keys(maybeErrorLines).length,
+//             numErrorLines,
+//         };
+//         throw new Error(`AssertFailed: numErrorLines === Object.keys(maybeErrorLines).length): ${JSON.stringify(details)}`);
+//     }
+//     else {
+//         return {
+//             state,
+//             errorLines: maybeErrorLines,
+//         };
+//     }
+// }
 
 function expectSnapshotInnerError(text: string): LexerError.TInnerLexerError {
     const state: Lexer.State = Lexer.stateFrom(text);
@@ -66,6 +66,29 @@ function expectBadLineNumberKind(
     }
 }
 
+function expectExpectedKind(
+    text: string,
+    expectedKind: LexerError.ExpectedKind,
+) {
+    const state: Lexer.State = Lexer.stateFrom(text);
+    expect(state.lines.length).to.equal(1);
+    
+    const line: Lexer.TLine = state.lines[0];
+    if (!(Lexer.isErrorLine(line))) {
+        throw new Error(`AssertFailed: Lexer.isErrorLine(line): ${JSON.stringify(line)}`);
+    }
+
+    const error: LexerError.TLexerError = line.error;
+    if (!(error.innerError instanceof LexerError.ExpectedError)) {
+        throw new Error(`AssertFailed: error.innerError instanceof LexerError.ExpectedError: ${JSON.stringify(line)}`);
+    }
+
+    const innerError: LexerError.ExpectedError = error.innerError;
+    if (!(innerError.kind === expectedKind)) {
+        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
+    }
+}
+
 function expectBadRangeKind(
     range: Lexer.Range,
     expectedKind: LexerError.BadRangeKind,
@@ -88,20 +111,20 @@ function expectBadRangeKind(
 }
 
 describe(`Lexer.Error`, () => {
-    it(`ExpectedHexLiteralError: 0x`, () => {
-        const stateErrorLinesPair = expectStateErrorLines(`0x`, 1);
-        const innerError = stateErrorLinesPair.errorLines[0].error.innerError;
-        expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
-    });
+    // it(`ExpectedHexLiteralError: 0x`, () => {
+    //     const stateErrorLinesPair = expectStateErrorLines(`0x`, 1);
+    //     const innerError = stateErrorLinesPair.errorLines[0].error.innerError;
+    //     expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
+    // });
 
-    it(`lexerLineError: 0x \\n 0x`, () => {
-        const stateErrorLinesPair = expectStateErrorLines(`0x \n 0x`, 2);
-        const firstInnerError = stateErrorLinesPair.errorLines[0].error.innerError;
-        expect(firstInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, firstInnerError.message);
+    // it(`lexerLineError: 0x \\n 0x`, () => {
+    //     const stateErrorLinesPair = expectStateErrorLines(`0x \n 0x`, 2);
+    //     const firstInnerError = stateErrorLinesPair.errorLines[0].error.innerError;
+    //     expect(firstInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, firstInnerError.message);
 
-        const secondInnerError = stateErrorLinesPair.errorLines[1].error.innerError;
-        expect(secondInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, secondInnerError.message);
-    });
+    //     const secondInnerError = stateErrorLinesPair.errorLines[1].error.innerError;
+    //     expect(secondInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, secondInnerError.message);
+    // });
 
     it(`UnterminatedMultilineCommentError: /*`, () => {
         const innerError = expectSnapshotInnerError(`/*`);
@@ -115,6 +138,12 @@ describe(`Lexer.Error`, () => {
 
     describe(`${LexerError.BadLineNumber.name}`, () => {
         it(`${LexerError.BadLineNumberKind.LessThanZero}`, () => {
+            expectExpectedKind("0x", LexerError.ExpectedKind.HexLiteral)
+        });
+    });
+
+    describe(`${LexerError.ExpectedError.name}`, () => {
+        it(`${LexerError.ExpectedKind.HexLiteral}`, () => {
             expectBadLineNumberKind(-1, LexerError.BadLineNumberKind.LessThanZero)
         });
 
