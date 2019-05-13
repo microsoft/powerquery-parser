@@ -3,36 +3,6 @@ import "mocha";
 import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
-// interface StateErrorLinesPair {
-//     readonly state: Lexer.State,
-//     readonly errorLines: Lexer.TErrorLines,
-// }
-
-// function expectStateErrorLines(text: string, numErrorLines: number): StateErrorLinesPair {
-//     const state: Lexer.State = Lexer.stateFrom(text);
-
-//     const maybeErrorLines = Lexer.maybeErrorLines(state);
-//     if (!(maybeErrorLines !== undefined)) {
-//         throw new Error(`AssertFailed: Lexer.maybeFirstErrorLine(state) !== undefined: ${JSON.stringify(state)}`);
-//     }
-//     else if (!(maybeErrorLines !== undefined)) {
-//         throw new Error(`AssertFailed: maybeErrorLines !== undefined: ${JSON.stringify(state)}`);
-//     }
-//     else if (!(numErrorLines === Object.keys(maybeErrorLines).length)) {
-//         const details = {
-//             "Object.keys(maybeErrorLines).length": Object.keys(maybeErrorLines).length,
-//             numErrorLines,
-//         };
-//         throw new Error(`AssertFailed: numErrorLines === Object.keys(maybeErrorLines).length): ${JSON.stringify(details)}`);
-//     }
-//     else {
-//         return {
-//             state,
-//             errorLines: maybeErrorLines,
-//         };
-//     }
-// }
-
 function expectSnapshotInnerError(text: string): LexerError.TInnerLexerError {
     const state: Lexer.State = Lexer.stateFrom(text);
     const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
