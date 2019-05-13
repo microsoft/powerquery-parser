@@ -44,6 +44,12 @@ export namespace LexerError {
         LineCodeUnitEnd_GreaterThan_LineLength = "LineCodeUnitEnd_GreaterThan_LineLength",
     }
 
+    export const enum ExpectedKind {
+        HexLiteral = "HexLiteral",
+        KeywordOrIdentifier = "KeywordOrIdentifier",
+        Numeric = "Numeric",
+    }
+
     export class LexerError extends Error {
         constructor(
             readonly innerError: TInnerLexerError,
@@ -90,6 +96,15 @@ export namespace LexerError {
     export class EndOfStreamError extends Error {
         constructor() {
             super(Localization.Error.lexerEndOfStream());
+        }
+    }
+
+    export class ExpectedError extends Error {
+        constructor(
+            readonly graphemePosition: StringHelpers.GraphemePosition,
+            readonly kind: ExpectedKind,
+        ) {
+            super(Localization.Error.lexerExpected(graphemePosition, kind))
         }
     }
 
