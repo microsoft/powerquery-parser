@@ -105,20 +105,7 @@ export namespace Lexer {
 
     export function stateFrom(text: string): State {
         const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
-        const numLines = splitLines.length;
-        const tokenizedLines: TLine[] = [];
-
-        for (let lineNumber = 0; lineNumber < numLines; lineNumber += 1) {
-            const splitLine: SplitLine = splitLines[lineNumber];
-            const maybePreviousLine: Option<TLine> = tokenizedLines[lineNumber - 1];
-            const lineModeStart: LineMode = maybePreviousLine !== undefined
-                ? maybePreviousLine.lineModeEnd
-                : LineMode.Default;
-
-            const untokenizedLine = lineFrom(splitLine.text, splitLine.lineTerminator, lineModeStart);
-            tokenizedLines.push(tokenize(untokenizedLine, lineNumber));
-        }
-
+        const tokenizedLines: TLine[] = tokenizedLinesFrom(splitLines, LineMode.Default);
         return { lines: tokenizedLines };
     }
 
@@ -140,28 +127,28 @@ export namespace Lexer {
         };
     }
 
-    // export function updateLine(
-    //     state: State,
-    //     lineNumber: number,
-    //     text: string,
-    // ): Result<State, LexerError.LexerError> {
-    //     const lines: ReadonlyArray<TLine> = state.lines;
+    export function updateLine(
+        state: State,
+        lineNumber: number,
+        text: string,
+    ): Result<State, LexerError.LexerError> {
+        const lines: ReadonlyArray<TLine> = state.lines;
 
-    //     const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
-    //         lineNumber,
-    //         lines,
-    //     );
-    //     if (maybeError) {
-    //         return {
-    //             kind: ResultKind.Err,
-    //             error: new LexerError.LexerError(maybeError),
-    //         };
-    //     }
+        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+            lineNumber,
+            lines,
+        );
+        if (maybeError) {
+            return {
+                kind: ResultKind.Err,
+                error: new LexerError.LexerError(maybeError),
+            };
+        }
 
-    //     const line: TLine = lines[lineNumber];
-    //     const range: Range = rangeFrom(line, lineNumber);
-    //     return updateRange(state, range, text);
-    // }
+        const line: TLine = lines[lineNumber];
+        const range: Range = rangeFrom(line, lineNumber);
+        return updateRange(state, range, text);
+    }
 
     export function updateRange(
         state: State,
@@ -176,79 +163,46 @@ export namespace Lexer {
             };
         }
 
-        // const textChunks: string[] = text.split(state.lineTerminator);
+        // unsafe action:
+        //      casting ReadonlyArray<SplitLine> to SplitLine[]
+        // what I'm trying to avoid:
+        //      the cost of properly casting, aka deep cloning the object
+        // why it's safe:
+        //      the array is generated for this function block,
+        //      and it never leaves this function block.
+        const splitLines: SplitLine[] = splitOnLineTerminators(text) as SplitLine[];
 
+        const rangeStart: RangePosition = range.start;
+        const textPrefix = state.lines[rangeStart.lineNumber].text.substr(0, rangeStart.lineCodeUnit);
+        splitLines[0].text = textPrefix + splitLines[0].text;
 
+        const rangeEnd: RangePosition = range.end;
+        const textSuffix = state.lines[rangeEnd.lineNumber].text.substr(rangeEnd.lineCodeUnit + 1);
+        const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
+        lastSplitLine.text = lastSplitLine.text + textSuffix;
 
-        // if (text === "") {
-        //     return deleteRange(state, range);
-        // }
+        const maybePreviousLine: Option<TLine> = state.lines[rangeStart.lineNumber - 1];
+        const previousLineModeEnd = maybePreviousLine !== undefined
+            ? maybePreviousLine.lineModeEnd
+            : LineMode.Default;
+        const newLines = tokenizedLinesFrom(splitLines, previousLineModeEnd);
 
-        // const lines: ReadonlyArray<TLine> = state.lines;
-        // const newLines: TLine[] = [];
-        // const rangeStart = range.start;
-        // const rangeEnd = range.end;
-        // const lineNumberStart: number = rangeStart.lineNumber;
-        // const textChunks = text.split(state.lineTerminator);
-        // const numTextChunks = textChunks.length;
-        // const lastTextChunksIndex = numTextChunks - 1;
+        let lines: TLine[] = [
+            ...state.lines.slice(0, rangeStart.lineNumber),
+            ...newLines,
+            ...retokenizeLines(
+                state.lines,
+                rangeEnd.lineNumber,
+                newLines[newLines.length - 1].lineModeEnd,
+            ),
+        ]
 
-        // const maybeLine: Option<TLine> = lines[lineNumberStart - 1];
-        // let lineMode: LineMode = maybeLine !== undefined
-        //     ? maybeLine.lineModeEnd
-        //     : LineMode.Default;
-
-        // for (let textChunkIndex: number = 0; textChunkIndex < numTextChunks; textChunkIndex += 1) {
-        //     const lineNumber = lineNumberStart + textChunkIndex;
-        //     let newLineText: string = textChunks[textChunkIndex];
-
-        //     if (textChunkIndex === 0 || lastTextChunksIndex) {
-
-        //         // prepend existing text
-        //         if (textChunkIndex === 0) {
-        //             const lineStart = lines[rangeStart.lineNumber];
-        //             newLineText = (lineStart.text.substring(0, rangeStart.columnNumber)) + newLineText;
-        //         }
-
-        //         // append existing text
-        //         if (textChunkIndex === lastTextChunksIndex) {
-        //             const lineEnd = lines[rangeEnd.lineNumber];
-        //             const lineStringEnd = lineEnd.lineString;
-        //             newLineText += lineStringEnd.text.substring(lineStringEnd.graphemeIndex2TextIndex[rangeEnd.columnNumber + 1])
-        //         }
-        //     }
-
-        //     const newLine: TLine = tokenize(lineFrom(newLineText, lineMode), lineNumber);
-        //     newLines.push(newLine);
-        //     lineMode = newLine.lineModeEnd;
-        // }
-
-        // let trailingLines: ReadonlyArray<TLine>;
-        // const retokenizeLineNumberStart = rangeEnd.lineNumber + 1;
-        // if (lines.length > retokenizeLineNumberStart) {
-        //     const lastNewLineModeEnd = newLines[newLines.length - 1].lineModeEnd;
-        //     const retokenizedLines: ReadonlyArray<TLine> = retokenizeLines(lines, retokenizeLineNumberStart, lastNewLineModeEnd);
-
-        //     trailingLines = [
-        //         ...retokenizedLines,
-        //         ...lines.slice(retokenizeLineNumberStart + retokenizedLines.length),
-        //     ]
-        // }
-        // else {
-        //     trailingLines = [];
-        // }
-
-        // return {
-        //     kind: ResultKind.Ok,
-        //     value: {
-        //         ...state,
-        //         lines: [
-        //             ...state.lines.slice(0, rangeStart.lineNumber),
-        //             ...newLines,
-        //             ...trailingLines,
-        //         ],
-        //     }
-        // };
+        return {
+            kind: ResultKind.Ok,
+            value: {
+                lines,
+            }
+        };
     }
 
     export function deleteLine(state: State, lineNumber: number): Result<State, LexerError.LexerError> {
@@ -588,10 +542,24 @@ export namespace Lexer {
         }
     }
 
+    function tokenizedLinesFrom(splitLines: ReadonlyArray<SplitLine>, previousLineModeEnd: LineMode) {
+        const numLines = splitLines.length;
+        const tokenizedLines: TLine[] = [];
+
+        for (let lineNumber = 0; lineNumber < numLines; lineNumber += 1) {
+            const splitLine: SplitLine = splitLines[lineNumber];
+            const untokenizedLine = lineFrom(splitLine.text, splitLine.lineTerminator, previousLineModeEnd);
+            const tokenizedLine = tokenize(untokenizedLine, lineNumber);
+            tokenizedLines.push(tokenizedLine);
+            previousLineModeEnd = tokenizedLine.lineModeEnd;
+        }
+
+        return tokenizedLines;
+    }
+
     // If an earlier line changed its lineModeEnd, eg. inserting a multiline line comment start,
     // then the proceeding tokens would need to be retokenized.
     // Exits when previous.lineModeEnd !== current.lineModeStart.
-    // Returns only tokens which were retokenized.
     function retokenizeLines(
         lines: ReadonlyArray<TLine>,
         lineNumber: number,
@@ -607,14 +575,18 @@ export namespace Lexer {
                 const line: TLine = maybeCurrentLine;
 
                 if (previousLineModeEnd !== line.lineModeStart) {
-                    const retokenizedLine: TLine = tokenize(lineFrom(line.text, line.lineTerminator, previousLineModeEnd), offsetLineNumber);
+                    const untokenizedLine: UntouchedLine = lineFrom(line.text, line.lineTerminator, previousLineModeEnd);
+                    const retokenizedLine: TLine = tokenize(untokenizedLine, offsetLineNumber);
                     retokenizedLines.push(retokenizedLine);
                     previousLineModeEnd = retokenizedLine.lineModeEnd;
                     lineNumber += 1;
                     maybeCurrentLine = lines[lineNumber];
                 }
                 else {
-                    return retokenizedLines;
+                    return [
+                        ...retokenizedLines,
+                        ...lines.slice(lineNumber + 1),
+                    ]
                 }
 
             }
@@ -622,7 +594,7 @@ export namespace Lexer {
             return retokenizedLines;
         }
         else {
-            return [];
+            return lines;
         }
     }
 
