@@ -119,14 +119,13 @@ export namespace Localization.Error {
 
             case LexerError.UnterminatedKind.QuotedIdentifier:
                 return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
-                
+
             case LexerError.UnterminatedKind.String:
                 return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
                 
             default:
                 throw isNever(kind);
         }
-
     }
 
     export function parserExpectedTokenKind(
