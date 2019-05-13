@@ -45,27 +45,6 @@ function expectSnapshotInnerError(text: string): LexerError.TInnerLexerError {
     }
 }
 
-function expectBadRangeKind(
-    range: Lexer.Range,
-    expectedKind: LexerError.BadRangeKind,
-) {
-    let state: Lexer.State = Lexer.stateFrom(`foo`);
-    const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateRange(state, range, `bar`);
-    if (!(updateRangeResult.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: updateRangeResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
-    }
-
-    const error: LexerError.LexerError = updateRangeResult.error;
-    if (!(error.innerError instanceof LexerError.BadRangeError)) {
-        throw new Error(`AssertFailed: error.innerError instanceof LexerError.BadRangeError: ${JSON.stringify(error)}`);
-    }
-
-    const innerError: LexerError.BadRangeError = error.innerError;
-    if (!(innerError.kind === expectedKind)) {
-        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
-    }
-}
-
 function expectBadLineNumberKind(
     lineNumber: number,
     expectedKind: LexerError.BadLineNumberKind,
@@ -82,6 +61,27 @@ function expectBadLineNumberKind(
     }
 
     const innerError: LexerError.BadLineNumber = error.innerError;
+    if (!(innerError.kind === expectedKind)) {
+        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
+    }
+}
+
+function expectBadRangeKind(
+    range: Lexer.Range,
+    expectedKind: LexerError.BadRangeKind,
+) {
+    let state: Lexer.State = Lexer.stateFrom(`foo`);
+    const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateRange(state, range, `bar`);
+    if (!(updateRangeResult.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: updateRangeResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    }
+
+    const error: LexerError.LexerError = updateRangeResult.error;
+    if (!(error.innerError instanceof LexerError.BadRangeError)) {
+        throw new Error(`AssertFailed: error.innerError instanceof LexerError.BadRangeError: ${JSON.stringify(error)}`);
+    }
+
+    const innerError: LexerError.BadRangeError = error.innerError;
     if (!(innerError.kind === expectedKind)) {
         throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
     }
@@ -111,6 +111,16 @@ describe(`Lexer.Error`, () => {
     it(`UnterminatedStringError: "`, () => {
         const innerError = expectSnapshotInnerError(`"`);
         expect(innerError instanceof LexerError.UnterminatedStringError).to.equal(true, innerError.message);
+    });
+
+    describe(`${LexerError.BadLineNumber.name}`, () => {
+        it(`${LexerError.BadLineNumberKind.LessThanZero}`, () => {
+            expectBadLineNumberKind(-1, LexerError.BadLineNumberKind.LessThanZero)
+        });
+
+        it(`${LexerError.BadLineNumberKind.GreaterThanNumLines}`, () => {
+            expectBadLineNumberKind(1, LexerError.BadLineNumberKind.GreaterThanNumLines)
+        });
     });
 
     describe(`${LexerError.BadRangeError.name}`, () => {
@@ -210,16 +220,6 @@ describe(`Lexer.Error`, () => {
                 },
             };
             expectBadRangeKind(range, LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength);
-        });
-    });
-
-    describe(`${LexerError.BadLineNumber.name}`, () => {
-        it(`${LexerError.BadLineNumberKind.LessThanZero}`, () => {
-            expectBadLineNumberKind(-1, LexerError.BadLineNumberKind.LessThanZero)
-        });
-
-        it(`${LexerError.BadLineNumberKind.GreaterThanNumLines}`, () => {
-            expectBadLineNumberKind(1, LexerError.BadLineNumberKind.GreaterThanNumLines)
         });
     });
 });
