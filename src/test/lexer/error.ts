@@ -42,7 +42,7 @@ function expectExpectedKind(
 ) {
     const state: Lexer.State = Lexer.stateFrom(text);
     expect(state.lines.length).to.equal(1);
-    
+
     const line: Lexer.TLine = state.lines[0];
     if (!(Lexer.isErrorLine(line))) {
         throw new Error(`AssertFailed: Lexer.isErrorLine(line): ${JSON.stringify(line)}`);
