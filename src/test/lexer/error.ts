@@ -3,18 +3,6 @@ import "mocha";
 import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 
-function expectSnapshotInnerError(text: string): LexerError.TInnerLexerError {
-    const state: Lexer.State = Lexer.stateFrom(text);
-    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
-
-    if (!(snapshotResult.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
-    }
-    else {
-        return snapshotResult.error.innerError;
-    }
-}
-
 function expectBadLineNumberKind(
     lineNumber: number,
     expectedKind: LexerError.BadLineNumberKind,
@@ -80,17 +68,29 @@ function expectBadRangeKind(
     }
 }
 
+function expectUnterminatedMultilineTokenKind(
+    text: string,
+    expectedKind: LexerError.UnterminatedMultilineTokenKind,
+) {
+    let state: Lexer.State = Lexer.stateFrom(text);
+
+    const snapshotResult: Result<LexerSnapshot, LexerError.LexerError> = LexerSnapshot.tryFrom(state);
+    if (!(snapshotResult.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    }
+
+    const error: LexerError.TLexerError = snapshotResult.error;
+    if (!(error.innerError instanceof LexerError.UnterminatedMultilineTokenError)) {
+        throw new Error(`AssertFailed: error.innerError instanceof LexerError.UnterminatedMultilineTokenError: ${JSON.stringify(error)}`);
+    }
+
+    const innerError: LexerError.UnterminatedMultilineTokenError = error.innerError;
+    if (!(innerError.kind === expectedKind)) {
+        throw new Error(`AssertFailed: innerError.kind === kind: ${JSON.stringify({ error, kind: expectedKind })}`);
+    }
+}
+
 describe(`Lexer.Error`, () => {
-
-    it(`UnterminatedMultilineCommentError: /*`, () => {
-        const innerError = expectSnapshotInnerError(`/*`);
-        expect(innerError instanceof LexerError.UnterminatedMultilineCommentError).to.equal(true, innerError.message);
-    });
-
-    it(`UnterminatedStringError: "`, () => {
-        const innerError = expectSnapshotInnerError(`"`);
-        expect(innerError instanceof LexerError.UnterminatedStringError).to.equal(true, innerError.message);
-    });
 
     describe(`${LexerError.BadLineNumber.name}`, () => {
         it(`${LexerError.BadLineNumberKind.LessThanZero}`, () => {
@@ -214,5 +214,20 @@ describe(`Lexer.Error`, () => {
             };
             expectBadRangeKind(range, LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength);
         });
+    });
+
+    describe(`${LexerError.UnterminatedMultilineTokenError.name}`, () => {
+        it(`${LexerError.UnterminatedMultilineTokenKind.MultilineComment}`, () => {
+            expectUnterminatedMultilineTokenKind(`/*`, LexerError.UnterminatedMultilineTokenKind.MultilineComment);
+        });
+
+        it(`${LexerError.UnterminatedMultilineTokenKind.String}`, () => {
+            expectUnterminatedMultilineTokenKind(`"`, LexerError.UnterminatedMultilineTokenKind.String);
+        });
+
+        it(`${LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier}`, () => {
+            expectUnterminatedMultilineTokenKind(`#"`, LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier);
+        });
+
     });
 });
