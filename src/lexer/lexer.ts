@@ -231,21 +231,6 @@ export namespace Lexer {
         }
     }
 
-    export function deleteRange(
-        state: State,
-        range: Range,
-    ): Result<State, LexerError.LexerError> {
-        const maybeError: Option<LexerError.BadRangeError> = maybeBadRangeError(state, range);
-        if (maybeError) {
-            return {
-                kind: ResultKind.Err,
-                error: new LexerError.LexerError(maybeError),
-            };
-        }
-
-
-    }
-
     // deep state comparison
     export function equalStates(leftState: State, rightState: State): boolean {
         return equalLines(leftState.lines, rightState.lines);

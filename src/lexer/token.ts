@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { StringHelpers } from "../common";
-import { Lexer } from "./lexer";
 
 const enum LineTokenKindAdditions {
     LineComment = "LineComment",
