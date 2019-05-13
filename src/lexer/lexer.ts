@@ -192,7 +192,7 @@ export namespace Lexer {
             ...newLines,
             ...retokenizeLines(
                 state.lines,
-                rangeEnd.lineNumber,
+                rangeEnd.lineNumber + 1,
                 newLines[newLines.length - 1].lineModeEnd,
             ),
         ]
@@ -565,8 +565,11 @@ export namespace Lexer {
         lineNumber: number,
         previousLineModeEnd: LineMode,
     ): ReadonlyArray<TLine> {
-        const retokenizedLines: TLine[] = [];
+        if (lines[lineNumber] === undefined) {
+            return [];
+        }
 
+        const retokenizedLines: TLine[] = [];
         if (previousLineModeEnd !== lines[lineNumber].lineModeStart) {
             let offsetLineNumber: number = lineNumber;
             let maybeCurrentLine: Option<TLine> = lines[lineNumber];
