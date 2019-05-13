@@ -111,20 +111,6 @@ function expectBadRangeKind(
 }
 
 describe(`Lexer.Error`, () => {
-    // it(`ExpectedHexLiteralError: 0x`, () => {
-    //     const stateErrorLinesPair = expectStateErrorLines(`0x`, 1);
-    //     const innerError = stateErrorLinesPair.errorLines[0].error.innerError;
-    //     expect(innerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, innerError.message);
-    // });
-
-    // it(`lexerLineError: 0x \\n 0x`, () => {
-    //     const stateErrorLinesPair = expectStateErrorLines(`0x \n 0x`, 2);
-    //     const firstInnerError = stateErrorLinesPair.errorLines[0].error.innerError;
-    //     expect(firstInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, firstInnerError.message);
-
-    //     const secondInnerError = stateErrorLinesPair.errorLines[1].error.innerError;
-    //     expect(secondInnerError instanceof LexerError.ExpectedHexLiteralError).to.equal(true, secondInnerError.message);
-    // });
 
     it(`UnterminatedMultilineCommentError: /*`, () => {
         const innerError = expectSnapshotInnerError(`/*`);
@@ -138,18 +124,26 @@ describe(`Lexer.Error`, () => {
 
     describe(`${LexerError.BadLineNumber.name}`, () => {
         it(`${LexerError.BadLineNumberKind.LessThanZero}`, () => {
-            expectExpectedKind("0x", LexerError.ExpectedKind.HexLiteral)
-        });
-    });
-
-    describe(`${LexerError.ExpectedError.name}`, () => {
-        it(`${LexerError.ExpectedKind.HexLiteral}`, () => {
             expectBadLineNumberKind(-1, LexerError.BadLineNumberKind.LessThanZero)
         });
 
         it(`${LexerError.BadLineNumberKind.GreaterThanNumLines}`, () => {
             expectBadLineNumberKind(1, LexerError.BadLineNumberKind.GreaterThanNumLines)
         });
+    });
+
+    describe(`${LexerError.ExpectedError.name}`, () => {
+        it(`${LexerError.ExpectedKind.HexLiteral}`, () => {
+            expectExpectedKind(`0x`, LexerError.ExpectedKind.HexLiteral)
+        });
+
+        it(`${LexerError.ExpectedKind.KeywordOrIdentifier}`, () => {
+            expectExpectedKind(`^`, LexerError.ExpectedKind.KeywordOrIdentifier)
+        });
+
+        // LexerError.ExpectedKind.Numeric only throws if the regex is incorrect,
+        // meaning there's no good way to test it.
+
     });
 
     describe(`${LexerError.BadRangeError.name}`, () => {
