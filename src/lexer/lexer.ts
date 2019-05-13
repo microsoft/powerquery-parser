@@ -597,7 +597,7 @@ export namespace Lexer {
             return retokenizedLines;
         }
         else {
-            return lines;
+            return lines.slice(lineNumber);
         }
     }
 
