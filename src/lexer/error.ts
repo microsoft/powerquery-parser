@@ -20,9 +20,7 @@ export namespace LexerError {
         | ExpectedError
         | UnexpectedEofError
         | UnexpectedReadError
-        | UnterminatedMultilineCommentError
-        | UnterminatedQuotedIdentierError
-        | UnterminatedStringError
+        | UnterminatedMultilineTokenError
     )
 
     export const enum BadLineNumberKind {
@@ -48,7 +46,7 @@ export namespace LexerError {
         Numeric = "Numeric",
     }
 
-    export const enum UnterminatedKind {
+    export const enum UnterminatedMultilineToken {
         MultilineComment = "MultilineComment",
         QuotedIdentifier = "QuotedIdentifier",
         String = "String",
@@ -128,36 +126,12 @@ export namespace LexerError {
         }
     }
 
-    export class UnterminatedError extends Error {
+    export class UnterminatedMultilineTokenError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly kind: UnterminatedKind,
+            readonly kind: UnterminatedMultilineToken,
         ) {
-            super(Localization.Error.lexerUnterminated(graphemePosition, kind));
-        }
-    }
-
-    export class UnterminatedMultilineCommentError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerUnterminatedMultilineComment(graphemePosition));
-        }
-    }
-
-    export class UnterminatedQuotedIdentierError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerUnterminatedQuotedIdentifier(graphemePosition));
-        }
-    }
-
-    export class UnterminatedStringError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerUnterminatedString(graphemePosition));
+            super(Localization.Error.lexerUnterminatedMultilineToken(graphemePosition, kind));
         }
     }
 
@@ -178,9 +152,7 @@ export namespace LexerError {
             || x instanceof ExpectedError
             || x instanceof UnexpectedEofError
             || x instanceof UnexpectedReadError
-            || x instanceof UnterminatedMultilineCommentError
-            || x instanceof UnterminatedQuotedIdentierError
-            || x instanceof UnterminatedStringError
+            || x instanceof UnterminatedMultilineTokenError
         );
     }
 }

@@ -109,18 +109,18 @@ export namespace Localization.Error {
         return `Unexpected read while attempting to lex on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
     }
 
-    export function lexerUnterminated(
+    export function lexerUnterminatedMultilineToken(
         graphemePosition: StringHelpers.GraphemePosition,
-        kind: LexerError.UnterminatedKind,
+        kind: LexerError.UnterminatedMultilineToken,
     ): string {
         switch (kind) {
-            case LexerError.UnterminatedKind.MultilineComment:
+            case LexerError.UnterminatedMultilineToken.MultilineComment:
                 return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
 
-            case LexerError.UnterminatedKind.QuotedIdentifier:
+            case LexerError.UnterminatedMultilineToken.QuotedIdentifier:
                 return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
 
-            case LexerError.UnterminatedKind.String:
+            case LexerError.UnterminatedMultilineToken.String:
                 return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
                 
             default:
