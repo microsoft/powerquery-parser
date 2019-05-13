@@ -48,6 +48,12 @@ export namespace LexerError {
         Numeric = "Numeric",
     }
 
+    export const enum UnterminatedKind {
+        MultilineComment = "MultilineComment",
+        QuotedIdentifier = "QuotedIdentifier",
+        String = "String",
+    }
+
     export class LexerError extends Error {
         constructor(
             readonly innerError: TInnerLexerError,
@@ -119,6 +125,15 @@ export namespace LexerError {
             readonly graphemePosition: StringHelpers.GraphemePosition,
         ) {
             super(Localization.Error.lexerUnexpectedRead(graphemePosition));
+        }
+    }
+
+    export class UnterminatedError extends Error {
+        constructor(
+            readonly graphemePosition: StringHelpers.GraphemePosition,
+            readonly kind: UnterminatedKind,
+        ) {
+            super(Localization.Error.lexerUnterminated(graphemePosition, kind));
         }
     }
 
