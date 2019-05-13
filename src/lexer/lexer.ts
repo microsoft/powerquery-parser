@@ -941,7 +941,10 @@ export namespace Lexer {
     ): LineToken {
         const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
         if (maybePositionEnd === undefined) {
-            throw new LexerError.ExpectedHexLiteralError(graphemePositionFrom(text, lineNumber, positionStart));
+            throw new LexerError.ExpectedError(
+                graphemePositionFrom(text, lineNumber, positionStart),
+                LexerError.ExpectedKind.HexLiteral,
+            );
         }
         const positionEnd: number = maybePositionEnd;
 
@@ -955,7 +958,10 @@ export namespace Lexer {
     ): LineToken {
         const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, text, positionStart);
         if (maybePositionEnd === undefined) {
-            throw new LexerError.ExpectedNumericLiteralError(graphemePositionFrom(text, lineNumber, positionStart));
+            throw new LexerError.ExpectedError(
+                graphemePositionFrom(text, lineNumber, positionStart),
+                LexerError.ExpectedKind.Numeric,
+            );
         }
         const positionEnd: number = maybePositionEnd;
 
@@ -1068,7 +1074,10 @@ export namespace Lexer {
         else {
             const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, positionStart);
             if (maybePositionEnd === undefined) {
-                throw unexpectedReadError(text, lineNumber, positionStart);
+                throw new LexerError.ExpectedError(
+                    graphemePositionFrom(text, lineNumber, positionStart),
+                    LexerError.ExpectedKind.KeywordOrIdentifier,
+                );
             }
             const positionEnd: number = maybePositionEnd;
             const data: string = text.substring(positionStart, positionEnd);

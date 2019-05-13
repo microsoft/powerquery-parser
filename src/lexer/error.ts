@@ -17,9 +17,7 @@ export namespace LexerError {
         | BadStateError
         | EndOfStreamError
         | ErrorLineError
-        | ExpectedHexLiteralError
-        | ExpectedKeywordOrIdentifierError
-        | ExpectedNumericLiteralError
+        | ExpectedError
         | UnexpectedEofError
         | UnexpectedReadError
         | UnterminatedMultilineCommentError
@@ -108,30 +106,6 @@ export namespace LexerError {
         }
     }
 
-    export class ExpectedHexLiteralError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerExpectedHexLiteral(graphemePosition));
-        }
-    }
-
-    export class ExpectedKeywordOrIdentifierError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerExpectedKeywordOrIdentifier(graphemePosition));
-        }
-    }
-
-    export class ExpectedNumericLiteralError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerExpectedNumericLiteral(graphemePosition));
-        }
-    }
-
     export class UnexpectedEofError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
@@ -186,9 +160,7 @@ export namespace LexerError {
             || x instanceof BadStateError
             || x instanceof EndOfStreamError
             || x instanceof ErrorLineError
-            || x instanceof ExpectedHexLiteralError
-            || x instanceof ExpectedKeywordOrIdentifierError
-            || x instanceof ExpectedNumericLiteralError
+            || x instanceof ExpectedError
             || x instanceof UnexpectedEofError
             || x instanceof UnexpectedReadError
             || x instanceof UnterminatedMultilineCommentError
