@@ -88,10 +88,10 @@ export namespace Localization.Error {
 
             case LexerError.ExpectedKind.KeywordOrIdentifier:
                 return `Expected keyword or identifier on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
-                
+
             case LexerError.ExpectedKind.Numeric:
                 return `Expected numeric literal on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
-                
+
             default:
                 throw isNever(kind);
         }
@@ -109,16 +109,24 @@ export namespace Localization.Error {
         return `Unexpected read while attempting to lex on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
     }
 
-    export function lexerUnterminatedMultilineComment(graphemePosition: StringHelpers.GraphemePosition): string {
-        return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
-    }
+    export function lexerUnterminated(
+        graphemePosition: StringHelpers.GraphemePosition,
+        kind: LexerError.UnterminatedKind,
+    ): string {
+        switch (kind) {
+            case LexerError.UnterminatedKind.MultilineComment:
+                return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
 
-    export function lexerUnterminatedQuotedIdentifier(graphemePosition: StringHelpers.GraphemePosition): string {
-        return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
-    }
+            case LexerError.UnterminatedKind.QuotedIdentifier:
+                return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
+                
+            case LexerError.UnterminatedKind.String:
+                return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
+                
+            default:
+                throw isNever(kind);
+        }
 
-    export function lexerUnterminatedString(graphemePosition: StringHelpers.GraphemePosition): string {
-        return `Unterminated string starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
     }
 
     export function parserExpectedTokenKind(
