@@ -6,7 +6,6 @@ export class Tokenizer implements TokensProvider {
     public getInitialState(): IState {
         const lexerState: Lexer.State = {
             lines: [],
-            lineTerminator: this.lineTerminator,
         };
         return new TokenizerState(lexerState);
     }
@@ -14,7 +13,7 @@ export class Tokenizer implements TokensProvider {
     public tokenize(line: string, state: IState): ILineTokens {
         const tokenizerState: TokenizerState = state as TokenizerState;
         const lexerState = tokenizerState.lexerState;
-        const newLexerState = Lexer.appendLine(lexerState, line);
+        const newLexerState = Lexer.appendLine(lexerState, line, this.lineTerminator);
 
         return {
             tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),
@@ -30,7 +29,7 @@ export class Tokenizer implements TokensProvider {
         // why it's safe:
         //      all variants for LineTokenKind are strings
         return {
-            startIndex: lineToken.positionStart.textIndex,
+            startIndex: lineToken.positionStart,
             scopes: lineToken.kind as unknown as string,
         }
     }

@@ -7,9 +7,9 @@ import { Lexer, LexerSnapshot, LexerError } from "./lexer";
 parseText(`if true then 1 else 2`);
 
 // @ts-ignore
-function parseText(text: string, lineTerminator = "\n"): Lexer.State {
-    console.log(JSON.stringify(lexAndParse(text, lineTerminator), null, 4));
-    const parseResult = lexAndParse(text, lineTerminator);
+function parseText(text: string): Lexer.State {
+    console.log(JSON.stringify(lexAndParse(text), null, 4));
+    const parseResult = lexAndParse(text);
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, null, 4));
     }
@@ -20,12 +20,12 @@ function parseText(text: string, lineTerminator = "\n"): Lexer.State {
 }
 
 // @ts-ignore
-function lexText(text: string, lineTerminator = "\n") {
+function lexText(text: string) {
     // state isn't const as calling Lexer functions return a new state object.
 
     // the returned state will be in an error state if `text` can't be lex'd.
     // use Lexer.isErrorState to validate if needed
-    let state: Lexer.State = Lexer.fromSplit(text, lineTerminator);
+    let state: Lexer.State = Lexer.stateFrom(text);
 
     const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
     if (maybeErrorLines) {
@@ -45,7 +45,7 @@ function lexText(text: string, lineTerminator = "\n") {
     // let's add one extra line.
     // note: adding new lines can introduce new errors,
     //       meaning you might want to check for them using maybeErrorLines again
-    state = Lexer.appendLine(state, "// hello world");
+    state = Lexer.appendLine(state, "// hello world", "\n");
 
     // a snapshot should be created once no more text is to be added.
     // a snapshot is an immutable copy which:
@@ -66,5 +66,3 @@ function lexText(text: string, lineTerminator = "\n") {
         console.log(`numComments: ${snapshot.comments}`);
     }
 }
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
