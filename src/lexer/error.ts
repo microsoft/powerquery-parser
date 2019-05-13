@@ -27,7 +27,12 @@ export namespace LexerError {
         | UnterminatedStringError
     )
 
-    // do not these sort variants,
+    export const enum BadLineNumberKind {
+        LessThanZero = "LessThanZero",
+        GreaterThanNumLines = "GreaterThanNumLines",
+    }
+
+        // do not these sort variants,
     // they are in order that logical checks are made, which in turn help create logical variants
     export const enum BadRangeKind {
         SameLine_LineCodeUnitStart_Higher = "SameLine_LineCodeUnitStart_Higher",
@@ -37,11 +42,6 @@ export namespace LexerError {
         LineNumberEnd_GreaterThan_NumLines = "LineNumberEnd_GreaterThan_NumLines",
         LineCodeUnitStart_GreaterThan_LineLength = "LineCodeUnitStart_GreaterThan_LineLength",
         LineCodeUnitEnd_GreaterThan_LineLength = "LineCodeUnitEnd_GreaterThan_LineLength",
-    }
-
-    export const enum BadLineNumberKind {
-        LessThanZero = "LessThanZero",
-        GreaterThanNumLines = "GreaterThanNumLines",
     }
 
     export class LexerError extends Error {
