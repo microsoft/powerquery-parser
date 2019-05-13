@@ -111,16 +111,16 @@ export namespace Localization.Error {
 
     export function lexerUnterminatedMultilineToken(
         graphemePosition: StringHelpers.GraphemePosition,
-        kind: LexerError.UnterminatedMultilineToken,
+        kind: LexerError.UnterminatedMultilineTokenKind,
     ): string {
         switch (kind) {
-            case LexerError.UnterminatedMultilineToken.MultilineComment:
+            case LexerError.UnterminatedMultilineTokenKind.MultilineComment:
                 return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
 
-            case LexerError.UnterminatedMultilineToken.QuotedIdentifier:
+            case LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier:
                 return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
 
-            case LexerError.UnterminatedMultilineToken.String:
+            case LexerError.UnterminatedMultilineTokenKind.String:
                 return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${graphemePosition.columnNumber}.`;
                 
             default:

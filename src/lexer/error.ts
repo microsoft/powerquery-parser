@@ -46,7 +46,7 @@ export namespace LexerError {
         Numeric = "Numeric",
     }
 
-    export const enum UnterminatedMultilineToken {
+    export const enum UnterminatedMultilineTokenKind {
         MultilineComment = "MultilineComment",
         QuotedIdentifier = "QuotedIdentifier",
         String = "String",
@@ -129,7 +129,7 @@ export namespace LexerError {
     export class UnterminatedMultilineTokenError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
-            readonly kind: UnterminatedMultilineToken,
+            readonly kind: UnterminatedMultilineTokenKind,
         ) {
             super(Localization.Error.lexerUnterminatedMultilineToken(graphemePosition, kind));
         }
