@@ -1140,7 +1140,7 @@ export class Parser {
                         break;
 
                     default:
-                        throw new CommonError.InvariantError("grammer doesn't allow remaining disambiguation: Record");
+                        throw new CommonError.InvariantError(`grammer doesn't allow remaining BracketDisambiguation: ${disambiguation}`);
                 }
             }
 
