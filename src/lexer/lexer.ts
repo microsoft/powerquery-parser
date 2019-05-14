@@ -442,7 +442,7 @@ export namespace Lexer {
             },
             end: {
                 lineNumber,
-                lineCodeUnit: line.text.length - 1,
+                lineCodeUnit: line.text.length,
             }
         }
     }
