@@ -154,7 +154,7 @@ describe(`Lexer.Incremental`, () => {
                 },
                 end: {
                     lineNumber: 1,
-                    lineCodeUnit: 1,
+                    lineCodeUnit: 2,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -174,7 +174,7 @@ describe(`Lexer.Incremental`, () => {
                 },
                 end: {
                     lineNumber: 1,
-                    lineCodeUnit: 2,
+                    lineCodeUnit: 3,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -196,7 +196,7 @@ describe(`Lexer.Incremental`, () => {
                 },
                 end: {
                     lineNumber: 1,
-                    lineCodeUnit: 1,
+                    lineCodeUnit: 2,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -211,177 +211,177 @@ describe(`Lexer.Incremental`, () => {
         });
     });
 
-    // describe(`Lexer.updateLine`, () => {
-    //     describe(`single line`, () => {
-    //         it(`identifier -> identifier`, () => {
-    //             expectLexerUpdateLine(
-    //                 `foo`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`],
-    //                 ],
-    //                 0,
-    //                 `foobar`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                 ],
-    //             );
-    //         });
+    describe(`Lexer.updateLine`, () => {
+        describe(`single line`, () => {
+            it(`identifier -> identifier`, () => {
+                expectLexerUpdateLine(
+                    `foo`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`],
+                    ],
+                    0,
+                    `foobar`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                    ],
+                );
+            });
 
-    //         it(`identifier -> unterminated string`, () => {
-    //             expectLexerUpdateLine(
-    //                 `foo`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`],
-    //                 ],
-    //                 0,
-    //                 `"`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-    //                 ],
-    //             );
-    //         });
+            it(`identifier -> unterminated string`, () => {
+                expectLexerUpdateLine(
+                    `foo`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`],
+                    ],
+                    0,
+                    `"`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                    ],
+                );
+            });
 
-    //         it(`unterminated string -> identifier`, () => {
-    //             expectLexerUpdateLine(
-    //                 `"`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-    //                 ],
-    //                 0,
-    //                 `foobar`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                 ],
-    //             );
-    //         });
-    //     });
+            it(`unterminated string -> identifier`, () => {
+                expectLexerUpdateLine(
+                    `"`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                    ],
+                    0,
+                    `foobar`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                    ],
+                );
+            });
+        });
 
-    //     describe(`multiple lines, no mode change`, () => {
-    //         it(`first`, () => {
-    //             expectLexerUpdateLine(
-    //                 `"`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-    //                 ],
-    //                 0,
-    //                 `foobar`,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                 ],
-    //             );
-    //         });
+        describe(`multiple lines, no mode change`, () => {
+            it(`first`, () => {
+                expectLexerUpdateLine(
+                    `"`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                    ],
+                    0,
+                    `foobar`,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                    ],
+                );
+            });
 
-    //         it(`first`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `foobar`,
-    //                 0,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-    //                 ],
-    //             );
-    //         });
+            it(`first`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `foobar`,
+                    0,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
+                    ],
+                );
+            });
 
-    //         it(`middle`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `foobar`,
-    //                 1,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-    //                 ],
-    //             );
-    //         });
+            it(`middle`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `foobar`,
+                    1,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
+                    ],
+                );
+            });
 
-    //         it(`last`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `foobar`,
-    //                 2,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                 ],
-    //             );
-    //         });
-    //     });
+            it(`last`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `foobar`,
+                    2,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                    ],
+                );
+            });
+        });
 
-    //     describe(`multiple lines, default mode to string mode`, () => {
-    //         it(`first`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `"`,
-    //                 0,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `bravo`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
-    //                 ],
-    //             );
-    //         });
+        describe(`multiple lines, default mode to string mode`, () => {
+            it(`first`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `"`,
+                    0,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
+                    ],
+                );
+            });
 
-    //         it(`middle`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `"`,
-    //                 1,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
-    //                 ],
-    //             );
-    //         });
+            it(`middle`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `"`,
+                    1,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
+                    ],
+                );
+            });
 
-    //         it(`last`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `"`,
-    //                 2,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-    //                 ],
-    //             );
-    //         });
-    //     });
+            it(`last`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `"`,
+                    2,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                    ],
+                );
+            });
+        });
 
-    //     describe(`multiple lines, string mode to default mode`, () => {
-    //         it(`first`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `foobar`,
-    //                 0,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-    //                 ],
-    //             );
-    //         });
+        describe(`multiple lines, string mode to default mode`, () => {
+            it(`first`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `foobar`,
+                    0,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
+                    ],
+                );
+            });
 
-    //         it(`middle`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `foobar`,
-    //                 1,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
-    //                 ],
-    //             );
-    //         });
+            it(`middle`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `foobar`,
+                    1,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
+                    ],
+                );
+            });
 
-    //         it(`last`, () => {
-    //             expectLexerUpdateLineAlphaBravoCharlie(
-    //                 `foobar`,
-    //                 2,
-    //                 [
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-    //                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
-    //                 ],
-    //             );
-    //         });
-    //     });
-    // });
+            it(`last`, () => {
+                expectLexerUpdateLineAlphaBravoCharlie(
+                    `foobar`,
+                    2,
+                    [
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
+                        [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
+                    ],
+                );
+            });
+        });
+    });
 });
