@@ -86,6 +86,26 @@ describe(`Lexer.Incremental`, () => {
             expect(state.lines[0].text).to.equal("Xfoobar");
         });
 
+        it(`foobar -> fooXbar`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                },
+                end: {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foobar`,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].text).to.equal("fooXbar");
+        });
+
         it(`foobar -> Xoobar`, () => {
             const range: Lexer.Range = {
                 start: {
