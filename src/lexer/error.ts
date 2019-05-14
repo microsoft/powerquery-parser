@@ -12,6 +12,8 @@ export namespace LexerError {
     )
 
     export type TInnerLexerError = (
+        | BadLineNumber
+        | BadRangeError
         | BadStateError
         | EndOfStreamError
         | ErrorLineError
@@ -25,11 +27,47 @@ export namespace LexerError {
         | UnterminatedStringError
     )
 
+    // do not these sort variants,
+    // they are in order that logical checks are made, which in turn help create logical variants
+    export const enum BadRangeKind {
+        SameLine_LineCodeUnitStart_Higher = "SameLine_LineCodeUnitStart_Higher",
+        LineNumberStart_GreaterThan_LineNumberEnd = "LineNumberStart_GreaterThan_LineNumberEnd",
+        LineNumberStart_LessThan_Zero = "LineNumberStart_LessThan_Zero",
+        LineNumberStart_GreaterThan_NumLines = "LineNumberStart_GreaterThan_NumLines",
+        LineNumberEnd_GreaterThan_NumLines = "LineNumberEnd_GreaterThan_NumLines",
+        LineCodeUnitStart_GreaterThan_LineLength = "LineCodeUnitStart_GreaterThan_LineLength",
+        LineCodeUnitEnd_GreaterThan_LineLength = "LineCodeUnitEnd_GreaterThan_LineLength",
+    }
+
+    export const enum BadLineNumberKind {
+        LessThanZero = "LessThanZero",
+        GreaterThanNumLines = "GreaterThanNumLines",
+    }
+
     export class LexerError extends Error {
         constructor(
             readonly innerError: TInnerLexerError,
         ) {
             super(innerError.message);
+        }
+    }
+
+    export class BadLineNumber extends Error {
+        constructor(
+            readonly kind: BadLineNumberKind,
+            readonly lineNumber: number,
+            readonly numLines: number,
+        ) {
+            super(Localization.Error.lexerBadLineNumber(kind, lineNumber, numLines));
+        }
+    }
+
+    export class BadRangeError extends Error {
+        constructor(
+            readonly range: Lexer.Range,
+            readonly kind: BadRangeKind,
+        ) {
+            super(Localization.Error.lexerBadRange(kind));
         }
     }
 
@@ -128,7 +166,9 @@ export namespace LexerError {
 
     export function isTInnerLexerError(x: any): x is TInnerLexerError {
         return (
-            x instanceof BadStateError
+            x instanceof BadLineNumber
+            || x instanceof BadRangeError
+            || x instanceof BadStateError
             || x instanceof EndOfStreamError
             || x instanceof ErrorLineError
             || x instanceof ExpectedHexLiteralError

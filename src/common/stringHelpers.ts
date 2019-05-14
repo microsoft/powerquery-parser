@@ -14,9 +14,13 @@ export namespace StringHelpers {
     }
 
     export interface GraphemePosition {
-        readonly textIndex: number,
+        readonly lineCodeUnit: number,
         readonly lineNumber: number,
         readonly columnNumber: number,
+    }
+
+    export interface ExtendedGraphemePosition extends GraphemePosition {
+        readonly codeUnit: number,
     }
 
     export function containsNewline(str: string): boolean {

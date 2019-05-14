@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { StringHelpers } from "../common";
-import { Lexer } from "./lexer";
 
 const enum LineTokenKindAdditions {
     LineComment = "LineComment",
@@ -163,6 +162,6 @@ export interface IToken<Kind, Position> {
     readonly data: string,
 }
 
-export interface LineToken extends IToken<LineTokenKind, Lexer.LinePosition> { };
+export interface LineToken extends IToken<LineTokenKind, number> { };
 
-export interface Token extends IToken<TokenKind, StringHelpers.GraphemePosition> { }
+export interface Token extends IToken<TokenKind, StringHelpers.ExtendedGraphemePosition> { }

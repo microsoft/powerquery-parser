@@ -1210,8 +1210,8 @@ export class Parser {
 
             const lexerSnapshot = this.lexerSnapshot;
             const tokens = lexerSnapshot.tokens;
-            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].positionStart.textIndex;
-            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].positionEnd.textIndex;
+            const contiguousIdentifierStartIndex = tokens[firstIdentifierTokenIndex].positionStart.codeUnit;
+            const contiguousIdentifierEndIndex = tokens[lastIdentifierTokenIndex].positionEnd.codeUnit;
             literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
         }
 
