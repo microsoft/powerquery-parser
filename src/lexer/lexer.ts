@@ -1290,10 +1290,10 @@ export namespace Lexer {
         const lineStart: TLine = lines[rangeStart.lineNumber];
         const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
-        if (rangeStart.lineCodeUnit >= lineStart.text.length) {
+        if (rangeStart.lineCodeUnit > lineStart.text.length) {
             maybeKind = LexerError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
         }
-        else if (rangeEnd.lineCodeUnit >= lineEnd.text.length) {
+        else if (rangeEnd.lineCodeUnit > lineEnd.text.length) {
             maybeKind = LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
         }
 

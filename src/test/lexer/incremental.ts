@@ -66,7 +66,7 @@ function expectLexerUpdateLineAlphaBravoCharlie(
 describe(`Lexer.Incremental`, () => {
 
     describe(`Lexer.updateRange`, () => {
-        it(`foobar -> Xoobar`, () => {
+        it(`foobar -> Xfoobar`, () => {
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
@@ -75,6 +75,26 @@ describe(`Lexer.Incremental`, () => {
                 end: {
                     lineNumber: 0,
                     lineCodeUnit: 0,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foobar`,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].text).to.equal("Xfoobar");
+        });
+
+        it(`foobar -> Xoobar`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                },
+                end: {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
