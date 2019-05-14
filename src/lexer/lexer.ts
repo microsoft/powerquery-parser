@@ -165,11 +165,13 @@ export namespace Lexer {
         const splitLines: SplitLine[] = splitOnLineTerminators(text) as SplitLine[];
 
         const rangeStart: RangePosition = range.start;
-        const textPrefix: string = state.lines[rangeStart.lineNumber].text.substring(0, rangeStart.lineCodeUnit - 1);
+        const lineStart: TLine = state.lines[rangeStart.lineNumber];
+        const textPrefix: string = lineStart.text.substring(0, rangeStart.lineCodeUnit);
         splitLines[0].text = textPrefix + splitLines[0].text;
 
         const rangeEnd: RangePosition = range.end;
-        const textSuffix: string = state.lines[rangeEnd.lineNumber].text.substr(rangeEnd.lineCodeUnit);
+        const lineEnd: TLine = state.lines[rangeEnd.lineNumber];
+        const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
         const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
         lastSplitLine.text = lastSplitLine.text + textSuffix;
 
