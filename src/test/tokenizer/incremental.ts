@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import "mocha";
 import { Tokenizer, ILineTokens, IToken, IState } from "./common";
+import { Lexer } from "../../lexer";
+import { ResultKind } from "../../common";
 
 const tokenizer = new Tokenizer("\n");
 
@@ -13,7 +15,39 @@ let
 in
    count + 3;`;
 
-// TODO: Only supports single line edits - should support insertion of new lines.
+class MockDocument2 {
+    private lexerState: Lexer.State;
+    private readonly defaultLineTerminator: string;
+
+    constructor(initialText: string, lineTerminator: string = "\n") {
+        this.lexerState = Lexer.stateFrom(initialText);
+        this.defaultLineTerminator = lineTerminator;
+    }
+
+    public applyChange(text: string, range: Lexer.Range) {
+        const result = Lexer.updateRange(this.lexerState, range, text);
+        // TODO: how do we handle error states?
+        if (result.kind === ResultKind.Ok) {
+            this.lexerState = result.value;
+        } else {
+            throw new Error("unexpected lexer error state");
+        }
+    }
+
+    public getText(): string {
+        // TODO: there should be a more efficient way of doing this. 
+        // The Document could track the current text value, but it would need 
+        // an easy way to determine string replacement range.
+        let text: string = "";
+        this.lexerState.lines.forEach(line => {
+            text = text.concat(line.text).concat(this.defaultLineTerminator);
+        });
+
+        return text;
+    }
+}
+
+// TODO: Replace with MockDocument2 to use built-in incremental updates
 class MockDocument {
     public readonly tokenizer: Tokenizer = new Tokenizer("\n");
     public lines: string[];
@@ -67,6 +101,20 @@ class MockDocument {
     }
 }
 
+describe("MockDocument validation", () => {
+    xit("Apply one line change", () => {
+        const document = new MockDocument2(OriginalQuery);
+        const originalText = document.getText();
+        const changeToMake: string = "    ";
+        document.applyChange(changeToMake, {
+            start: { lineNumber: 0, lineCodeUnit: 0 },
+            end: { lineNumber: 0, lineCodeUnit: 0 },
+        });
+        const changedText = document.getText();
+
+        expect(changedText).equals(changeToMake + originalText, "unexpected changed text");
+    });
+});
 
 describe("Incremental updates", () => {
     it("Reparse with no change", () => {
