@@ -76,7 +76,7 @@ describe("Incremental updates", () => {
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 
-    xit("Reparse with simple change", () => {
+    it("Reparse with simple change", () => {
         const document = new MockDocument(OriginalQuery);
         const modified = document.lines[2].replace("source", "source123");
         const count = document.applyChangeAndTokenize(modified, 2);
