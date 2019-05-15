@@ -139,6 +139,19 @@ describe("MockDocument validation", () => {
         const changedDocumentText = document.getText();
         expect(changedDocumentText).equals(originalWithChange, "unexpected changed text");
     });
+
+    it("Delete most of the document", () => {
+        const document = new MockDocument2(OriginalQuery);
+
+        document.applyChange("", {
+            start: { lineNumber: 1, lineCodeUnit: 0 },
+            end: { lineNumber: 7, lineCodeUnit: 10 },
+        });
+
+        const originalWithChange = "shared Query1 =\n 3;";
+        const changedDocumentText = document.getText();
+        expect(changedDocumentText).equals(originalWithChange, "unexpected changed text");
+    });
 });
 
 describe("Incremental updates", () => {
