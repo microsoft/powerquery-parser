@@ -140,7 +140,10 @@ function readMultilineComment(
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedMultilineCommentError(positionStart)
+        throw new LexerError.UnterminatedMultilineTokenError(
+            positionStart,
+            LexerError.UnterminatedMultilineTokenKind.MultilineComment,
+        )
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.MultilineCommentEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -173,7 +176,10 @@ function readQuotedIdentifier(
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedQuotedIdentierError(positionStart)
+        throw new LexerError.UnterminatedMultilineTokenError(
+            positionStart,
+            LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier,
+        );
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.QuotedIdentifierEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -205,7 +211,10 @@ function readStringLiteral(
     const maybeTokenEnd = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         const positionStart = tokenStart.positionStart;
-        throw new LexerError.UnterminatedStringError(positionStart)
+        throw new LexerError.UnterminatedMultilineTokenError(
+            positionStart,
+            LexerError.UnterminatedMultilineTokenKind.String,
+        );
     }
     else if (maybeTokenEnd.kind !== LineTokenKind.StringLiteralEnd) {
         const details = { foundTokenEnd: maybeTokenEnd };
@@ -334,6 +343,12 @@ interface ConcatenatedTokenRead {
     readonly flatIndexEnd: number,
 }
 
+interface FlatLineCollection {
+    readonly tokenStart: FlatLineToken,
+    readonly collectedTokens: ReadonlyArray<FlatLineToken>,
+    readonly maybeTokenEnd: Option<FlatLineToken>,
+}
+
 interface FlatLineToken {
     readonly kind: LineTokenKind,
     // range is [start, end)
@@ -341,10 +356,4 @@ interface FlatLineToken {
     readonly positionEnd: StringHelpers.ExtendedGraphemePosition,
     readonly data: string,
     readonly flatIndex: number,
-}
-
-interface FlatLineCollection {
-    readonly tokenStart: FlatLineToken,
-    readonly collectedTokens: ReadonlyArray<FlatLineToken>,
-    readonly maybeTokenEnd: Option<FlatLineToken>,
 }

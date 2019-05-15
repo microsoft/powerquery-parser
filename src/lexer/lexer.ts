@@ -126,7 +126,7 @@ export namespace Lexer {
     ): Result<State, LexerError.LexerError> {
         const lines: ReadonlyArray<TLine> = state.lines;
 
-        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+        const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(
             lineNumber,
             lines,
         );
@@ -205,7 +205,7 @@ export namespace Lexer {
     export function deleteLine(state: State, lineNumber: number): Result<State, LexerError.LexerError> {
         const lines: ReadonlyArray<TLine> = state.lines;
 
-        const maybeError: Option<LexerError.BadLineNumber> = maybeBadLineNumberError(
+        const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(
             lineNumber,
             lines,
         );
@@ -942,7 +942,10 @@ export namespace Lexer {
     ): LineToken {
         const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
         if (maybePositionEnd === undefined) {
-            throw new LexerError.ExpectedHexLiteralError(graphemePositionFrom(text, lineNumber, positionStart));
+            throw new LexerError.ExpectedError(
+                graphemePositionFrom(text, lineNumber, positionStart),
+                LexerError.ExpectedKind.HexLiteral,
+            );
         }
         const positionEnd: number = maybePositionEnd;
 
@@ -956,7 +959,10 @@ export namespace Lexer {
     ): LineToken {
         const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, text, positionStart);
         if (maybePositionEnd === undefined) {
-            throw new LexerError.ExpectedNumericLiteralError(graphemePositionFrom(text, lineNumber, positionStart));
+            throw new LexerError.ExpectedError(
+                graphemePositionFrom(text, lineNumber, positionStart),
+                LexerError.ExpectedKind.Numeric,
+            );
         }
         const positionEnd: number = maybePositionEnd;
 
@@ -1069,7 +1075,10 @@ export namespace Lexer {
         else {
             const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, positionStart);
             if (maybePositionEnd === undefined) {
-                throw unexpectedReadError(text, lineNumber, positionStart);
+                throw new LexerError.ExpectedError(
+                    graphemePositionFrom(text, lineNumber, positionStart),
+                    LexerError.ExpectedKind.KeywordOrIdentifier,
+                );
             }
             const positionEnd: number = maybePositionEnd;
             const data: string = text.substring(positionStart, positionEnd);
@@ -1239,17 +1248,17 @@ export namespace Lexer {
     function maybeBadLineNumberError(
         lineNumber: number,
         lines: ReadonlyArray<TLine>,
-    ): Option<LexerError.BadLineNumber> {
+    ): Option<LexerError.BadLineNumberError> {
         const numLines: number = lines.length;
         if (lineNumber >= numLines) {
-            return new LexerError.BadLineNumber(
+            return new LexerError.BadLineNumberError(
                 LexerError.BadLineNumberKind.GreaterThanNumLines,
                 lineNumber,
                 numLines,
             );
         }
         else if (lineNumber < 0) {
-            return new LexerError.BadLineNumber(
+            return new LexerError.BadLineNumberError(
                 LexerError.BadLineNumberKind.LessThanZero,
                 lineNumber,
                 numLines,

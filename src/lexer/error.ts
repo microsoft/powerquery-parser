@@ -12,22 +12,23 @@ export namespace LexerError {
     )
 
     export type TInnerLexerError = (
-        | BadLineNumber
+        | BadLineNumberError
         | BadRangeError
         | BadStateError
         | EndOfStreamError
         | ErrorLineError
-        | ExpectedHexLiteralError
-        | ExpectedKeywordOrIdentifierError
-        | ExpectedNumericLiteralError
+        | ExpectedError
         | UnexpectedEofError
         | UnexpectedReadError
-        | UnterminatedMultilineCommentError
-        | UnterminatedQuotedIdentierError
-        | UnterminatedStringError
+        | UnterminatedMultilineTokenError
     )
 
-    // do not these sort variants,
+    export const enum BadLineNumberKind {
+        LessThanZero = "LessThanZero",
+        GreaterThanNumLines = "GreaterThanNumLines",
+    }
+
+        // do not these sort variants,
     // they are in order that logical checks are made, which in turn help create logical variants
     export const enum BadRangeKind {
         SameLine_LineCodeUnitStart_Higher = "SameLine_LineCodeUnitStart_Higher",
@@ -39,9 +40,16 @@ export namespace LexerError {
         LineCodeUnitEnd_GreaterThan_LineLength = "LineCodeUnitEnd_GreaterThan_LineLength",
     }
 
-    export const enum BadLineNumberKind {
-        LessThanZero = "LessThanZero",
-        GreaterThanNumLines = "GreaterThanNumLines",
+    export const enum ExpectedKind {
+        HexLiteral = "HexLiteral",
+        KeywordOrIdentifier = "KeywordOrIdentifier",
+        Numeric = "Numeric",
+    }
+
+    export const enum UnterminatedMultilineTokenKind {
+        MultilineComment = "MultilineComment",
+        QuotedIdentifier = "QuotedIdentifier",
+        String = "String",
     }
 
     export class LexerError extends Error {
@@ -52,7 +60,7 @@ export namespace LexerError {
         }
     }
 
-    export class BadLineNumber extends Error {
+    export class BadLineNumberError extends Error {
         constructor(
             readonly kind: BadLineNumberKind,
             readonly lineNumber: number,
@@ -93,27 +101,12 @@ export namespace LexerError {
         }
     }
 
-    export class ExpectedHexLiteralError extends Error {
+    export class ExpectedError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
+            readonly kind: ExpectedKind,
         ) {
-            super(Localization.Error.lexerExpectedHexLiteral(graphemePosition));
-        }
-    }
-
-    export class ExpectedKeywordOrIdentifierError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerExpectedKeywordOrIdentifier(graphemePosition));
-        }
-    }
-
-    export class ExpectedNumericLiteralError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerExpectedNumericLiteral(graphemePosition));
+            super(Localization.Error.lexerExpected(graphemePosition, kind))
         }
     }
 
@@ -133,27 +126,12 @@ export namespace LexerError {
         }
     }
 
-    export class UnterminatedMultilineCommentError extends Error {
+    export class UnterminatedMultilineTokenError extends Error {
         constructor(
             readonly graphemePosition: StringHelpers.GraphemePosition,
+            readonly kind: UnterminatedMultilineTokenKind,
         ) {
-            super(Localization.Error.lexerUnterminatedMultilineComment(graphemePosition));
-        }
-    }
-
-    export class UnterminatedQuotedIdentierError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerUnterminatedQuotedIdentifier(graphemePosition));
-        }
-    }
-
-    export class UnterminatedStringError extends Error {
-        constructor(
-            readonly graphemePosition: StringHelpers.GraphemePosition,
-        ) {
-            super(Localization.Error.lexerUnterminatedString(graphemePosition));
+            super(Localization.Error.lexerUnterminatedMultilineToken(graphemePosition, kind));
         }
     }
 
@@ -166,19 +144,15 @@ export namespace LexerError {
 
     export function isTInnerLexerError(x: any): x is TInnerLexerError {
         return (
-            x instanceof BadLineNumber
+            x instanceof BadLineNumberError
             || x instanceof BadRangeError
             || x instanceof BadStateError
             || x instanceof EndOfStreamError
             || x instanceof ErrorLineError
-            || x instanceof ExpectedHexLiteralError
-            || x instanceof ExpectedKeywordOrIdentifierError
-            || x instanceof ExpectedNumericLiteralError
+            || x instanceof ExpectedError
             || x instanceof UnexpectedEofError
             || x instanceof UnexpectedReadError
-            || x instanceof UnterminatedMultilineCommentError
-            || x instanceof UnterminatedQuotedIdentierError
-            || x instanceof UnterminatedStringError
+            || x instanceof UnterminatedMultilineTokenError
         );
     }
 }
