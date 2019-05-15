@@ -58,7 +58,7 @@ export function expectLineTokenMatch(
         expectLineTokenMatch(wrappedText, wrappedExpected, false);
     }
 
-    const state = expectLexSuccess(text);
+    const state = expectLexOk(text);
 
     const tmp: [LineTokenKind, string][] = [];
     for (let line of state.lines) {
@@ -106,7 +106,7 @@ export function expectSnapshotAbridgedComments(
     );
 }
 
-export function expectLexSuccess(text: string): Lexer.State {
+export function expectLexOk(text: string): Lexer.State {
     const state: Lexer.State = Lexer.stateFrom(text);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLines = Lexer.maybeErrorLines(state);
@@ -123,7 +123,7 @@ export function expectLexSuccess(text: string): Lexer.State {
 }
 
 export function expectLexerSnapshot(text: string): LexerSnapshot {
-    const state = expectLexSuccess(text);
+    const state = expectLexOk(text);
     const snapshotResult = LexerSnapshot.tryFrom(state);
     if (!(snapshotResult.kind === ResultKind.Ok)) {
         throw new Error("AssertFailed: snapshotResult.kind === ResultKind.Ok");
