@@ -102,7 +102,7 @@ class MockDocument {
 }
 
 describe("MockDocument validation", () => {
-    xit("Apply one line change", () => {
+    it("Apply one line change", () => {
         const document = new MockDocument2(OriginalQuery);
         const originalText = document.getText();
         const changeToMake: string = "    ";
