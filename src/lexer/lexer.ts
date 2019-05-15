@@ -165,11 +165,13 @@ export namespace Lexer {
         const splitLines: SplitLine[] = splitOnLineTerminators(text) as SplitLine[];
 
         const rangeStart: RangePosition = range.start;
-        const textPrefix: string = state.lines[rangeStart.lineNumber].text.substr(0, rangeStart.lineCodeUnit);
+        const lineStart: TLine = state.lines[rangeStart.lineNumber];
+        const textPrefix: string = lineStart.text.substring(0, rangeStart.lineCodeUnit);
         splitLines[0].text = textPrefix + splitLines[0].text;
 
         const rangeEnd: RangePosition = range.end;
-        const textSuffix: string = state.lines[rangeEnd.lineNumber].text.substr(rangeEnd.lineCodeUnit + 1);
+        const lineEnd: TLine = state.lines[rangeEnd.lineNumber];
+        const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
         const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
         lastSplitLine.text = lastSplitLine.text + textSuffix;
 
@@ -442,7 +444,7 @@ export namespace Lexer {
             },
             end: {
                 lineNumber,
-                lineCodeUnit: line.text.length - 1,
+                lineCodeUnit: line.text.length,
             }
         }
     }
@@ -1290,10 +1292,10 @@ export namespace Lexer {
         const lineStart: TLine = lines[rangeStart.lineNumber];
         const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
-        if (rangeStart.lineCodeUnit >= lineStart.text.length) {
+        if (rangeStart.lineCodeUnit > lineStart.text.length) {
             maybeKind = LexerError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
         }
-        else if (rangeEnd.lineCodeUnit >= lineEnd.text.length) {
+        else if (rangeEnd.lineCodeUnit > lineEnd.text.length) {
             maybeKind = LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
         }
 
