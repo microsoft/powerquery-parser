@@ -23,21 +23,23 @@ class MockDocument2 {
     }
 
     public applyChange(text: string, range: Lexer.Range) {
-        const result = Lexer.updateRange(this.lexerState, range, text);
-        if (result.kind === ResultKind.Ok) {
-            this.lexerState = result.value;
-        } else {
-            throw new Error("Unexpected lexer error state: " + JSON.stringify(result));
+        const stateResult = Lexer.updateRange(this.lexerState, range, text);
+
+        if (!(stateResult.kind === ResultKind.Ok)) {
+            throw new Error(`AssertFailed:stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, null, 4)}`);
         }
+
+        this.lexerState = stateResult.value;
     }
 
     public getText(): string {
-        let snapshot = LexerSnapshot.tryFrom(this.lexerState);
-        if (snapshot.kind === ResultKind.Ok) {
-            return snapshot.value.text;
+        let snapshotResult = LexerSnapshot.tryFrom(this.lexerState);
+
+        if (!(snapshotResult.kind === ResultKind.Ok)) {
+            throw new Error(`AssertFailed:snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
         }
 
-        throw new Error("Failed to create lexer snapshot: " + JSON.stringify(snapshot));
+        return snapshotResult.value.text;
     }
 }
 
