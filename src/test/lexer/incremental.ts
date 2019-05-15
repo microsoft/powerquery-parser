@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer, LexerSnapshot } from "../../lexer";
+import { Result, ResultKind } from "../../common";
+import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 import { expectLexSuccess } from "./common";
-import { ResultKind } from "../../common";
 
 const LINE_TERMINATOR: string = `\n`;
 
@@ -231,6 +231,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`lineTerminator maintained on single line change`, () => {
+            const original: string = `foo\nbar\nbaz`;
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 1,
@@ -241,25 +242,23 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 2,
                 },
             };
-
-            const original: string = `foo\nbar\nbaz`;
             const state: Lexer.State = expectLexerUpdateRangeOk(
                 original,
                 "X",
                 range
             );
 
-            const modified = original.replace("bar", "bXr");
-
-            const snapshot = LexerSnapshot.tryFrom(state);
-            expect(snapshot.kind).equals(ResultKind.Ok);
-            if (snapshot.kind === ResultKind.Ok) {
-                const newText: string = snapshot.value.text;
-                expect(newText).equals(modified, "expected snapshot text doesn't match");
+            const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+            expect(snapshotResult.kind).equals(ResultKind.Ok);
+            if (!(snapshotResult.kind === ResultKind.Ok)) {
+                throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
             }
+            const snapshot: LexerSnapshot = snapshotResult.value;
+            expect(snapshot.text).equals(`foo\nbXr\nbaz`, "expected snapshot text doesn't match");
         });
 
         it(`lineTerminator maintained on multiline change`, () => {
+            const original: string = `foo\nbar\nbaz\nboo`;
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
@@ -270,27 +269,23 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
-
-            const original: string = `foo\nbar\nbaz\nboo`;
             const state: Lexer.State = expectLexerUpdateRangeOk(
                 original,
                 "OO\nB",
                 range
             );
-
-            const expectedResult: string = `fOO\nBaz\nboo`;
-
             expect(state.lines.length).to.equal(3);
 
-            const snapshot = LexerSnapshot.tryFrom(state);
-            expect(snapshot.kind).equals(ResultKind.Ok);
-            if (snapshot.kind === ResultKind.Ok) {
-                const newText: string = snapshot.value.text;
-                expect(newText).equals(expectedResult, "expected snapshot text doesn't match");
+            const snapshotResult = LexerSnapshot.tryFrom(state);
+            if (!(snapshotResult.kind === ResultKind.Ok)) {
+                throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
             }
+            const snapshot: LexerSnapshot = snapshotResult.value;
+            expect(snapshot.text).equals(`fOO\nBaz\nboo`, "expected snapshot text doesn't match");
         });
 
         it(`text match on multiline deconstion`, () => {
+            const original: string = `foo\nbar\nbaz\nboo`;
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
@@ -301,8 +296,6 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
-
-            const original: string = `foo\nbar\nbaz\nboo`;
             const state: Lexer.State = expectLexerUpdateRangeOk(
                 original,
                 "",
@@ -311,12 +304,12 @@ describe(`Lexer.Incremental`, () => {
 
             expect(state.lines.length).to.equal(2);
 
-            const snapshot = LexerSnapshot.tryFrom(state);
-            expect(snapshot.kind).equals(ResultKind.Ok);
-            if (snapshot.kind === ResultKind.Ok) {
-                const newText: string = snapshot.value.text;
-                expect(newText).equals("faz\nboo", "expected snapshot text doesn't match");
+            const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+            if (!(snapshotResult.kind === ResultKind.Ok)) {
+                throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
             }
+            const snapshot: LexerSnapshot = snapshotResult.value;
+            expect(snapshot.text).equals("faz\nboo", "expected snapshot text doesn't match");
         });
     });
 
