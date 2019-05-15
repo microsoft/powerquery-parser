@@ -175,14 +175,8 @@ export namespace Lexer {
         const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
         lastSplitLine.text = lastSplitLine.text + textSuffix;
 
-        // first and last lines of change might not contain line terminators - fix that now.
-        if (splitLines.length === 1) {
-            splitLines[0].lineTerminator = lineStart.lineTerminator;
-        }
-
-        if (!lastSplitLine.lineTerminator) {
-            lastSplitLine.lineTerminator = lineEnd.lineTerminator;
-        }
+        // make sure we have a line terminator
+        lastSplitLine.lineTerminator = lineEnd.lineTerminator;
 
         const maybePreviousLine: Option<TLine> = state.lines[rangeStart.lineNumber - 1];
         const previousLineModeEnd: LineMode = maybePreviousLine !== undefined
