@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer } from "../../lexer";
+import { Lexer, LexerSnapshot } from "../../lexer";
 import { expectLexSuccess } from "./common";
 import { ResultKind } from "../../common";
 
@@ -228,6 +228,95 @@ describe(`Lexer.Incremental`, () => {
             expect(state.lines[0].text).to.equal("foo");
             expect(state.lines[1].text).to.equal("bXr");
             expect(state.lines[2].text).to.equal("baz");
+        });
+
+        it(`lineTerminator maintained on single line change`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 1,
+                    lineCodeUnit: 1,
+                },
+                end: {
+                    lineNumber: 1,
+                    lineCodeUnit: 2,
+                },
+            };
+
+            let original: string = `foo\nbar\nbaz`;
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                original,
+                "X",
+                range
+            );
+
+            let modified = original.replace("bar", "bXr");
+
+            const snapshot = LexerSnapshot.tryFrom(state);
+            expect(snapshot.kind).equals(ResultKind.Ok);
+            if (snapshot.kind === ResultKind.Ok) {
+                const newText: string = snapshot.value.text;
+                expect(newText).equals(modified, "expected snapshot text doesn't match");
+            }
+        });
+
+        it(`lineTerminator maintained on multiline change`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                },
+                end: {
+                    lineNumber: 2,
+                    lineCodeUnit: 1,
+                },
+            };
+
+            let original: string = `foo\nbar\nbaz\nboo`;
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                original,
+                "OO\nB",
+                range
+            );
+
+            let expectedResult: string = `fOO\nBaz\nboo`;
+
+            expect(state.lines.length).to.equal(3);
+
+            const snapshot = LexerSnapshot.tryFrom(state);
+            expect(snapshot.kind).equals(ResultKind.Ok);
+            if (snapshot.kind === ResultKind.Ok) {
+                const newText: string = snapshot.value.text;
+                expect(newText).equals(expectedResult, "expected snapshot text doesn't match");
+            }
+        });
+
+        it(`text match on multiline deletion`, () => {
+            let range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                },
+                end: {
+                    lineNumber: 2,
+                    lineCodeUnit: 1,
+                },
+            };
+
+            let original: string = `foo\nbar\nbaz\nboo`;
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                original,
+                "",
+                range
+            );
+
+            expect(state.lines.length).to.equal(2);
+
+            const snapshot = LexerSnapshot.tryFrom(state);
+            expect(snapshot.kind).equals(ResultKind.Ok);
+            if (snapshot.kind === ResultKind.Ok) {
+                const newText: string = snapshot.value.text;
+                expect(newText).equals("faz\nboo", "expected snapshot text doesn't match");
+            }
         });
     });
 
