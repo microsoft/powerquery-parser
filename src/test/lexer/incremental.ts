@@ -18,7 +18,7 @@ function expectLexerUpdateRangeOk(
     newText: string,
     range: Lexer.Range,
 ): Lexer.State {
-    let state = expectLexSuccess(originalText);
+    const state = expectLexSuccess(originalText);
 
     const stateResult = Lexer.updateRange(state, range, newText);
     if (!(stateResult.kind === ResultKind.Ok)) {
@@ -127,7 +127,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foobar -> X`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 0,
@@ -147,7 +147,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar -> X`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 0,
@@ -167,7 +167,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar -> fXr`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 1,
@@ -187,7 +187,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar\\baz -> foo\\nX\\nbaz`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 1,
                     lineCodeUnit: 0,
@@ -209,7 +209,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar\\baz -> foo\\nbXr\\nbaz`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 1,
                     lineCodeUnit: 1,
@@ -231,7 +231,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`lineTerminator maintained on single line change`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 1,
                     lineCodeUnit: 1,
@@ -242,14 +242,14 @@ describe(`Lexer.Incremental`, () => {
                 },
             };
 
-            let original: string = `foo\nbar\nbaz`;
+            const original: string = `foo\nbar\nbaz`;
             const state: Lexer.State = expectLexerUpdateRangeOk(
                 original,
                 "X",
                 range
             );
 
-            let modified = original.replace("bar", "bXr");
+            const modified = original.replace("bar", "bXr");
 
             const snapshot = LexerSnapshot.tryFrom(state);
             expect(snapshot.kind).equals(ResultKind.Ok);
@@ -260,7 +260,7 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`lineTerminator maintained on multiline change`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 1,
@@ -271,14 +271,14 @@ describe(`Lexer.Incremental`, () => {
                 },
             };
 
-            let original: string = `foo\nbar\nbaz\nboo`;
+            const original: string = `foo\nbar\nbaz\nboo`;
             const state: Lexer.State = expectLexerUpdateRangeOk(
                 original,
                 "OO\nB",
                 range
             );
 
-            let expectedResult: string = `fOO\nBaz\nboo`;
+            const expectedResult: string = `fOO\nBaz\nboo`;
 
             expect(state.lines.length).to.equal(3);
 
@@ -290,8 +290,8 @@ describe(`Lexer.Incremental`, () => {
             }
         });
 
-        it(`text match on multiline deletion`, () => {
-            let range: Lexer.Range = {
+        it(`text match on multiline deconstion`, () => {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 1,
@@ -302,7 +302,7 @@ describe(`Lexer.Incremental`, () => {
                 },
             };
 
-            let original: string = `foo\nbar\nbaz\nboo`;
+            const original: string = `foo\nbar\nbaz\nboo`;
             const state: Lexer.State = expectLexerUpdateRangeOk(
                 original,
                 "",
