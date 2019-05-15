@@ -7,13 +7,13 @@ import { LexerError } from "./error";
 import { Keyword } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
-// the lexer
-//  * takes a mostly functional approach, plus a few throws to propagate errors
-//  * splits up text by line terminator, allowing line-by-line lexing
+// The lexer
+//  * Takes a mostly functional approach, plus a few throws to propagate errors
+//  * Splits up text by line terminator, allowing line-by-line lexing
 
-// call Lexer.from to instantiate a state instance
-// calls to lexer functions returns a new state object
-// call Lexer.snapshot creates a frozen copy of a lexer state
+// Call Lexer.stateFrom to instantiate a state instance
+// Lexer functions returns a new state object
+// LexerSnapshot.tryFrom freezes a lexer state
 
 export namespace Lexer {
 
@@ -38,7 +38,7 @@ export namespace Lexer {
         Untouched = "Untouched",
     }
 
-    // there are two contexts for line tokenization:
+    // there are two categories of line tokenization contexts:
     //  * tokenize the entire line as usual
     //  * the line is a contiuation of a multiline token, eg. `"foo \n bar"`
     //
@@ -57,18 +57,10 @@ export namespace Lexer {
     export interface ILexerLine {
         readonly kind: LineKind,
         readonly text: string,
-        readonly lineTerminator: string,
-        readonly lineModeStart: LineMode,
-        readonly lineModeEnd: LineMode,
+        readonly lineTerminator: string,            // must be a valid Power Query newline character
+        readonly lineModeStart: LineMode,           // previousLine's lineModeEnd || LineMode.Default
+        readonly lineModeEnd: LineMode, 
         readonly tokens: ReadonlyArray<LineToken>,
-    }
-
-    // an extension to the string type, allows column numbering by using graphemes
-    export interface LineString {
-        readonly text: string,
-        readonly graphemes: ReadonlyArray<string>,
-        readonly textIndex2GraphemeIndex: { [textIndex: number]: number; }
-        readonly graphemeIndex2TextIndex: { [graphemeIndex: number]: number; }
     }
 
     // an error was thrown immediately, nothing was tokenized
@@ -173,11 +165,13 @@ export namespace Lexer {
         const splitLines: SplitLine[] = splitOnLineTerminators(text) as SplitLine[];
 
         const rangeStart: RangePosition = range.start;
-        const textPrefix: string = state.lines[rangeStart.lineNumber].text.substr(0, rangeStart.lineCodeUnit);
+        const lineStart: TLine = state.lines[rangeStart.lineNumber];
+        const textPrefix: string = lineStart.text.substring(0, rangeStart.lineCodeUnit);
         splitLines[0].text = textPrefix + splitLines[0].text;
 
         const rangeEnd: RangePosition = range.end;
-        const textSuffix: string = state.lines[rangeEnd.lineNumber].text.substr(rangeEnd.lineCodeUnit + 1);
+        const lineEnd: TLine = state.lines[rangeEnd.lineNumber];
+        const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
         const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
         lastSplitLine.text = lastSplitLine.text + textSuffix;
 
@@ -332,6 +326,9 @@ export namespace Lexer {
         readonly lineMode: LineMode,
     }
 
+    // Attributes can't be readyonly.
+    // In `updateRange` text is updated by adding existing existing lines as a suffix/prefix.
+    // In `splitOnLineTerminators` lineTerminator is updated as the last must have no terminator, ""
     interface SplitLine {
         text: string,
         lineTerminator: string,
@@ -447,9 +444,24 @@ export namespace Lexer {
             },
             end: {
                 lineNumber,
-                lineCodeUnit: line.text.length - 1,
+                lineCodeUnit: line.text.length,
             }
         }
+    }
+
+    function tokenizedLinesFrom(splitLines: ReadonlyArray<SplitLine>, previousLineModeEnd: LineMode) {
+        const numLines: number = splitLines.length;
+        const tokenizedLines: TLine[] = [];
+
+        for (let lineNumber = 0; lineNumber < numLines; lineNumber += 1) {
+            const splitLine: SplitLine = splitLines[lineNumber];
+            const untokenizedLine: UntouchedLine = lineFrom(splitLine.text, splitLine.lineTerminator, previousLineModeEnd);
+            const tokenizedLine: TLine = tokenize(untokenizedLine, lineNumber);
+            tokenizedLines.push(tokenizedLine);
+            previousLineModeEnd = tokenizedLine.lineModeEnd;
+        }
+
+        return tokenizedLines;
     }
 
     // takes the return from a tokenizeX function to updates the line's state
@@ -503,24 +515,10 @@ export namespace Lexer {
         }
     }
 
-    function tokenizedLinesFrom(splitLines: ReadonlyArray<SplitLine>, previousLineModeEnd: LineMode) {
-        const numLines: number = splitLines.length;
-        const tokenizedLines: TLine[] = [];
-
-        for (let lineNumber = 0; lineNumber < numLines; lineNumber += 1) {
-            const splitLine: SplitLine = splitLines[lineNumber];
-            const untokenizedLine: UntouchedLine = lineFrom(splitLine.text, splitLine.lineTerminator, previousLineModeEnd);
-            const tokenizedLine: TLine = tokenize(untokenizedLine, lineNumber);
-            tokenizedLines.push(tokenizedLine);
-            previousLineModeEnd = tokenizedLine.lineModeEnd;
-        }
-
-        return tokenizedLines;
-    }
-
-    // If an earlier line changed its lineModeEnd, eg. inserting a multiline line comment start,
-    // then the proceeding tokens would need to be retokenized.
-    // Exits when previous.lineModeEnd !== current.lineModeStart.
+    // If an earlier line changed its lineModeEnd, eg. inserting a `"` to start a string literal,
+    // then the proceeding lines would need to be retokenized.
+    // Stops retokenizing when previous.lineModeEnd !== current.lineModeStart.
+    // Returns lines in the range [lineNumber, lines.length -1]
     function retokenizeLines(
         lines: ReadonlyArray<TLine>,
         lineNumber: number,
@@ -562,28 +560,27 @@ export namespace Lexer {
         }
     }
 
-    // the main function of the lexer's tokenizer
+    // The main function of the lexer's tokenizer
     function tokenize(line: TLine, lineNumber: number): TLine {
         switch (line.kind) {
-            // cannot tokenize something that ended with an error,
+            // Cannot tokenize something that ended with an error,
             // nothing has changed since the last tokenize.
-            // update the line's text before trying again.
+            // Update the line's text before trying again.
             case LineKind.Error:
                 return line;
 
             case LineKind.Touched:
-                // the line was already fully lexed once.
-                // without any text changes it should throw eof to help diagnose
-                // why it's trying to re-tokenize
+                // The line was already fully lexed once.
+                // Without any text changes it should throw eof to help diagnose
+                // why it's trying to retokenize
                 return {
                     ...line,
                     kind: LineKind.Error,
                     error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
                 }
 
-            // cannot tokenize something that ended with an error,
-            // nothing has changed since the last tokenize.
-            // update the line's text before trying again.
+            // Cannot tokenize something that previously ended with an error.
+            // Update the line's text before trying again.
             case LineKind.TouchedWithError:
                 return {
                     kind: LineKind.Error,
@@ -600,7 +597,7 @@ export namespace Lexer {
         const text: string = untouchedLine.text;
         const textLength: number = text.length;
 
-        // sanity check that there's something to tokenize
+        // Sanity check that there's something to tokenize
         if (textLength === 0) {
             return {
                 kind: LineKind.Touched,
@@ -623,10 +620,10 @@ export namespace Lexer {
         let continueLexing: boolean = true;
         let maybeError: Option<LexerError.TLexerError>;
 
-        // while neither eof or having encountered an error:
-        //  * lex according to lineMode, starting from currentPosition
-        //  * update currentPosition and lineMode
-        //  * drain whitespace
+        // While neither eof nor having encountered an error:
+        //  * Lex according to lineModestart, starting from currentPosition.
+        //  * Update currentPosition and lineMode.
+        //  * Drain whitespace.
         while (continueLexing) {
             try {
                 let readOutcome: LineModeAlteringRead;
@@ -895,6 +892,7 @@ export namespace Lexer {
         };
     }
 
+    // newlines are not considered whitespace
     function drainWhitespace(
         text: string,
         position: number,
@@ -1053,8 +1051,8 @@ export namespace Lexer {
         }
     }
 
-    // the quoted identifier case has already been taken care of
-    // null-literal is also read here
+    // The case for quoted identifier has already been taken care of.
+    // The null-literal is also read here.
     function readKeywordOrIdentifier(
         text: string,
         lineNumber: number,
@@ -1130,12 +1128,11 @@ export namespace Lexer {
     function maybeIndexOfRegexEnd(
         pattern: RegExp,
         text: string,
-        textIndex: number,
+        positionStart: number,
     ): Option<number> {
-        const maybeLength: Option<number> = StringHelpers.maybeRegexMatchLength(pattern, text, textIndex);
-
+        const maybeLength: Option<number> = StringHelpers.maybeRegexMatchLength(pattern, text, positionStart);
         return maybeLength !== undefined
-            ? textIndex + maybeLength
+            ? positionStart + maybeLength
             : undefined;
     }
 
@@ -1260,6 +1257,7 @@ export namespace Lexer {
         }
     }
 
+    // Validator for Range.
     function maybeBadRangeError(state: State, range: Range): Option<LexerError.BadRangeError> {
         const start: RangePosition = range.start;
         const end: RangePosition = range.end;
@@ -1294,10 +1292,10 @@ export namespace Lexer {
         const lineStart: TLine = lines[rangeStart.lineNumber];
         const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
-        if (rangeStart.lineCodeUnit >= lineStart.text.length) {
+        if (rangeStart.lineCodeUnit > lineStart.text.length) {
             maybeKind = LexerError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
         }
-        else if (rangeEnd.lineCodeUnit >= lineEnd.text.length) {
+        else if (rangeEnd.lineCodeUnit > lineEnd.text.length) {
             maybeKind = LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
         }
 
