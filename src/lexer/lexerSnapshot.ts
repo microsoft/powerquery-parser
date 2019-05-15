@@ -39,9 +39,9 @@ export class LexerSnapshot {
         const tokens: Token[] = [];
         const comments: TComment[] = [];
         const [text, flatTokens]: [string, ReadonlyArray<FlatLineToken>] = flattenLineTokens(state);
-        const numFlatTokens = flatTokens.length;
+        const numFlatTokens: number = flatTokens.length;
 
-        let flatIndex = 0;
+        let flatIndex: number = 0;
         while (flatIndex < numFlatTokens) {
             const flatToken: FlatLineToken = flatTokens[flatIndex];
 
@@ -84,8 +84,8 @@ export class LexerSnapshot {
                     //      the above TokenLineKinds are taken care of, along with their Content and End variants,
                     //      leaving the rest to be a 1-to-1 match with TokenKind.
                     //      eg. set(LineTokenKind) & set(remaining variants) === set(LineKind)
-                    const positionStart = flatToken.positionStart;
-                    const positionEnd = flatToken.positionEnd;
+                    const positionStart: StringHelpers.ExtendedGraphemePosition = flatToken.positionStart;
+                    const positionEnd: StringHelpers.ExtendedGraphemePosition = flatToken.positionEnd;
                     tokens.push({
                         kind: flatToken.kind as unknown as TokenKind,
                         data: flatToken.data,
@@ -105,8 +105,9 @@ export class LexerSnapshot {
 function readLineComment(
     flatToken: FlatLineToken
 ): LineComment {
-    const positionStart = flatToken.positionStart;
-    const positionEnd = flatToken.positionEnd;
+    const positionStart: StringHelpers.ExtendedGraphemePosition = flatToken.positionStart;
+    const positionEnd: StringHelpers.ExtendedGraphemePosition = flatToken.positionEnd;
+    
     return {
         kind: CommentKind.Line,
         data: flatToken.data,
@@ -120,8 +121,9 @@ function readLineComment(
 function readSingleLineMultilineComment(
     flatToken: FlatLineToken
 ): MultilineComment {
-    const positionStart = flatToken.positionStart;
-    const positionEnd = flatToken.positionEnd;
+    const positionStart: StringHelpers.ExtendedGraphemePosition = flatToken.positionStart;
+    const positionEnd: StringHelpers.ExtendedGraphemePosition = flatToken.positionEnd;
+
     return {
         kind: CommentKind.Multiline,
         data: flatToken.data,
@@ -137,9 +139,9 @@ function readMultilineComment(
     tokenStart: FlatLineToken,
 ): ConcatenatedCommentRead {
     const collection = collectWhileContent(flatTokens, tokenStart, LineTokenKind.MultilineCommentContent);
-    const maybeTokenEnd = collection.maybeTokenEnd;
+    const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
-        const positionStart = tokenStart.positionStart;
+        const positionStart: StringHelpers.ExtendedGraphemePosition = tokenStart.positionStart;
         throw new LexerError.UnterminatedMultilineTokenError(
             positionStart,
             LexerError.UnterminatedMultilineTokenKind.MultilineComment,
@@ -150,10 +152,10 @@ function readMultilineComment(
         const message = "once a multiline token starts it should either reach a paired end token, or eof";
         throw new CommonError.InvariantError(message, details);
     }
-    const tokenEnd = maybeTokenEnd;
+    const tokenEnd: FlatLineToken = maybeTokenEnd;
 
-    const positionStart = tokenStart.positionStart;
-    const positionEnd = tokenEnd.positionEnd;
+    const positionStart: StringHelpers.ExtendedGraphemePosition = tokenStart.positionStart;
+    const positionEnd: StringHelpers.ExtendedGraphemePosition = tokenEnd.positionEnd;
 
     return {
         comment: {
@@ -173,9 +175,9 @@ function readQuotedIdentifier(
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {
     const collection = collectWhileContent(flatTokens, tokenStart, LineTokenKind.QuotedIdentifierContent);
-    const maybeTokenEnd = collection.maybeTokenEnd;
+    const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
-        const positionStart = tokenStart.positionStart;
+        const positionStart: StringHelpers.ExtendedGraphemePosition = tokenStart.positionStart;
         throw new LexerError.UnterminatedMultilineTokenError(
             positionStart,
             LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier,
@@ -186,10 +188,10 @@ function readQuotedIdentifier(
         const message = "once a multiline token starts it should either reach a paired end token, or eof";
         throw new CommonError.InvariantError(message, details);
     }
-    const tokenEnd = maybeTokenEnd;
+    const tokenEnd: FlatLineToken = maybeTokenEnd;
 
-    const positionStart = tokenStart.positionStart;
-    const positionEnd = tokenEnd.positionEnd;
+    const positionStart: StringHelpers.ExtendedGraphemePosition = tokenStart.positionStart;
+    const positionEnd: StringHelpers.ExtendedGraphemePosition = tokenEnd.positionEnd;
 
     return {
         token: {
@@ -208,9 +210,9 @@ function readStringLiteral(
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {
     const collection = collectWhileContent(flatTokens, tokenStart, LineTokenKind.StringLiteralContent);
-    const maybeTokenEnd = collection.maybeTokenEnd;
+    const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
-        const positionStart = tokenStart.positionStart;
+        const positionStart: StringHelpers.ExtendedGraphemePosition = tokenStart.positionStart;
         throw new LexerError.UnterminatedMultilineTokenError(
             positionStart,
             LexerError.UnterminatedMultilineTokenKind.String,
@@ -221,10 +223,10 @@ function readStringLiteral(
         const message = "once a multiline token starts it should either reach a paired end token, or eof";
         throw new CommonError.InvariantError(message, details);
     }
-    const tokenEnd = maybeTokenEnd;
+    const tokenEnd: FlatLineToken = maybeTokenEnd;
 
-    const positionStart = tokenStart.positionStart;
-    const positionEnd = tokenEnd.positionEnd;
+    const positionStart: StringHelpers.ExtendedGraphemePosition = tokenStart.positionStart;
+    const positionEnd: StringHelpers.ExtendedGraphemePosition = tokenEnd.positionEnd;
 
     return {
         token: {
