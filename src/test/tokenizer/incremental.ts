@@ -24,11 +24,10 @@ class MockDocument2 {
 
     public applyChange(text: string, range: Lexer.Range) {
         const result = Lexer.updateRange(this.lexerState, range, text);
-        // TODO: how do we handle error states?
         if (result.kind === ResultKind.Ok) {
             this.lexerState = result.value;
         } else {
-            throw new Error("unexpected lexer error state");
+            throw new Error("Unexpected lexer error state: " + JSON.stringify(result));
         }
     }
 
