@@ -8,8 +8,8 @@ export type TokenRangeMap<T> = { [key: string]: T; }
 export interface TokenRange {
     readonly startTokenIndex: number,
     readonly endTokenIndex: number // exclusive
-    readonly positionStart: StringHelpers.GraphemePosition,
-    readonly positionEnd: StringHelpers.GraphemePosition,
+    readonly positionStart: StringHelpers.ExtendedGraphemePosition,
+    readonly positionEnd: StringHelpers.ExtendedGraphemePosition,
     readonly hash: string,
 }
 

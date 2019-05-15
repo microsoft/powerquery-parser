@@ -1970,7 +1970,7 @@ const enum BracketDisambiguation {
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind,
     readonly tokenIndexStart: number,
-    readonly positionStart: StringHelpers.GraphemePosition,
+    readonly positionStart: StringHelpers.ExtendedGraphemePosition,
 }
 
 interface ParserState {
