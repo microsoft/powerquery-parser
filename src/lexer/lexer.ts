@@ -59,7 +59,7 @@ export namespace Lexer {
         readonly text: string,
         readonly lineTerminator: string,            // must be a valid Power Query newline character
         readonly lineModeStart: LineMode,           // previousLine's lineModeEnd || LineMode.Default
-        readonly lineModeEnd: LineMode, 
+        readonly lineModeEnd: LineMode,
         readonly tokens: ReadonlyArray<LineToken>,
     }
 
@@ -174,6 +174,9 @@ export namespace Lexer {
         const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
         const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
         lastSplitLine.text = lastSplitLine.text + textSuffix;
+
+        // make sure we have a line terminator
+        lastSplitLine.lineTerminator = lineEnd.lineTerminator;
 
         const maybePreviousLine: Option<TLine> = state.lines[rangeStart.lineNumber - 1];
         const previousLineModeEnd: LineMode = maybePreviousLine !== undefined

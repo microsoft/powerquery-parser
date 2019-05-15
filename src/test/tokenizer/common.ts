@@ -42,10 +42,24 @@ export class TokenizerState implements IState {
         return new TokenizerState(this.lexerState);
     }
 
+    // For tokenizer state comparison, all we really care about is the line mode end value.
+    // i.e. we need to know if we're ending on an unterminated comment/string as it 
+    // would impact tokenization for the following line.
     public equals(other: IState): boolean {
-        return other !== undefined
-            ? Lexer.equalStates(this.lexerState, (other as TokenizerState).lexerState)
-            : false;
+        if (!other) {
+            return false;
+        }
+
+        // Check for initial state.
+        const rightLexerState = (other as TokenizerState).lexerState;
+        if (this.lexerState.lines.length === 0) {
+            return rightLexerState.lines.length === 0;
+        }
+
+        // Compare last line state.
+        const leftLastLine = this.lexerState.lines[this.lexerState.lines.length - 1];
+        const rightLastLine = rightLexerState.lines[rightLexerState.lines.length - 1];
+        return leftLastLine.lineModeEnd === rightLastLine.lineModeEnd;
     }
 }
 

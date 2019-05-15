@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import "mocha";
 import { Tokenizer, ILineTokens, IToken, IState } from "./common";
+import { Lexer, LexerSnapshot } from "../../lexer";
+import { ResultKind } from "../../common";
 
 const tokenizer = new Tokenizer("\n");
 
@@ -13,7 +15,35 @@ let
 in
    count + 3;`;
 
-// TODO: Only supports single line edits - should support insertion of new lines.
+class MockDocument2 {
+    private lexerState: Lexer.State;
+
+    constructor(initialText: string) {
+        this.lexerState = Lexer.stateFrom(initialText);
+    }
+
+    public applyChange(text: string, range: Lexer.Range) {
+        const stateResult = Lexer.updateRange(this.lexerState, range, text);
+
+        if (!(stateResult.kind === ResultKind.Ok)) {
+            throw new Error(`AssertFailed:stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, null, 4)}`);
+        }
+
+        this.lexerState = stateResult.value;
+    }
+
+    public getText(): string {
+        let snapshotResult = LexerSnapshot.tryFrom(this.lexerState);
+
+        if (!(snapshotResult.kind === ResultKind.Ok)) {
+            throw new Error(`AssertFailed:snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
+        }
+
+        return snapshotResult.value.text;
+    }
+}
+
+// TODO: Replace with MockDocument2 to use built-in incremental updates
 class MockDocument {
     public readonly tokenizer: Tokenizer = new Tokenizer("\n");
     public lines: string[];
@@ -67,6 +97,63 @@ class MockDocument {
     }
 }
 
+describe("MockDocument validation", () => {
+    it("No change", () => {
+        const document = new MockDocument2(OriginalQuery);
+        expect(document.getText()).equals(OriginalQuery, "unexpected changed text");
+    });
+
+    it("Insert at beginning", () => {
+        const document = new MockDocument2(OriginalQuery);
+        const changeToMake: string = "    ";
+        document.applyChange(changeToMake, {
+            start: { lineNumber: 0, lineCodeUnit: 0 },
+            end: { lineNumber: 0, lineCodeUnit: 0 },
+        });
+
+        const changedText = document.getText();
+        expect(changedText).equals(changeToMake + OriginalQuery, "unexpected changed text");
+    });
+
+    it("Change first line", () => {
+        const document = new MockDocument2(OriginalQuery);
+
+        document.applyChange("Query2", {
+            start: { lineNumber: 0, lineCodeUnit: 7 },
+            end: { lineNumber: 0, lineCodeUnit: 13 },
+        });
+
+        const originalWithChange = OriginalQuery.replace("Query1", "Query2");
+        const changedDocumentText = document.getText();
+        expect(changedDocumentText).equals(originalWithChange, "unexpected changed text");
+    });
+
+    it("Change middle of document", () => {
+        const document = new MockDocument2(OriginalQuery);
+
+        document.applyChange("numbers123", {
+            start: { lineNumber: 5, lineCodeUnit: 3 },
+            end: { lineNumber: 5, lineCodeUnit: 10 },
+        });
+
+        const originalWithChange = OriginalQuery.replace("numbers", "numbers123");
+        const changedDocumentText = document.getText();
+        expect(changedDocumentText).equals(originalWithChange, "unexpected changed text");
+    });
+
+    it("Delete most of the document", () => {
+        const document = new MockDocument2(OriginalQuery);
+
+        document.applyChange("", {
+            start: { lineNumber: 1, lineCodeUnit: 0 },
+            end: { lineNumber: 7, lineCodeUnit: 10 },
+        });
+
+        const originalWithChange = "shared Query1 =\n 3;";
+        const changedDocumentText = document.getText();
+        expect(changedDocumentText).equals(originalWithChange, "unexpected changed text");
+    });
+});
 
 describe("Incremental updates", () => {
     it("Reparse with no change", () => {
@@ -76,31 +163,41 @@ describe("Incremental updates", () => {
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 
-    xit("Reparse with simple change", () => {
+    it("Reparse with simple change", () => {
         const document = new MockDocument(OriginalQuery);
         const modified = document.lines[2].replace("source", "source123");
         const count = document.applyChangeAndTokenize(modified, 2);
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 
-    // TODO: tokenizer needs to support multiline strings
-    xit("Reparse with unterminated string", () => {
+    it("Reparse with unterminated string", () => {
+        const lineNumber = 4;
         const document = new MockDocument(OriginalQuery);
-        const modified = document.lines[4].replace(`"text",`, `"text`);
-        const count = document.applyChangeAndTokenize(modified, 4);
-        expect(count).equals(document.lines.length - 4, "remaining lines should have been tokenized");
+        const modified = document.lines[lineNumber].replace(`"text",`, `"text`);
+        const count = document.applyChangeAndTokenize(modified, lineNumber);
+        expect(count).equals(document.lines.length - lineNumber, "remaining lines should have been tokenized");
 
-        // TODO: check that tokens were all changed to string
+        for (let i = lineNumber + 1; i < document.lineTokens.length; i++) {
+            const lineTokens = document.lineTokens[i];
+            lineTokens.forEach(token => {
+                expect(token.scopes).equals("StringContent", "expecting remaining tokens to be strings");
+            });
+        }
     });
 
-    // TODO: tokenizer needs to support multiline comments
-    xit("Reparse with unterminated block comment", () => {
+    it("Reparse with unterminated block comment", () => {
+        const lineNumber = 3;
         const document = new MockDocument(OriginalQuery);
-        const modified = document.lines[3].replace(`rce),`, `rce), /* my open comment`);
-        const count = document.applyChangeAndTokenize(modified, 3);
-        expect(count).equals(document.lines.length - 3, "remaining lines should have been tokenized");
+        const modified = document.lines[lineNumber].replace(`rce),`, `rce), /* my open comment`);
+        const count = document.applyChangeAndTokenize(modified, lineNumber);
+        expect(count).equals(document.lines.length - lineNumber, "remaining lines should have been tokenized");
 
-        // TODO: check that tokens were all changed to comment
+        for (let i = lineNumber + 1; i < document.lineTokens.length; i++) {
+            const lineTokens = document.lineTokens[i];
+            lineTokens.forEach(token => {
+                expect(token.scopes).equals("MultilineCommentContent", "expecting remaining tokens to be comments");
+            });
+        }
     });
 
     // TODO: add tests that insert newlines into the original query
