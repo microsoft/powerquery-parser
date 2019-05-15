@@ -2,7 +2,7 @@ import { expect } from "chai";
 import "mocha";
 import { Result, ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
-import { expectLexSuccess } from "./common";
+import { expectLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
 
@@ -18,7 +18,7 @@ function expectLexerUpdateRangeOk(
     newText: string,
     range: Lexer.Range,
 ): Lexer.State {
-    const state = expectLexSuccess(originalText);
+    const state = expectLexOk(originalText);
 
     const stateResult = Lexer.updateRange(state, range, newText);
     if (!(stateResult.kind === ResultKind.Ok)) {
@@ -35,7 +35,7 @@ function expectLexerUpdateLine(
     newText: string,
     expectedUpdate: AbridgedTLexerLine,
 ): Lexer.State {
-    let state = expectLexSuccess(originalText);
+    let state = expectLexOk(originalText);
     expectAbridgedTLexerLine(state, expectedOriginal);
 
     const stateResult = Lexer.updateLine(state, lineNumber, newText);

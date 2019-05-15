@@ -4,12 +4,17 @@ import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment } from "./lexer";
 import { Ast, Parser, ParserError } from "./parser";
 
-export interface LexAndParseSuccess {
+export type LexAndParseErr = (
+    | LexerError.TLexerError
+    | ParserError.TParserError
+);
+
+export interface LexAndParseOk {
     readonly ast: Ast.TDocument,
     readonly comments: ReadonlyArray<TComment>,
 }
 
-export function lexAndParse(text: string): Result<LexAndParseSuccess, LexerError.TLexerError | ParserError.TParserError> {
+export function lexAndParse(text: string): Result<LexAndParseOk, LexAndParseErr> {
     let state: Lexer.State = Lexer.stateFrom(text);
 
     const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
