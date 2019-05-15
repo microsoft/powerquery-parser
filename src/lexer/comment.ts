@@ -16,8 +16,8 @@ export interface IComment {
     readonly kind: CommentKind,
     readonly data: string,
     readonly containsNewline: boolean,
-    readonly positionStart: StringHelpers.GraphemePosition,
-    readonly positionEnd: StringHelpers.GraphemePosition,
+    readonly positionStart: StringHelpers.ExtendedGraphemePosition,
+    readonly positionEnd: StringHelpers.ExtendedGraphemePosition,
 }
 
 export interface LineComment extends IComment {
