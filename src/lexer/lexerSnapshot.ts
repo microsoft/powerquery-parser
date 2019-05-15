@@ -111,7 +111,7 @@ function readLineComment(
     return {
         kind: CommentKind.Line,
         data: flatToken.data,
-        containsNewline: true,
+        containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
         positionStart,
         positionEnd,
     };
