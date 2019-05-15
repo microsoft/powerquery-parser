@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Tokenizer, ILineTokens, IToken, IState } from "./common";
-import { Lexer } from "../../lexer";
+import { Lexer, LexerSnapshot } from "../../lexer";
 import { ResultKind } from "../../common";
 
 const tokenizer = new Tokenizer("\n");
@@ -17,11 +17,9 @@ in
 
 class MockDocument2 {
     private lexerState: Lexer.State;
-    private readonly defaultLineTerminator: string;
 
-    constructor(initialText: string, lineTerminator: string = "\n") {
+    constructor(initialText: string) {
         this.lexerState = Lexer.stateFrom(initialText);
-        this.defaultLineTerminator = lineTerminator;
     }
 
     public applyChange(text: string, range: Lexer.Range) {
@@ -35,15 +33,12 @@ class MockDocument2 {
     }
 
     public getText(): string {
-        // TODO: there should be a more efficient way of doing this. 
-        // The Document could track the current text value, but it would need 
-        // an easy way to determine string replacement range.
-        let text: string = "";
-        this.lexerState.lines.forEach(line => {
-            text = text.concat(line.text).concat(this.defaultLineTerminator);
-        });
+        let snapshot = LexerSnapshot.tryFrom(this.lexerState);
+        if (snapshot.kind === ResultKind.Ok) {
+            return snapshot.value.text;
+        }
 
-        return text;
+        throw new Error("Failed to create lexer snapshot: " + JSON.stringify(snapshot));
     }
 }
 
@@ -102,17 +97,47 @@ class MockDocument {
 }
 
 describe("MockDocument validation", () => {
-    it("Apply one line change", () => {
+    it("No change", () => {
         const document = new MockDocument2(OriginalQuery);
-        const originalText = document.getText();
+        expect(document.getText()).equals(OriginalQuery, "unexpected changed text");
+    });
+
+    it("Insert at beginning", () => {
+        const document = new MockDocument2(OriginalQuery);
         const changeToMake: string = "    ";
         document.applyChange(changeToMake, {
             start: { lineNumber: 0, lineCodeUnit: 0 },
             end: { lineNumber: 0, lineCodeUnit: 0 },
         });
-        const changedText = document.getText();
 
-        expect(changedText).equals(changeToMake + originalText, "unexpected changed text");
+        const changedText = document.getText();
+        expect(changedText).equals(changeToMake + OriginalQuery, "unexpected changed text");
+    });
+
+    it("Change first line", () => {
+        const document = new MockDocument2(OriginalQuery);
+
+        document.applyChange("Query2", {
+            start: { lineNumber: 0, lineCodeUnit: 7 },
+            end: { lineNumber: 0, lineCodeUnit: 13 },
+        });
+
+        const originalWithChange = OriginalQuery.replace("Query1", "Query2");
+        const changedDocumentText = document.getText();
+        expect(changedDocumentText).equals(originalWithChange, "unexpected changed text");
+    });
+
+    it("Change middle of document", () => {
+        const document = new MockDocument2(OriginalQuery);
+
+        document.applyChange("numbers123", {
+            start: { lineNumber: 5, lineCodeUnit: 3 },
+            end: { lineNumber: 5, lineCodeUnit: 10 },
+        });
+
+        const originalWithChange = OriginalQuery.replace("numbers", "numbers123");
+        const changedDocumentText = document.getText();
+        expect(changedDocumentText).equals(originalWithChange, "unexpected changed text");
     });
 });
 
