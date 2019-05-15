@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import "mocha";
-import { Lexer } from "../../lexer";
+import { Result, ResultKind } from "../../common";
+import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
 import { expectLexSuccess } from "./common";
-import { ResultKind } from "../../common";
 
 const LINE_TERMINATOR: string = `\n`;
 
@@ -18,7 +18,7 @@ function expectLexerUpdateRangeOk(
     newText: string,
     range: Lexer.Range,
 ): Lexer.State {
-    let state = expectLexSuccess(originalText);
+    const state = expectLexSuccess(originalText);
 
     const stateResult = Lexer.updateRange(state, range, newText);
     if (!(stateResult.kind === ResultKind.Ok)) {
@@ -66,7 +66,7 @@ function expectLexerUpdateLineAlphaBravoCharlie(
 describe(`Lexer.Incremental`, () => {
 
     describe(`Lexer.updateRange`, () => {
-        it(`foobar -> Xoobar`, () => {
+        it(`foobar -> Xfoobar`, () => {
             const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
@@ -83,18 +83,58 @@ describe(`Lexer.Incremental`, () => {
                 range
             );
             expect(state.lines.length).to.equal(1);
-            expect(state.lines[0].text).to.equal("Xoobar");
+            expect(state.lines[0].text).to.equal("Xfoobar");
         });
 
-        it(`foobar -> X`, () => {
-            let range: Lexer.Range = {
+        it(`foobar -> fooXbar`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                },
+                end: {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foobar`,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].text).to.equal("fooXbar");
+        });
+
+        it(`foobar -> Xoobar`, () => {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 0,
                 },
                 end: {
                     lineNumber: 0,
-                    lineCodeUnit: 5,
+                    lineCodeUnit: 1,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                `foobar`,
+                "X",
+                range
+            );
+            expect(state.lines.length).to.equal(1);
+            expect(state.lines[0].text).to.equal("Xoobar");
+        });
+
+        it(`foobar -> X`, () => {
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                },
+                end: {
+                    lineNumber: 0,
+                    lineCodeUnit: 6,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -107,14 +147,14 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar -> X`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 0,
                 },
                 end: {
                     lineNumber: 1,
-                    lineCodeUnit: 2,
+                    lineCodeUnit: 3,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -127,14 +167,14 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar -> fXr`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 },
                 end: {
                     lineNumber: 1,
-                    lineCodeUnit: 1,
+                    lineCodeUnit: 2,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -147,14 +187,14 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar\\baz -> foo\\nX\\nbaz`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 1,
                     lineCodeUnit: 0,
                 },
                 end: {
                     lineNumber: 1,
-                    lineCodeUnit: 2,
+                    lineCodeUnit: 3,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -169,14 +209,14 @@ describe(`Lexer.Incremental`, () => {
         });
 
         it(`foo\\nbar\\baz -> foo\\nbXr\\nbaz`, () => {
-            let range: Lexer.Range = {
+            const range: Lexer.Range = {
                 start: {
                     lineNumber: 1,
                     lineCodeUnit: 1,
                 },
                 end: {
                     lineNumber: 1,
-                    lineCodeUnit: 1,
+                    lineCodeUnit: 2,
                 },
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(
@@ -188,6 +228,88 @@ describe(`Lexer.Incremental`, () => {
             expect(state.lines[0].text).to.equal("foo");
             expect(state.lines[1].text).to.equal("bXr");
             expect(state.lines[2].text).to.equal("baz");
+        });
+
+        it(`lineTerminator maintained on single line change`, () => {
+            const original: string = `foo\nbar\nbaz`;
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 1,
+                    lineCodeUnit: 1,
+                },
+                end: {
+                    lineNumber: 1,
+                    lineCodeUnit: 2,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                original,
+                "X",
+                range
+            );
+
+            const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+            expect(snapshotResult.kind).equals(ResultKind.Ok);
+            if (!(snapshotResult.kind === ResultKind.Ok)) {
+                throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
+            }
+            const snapshot: LexerSnapshot = snapshotResult.value;
+            expect(snapshot.text).equals(`foo\nbXr\nbaz`, "expected snapshot text doesn't match");
+        });
+
+        it(`lineTerminator maintained on multiline change`, () => {
+            const original: string = `foo\nbar\nbaz\nboo`;
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                },
+                end: {
+                    lineNumber: 2,
+                    lineCodeUnit: 1,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                original,
+                "OO\nB",
+                range
+            );
+            expect(state.lines.length).to.equal(3);
+
+            const snapshotResult = LexerSnapshot.tryFrom(state);
+            if (!(snapshotResult.kind === ResultKind.Ok)) {
+                throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
+            }
+            const snapshot: LexerSnapshot = snapshotResult.value;
+            expect(snapshot.text).equals(`fOO\nBaz\nboo`, "expected snapshot text doesn't match");
+        });
+
+        it(`text match on multiline deconstion`, () => {
+            const original: string = `foo\nbar\nbaz\nboo`;
+            const range: Lexer.Range = {
+                start: {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                },
+                end: {
+                    lineNumber: 2,
+                    lineCodeUnit: 1,
+                },
+            };
+            const state: Lexer.State = expectLexerUpdateRangeOk(
+                original,
+                "",
+                range
+            );
+
+            expect(state.lines.length).to.equal(2);
+
+            const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+            if (!(snapshotResult.kind === ResultKind.Ok)) {
+                throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`);
+            }
+            const snapshot: LexerSnapshot = snapshotResult.value;
+            expect(snapshot.text).equals("faz\nboo", "expected snapshot text doesn't match");
         });
     });
 
