@@ -8,6 +8,7 @@ import { Keyword } from "../lexer/keywords";
 import { LexerSnapshot } from "../lexer/lexerSnapshot";
 import { Token, TokenKind } from "../lexer/token";
 import { Ast } from "./ast";
+import { ParserContext } from "./context";
 import { ParserError } from "./error";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 
@@ -19,6 +20,15 @@ export class Parser {
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
+        private contextCounter: number = 0,
+        private readonly context: ParserContext.ContextNode = {
+            id: contextCounter++,
+            codeUnitStart: 0,
+            maybeCodeUnitEnd: undefined,
+            maybeParent: undefined,
+            children: [],
+            maybeAstNode: undefined,
+        }
     ) {
         if (this.lexerSnapshot.tokens.length) {
             this.currentToken = this.lexerSnapshot.tokens[0];
@@ -1873,6 +1883,40 @@ export class Parser {
             positionEnd,
             hash: tokenRangeHashFrom(tag, positionStart, positionEnd),
         }
+    }
+
+    private startContext(
+        parent: ParserContext.ContextNode,
+    ): ParserContext.ContextNode {
+        if (!this.currentToken) {
+            throw new CommonError.InvariantError("AssertFailed: this.currentToken is truthy");
+        }
+
+        const child: ParserContext.ContextNode = {
+            id: this.contextCounter++,
+            codeUnitStart: this.currentToken.positionStart.codeUnit,
+            maybeCodeUnitEnd: undefined,
+            maybeParent: parent,
+            children: [],
+            maybeAstNode: undefined,
+        }
+        parent.children.push(child);
+
+        return child;
+    }
+
+    private finishContext(
+        context: ParserContext.ContextNode,
+        astNode: Ast.TNode,
+    ): Option<ParserContext.ContextNode> {
+        const codeUnitEnd: number = this.currentToken !== undefined
+            ? this.currentToken.positionStart.codeUnit
+            : this.lexerSnapshot.text.length;
+
+        context.maybeCodeUnitEnd = codeUnitEnd;
+        context.maybeAstNode = astNode;
+
+        return context.maybeParent;
     }
 
     private isNextTokenKind(tokenKind: TokenKind): boolean {
