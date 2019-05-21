@@ -530,6 +530,7 @@ export class Parser {
 
     // 12.2.3.19 Item access expression
     private readItemAccessExpression(): Ast.ItemAccessExpression {
+        // TODO figure out context
         this.startTokenRange(Ast.NodeKind.ItemAccessExpression);
         const maybeReturn = this.readWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
             Ast.NodeKind.ItemAccessExpression,
@@ -564,6 +565,7 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
+        // TODO figure out context
         this.startTokenRange(Ast.NodeKind.FieldProjection);
         const maybeReturn = this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
             Ast.NodeKind.FieldProjection,
@@ -597,6 +599,7 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldSelector(allowOptional: boolean): Ast.FieldSelector {
+        // TODO figure out context
         this.startTokenRange(Ast.NodeKind.FieldSelector);
         const maybeReturn = this.readWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
             Ast.NodeKind.FieldSelector,
@@ -627,6 +630,7 @@ export class Parser {
 
     // 12.2.3.21 Function expression
     private readFunctionExpression(): Ast.FunctionExpression {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.FunctionExpression);
 
         const parameters = this.readParameterList(() => this.maybeReadAsNullablePrimitiveType());
@@ -634,7 +638,7 @@ export class Parser {
         const fatArrowConstant = this.readTokenKindAsConstant(TokenKind.FatArrow);
         const expression = this.readExpression();
 
-        return {
+        const astNode: Ast.FunctionExpression = {
             kind: Ast.NodeKind.FunctionExpression,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
@@ -642,7 +646,9 @@ export class Parser {
             maybeFunctionReturnType,
             fatArrowConstant,
             expression,
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.22 Each expression
@@ -656,6 +662,7 @@ export class Parser {
 
     // 12.2.3.23 Let expression
     private readLetExpression(): Ast.LetExpression {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.LetExpression);
 
         const letConstant = this.readTokenKindAsConstant(TokenKind.KeywordLet);
@@ -663,7 +670,7 @@ export class Parser {
         const inConstant = this.readTokenKindAsConstant(TokenKind.KeywordIn);
         const expression = this.readExpression();
 
-        return {
+        const astNode: Ast.LetExpression = {
             kind: Ast.NodeKind.LetExpression,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
@@ -672,10 +679,13 @@ export class Parser {
             inConstant,
             expression,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.24 If expression
     private readIfExpression(): Ast.IfExpression {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.IfExpression);
 
         const ifConstant = this.readTokenKindAsConstant(TokenKind.KeywordIf);
@@ -687,7 +697,7 @@ export class Parser {
         const elseConstant = this.readTokenKindAsConstant(TokenKind.KeywordElse);
         const falseExpression = this.readExpression();
 
-        return {
+        const astNode: Ast.IfExpression = {
             kind: Ast.NodeKind.IfExpression,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
@@ -698,6 +708,8 @@ export class Parser {
             elseConstant,
             falseExpression,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.25 Type expression
@@ -794,20 +806,24 @@ export class Parser {
 
     // sub-item of 12.2.3.25 Type expression
     private readRecordType(): Ast.RecordType {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.RecordType)
 
         const fields = this.readFieldSpecificationList(true);
 
-        return {
+        const astNode: Ast.RecordType = {
             kind: Ast.NodeKind.RecordType,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             fields,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // sub-item of 12.2.3.25 Type expression
     private readTableType(): Ast.TableType {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.TableType)
 
         const tableConstant = this.readIdentifierConstantAsConstant(Ast.IdentifierConstant.Table);
@@ -826,17 +842,20 @@ export class Parser {
             rowType = this.readFieldSpecificationList(false);
         }
 
-        return {
+        const astNode: Ast.TableType = {
             kind: Ast.NodeKind.TableType,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             tableConstant,
             rowType,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // sub-item of 12.2.3.25 Type expression
     private readFieldSpecificationList(allowOpenMarker: boolean): Ast.FieldSpecificationList {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.FieldSpecificationList);
 
         const leftBracketConstant = this.readTokenKindAsConstant(TokenKind.LeftBracket);
@@ -861,6 +880,7 @@ export class Parser {
             }
 
             else if (this.isOnTokenKind(TokenKind.Identifier)) {
+                // TODO figure out context
                 this.startTokenRange(Ast.NodeKind.Csv);
                 this.startTokenRange(Ast.NodeKind.FieldSpecification);
 
@@ -894,7 +914,7 @@ export class Parser {
 
         const rightBracketConstant = this.readTokenKindAsConstant(TokenKind.RightBracket);
 
-        return {
+        const astNode: Ast.FieldSpecificationList = {
             kind: Ast.NodeKind.FieldSpecificationList,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
@@ -903,6 +923,8 @@ export class Parser {
             maybeOpenRecordMarkerConstant,
             closeWrapperConstant: rightBracketConstant,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // sub-item of 12.2.3.25 Type expression
