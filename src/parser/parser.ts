@@ -59,6 +59,7 @@ export class Parser {
     // 12.2.1 Documents
     private readDocument(): Ast.TDocument {
         let document;
+
         if (this.isOnTokenKind(TokenKind.KeywordSection)) {
             document = this.readSection();
         }
@@ -1878,39 +1879,28 @@ export class Parser {
         }
     }
 
-    // private startContext(
-    //     parent: ParserContext.Node,
-    // ): ParserContext.Node {
-    //     if (!this.currentToken) {
-    //         throw new CommonError.InvariantError("AssertFailed: this.currentToken is truthy");
-    //     }
+    private startContext() {
+        const codeUnitEnd: number = this.currentToken !== undefined
+            ? this.currentToken.positionStart.codeUnit
+            : -1;
 
-    //     const child: ParserContext.Node = {
-    //         nodeId: this.nodeIdCounter++,
-    //         codeUnitStart: this.currentToken.positionStart.codeUnit,
-    //         maybeCodeUnitEnd: undefined,
-    //         maybeParentId: parent.nodeId,
-    //         childrenIds: [],
-    //         maybeAstNode: undefined,
-    //     }
-    //     parent.childrenIds.push(child.nodeId);
+        this.contextNode = ParserContext.addChild(
+            this.contextState,
+            this.contextNode,
+            codeUnitEnd,
+        );
+    }
 
-    //     return child;
-    // }
+    private endContext(astNode: Ast.TNode) {
+        const oldContextNode: ParserContext.Node = this.contextNode;
+        const parentId: number = oldContextNode.parentId;
+        if (parentId < 0) {
+            throw new CommonError.InvariantError("AssertFailed: parentId >= 0");
+        }
 
-    // private finishContext(
-    //     context: ParserContext.Node,
-    //     astNode: Ast.TNode,
-    // ): Option<ParserContext.Node> {
-    //     const codeUnitEnd: number = this.currentToken !== undefined
-    //         ? this.currentToken.positionStart.codeUnit
-    //         : this.lexerSnapshot.text.length;
-
-    //     context.maybeCodeUnitEnd = codeUnitEnd;
-    //     context.maybeAstNode = astNode;
-
-    //     return context.maybeParent;
-    // }
+        oldContextNode.maybeAstNode = astNode;
+        this.contextNode = this.contextState.nodesById[parentId];
+    }
 
     private isNextTokenKind(tokenKind: TokenKind): boolean {
         return this.isTokenKind(tokenKind, this.tokenIndex + 1);

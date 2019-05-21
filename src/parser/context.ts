@@ -11,8 +11,8 @@ export namespace ParserContext {
     export interface Node {
         readonly nodeId: number,
         readonly codeUnitStart: number,
-        maybeCodeUnitEnd: Option<number>,
-        maybeParentId: Option<number>,
+        codeUnitEnd: number,
+        parentId: number,
         childrenIds: number[],
         maybeAstNode: Option<Ast.TNode>,
     }
@@ -21,8 +21,8 @@ export namespace ParserContext {
         const root: Node = {
             nodeId: 0,
             codeUnitStart: 0,
-            maybeCodeUnitEnd: undefined,
-            maybeParentId: undefined,
+            codeUnitEnd: -1,
+            parentId: -1,
             childrenIds: [],
             maybeAstNode: undefined,
         };
@@ -35,14 +35,14 @@ export namespace ParserContext {
     }
 
     // assumes parent is in state
-    export function addNode(state: State, parent: Node, codeUnitStart: number): Node {
+    export function addChild(state: State, parent: Node, codeUnitStart: number): Node {
         state.nodeIdCounter += 1;
 
         const child: Node = {
             nodeId: state.nodeIdCounter,
             codeUnitStart,
-            maybeCodeUnitEnd: undefined,
-            maybeParentId: parent.nodeId,
+            codeUnitEnd: -1,
+            parentId: parent.nodeId,
             childrenIds: [],
             maybeAstNode: undefined,
         }
