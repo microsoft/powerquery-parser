@@ -428,18 +428,21 @@ export class Parser {
 
     // 12.2.3.12 Identifier expression
     private readIdentifierExpression(): Ast.IdentifierExpression {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.IdentifierExpression);
 
         const maybeInclusiveConstant = this.maybeReadTokenKindAsConstant(TokenKind.AtSign);
         const identifier = this.readIdentifier();
 
-        return {
+        const astNode: Ast.IdentifierExpression = {
             kind: Ast.NodeKind.IdentifierExpression,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             maybeInclusiveConstant,
             identifier,
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.14 Parenthesized expression
@@ -1402,6 +1405,7 @@ export class Parser {
 
     private maybeReadTokenKindAsConstant(tokenKind: TokenKind): Option<Ast.Constant> {
         if (this.isOnTokenKind(tokenKind)) {
+            this.startContext();
             const tokenRange = this.singleTokenRange(tokenKind);
 
             const maybeConstantKind = Ast.constantKindFromTokenKind(tokenKind);
@@ -1410,12 +1414,14 @@ export class Parser {
             }
 
             this.readToken();
-            return {
+            const astNode: Ast.Constant = {
                 kind: Ast.NodeKind.Constant,
                 tokenRange,
                 terminalNode: true,
                 literal: maybeConstantKind,
-            }
+            };
+            this.endContext(astNode);
+            return astNode;
         }
         else {
             return undefined;
@@ -1433,6 +1439,7 @@ export class Parser {
 
     private maybeReadIdentifierConstantAsConstant(identifierConstant: Ast.IdentifierConstant): Option<Ast.Constant> {
         if (this.isOnIdentifierConstant(identifierConstant)) {
+            this.startContext();
             const tokenRange = this.singleTokenRange(identifierConstant);
 
             const maybeConstantKind = Ast.constantKindFromIdentifieConstant(identifierConstant);
@@ -1441,12 +1448,14 @@ export class Parser {
             }
 
             this.readToken();
-            return {
+            const astNode: Ast.Constant = {
                 kind: Ast.NodeKind.Constant,
                 tokenRange,
                 terminalNode: true,
                 literal: maybeConstantKind,
-            }
+            };
+            this.endContext(astNode);
+            return astNode;
         }
         else {
             return undefined;
@@ -1454,18 +1463,22 @@ export class Parser {
     }
 
     private readUnaryOperatorAsConstant(operator: Ast.TUnaryExpressionHelperOperator): Ast.Constant {
+        this.startContext();
         const tokenRange = this.singleTokenRange(operator);
         this.readToken();
 
-        return {
+        const astNode: Ast.Constant = {
             kind: Ast.NodeKind.Constant,
             tokenRange,
             terminalNode: true,
             literal: operator,
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     private readKeyword(): Ast.IdentifierExpression {
+        this.startContext();
         const tokenRange = this.singleTokenRange(TokenKind.Identifier);
         const literal = this.readToken();
         const identifier: Ast.Identifier = {
@@ -1475,13 +1488,15 @@ export class Parser {
             literal,
         }
 
-        return {
+        const astNode: Ast.IdentifierExpression = {
             kind: Ast.NodeKind.IdentifierExpression,
             tokenRange,
             terminalNode: false,
             maybeInclusiveConstant: undefined,
             identifier,
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     private fieldSpecificationListReadError(allowOpenMarker: boolean): Option<Error> {
