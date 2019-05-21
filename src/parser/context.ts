@@ -4,7 +4,7 @@ import { Ast } from "./ast";
 export namespace ParserContext {
     export interface State {
         readonly root: Node,
-        readonly nodesById: { [nodeId: number]: Node; },
+        readonly nodesById: Node[],
         nodeIdCounter: number,
     }
 
@@ -29,7 +29,7 @@ export namespace ParserContext {
 
         return {
             root,
-            nodesById: {0: root},
+            nodesById: [root],
             nodeIdCounter: 0,
         }
     }
@@ -50,5 +50,24 @@ export namespace ParserContext {
         state.nodesById[child.nodeId] = child;
 
         return child;
+    }
+
+    export function deepCopy(state: State): State {
+        const nodesById: Node[] = state.nodesById.map(deepCopyNode);
+
+        return {
+            root: nodesById[0],
+            nodesById,
+            nodeIdCounter: state.nodeIdCounter,
+        }
+    }
+
+    function deepCopyNode(node: Node): Node {
+        return {
+            ...node,
+            maybeAstNode: node.maybeAstNode !== undefined
+                ? { ...node.maybeAstNode }
+                : undefined
+        }
     }
 }

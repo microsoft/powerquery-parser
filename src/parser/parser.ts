@@ -20,8 +20,8 @@ export class Parser {
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
-        private readonly contextState: ParserContext.State = ParserContext.empty(),
-        private readonly contextNode: ParserContext.Node = contextState.nodesById[0],
+        private contextState: ParserContext.State = ParserContext.empty(),
+        private contextNode: ParserContext.Node = contextState.nodesById[0],
     ) {
         if (this.lexerSnapshot.tokens.length) {
             this.currentToken = this.lexerSnapshot.tokens[0];
@@ -63,7 +63,7 @@ export class Parser {
             document = this.readSection();
         }
         else {
-            const state = this.backup();
+            const state: ParserState = this.backup();
             try {
                 document = this.readExpression();
                 const maybeErr = this.expectNoMoreTokens();
@@ -713,7 +713,7 @@ export class Parser {
     }
 
     private tryReadPrimaryType(): Result<Ast.TPrimaryType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError> {
-        const state = this.backup();
+        const state: ParserState = this.backup();
 
         const isTableTypeNext = (
             this.isOnIdentifierConstant(Ast.IdentifierConstant.Table)
@@ -1238,7 +1238,7 @@ export class Parser {
 
     private tryReadPrimitiveType(): Result<Ast.PrimitiveType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError> {
         this.startTokenRange(Ast.NodeKind.PrimitiveType);
-        const state = this.backup();
+        const state: ParserState = this.backup();
         const expectedTokenKinds = [
             TokenKind.Identifier,
             TokenKind.KeywordType,
@@ -1878,39 +1878,39 @@ export class Parser {
         }
     }
 
-    private startContext(
-        parent: ParserContext.Node,
-    ): ParserContext.Node {
-        if (!this.currentToken) {
-            throw new CommonError.InvariantError("AssertFailed: this.currentToken is truthy");
-        }
+    // private startContext(
+    //     parent: ParserContext.Node,
+    // ): ParserContext.Node {
+    //     if (!this.currentToken) {
+    //         throw new CommonError.InvariantError("AssertFailed: this.currentToken is truthy");
+    //     }
 
-        const child: ParserContext.Node = {
-            nodeId: this.nodeIdCounter++,
-            codeUnitStart: this.currentToken.positionStart.codeUnit,
-            maybeCodeUnitEnd: undefined,
-            maybeParentId: parent.nodeId,
-            childrenIds: [],
-            maybeAstNode: undefined,
-        }
-        parent.childrenIds.push(child.nodeId);
+    //     const child: ParserContext.Node = {
+    //         nodeId: this.nodeIdCounter++,
+    //         codeUnitStart: this.currentToken.positionStart.codeUnit,
+    //         maybeCodeUnitEnd: undefined,
+    //         maybeParentId: parent.nodeId,
+    //         childrenIds: [],
+    //         maybeAstNode: undefined,
+    //     }
+    //     parent.childrenIds.push(child.nodeId);
 
-        return child;
-    }
+    //     return child;
+    // }
 
-    private finishContext(
-        context: ParserContext.Node,
-        astNode: Ast.TNode,
-    ): Option<ParserContext.Node> {
-        const codeUnitEnd: number = this.currentToken !== undefined
-            ? this.currentToken.positionStart.codeUnit
-            : this.lexerSnapshot.text.length;
+    // private finishContext(
+    //     context: ParserContext.Node,
+    //     astNode: Ast.TNode,
+    // ): Option<ParserContext.Node> {
+    //     const codeUnitEnd: number = this.currentToken !== undefined
+    //         ? this.currentToken.positionStart.codeUnit
+    //         : this.lexerSnapshot.text.length;
 
-        context.maybeCodeUnitEnd = codeUnitEnd;
-        context.maybeAstNode = astNode;
+    //     context.maybeCodeUnitEnd = codeUnitEnd;
+    //     context.maybeAstNode = astNode;
 
-        return context.maybeParent;
-    }
+    //     return context.maybeParent;
+    // }
 
     private isNextTokenKind(tokenKind: TokenKind): boolean {
         return this.isTokenKind(tokenKind, this.tokenIndex + 1);
@@ -1980,16 +1980,21 @@ export class Parser {
         return {
             tokenIndex: this.tokenIndex,
             tokenRangeStackLength: this.tokenRangeStack.length,
+            contextState: ParserContext.deepCopy(this.contextState),
+            contextNodeId: this.contextNode.nodeId,
         };
     }
 
-    private restore(state: ParserState) {
-        this.tokenRangeStack.length = state.tokenRangeStackLength;
-        this.tokenIndex = state.tokenIndex;
+    private restore(backup: ParserState) {
+        this.tokenRangeStack.length = backup.tokenRangeStackLength;
+        this.tokenIndex = backup.tokenIndex;
         this.currentToken = this.lexerSnapshot.tokens[this.tokenIndex]
         this.currentTokenKind = this.currentToken !== undefined
             ? this.currentToken.kind
             : undefined;
+
+        this.contextState = backup.contextState;
+        this.contextNode = this.contextState.nodesById[backup.contextNodeId];
     }
 }
 
@@ -2013,4 +2018,6 @@ interface TokenRangeStackElement {
 interface ParserState {
     readonly tokenRangeStackLength: number,
     readonly tokenIndex: number,
+    readonly contextState: ParserContext.State,
+    readonly contextNodeId: number,
 }
