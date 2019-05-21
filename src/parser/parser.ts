@@ -20,15 +20,8 @@ export class Parser {
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
-        private contextCounter: number = 0,
-        private readonly context: ParserContext.ContextNode = {
-            id: contextCounter++,
-            codeUnitStart: 0,
-            maybeCodeUnitEnd: undefined,
-            maybeParent: undefined,
-            children: [],
-            maybeAstNode: undefined,
-        }
+        private readonly contextState: ParserContext.State = ParserContext.empty(),
+        private readonly contextNode: ParserContext.Node = contextState.nodesById[0],
     ) {
         if (this.lexerSnapshot.tokens.length) {
             this.currentToken = this.lexerSnapshot.tokens[0];
@@ -1886,29 +1879,29 @@ export class Parser {
     }
 
     private startContext(
-        parent: ParserContext.ContextNode,
-    ): ParserContext.ContextNode {
+        parent: ParserContext.Node,
+    ): ParserContext.Node {
         if (!this.currentToken) {
             throw new CommonError.InvariantError("AssertFailed: this.currentToken is truthy");
         }
 
-        const child: ParserContext.ContextNode = {
-            id: this.contextCounter++,
+        const child: ParserContext.Node = {
+            nodeId: this.nodeIdCounter++,
             codeUnitStart: this.currentToken.positionStart.codeUnit,
             maybeCodeUnitEnd: undefined,
-            maybeParent: parent,
-            children: [],
+            maybeParentId: parent.nodeId,
+            childrenIds: [],
             maybeAstNode: undefined,
         }
-        parent.children.push(child);
+        parent.childrenIds.push(child.nodeId);
 
         return child;
     }
 
     private finishContext(
-        context: ParserContext.ContextNode,
+        context: ParserContext.Node,
         astNode: Ast.TNode,
-    ): Option<ParserContext.ContextNode> {
+    ): Option<ParserContext.Node> {
         const codeUnitEnd: number = this.currentToken !== undefined
             ? this.currentToken.positionStart.codeUnit
             : this.lexerSnapshot.text.length;
