@@ -91,6 +91,7 @@ export class Parser {
     }
 
     private readSection(): Ast.Section {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.Section);
 
         const maybeLiteralAttributes = this.maybeReadLiteralAttributes();
@@ -109,7 +110,7 @@ export class Parser {
             sectionMembers.push(this.readSectionMember());
         }
 
-        return {
+        const astNode: Ast.Section = {
             kind: Ast.NodeKind.Section,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
@@ -118,11 +119,14 @@ export class Parser {
             maybeName,
             semicolonConstant,
             sectionMembers
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // sub-item of 12.2.2 Section Documents
     private readSectionMember(): Ast.SectionMember {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.SectionMember);
 
         const maybeLiteralAttributes = this.maybeReadLiteralAttributes();
@@ -130,7 +134,7 @@ export class Parser {
         const namePairedExpression = this.readIdentifierPairedExpression();
         const semicolonConstant = this.readTokenKindAsConstant(TokenKind.Semicolon);
 
-        return {
+        const astNode: Ast.SectionMember = {
             kind: Ast.NodeKind.SectionMember,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
@@ -138,7 +142,9 @@ export class Parser {
             maybeSharedConstant,
             namePairedExpression,
             semicolonConstant,
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.1 Expressions
@@ -261,13 +267,17 @@ export class Parser {
         let maybeOperator = Ast.unaryOperatorFrom(this.currentTokenKind);
 
         if (maybeOperator) {
+            this.startContext();
             this.startTokenRange(Ast.NodeKind.UnaryExpression);
             const expressions: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
 
             while (maybeOperator) {
+                // TODO figure this mess
+                // this.startContext();
                 this.startTokenRange(Ast.NodeKind.UnaryExpressionHelper);
+
                 const operatorConstant = this.readUnaryOperatorAsConstant(maybeOperator);
-                expressions.push({
+                const astNode: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
                     kind: Ast.NodeKind.UnaryExpressionHelper,
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
@@ -275,17 +285,21 @@ export class Parser {
                     operator: maybeOperator,
                     operatorConstant,
                     node: this.readUnaryExpression(),
-                });
+                };
+
+                expressions.push(astNode);
+                // this.endContext(astNode);
                 maybeOperator = Ast.unaryOperatorFrom(this.currentTokenKind);
             };
 
-            const result: Ast.UnaryExpression = {
+            const astNode: Ast.UnaryExpression = {
                 kind: Ast.NodeKind.UnaryExpression,
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 expressions,
             };
-            return result;
+            this.endContext(astNode);
+            return astNode;
         }
         else {
             return this.readTypeExpression();
@@ -396,6 +410,7 @@ export class Parser {
 
     // 12.2.3.11 Literal expression
     private readLiteralExpression(): Ast.LiteralExpression {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.LiteralExpression);
 
         const expectedTokenKinds = [
@@ -417,13 +432,15 @@ export class Parser {
         }
 
         const literal = this.readToken();
-        return {
+        const astNode: Ast.LiteralExpression = {
             kind: Ast.NodeKind.LiteralExpression,
             tokenRange: this.popTokenRange(),
             terminalNode: true,
             literal: literal,
             literalKind: maybeLiteralKind,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.12 Identifier expression
@@ -457,16 +474,19 @@ export class Parser {
 
     // 12.2.3.15 Not-implemented expression
     private readNotImplementedExpression(): Ast.NotImplementedExpression {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.NotImplementedExpression);
 
         const ellipsisConstant = this.readTokenKindAsConstant(TokenKind.Ellipsis);
 
-        return {
+        const astNode: Ast.NotImplementedExpression = {
             kind: Ast.NodeKind.NotImplementedExpression,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             ellipsisConstant,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.16 Invoke expression
