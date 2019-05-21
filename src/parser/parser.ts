@@ -277,7 +277,7 @@ export class Parser {
                 this.startTokenRange(Ast.NodeKind.UnaryExpressionHelper);
 
                 const operatorConstant = this.readUnaryOperatorAsConstant(maybeOperator);
-                const astNode: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
+                const expression: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
                     kind: Ast.NodeKind.UnaryExpressionHelper,
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
@@ -286,8 +286,7 @@ export class Parser {
                     operatorConstant,
                     node: this.readUnaryExpression(),
                 };
-
-                expressions.push(astNode);
+                expressions.push(expression);
                 // this.endContext(astNode);
                 maybeOperator = Ast.unaryOperatorFrom(this.currentTokenKind);
             };
@@ -929,6 +928,7 @@ export class Parser {
 
     // sub-item of 12.2.3.25 Type expression
     private maybeReadFieldTypeSpecification(): Option<Ast.FieldTypeSpecification> {
+        // TODO figure out context
         this.startTokenRange(Ast.NodeKind.FieldTypeSpecification);
         const maybeEqualConstant = this.maybeReadTokenKindAsConstant(TokenKind.Equal);
         if (maybeEqualConstant) {
@@ -986,6 +986,7 @@ export class Parser {
 
     // 12.2.3.27 Error handling expression
     private readErrorHandlingExpression(): Ast.ErrorHandlingExpression {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.ErrorHandlingExpression);
 
         const tryConstant = this.readTokenKindAsConstant(TokenKind.KeywordTry);
@@ -999,7 +1000,7 @@ export class Parser {
             () => this.readExpression(),
         );
 
-        return {
+        const astNode: Ast.ErrorHandlingExpression = {
             kind: Ast.NodeKind.ErrorHandlingExpression,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
@@ -1007,6 +1008,8 @@ export class Parser {
             protectedExpression,
             maybeOtherwiseExpression,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.4 Literal Attributes
@@ -1283,7 +1286,9 @@ export class Parser {
     }
 
     private tryReadPrimitiveType(): Result<Ast.PrimitiveType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError> {
+        // TODO figure out context
         this.startTokenRange(Ast.NodeKind.PrimitiveType);
+
         const state: ParserState = this.backupParserState();
         const expectedTokenKinds = [
             TokenKind.Identifier,
@@ -1507,6 +1512,7 @@ export class Parser {
     private readUnaryOperatorAsConstant(operator: Ast.TUnaryExpressionHelperOperator): Ast.Constant {
         this.startContext();
         const tokenRange = this.singleTokenRange(operator);
+
         this.readToken();
 
         const astNode: Ast.Constant = {
@@ -1522,6 +1528,7 @@ export class Parser {
     private readKeyword(): Ast.IdentifierExpression {
         this.startContext();
         const tokenRange = this.singleTokenRange(TokenKind.Identifier);
+
         const literal = this.readToken();
         const identifier: Ast.Identifier = {
             kind: Ast.NodeKind.Identifier,
@@ -1595,6 +1602,7 @@ export class Parser {
         keywordTokenKind: KeywordTokenKindVariant & TokenKind,
         rightExpressionReader: () => R,
     ): L | Ast.IBinOpKeyword<NodeKindVariant, L, R> {
+        // TODO figure out context
         this.startTokenRange(nodeKind);
         const left = leftExpressionReader()
         const maybeConstant = this.maybeReadTokenKindAsConstant(keywordTokenKind);
@@ -1621,6 +1629,7 @@ export class Parser {
         operatorFrom: (tokenKind: Option<TokenKind>) => Option<(Operator & Ast.TUnaryExpressionHelperOperator)>,
         operandReader: () => Operand,
     ): Operand | Ast.IBinOpExpression<NodeKindVariant, Operator, Operand> {
+        // TODO figure out context
         this.startTokenRange(nodeKind);
         const first = operandReader();
 
@@ -1663,6 +1672,7 @@ export class Parser {
         pairedReader: () => Paired,
     ): Ast.IPairedConstant<NodeKindVariant, Paired> {
         this.startTokenRange(nodeKind);
+
         const constant = constantReader();
         const paired = pairedReader();
         return {
