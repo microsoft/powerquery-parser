@@ -14,7 +14,7 @@ export namespace ParserContext {
     export interface Node {
         readonly nodeId: number,
         readonly codeUnitStart: number,
-        parentId: number,
+        readonly parentId: number,
         readonly childNodeIds: number[],
         maybeAstNode: Option<Ast.TNode>,
     }
