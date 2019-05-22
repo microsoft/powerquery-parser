@@ -1693,15 +1693,15 @@ export class Parser {
         // Why are you trying to avoid a safer approach?
         //      endContext takes an Ast.TNode, but due to generics the parser
         //      can't prove for all types A, B that Ast.IPairedConstant<A, B>
-        //      ends with a Ast.TNode.
+        //      results in an Ast.TNode.
         //
         //      The alternative approach is let the callers of readPairedConstant
-        //      take the return and end the context itself which is messy.
+        //      take the return and end the context themselves, which is messy.
         //
         // Why is it safe?
         //      All Ast.IPairedConstant used by the parser are of Ast.TPairedConstant,
         //      a sub type of Ast.TNode.
-        this.endContext(pairedConstant as unknown as Ast.TNode);
+        this.endContext(pairedConstant as unknown as Ast.TPairedConstant);
 
         return pairedConstant;
     }
@@ -1730,20 +1730,40 @@ export class Parser {
         contentReader: () => Content,
         closeConstantReader: () => Ast.Constant,
     ): Ast.IWrapped<NodeKindVariant, Content> {
+        this.startContext();
         this.startTokenRange(nodeKind);
 
-        const openWrapperConstant = openConstantReader();
-        const content = contentReader();
-        const closeWrapperConstant = closeConstantReader();
+        const openWrapperConstant: Ast.Constant = openConstantReader();
+        const content: Content = contentReader();
+        const closeWrapperConstant: Ast.Constant = closeConstantReader();
 
-        return {
+        const wrapped: Ast.IWrapped<NodeKindVariant, Content> = {
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             openWrapperConstant,
             content,
             closeWrapperConstant,
-        }
+        };
+
+        // UNSAFE MARKER
+        //
+        // Purpose of code block:
+        //      End the context started within the same function.
+        //
+        // Why are you trying to avoid a safer approach?
+        //      endContext takes an Ast.TNode, but due to generics the parser
+        //      can't prove for all types A, B that Ast.IWrapped<A, B>
+        //      results in an Ast.TNode.
+        //
+        //      The alternative approach is let the callers of readWrapped
+        //      take the return and end the context themselves, which is messy.
+        //
+        // Why is it safe?
+        //      All Ast.IWrapped used by the parser are of Ast.TWrapped,
+        //      a sub type of Ast.TNode.
+        this.endContext(wrapped as unknown as Ast.TWrapped);
+        return wrapped;
     }
 
     private readKeyValuePair<NodeKindVariant, Key, Value>(
@@ -1751,19 +1771,39 @@ export class Parser {
         keyReader: () => Key,
         valueReader: () => Value,
     ): Ast.IKeyValuePair<NodeKindVariant, Key, Value> {
+        this.startContext();
         this.startTokenRange(nodeKind);
-        const key = keyReader();
-        const equalConstant = this.readTokenKindAsConstant(TokenKind.Equal);
-        const value = valueReader();
 
-        return {
+        const key: Key = keyReader();
+        const equalConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Equal);
+        const value: Value = valueReader();
+
+        const keyValuePair: Ast.IKeyValuePair<NodeKindVariant, Key, Value> = {
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             key,
             equalConstant,
             value,
-        }
+        };
+        // UNSAFE MARKER
+        //
+        // Purpose of code block:
+        //      End the context started within the same function.
+        //
+        // Why are you trying to avoid a safer approach?
+        //      endContext takes an Ast.TNode, but due to generics the parser
+        //      can't prove for all types A, B, C that Ast.IKeyValuePair<A, B, C>
+        //      results in an Ast.TNode.
+        //
+        //      The alternative approach is let the callers of readKeyValuePair
+        //      take the return and end the context themselves, which is messy.
+        //
+        // Why is it safe?
+        //      All Ast.IKeyValuePair used by the parser are of Ast.TKeyValuePair,
+        //      a sub type of Ast.TNode.
+        this.endContext(keyValuePair as unknown as Ast.TKeyValuePair)
+        return keyValuePair;
     }
 
     private readCsv<T>(
