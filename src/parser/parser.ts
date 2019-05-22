@@ -1671,17 +1671,39 @@ export class Parser {
         constantReader: () => Ast.Constant,
         pairedReader: () => Paired,
     ): Ast.IPairedConstant<NodeKindVariant, Paired> {
+        this.startContext();
         this.startTokenRange(nodeKind);
 
-        const constant = constantReader();
-        const paired = pairedReader();
-        return {
+        const constant: Ast.Constant = constantReader();
+        const paired: Paired = pairedReader();
+
+        const pairedConstant: Ast.IPairedConstant<NodeKindVariant, Paired> = {
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             constant,
             paired,
         }
+
+        // UNSAFE MARKER
+        //
+        // Purpose of code block:
+        //      End the context started within the same function.
+        //
+        // Why are you trying to avoid a safer approach?
+        //      endContext takes an Ast.TNode, but due to generics the parser
+        //      can't prove for all types A, B that Ast.IPairedConstant<A, B>
+        //      ends with a Ast.TNode.
+        //
+        //      The alternative approach is let the callers of readPairedConstant
+        //      take the return and end the context itself which is messy.
+        //
+        // Why is it safe?
+        //      All Ast.IPairedConstant used by the parser are of Ast.TPairedConstant,
+        //      a sub type of Ast.TNode.
+        this.endContext(pairedConstant as unknown as Ast.TNode);
+
+        return pairedConstant;
     }
 
     private maybeReadPairedConstant<NodeKindVariant, Paired>(
