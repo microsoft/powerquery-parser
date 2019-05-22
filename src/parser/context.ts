@@ -52,6 +52,7 @@ export namespace ParserContext {
         }
 
         state.nodesById.set(child.nodeId, child);
+        parent.childNodeIds.push(child.nodeId);
 
         return child;
     }
