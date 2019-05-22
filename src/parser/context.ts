@@ -10,7 +10,7 @@ export namespace ParserContext {
     export interface State {
         readonly root: Node,
         readonly nodesById: NodeMap,
-        readonly terminalNodeIds: number[],
+        terminalNodeIds: number[],
         nodeIdCounter: number,
     }
 
@@ -18,7 +18,7 @@ export namespace ParserContext {
         readonly nodeId: number,
         readonly codeUnitStart: number,
         readonly parentId: number,
-        readonly childNodeIds: number[],
+        childNodeIds: number[],
         maybeAstNode: Option<Ast.TNode>,
     }
 
@@ -63,7 +63,7 @@ export namespace ParserContext {
     ): Node {
         const parentId: number = oldNode.parentId;
         if (parentId < 0) {
-            throw new CommonError.InvariantError(`parentId < 0: ${parentId}`);
+            throw new CommonError.InvariantError(`parentId < 0: ${parentId}.`);
         }
 
         if (astNode.terminalNode) {
@@ -71,21 +71,52 @@ export namespace ParserContext {
         }
 
         oldNode.maybeAstNode = astNode;
-        const maybeParent: Option<Node> = state.nodesById.get(parentId);
-        if (!maybeParent) {
-            throw new CommonError.InvariantError(`parentId not in state: ${parentId}`)
-        }
-        
-        const parent: Node = maybeParent;
-        return parent;
+        return expectNode(state.nodesById, parentId);
     }
 
-    // export function deleteContext(
-    //     state: State,
-    //     node: Node,
-    // ) {
-    //     state.nodes
-    // }
+    export function deleteContext(
+        state: State,
+        node: Node,
+    ): Node {
+        const nodesById: NodeMap = state.nodesById;
+        const terminalNodeIds: number[] = state.terminalNodeIds;
+
+        const parentId: number = node.parentId;
+        const nodeId: number = node.nodeId;
+
+        if (!nodesById.has(nodeId)) {
+            throw new CommonError.InvariantError(`node.nodeId not in state: ${nodeId}.`);
+        }
+        nodesById.delete(nodeId);
+
+        const maybeTerminalIndex = terminalNodeIds.indexOf(nodeId);
+        if (maybeTerminalIndex) {
+            const terminalIndex: number = maybeTerminalIndex;
+            state.terminalNodeIds = [
+                ...terminalNodeIds.slice(0, terminalIndex),
+                ...terminalNodeIds.slice(terminalIndex + 1),
+            ]
+        }
+
+        if (parentId === -1) {
+            throw new CommonError.InvariantError(`cannot delete root context.`);
+        }
+
+        const parent: Node = expectNode(state.nodesById, parentId);
+        const childNodeIds: number[] = parent.childNodeIds;
+        const childNodeIndex: number = childNodeIds.indexOf(nodeId);
+
+        if (childNodeIndex === -1) {
+            throw new CommonError.InvariantError(`nodeId ${nodeId} considers ${parentId} to be a parent, but isn't listed as a child of the parent.`)
+        }
+
+        parent.childNodeIds = [
+            ...childNodeIds.slice(0, childNodeIndex),
+            ...childNodeIds.slice(childNodeIndex + 1),
+        ];
+
+        return parent;
+    }
 
     export function deepCopy(state: State): State {
         const nodesById: NodeMap = new Map<number, Node>();
@@ -93,15 +124,9 @@ export namespace ParserContext {
             nodesById.set(key, deepCopyNode(value));
         });
 
-        const maybeRoot: Option<Node> = state.nodesById.get(0);
-        if (!maybeRoot) {
-            throw new CommonError.InvariantError(`root not present in state`)
-        }
-        const root: Node = maybeRoot;
-
         return {
-            root,
-            nodesById: state.nodesById,
+            root: expectNode(nodesById, 0),
+            nodesById: nodesById,
             terminalNodeIds: state.terminalNodeIds.slice(),
             nodeIdCounter: state.nodeIdCounter,
         }
@@ -114,5 +139,15 @@ export namespace ParserContext {
                 ? { ...node.maybeAstNode }
                 : undefined
         }
+    }
+
+    function expectNode(nodesById: NodeMap, nodeId: number): Node {
+        const maybeNode: Option<Node> = nodesById.get(nodeId);
+        if (maybeNode === undefined) {
+            throw new CommonError.InvariantError(`nodeId (${nodeId}) wasn't in State.`);
+        }
+        const node: Node = maybeNode;
+
+        return node;
     }
 }
