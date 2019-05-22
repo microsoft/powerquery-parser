@@ -1211,19 +1211,25 @@ export class Parser {
     }
 
     private readIdentifier(): Ast.Identifier {
+        this.startContext();
+
         const tokenRange = this.singleTokenRange(TokenKind.Identifier);
         const literal = this.readTokenKind(TokenKind.Identifier);
 
-        return {
+        const astNode: Ast.Identifier = {
             kind: Ast.NodeKind.Identifier,
             tokenRange,
             terminalNode: true,
             literal,
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     private readGeneralizedIdentifier(): Ast.GeneralizedIdentifier {
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.GeneralizedIdentifier);
+
         let literal;
 
         const currentTokenKind = this.currentTokenKind;
@@ -1267,12 +1273,14 @@ export class Parser {
             literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
         }
 
-        return {
+        const astNode: Ast.GeneralizedIdentifier = {
             kind: Ast.NodeKind.GeneralizedIdentifier,
             tokenRange: this.popTokenRange(),
             terminalNode: true,
             literal,
-        }
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     private readPrimitiveType(): Ast.PrimitiveType {
@@ -1813,19 +1821,38 @@ export class Parser {
         const values: Ast.ICsv<T>[] = [];
 
         while (continueReadingValues) {
+            this.startContext();
             this.startTokenRange(Ast.NodeKind.Csv);
 
-            const node = valueReader();
-            const maybeCommaConstant = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
+            const node: T = valueReader();
+            const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
             continueReadingValues = maybeCommaConstant !== undefined;
 
-            values.push({
+            const value: Ast.ICsv<T> = {
                 kind: Ast.NodeKind.Csv,
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 node,
                 maybeCommaConstant,
-            })
+            }
+            values.push(value);
+            // UNSAFE MARKER
+            //
+            // Purpose of code block:
+            //      End the context started within the same function.
+            //
+            // Why are you trying to avoid a safer approach?
+            //      endContext takes an Ast.TNode, but due to generics the parser
+            //      can't prove for all types T that Ast.ICsv<T>
+            //      results in an Ast.TNode.
+            //
+            //      The alternative approach is let the callers of readCsv
+            //      take the return and end the context themselves, which is messy.
+            //
+            // Why is it safe?
+            //      All Ast.Csv used by the parser are of Ast.TCsv,
+            //      a sub type of Ast.TNode.
+            this.endContext(value as unknown as Ast.TCsv);
         }
 
         return values;
