@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Option, CommonError } from "../common";
 import { Ast } from "./ast";
 
