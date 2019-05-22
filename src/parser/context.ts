@@ -11,7 +11,6 @@ export namespace ParserContext {
     export interface Node {
         readonly nodeId: number,
         readonly codeUnitStart: number,
-        codeUnitEnd: number,
         parentId: number,
         childrenIds: number[],
         maybeAstNode: Option<Ast.TNode>,
@@ -21,7 +20,6 @@ export namespace ParserContext {
         const root: Node = {
             nodeId: 0,
             codeUnitStart: 0,
-            codeUnitEnd: -1,
             parentId: -1,
             childrenIds: [],
             maybeAstNode: undefined,
@@ -41,7 +39,6 @@ export namespace ParserContext {
         const child: Node = {
             nodeId: state.nodeIdCounter,
             codeUnitStart,
-            codeUnitEnd: -1,
             parentId: parent.nodeId,
             childrenIds: [],
             maybeAstNode: undefined,
