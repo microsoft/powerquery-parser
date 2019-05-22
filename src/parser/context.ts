@@ -1,10 +1,11 @@
-import { Option } from "../common";
+import { Option, CommonError } from "../common";
 import { Ast } from "./ast";
 
 export namespace ParserContext {
     export interface State {
         readonly root: Node,
         readonly nodesById: Node[],
+        readonly terminalNodeIds: number[],
         nodeIdCounter: number,
     }
 
@@ -12,7 +13,7 @@ export namespace ParserContext {
         readonly nodeId: number,
         readonly codeUnitStart: number,
         parentId: number,
-        childrenIds: number[],
+        readonly childNodeIds: number[],
         maybeAstNode: Option<Ast.TNode>,
     }
 
@@ -21,13 +22,14 @@ export namespace ParserContext {
             nodeId: 0,
             codeUnitStart: 0,
             parentId: -1,
-            childrenIds: [],
+            childNodeIds: [],
             maybeAstNode: undefined,
         };
 
         return {
             root,
             nodesById: [root],
+            terminalNodeIds: [],
             nodeIdCounter: 0,
         }
     }
@@ -40,7 +42,7 @@ export namespace ParserContext {
             nodeId: state.nodeIdCounter,
             codeUnitStart,
             parentId: parent.nodeId,
-            childrenIds: [],
+            childNodeIds: [],
             maybeAstNode: undefined,
         }
 
@@ -49,12 +51,31 @@ export namespace ParserContext {
         return child;
     }
 
+    export function endContext(
+        state: State,
+        oldNode: Node,
+        astNode: Ast.TNode,
+    ): Node {
+        const parentId: number = oldNode.parentId;
+        if (parentId < 0) {
+            throw new CommonError.InvariantError("AssertFailed: parentId >= 0");
+        }
+
+        if (astNode.terminalNode) {
+            state.terminalNodeIds.push(oldNode.nodeId);
+        }
+
+        oldNode.maybeAstNode = astNode;
+        return state.nodesById[parentId];
+    }
+
     export function deepCopy(state: State): State {
         const nodesById: Node[] = state.nodesById.map(deepCopyNode);
 
         return {
             root: nodesById[0],
-            nodesById,
+            nodesById: state.nodesById.slice(),
+            terminalNodeIds: state.terminalNodeIds.slice(),
             nodeIdCounter: state.nodeIdCounter,
         }
     }

@@ -2066,14 +2066,11 @@ export class Parser {
     }
 
     private endContext(astNode: Ast.TNode) {
-        const oldContextNode: ParserContext.Node = this.contextNode;
-        const parentId: number = oldContextNode.parentId;
-        if (parentId < 0) {
-            throw new CommonError.InvariantError("AssertFailed: parentId >= 0");
-        }
-
-        oldContextNode.maybeAstNode = astNode;
-        this.contextNode = this.contextState.nodesById[parentId];
+        this.contextNode = ParserContext.endContext(
+            this.contextState,
+            this.contextNode,
+            astNode,
+        );
     }
 
     private isNextTokenKind(tokenKind: TokenKind): boolean {
