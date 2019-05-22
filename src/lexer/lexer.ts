@@ -155,14 +155,7 @@ export namespace Lexer {
             };
         }
 
-        // unsafe action:
-        //      casting ReadonlyArray<SplitLine> to SplitLine[]
-        // what I'm trying to avoid:
-        //      the cost of properly casting, aka deep cloning the object
-        // why it's safe:
-        //      the array is generated for this function block,
-        //      and it never leaves this function block.
-        const splitLines: SplitLine[] = splitOnLineTerminators(text) as SplitLine[];
+        const splitLines: SplitLine[] = splitOnLineTerminators(text);
 
         const rangeStart: RangePosition = range.start;
         const lineStart: TLine = state.lines[rangeStart.lineNumber];
@@ -337,7 +330,7 @@ export namespace Lexer {
         lineTerminator: string,
     }
 
-    function splitOnLineTerminators(text: string): ReadonlyArray<SplitLine> {
+    function splitOnLineTerminators(text: string): SplitLine[] {
         let lines: SplitLine[] = text
             .split("\r\n")
             .map((text: string) => {
