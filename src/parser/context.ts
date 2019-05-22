@@ -4,9 +4,12 @@ import { Option, CommonError } from "../common";
 import { Ast } from "./ast";
 
 export namespace ParserContext {
+
+    export type NodeMap = Map<number, Node>;
+
     export interface State {
         readonly root: Node,
-        readonly nodesById: Node[],
+        readonly nodesById: NodeMap,
         readonly terminalNodeIds: number[],
         nodeIdCounter: number,
     }
@@ -30,7 +33,7 @@ export namespace ParserContext {
 
         return {
             root,
-            nodesById: [root],
+            nodesById: new Map<number, Node>([[0, root]]),
             terminalNodeIds: [],
             nodeIdCounter: 0,
         }
@@ -48,7 +51,7 @@ export namespace ParserContext {
             maybeAstNode: undefined,
         }
 
-        state.nodesById[child.nodeId] = child;
+        state.nodesById.set(child.nodeId, child);
 
         return child;
     }
@@ -60,7 +63,7 @@ export namespace ParserContext {
     ): Node {
         const parentId: number = oldNode.parentId;
         if (parentId < 0) {
-            throw new CommonError.InvariantError("AssertFailed: parentId >= 0");
+            throw new CommonError.InvariantError(`parentId < 0: ${parentId}`);
         }
 
         if (astNode.terminalNode) {
@@ -68,15 +71,37 @@ export namespace ParserContext {
         }
 
         oldNode.maybeAstNode = astNode;
-        return state.nodesById[parentId];
+        const maybeParent: Option<Node> = state.nodesById.get(parentId);
+        if (!maybeParent) {
+            throw new CommonError.InvariantError(`parentId not in state: ${parentId}`)
+        }
+        
+        const parent: Node = maybeParent;
+        return parent;
     }
 
+    // export function deleteContext(
+    //     state: State,
+    //     node: Node,
+    // ) {
+    //     state.nodes
+    // }
+
     export function deepCopy(state: State): State {
-        const nodesById: Node[] = state.nodesById.map(deepCopyNode);
+        const nodesById: NodeMap = new Map<number, Node>();
+        state.nodesById.forEach((value: Node, key: number) => {
+            nodesById.set(key, deepCopyNode(value));
+        });
+
+        const maybeRoot: Option<Node> = state.nodesById.get(0);
+        if (!maybeRoot) {
+            throw new CommonError.InvariantError(`root not present in state`)
+        }
+        const root: Node = maybeRoot;
 
         return {
-            root: nodesById[0],
-            nodesById: state.nodesById.slice(),
+            root,
+            nodesById: state.nodesById,
             terminalNodeIds: state.terminalNodeIds.slice(),
             nodeIdCounter: state.nodeIdCounter,
         }

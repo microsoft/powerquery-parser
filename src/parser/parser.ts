@@ -15,14 +15,27 @@ import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 export class Parser {
     private currentToken: Option<Token>;
     private currentTokenKind: Option<TokenKind>;
+    private contextNode: ParserContext.Node;
 
     private constructor(
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
         private contextState: ParserContext.State = ParserContext.empty(),
-        private contextNode: ParserContext.Node = contextState.nodesById[0],
     ) {
+        // UNSAFE MARKER
+        //
+        // Purpose of code block:
+        //      Initialize contextNode to the root context.
+        //
+        // Why are you trying to avoid a safer approach?
+        //      The root node is guaranteed to exist as the function call which
+        //      initializes the parser's context state creates a root.
+        //
+        // Why is it safe?
+        //      See above.
+        this.contextNode = this.contextState.nodesById.get(0) as ParserContext.Node;
+
         if (this.lexerSnapshot.tokens.length) {
             this.currentToken = this.lexerSnapshot.tokens[0];
             this.currentTokenKind = this.currentToken.kind;
@@ -913,7 +926,7 @@ export class Parser {
                 };
                 this.endContext(field);
 
-                const csv:  Ast.ICsv<Ast.FieldSpecification> = {
+                const csv: Ast.ICsv<Ast.FieldSpecification> = {
                     kind: Ast.NodeKind.Csv,
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
@@ -1655,7 +1668,7 @@ export class Parser {
         operatorFrom: (tokenKind: Option<TokenKind>) => Option<(Operator & Ast.TUnaryExpressionHelperOperator)>,
         operandReader: () => Operand,
     ): Operand | Ast.IBinOpExpression<NodeKindVariant, Operator, Operand> {
-        // TODO figure out context
+        this.startContext();
         this.startTokenRange(nodeKind);
         const first = operandReader();
 
@@ -1688,6 +1701,7 @@ export class Parser {
         }
         else {
             this.popTokenRangeNoop();
+            this.deleteContext();
             return first;
         }
     }
@@ -2073,6 +2087,10 @@ export class Parser {
         );
     }
 
+    private deleteContext() {
+
+    }
+
     private isNextTokenKind(tokenKind: TokenKind): boolean {
         return this.isTokenKind(tokenKind, this.tokenIndex + 1);
     }
@@ -2155,8 +2173,24 @@ export class Parser {
             : undefined;
 
         this.contextState = backup.contextState;
-        this.contextNode = this.contextState.nodesById[backup.contextNodeId];
+
+        const maybeContextNode: Option<ParserContext.Node> = this.contextState.nodesById.get(backup.contextNodeId);
+        if (!maybeContextNode) {
+            throw new CommonError.InvariantError(`backup contextNodeId doesn't exist: ${backup.contextNodeId}`)
+        }
+        const contextNode: ParserContext.Node = maybeContextNode;
+        this.contextNode = contextNode;
     }
+}
+
+export interface ParseOk {
+    readonly document: Ast.TDocument,
+    readonly nodesById: { [nodeId: number]: Ast.TNode; }
+}
+
+export interface ParseErr {
+    readonly error: ParserError.TParserError,
+    readonly context: ParserContext.Node,
 }
 
 const enum ParenthesisDisambiguation {
