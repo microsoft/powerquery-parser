@@ -272,8 +272,7 @@ export class Parser {
             const expressions: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
 
             while (maybeOperator) {
-                // TODO figure this mess
-                // this.startContext();
+                this.startContext();
                 this.startTokenRange(Ast.NodeKind.UnaryExpressionHelper);
 
                 const operatorConstant = this.readUnaryOperatorAsConstant(maybeOperator);
@@ -287,7 +286,8 @@ export class Parser {
                     node: this.readUnaryExpression(),
                 };
                 expressions.push(expression);
-                // this.endContext(astNode);
+                this.endContext(expression);
+
                 maybeOperator = Ast.unaryOperatorFrom(this.currentTokenKind);
             };
 
@@ -529,8 +529,9 @@ export class Parser {
 
     // 12.2.3.19 Item access expression
     private readItemAccessExpression(): Ast.ItemAccessExpression {
-        // TODO figure out context
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.ItemAccessExpression);
+
         const maybeReturn = this.readWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
             Ast.NodeKind.ItemAccessExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
@@ -540,9 +541,10 @@ export class Parser {
 
         // hack to conditionally read '?' after closeWrapperConstant
         const maybeOptionalConstant = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
+        let astNode: Ast.ItemAccessExpression;
         if (maybeOptionalConstant) {
             const newTokenRange = this.popTokenRange();
-            return {
+            astNode = {
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
                 ...maybeReturn
@@ -550,11 +552,14 @@ export class Parser {
         }
         else {
             this.popTokenRangeNoop();
-            return {
+            astNode = {
                 maybeOptionalConstant: undefined,
                 ...maybeReturn
-            }
+            };
         }
+
+        this.endContext(astNode);
+        return astNode;
     }
 
     // sub-item of 12.2.3.20 Field access expressions
@@ -564,8 +569,9 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
-        // TODO figure out context
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.FieldProjection);
+
         const maybeReturn = this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
@@ -577,11 +583,11 @@ export class Parser {
         );
 
         // hack to conditionally read '?' after closeWrapperConstant
-        // and to add in "implicit" metatdata
         const maybeOptionalConstant = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
+        let astNode: Ast.FieldProjection;
         if (maybeOptionalConstant) {
             const newTokenRange = this.popTokenRange();
-            return {
+            astNode = {
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
                 ...maybeReturn
@@ -589,17 +595,21 @@ export class Parser {
         }
         else {
             this.popTokenRangeNoop();
-            return {
+            astNode = {
                 maybeOptionalConstant: undefined,
                 ...maybeReturn,
             };
         }
+
+        this.endContext(astNode);
+        return astNode;
     }
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldSelector(allowOptional: boolean): Ast.FieldSelector {
-        // TODO figure out context
+        this.startContext();
         this.startTokenRange(Ast.NodeKind.FieldSelector);
+
         const maybeReturn = this.readWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
             Ast.NodeKind.FieldSelector,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
@@ -608,11 +618,11 @@ export class Parser {
         );
 
         // hack to conditionally read '?' after closeWrapperConstant
-        // and to add in "implicit" metatdata
         const maybeOptionalConstant = allowOptional && this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
+        let astNode: Ast.FieldSelector;
         if (maybeOptionalConstant) {
             const newTokenRange = this.popTokenRange();
-            return {
+            astNode = {
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
                 ...maybeReturn
@@ -620,11 +630,14 @@ export class Parser {
         }
         else {
             this.popTokenRangeNoop();
-            return {
+            astNode = {
                 maybeOptionalConstant: undefined,
                 ...maybeReturn,
             };
         }
+
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.21 Function expression
@@ -879,8 +892,9 @@ export class Parser {
             }
 
             else if (this.isOnTokenKind(TokenKind.Identifier)) {
-                // TODO figure out context
+                this.startContext();
                 this.startTokenRange(Ast.NodeKind.Csv);
+                this.startContext();
                 this.startTokenRange(Ast.NodeKind.FieldSpecification);
 
                 const maybeOptionalConstant = this.maybeReadIdentifierConstantAsConstant(Ast.IdentifierConstant.Optional);
@@ -897,13 +911,17 @@ export class Parser {
                     name,
                     maybeFieldTypeSpeification,
                 };
-                fields.push({
+                this.endContext(field);
+
+                const csv:  Ast.ICsv<Ast.FieldSpecification> = {
                     kind: Ast.NodeKind.Csv,
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     node: field,
                     maybeCommaConstant,
-                })
+                };
+                this.endContext(csv);
+                fields.push(csv);
             }
 
             else {
