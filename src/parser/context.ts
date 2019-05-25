@@ -91,12 +91,12 @@ export namespace ParserContext {
         nodesById.delete(nodeId);
 
         const maybeTerminalIndex = terminalNodeIds.indexOf(nodeId);
-        if (maybeTerminalIndex) {
+        if (maybeTerminalIndex !== -1) {
             const terminalIndex: number = maybeTerminalIndex;
             state.terminalNodeIds = [
                 ...terminalNodeIds.slice(0, terminalIndex),
                 ...terminalNodeIds.slice(terminalIndex + 1),
-            ]
+            ];
         }
 
         if (parentId === -1) {
