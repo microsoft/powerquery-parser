@@ -62,17 +62,18 @@ export namespace ParserContext {
         oldNode: Node,
         astNode: Ast.TNode,
     ): Node {
-        const parentId: number = oldNode.parentId;
-        if (parentId < 0) {
-            throw new CommonError.InvariantError(`parentId < 0: ${parentId}.`);
-        }
-
         if (astNode.terminalNode) {
             state.terminalNodeIds.push(oldNode.nodeId);
         }
 
         oldNode.maybeAstNode = astNode;
-        return expectNode(state.nodesById, parentId);
+        const parentId: number = oldNode.parentId;
+        if (parentId !== -1) {
+            return expectNode(state.nodesById, parentId);
+        }
+        else {
+            return oldNode;
+        }
     }
 
     export function deleteContext(

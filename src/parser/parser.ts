@@ -89,7 +89,8 @@ export class Parser {
                     throw maybeErr;
                 }
             }
-            catch (firstErr) {
+            catch (expressionError) {
+                const expressionContextState = ParserContext.deepCopy(this.contextState);
                 this.restoreParserState(state);
                 try {
                     document = this.readSection();
@@ -99,11 +100,13 @@ export class Parser {
                     }
                 }
                 catch {
-                    throw firstErr;
+                    this.contextState = expressionContextState;
+                    throw expressionError;
                 }
             }
         }
 
+        this.endContext(document);
         return document;
     }
 
