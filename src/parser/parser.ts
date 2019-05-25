@@ -37,6 +37,11 @@ export class Parser {
         const parser = new Parser(lexerSnapshot);
         try {
             const document: Ast.TDocument = parser.readDocument();
+            if (parser.maybeContextNode !== undefined) {
+                const details = { maybeContextNode: parser.maybeContextNode }
+                throw new CommonError.InvariantError("maybeContextNode should be falsey, there shouldn't be an open context", details);
+            }
+
             return {
                 kind: ResultKind.Ok,
                 value: {
@@ -1238,7 +1243,7 @@ export class Parser {
 
     private readRecursivePrimaryExpression(head: Ast.TPrimaryExpression): Ast.RecursivePrimaryExpression {
         const tokenRangeStart = head.tokenRange.startTokenIndex;
-        const nodeKind: Ast.NodeKind.RecursivePrimaryExpression =Ast.NodeKind.RecursivePrimaryExpression;
+        const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
         this.startContext(nodeKind);
         this.startTokenRangeAt(nodeKind, tokenRangeStart);
 
