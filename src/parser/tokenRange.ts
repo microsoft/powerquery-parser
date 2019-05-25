@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { StringHelpers } from "../common";
 
-export type TokenRangeMap<T> = { [key: string]: T; }
+export type TokenRangeMap<T> = Map<string, T>
 
 // keep track of how many tokens and code units make up a TNode in the range of [start, end).
 export interface TokenRange {

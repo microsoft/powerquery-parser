@@ -42,22 +42,26 @@ export class Parser {
         }
     }
 
-    public static run(lexerSnapshot: LexerSnapshot): Result<Ast.TDocument, ParserError.TParserError> {
+    public static run(lexerSnapshot: LexerSnapshot): Result<ParseOk, ParserError.TParserError> {
         if (!lexerSnapshot.tokens.length) {
             throw new CommonError.InvariantError("the parser received an empty token array");
         }
 
         const parser = new Parser(lexerSnapshot);
         try {
+            const document: Ast.TDocument = parser.readDocument();
             return {
                 kind: ResultKind.Ok,
-                value: parser.readDocument(),
+                value: {
+                    document,
+                    nodesById: parser.contextState.nodesById,
+                },
             };
         }
         catch (e) {
             let error: ParserError.TParserError;
             if (ParserError.isTInnerParserError(e)) {
-                error = new ParserError.ParserError(e);
+                error = new ParserError.ParserError(e, parser.contextState);
             }
             else {
                 error = CommonError.ensureCommonError(e);
@@ -2214,12 +2218,7 @@ export class Parser {
 
 export interface ParseOk {
     readonly document: Ast.TDocument,
-    readonly nodesById: { [nodeId: number]: Ast.TNode; }
-}
-
-export interface ParseErr {
-    readonly error: ParserError.TParserError,
-    readonly context: ParserContext.Node,
+    readonly nodesById: ParserContext.NodeMap,
 }
 
 const enum ParenthesisDisambiguation {

@@ -2,9 +2,10 @@
 // Licensed under the MIT license.
 import { CommonError } from "../common";
 import { Option } from "../common/option";
-import { TokenKind, Token } from "../lexer/token";
+import { Token, TokenKind } from "../lexer/token";
 import { Localization } from "../localization/error";
 import { Ast } from "./ast";
+import { ParserContext } from "./context";
 
 export namespace ParserError {
 
@@ -27,6 +28,7 @@ export namespace ParserError {
     export class ParserError extends Error {
         constructor(
             readonly innerError: TInnerParserError,
+            readonly context: ParserContext.State,
         ) {
             super(innerError.message);
         }

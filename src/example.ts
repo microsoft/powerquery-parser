@@ -8,7 +8,6 @@ parseText(`if true then 1 else 2`);
 
 // @ts-ignore
 function parseText(text: string): Lexer.State {
-    console.log(JSON.stringify(lexAndParse(text), null, 4));
     const parseResult = lexAndParse(text);
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, null, 4));
