@@ -8,51 +8,65 @@ export namespace ParserContext {
     export type NodeMap = Map<number, Node>;
 
     export interface State {
-        readonly root: Node,
+        readonly root: Root,
         readonly nodesById: NodeMap,
         terminalNodeIds: number[],
         nodeIdCounter: number,
     }
 
+    export interface Root {
+        maybeNode: Option<Node>
+    }
+
     export interface Node {
         readonly nodeId: number,
-        readonly codeUnitStart: number,
-        readonly parentId: number,
+        readonly tokenIndex: number,
+        readonly maybeParentId: Option<number>,
         childNodeIds: number[],
         maybeAstNode: Option<Ast.TNode>,
     }
 
     export function empty(): State {
-        const root: Node = {
-            nodeId: 0,
-            codeUnitStart: 0,
-            parentId: -1,
-            childNodeIds: [],
-            maybeAstNode: undefined,
-        };
-
         return {
-            root,
-            nodesById: new Map<number, Node>([[0, root]]),
+            root: {
+                maybeNode: undefined,
+            },
+            nodesById: new Map(),
             terminalNodeIds: [],
             nodeIdCounter: 0,
         }
     }
 
-    // assumes parent is in state
-    export function addChild(state: State, parent: Node, codeUnitStart: number): Node {
+    export function expectNode(nodesById: NodeMap, nodeId: number): Node {
+        const maybeNode: Option<Node> = maybeGetNode(nodesById, nodeId);
+        if (maybeNode === undefined) {
+            throw new CommonError.InvariantError(`nodeId (${nodeId}) wasn't in State.`);
+        }
+        return maybeNode;
+    }
+
+    export function addChild(state: State, maybeParent: Option<Node>, tokenIndex: number): Node {
         state.nodeIdCounter += 1;
+        const newNodeId = state.nodeIdCounter;
+
+        let maybeParentId: Option<number>;
+        if (maybeParent) {
+            const parent: Node = maybeParent;
+            maybeParentId = parent.nodeId;
+            parent.childNodeIds.push(newNodeId);
+        }
+        else {
+            maybeParentId = undefined;
+        }
 
         const child: Node = {
             nodeId: state.nodeIdCounter,
-            codeUnitStart,
-            parentId: parent.nodeId,
+            tokenIndex,
+            maybeParentId,
             childNodeIds: [],
             maybeAstNode: undefined,
         }
-
         state.nodesById.set(child.nodeId, child);
-        parent.childNodeIds.push(child.nodeId);
 
         return child;
     }
@@ -61,29 +75,26 @@ export namespace ParserContext {
         state: State,
         oldNode: Node,
         astNode: Ast.TNode,
-    ): Node {
+    ): Option<Node> {
         if (astNode.terminalNode) {
             state.terminalNodeIds.push(oldNode.nodeId);
         }
 
         oldNode.maybeAstNode = astNode;
-        const parentId: number = oldNode.parentId;
-        if (parentId !== -1) {
-            return expectNode(state.nodesById, parentId);
-        }
-        else {
-            return oldNode;
-        }
+        const maybeParentId: Option<number> = oldNode.maybeParentId;
+        return maybeParentId !== undefined
+            ? expectNode(state.nodesById, maybeParentId)
+            : undefined;
     }
 
     export function deleteContext(
         state: State,
         node: Node,
-    ): Node {
+    ): Option<Node> {
         const nodesById: NodeMap = state.nodesById;
         const terminalNodeIds: number[] = state.terminalNodeIds;
 
-        const parentId: number = node.parentId;
+        const maybeParentId: Option<number> = node.maybeParentId;
         const nodeId: number = node.nodeId;
 
         if (!nodesById.has(nodeId)) {
@@ -100,10 +111,11 @@ export namespace ParserContext {
             ];
         }
 
-        if (parentId === -1) {
-            throw new CommonError.InvariantError(`cannot delete root context.`);
+        if (maybeParentId === undefined) {
+            return undefined;
         }
 
+        const parentId: number = maybeParentId;
         const parent: Node = expectNode(state.nodesById, parentId);
         const childNodeIds: number[] = parent.childNodeIds;
         const childNodeIndex: number = childNodeIds.indexOf(nodeId);
@@ -127,7 +139,9 @@ export namespace ParserContext {
         });
 
         return {
-            root: expectNode(nodesById, 0),
+            root: {
+                maybeNode: maybeGetNode(nodesById, 0),
+            },
             nodesById: nodesById,
             terminalNodeIds: state.terminalNodeIds.slice(),
             nodeIdCounter: state.nodeIdCounter,
@@ -143,13 +157,8 @@ export namespace ParserContext {
         }
     }
 
-    function expectNode(nodesById: NodeMap, nodeId: number): Node {
+    function maybeGetNode(nodesById: NodeMap, nodeId: number): Option<Node> {
         const maybeNode: Option<Node> = nodesById.get(nodeId);
-        if (maybeNode === undefined) {
-            throw new CommonError.InvariantError(`nodeId (${nodeId}) wasn't in State.`);
-        }
-        const node: Node = maybeNode;
-
-        return node;
+        return maybeNode;
     }
 }

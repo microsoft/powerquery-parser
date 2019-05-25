@@ -15,27 +15,14 @@ import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 export class Parser {
     private currentToken: Option<Token>;
     private currentTokenKind: Option<TokenKind>;
-    private contextNode: ParserContext.Node;
 
     private constructor(
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
         private contextState: ParserContext.State = ParserContext.empty(),
+        private maybeContextNode: Option<ParserContext.Node> = undefined,
     ) {
-        // UNSAFE MARKER
-        //
-        // Purpose of code block:
-        //      Initialize contextNode to the root context.
-        //
-        // Why are you trying to avoid a safer approach?
-        //      The root node is guaranteed to exist as the function call which
-        //      initializes the parser's context state creates a root.
-        //
-        // Why is it safe?
-        //      See above.
-        this.contextNode = this.contextState.nodesById.get(0) as ParserContext.Node;
-
         if (this.lexerSnapshot.tokens.length) {
             this.currentToken = this.lexerSnapshot.tokens[0];
             this.currentTokenKind = this.currentToken.kind;
@@ -106,7 +93,6 @@ export class Parser {
             }
         }
 
-        this.endContext(document);
         return document;
     }
 
@@ -2101,29 +2087,33 @@ export class Parser {
     }
 
     private startContext() {
-        const codeUnitEnd: number = this.currentToken !== undefined
-            ? this.currentToken.positionStart.codeUnit
-            : -1;
-
-        this.contextNode = ParserContext.addChild(
+        this.maybeContextNode = ParserContext.addChild(
             this.contextState,
-            this.contextNode,
-            codeUnitEnd,
+            this.maybeContextNode,
+            this.tokenIndex,
         );
     }
 
     private endContext(astNode: Ast.TNode) {
-        this.contextNode = ParserContext.endContext(
+        if (this.maybeContextNode === undefined) {
+            throw new CommonError.InvariantError("maybeContextNode should be truthy, can't end context if it doesn't exist.");
+        }
+
+        this.maybeContextNode = ParserContext.endContext(
             this.contextState,
-            this.contextNode,
+            this.maybeContextNode,
             astNode,
         );
     }
 
     private deleteContext() {
-        this.contextNode = ParserContext.deleteContext(
+        if (this.maybeContextNode === undefined) {
+            throw new CommonError.InvariantError("maybeContextNode should be truthy, can't end context if it doesn't exist.");
+        }
+
+        this.maybeContextNode = ParserContext.deleteContext(
             this.contextState,
-            this.contextNode,
+            this.maybeContextNode,
         );
     }
 
@@ -2196,7 +2186,9 @@ export class Parser {
             tokenIndex: this.tokenIndex,
             tokenRangeStackLength: this.tokenRangeStack.length,
             contextState: ParserContext.deepCopy(this.contextState),
-            contextNodeId: this.contextNode.nodeId,
+            maybeContextNodeId: this.maybeContextNode !== undefined
+                ? this.maybeContextNode.nodeId
+                : undefined,
         };
     }
 
@@ -2210,12 +2202,12 @@ export class Parser {
 
         this.contextState = backup.contextState;
 
-        const maybeContextNode: Option<ParserContext.Node> = this.contextState.nodesById.get(backup.contextNodeId);
-        if (!maybeContextNode) {
-            throw new CommonError.InvariantError(`backup contextNodeId doesn't exist: ${backup.contextNodeId}`)
+        if (backup.maybeContextNodeId) {
+            this.maybeContextNode = ParserContext.expectNode(this.contextState.nodesById, backup.maybeContextNodeId);
         }
-        const contextNode: ParserContext.Node = maybeContextNode;
-        this.contextNode = contextNode;
+        else {
+            this.maybeContextNode = undefined;
+        }
     }
 }
 
@@ -2245,5 +2237,5 @@ interface ParserState {
     readonly tokenRangeStackLength: number,
     readonly tokenIndex: number,
     readonly contextState: ParserContext.State,
-    readonly contextNodeId: number,
+    readonly maybeContextNodeId: Option<number>,
 }
