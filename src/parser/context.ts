@@ -20,6 +20,7 @@ export namespace ParserContext {
 
     export interface Node {
         readonly nodeId: number,
+        readonly nodeKind: Ast.NodeKind,
         readonly tokenIndex: number,
         readonly maybeParentId: Option<number>,
         childNodeIds: number[],
@@ -45,7 +46,12 @@ export namespace ParserContext {
         return maybeNode;
     }
 
-    export function addChild(state: State, maybeParent: Option<Node>, tokenIndex: number): Node {
+    export function addChild(
+        state: State,
+        maybeParent: Option<Node>,
+        nodeKind: Ast.NodeKind,
+        tokenIndex: number,
+    ): Node {
         state.nodeIdCounter += 1;
         const newNodeId = state.nodeIdCounter;
 
@@ -61,6 +67,7 @@ export namespace ParserContext {
 
         const child: Node = {
             nodeId: state.nodeIdCounter,
+            nodeKind,
             tokenIndex,
             maybeParentId,
             childNodeIds: [],
