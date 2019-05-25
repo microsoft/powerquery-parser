@@ -275,17 +275,20 @@ export class Parser {
         let maybeOperator = Ast.unaryOperatorFrom(this.currentTokenKind);
 
         if (maybeOperator) {
-            this.startContext();
-            this.startTokenRange(Ast.NodeKind.UnaryExpression);
+            const nodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
+            this.startContext(nodeKind);
+            this.startTokenRange(nodeKind);
+
             const expressions: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
 
             while (maybeOperator) {
-                this.startContext();
-                this.startTokenRange(Ast.NodeKind.UnaryExpressionHelper);
+                const nodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
+                this.startContext(nodeKind);
+                this.startTokenRange(nodeKind);
 
                 const operatorConstant = this.readUnaryOperatorAsConstant(maybeOperator);
                 const expression: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
-                    kind: Ast.NodeKind.UnaryExpressionHelper,
+                    kind: nodeKind,
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     inBinaryExpression: false,
@@ -300,7 +303,7 @@ export class Parser {
             };
 
             const astNode: Ast.UnaryExpression = {
-                kind: Ast.NodeKind.UnaryExpression,
+                kind: nodeKind,
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 expressions,
@@ -713,8 +716,9 @@ export class Parser {
 
     // 12.2.3.24 If expression
     private readIfExpression(): Ast.IfExpression {
-        this.startContext();
-        this.startTokenRange(Ast.NodeKind.IfExpression);
+        const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
+        this.startContext(nodeKind);
+        this.startTokenRange(nodeKind);
 
         const ifConstant = this.readTokenKindAsConstant(TokenKind.KeywordIf);
         const condition = this.readExpression();
@@ -726,7 +730,7 @@ export class Parser {
         const falseExpression = this.readExpression();
 
         const astNode: Ast.IfExpression = {
-            kind: Ast.NodeKind.IfExpression,
+            kind: nodeKind,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             ifConstant,
@@ -911,10 +915,13 @@ export class Parser {
             }
 
             else if (this.isOnTokenKind(TokenKind.Identifier)) {
-                this.startContext();
-                this.startTokenRange(Ast.NodeKind.Csv);
-                this.startContext();
-                this.startTokenRange(Ast.NodeKind.FieldSpecification);
+                const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;;
+                this.startContext(csvNodeKind);
+                this.startTokenRange(csvNodeKind);
+
+                const fieldSpecificationNodeKind: Ast.NodeKind.FieldSpecification = Ast.NodeKind.FieldSpecification;;
+                this.startContext(fieldSpecificationNodeKind);
+                this.startTokenRange(fieldSpecificationNodeKind);
 
                 const maybeOptionalConstant = this.maybeReadIdentifierConstantAsConstant(Ast.IdentifierConstant.Optional);
                 const name = this.readGeneralizedIdentifier();
@@ -923,7 +930,7 @@ export class Parser {
                 continueReadingValues = maybeCommaConstant !== undefined;
 
                 const field: Ast.FieldSpecification = {
-                    kind: Ast.NodeKind.FieldSpecification,
+                    kind: fieldSpecificationNodeKind,
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     maybeOptionalConstant,
@@ -933,7 +940,7 @@ export class Parser {
                 this.endContext(field);
 
                 const csv: Ast.ICsv<Ast.FieldSpecification> = {
-                    kind: Ast.NodeKind.Csv,
+                    kind: csvNodeKind,
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     node: field,
@@ -1231,7 +1238,9 @@ export class Parser {
 
     private readRecursivePrimaryExpression(head: Ast.TPrimaryExpression): Ast.RecursivePrimaryExpression {
         const tokenRangeStart = head.tokenRange.startTokenIndex;
-        this.startTokenRangeAt(Ast.NodeKind.RecursivePrimaryExpression, tokenRangeStart);
+        const nodeKind: Ast.NodeKind.RecursivePrimaryExpression =Ast.NodeKind.RecursivePrimaryExpression;
+        this.startContext(nodeKind);
+        this.startTokenRangeAt(nodeKind, tokenRangeStart);
 
         const recursiveExpressions = [];
         let continueReadingValues = true;
@@ -1269,13 +1278,15 @@ export class Parser {
             }
         }
 
-        return {
-            kind: Ast.NodeKind.RecursivePrimaryExpression,
+        const astNode: Ast.RecursivePrimaryExpression = {
+            kind: nodeKind,
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             head,
             recursiveExpressions,
         };
+        this.endContext(astNode);
+        return astNode;
     }
 
     private readIdentifier(): Ast.Identifier {
@@ -1610,26 +1621,32 @@ export class Parser {
     }
 
     private readKeyword(): Ast.IdentifierExpression {
-        this.startContext();
-        const tokenRange = this.singleTokenRange(TokenKind.Identifier);
+        const identifierExpressionNodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
+        this.startContext(identifierExpressionNodeKind);
+        const identifierExpressionTokenRange = this.singleTokenRange(TokenKind.Identifier);
+
+        const identifierNodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
+        this.startContext(identifierNodeKind);
+        const identifierTokenRange = this.singleTokenRange(TokenKind.Identifier);
 
         const literal = this.readToken();
         const identifier: Ast.Identifier = {
-            kind: Ast.NodeKind.Identifier,
-            tokenRange,
+            kind: identifierNodeKind,
+            tokenRange: identifierTokenRange,
             terminalNode: true,
             literal,
-        }
+        };
+        this.endContext(identifier);
 
-        const astNode: Ast.IdentifierExpression = {
-            kind: Ast.NodeKind.IdentifierExpression,
-            tokenRange,
+        const identifierExpression: Ast.IdentifierExpression = {
+            kind: identifierExpressionNodeKind,
+            tokenRange: identifierExpressionTokenRange,
             terminalNode: false,
             maybeInclusiveConstant: undefined,
             identifier,
         };
-        this.endContext(astNode);
-        return astNode;
+        this.endContext(identifierExpression);
+        return identifierExpression;
     }
 
     private fieldSpecificationListReadError(allowOpenMarker: boolean): Option<Error> {
