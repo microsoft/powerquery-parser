@@ -36,8 +36,7 @@ function lexText(text: string) {
         //       considered an error at this stage.
         const errorLines: Lexer.TErrorLines = maybeErrorLines;
 
-        for (let lineNumber of Object.keys(errorLines)) {
-            const errorLine = errorLines[Number.parseInt(lineNumber)];
+        for (const errorLine of errorLines.values()) {
             console.log(errorLine);
         }
     }

@@ -17,7 +17,7 @@ import { LineToken, LineTokenKind } from "./token";
 
 export namespace Lexer {
 
-    export type TErrorLines = { [lineNumber: number]: TErrorLine; }
+    export type TErrorLines = Map<number, TErrorLine>;
 
     export type TLine = (
         | TouchedLine
@@ -294,7 +294,7 @@ export namespace Lexer {
     }
 
     export function maybeErrorLines(state: State): Option<TErrorLines> {
-        const errorLines: TErrorLines = {};
+        const errorLines: TErrorLines = new Map();
 
         const lines: ReadonlyArray<TLine> = state.lines;
         const numLines = lines.length;
@@ -302,7 +302,7 @@ export namespace Lexer {
         for (let index = 0; index < numLines; index++) {
             const line: TLine = lines[index];
             if (isErrorLine(line)) {
-                errorLines[index] = line;
+                errorLines.set(index, line);
                 errorsExist = true;
             }
         }
