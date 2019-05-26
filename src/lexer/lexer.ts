@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError, isNever, Pattern, StringHelpers, Result, ResultKind } from "../common";
+import { CommonError, isNever, Pattern, Result, ResultKind, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { PartialResult, PartialResultKind } from "../common/partialResult";
 import * as LexerError from "./error";
