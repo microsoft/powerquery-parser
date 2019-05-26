@@ -13,8 +13,8 @@ import { ParserError } from "./error";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 
 export class Parser {
-    private currentToken: Option<Token>;
-    private currentTokenKind: Option<TokenKind>;
+    private maybeCurrentToken: Option<Token>;
+    private maybeCurrentTokenKind: Option<TokenKind>;
 
     private constructor(
         private readonly lexerSnapshot: LexerSnapshot,
@@ -24,8 +24,8 @@ export class Parser {
         private maybeContextNode: Option<ParserContext.Node> = undefined,
     ) {
         if (this.lexerSnapshot.tokens.length) {
-            this.currentToken = this.lexerSnapshot.tokens[0];
-            this.currentTokenKind = this.currentToken.kind;
+            this.maybeCurrentToken = this.lexerSnapshot.tokens[0];
+            this.maybeCurrentTokenKind = this.maybeCurrentToken.kind;
         }
     }
 
@@ -162,7 +162,7 @@ export class Parser {
 
     // 12.2.3.1 Expressions
     private readExpression(): Ast.TExpression {
-        switch (this.currentTokenKind) {
+        switch (this.maybeCurrentTokenKind) {
             case TokenKind.KeywordEach:
                 return this.readEachExpression();
 
@@ -277,7 +277,7 @@ export class Parser {
 
     // 12.2.3.9 Unary expression
     private readUnaryExpression(): Ast.TUnaryExpression {
-        let maybeOperator = Ast.unaryOperatorFrom(this.currentTokenKind);
+        let maybeOperator = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
 
         if (maybeOperator) {
             const nodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
@@ -304,7 +304,7 @@ export class Parser {
                 expressions.push(expression);
                 this.endContext(expression);
 
-                maybeOperator = Ast.unaryOperatorFrom(this.currentTokenKind);
+                maybeOperator = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
             };
 
             const astNode: Ast.UnaryExpression = {
@@ -328,7 +328,7 @@ export class Parser {
         // but it gets updated with readX calls.
 
         let primaryExpression: Option<Ast.TPrimaryExpression>;
-        const currentTokenKind = this.currentTokenKind;
+        const currentTokenKind = this.maybeCurrentTokenKind;
         const isIdentifierExpressionNext = (
             currentTokenKind === TokenKind.AtSign
             || currentTokenKind === TokenKind.Identifier
@@ -442,9 +442,9 @@ export class Parser {
             throw maybeErr;
         }
 
-        let maybeLiteralKind = Ast.literalKindFrom(this.currentTokenKind);
+        let maybeLiteralKind = Ast.literalKindFrom(this.maybeCurrentTokenKind);
         if (maybeLiteralKind === undefined) {
-            throw new CommonError.InvariantError(`couldn't convert TokenKind=${this.currentTokenKind} into LiteralKind`);
+            throw new CommonError.InvariantError(`couldn't convert TokenKind=${this.maybeCurrentTokenKind} into LiteralKind`);
         }
 
         const literal = this.readToken();
@@ -866,7 +866,7 @@ export class Parser {
         this.startTokenRange(nodeKind)
 
         const tableConstant = this.readIdentifierConstantAsConstant(Ast.IdentifierConstant.Table);
-        const currentTokenKind = this.currentTokenKind;
+        const currentTokenKind = this.maybeCurrentTokenKind;
         const isPrimaryExpressionExpected = (
             currentTokenKind === TokenKind.AtSign
             || currentTokenKind === TokenKind.Identifier
@@ -1251,7 +1251,7 @@ export class Parser {
         let continueReadingValues = true;
 
         while (continueReadingValues) {
-            const currentTokenKind = this.currentTokenKind;
+            const currentTokenKind = this.maybeCurrentTokenKind;
 
             if (currentTokenKind === TokenKind.LeftParenthesis) {
                 recursiveExpressions.push(this.readInvokeExpression());
@@ -1318,7 +1318,7 @@ export class Parser {
 
         let literal;
 
-        const currentTokenKind = this.currentTokenKind;
+        const currentTokenKind = this.maybeCurrentTokenKind;
         const isKeywordGeneralizedIdentifier = (
             currentTokenKind === TokenKind.KeywordAnd
             || currentTokenKind === TokenKind.KeywordAs
@@ -1433,7 +1433,7 @@ export class Parser {
             primitiveType = this.readTokenKindAsConstant(TokenKind.NullLiteral);
         }
         else {
-            const details = { tokenKind: this.currentTokenKind };
+            const details = { tokenKind: this.maybeCurrentTokenKind };
             this.restoreParserState(state);
             return {
                 kind: ResultKind.Err,
@@ -1506,11 +1506,11 @@ export class Parser {
         this.tokenIndex += 1;
 
         if (this.tokenIndex === tokens.length) {
-            this.currentTokenKind = undefined;
+            this.maybeCurrentTokenKind = undefined;
         }
         else {
-            this.currentToken = tokens[this.tokenIndex];
-            this.currentTokenKind = this.currentToken.kind;
+            this.maybeCurrentToken = tokens[this.tokenIndex];
+            this.maybeCurrentTokenKind = this.maybeCurrentToken.kind;
         }
 
         return data;
@@ -1535,7 +1535,7 @@ export class Parser {
             else {
                 const details = {
                     expectedTokenKind: tokenKind,
-                    actualTokenKind: this.currentTokenKind,
+                    actualTokenKind: this.maybeCurrentTokenKind,
                 };
                 throw new CommonError.InvariantError(
                     "failures from maybeReadTokenKindAsConstant should be reportable by expectTokenKind",
@@ -1678,8 +1678,8 @@ export class Parser {
     }
 
     private expectTokenKind(expectedTokenKind: TokenKind): Option<ParserError.ExpectedTokenKindError> {
-        if (expectedTokenKind !== this.currentTokenKind) {
-            return new ParserError.ExpectedTokenKindError(expectedTokenKind, this.currentToken);
+        if (expectedTokenKind !== this.maybeCurrentTokenKind) {
+            return new ParserError.ExpectedTokenKindError(expectedTokenKind, this.maybeCurrentToken);
         }
         else {
             return undefined;
@@ -1690,12 +1690,12 @@ export class Parser {
         expectedAnyTokenKind: ReadonlyArray<TokenKind>
     ): Option<ParserError.ExpectedAnyTokenKindError> {
         const isError = (
-            this.currentTokenKind === undefined
-            || expectedAnyTokenKind.indexOf(this.currentTokenKind) === -1
+            this.maybeCurrentTokenKind === undefined
+            || expectedAnyTokenKind.indexOf(this.maybeCurrentTokenKind) === -1
         )
 
         if (isError) {
-            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, this.currentToken);
+            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, this.maybeCurrentToken);
         }
         else {
             return undefined;
@@ -1760,7 +1760,7 @@ export class Parser {
         this.startTokenRange(nodeKind);
         const first = operandReader();
 
-        let maybeOperator = operatorFrom(this.currentTokenKind);
+        let maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {
             const rest: Ast.UnaryExpressionHelper<Operator, Operand>[] = [];
 
@@ -1776,7 +1776,7 @@ export class Parser {
                     operatorConstant,
                     node: operandReader(),
                 });
-                maybeOperator = operatorFrom(this.currentTokenKind);
+                maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
 
             return {
@@ -2160,7 +2160,7 @@ export class Parser {
             this.contextState,
             this.maybeContextNode,
             nodeKind,
-            this.tokenIndex,
+            this.maybeCurrentToken,
         );
     }
 
@@ -2242,12 +2242,12 @@ export class Parser {
         this.tokenIndex = tokenIndex;
 
         if (tokenIndex < tokens.length) {
-            this.currentToken = tokens[tokenIndex];
-            this.currentTokenKind = this.currentToken.kind;
+            this.maybeCurrentToken = tokens[tokenIndex];
+            this.maybeCurrentTokenKind = this.maybeCurrentToken.kind;
         }
         else {
-            this.currentToken = undefined;
-            this.currentTokenKind = undefined;
+            this.maybeCurrentToken = undefined;
+            this.maybeCurrentTokenKind = undefined;
         }
     }
 
@@ -2265,9 +2265,9 @@ export class Parser {
     private restoreParserState(backup: ParserState) {
         this.tokenRangeStack.length = backup.tokenRangeStackLength;
         this.tokenIndex = backup.tokenIndex;
-        this.currentToken = this.lexerSnapshot.tokens[this.tokenIndex]
-        this.currentTokenKind = this.currentToken !== undefined
-            ? this.currentToken.kind
+        this.maybeCurrentToken = this.lexerSnapshot.tokens[this.tokenIndex]
+        this.maybeCurrentTokenKind = this.maybeCurrentToken !== undefined
+            ? this.maybeCurrentToken.kind
             : undefined;
 
         this.contextState = backup.contextState;

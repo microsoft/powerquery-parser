@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 import { Option, CommonError } from "../common";
 import { Ast } from "./ast";
+import { Token } from "../lexer";
 
 export namespace ParserContext {
 
@@ -21,7 +22,7 @@ export namespace ParserContext {
     export interface Node {
         readonly nodeId: number,
         readonly nodeKind: Ast.NodeKind,
-        readonly tokenIndex: number,
+        readonly maybeTokenStart: Option<Token>,
         readonly maybeParentId: Option<number>,
         childNodeIds: number[],
         maybeAstNode: Option<Ast.TNode>,
@@ -50,7 +51,7 @@ export namespace ParserContext {
         state: State,
         maybeParent: Option<Node>,
         nodeKind: Ast.NodeKind,
-        tokenIndex: number,
+        tokenStart: Option<Token>,
     ): Node {
         state.nodeIdCounter += 1;
         const newNodeId = state.nodeIdCounter;
@@ -68,7 +69,7 @@ export namespace ParserContext {
         const child: Node = {
             nodeId: state.nodeIdCounter,
             nodeKind,
-            tokenIndex,
+            maybeTokenStart: tokenStart,
             maybeParentId,
             childNodeIds: [],
             maybeAstNode: undefined,
