@@ -6,13 +6,6 @@
         "no-namespace": true,
         "prettier": true,
 
-        // Internal
-        "format-imports": true,
-        "no-methods-in-interfaces": true,
-        "no-partial-default-props": true,
-        "no-redux-combine-reducer": true,
-        "use-create-error-with-stack": true,
-
         // tslint-microsoft-contrib rules we use with some configuration
         "comment-format": [true, "check-space"],
         "function-name": [
@@ -33,11 +26,6 @@
                 // changed from lowercase to also allow uppercase (functional components)
                 "function-regex": "^([a-z]|[A-Z])[\\w\\d]+$"
             }
-        ],
-        "import-blacklist": [
-            true,
-            // Do not import LocalizedStringResources, import StringResources instead
-            "Shared/Scripts/Generated/LocalizedStringResources"
         ],
         // TODO: Remove once prettier formats comments correctly: https://github.com/prettier/prettier/issues/265
         "max-line-length": [
@@ -67,52 +55,8 @@
                 ]
             }
         ],
-        "no-implicit-dependencies": [
-            true,
-            // Needed because of "@storybook/react".
-            "dev",
-            [
-                "ColumnProfileView",
-                "ColumnProfileViewClient",
-                "Document",
-                "EditableGrid",
-                "Grid",
-                "GridTester",
-                "MashupEditor",
-                "MashupEditorClient",
-                "MashupEditorTester",
-                "OAuthStartLogin",
-                "Portal",
-                "Rpc",
-                "Shared",
-                "TestUtils"
-            ]
-        ],
-        "no-import-side-effect": [true, { "ignore-module": "\\.less$" }],
-        "no-submodule-imports": [
-            true,
-            // External packages
-            "core-js",
-            "uuid",
-            // Internal projects
-            "ColumnProfileView",
-            "ColumnProfileViewClient",
-            "Document",
-            "EditableGrid",
-            "Grid",
-            "GridTester",
-            "MashupEditor",
-            "MashupEditorClient",
-            "MashupEditorTester",
-            "OAuthStartLogin",
-            "Portal",
-            "Rpc",
-            "Shared",
-            "TestUtils"
-        ],
+        "no-import-side-effect": [true, { "ignore-module": "mocha" }],
         "no-void-expression": [true, "ignore-arrow-function-shorthand"],
-        "one-variable-per-declaration": [true, "ignore-for-loop"],
-        "triple-equals": [true, "allow-undefined-check"],
         "typedef": [
             true,
             "member-variable-declaration",
@@ -124,34 +68,22 @@
         "variable-name": [true, "ban-keywords", "check-format", "allow-pascal-case", "allow-leading-underscore"],
 
         // tslint-microsoft-contrib rules we don't use
-        "binary-expression-operand-order": false,
         "completed-docs": false,
-        "encoding": false,
         "export-name": false,
         "import-name": false,
         "interface-name": false,
         "max-classes-per-file": false,
         "max-func-body-length": false,
-        "missing-jsdoc": false, // this will also be deprecated in tslint-microsoft-contrib 5.2.1
         "mocha-no-side-effect-code": false,
         "newline-before-return": false,
-        "no-redundant-jsdoc": false,
         "no-any": false,
-        "no-cookies": false,
-        "no-duplicate-imports": false,
-        "no-increment-decrement": false,
         "no-parameter-properties": false,
         "no-reserved-keywords": false,
         "no-suspicious-comment": false,
-        "no-use-before-declare": false,
-        "ordered-imports": false,
-        "prefer-for-of": false,
         "prefer-type-cast": false,
         "prefer-method-signature": false,
 
         // tslint-microsoft-contrib rules we're temporarily disabling
-        "await-promise": false,
-        "cyclomatic-complexity": false,
         "import-spacing": false,
         "insecure-random": false,
         "match-default-export-name": false,
@@ -185,6 +117,6 @@
     },
     "extends": ["tslint-microsoft-contrib", "tslint-config-prettier"],
     "linterOptions": {
-        "exclude": ["../../../node_modules/**/*", "wwwroot/Shared/Scripts/Generated/**/*", "wwwroot/**/*.generated.ts"]
+        "exclude": ["./node_modules/**/*"]
     }
 }
