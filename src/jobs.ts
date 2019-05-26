@@ -30,7 +30,7 @@ export function lexAndParse(text: string): TriedLexAndParse {
     }
     const snapshot: LexerSnapshot = snapshotResult.value;
 
-    const parseResult: Parser.TriedParse = Parser.Parser.run(snapshot);
+    const parseResult: Parser.TriedParse = Parser.parse(snapshot);
     if (parseResult.kind === ResultKind.Err) {
         return parseResult;
     }

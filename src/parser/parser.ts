@@ -18,7 +18,7 @@ export class Parser {
     private maybeCurrentToken: Option<Token>;
     private maybeCurrentTokenKind: Option<TokenKind>;
 
-    private constructor(
+    public constructor(
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
@@ -31,16 +31,11 @@ export class Parser {
         }
     }
 
-    public static run(lexerSnapshot: LexerSnapshot): Result<ParseOk, ParserError.TParserError> {
-        if (!lexerSnapshot.tokens.length) {
-            throw new CommonError.InvariantError("the parser received an empty token array");
-        }
-
-        const parser: Parser = new Parser(lexerSnapshot);
+    public parse(): TriedParse {
         try {
-            const document: Ast.TDocument = parser.readDocument();
-            if (parser.maybeCurrentContextNode !== undefined) {
-                const details: {} = { maybeContextNode: parser.maybeCurrentContextNode };
+            const document: Ast.TDocument = this.readDocument();
+            if (this.maybeCurrentContextNode !== undefined) {
+                const details: {} = { maybeContextNode: this.maybeCurrentContextNode };
                 throw new CommonError.InvariantError(
                     "maybeContextNode should be falsey, there shouldn't be an open context",
                     details,
@@ -51,13 +46,13 @@ export class Parser {
                 kind: ResultKind.Ok,
                 value: {
                     document,
-                    nodesById: parser.contextState.nodesById,
+                    nodesById: this.contextState.nodesById,
                 },
             };
         } catch (e) {
             let error: ParserError.TParserError;
             if (ParserError.isTInnerParserError(e)) {
-                error = new ParserError.ParserError(e, parser.contextState);
+                error = new ParserError.ParserError(e, this.contextState);
             } else {
                 error = CommonError.ensureCommonError(e);
             }
@@ -75,7 +70,7 @@ export class Parser {
         if (this.isOnTokenKind(TokenKind.KeywordSection)) {
             document = this.readSection();
         } else {
-            const state: ParserState = this.backupParserState();
+            const backup: StateBackup = this.backupState();
             try {
                 document = this.readExpression();
                 const maybeErr: Option<ParserError.UnusedTokensRemainError> = this.expectNoMoreTokens();
@@ -84,7 +79,7 @@ export class Parser {
                 }
             } catch (expressionError) {
                 const expressionContextState: Context.State = Context.deepCopy(this.contextState);
-                this.restoreParserState(state);
+                this.restoreBackup(backup);
                 try {
                     document = this.readSection();
                     const maybeErr: Option<ParserError.UnusedTokensRemainError> = this.expectNoMoreTokens();
@@ -794,7 +789,7 @@ export class Parser {
     }
 
     private tryReadPrimaryType(): TryReadPrimaryType {
-        const state: ParserState = this.backupParserState();
+        const backup: StateBackup = this.backupState();
 
         const isTableTypeNext: boolean =
             this.isOnIdentifierConstant(Ast.IdentifierConstant.Table) &&
@@ -835,7 +830,7 @@ export class Parser {
             const triedReadPrimitiveType: TryReadPrimaryType = this.tryReadPrimitiveType();
 
             if (triedReadPrimitiveType.kind === ResultKind.Err) {
-                this.restoreParserState(state);
+                this.restoreBackup(backup);
             }
             return triedReadPrimitiveType;
         }
@@ -1384,7 +1379,7 @@ export class Parser {
         this.startContext(nodeKind);
         this.startTokenRange(nodeKind);
 
-        const state: ParserState = this.backupParserState();
+        const backup: StateBackup = this.backupState();
         const expectedTokenKinds: ReadonlyArray<TokenKind> = [
             TokenKind.Identifier,
             TokenKind.KeywordType,
@@ -1419,7 +1414,7 @@ export class Parser {
 
                 default:
                     const token: Token = this.expectTokenAt(this.tokenIndex);
-                    this.restoreParserState(state);
+                    this.restoreBackup(backup);
                     return {
                         kind: ResultKind.Err,
                         error: new ParserError.InvalidPrimitiveTypeError(token),
@@ -1431,7 +1426,7 @@ export class Parser {
             primitiveType = this.readTokenKindAsConstant(TokenKind.NullLiteral);
         } else {
             const details: {} = { tokenKind: this.maybeCurrentTokenKind };
-            this.restoreParserState(state);
+            this.restoreBackup(backup);
             return {
                 kind: ResultKind.Err,
                 error: new CommonError.InvariantError(
@@ -1979,13 +1974,13 @@ export class Parser {
                 //
                 // It's important we backup and eventually restore the original Parser state.
                 if (this.isTokenKind(TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                    const parserStateBackup: ParserState = this.backupParserState();
+                    const parserStateBackup: StateBackup = this.backupState();
                     this.unsafeMoveTo(offsetTokenIndex + 2);
 
                     try {
                         this.readNullablePrimitiveType();
                     } catch {
-                        this.restoreParserState(parserStateBackup);
+                        this.restoreBackup(parserStateBackup);
                         if (this.isOnTokenKind(TokenKind.FatArrow)) {
                             return ParenthesisDisambiguation.FunctionExpression;
                         } else {
@@ -2000,7 +1995,7 @@ export class Parser {
                         result = ParenthesisDisambiguation.ParenthesizedExpression;
                     }
 
-                    this.restoreParserState(parserStateBackup);
+                    this.restoreBackup(parserStateBackup);
                     return result;
                 } else {
                     if (this.isTokenKind(TokenKind.FatArrow, offsetTokenIndex + 1)) {
@@ -2212,7 +2207,7 @@ export class Parser {
         }
     }
 
-    private backupParserState(): ParserState {
+    private backupState(): StateBackup {
         return {
             tokenIndex: this.tokenIndex,
             tokenRangeStackLength: this.tokenRangeStack.length,
@@ -2222,7 +2217,7 @@ export class Parser {
         };
     }
 
-    private restoreParserState(backup: ParserState): void {
+    private restoreBackup(backup: StateBackup): void {
         this.tokenRangeStack.length = backup.tokenRangeStackLength;
         this.tokenIndex = backup.tokenIndex;
         this.maybeCurrentToken = this.lexerSnapshot.tokens[this.tokenIndex];
@@ -2241,6 +2236,11 @@ export class Parser {
 export interface ParseOk {
     readonly document: Ast.TDocument;
     readonly nodesById: Context.NodeMap;
+}
+
+export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
+    const parser: Parser = new Parser(lexerSnapshot);
+    return parser.parse();
 }
 
 type TryReadPrimaryType = Result<Ast.TPrimaryType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError>;
@@ -2267,7 +2267,7 @@ interface TokenRangeStackElement {
     readonly positionStart: StringHelpers.ExtendedGraphemePosition;
 }
 
-interface ParserState {
+interface StateBackup {
     readonly tokenRangeStackLength: number;
     readonly tokenIndex: number;
     readonly contextState: Context.State;
