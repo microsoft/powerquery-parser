@@ -26,14 +26,14 @@ function lexText(text: string) {
     // use Lexer.isErrorState to validate if needed
     let state: Lexer.State = Lexer.stateFrom(text);
 
-    const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
+    const maybeErrorLines: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLines) {
         // handle the error(s).
         //
         // note: these are errors isolated to indiviudal lines,
         //       meaning multiline errors such as an unterminated string are not
         //       considered an error at this stage.
-        const errorLines: Lexer.TErrorLines = maybeErrorLines;
+        const errorLines: Lexer.ErrorLineMap = maybeErrorLines;
 
         for (const errorLine of errorLines.values()) {
             console.log(errorLine);

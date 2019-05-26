@@ -12,6 +12,8 @@ import * as Context from "./context";
 import * as ParserError from "./error";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 
+export type TriedParse = Result<ParseOk, ParserError.TParserError>;
+
 export class Parser {
     private maybeCurrentToken: Option<Token>;
     private maybeCurrentTokenKind: Option<TokenKind>;

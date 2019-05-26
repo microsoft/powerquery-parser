@@ -6,6 +6,8 @@ import * as LexerError from "./error";
 import * as Lexer from "./lexer";
 import { LineTokenKind, Token, TokenKind } from "./token";
 
+export type TriedLexerSnapshot = Result<LexerSnapshot, LexerError.TLexerError>;
+
 export class LexerSnapshot {
     constructor(
         public readonly text: string,

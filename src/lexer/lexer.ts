@@ -15,7 +15,7 @@ import { LineToken, LineTokenKind } from "./token";
 // Lexer functions returns a new state object
 // LexerSnapshot.tryFrom freezes a lexer state
 
-export type TErrorLines = Map<number, TErrorLine>;
+export type ErrorLineMap = Map<number, TErrorLine>;
 
 export type TLine = TouchedLine | UntouchedLine | TouchedWithErrorLine | ErrorLine;
 
@@ -256,8 +256,8 @@ export function isErrorLine(line: TLine): line is TErrorLine {
     }
 }
 
-export function maybeErrorLines(state: State): Option<TErrorLines> {
-    const errorLines: TErrorLines = new Map();
+export function maybeErrorLineMap(state: State): Option<ErrorLineMap> {
+    const errorLines: ErrorLineMap = new Map();
     const lines: ReadonlyArray<TLine> = state.lines;
     const numLines: number = lines.length;
 

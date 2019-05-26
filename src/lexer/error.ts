@@ -11,7 +11,7 @@ export type TInnerLexerError =
     | BadRangeError
     | BadStateError
     | EndOfStreamError
-    | ErrorLineError
+    | ErrorLineMapError
     | ExpectedError
     | UnexpectedEofError
     | UnexpectedReadError
@@ -70,9 +70,9 @@ export class BadStateError extends Error {
     }
 }
 
-export class ErrorLineError extends Error {
-    constructor(readonly errors: Lexer.TErrorLines) {
-        super(Localization.lexerLineError(errors));
+export class ErrorLineMapError extends Error {
+    constructor(readonly errorLineMap: Lexer.ErrorLineMap) {
+        super(Localization.lexerErrorLineMap(errorLineMap));
     }
 }
 
@@ -119,7 +119,7 @@ export function isTInnerLexerError(x: any): x is TInnerLexerError {
         x instanceof BadRangeError ||
         x instanceof BadStateError ||
         x instanceof EndOfStreamError ||
-        x instanceof ErrorLineError ||
+        x instanceof ErrorLineMapError ||
         x instanceof ExpectedError ||
         x instanceof UnexpectedEofError ||
         x instanceof UnexpectedReadError ||

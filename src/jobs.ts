@@ -2,47 +2,43 @@
 // Licensed under the MIT license.
 import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment } from "./lexer";
-import { Ast, ParseOk, Parser, ParserError } from "./parser";
+import { Ast, Parser, ParserError } from "./parser";
 
-export type LexAndParseErr = (
-    | LexerError.TLexerError
-    | ParserError.TParserError
-);
+export type LexAndParseErr = LexerError.TLexerError | ParserError.TParserError;
 
 export interface LexAndParseOk {
-    readonly ast: Ast.TDocument,
-    readonly comments: ReadonlyArray<TComment>,
+    readonly ast: Ast.TDocument;
+    readonly comments: ReadonlyArray<TComment>;
 }
 
 export function lexAndParse(text: string): Result<LexAndParseOk, LexAndParseErr> {
-    let state: Lexer.State = Lexer.stateFrom(text);
-
-    const maybeErrorLines: Option<Lexer.TErrorLines> = Lexer.maybeErrorLines(state);
-    if (maybeErrorLines) {
-        const errorLines: Lexer.TErrorLines = maybeErrorLines;
+    const state: Lexer.State = Lexer.stateFrom(text);
+    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
+    if (maybeErrorLineMap) {
+        const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return {
             kind: ResultKind.Err,
-            error: new LexerError.LexerError(new LexerError.ErrorLineError(errorLines)),
-        }
+            error: new LexerError.LexerError(new LexerError.ErrorLineMapError(errorLineMap)),
+        };
     }
 
-    let snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
     if (snapshotResult.kind === ResultKind.Err) {
         return snapshotResult;
     }
     const snapshot: LexerSnapshot = snapshotResult.value;
 
-    const parseResult = Parser.run(snapshot);
+    const parseResult: Parser.TriedParse = Parser.Parser.run(snapshot);
     if (parseResult.kind === ResultKind.Err) {
         return parseResult;
     }
-    const parseOk: ParseOk = parseResult.value;
+    const parseOk: Parser.ParseOk = parseResult.value;
 
     return {
         kind: ResultKind.Ok,
         value: {
             ast: parseOk.document,
             comments: snapshot.comments,
-        }
-    }
+        },
+    };
 }
