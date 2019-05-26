@@ -27,7 +27,9 @@ class MockDocument2 {
         const stateResult: TriedLexerUpdate = Lexer.updateRange(this.lexerState, range, text);
 
         if (!(stateResult.kind === ResultKind.Ok)) {
-            throw new Error(`AssertFailed:stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, null, 4)}`);
+            throw new Error(
+                `AssertFailed:stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, undefined, 4)}`,
+            );
         }
 
         this.lexerState = stateResult.value;
@@ -38,7 +40,7 @@ class MockDocument2 {
 
         if (!(snapshotResult.kind === ResultKind.Ok)) {
             throw new Error(
-                `AssertFailed:snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, null, 4)}`,
+                `AssertFailed:snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, undefined, 4)}`,
             );
         }
 
@@ -73,25 +75,25 @@ class MockDocument {
 
         // Get the state for the previous line
         let state: IState;
-        if (startingIndex == 0 || this.lineEndStates[startingIndex - 1] == null) {
+        if (startingIndex === 0 || this.lineEndStates[startingIndex - 1] === undefined) {
             state = this.tokenizer.getInitialState();
         } else {
             state = this.lineEndStates[startingIndex - 1];
         }
 
-        for (let i = startingIndex; i < this.lines.length; i++) {
-            const result: ILineTokens = tokenizer.tokenize(this.lines[i], state);
-            this.lineTokens[i] = result.tokens;
-            tokenizedLineCount++;
+        for (let index: number = startingIndex; index < this.lines.length; index += 1) {
+            const result: ILineTokens = tokenizer.tokenize(this.lines[index], state);
+            this.lineTokens[index] = result.tokens;
+            tokenizedLineCount += 1;
 
             // If the new end state matches the previous state, we can stop tokenizing
-            if (result.endState.equals(this.lineEndStates[i])) {
+            if (result.endState.equals(this.lineEndStates[index])) {
                 break;
             }
 
             // Update line end state and pass on new state value
             state = result.endState.clone();
-            this.lineEndStates[i] = state;
+            this.lineEndStates[index] = state;
         }
 
         return tokenizedLineCount;
@@ -159,8 +161,8 @@ describe("MockDocument validation", () => {
 describe("Incremental updates", () => {
     it("Reparse with no change", () => {
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
-        const originalLine = document.lines[2];
-        const count = document.applyChangeAndTokenize(originalLine, 2);
+        const originalLine: string = document.lines[2];
+        const count: number = document.applyChangeAndTokenize(originalLine, 2);
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 

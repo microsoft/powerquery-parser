@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
-import { ResultKind, Result } from "../../common";
-import { lexAndParse, LexAndParseOk, LexAndParseErr } from "../../jobs";
+import { Result, ResultKind } from "../../common";
+import { lexAndParse, LexAndParseErr, LexAndParseOk } from "../../jobs";
 import { ParserError } from "../../parser";
 
 function expectParserInnerError(text: string): ParserError.TInnerParserError {

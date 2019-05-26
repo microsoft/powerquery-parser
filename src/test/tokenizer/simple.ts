@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { ILineTokens, Tokenizer, TokenizerState } from "./common";
+import { ILineTokens, IState, Tokenizer, TokenizerState } from "./common";
 
 const tokenizer: Tokenizer = new Tokenizer(`\n`);
 const initialState: TokenizerState = tokenizer.getInitialState() as TokenizerState;
@@ -37,7 +37,7 @@ describe(`Tokenizer`, () => {
     it(`Cloned state equality`, () => {
         const r: ILineTokens = tokenizer.tokenize(`let a = 1 in a`, initialState);
 
-        const clonedState = r.endState.clone();
+        const clonedState: IState = r.endState.clone();
         expect(r.endState.equals(clonedState), `states should be equal`);
     });
 
