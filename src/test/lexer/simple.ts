@@ -1,5 +1,4 @@
 import { expect } from "chai";
-// tslint:disable-next-line: no-import-side-effect
 import "mocha";
 import { Keywords, TokenKind } from "../../lexer";
 import { expectSnapshotAbridgedTokens } from "./common";

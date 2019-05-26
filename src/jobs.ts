@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { Option, Result, ResultKind } from "./common";
-import { Lexer, LexerError, LexerSnapshot, TComment } from "./lexer";
+import { Lexer, LexerError, LexerSnapshot, TComment, TriedLexerSnapshot } from "./lexer";
 import { Ast, Parser, ParserError } from "./parser";
+
+export type TriedLexAndParse = Result<LexAndParseOk, LexAndParseErr>;
 
 export type LexAndParseErr = LexerError.TLexerError | ParserError.TParserError;
 
@@ -11,7 +13,7 @@ export interface LexAndParseOk {
     readonly comments: ReadonlyArray<TComment>;
 }
 
-export function lexAndParse(text: string): Result<LexAndParseOk, LexAndParseErr> {
+export function lexAndParse(text: string): TriedLexAndParse {
     const state: Lexer.State = Lexer.stateFrom(text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
@@ -22,7 +24,7 @@ export function lexAndParse(text: string): Result<LexAndParseOk, LexAndParseErr>
         };
     }
 
-    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
     if (snapshotResult.kind === ResultKind.Err) {
         return snapshotResult;
     }

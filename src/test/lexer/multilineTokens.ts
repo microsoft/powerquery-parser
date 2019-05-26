@@ -1,4 +1,3 @@
-// tslint:disable-next-line: no-import-side-effect
 import "mocha";
 import { CommentKind, LineTokenKind, TokenKind } from "../../lexer";
 import {

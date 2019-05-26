@@ -1,8 +1,7 @@
 import { expect } from "chai";
-// tslint:disable-next-line: no-import-side-effect
 import "mocha";
 import { Result, ResultKind } from "../../common";
-import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
+import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { expectLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
@@ -216,7 +215,7 @@ describe(`Lexer.Incremental`, () => {
             };
             const state: Lexer.State = expectLexerUpdateRangeOk(original, "X", range);
 
-            const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+            const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
             expect(snapshotResult.kind).equals(ResultKind.Ok);
             if (!(snapshotResult.kind === ResultKind.Ok)) {
                 throw new Error(
@@ -246,7 +245,7 @@ describe(`Lexer.Incremental`, () => {
             const state: Lexer.State = expectLexerUpdateRangeOk(original, "OO\nB", range);
             expect(state.lines.length).to.equal(3);
 
-            const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+            const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
             if (!(snapshotResult.kind === ResultKind.Ok)) {
                 throw new Error(
                     `AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(
@@ -276,7 +275,7 @@ describe(`Lexer.Incremental`, () => {
 
             expect(state.lines.length).to.equal(2);
 
-            const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+            const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
             if (!(snapshotResult.kind === ResultKind.Ok)) {
                 throw new Error(
                     `AssertFailed: snapshotResult.kind === ResultKind.Ok ${JSON.stringify(

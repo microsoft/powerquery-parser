@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { Option, Result, ResultKind } from "../../common";
-import { CommentKind, Lexer, LexerError, LexerSnapshot, LineTokenKind, TokenKind } from "../../lexer";
+import { Option, ResultKind } from "../../common";
+import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../lexer";
 
 export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
 
@@ -108,7 +108,7 @@ export function expectLexOk(text: string): Lexer.State {
 
 export function expectLexerSnapshot(text: string): LexerSnapshot {
     const state: Lexer.State = expectLexOk(text);
-    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
     if (!(snapshotResult.kind === ResultKind.Ok)) {
         throw new Error("AssertFailed: snapshotResult.kind === ResultKind.Ok");
     }

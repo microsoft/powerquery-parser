@@ -1,8 +1,7 @@
 import { expect } from "chai";
-// tslint:disable-next-line: no-import-side-effect
 import "mocha";
 import { Result, ResultKind } from "../../common";
-import { Lexer, LexerError, LexerSnapshot } from "../../lexer";
+import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 
 function expectBadLineNumberKind(lineNumber: number, expectedKind: LexerError.BadLineNumberKind): void {
     const state: Lexer.State = Lexer.stateFrom(`foo`);
@@ -65,7 +64,7 @@ function expectUnterminatedMultilineTokenKind(
     expectedKind: LexerError.UnterminatedMultilineTokenKind,
 ): void {
     const state: Lexer.State = Lexer.stateFrom(text);
-    const snapshotResult: Result<LexerSnapshot, LexerError.LexerError> = LexerSnapshot.tryFrom(state);
+    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
     if (!(snapshotResult.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
     }

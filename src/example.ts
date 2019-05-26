@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { ResultKind, Option, Result } from "./common";
+import { Option, ResultKind } from "./common";
 import { lexAndParse } from "./jobs";
-import { Lexer, LexerSnapshot, LexerError } from "./lexer";
+import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 
 parseText(`if true then 1 else 2`);
 
@@ -51,7 +51,7 @@ function lexText(text: string) {
     //        (eg. StringLiteralStart + StringLiteralContent + StringLiteralEnd)
     //      * checks for multiline errors
     //        (eg. unterminated string error)
-    const snapshotResult: Result<LexerSnapshot, LexerError.TLexerError> = LexerSnapshot.tryFrom(state);
+    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
     if (snapshotResult.kind === ResultKind.Err) {
         // a multiline error was found
         const error: LexerError.LexerError = snapshotResult.error;

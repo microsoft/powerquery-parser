@@ -1,5 +1,4 @@
 import { expect } from "chai";
-// tslint:disable-next-line: no-import-side-effect
 import "mocha";
 import { ResultKind, Result } from "../../common";
 import { lexAndParse, LexAndParseOk, LexAndParseErr } from "../../jobs";

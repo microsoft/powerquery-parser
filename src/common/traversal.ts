@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+import { CommonError, isNever, Option, Result, ResultKind } from ".";
 import { Ast } from "../parser";
-import { isNever } from "./assert";
-import { CommonError } from "./error";
-import { Option } from "./option";
-import { Result, ResultKind } from "./result";
 
 // Adds some structure / helper functions for traversing an AST.
 //
