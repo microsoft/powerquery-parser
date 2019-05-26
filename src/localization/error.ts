@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { isNever, StringHelpers } from "../common";
+import { isNever } from "../common";
 import { Option } from "../common/option";
-import { Lexer, LexerError, Token, TokenKind } from "../lexer";
+import { GraphemePosition, Lexer, LexerError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
 
 export function invariantError(reason: string, maybeJsonifyable: Option<any>): string {
@@ -74,7 +74,7 @@ export function lexerEndOfStream(): string {
     return `The lexer reached end-of-stream.`;
 }
 
-export function lexerExpected(graphemePosition: StringHelpers.GraphemePosition, kind: LexerError.ExpectedKind): string {
+export function lexerExpected(graphemePosition: GraphemePosition, kind: LexerError.ExpectedKind): string {
     switch (kind) {
         case LexerError.ExpectedKind.HexLiteral:
             return `Expected hex literal on line ${graphemePosition.lineNumber}, column ${
@@ -100,20 +100,20 @@ export function lexerErrorLineMap(errorLineMap: Lexer.ErrorLineMap): string {
     return `Error on line(s): ${Object.keys(errorLineMap).join(", ")}`;
 }
 
-export function lexerUnexpectedEof(graphemePosition: StringHelpers.GraphemePosition): string {
+export function lexerUnexpectedEof(graphemePosition: GraphemePosition): string {
     return `Reached EOF while attempting to lex on line ${graphemePosition.lineNumber}, column ${
         graphemePosition.columnNumber
     }.`;
 }
 
-export function lexerUnexpectedRead(graphemePosition: StringHelpers.GraphemePosition): string {
+export function lexerUnexpectedRead(graphemePosition: GraphemePosition): string {
     return `Unexpected read while attempting to lex on line ${graphemePosition.lineNumber}, column ${
         graphemePosition.columnNumber
     }.`;
 }
 
 export function lexerUnterminatedMultilineToken(
-    graphemePosition: StringHelpers.GraphemePosition,
+    graphemePosition: GraphemePosition,
     kind: LexerError.UnterminatedMultilineTokenKind,
 ): string {
     switch (kind) {
@@ -140,7 +140,7 @@ export function lexerUnterminatedMultilineToken(
 export function parserExpectedTokenKind(expectedTokenKind: TokenKind, maybeFoundToken: Option<Token>): string {
     if (maybeFoundToken) {
         const token: Token = maybeFoundToken;
-        const positionStart: StringHelpers.ExtendedGraphemePosition = token.positionStart;
+        const positionStart: GraphemePosition = token.positionStart;
         return `Expected to find a ${expectedTokenKind} on line ${positionStart.lineNumber}, column ${
             positionStart.columnNumber
         }, but a ${token.kind} was found instead.`;
@@ -150,14 +150,14 @@ export function parserExpectedTokenKind(expectedTokenKind: TokenKind, maybeFound
 }
 
 export function parserInvalidLiteralValue(currentTokenData: string, token: Token): string {
-    const positionStart: StringHelpers.ExtendedGraphemePosition = token.positionStart;
+    const positionStart: GraphemePosition = token.positionStart;
     return `Expected to find a literal on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }, but ${currentTokenData} was found instead.`;
 }
 
 export function parserInvalidPrimitiveType(token: Token): string {
-    const positionStart: StringHelpers.ExtendedGraphemePosition = token.positionStart;
+    const positionStart: GraphemePosition = token.positionStart;
     return `Expected to find a primitive literal on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }, but ${token.data} was found instead.`;
@@ -169,7 +169,7 @@ export function parserExpectedAnyTokenKind(
 ): string {
     if (maybeFoundToken) {
         const token: Token = maybeFoundToken;
-        const positionStart: StringHelpers.ExtendedGraphemePosition = maybeFoundToken.positionStart;
+        const positionStart: GraphemePosition = maybeFoundToken.positionStart;
         return `Expected to find one of the following on line ${positionStart.lineNumber}, column ${
             positionStart.columnNumber
         }, but a ${token.kind} was found instead: [${expectedAnyTokenKind}].`;
@@ -179,7 +179,7 @@ export function parserExpectedAnyTokenKind(
 }
 
 export function parserRequiredParameterAfterOptionalParameter(missingOptionalToken: Token): string {
-    const positionStart: StringHelpers.ExtendedGraphemePosition = missingOptionalToken.positionStart;
+    const positionStart: GraphemePosition = missingOptionalToken.positionStart;
     return `Cannot have a non-optional parameter after an optional parameter. Line ${
         positionStart.lineNumber
     }, column ${positionStart.columnNumber}.`;
@@ -190,19 +190,19 @@ export function parserUnexpectedEndOfTokens(nodeKindOnStack: Ast.NodeKind): stri
 }
 
 export function parserUnterminatedBracket(openBracketToken: Token): string {
-    const positionStart: StringHelpers.ExtendedGraphemePosition = openBracketToken.positionStart;
+    const positionStart: GraphemePosition = openBracketToken.positionStart;
     return `Unterminated bracket starting on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}.`;
 }
 
 export function parserUnterminatedParentheses(openParenthesesToken: Token): string {
-    const positionStart: StringHelpers.ExtendedGraphemePosition = openParenthesesToken.positionStart;
+    const positionStart: GraphemePosition = openParenthesesToken.positionStart;
     return `Unterminated parentheses starting on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }.`;
 }
 
 export function parserUnusedTokensRemain(firstUnusedToken: Token): string {
-    const positionStart: StringHelpers.ExtendedGraphemePosition = firstUnusedToken.positionStart;
+    const positionStart: GraphemePosition = firstUnusedToken.positionStart;
     return `Finished parsing, but more tokens remain starting on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }.`;

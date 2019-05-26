@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError, StringHelpers } from "../common";
+import { CommonError } from "../common";
 import { isNever } from "../common/assert";
 import { Option } from "../common/option";
 import { Result, ResultKind } from "../common/result";
 import { Keyword } from "../lexer/keywords";
 import { LexerSnapshot } from "../lexer/lexerSnapshot";
-import { Token, TokenKind } from "../lexer/token";
+import { Token, TokenKind, TokenPosition } from "../lexer/token";
 import * as Ast from "./ast";
 import * as Context from "./context";
 import * as ParserError from "./error";
@@ -2087,7 +2087,7 @@ export class Parser {
         }
 
         const element: TokenRangeStackElement = maybeElement;
-        const positionStart: StringHelpers.ExtendedGraphemePosition = element.positionStart;
+        const positionStart: TokenPosition = element.positionStart;
         const endTokenIndex: number = this.tokenIndex;
         const lastInclusiveToken: Token = this.lexerSnapshot.tokens[endTokenIndex - 1];
 
@@ -2106,8 +2106,8 @@ export class Parser {
     ): TokenRange {
         const tokenIndex: number = this.tokenIndex;
         const token: Token = this.lexerSnapshot.tokens[tokenIndex];
-        const positionStart: StringHelpers.ExtendedGraphemePosition = token.positionStart;
-        const positionEnd: StringHelpers.ExtendedGraphemePosition = token.positionEnd;
+        const positionStart: TokenPosition = token.positionStart;
+        const positionEnd: TokenPosition = token.positionEnd;
 
         return {
             startTokenIndex: tokenIndex,
@@ -2264,7 +2264,7 @@ const enum BracketDisambiguation {
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind;
     readonly tokenIndexStart: number;
-    readonly positionStart: StringHelpers.ExtendedGraphemePosition;
+    readonly positionStart: TokenPosition;
 }
 
 interface StateBackup {
