@@ -34,8 +34,8 @@ function lexText(text: string): void {
         //       considered an error at this stage.
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
 
-        for (const errorLine of errorLineMap.values()) {
-            console.log(errorLine);
+        for (const [lineNumber, errorLine] of errorLineMap.entries()) {
+            console.log(`lineNumber ${lineNumber} has the following error: ${errorLine.error.message}`);
         }
     }
 
