@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Option, CommonError } from "../common";
-import { Ast } from "./ast";
+import { CommonError, Option } from "../common";
 import { Token } from "../lexer";
+import { Ast } from "./ast";
 
 export namespace ParserContext {
 
