@@ -2,24 +2,24 @@ import { expect } from "chai";
 import "mocha";
 import { ILineTokens, Tokenizer, TokenizerState } from "./common";
 
-const tokenizer = new Tokenizer(`\n`);
+const tokenizer: Tokenizer = new Tokenizer(`\n`);
 const initialState: TokenizerState = tokenizer.getInitialState() as TokenizerState;
 
-function tokenizeLines(query: string, expectedTokenCounts: number[]) {
-    const lines = query.split(`\n`);
-    let state = initialState;
+function tokenizeLines(query: string, expectedTokenCounts: number[]): void {
+    const lines: ReadonlyArray<string> = query.split(`\n`);
+    let state: TokenizerState = initialState;
 
     expect(lines.length).equals(expectedTokenCounts.length);
 
-    for (let i = 0; i < lines.length; i++) {
-        const r: ILineTokens = tokenizer.tokenize(lines[i], state);
+    for (let index: number = 0; index < lines.length; index += 1) {
+        const r: ILineTokens = tokenizer.tokenize(lines[index], state);
         expect(!state.equals(r.endState), `state should have changed.`);
-        expect(r.tokens.length).equals(expectedTokenCounts[i], `unexpected token count`);
+        expect(r.tokens.length).equals(expectedTokenCounts[index], `unexpected token count`);
 
         state = r.endState as TokenizerState;
 
         r.tokens.forEach(token => {
-            expect(token.startIndex).is.lessThan(lines[i].length);
+            expect(token.startIndex).is.lessThan(lines[index].length);
         });
     }
 }

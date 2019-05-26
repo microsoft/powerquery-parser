@@ -15,6 +15,8 @@ import { LineToken, LineTokenKind } from "./token";
 // Lexer functions returns a new state object
 // LexerSnapshot.tryFrom freezes a lexer state
 
+export type TriedLexerUpdate = Result<State, LexerError.LexerError>;
+
 export type ErrorLineMap = Map<number, TErrorLine>;
 
 export type TLine = TouchedLine | UntouchedLine | TouchedWithErrorLine | ErrorLine;
@@ -105,7 +107,7 @@ export function appendLine(state: State, text: string, lineTerminator: string): 
     };
 }
 
-export function updateLine(state: State, lineNumber: number, text: string): Result<State, LexerError.LexerError> {
+export function updateLine(state: State, lineNumber: number, text: string): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
     const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
@@ -121,7 +123,7 @@ export function updateLine(state: State, lineNumber: number, text: string): Resu
     return updateRange(state, range, text);
 }
 
-export function updateRange(state: State, range: Range, text: string): Result<State, LexerError.LexerError> {
+export function updateRange(state: State, range: Range, text: string): TriedLexerUpdate {
     const maybeError: Option<LexerError.BadRangeError> = maybeBadRangeError(state, range);
     if (maybeError) {
         return {
@@ -165,7 +167,7 @@ export function updateRange(state: State, range: Range, text: string): Result<St
     };
 }
 
-export function deleteLine(state: State, lineNumber: number): Result<State, LexerError.LexerError> {
+export function deleteLine(state: State, lineNumber: number): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
     const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);

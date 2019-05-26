@@ -1,27 +1,10 @@
 import { Lexer, LineToken } from "../../lexer";
 
 export class Tokenizer implements TokensProvider {
-    constructor(private readonly lineTerminator: string) { }
+    constructor(private readonly lineTerminator: string) {}
 
-    public getInitialState(): IState {
-        const lexerState: Lexer.State = {
-            lines: [],
-        };
-        return new TokenizerState(lexerState);
-    }
-
-    public tokenize(line: string, state: IState): ILineTokens {
-        const tokenizerState: TokenizerState = state as TokenizerState;
-        const lexerState = tokenizerState.lexerState;
-        const newLexerState = Lexer.appendLine(lexerState, line, this.lineTerminator);
-
-        return {
-            tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),
-            endState: new TokenizerState(newLexerState)
-        };
-    }
-
-    static ITokenFrom(lineToken: LineToken): IToken {
+    // tslint:disable-next-line: function-name
+    public static ITokenFrom(lineToken: LineToken): IToken {
         // UNSAFE MARKER
         //
         // Purpose of code block:
@@ -34,13 +17,31 @@ export class Tokenizer implements TokensProvider {
         //      All variants of LineNodeKind are strings.
         return {
             startIndex: lineToken.positionStart,
-            scopes: lineToken.kind as unknown as string,
-        }
+            scopes: (lineToken.kind as unknown) as string,
+        };
+    }
+
+    public getInitialState(): IState {
+        const lexerState: Lexer.State = {
+            lines: [],
+        };
+        return new TokenizerState(lexerState);
+    }
+
+    public tokenize(line: string, state: IState): ILineTokens {
+        const tokenizerState: TokenizerState = state as TokenizerState;
+        const lexerState: Lexer.State = tokenizerState.lexerState;
+        const newLexerState: Lexer.State = Lexer.appendLine(lexerState, line, this.lineTerminator);
+
+        return {
+            tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),
+            endState: new TokenizerState(newLexerState),
+        };
     }
 }
 
 export class TokenizerState implements IState {
-    constructor(public readonly lexerState: Lexer.State) { }
+    constructor(public readonly lexerState: Lexer.State) {}
 
     public clone(): IState {
         return new TokenizerState(this.lexerState);
@@ -55,14 +56,14 @@ export class TokenizerState implements IState {
         }
 
         // Check for initial state.
-        const rightLexerState = (other as TokenizerState).lexerState;
+        const rightLexerState: Lexer.State = (other as TokenizerState).lexerState;
         if (this.lexerState.lines.length === 0) {
             return rightLexerState.lines.length === 0;
         }
 
         // Compare last line state.
-        const leftLastLine = this.lexerState.lines[this.lexerState.lines.length - 1];
-        const rightLastLine = rightLexerState.lines[rightLexerState.lines.length - 1];
+        const leftLastLine: Lexer.TLine = this.lexerState.lines[this.lexerState.lines.length - 1];
+        const rightLastLine: Lexer.TLine = rightLexerState.lines[rightLexerState.lines.length - 1];
         return leftLastLine.lineModeEnd === rightLastLine.lineModeEnd;
     }
 }
