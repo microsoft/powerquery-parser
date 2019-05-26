@@ -8,6 +8,7 @@ export const RegExpIdentifier: RegExp = RegExp(
 
 // Not mentioned: CARRIAGE RETURN + LINE FEED
 export const RegExpNewline: RegExp = RegExp(
+    // tslint:disable-next-line: prefer-template
     "\u000D" + // CARRIAGE RETURN
     "|\u000A" + // LINE FEED
     "|\u0085" + // NEXT LINE

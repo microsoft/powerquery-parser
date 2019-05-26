@@ -198,7 +198,7 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
     }
 
     const numLines: number = leftLines.length;
-    for (let lineIndex: number = 0; lineIndex < numLines; lineIndex++) {
+    for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
         const left: TLine = leftLines[lineIndex];
         const right: TLine = rightLines[lineIndex];
         const leftTokens: ReadonlyArray<LineToken> = left.tokens;
@@ -216,7 +216,7 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
 
         // isEqualQuickCheck ensures tokens.length is the same
         const numTokens: number = leftTokens.length;
-        for (let tokenIndex: number = 0; tokenIndex < numTokens; tokenIndex++) {
+        for (let tokenIndex: number = 0; tokenIndex < numTokens; tokenIndex += 1) {
             if (!equalTokens(leftTokens[tokenIndex], rightTokens[tokenIndex])) {
                 return false;
             }
@@ -262,7 +262,7 @@ export function maybeErrorLineMap(state: State): Option<ErrorLineMap> {
     const numLines: number = lines.length;
 
     let errorsExist: boolean = false;
-    for (let index: number = 0; index < numLines; index++) {
+    for (let index: number = 0; index < numLines; index += 1) {
         const line: TLine = lines[index];
         if (isErrorLine(line)) {
             errorLines.set(index, line);

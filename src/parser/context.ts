@@ -38,7 +38,7 @@ export function empty(): State {
 }
 
 export function expectNode(nodesById: NodeMap, nodeId: number): Node {
-    const maybeNode: Option<Node> = maybeGetNode(nodesById, nodeId);
+    const maybeNode: Option<Node> = nodesById.get(nodeId);
     if (maybeNode === undefined) {
         throw new CommonError.InvariantError(`nodeId (${nodeId}) wasn't in State.`);
     }
@@ -135,7 +135,7 @@ export function deepCopy(state: State): State {
 
     return {
         root: {
-            maybeNode: maybeGetNode(nodesById, 0),
+            maybeNode: nodesById.get(0),
         },
         nodesById: nodesById,
         terminalNodeIds: state.terminalNodeIds.slice(),
@@ -148,9 +148,4 @@ function deepCopyNode(node: Node): Node {
         ...node,
         maybeAstNode: node.maybeAstNode !== undefined ? { ...node.maybeAstNode } : undefined,
     };
-}
-
-function maybeGetNode(nodesById: NodeMap, nodeId: number): Option<Node> {
-    const maybeNode: Option<Node> = nodesById.get(nodeId);
-    return maybeNode;
 }

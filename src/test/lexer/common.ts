@@ -112,7 +112,5 @@ export function expectLexerSnapshot(text: string): LexerSnapshot {
     if (!(snapshotResult.kind === ResultKind.Ok)) {
         throw new Error("AssertFailed: snapshotResult.kind === ResultKind.Ok");
     }
-    const snapshot: LexerSnapshot = snapshotResult.value;
-
-    return snapshot;
+    return snapshotResult.value;
 }

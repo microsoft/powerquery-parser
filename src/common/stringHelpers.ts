@@ -2,8 +2,7 @@
 // Licensed under the MIT license.
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
-import { Option } from "./option";
-import { Pattern } from "./patterns";
+import { Option, Pattern } from ".";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
