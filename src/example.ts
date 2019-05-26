@@ -7,6 +7,7 @@ import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 
 parseText(`if true then 1 else 2`);
 
+// @ts-ignore
 function parseText(text: string): void {
     const parseResult: TriedLexAndParse = lexAndParse(text);
     if (parseResult.kind === ResultKind.Ok) {
