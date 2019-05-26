@@ -21,7 +21,7 @@ export class Parser {
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
         private contextState: ParserContext.State = ParserContext.empty(),
-        private maybeContextNode: Option<ParserContext.Node> = undefined,
+        private maybeCurrentContextNode: Option<ParserContext.Node> = undefined,
     ) {
         if (this.lexerSnapshot.tokens.length) {
             this.maybeCurrentToken = this.lexerSnapshot.tokens[0];
@@ -37,8 +37,8 @@ export class Parser {
         const parser = new Parser(lexerSnapshot);
         try {
             const document: Ast.TDocument = parser.readDocument();
-            if (parser.maybeContextNode !== undefined) {
-                const details = { maybeContextNode: parser.maybeContextNode }
+            if (parser.maybeCurrentContextNode !== undefined) {
+                const details = { maybeContextNode: parser.maybeCurrentContextNode }
                 throw new CommonError.InvariantError("maybeContextNode should be falsey, there shouldn't be an open context", details);
             }
 
@@ -2156,34 +2156,34 @@ export class Parser {
     }
 
     private startContext(nodeKind: Ast.NodeKind) {
-        this.maybeContextNode = ParserContext.addChild(
+        this.maybeCurrentContextNode = ParserContext.addChild(
             this.contextState,
-            this.maybeContextNode,
+            this.maybeCurrentContextNode,
             nodeKind,
             this.maybeCurrentToken,
         );
     }
 
     private endContext(astNode: Ast.TNode) {
-        if (this.maybeContextNode === undefined) {
+        if (this.maybeCurrentContextNode === undefined) {
             throw new CommonError.InvariantError("maybeContextNode should be truthy, can't end context if it doesn't exist.");
         }
 
-        this.maybeContextNode = ParserContext.endContext(
+        this.maybeCurrentContextNode = ParserContext.endContext(
             this.contextState,
-            this.maybeContextNode,
+            this.maybeCurrentContextNode,
             astNode,
         );
     }
 
     private deleteContext() {
-        if (this.maybeContextNode === undefined) {
+        if (this.maybeCurrentContextNode === undefined) {
             throw new CommonError.InvariantError("maybeContextNode should be truthy, can't end context if it doesn't exist.");
         }
 
-        this.maybeContextNode = ParserContext.deleteContext(
+        this.maybeCurrentContextNode = ParserContext.deleteContext(
             this.contextState,
-            this.maybeContextNode,
+            this.maybeCurrentContextNode,
         );
     }
 
@@ -2256,8 +2256,8 @@ export class Parser {
             tokenIndex: this.tokenIndex,
             tokenRangeStackLength: this.tokenRangeStack.length,
             contextState: ParserContext.deepCopy(this.contextState),
-            maybeContextNodeId: this.maybeContextNode !== undefined
-                ? this.maybeContextNode.nodeId
+            maybeContextNodeId: this.maybeCurrentContextNode !== undefined
+                ? this.maybeCurrentContextNode.nodeId
                 : undefined,
         };
     }
@@ -2273,10 +2273,10 @@ export class Parser {
         this.contextState = backup.contextState;
 
         if (backup.maybeContextNodeId) {
-            this.maybeContextNode = ParserContext.expectNode(this.contextState.nodesById, backup.maybeContextNodeId);
+            this.maybeCurrentContextNode = ParserContext.expectNode(this.contextState.nodesById, backup.maybeContextNodeId);
         }
         else {
-            this.maybeContextNode = undefined;
+            this.maybeCurrentContextNode = undefined;
         }
     }
 }
