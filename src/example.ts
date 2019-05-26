@@ -38,6 +38,7 @@ function lexText(text: string): void {
         for (const [lineNumber, errorLine] of errorLineMap.entries()) {
             console.log(`lineNumber ${lineNumber} has the following error: ${errorLine.error.message}`);
         }
+        return;
     }
 
     // let's add one extra line.
