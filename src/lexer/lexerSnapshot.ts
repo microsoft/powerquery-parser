@@ -3,7 +3,7 @@
 import { CommonError, Option, Result, ResultKind, StringHelpers } from "../common";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import * as LexerError from "./error";
-import { Lexer } from "./lexer";
+import * as Lexer from "./lexer";
 import { LineTokenKind, Token, TokenKind } from "./token";
 
 export class LexerSnapshot {

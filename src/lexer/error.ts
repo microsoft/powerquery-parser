@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { CommonError, StringHelpers } from "../common";
 import * as Localization from "../localization/error";
-import { Lexer } from "./lexer";
+import * as Lexer from "./lexer";
 
 export type TLexerError = CommonError.CommonError | LexerError;
 
