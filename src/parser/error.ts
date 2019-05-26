@@ -3,7 +3,7 @@
 import { CommonError } from "../common";
 import { Option } from "../common/option";
 import { Token, TokenKind } from "../lexer/token";
-import { Localization } from "../localization/error";
+import * as Localization from "../localization/error";
 import * as Ast from "./ast";
 import * as Context from "./context";
 
@@ -27,49 +27,49 @@ export class ParserError extends Error {
 
 export class ExpectedAnyTokenKindError extends Error {
     constructor(readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>, readonly maybeFoundToken: Option<Token>) {
-        super(Localization.Error.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
+        super(Localization.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
     }
 }
 
 export class ExpectedTokenKindError extends Error {
     constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<Token>) {
-        super(Localization.Error.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
+        super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
     }
 }
 
 export class InvalidPrimitiveTypeError extends Error {
     constructor(readonly token: Token) {
-        super(Localization.Error.parserInvalidPrimitiveType(token));
+        super(Localization.parserInvalidPrimitiveType(token));
     }
 }
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
     constructor(readonly missingOptionalToken: Token) {
-        super(Localization.Error.parserRequiredParameterAfterOptionalParameter(missingOptionalToken));
+        super(Localization.parserRequiredParameterAfterOptionalParameter(missingOptionalToken));
     }
 }
 
 export class UnexpectedEndOfTokensError extends Error {
     constructor(readonly topOfTokenRangeStack: Ast.NodeKind) {
-        super(Localization.Error.parserUnexpectedEndOfTokens(topOfTokenRangeStack));
+        super(Localization.parserUnexpectedEndOfTokens(topOfTokenRangeStack));
     }
 }
 
 export class UnterminatedBracketError extends Error {
     constructor(readonly openBracketToken: Token) {
-        super(Localization.Error.parserUnterminatedBracket(openBracketToken));
+        super(Localization.parserUnterminatedBracket(openBracketToken));
     }
 }
 
 export class UnterminatedParenthesesError extends Error {
     constructor(readonly openParenthesesToken: Token) {
-        super(Localization.Error.parserUnterminatedParentheses(openParenthesesToken));
+        super(Localization.parserUnterminatedParentheses(openParenthesesToken));
     }
 }
 
 export class UnusedTokensRemainError extends Error {
     constructor(readonly firstUnusedToken: Token) {
-        super(Localization.Error.parserUnusedTokensRemain(firstUnusedToken));
+        super(Localization.parserUnusedTokensRemain(firstUnusedToken));
     }
 }
 
