@@ -1157,7 +1157,10 @@ export class Parser {
 
             if (reachedOptionalParameter && !maybeOptionalConstant) {
                 const token: Token = this.expectTokenAt(this.tokenIndex);
-                throw new ParserError.RequiredParameterAfterOptionalParameterError(token);
+                throw new ParserError.RequiredParameterAfterOptionalParameterError(
+                    token,
+                    this.lexerSnapshot.graphemePositionFrom(token),
+                );
             } else if (maybeOptionalConstant) {
                 reachedOptionalParameter = true;
             }
@@ -1417,7 +1420,10 @@ export class Parser {
                     this.restoreBackup(backup);
                     return {
                         kind: ResultKind.Err,
-                        error: new ParserError.InvalidPrimitiveTypeError(token),
+                        error: new ParserError.InvalidPrimitiveTypeError(
+                            token,
+                            this.lexerSnapshot.graphemePositionFrom(token),
+                        ),
                     };
             }
         } else if (this.isOnTokenKind(TokenKind.KeywordType)) {
@@ -1659,7 +1665,7 @@ export class Parser {
     private expectNoMoreTokens(): Option<ParserError.UnusedTokensRemainError> {
         if (this.tokenIndex !== this.lexerSnapshot.tokens.length) {
             const token: Token = this.expectTokenAt(this.tokenIndex);
-            return new ParserError.UnusedTokensRemainError(token);
+            return new ParserError.UnusedTokensRemainError(token, this.lexerSnapshot.graphemePositionFrom(token));
         } else {
             return undefined;
         }
@@ -1667,7 +1673,11 @@ export class Parser {
 
     private expectTokenKind(expectedTokenKind: TokenKind): Option<ParserError.ExpectedTokenKindError> {
         if (expectedTokenKind !== this.maybeCurrentTokenKind) {
-            return new ParserError.ExpectedTokenKindError(expectedTokenKind, this.maybeCurrentToken);
+            return new ParserError.ExpectedTokenKindError(
+                expectedTokenKind,
+                this.maybeCurrentToken,
+                this.lexerSnapshot.maybeGraphemePositionFrom(this.maybeCurrentToken),
+            );
         } else {
             return undefined;
         }
@@ -1680,7 +1690,11 @@ export class Parser {
             this.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(this.maybeCurrentTokenKind) === -1;
 
         if (isError) {
-            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, this.maybeCurrentToken);
+            return new ParserError.ExpectedAnyTokenKindError(
+                expectedAnyTokenKind,
+                this.maybeCurrentToken,
+                this.lexerSnapshot.maybeGraphemePositionFrom(this.maybeCurrentToken),
+            );
         } else {
             return undefined;
         }
@@ -2014,7 +2028,7 @@ export class Parser {
 
     private unterminatedParenthesesError(openTokenIndex: number): ParserError.UnterminatedParenthesesError {
         const token: Token = this.expectTokenAt(openTokenIndex);
-        return new ParserError.UnterminatedParenthesesError(token);
+        return new ParserError.UnterminatedParenthesesError(token, this.lexerSnapshot.graphemePositionFrom(token));
     }
 
     private disambiguateBracket(): BracketDisambiguation {
@@ -2052,7 +2066,7 @@ export class Parser {
 
     private unterminatedBracketError(openTokenIndex: number): ParserError.UnterminatedBracketError {
         const token: Token = this.expectTokenAt(openTokenIndex);
-        return new ParserError.UnterminatedBracketError(token);
+        return new ParserError.UnterminatedBracketError(token, this.lexerSnapshot.graphemePositionFrom(token));
     }
 
     private startTokenRange(nodeKind: Ast.NodeKind): void {
