@@ -13,7 +13,7 @@ export class LexerSnapshot {
         public readonly text: string,
         public readonly tokens: ReadonlyArray<Token>,
         public readonly comments: ReadonlyArray<TComment>,
-        public readonly lineTerminatorCodeUnits: ReadonlyArray<number>,
+        public readonly lineTerminators: ReadonlyArray<LineTerminator>,
     ) {}
 
     public static tryFrom(state: Lexer.State): Result<LexerSnapshot, LexerError.TLexerError> {
@@ -111,7 +111,7 @@ export class LexerSnapshot {
             flatIndex += 1;
         }
 
-        return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminatorCodeUnits);
+        return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminators);
     }
 }
 
@@ -270,7 +270,7 @@ function collectWhileContent<KindVariant>(
 
 function flattenLineTokens(state: Lexer.State): FlattenedLines {
     const lines: ReadonlyArray<Lexer.TLine> = state.lines;
-    const lineTerminatorCodeUnits: number[] = [];
+    const lineTerminators: LineTerminator[] = [];
     const numLines: number = lines.length;
 
     let text: string = "";
@@ -311,13 +311,16 @@ function flattenLineTokens(state: Lexer.State): FlattenedLines {
         }
 
         const lineTerminatorCodeUnit: number = lineTextOffset + line.text.length;
-        lineTerminatorCodeUnits.push(lineTerminatorCodeUnit);
+        lineTerminators.push({
+            codeUnit: lineTerminatorCodeUnit,
+            text: line.lineTerminator,
+        });
         lineTextOffset = lineTerminatorCodeUnit + line.lineTerminator.length;
     }
 
     return {
         text,
-        lineTerminatorCodeUnits,
+        lineTerminators,
         flatLineTokens,
     };
 }
@@ -332,7 +335,7 @@ function graphemePositionFrom(
 
 interface FlattenedLines {
     text: string;
-    lineTerminatorCodeUnits: ReadonlyArray<number>;
+    lineTerminators: ReadonlyArray<LineTerminator>;
     flatLineTokens: ReadonlyArray<FlatLineToken>;
 }
 
@@ -350,6 +353,11 @@ interface FlatLineCollection {
     readonly tokenStart: FlatLineToken;
     readonly collectedTokens: ReadonlyArray<FlatLineToken>;
     readonly maybeTokenEnd: Option<FlatLineToken>;
+}
+
+interface LineTerminator {
+    readonly codeUnit: number;
+    readonly text: string;
 }
 
 interface FlatLineToken {
