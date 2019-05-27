@@ -10,6 +10,7 @@ export const enum NewlineKind {
     SingleCharacter = "SingleCharacter",
     DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
 }
+
 export interface GraphemePosition {
     readonly lineNumber: number;
     readonly lineCodeUnit: number;

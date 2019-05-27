@@ -331,6 +331,25 @@ function graphemePositionFrom(
 ): StringHelpers.GraphemePosition {
     const positionStart: TokenPosition = flatLineToken.positionStart;
     const positionEnd: TokenPosition = flatLineToken.positionEnd;
+
+    let substringPositionStart: number = 0;
+    let substringPositionEnd: number = flattenedLines.text.length;
+    for (const lineTerminator of flattenedLines.lineTerminators) {
+        if (lineTerminator.codeUnit < positionStart.codeUnit) {
+            substringPositionStart = lineTerminator.codeUnit + lineTerminator.text.length;
+        }
+        if (lineTerminator.codeUnit >= positionEnd.codeUnit) {
+            substringPositionEnd = lineTerminator.codeUnit + lineTerminator.text.length;
+            break;
+        }
+    }
+
+    return StringHelpers.graphemePositionFrom(
+        flattenedLines.text.substring(substringPositionStart, substringPositionEnd),
+        positionStart.lineCodeUnit,
+        positionStart.lineNumber,
+        positionEnd.codeUnit,
+    );
 }
 
 interface FlattenedLines {
