@@ -4,6 +4,7 @@ import { isNever, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { Lexer, LexerError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
+import { TokenAndGraphemePosition } from "../parser/error";
 
 export function invariantError(reason: string, maybeJsonifyable: Option<any>): string {
     if (maybeJsonifyable !== undefined) {
@@ -139,12 +140,11 @@ export function lexerUnterminatedMultilineToken(
 
 export function parserExpectedTokenKind(
     expectedTokenKind: TokenKind,
-    maybeFoundToken: Option<Token>,
-    maybePositionStart: Option<StringHelpers.GraphemePosition>,
+    maybeFoundToken: Option<TokenAndGraphemePosition>,
 ): string {
-    if (maybeFoundToken && maybePositionStart) {
-        const positionStart: StringHelpers.GraphemePosition = maybePositionStart;
-        const token: Token = maybeFoundToken;
+    if (maybeFoundToken) {
+        const token: Token = maybeFoundToken.token;
+        const positionStart: StringHelpers.GraphemePosition = maybeFoundToken.graphemePosition;
         return `Expected to find a ${expectedTokenKind} on line ${positionStart.lineNumber}, column ${
             positionStart.columnNumber
         }, but a ${token.kind} was found instead.`;
@@ -170,12 +170,11 @@ export function parserInvalidPrimitiveType(token: Token, positionStart: StringHe
 
 export function parserExpectedAnyTokenKind(
     expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-    maybeFoundToken: Option<Token>,
-    maybePositionStart: Option<StringHelpers.GraphemePosition>,
+    maybeFoundToken: Option<TokenAndGraphemePosition>,
 ): string {
-    if (maybeFoundToken && maybePositionStart) {
-        const positionStart: StringHelpers.GraphemePosition = maybePositionStart;
-        const token: Token = maybeFoundToken;
+    if (maybeFoundToken) {
+        const token: Token = maybeFoundToken.token;
+        const positionStart: StringHelpers.GraphemePosition = maybeFoundToken.graphemePosition;
         return `Expected to find one of the following on line ${positionStart.lineNumber}, column ${
             positionStart.columnNumber
         }, but a ${token.kind} was found instead: [${expectedAnyTokenKind}].`;

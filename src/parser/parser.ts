@@ -1673,11 +1673,14 @@ export class Parser {
 
     private expectTokenKind(expectedTokenKind: TokenKind): Option<ParserError.ExpectedTokenKindError> {
         if (expectedTokenKind !== this.maybeCurrentTokenKind) {
-            return new ParserError.ExpectedTokenKindError(
-                expectedTokenKind,
-                this.maybeCurrentToken,
-                this.lexerSnapshot.maybeGraphemePositionFrom(this.maybeCurrentToken),
-            );
+            const maybeTokenWithGraphemePosition: Option<ParserError.TokenAndGraphemePosition> =
+                this.maybeCurrentToken !== undefined
+                    ? {
+                          token: this.maybeCurrentToken,
+                          graphemePosition: this.lexerSnapshot.graphemePositionFrom(this.maybeCurrentToken),
+                      }
+                    : undefined;
+            return new ParserError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithGraphemePosition);
         } else {
             return undefined;
         }
@@ -1690,11 +1693,14 @@ export class Parser {
             this.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(this.maybeCurrentTokenKind) === -1;
 
         if (isError) {
-            return new ParserError.ExpectedAnyTokenKindError(
-                expectedAnyTokenKind,
-                this.maybeCurrentToken,
-                this.lexerSnapshot.maybeGraphemePositionFrom(this.maybeCurrentToken),
-            );
+            const maybeTokenWithGraphemePosition: Option<ParserError.TokenAndGraphemePosition> =
+                this.maybeCurrentToken !== undefined
+                    ? {
+                          token: this.maybeCurrentToken,
+                          graphemePosition: this.lexerSnapshot.graphemePositionFrom(this.maybeCurrentToken),
+                      }
+                    : undefined;
+            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithGraphemePosition);
         } else {
             return undefined;
         }

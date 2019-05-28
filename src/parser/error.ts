@@ -28,20 +28,15 @@ export class ParserError extends Error {
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
         readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-        readonly maybeFoundToken: Option<Token>,
-        readonly maybePositionStart: Option<StringHelpers.GraphemePosition>,
+        readonly maybeFoundToken: Option<TokenAndGraphemePosition>,
     ) {
-        super(Localization.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken, maybePositionStart));
+        super(Localization.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
     }
 }
 
 export class ExpectedTokenKindError extends Error {
-    constructor(
-        readonly expectedTokenKind: TokenKind,
-        readonly maybeFoundToken: Option<Token>,
-        readonly maybePositionStart: Option<StringHelpers.GraphemePosition>,
-    ) {
-        super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken, maybePositionStart));
+    constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenAndGraphemePosition>) {
+        super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
     }
 }
 
@@ -79,6 +74,11 @@ export class UnusedTokensRemainError extends Error {
     constructor(readonly firstUnusedToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
         super(Localization.parserUnusedTokensRemain(positionStart));
     }
+}
+
+export interface TokenAndGraphemePosition {
+    readonly token: Token;
+    readonly graphemePosition: StringHelpers.GraphemePosition;
 }
 
 export function isTParserError(x: any): x is TParserError {
