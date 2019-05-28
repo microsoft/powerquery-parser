@@ -1790,11 +1790,11 @@ export class Parser {
 
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
-                this.startContext(helperNodeKind)
+                this.startContext(helperNodeKind);
                 this.startTokenRange(helperNodeKind);
 
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
-                
+
                 const helper: Ast.UnaryExpressionHelper<Op, Operand> = {
                     kind: helperNodeKind,
                     id: this.expectContextNodeId(),
