@@ -28,14 +28,14 @@ export class ParserError extends Error {
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
         readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-        readonly maybeFoundToken: Option<TokenAndGraphemePosition>,
+        readonly maybeFoundToken: Option<TokenWithColumnNumber>,
     ) {
         super(Localization.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
     }
 }
 
 export class ExpectedTokenKindError extends Error {
-    constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenAndGraphemePosition>) {
+    constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
         super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
     }
 }
@@ -76,9 +76,9 @@ export class UnusedTokensRemainError extends Error {
     }
 }
 
-export interface TokenAndGraphemePosition {
+export interface TokenWithColumnNumber {
     readonly token: Token;
-    readonly graphemePosition: StringHelpers.GraphemePosition;
+    readonly columnNumber: number;
 }
 
 export function isTParserError(x: any): x is TParserError {

@@ -4,7 +4,7 @@ import { isNever, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { Lexer, LexerError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
-import { TokenAndGraphemePosition } from "../parser/error";
+import { TokenWithColumnNumber } from "../parser/error";
 
 export function invariantError(reason: string, maybeJsonifyable: Option<any>): string {
     if (maybeJsonifyable !== undefined) {
@@ -140,14 +140,15 @@ export function lexerUnterminatedMultilineToken(
 
 export function parserExpectedTokenKind(
     expectedTokenKind: TokenKind,
-    maybeFoundToken: Option<TokenAndGraphemePosition>,
+    maybeTokenWithColumnNumber: Option<TokenWithColumnNumber>,
 ): string {
-    if (maybeFoundToken) {
-        const token: Token = maybeFoundToken.token;
-        const positionStart: StringHelpers.GraphemePosition = maybeFoundToken.graphemePosition;
-        return `Expected to find a ${expectedTokenKind} on line ${positionStart.lineNumber}, column ${
-            positionStart.columnNumber
-        }, but a ${token.kind} was found instead.`;
+    if (maybeTokenWithColumnNumber) {
+        const tokenWithColumnNumber: TokenWithColumnNumber = maybeTokenWithColumnNumber;
+        const token: Token = tokenWithColumnNumber.token;
+        const columnNumber: number = tokenWithColumnNumber.columnNumber;
+        return `Expected to find a ${expectedTokenKind} on line ${
+            token.positionStart.lineNumber
+        }, column ${columnNumber}, but a ${token.kind} was found instead.`;
     } else {
         return `Expected to find a ${expectedTokenKind} but the end-of-file was reached instead.`;
     }
@@ -170,14 +171,15 @@ export function parserInvalidPrimitiveType(token: Token, positionStart: StringHe
 
 export function parserExpectedAnyTokenKind(
     expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-    maybeFoundToken: Option<TokenAndGraphemePosition>,
+    maybeTokenWithColumnNumber: Option<TokenWithColumnNumber>,
 ): string {
-    if (maybeFoundToken) {
-        const token: Token = maybeFoundToken.token;
-        const positionStart: StringHelpers.GraphemePosition = maybeFoundToken.graphemePosition;
-        return `Expected to find one of the following on line ${positionStart.lineNumber}, column ${
-            positionStart.columnNumber
-        }, but a ${token.kind} was found instead: [${expectedAnyTokenKind}].`;
+    if (maybeTokenWithColumnNumber) {
+        const tokenWithColumnNumber: TokenWithColumnNumber = maybeTokenWithColumnNumber;
+        const token: Token = tokenWithColumnNumber.token;
+        const columnNumber: number = tokenWithColumnNumber.columnNumber;
+        return `Expected to find one of the following on line ${
+            token.positionStart.lineNumber
+        }, column ${columnNumber}, but a ${token.kind} was found instead: [${expectedAnyTokenKind}].`;
     } else {
         return `Expected to find one of the following, but the end-of-file was reached instead: [${expectedAnyTokenKind}].`;
     }

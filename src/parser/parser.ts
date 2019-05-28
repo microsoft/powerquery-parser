@@ -1159,7 +1159,7 @@ export class Parser {
                 const token: Token = this.expectTokenAt(this.tokenIndex);
                 throw new ParserError.RequiredParameterAfterOptionalParameterError(
                     token,
-                    this.lexerSnapshot.graphemePositionFrom(token),
+                    this.lexerSnapshot.graphemePositionStartFrom(token),
                 );
             } else if (maybeOptionalConstant) {
                 reachedOptionalParameter = true;
@@ -1422,7 +1422,7 @@ export class Parser {
                         kind: ResultKind.Err,
                         error: new ParserError.InvalidPrimitiveTypeError(
                             token,
-                            this.lexerSnapshot.graphemePositionFrom(token),
+                            this.lexerSnapshot.graphemePositionStartFrom(token),
                         ),
                     };
             }
@@ -1665,7 +1665,7 @@ export class Parser {
     private expectNoMoreTokens(): Option<ParserError.UnusedTokensRemainError> {
         if (this.tokenIndex !== this.lexerSnapshot.tokens.length) {
             const token: Token = this.expectTokenAt(this.tokenIndex);
-            return new ParserError.UnusedTokensRemainError(token, this.lexerSnapshot.graphemePositionFrom(token));
+            return new ParserError.UnusedTokensRemainError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
         } else {
             return undefined;
         }
@@ -1673,14 +1673,14 @@ export class Parser {
 
     private expectTokenKind(expectedTokenKind: TokenKind): Option<ParserError.ExpectedTokenKindError> {
         if (expectedTokenKind !== this.maybeCurrentTokenKind) {
-            const maybeTokenWithGraphemePosition: Option<ParserError.TokenAndGraphemePosition> =
+            const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
                 this.maybeCurrentToken !== undefined
                     ? {
                           token: this.maybeCurrentToken,
-                          graphemePosition: this.lexerSnapshot.graphemePositionFrom(this.maybeCurrentToken),
+                          columnNumber: this.lexerSnapshot.columnNumberStartFrom(this.maybeCurrentToken),
                       }
                     : undefined;
-            return new ParserError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithGraphemePosition);
+            return new ParserError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
         } else {
             return undefined;
         }
@@ -1693,14 +1693,14 @@ export class Parser {
             this.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(this.maybeCurrentTokenKind) === -1;
 
         if (isError) {
-            const maybeTokenWithGraphemePosition: Option<ParserError.TokenAndGraphemePosition> =
+            const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
                 this.maybeCurrentToken !== undefined
                     ? {
                           token: this.maybeCurrentToken,
-                          graphemePosition: this.lexerSnapshot.graphemePositionFrom(this.maybeCurrentToken),
+                          columnNumber: this.lexerSnapshot.columnNumberStartFrom(this.maybeCurrentToken),
                       }
                     : undefined;
-            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithGraphemePosition);
+            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
         } else {
             return undefined;
         }
@@ -2034,7 +2034,7 @@ export class Parser {
 
     private unterminatedParenthesesError(openTokenIndex: number): ParserError.UnterminatedParenthesesError {
         const token: Token = this.expectTokenAt(openTokenIndex);
-        return new ParserError.UnterminatedParenthesesError(token, this.lexerSnapshot.graphemePositionFrom(token));
+        return new ParserError.UnterminatedParenthesesError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
     }
 
     private disambiguateBracket(): BracketDisambiguation {
@@ -2072,7 +2072,7 @@ export class Parser {
 
     private unterminatedBracketError(openTokenIndex: number): ParserError.UnterminatedBracketError {
         const token: Token = this.expectTokenAt(openTokenIndex);
-        return new ParserError.UnterminatedBracketError(token, this.lexerSnapshot.graphemePositionFrom(token));
+        return new ParserError.UnterminatedBracketError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
     }
 
     private startTokenRange(nodeKind: Ast.NodeKind): void {
