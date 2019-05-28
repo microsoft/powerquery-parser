@@ -2299,6 +2299,7 @@ export class Parser {
         const contextNode: Context.Node = this.maybeCurrentContextNode;
         return {
             id: contextNode.nodeId,
+            maybeParentId: contextNode.maybeParentId,
             childIds: contextNode.childNodeIds.slice(),
         };
     }
@@ -2387,5 +2388,6 @@ interface StateBackup {
 }
 interface ContextNodeMetadata {
     readonly id: number;
+    readonly maybeParentId: Option<number>;
     readonly childIds: ReadonlyArray<number>;
 }
