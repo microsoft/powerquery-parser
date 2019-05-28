@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
-import { Option, Pattern } from ".";
+import { CommonError, Option, Pattern } from ".";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
@@ -12,19 +12,51 @@ export const enum NewlineKind {
 }
 
 export interface GraphemePosition {
-    readonly lineCodeUnit: number;
     readonly lineNumber: number;
+    readonly lineCodeUnit: number;
     readonly columnNumber: number;
+    readonly maybeCodeUnit: Option<number>;
 }
 
-export interface ExtendedGraphemePosition extends GraphemePosition {
-    readonly codeUnit: number;
+export function columnNumberFrom(text: string, requiredCodeUnit: number): number {
+    const graphemes: ReadonlyArray<string> = graphemeSplitter.splitGraphemes(text);
+
+    let columnNumber: number = 0;
+    let summedCodeUnits: number = 0;
+    for (const grapheme of graphemes) {
+        if (summedCodeUnits === requiredCodeUnit) {
+            return columnNumber;
+        } else {
+            summedCodeUnits += grapheme.length;
+            columnNumber += 1;
+        }
+    }
+
+    const details: {} = {
+        text,
+        requiredCodeUnit,
+    };
+    throw new CommonError.InvariantError(`no columnNumber can be generated for required codeUnit`, details);
 }
 
-export function maybeNewlineKindAt(str: string, index: number): Option<NewlineKind> {
-    if (maybeRegexMatchLength(Pattern.RegExpNewline, str, index)) {
+export function graphemePositionFrom(
+    text: string,
+    lineCodeUnit: number,
+    lineNumber: number,
+    maybeCodeUnit: Option<number>,
+): GraphemePosition {
+    return {
+        lineCodeUnit,
+        lineNumber,
+        columnNumber: columnNumberFrom(text, lineCodeUnit),
+        maybeCodeUnit,
+    };
+}
+
+export function maybeNewlineKindAt(text: string, index: number): Option<NewlineKind> {
+    if (maybeRegexMatchLength(Pattern.RegExpNewline, text, index)) {
         // test for CARRIAGE RETURN + LINE FEED
-        if (str[index] === "\r" && str[index + 1] === "\n") {
+        if (text[index] === "\r" && text[index + 1] === "\n") {
             return NewlineKind.DoubleCharacter;
         } else {
             return NewlineKind.SingleCharacter;
@@ -34,9 +66,9 @@ export function maybeNewlineKindAt(str: string, index: number): Option<NewlineKi
     }
 }
 
-export function maybeRegexMatchLength(pattern: RegExp, str: string, index: number): Option<number> {
+export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): Option<number> {
     pattern.lastIndex = index;
-    const matches: RegExpExecArray | null = pattern.exec(str);
+    const matches: RegExpExecArray | null = pattern.exec(text);
 
     if (!matches) {
         return undefined;

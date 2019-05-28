@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { StringHelpers } from "../common";
-
-const enum LineTokenKindAdditions {
+export const enum LineTokenKindAdditions {
     LineComment = "LineComment",
     MultilineComment = "MultilineComment",
     MultilineCommentContent = "MultilineCommentContent",
@@ -164,4 +162,10 @@ export interface IToken<Kind, Position> {
 
 export interface LineToken extends IToken<LineTokenKind, number> {}
 
-export interface Token extends IToken<TokenKind, StringHelpers.ExtendedGraphemePosition> {}
+export interface Token extends IToken<TokenKind, TokenPosition> {}
+
+export interface TokenPosition {
+    readonly lineCodeUnit: number;
+    readonly lineNumber: number;
+    readonly codeUnit: number;
+}

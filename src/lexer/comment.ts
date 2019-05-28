@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { StringHelpers } from "../common";
+import { TokenPosition } from "./token";
 
 export type TComment = LineComment | MultilineComment;
 
@@ -13,8 +13,8 @@ export interface IComment {
     readonly kind: CommentKind;
     readonly data: string;
     readonly containsNewline: boolean;
-    readonly positionStart: StringHelpers.ExtendedGraphemePosition;
-    readonly positionEnd: StringHelpers.ExtendedGraphemePosition;
+    readonly positionStart: TokenPosition;
+    readonly positionEnd: TokenPosition;
 }
 
 export interface LineComment extends IComment {

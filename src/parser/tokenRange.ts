@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { StringHelpers } from "../common";
+import { TokenPosition } from "../lexer";
 
 export type TokenRangeMap<T> = Map<string, T>;
 
@@ -8,8 +8,8 @@ export type TokenRangeMap<T> = Map<string, T>;
 export interface TokenRange {
     readonly startTokenIndex: number;
     readonly endTokenIndex: number; // exclusive
-    readonly positionStart: StringHelpers.ExtendedGraphemePosition;
-    readonly positionEnd: StringHelpers.ExtendedGraphemePosition;
+    readonly positionStart: TokenPosition;
+    readonly positionEnd: TokenPosition;
     readonly hash: string;
 }
 
@@ -17,12 +17,8 @@ export interface TokenRange {
 // tag is needed as some TNodes can have the same range,
 // eg. an IdentifierExpression without the inclusive modifier '@'
 // has the same TokenRange as its child, Identifier.
-export function tokenRangeHashFrom(
-    tag: string,
-    positionStart: StringHelpers.GraphemePosition,
-    positionEnd: StringHelpers.GraphemePosition,
-): string {
-    return `${tag}:${positionStart.lineNumber},${positionStart.columnNumber}:${positionEnd.lineNumber},${
-        positionEnd.columnNumber
+export function tokenRangeHashFrom(tag: string, positionStart: TokenPosition, positionEnd: TokenPosition): string {
+    return `${tag}:${positionStart.lineNumber},${positionStart.lineCodeUnit}:${positionEnd.lineNumber},${
+        positionEnd.lineCodeUnit
     }`;
 }
