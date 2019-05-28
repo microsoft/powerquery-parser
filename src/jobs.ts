@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment } from "./lexer";
-import { Ast, Parser, ParserError } from "./parser";
+import { Ast, ParseOk, Parser, ParserError } from "./parser";
 
 export type LexAndParseErr = (
     | LexerError.TLexerError
@@ -36,11 +36,12 @@ export function lexAndParse(text: string): Result<LexAndParseOk, LexAndParseErr>
     if (parseResult.kind === ResultKind.Err) {
         return parseResult;
     }
+    const parseOk: ParseOk = parseResult.value;
 
     return {
         kind: ResultKind.Ok,
         value: {
-            ast: parseResult.value,
+            ast: parseOk.document,
             comments: snapshot.comments,
         }
     }

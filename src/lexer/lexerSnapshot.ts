@@ -76,14 +76,18 @@ export class LexerSnapshot {
                 }
 
                 default:
-                    // unsafe action:
-                    //      casting TokenLineKind to TokenKind
-                    // what I'm trying to avoid:
-                    //      the cost of properly casting, aka one switch statement per LineTokenKind
-                    // why it's safe:
-                    //      the above TokenLineKinds are taken care of, along with their Content and End variants,
-                    //      leaving the rest to be a 1-to-1 match with TokenKind.
-                    //      eg. set(LineTokenKind) & set(remaining variants) === set(LineKind)
+                    // UNSAFE MARKER
+                    //
+                    // Purpose of code block:
+                    //      Translate LineTokenKind to LineToken.
+                    //
+                    // Why are you trying to avoid a safer approach?
+                    //      A proper mapping would require a switch statement, one case per kind in LineNodeKind
+                    //
+                    // Why is it safe?
+                    //      Almost all of LineTokenKind and TokenKind have a 1-to-1 mapping.
+                    //      The edge cases (multiline tokens) have already been taken care of above.
+                    //      set(remaining variants of LineTokenKind) === set(LineKind)
                     const positionStart: StringHelpers.ExtendedGraphemePosition = flatToken.positionStart;
                     const positionEnd: StringHelpers.ExtendedGraphemePosition = flatToken.positionEnd;
                     tokens.push({
@@ -107,7 +111,7 @@ function readLineComment(
 ): LineComment {
     const positionStart: StringHelpers.ExtendedGraphemePosition = flatToken.positionStart;
     const positionEnd: StringHelpers.ExtendedGraphemePosition = flatToken.positionEnd;
-    
+
     return {
         kind: CommentKind.Line,
         data: flatToken.data,

@@ -22,12 +22,16 @@ export class Tokenizer implements TokensProvider {
     }
 
     static ITokenFrom(lineToken: LineToken): IToken {
-        // unsafe action:
-        //      cast LineTokenKind into string
-        // what I'm trying to avoid:
-        //      the cost of properly casting, aka one switch statement per LineTokenKind
-        // why it's safe:
-        //      all variants for LineTokenKind are strings
+        // UNSAFE MARKER
+        //
+        // Purpose of code block:
+        //      Translate LineTokenKind to LineToken.
+        //
+        // Why are you trying to avoid a safer approach?
+        //      A proper mapping would require a switch statement, one case per kind in LineNodeKind.
+        //
+        // Why is it safe?
+        //      All variants of LineNodeKind are strings.
         return {
             startIndex: lineToken.positionStart,
             scopes: lineToken.kind as unknown as string,
@@ -43,7 +47,7 @@ export class TokenizerState implements IState {
     }
 
     // For tokenizer state comparison, all we really care about is the line mode end value.
-    // i.e. we need to know if we're ending on an unterminated comment/string as it 
+    // i.e. we need to know if we're ending on an unterminated comment/string as it
     // would impact tokenization for the following line.
     public equals(other: IState): boolean {
         if (!other) {

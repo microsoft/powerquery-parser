@@ -17,7 +17,7 @@ import { LineToken, LineTokenKind } from "./token";
 
 export namespace Lexer {
 
-    export type TErrorLines = { [lineNumber: number]: TErrorLine; }
+    export type TErrorLines = Map<number, TErrorLine>;
 
     export type TLine = (
         | TouchedLine
@@ -155,14 +155,7 @@ export namespace Lexer {
             };
         }
 
-        // unsafe action:
-        //      casting ReadonlyArray<SplitLine> to SplitLine[]
-        // what I'm trying to avoid:
-        //      the cost of properly casting, aka deep cloning the object
-        // why it's safe:
-        //      the array is generated for this function block,
-        //      and it never leaves this function block.
-        const splitLines: SplitLine[] = splitOnLineTerminators(text) as SplitLine[];
+        const splitLines: SplitLine[] = splitOnLineTerminators(text);
 
         const rangeStart: RangePosition = range.start;
         const lineStart: TLine = state.lines[rangeStart.lineNumber];
@@ -301,7 +294,7 @@ export namespace Lexer {
     }
 
     export function maybeErrorLines(state: State): Option<TErrorLines> {
-        const errorLines: TErrorLines = {};
+        const errorLines: TErrorLines = new Map();
 
         const lines: ReadonlyArray<TLine> = state.lines;
         const numLines = lines.length;
@@ -309,7 +302,7 @@ export namespace Lexer {
         for (let index = 0; index < numLines; index++) {
             const line: TLine = lines[index];
             if (isErrorLine(line)) {
-                errorLines[index] = line;
+                errorLines.set(index, line);
                 errorsExist = true;
             }
         }
@@ -337,7 +330,7 @@ export namespace Lexer {
         lineTerminator: string,
     }
 
-    function splitOnLineTerminators(text: string): ReadonlyArray<SplitLine> {
+    function splitOnLineTerminators(text: string): SplitLine[] {
         let lines: SplitLine[] = text
             .split("\r\n")
             .map((text: string) => {
