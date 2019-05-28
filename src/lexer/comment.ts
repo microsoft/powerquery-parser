@@ -2,10 +2,7 @@
 // Licensed under the MIT license.
 import { StringHelpers } from "../common";
 
-export type TComment = (
-    | LineComment
-    | MultilineComment
-)
+export type TComment = LineComment | MultilineComment;
 
 export const enum CommentKind {
     Line = "Line",
@@ -13,17 +10,17 @@ export const enum CommentKind {
 }
 
 export interface IComment {
-    readonly kind: CommentKind,
-    readonly data: string,
-    readonly containsNewline: boolean,
-    readonly positionStart: StringHelpers.ExtendedGraphemePosition,
-    readonly positionEnd: StringHelpers.ExtendedGraphemePosition,
+    readonly kind: CommentKind;
+    readonly data: string;
+    readonly containsNewline: boolean;
+    readonly positionStart: StringHelpers.ExtendedGraphemePosition;
+    readonly positionEnd: StringHelpers.ExtendedGraphemePosition;
 }
 
 export interface LineComment extends IComment {
-    readonly kind: CommentKind.Line,
+    readonly kind: CommentKind.Line;
 }
 
 export interface MultilineComment extends IComment {
-    readonly kind: CommentKind.Multiline,
+    readonly kind: CommentKind.Multiline;
 }

@@ -2,15 +2,15 @@
 // Licensed under the MIT license.
 import { StringHelpers } from "../common";
 
-export type TokenRangeMap<T> = Map<string, T>
+export type TokenRangeMap<T> = Map<string, T>;
 
 // keep track of how many tokens and code units make up a TNode in the range of [start, end).
 export interface TokenRange {
-    readonly startTokenIndex: number,
-    readonly endTokenIndex: number // exclusive
-    readonly positionStart: StringHelpers.ExtendedGraphemePosition,
-    readonly positionEnd: StringHelpers.ExtendedGraphemePosition,
-    readonly hash: string,
+    readonly startTokenIndex: number;
+    readonly endTokenIndex: number; // exclusive
+    readonly positionStart: StringHelpers.ExtendedGraphemePosition;
+    readonly positionEnd: StringHelpers.ExtendedGraphemePosition;
+    readonly hash: string;
 }
 
 // used as a key in TokenRangeMap.
@@ -22,5 +22,7 @@ export function tokenRangeHashFrom(
     positionStart: StringHelpers.GraphemePosition,
     positionEnd: StringHelpers.GraphemePosition,
 ): string {
-    return `${tag}:${positionStart.lineNumber},${positionStart.columnNumber}:${positionEnd.lineNumber},${positionEnd.columnNumber}`;
+    return `${tag}:${positionStart.lineNumber},${positionStart.columnNumber}:${positionEnd.lineNumber},${
+        positionEnd.columnNumber
+    }`;
 }

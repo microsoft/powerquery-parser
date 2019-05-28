@@ -1,22 +1,29 @@
 import "mocha";
 import { CommentKind, LineTokenKind, TokenKind } from "../../lexer";
-import { AbridgedComments, AbridgedLineTokens, AbridgedSnapshot, AbridgedTokens, expectAbridgedSnapshotMatch, expectLineTokenMatch, expectSnapshotAbridgedComments, expectSnapshotAbridgedTokens } from "./common";
+import {
+    AbridgedComments,
+    AbridgedLineTokens,
+    AbridgedSnapshot,
+    AbridgedTokens,
+    expectAbridgedSnapshotMatch,
+    expectLineTokenMatch,
+    expectSnapshotAbridgedComments,
+    expectSnapshotAbridgedTokens,
+} from "./common";
 
-const LINE_TERMINATOR = "\n"
+const LINE_TERMINATOR: string = "\n";
 
 describe(`Lexer`, () => {
     describe(`MultilineTokens Abridged LineToken`, () => {
         describe(`MultilineComment`, () => {
             it(`/**/`, () => {
-                const text = `/**/`;
-                const expected: AbridgedLineTokens = [
-                    [LineTokenKind.MultilineComment, `/**/`],
-                ];
+                const text: string = `/**/`;
+                const expected: AbridgedLineTokens = [[LineTokenKind.MultilineComment, `/**/`]];
                 expectLineTokenMatch(text, expected, true);
             });
 
             it(`/*\\n*/`, () => {
-                const text = `/*${LINE_TERMINATOR}*/`;
+                const text: string = `/*${LINE_TERMINATOR}*/`;
                 const expected: AbridgedLineTokens = [
                     [LineTokenKind.MultilineCommentStart, `/*`],
                     [LineTokenKind.MultilineCommentEnd, `*/`],
@@ -25,7 +32,7 @@ describe(`Lexer`, () => {
             });
 
             it(`/*\\nfoobar\\n*/`, () => {
-                const text = `/*${LINE_TERMINATOR}foobar${LINE_TERMINATOR}*/`;
+                const text: string = `/*${LINE_TERMINATOR}foobar${LINE_TERMINATOR}*/`;
                 const expected: AbridgedLineTokens = [
                     [LineTokenKind.MultilineCommentStart, `/*`],
                     [LineTokenKind.MultilineCommentContent, `foobar`],
@@ -37,15 +44,13 @@ describe(`Lexer`, () => {
 
         describe(`StringLiteral`, () => {
             it(`""`, () => {
-                const text = `""`;
-                const expected: AbridgedLineTokens = [
-                    [LineTokenKind.StringLiteral, `""`],
-                ];
+                const text: string = `""`;
+                const expected: AbridgedLineTokens = [[LineTokenKind.StringLiteral, `""`]];
                 expectLineTokenMatch(text, expected, true);
             });
 
             it(`"\\n"`, () => {
-                const text = `"${LINE_TERMINATOR}"`;
+                const text: string = `"${LINE_TERMINATOR}"`;
                 const expected: AbridgedLineTokens = [
                     [LineTokenKind.StringLiteralStart, `"`],
                     [LineTokenKind.StringLiteralEnd, `"`],
@@ -54,7 +59,7 @@ describe(`Lexer`, () => {
             });
 
             it(`"\\nfoobar\\n"`, () => {
-                const text = `"${LINE_TERMINATOR}foobar${LINE_TERMINATOR}"`;
+                const text: string = `"${LINE_TERMINATOR}foobar${LINE_TERMINATOR}"`;
                 const expected: AbridgedLineTokens = [
                     [LineTokenKind.StringLiteralStart, `"`],
                     [LineTokenKind.StringLiteralContent, `foobar`],
@@ -66,15 +71,13 @@ describe(`Lexer`, () => {
 
         describe(`QuotedIdentiifer`, () => {
             it(`""`, () => {
-                const text = `#""`;
-                const expected: AbridgedLineTokens = [
-                    [LineTokenKind.Identifier, `#""`],
-                ];
+                const text: string = `#""`;
+                const expected: AbridgedLineTokens = [[LineTokenKind.Identifier, `#""`]];
                 expectLineTokenMatch(text, expected, true);
             });
 
             it(`#"\\n"`, () => {
-                const text = `#"${LINE_TERMINATOR}"`;
+                const text: string = `#"${LINE_TERMINATOR}"`;
                 const expected: AbridgedLineTokens = [
                     [LineTokenKind.QuotedIdentifierStart, `#"`],
                     [LineTokenKind.QuotedIdentifierEnd, `"`],
@@ -83,7 +86,7 @@ describe(`Lexer`, () => {
             });
 
             it(`#"\\nfoobar\\n"`, () => {
-                const text = `#"${LINE_TERMINATOR}foobar${LINE_TERMINATOR}"`;
+                const text: string = `#"${LINE_TERMINATOR}foobar${LINE_TERMINATOR}"`;
                 const expected: AbridgedLineTokens = [
                     [LineTokenKind.QuotedIdentifierStart, `#"`],
                     [LineTokenKind.QuotedIdentifierContent, `foobar`],
@@ -97,31 +100,25 @@ describe(`Lexer`, () => {
     describe(`MultilineTokens Abridged LexerSnapshot`, () => {
         describe(`MultilineComment`, () => {
             it(`/**/`, () => {
-                const text = `/**/`;
-                const expected: AbridgedComments = [
-                    [CommentKind.Multiline, `/**/`],
-                ];
+                const text: string = `/**/`;
+                const expected: AbridgedComments = [[CommentKind.Multiline, `/**/`]];
                 expectSnapshotAbridgedComments(text, expected, true);
             });
 
             it(`/* */`, () => {
-                const text = `/* */`;
-                const expected: AbridgedComments = [
-                    [CommentKind.Multiline, `/* */`],
-                ];
+                const text: string = `/* */`;
+                const expected: AbridgedComments = [[CommentKind.Multiline, `/* */`]];
                 expectSnapshotAbridgedComments(text, expected, true);
             });
 
             it(`/* X */`, () => {
-                const text = `/* X */`;
-                const expected: AbridgedComments = [
-                    [CommentKind.Multiline, `/* X */`],
-                ];
+                const text: string = `/* X */`;
+                const expected: AbridgedComments = [[CommentKind.Multiline, `/* X */`]];
                 expectSnapshotAbridgedComments(text, expected, true);
             });
 
             it(`/*X\\nX\\nX*/`, () => {
-                const text = `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`;
+                const text: string = `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`;
                 const expected: AbridgedComments = [
                     [CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`],
                 ];
@@ -129,9 +126,8 @@ describe(`Lexer`, () => {
             });
 
             it(`abc /*X\\nX\\nX*/`, () => {
-                const text = `abc /*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`;
-                const expected: AbridgedSnapshot =
-                {
+                const text: string = `abc /*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`;
+                const expected: AbridgedSnapshot = {
                     comments: [[CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`]],
                     tokens: [[TokenKind.Identifier, `abc`]],
                 };
@@ -139,10 +135,10 @@ describe(`Lexer`, () => {
             });
 
             it(`/*X\\nX\\nX*/ abc`, () => {
-                const text = `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/ abc`;
+                const text: string = `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/ abc`;
                 const expected: AbridgedSnapshot = {
                     tokens: [[TokenKind.Identifier, `abc`]],
-                    comments: [[CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`]]
+                    comments: [[CommentKind.Multiline, `/*X${LINE_TERMINATOR}X${LINE_TERMINATOR}X*/`]],
                 };
                 expectAbridgedSnapshotMatch(text, expected, true);
             });
@@ -150,15 +146,13 @@ describe(`Lexer`, () => {
 
         describe(`StringLiteral`, () => {
             it(`"X"`, () => {
-                const text = `"X"`;
-                const expected: AbridgedTokens = [
-                    [TokenKind.StringLiteral, `"X"`],
-                ];
+                const text: string = `"X"`;
+                const expected: AbridgedTokens = [[TokenKind.StringLiteral, `"X"`]];
                 expectSnapshotAbridgedTokens(text, expected, true);
             });
 
             it(`"X\\nX\\nX"`, () => {
-                const text = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
+                const text: string = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
                 const expected: AbridgedTokens = [
                     [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                 ];
@@ -166,7 +160,7 @@ describe(`Lexer`, () => {
             });
 
             it(`abc "X\\nX\\nX"`, () => {
-                const text = `abc "X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
+                const text: string = `abc "X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
                 const expected: AbridgedTokens = [
                     [TokenKind.Identifier, `abc`],
                     [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
@@ -175,7 +169,7 @@ describe(`Lexer`, () => {
             });
 
             it(`"X\\nX\\nX" abc`, () => {
-                const text = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X" abc`;
+                const text: string = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X" abc`;
                 const expected: AbridgedTokens = [
                     [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                     [TokenKind.Identifier, `abc`],
@@ -183,5 +177,5 @@ describe(`Lexer`, () => {
                 expectSnapshotAbridgedTokens(text, expected, true);
             });
         });
-    })
+    });
 });

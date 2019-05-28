@@ -1,0 +1,105 @@
+{
+    "rulesDirectory": ["tslint-config-prettier", "tslint-microsoft-contrib", "tslint-plugin-prettier"],
+    "rules": {
+        "no-angle-bracket-type-assertion": true,
+        "no-internal-module": true,
+        "no-namespace": true,
+        "prettier": true,
+
+        // tslint-microsoft-contrib rules we use with some configuration
+        "comment-format": [true, "check-space"],
+        "function-name": [
+            true,
+            {
+                // default
+                "method-regex": "^[a-z][\\w\\d]+$",
+
+                // default
+                "private-method-regex": "^[a-z][\\w\\d]+$",
+
+                // default
+                "protected-method-regex": "^[a-z][\\w\\d]+$",
+
+                // changed from uppercase to lowercase
+                "static-method-regex": "^[a-z][\\w\\d]+$",
+
+                // changed from lowercase to also allow uppercase (functional components)
+                "function-regex": "^([a-z]|[A-Z])[\\w\\d]+$"
+            }
+        ],
+        // TODO: Remove once prettier formats comments correctly: https://github.com/prettier/prettier/issues/265
+        "max-line-length": [
+            true,
+            {
+                "ignore-pattern": "^(?!.*/(/|\\*) .* .*).*$",
+                "limit": 120
+            }
+        ],
+        "member-ordering": [
+            true,
+            {
+                "order": [
+                    "public-static-field",
+                    "public-instance-field",
+                    "protected-static-field",
+                    "protected-instance-field",
+                    "private-static-field",
+                    "private-instance-field",
+                    "constructor",
+                    "public-static-method",
+                    "public-instance-method",
+                    "protected-static-method",
+                    "protected-instance-method",
+                    "private-static-method",
+                    "private-instance-method"
+                ]
+            }
+        ],
+        "no-implicit-dependencies": [true, "dev"],
+        "no-import-side-effect": [true, { "ignore-module": "mocha" }],
+        "no-void-expression": [true, "ignore-arrow-function-shorthand"],
+        "typedef": [
+            true,
+            "member-variable-declaration",
+            "property-declaration",
+            "variable-declaration",
+            "call-signature",
+            "parameter"
+        ],
+        "variable-name": [true, "ban-keywords", "check-format", "allow-pascal-case", "allow-leading-underscore"],
+
+        // tslint-microsoft-contrib rules we don't use
+        "binary-expression-operand-order": false,
+        "completed-docs": false,
+        "cyclomatic-complexity": false,
+        "export-name": false,
+        "import-name": false,
+        "import-spacing": false,
+        "interface-name": false,
+        "match-default-export-name": false,
+        "max-classes-per-file": false,
+        "max-func-body-length": false,
+        "mocha-no-side-effect-code": false,
+        "newline-before-return": false,
+        "no-any": false,
+        "no-non-null-assertion": false,
+        "no-object-literal-type-assertion": false,
+        "no-parameter-properties": false,
+        "no-parameter-reassignment": false,
+        "no-relative-imports": false,
+        "no-single-line-block-comment": false,
+        "no-suspicious-comment": false,
+        "no-unnecessary-initializer": false,
+        "no-unsafe-any": false,
+        "no-use-before-declare": false,
+        "prefer-method-signature": false,
+        "prefer-type-cast": false,
+        "strict-boolean-expressions": false,
+        "type-literal-delimiter": false,
+        "use-default-type-parameter": false
+    },
+    "extends": ["tslint-microsoft-contrib", "tslint-config-prettier"],
+    "linterOptions": {
+        "exclude": ["./node_modules/**/*"]
+    }
+}

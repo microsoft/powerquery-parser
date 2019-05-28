@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { ResultKind } from "../../common";
-import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind } from "../../lexer";
+import { Option, ResultKind } from "../../common";
+import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../lexer";
 
 export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
 
@@ -13,29 +13,21 @@ export interface AbridgedSnapshot {
 
 export type AbridgedLineTokens = ReadonlyArray<[LineTokenKind, string]>;
 
-export function expectAbridgedSnapshotMatch(
-    text: string,
-    expected: AbridgedSnapshot,
-    wrapped: boolean,
-): LexerSnapshot {
+export function expectAbridgedSnapshotMatch(text: string, expected: AbridgedSnapshot, wrapped: boolean): LexerSnapshot {
     if (wrapped) {
-        const wrappedText = `wrapperOpen\n${text}\nwrapperClose`;
+        const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
         const wrappedExpected: AbridgedSnapshot = {
-            tokens: [
-                [TokenKind.Identifier, "wrapperOpen"],
-                ...expected.tokens,
-                [TokenKind.Identifier, "wrapperClose"],
-            ],
+            tokens: [[TokenKind.Identifier, "wrapperOpen"], ...expected.tokens, [TokenKind.Identifier, "wrapperClose"]],
             comments: expected.comments,
         };
         expectAbridgedSnapshotMatch(wrappedText, wrappedExpected, false);
     }
 
-    const snapshot = expectLexerSnapshot(text);
-    const expectedTokens = expected.tokens;
-    const expectedComments = expected.comments;
-    const actualTokens = snapshot.tokens.map(token => [token.kind, token.data]);
-    const actualComments = snapshot.comments.map(comment => [comment.kind, comment.data]);
+    const snapshot: LexerSnapshot = expectLexerSnapshot(text);
+    const expectedTokens: AbridgedTokens = expected.tokens;
+    const expectedComments: AbridgedComments = expected.comments;
+    const actualTokens: AbridgedTokens = snapshot.tokens.map(token => [token.kind, token.data]);
+    const actualComments: AbridgedComments = snapshot.comments.map(comment => [comment.kind, comment.data]);
 
     expect(actualTokens).deep.equal(expectedTokens);
     expect(actualComments).deep.equal(expectedComments);
@@ -43,13 +35,9 @@ export function expectAbridgedSnapshotMatch(
     return snapshot;
 }
 
-export function expectLineTokenMatch(
-    text: string,
-    expected: AbridgedLineTokens,
-    wrapped: boolean,
-): Lexer.State {
+export function expectLineTokenMatch(text: string, expected: AbridgedLineTokens, wrapped: boolean): Lexer.State {
     if (wrapped) {
-        const wrappedText = `wrapperOpen\n${text}\nwrapperClose`;
+        const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
         const wrappedExpected: AbridgedLineTokens = [
             [LineTokenKind.Identifier, "wrapperOpen"],
             ...expected,
@@ -58,16 +46,16 @@ export function expectLineTokenMatch(
         expectLineTokenMatch(wrappedText, wrappedExpected, false);
     }
 
-    const state = expectLexOk(text);
+    const state: Lexer.State = expectLexOk(text);
 
     const tmp: [LineTokenKind, string][] = [];
-    for (let line of state.lines) {
-        for (let token of line.tokens) {
+    for (const line of state.lines) {
+        for (const token of line.tokens) {
             tmp.push([token.kind, token.data]);
         }
     }
     const actual: AbridgedLineTokens = tmp;
-    const tokenDetails = {
+    const tokenDetails: {} = {
         actual,
         expected,
     };
@@ -76,11 +64,7 @@ export function expectLineTokenMatch(
     return state;
 }
 
-export function expectSnapshotAbridgedTokens(
-    text: string,
-    expected: AbridgedTokens,
-    wrapped: boolean,
-): LexerSnapshot {
+export function expectSnapshotAbridgedTokens(text: string, expected: AbridgedTokens, wrapped: boolean): LexerSnapshot {
     return expectAbridgedSnapshotMatch(
         text,
         {
@@ -109,26 +93,24 @@ export function expectSnapshotAbridgedComments(
 export function expectLexOk(text: string): Lexer.State {
     const state: Lexer.State = Lexer.stateFrom(text);
     if (Lexer.isErrorState(state)) {
-        const maybeErrorLines = Lexer.maybeErrorLines(state);
-        if (!(maybeErrorLines !== undefined)) {
-            throw new Error(`AssertFailed: maybeErrorLines !== undefined`);
+        const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
+        if (!(maybeErrorLineMap !== undefined)) {
+            throw new Error(`AssertFailed: maybeErrorLineMap !== undefined`);
         }
-        const errorLines = maybeErrorLines;
+        const errorLines: Lexer.ErrorLineMap = maybeErrorLineMap;
 
-        const details = { errorLines };
-        throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, null, 4)}`);
+        const details: {} = { errorLines };
+        throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, undefined, 4)}`);
     }
 
     return state;
 }
 
 export function expectLexerSnapshot(text: string): LexerSnapshot {
-    const state = expectLexOk(text);
-    const snapshotResult = LexerSnapshot.tryFrom(state);
+    const state: Lexer.State = expectLexOk(text);
+    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
     if (!(snapshotResult.kind === ResultKind.Ok)) {
         throw new Error("AssertFailed: snapshotResult.kind === ResultKind.Ok");
     }
-    const snapshot = snapshotResult.value;
-
-    return snapshot;
+    return snapshotResult.value;
 }

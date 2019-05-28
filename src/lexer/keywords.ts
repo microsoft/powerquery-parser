@@ -34,7 +34,7 @@ export const enum Keyword {
     HashTime = "#time",
 }
 
-export const Keywords: string[] = [
+export const Keywords: ReadonlyArray<string> = [
     Keyword.And,
     Keyword.As,
     Keyword.Each,

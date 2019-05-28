@@ -5,7 +5,7 @@ import { expectSnapshotAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
     it(`HexLiteral`, () => {
-        const text = `
+        const text: string = `
 0x1
 0X1`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
@@ -16,7 +16,7 @@ describe(`Lexer.Simple.TokenKinds`, () => {
     });
 
     it(`keywords`, () => {
-        const text = `
+        const text: string = `
 and
 as
 each
@@ -86,13 +86,13 @@ type
     });
 
     it(`NullLiteral`, () => {
-        const text = `null`;
+        const text: string = `null`;
         const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.NullLiteral, `null`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`NumericLiteral`, () => {
-        const text = `
+        const text: string = `
 1
 1e1
 1e-1
@@ -124,7 +124,7 @@ type
 
     // TODO: look into adding `..`
     it(`operator-or-punctuator`, () => {
-        const text = `
+        const text: string = `
 ,
 ;
 =
@@ -177,7 +177,7 @@ type
     });
 
     it(`StringLiteral`, () => {
-        const text = `
+        const text: string = `
 ""
 """"
 `;
@@ -191,68 +191,50 @@ type
 
 describe(`Lexer.Simple.Whitespace`, () => {
     it(`spaces`, () => {
-        const text = ` a b `;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-            [TokenKind.Identifier, `b`],
-        ];
+        const text: string = ` a b `;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`], [TokenKind.Identifier, `b`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`tabs`, () => {
-        const text = `\ta\tb\t`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-            [TokenKind.Identifier, `b`],
-        ];
+        const text: string = `\ta\tb\t`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`], [TokenKind.Identifier, `b`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`trailing \\n`, () => {
-        const text = `a\n`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-        ];
+        const text: string = `a\n`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`trailing \\r\\n`, () => {
-        const text = `a\r\n`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-        ];
+        const text: string = `a\r\n`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`trailing space`, () => {
-        const text = `a `;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-        ];
+        const text: string = `a `;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`leading \\n`, () => {
-        const text = `\na`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-        ];
+        const text: string = `\na`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`leading \\r\\n`, () => {
-        const text = `\r\na`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-        ];
+        const text: string = `\r\na`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`leading space`, () => {
-        const text = ` a`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.Identifier, `a`],
-        ];
+        const text: string = ` a`;
+        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`]];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 });

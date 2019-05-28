@@ -155,13 +155,13 @@ export const enum LineTokenKind {
 }
 
 export interface IToken<Kind, Position> {
-    readonly kind: Kind,
+    readonly kind: Kind;
     // range is [start, end)
-    readonly positionStart: Position,
-    readonly positionEnd: Position,
-    readonly data: string,
+    readonly positionStart: Position;
+    readonly positionEnd: Position;
+    readonly data: string;
 }
 
-export interface LineToken extends IToken<LineTokenKind, number> { };
+export interface LineToken extends IToken<LineTokenKind, number> {}
 
-export interface Token extends IToken<TokenKind, StringHelpers.ExtendedGraphemePosition> { }
+export interface Token extends IToken<TokenKind, StringHelpers.ExtendedGraphemePosition> {}
