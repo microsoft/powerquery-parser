@@ -67,6 +67,7 @@ export const enum NodeKind {
 
 export interface INode {
     readonly kind: NodeKind;
+    readonly id: number;
     readonly tokenRange: TokenRange;
     readonly terminalNode: boolean;
 }
@@ -86,13 +87,13 @@ export type TAuxiliaryNodes =
     | FieldTypeSpecification
     | GeneralizedIdentifier
     | Identifier
-    | Parameter<TParameterType>
     | SectionMember
     | TAnyLiteral
     | TCsv
     | TKeyValuePair
     | TNullablePrimitiveType
     | TPairedConstant
+    | TParameter
     | TParameterList
     | TType
     | TUnaryExpressionHelper
@@ -104,11 +105,12 @@ export type TCsv =
     | ICsv<GeneralizedIdentifierPairedAnyLiteral>
     | ICsv<GeneralizedIdentifierPairedExpression>
     | ICsv<IdentifierPairedExpression>
-    | ICsv<Parameter<TParameterType>>
+    | ICsv<TParameter>
     | ICsv<TAnyLiteral>
     | ICsv<TExpression>;
 
-export type TParameterList = ParameterList<TParameterType>;
+export type TParameter = IParameter<TParameterType>;
+export type TParameterList = IParameterList<TParameterType>;
 
 export type TRecursivePrimaryExpression =
     | RecursivePrimaryExpression
@@ -525,7 +527,7 @@ export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, Read
 export interface FunctionExpression extends INode {
     readonly kind: NodeKind.FunctionExpression;
     readonly terminalNode: false;
-    readonly parameters: ParameterList<Option<AsNullablePrimitiveType>>;
+    readonly parameters: IParameterList<Option<AsNullablePrimitiveType>>;
     readonly maybeFunctionReturnType: Option<AsNullablePrimitiveType>;
     readonly fatArrowConstant: Constant;
     readonly expression: TExpression;
@@ -580,7 +582,7 @@ export interface FunctionType extends INode {
     readonly kind: NodeKind.FunctionType;
     readonly terminalNode: false;
     readonly functionConstant: Constant;
-    readonly parameters: ParameterList<AsType>;
+    readonly parameters: IParameterList<AsType>;
     readonly functionReturnType: AsType;
 }
 
@@ -745,14 +747,15 @@ export interface IdentifierExpressionPairedExpression
 
 export type TParameterType = AsType | Option<AsNullablePrimitiveType>;
 
-export interface ParameterList<T> extends IWrapped<NodeKind.ParameterList, ReadonlyArray<ICsv<Parameter<T>>>> {}
+export interface IParameterList<T>
+    extends IWrapped<NodeKind.ParameterList, ReadonlyArray<ICsv<IParameter<T & TParameterType>>>> {}
 
-export interface Parameter<T> extends INode {
+export interface IParameter<T> extends INode {
     readonly kind: NodeKind.Parameter;
     readonly terminalNode: false;
     readonly maybeOptionalConstant: Option<Constant>;
     readonly name: Identifier;
-    readonly maybeParameterType: T;
+    readonly maybeParameterType: T & TParameterType;
 }
 
 export interface AsNullablePrimitiveType

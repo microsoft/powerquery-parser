@@ -10,7 +10,6 @@ export interface State {
     readonly root: Root;
     readonly nodesById: NodeMap;
     terminalNodeIds: number[];
-    nodeIdCounter: number;
 }
 
 export interface Root {
@@ -33,7 +32,6 @@ export function empty(): State {
         },
         nodesById: new Map(),
         terminalNodeIds: [],
-        nodeIdCounter: 0,
     };
 }
 
@@ -49,22 +47,20 @@ export function addChild(
     state: State,
     maybeParent: Option<Node>,
     nodeKind: Ast.NodeKind,
+    nodeId: number,
     tokenStart: Option<Token>,
 ): Node {
-    state.nodeIdCounter += 1;
-    const newNodeId: number = state.nodeIdCounter;
-
     let maybeParentId: Option<number>;
     if (maybeParent) {
         const parent: Node = maybeParent;
         maybeParentId = parent.nodeId;
-        parent.childNodeIds.push(newNodeId);
+        parent.childNodeIds.push(nodeId);
     } else {
         maybeParentId = undefined;
     }
 
     const child: Node = {
-        nodeId: state.nodeIdCounter,
+        nodeId,
         nodeKind,
         maybeTokenStart: tokenStart,
         maybeParentId,
@@ -139,7 +135,6 @@ export function deepCopy(state: State): State {
         },
         nodesById: nodesById,
         terminalNodeIds: state.terminalNodeIds.slice(),
-        nodeIdCounter: state.nodeIdCounter,
     };
 }
 
