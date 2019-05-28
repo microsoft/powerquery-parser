@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError } from "../common";
+import { CommonError, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { Token, TokenKind } from "../lexer/token";
 import * as Localization from "../localization/error";
@@ -26,26 +26,29 @@ export class ParserError extends Error {
 }
 
 export class ExpectedAnyTokenKindError extends Error {
-    constructor(readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>, readonly maybeFoundToken: Option<Token>) {
+    constructor(
+        readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        readonly maybeFoundToken: Option<TokenWithColumnNumber>,
+    ) {
         super(Localization.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
     }
 }
 
 export class ExpectedTokenKindError extends Error {
-    constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<Token>) {
+    constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
         super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
     }
 }
 
 export class InvalidPrimitiveTypeError extends Error {
-    constructor(readonly token: Token) {
-        super(Localization.parserInvalidPrimitiveType(token));
+    constructor(readonly token: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+        super(Localization.parserInvalidPrimitiveType(token, positionStart));
     }
 }
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
-    constructor(readonly missingOptionalToken: Token) {
-        super(Localization.parserRequiredParameterAfterOptionalParameter(missingOptionalToken));
+    constructor(readonly missingOptionalToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+        super(Localization.parserRequiredParameterAfterOptionalParameter(positionStart));
     }
 }
 
@@ -56,21 +59,26 @@ export class UnexpectedEndOfTokensError extends Error {
 }
 
 export class UnterminatedBracketError extends Error {
-    constructor(readonly openBracketToken: Token) {
-        super(Localization.parserUnterminatedBracket(openBracketToken));
+    constructor(readonly openBracketToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+        super(Localization.parserUnterminatedBracket(positionStart));
     }
 }
 
 export class UnterminatedParenthesesError extends Error {
-    constructor(readonly openParenthesesToken: Token) {
-        super(Localization.parserUnterminatedParentheses(openParenthesesToken));
+    constructor(readonly openParenthesesToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+        super(Localization.parserUnterminatedParentheses(positionStart));
     }
 }
 
 export class UnusedTokensRemainError extends Error {
-    constructor(readonly firstUnusedToken: Token) {
-        super(Localization.parserUnusedTokensRemain(firstUnusedToken));
+    constructor(readonly firstUnusedToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+        super(Localization.parserUnusedTokensRemain(positionStart));
     }
+}
+
+export interface TokenWithColumnNumber {
+    readonly token: Token;
+    readonly columnNumber: number;
 }
 
 export function isTParserError(x: any): x is TParserError {

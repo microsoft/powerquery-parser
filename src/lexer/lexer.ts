@@ -350,34 +350,7 @@ function lineFrom(text: string, lineTerminator: string, lineModeStart: LineMode)
 }
 
 function graphemePositionFrom(text: string, lineNumber: number, lineCodeUnit: number): StringHelpers.GraphemePosition {
-    const graphemes: ReadonlyArray<string> = StringHelpers.graphemeSplitter.splitGraphemes(text);
-    const numGraphemes: number = graphemes.length;
-
-    let summedLength: number = 0;
-    let maybeColumnNumber: Option<number>;
-    for (let index: number = 0; index < numGraphemes; index += 1) {
-        if (summedLength === lineCodeUnit) {
-            maybeColumnNumber = index;
-            break;
-        }
-        summedLength += graphemes[index].length;
-    }
-
-    if (maybeColumnNumber === undefined) {
-        const details: {} = {
-            lineNumber,
-            lineCodeUnit,
-            text,
-        };
-        throw new CommonError.InvariantError("graphemePositionFrom failed to find the columnNumber", details);
-    }
-    const columnNumber: number = maybeColumnNumber;
-
-    return {
-        lineCodeUnit,
-        lineNumber,
-        columnNumber,
-    };
+    return StringHelpers.graphemePositionFrom(text, lineCodeUnit, lineNumber, undefined);
 }
 
 function rangeFrom(line: TLine, lineNumber: number): Range {

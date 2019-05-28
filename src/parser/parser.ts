@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError, StringHelpers } from "../common";
+import { CommonError } from "../common";
 import { isNever } from "../common/assert";
 import { Option } from "../common/option";
 import { Result, ResultKind } from "../common/result";
 import { Keyword } from "../lexer/keywords";
 import { LexerSnapshot } from "../lexer/lexerSnapshot";
-import { Token, TokenKind } from "../lexer/token";
+import { Token, TokenKind, TokenPosition } from "../lexer/token";
 import * as Ast from "./ast";
 import * as Context from "./context";
 import * as ParserError from "./error";
@@ -1157,7 +1157,10 @@ export class Parser {
 
             if (reachedOptionalParameter && !maybeOptionalConstant) {
                 const token: Token = this.expectTokenAt(this.tokenIndex);
-                throw new ParserError.RequiredParameterAfterOptionalParameterError(token);
+                throw new ParserError.RequiredParameterAfterOptionalParameterError(
+                    token,
+                    this.lexerSnapshot.graphemePositionStartFrom(token),
+                );
             } else if (maybeOptionalConstant) {
                 reachedOptionalParameter = true;
             }
@@ -1417,7 +1420,10 @@ export class Parser {
                     this.restoreBackup(backup);
                     return {
                         kind: ResultKind.Err,
-                        error: new ParserError.InvalidPrimitiveTypeError(token),
+                        error: new ParserError.InvalidPrimitiveTypeError(
+                            token,
+                            this.lexerSnapshot.graphemePositionStartFrom(token),
+                        ),
                     };
             }
         } else if (this.isOnTokenKind(TokenKind.KeywordType)) {
@@ -1659,7 +1665,7 @@ export class Parser {
     private expectNoMoreTokens(): Option<ParserError.UnusedTokensRemainError> {
         if (this.tokenIndex !== this.lexerSnapshot.tokens.length) {
             const token: Token = this.expectTokenAt(this.tokenIndex);
-            return new ParserError.UnusedTokensRemainError(token);
+            return new ParserError.UnusedTokensRemainError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
         } else {
             return undefined;
         }
@@ -1667,7 +1673,14 @@ export class Parser {
 
     private expectTokenKind(expectedTokenKind: TokenKind): Option<ParserError.ExpectedTokenKindError> {
         if (expectedTokenKind !== this.maybeCurrentTokenKind) {
-            return new ParserError.ExpectedTokenKindError(expectedTokenKind, this.maybeCurrentToken);
+            const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
+                this.maybeCurrentToken !== undefined
+                    ? {
+                          token: this.maybeCurrentToken,
+                          columnNumber: this.lexerSnapshot.columnNumberStartFrom(this.maybeCurrentToken),
+                      }
+                    : undefined;
+            return new ParserError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
         } else {
             return undefined;
         }
@@ -1680,7 +1693,14 @@ export class Parser {
             this.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(this.maybeCurrentTokenKind) === -1;
 
         if (isError) {
-            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, this.maybeCurrentToken);
+            const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
+                this.maybeCurrentToken !== undefined
+                    ? {
+                          token: this.maybeCurrentToken,
+                          columnNumber: this.lexerSnapshot.columnNumberStartFrom(this.maybeCurrentToken),
+                      }
+                    : undefined;
+            return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
         } else {
             return undefined;
         }
@@ -2014,7 +2034,7 @@ export class Parser {
 
     private unterminatedParenthesesError(openTokenIndex: number): ParserError.UnterminatedParenthesesError {
         const token: Token = this.expectTokenAt(openTokenIndex);
-        return new ParserError.UnterminatedParenthesesError(token);
+        return new ParserError.UnterminatedParenthesesError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
     }
 
     private disambiguateBracket(): BracketDisambiguation {
@@ -2052,7 +2072,7 @@ export class Parser {
 
     private unterminatedBracketError(openTokenIndex: number): ParserError.UnterminatedBracketError {
         const token: Token = this.expectTokenAt(openTokenIndex);
-        return new ParserError.UnterminatedBracketError(token);
+        return new ParserError.UnterminatedBracketError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
     }
 
     private startTokenRange(nodeKind: Ast.NodeKind): void {
@@ -2087,7 +2107,7 @@ export class Parser {
         }
 
         const element: TokenRangeStackElement = maybeElement;
-        const positionStart: StringHelpers.ExtendedGraphemePosition = element.positionStart;
+        const positionStart: TokenPosition = element.positionStart;
         const endTokenIndex: number = this.tokenIndex;
         const lastInclusiveToken: Token = this.lexerSnapshot.tokens[endTokenIndex - 1];
 
@@ -2106,8 +2126,8 @@ export class Parser {
     ): TokenRange {
         const tokenIndex: number = this.tokenIndex;
         const token: Token = this.lexerSnapshot.tokens[tokenIndex];
-        const positionStart: StringHelpers.ExtendedGraphemePosition = token.positionStart;
-        const positionEnd: StringHelpers.ExtendedGraphemePosition = token.positionEnd;
+        const positionStart: TokenPosition = token.positionStart;
+        const positionEnd: TokenPosition = token.positionEnd;
 
         return {
             startTokenIndex: tokenIndex,
@@ -2264,7 +2284,7 @@ const enum BracketDisambiguation {
 interface TokenRangeStackElement {
     readonly nodeKind: Ast.NodeKind;
     readonly tokenIndexStart: number;
-    readonly positionStart: StringHelpers.ExtendedGraphemePosition;
+    readonly positionStart: TokenPosition;
 }
 
 interface StateBackup {
