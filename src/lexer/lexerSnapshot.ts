@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError, Option, Result, ResultKind, StringHelpers, graphemePositionFrom } from "../common";
+import { CommonError, Option, Result, ResultKind, StringHelpers } from "../common";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import * as LexerError from "./error";
 import * as Lexer from "./lexer";
@@ -69,7 +69,7 @@ export class LexerSnapshot {
     }
 
     public columnNumberStartFrom(token: Token): number {
-        return this.graphemePositionStartFrom(token).lineNumber;
+        return this.graphemePositionStartFrom(token).columnNumber;
     }
 
     private static factory(state: Lexer.State): LexerSnapshot {
