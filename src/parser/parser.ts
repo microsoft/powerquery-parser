@@ -43,8 +43,9 @@ export class Parser {
                 );
             }
 
+            const contextState: Context.State = this.contextState;
             const nodesById: Map<number, Ast.TNode> = new Map();
-            for (const [nodeId, contextNode] of this.contextState.nodesById.entries()) {
+            for (const [nodeId, contextNode] of contextState.nodesById.entries()) {
                 if (contextNode.maybeAstNode === undefined) {
                     throw new CommonError.InvariantError("maybeAstNode should be truthy");
                 }
@@ -58,6 +59,7 @@ export class Parser {
                 value: {
                     document,
                     nodesById,
+                    terminalNodeIds: contextState.terminalNodeIds.slice(),
                 },
             };
         } catch (e) {
@@ -2349,6 +2351,7 @@ export class Parser {
 export interface ParseOk {
     readonly document: Ast.TDocument;
     readonly nodesById: Map<number, Ast.TNode>;
+    readonly terminalNodeIds: ReadonlyArray<number>;
 }
 
 export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
