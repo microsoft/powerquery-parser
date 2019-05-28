@@ -683,8 +683,8 @@ export interface IKeyValuePair<NodeKindVariant, Key, Value> extends INode {
     readonly value: Value;
 }
 
-// a (Constant, T) tuple
-// ex. EachExpression is a `each` Constant paired with a TExpression
+// A [Constant, T] tuple
+// eg. EachExpression is a `each` Constant paired with a TExpression
 export interface IPairedConstant<NodeKindVariant, Paired> extends INode {
     readonly kind: NodeKindVariant & TPairedConstantNodeKind;
     readonly constant: Constant;
