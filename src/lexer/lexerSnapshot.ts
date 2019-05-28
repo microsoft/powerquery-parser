@@ -36,7 +36,7 @@ export class LexerSnapshot {
         }
     }
 
-    public static graphemePositionFrom(
+    public static graphemePositionStartFrom(
         text: string,
         lineTerminators: ReadonlyArray<LineTerminator>,
         flatLineToken: Token | FlatLineToken,
@@ -65,7 +65,7 @@ export class LexerSnapshot {
     }
 
     public graphemePositionStartFrom(token: Token): StringHelpers.GraphemePosition {
-        return LexerSnapshot.graphemePositionFrom(this.text, this.lineTerminators, token);
+        return LexerSnapshot.graphemePositionStartFrom(this.text, this.lineTerminators, token);
     }
 
     public columnNumberStartFrom(token: Token): number {
@@ -187,7 +187,7 @@ function readMultilineComment(flattenedLines: FlattenedLines, tokenStart: FlatLi
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexerError.UnterminatedMultilineTokenError(
-            LexerSnapshot.graphemePositionFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
+            LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexerError.UnterminatedMultilineTokenKind.MultilineComment,
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.MultilineCommentEnd) {
@@ -221,7 +221,7 @@ function readQuotedIdentifier(flattenedLines: FlattenedLines, tokenStart: FlatLi
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexerError.UnterminatedMultilineTokenError(
-            LexerSnapshot.graphemePositionFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
+            LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.QuotedIdentifierEnd) {
@@ -254,7 +254,7 @@ function readStringLiteral(flattenedLines: FlattenedLines, tokenStart: FlatLineT
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexerError.UnterminatedMultilineTokenError(
-            LexerSnapshot.graphemePositionFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
+            LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexerError.UnterminatedMultilineTokenKind.String,
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.StringLiteralEnd) {
