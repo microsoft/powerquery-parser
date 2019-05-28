@@ -43,11 +43,21 @@ export class Parser {
                 );
             }
 
+            const nodesById: Map<number, Ast.TNode> = new Map();
+            for (const [nodeId, contextNode] of this.contextState.nodesById.entries()) {
+                if (contextNode.maybeAstNode === undefined) {
+                    throw new CommonError.InvariantError("maybeAstNode should be truthy");
+                }
+
+                const oldNode: Ast.TNode = contextNode.maybeAstNode;
+                nodesById.set(nodeId, oldNode);
+            }
+
             return {
                 kind: ResultKind.Ok,
                 value: {
                     document,
-                    nodesById: this.contextState.nodesById,
+                    nodesById,
                 },
             };
         } catch (e) {
@@ -2334,7 +2344,7 @@ export class Parser {
 
 export interface ParseOk {
     readonly document: Ast.TDocument;
-    readonly nodesById: Context.NodeMap;
+    readonly nodesById: Map<number, Ast.TNode>;
 }
 
 export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
