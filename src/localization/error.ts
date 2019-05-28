@@ -98,7 +98,7 @@ export function lexerExpected(graphemePosition: StringHelpers.GraphemePosition, 
 }
 
 export function lexerErrorLineMap(errorLineMap: Lexer.ErrorLineMap): string {
-    return `Error on line(s): ${Object.keys(errorLineMap).join(", ")}`;
+    return `Error on line(s): ${errorLineMap.keys()}`;
 }
 
 export function lexerUnexpectedEof(graphemePosition: StringHelpers.GraphemePosition): string {
