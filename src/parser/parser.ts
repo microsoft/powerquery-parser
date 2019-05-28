@@ -129,8 +129,8 @@ export class Parser {
         }
 
         const astNode: Ast.Section = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             maybeLiteralAttributes,
@@ -155,8 +155,8 @@ export class Parser {
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
 
         const astNode: Ast.SectionMember = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             maybeLiteralAttributes,
@@ -306,8 +306,8 @@ export class Parser {
 
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
                 const expression: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
+                    ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
-                    id: this.expectContextNodeId(),
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     inBinaryExpression: false,
@@ -322,8 +322,8 @@ export class Parser {
             }
 
             const astNode: Ast.UnaryExpression = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                id: this.expectContextNodeId(),
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 expressions,
@@ -462,8 +462,8 @@ export class Parser {
 
         const literal: string = this.readToken();
         const astNode: Ast.LiteralExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: true,
             literal: literal,
@@ -483,8 +483,8 @@ export class Parser {
         const identifier: Ast.Identifier = this.readIdentifier();
 
         const astNode: Ast.IdentifierExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             maybeInclusiveConstant,
@@ -513,8 +513,8 @@ export class Parser {
         const ellipsisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Ellipsis);
 
         const astNode: Ast.NotImplementedExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             ellipsisConstant,
@@ -694,8 +694,8 @@ export class Parser {
         const expression: Ast.TExpression = this.readExpression();
 
         const astNode: Ast.FunctionExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             parameters,
@@ -730,8 +730,8 @@ export class Parser {
         const expression: Ast.TExpression = this.readExpression();
 
         const astNode: Ast.LetExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: Ast.NodeKind.LetExpression,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             letConstant,
@@ -759,8 +759,8 @@ export class Parser {
         const falseExpression: Ast.TExpression = this.readExpression();
 
         const astNode: Ast.IfExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             ifConstant,
@@ -866,8 +866,8 @@ export class Parser {
         const fields: Ast.FieldSpecificationList = this.readFieldSpecificationList(true);
 
         const astNode: Ast.RecordType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             fields,
@@ -897,8 +897,8 @@ export class Parser {
         }
 
         const astNode: Ast.TableType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             tableConstant,
@@ -951,8 +951,8 @@ export class Parser {
                 continueReadingValues = maybeCommaConstant !== undefined;
 
                 const field: Ast.FieldSpecification = {
+                    ...this.expectContextNodeMetadata(),
                     kind: fieldSpecificationNodeKind,
-                    id: this.expectContextNodeId(),
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     maybeOptionalConstant,
@@ -962,8 +962,8 @@ export class Parser {
                 this.endContext(field);
 
                 const csv: Ast.ICsv<Ast.FieldSpecification> = {
+                    ...this.expectContextNodeMetadata(),
                     kind: csvNodeKind,
-                    id: this.expectContextNodeId(),
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     node: field,
@@ -979,8 +979,8 @@ export class Parser {
         const rightBracketConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightBracket);
 
         const astNode: Ast.FieldSpecificationList = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             openWrapperConstant: leftBracketConstant,
@@ -1003,8 +1003,8 @@ export class Parser {
             const fieldType: Ast.TType = this.readType();
 
             const astNode: Ast.FieldTypeSpecification = {
+                ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.FieldTypeSpecification,
-                id: this.expectContextNodeId(),
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 equalConstant: maybeEqualConstant,
@@ -1030,8 +1030,8 @@ export class Parser {
         const functionReturnType: Ast.AsType = this.readAsType();
 
         const astNode: Ast.FunctionType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             functionConstant,
@@ -1081,8 +1081,8 @@ export class Parser {
         );
 
         const astNode: Ast.ErrorHandlingExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             tryConstant,
@@ -1199,8 +1199,8 @@ export class Parser {
             const name: Ast.Identifier = this.readIdentifier();
             const maybeParameterType: T & Ast.TParameterType = typeReader();
             const parameter: Ast.IParameter<T & Ast.TParameterType> = {
+                ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Parameter,
-                id: this.expectContextNodeId(),
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 maybeOptionalConstant,
@@ -1213,8 +1213,8 @@ export class Parser {
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const csv: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>> = {
+                ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Csv,
-                id: this.expectContextNodeId(),
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 node: parameter,
@@ -1228,8 +1228,8 @@ export class Parser {
         const rightParenthesisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightParenthesis);
 
         const astNode: Ast.IParameterList<T & Ast.TParameterType> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             openWrapperConstant: leftParenthesisConstant,
@@ -1305,8 +1305,8 @@ export class Parser {
         }
 
         const astNode: Ast.RecursivePrimaryExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             head,
@@ -1324,8 +1324,8 @@ export class Parser {
         const literal: string = this.readTokenKind(TokenKind.Identifier);
 
         const astNode: Ast.Identifier = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange,
             terminalNode: true,
             literal,
@@ -1381,8 +1381,8 @@ export class Parser {
         }
 
         const astNode: Ast.GeneralizedIdentifier = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: true,
             literal,
@@ -1466,8 +1466,8 @@ export class Parser {
         }
 
         const astNode: Ast.PrimitiveType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             primitiveType,
@@ -1579,8 +1579,8 @@ export class Parser {
 
             this.readToken();
             const astNode: Ast.Constant = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                id: this.expectContextNodeId(),
                 tokenRange,
                 terminalNode: true,
                 literal: constantKind,
@@ -1620,8 +1620,8 @@ export class Parser {
 
             this.readToken();
             const astNode: Ast.Constant = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                id: this.expectContextNodeId(),
                 tokenRange,
                 terminalNode: true,
                 literal: maybeConstantKind,
@@ -1641,8 +1641,8 @@ export class Parser {
         this.readToken();
 
         const astNode: Ast.Constant = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange,
             terminalNode: true,
             literal: operator,
@@ -1662,8 +1662,8 @@ export class Parser {
 
         const literal: string = this.readToken();
         const identifier: Ast.Identifier = {
+            ...this.expectContextNodeMetadata(),
             kind: identifierNodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: identifierTokenRange,
             terminalNode: true,
             literal,
@@ -1671,8 +1671,8 @@ export class Parser {
         this.endContext(identifier);
 
         const identifierExpression: Ast.IdentifierExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: identifierExpressionNodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: identifierExpressionTokenRange,
             terminalNode: false,
             maybeInclusiveConstant: undefined,
@@ -1751,8 +1751,8 @@ export class Parser {
             const right: R = rightExpressionReader();
 
             const astNode: Ast.IBinOpKeyword<NodeKindVariant, L, R> = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                id: this.expectContextNodeId(),
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 left,
@@ -1806,8 +1806,8 @@ export class Parser {
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
 
                 const helper: Ast.UnaryExpressionHelper<Op, Operand> = {
+                    ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
-                    id: this.expectContextNodeId(),
                     tokenRange: this.popTokenRange(),
                     terminalNode: false,
                     inBinaryExpression: true,
@@ -1837,8 +1837,8 @@ export class Parser {
             }
 
             const astNode: Ast.IBinOpExpression<NodeKindVariant, Op, Operand> = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                id: this.expectContextNodeId(),
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 first,
@@ -1881,8 +1881,8 @@ export class Parser {
         const paired: Paired = pairedReader();
 
         const pairedConstant: Ast.IPairedConstant<NodeKindVariant, Paired> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             constant,
@@ -1937,8 +1937,8 @@ export class Parser {
         const closeWrapperConstant: Ast.Constant = closeConstantReader();
 
         const wrapped: Ast.IWrapped<NodeKindVariant, Content> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             openWrapperConstant,
@@ -1979,8 +1979,8 @@ export class Parser {
         const value: Value = valueReader();
 
         const keyValuePair: Ast.IKeyValuePair<NodeKindVariant, Key, Value> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            id: this.expectContextNodeId(),
             tokenRange: this.popTokenRange(),
             terminalNode: false,
             key,
@@ -2020,8 +2020,8 @@ export class Parser {
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const value: Ast.ICsv<T> = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                id: this.expectContextNodeId(),
                 tokenRange: this.popTokenRange(),
                 terminalNode: false,
                 node,
@@ -2291,13 +2291,16 @@ export class Parser {
         }
     }
 
-    private expectContextNodeId(): number {
+    private expectContextNodeMetadata(): ContextNodeMetadata {
         if (this.maybeCurrentContextNode === undefined) {
             throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
         }
 
         const contextNode: Context.Node = this.maybeCurrentContextNode;
-        return contextNode.nodeId;
+        return {
+            id: contextNode.nodeId,
+            childIds: contextNode.childNodeIds.slice(),
+        };
     }
 
     // WARNING: Only updates tokenIndex and currentTokenKind,
@@ -2381,4 +2384,8 @@ interface StateBackup {
     readonly tokenIndex: number;
     readonly contextState: Context.State;
     readonly maybeContextNodeId: Option<number>;
+}
+interface ContextNodeMetadata {
+    readonly id: number;
+    readonly childIds: ReadonlyArray<number>;
 }

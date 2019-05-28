@@ -73,6 +73,10 @@ export function addChild(
 }
 
 export function endContext(state: State, oldNode: Node, astNode: Ast.TNode): Option<Node> {
+    if (oldNode.maybeAstNode !== undefined) {
+        throw new CommonError.InvariantError("context was already ended");
+    }
+
     if (astNode.terminalNode) {
         state.terminalNodeIds.push(oldNode.nodeId);
     }
