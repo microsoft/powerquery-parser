@@ -59,7 +59,7 @@ export class Parser {
                 value: {
                     document,
                     nodesById,
-                    terminalNodeIds: contextState.terminalNodeIds.slice(),
+                    leafNodes: contextState.leafNodeIds.slice(),
                 },
             };
         } catch (e) {
@@ -134,7 +134,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             maybeLiteralAttributes,
             sectionConstant,
             maybeName,
@@ -160,7 +160,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             maybeLiteralAttributes,
             maybeSharedConstant,
             namePairedExpression,
@@ -311,7 +311,7 @@ export class Parser {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+                    isLeaf: false,
                     inBinaryExpression: false,
                     operator: maybeOperator,
                     operatorConstant,
@@ -327,7 +327,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 expressions,
             };
             this.endContext(astNode);
@@ -467,7 +467,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: true,
+            isLeaf: true,
             literal: literal,
             literalKind: maybeLiteralKind,
         };
@@ -488,7 +488,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             maybeInclusiveConstant,
             identifier,
         };
@@ -518,7 +518,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             ellipsisConstant,
         };
         this.endContext(astNode);
@@ -699,7 +699,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             parameters,
             maybeFunctionReturnType,
             fatArrowConstant,
@@ -735,7 +735,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: Ast.NodeKind.LetExpression,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             letConstant,
             variableList: identifierExpressionPairedExpressions,
             inConstant,
@@ -764,7 +764,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             ifConstant,
             condition,
             thenConstant,
@@ -871,7 +871,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             fields,
         };
         this.endContext(astNode);
@@ -902,7 +902,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             tableConstant,
             rowType,
         };
@@ -956,7 +956,7 @@ export class Parser {
                     ...this.expectContextNodeMetadata(),
                     kind: fieldSpecificationNodeKind,
                     tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+                    isLeaf: false,
                     maybeOptionalConstant,
                     name,
                     maybeFieldTypeSpeification,
@@ -967,7 +967,7 @@ export class Parser {
                     ...this.expectContextNodeMetadata(),
                     kind: csvNodeKind,
                     tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+                    isLeaf: false,
                     node: field,
                     maybeCommaConstant,
                 };
@@ -984,7 +984,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             openWrapperConstant: leftBracketConstant,
             content: fields,
             maybeOpenRecordMarkerConstant,
@@ -1008,7 +1008,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.FieldTypeSpecification,
                 tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 equalConstant: maybeEqualConstant,
                 fieldType,
             };
@@ -1035,7 +1035,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             functionConstant,
             parameters,
             functionReturnType,
@@ -1086,7 +1086,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             tryConstant,
             protectedExpression,
             maybeOtherwiseExpression,
@@ -1204,7 +1204,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Parameter,
                 tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 maybeOptionalConstant,
                 name,
                 maybeParameterType,
@@ -1218,7 +1218,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Csv,
                 tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 node: parameter,
                 maybeCommaConstant,
             };
@@ -1233,7 +1233,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             openWrapperConstant: leftParenthesisConstant,
             content: parameters,
             closeWrapperConstant: rightParenthesisConstant,
@@ -1310,7 +1310,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             head,
             recursiveExpressions,
         };
@@ -1329,7 +1329,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange,
-            terminalNode: true,
+            isLeaf: true,
             literal,
         };
         this.endContext(astNode);
@@ -1386,7 +1386,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: true,
+            isLeaf: true,
             literal,
         };
         this.endContext(astNode);
@@ -1471,7 +1471,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             primitiveType,
         };
         this.endContext(astNode);
@@ -1584,7 +1584,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 tokenRange,
-                terminalNode: true,
+                isLeaf: true,
                 literal: constantKind,
             };
             this.endContext(astNode);
@@ -1625,7 +1625,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 tokenRange,
-                terminalNode: true,
+                isLeaf: true,
                 literal: maybeConstantKind,
             };
             this.endContext(astNode);
@@ -1646,7 +1646,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange,
-            terminalNode: true,
+            isLeaf: true,
             literal: operator,
         };
         this.endContext(astNode);
@@ -1667,7 +1667,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: identifierNodeKind,
             tokenRange: identifierTokenRange,
-            terminalNode: true,
+            isLeaf: true,
             literal,
         };
         this.endContext(identifier);
@@ -1676,7 +1676,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: identifierExpressionNodeKind,
             tokenRange: identifierExpressionTokenRange,
-            terminalNode: false,
+            isLeaf: false,
             maybeInclusiveConstant: undefined,
             identifier,
         };
@@ -1756,7 +1756,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 left,
                 constant: maybeConstant,
                 right,
@@ -1811,7 +1811,7 @@ export class Parser {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+                    isLeaf: false,
                     inBinaryExpression: true,
                     operator: maybeOperator,
                     operatorConstant,
@@ -1842,7 +1842,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 first,
                 rest,
             };
@@ -1886,7 +1886,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             constant,
             paired,
         };
@@ -1942,7 +1942,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             openWrapperConstant,
             content,
             closeWrapperConstant,
@@ -1984,7 +1984,7 @@ export class Parser {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             key,
             equalConstant,
             value,
@@ -2025,7 +2025,7 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 node,
                 maybeCommaConstant,
             };
@@ -2351,7 +2351,7 @@ export class Parser {
 export interface ParseOk {
     readonly document: Ast.TDocument;
     readonly nodesById: Map<number, Ast.TNode>;
-    readonly terminalNodeIds: ReadonlyArray<number>;
+    readonly leafNodes: ReadonlyArray<number>;
 }
 
 export function parse(lexerSnapshot: LexerSnapshot): TriedParse {

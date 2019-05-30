@@ -9,7 +9,7 @@ export type NodeMap = Map<number, Node>;
 export interface State {
     readonly root: Root;
     readonly nodesById: NodeMap;
-    terminalNodeIds: number[];
+    leafNodeIds: number[];
 }
 
 export interface Root {
@@ -31,7 +31,7 @@ export function empty(): State {
             maybeNode: undefined,
         },
         nodesById: new Map(),
-        terminalNodeIds: [],
+        leafNodeIds: [],
     };
 }
 
@@ -77,8 +77,8 @@ export function endContext(state: State, oldNode: Node, astNode: Ast.TNode): Opt
         throw new CommonError.InvariantError("context was already ended");
     }
 
-    if (astNode.terminalNode) {
-        state.terminalNodeIds.push(oldNode.nodeId);
+    if (astNode.isLeaf) {
+        state.leafNodeIds.push(oldNode.nodeId);
     }
 
     oldNode.maybeAstNode = astNode;
@@ -88,7 +88,7 @@ export function endContext(state: State, oldNode: Node, astNode: Ast.TNode): Opt
 
 export function deleteContext(state: State, node: Node): Option<Node> {
     const nodesById: NodeMap = state.nodesById;
-    const terminalNodeIds: number[] = state.terminalNodeIds;
+    const terminalNodeIds: number[] = state.leafNodeIds;
 
     const maybeParentId: Option<number> = node.maybeParentId;
     const nodeId: number = node.nodeId;
@@ -101,7 +101,7 @@ export function deleteContext(state: State, node: Node): Option<Node> {
     const maybeTerminalIndex: Option<number> = terminalNodeIds.indexOf(nodeId);
     if (maybeTerminalIndex !== -1) {
         const terminalIndex: number = maybeTerminalIndex;
-        state.terminalNodeIds = [
+        state.leafNodeIds = [
             ...terminalNodeIds.slice(0, terminalIndex),
             ...terminalNodeIds.slice(terminalIndex + 1),
         ];
@@ -138,7 +138,7 @@ export function deepCopy(state: State): State {
             maybeNode: nodesById.get(0),
         },
         nodesById: nodesById,
-        terminalNodeIds: state.terminalNodeIds.slice(),
+        leafNodeIds: state.leafNodeIds.slice(),
     };
 }
 
