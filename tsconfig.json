@@ -12,6 +12,7 @@
         "noUnusedParameters": true,
         "declaration": true,
         "rootDir": "src",
+        "incremental": true
     },
     "include": [
         "src/**/*.ts",
