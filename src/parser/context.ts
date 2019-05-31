@@ -48,7 +48,7 @@ export function addChild(
     maybeParent: Option<Node>,
     nodeKind: Ast.NodeKind,
     nodeId: number,
-    tokenStart: Option<Token>,
+    maybeTokenStart: Option<Token>,
 ): Node {
     let maybeParentId: Option<number>;
     if (maybeParent) {
@@ -62,7 +62,7 @@ export function addChild(
     const child: Node = {
         nodeId,
         nodeKind,
-        maybeTokenStart: tokenStart,
+        maybeTokenStart,
         maybeParentId,
         childNodeIds: [],
         maybeAstNode: undefined,
