@@ -101,10 +101,7 @@ export function deleteContext(state: State, node: Node): Option<Node> {
     const maybeTerminalIndex: Option<number> = terminalNodeIds.indexOf(nodeId);
     if (maybeTerminalIndex !== -1) {
         const terminalIndex: number = maybeTerminalIndex;
-        state.leafNodeIds = [
-            ...terminalNodeIds.slice(0, terminalIndex),
-            ...terminalNodeIds.slice(terminalIndex + 1),
-        ];
+        state.leafNodeIds = [...terminalNodeIds.slice(0, terminalIndex), ...terminalNodeIds.slice(terminalIndex + 1)];
     }
 
     if (maybeParentId === undefined) {
