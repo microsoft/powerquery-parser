@@ -12,7 +12,8 @@
         "noUnusedParameters": true,
         "declaration": true,
         "rootDir": "src",
-        "incremental": true
+        "incremental": true,
+        "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
     },
     "include": [
         "src/**/*.ts",
