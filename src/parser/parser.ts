@@ -45,7 +45,7 @@ export class Parser {
 
             const contextState: Context.State = this.contextState;
             const nodesById: Map<number, Ast.TNode> = new Map();
-            for (const [nodeId, contextNode] of contextState.nodesById.entries()) {
+            for (const [nodeId, contextNode] of contextState.contextNodesById.entries()) {
                 if (contextNode.maybeAstNode === undefined) {
                     throw new CommonError.InvariantError("maybeAstNode should be truthy");
                 }
@@ -2341,7 +2341,10 @@ export class Parser {
         this.contextState = backup.contextState;
 
         if (backup.maybeContextNodeId) {
-            this.maybeCurrentContextNode = Context.expectNode(this.contextState.nodesById, backup.maybeContextNodeId);
+            this.maybeCurrentContextNode = Context.expectContextNode(
+                this.contextState.contextNodesById,
+                backup.maybeContextNodeId,
+            );
         } else {
             this.maybeCurrentContextNode = undefined;
         }
