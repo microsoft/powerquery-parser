@@ -44,21 +44,11 @@ export class Parser {
             }
 
             const contextState: Context.State = this.contextState;
-            const nodesById: Map<number, Ast.TNode> = new Map();
-            for (const [nodeId, contextNode] of contextState.contextNodesById.entries()) {
-                if (contextNode.maybeAstNode === undefined) {
-                    throw new CommonError.InvariantError("maybeAstNode should be truthy");
-                }
-
-                const oldNode: Ast.TNode = contextNode.maybeAstNode;
-                nodesById.set(nodeId, oldNode);
-            }
-
             return {
                 kind: ResultKind.Ok,
                 value: {
                     document,
-                    nodesById,
+                    nodesById: contextState.astNodesById,
                     leafNodes: contextState.leafNodeIds.slice(),
                 },
             };
@@ -564,10 +554,10 @@ export class Parser {
     // 12.2.3.19 Item access expression
     private readItemAccessExpression(): Ast.ItemAccessExpression {
         const nodeKind: Ast.NodeKind.ItemAccessExpression = Ast.NodeKind.ItemAccessExpression;
-        this.startContext(nodeKind);
+        const nodeIdNumber: number = this.startContext(nodeKind);
         this.startTokenRange(nodeKind);
 
-        const maybeReturn: Ast.IWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression> = this.readWrapped<
+        const wrapped: Ast.IWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression> = this.readWrapped<
             Ast.NodeKind.ItemAccessExpression,
             Ast.TExpression
         >(
@@ -583,15 +573,17 @@ export class Parser {
         if (maybeOptionalConstant) {
             const newTokenRange: TokenRange = this.popTokenRange();
             astNode = {
+                ...wrapped,
+                id: nodeIdNumber,
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
-                ...maybeReturn,
             };
         } else {
             this.popTokenRangeNoop();
             astNode = {
+                ...wrapped,
+                id: nodeIdNumber,
                 maybeOptionalConstant: undefined,
-                ...maybeReturn,
             };
         }
 
@@ -607,10 +599,10 @@ export class Parser {
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
         const nodeKind: Ast.NodeKind.FieldProjection = Ast.NodeKind.FieldProjection;
-        this.startContext(nodeKind);
+        const originalNodeId: number = this.startContext(nodeKind);
         this.startTokenRange(nodeKind);
 
-        const maybeReturn: Ast.IWrapped<
+        const wrapped: Ast.IWrapped<
             Ast.NodeKind.FieldProjection,
             ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>
         > = this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
@@ -626,15 +618,17 @@ export class Parser {
         if (maybeOptionalConstant) {
             const newTokenRange: TokenRange = this.popTokenRange();
             astNode = {
+                ...wrapped,
+                id: originalNodeId,
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
-                ...maybeReturn,
             };
         } else {
             this.popTokenRangeNoop();
             astNode = {
+                ...wrapped,
+                id: originalNodeId,
                 maybeOptionalConstant: undefined,
-                ...maybeReturn,
             };
         }
 
@@ -645,10 +639,10 @@ export class Parser {
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldSelector(allowOptional: boolean): Ast.FieldSelector {
         const nodeKind: Ast.NodeKind.FieldSelector = Ast.NodeKind.FieldSelector;
-        this.startContext(nodeKind);
+        const nodeIdNumber: number = this.startContext(nodeKind);
         this.startTokenRange(nodeKind);
 
-        const maybeReturn: Ast.IWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier> = this.readWrapped<
+        const wrapped: Ast.IWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier> = this.readWrapped<
             Ast.NodeKind.FieldSelector,
             Ast.GeneralizedIdentifier
         >(
@@ -666,15 +660,17 @@ export class Parser {
         if (maybeOptionalConstant) {
             const newTokenRange: TokenRange = this.popTokenRange();
             astNode = {
+                ...wrapped,
+                id: nodeIdNumber,
                 tokenRange: newTokenRange,
                 maybeOptionalConstant,
-                ...maybeReturn,
             };
         } else {
             this.popTokenRangeNoop();
             astNode = {
+                ...wrapped,
+                id: nodeIdNumber,
                 maybeOptionalConstant: undefined,
-                ...maybeReturn,
             };
         }
 
@@ -1016,7 +1012,7 @@ export class Parser {
             return astNode;
         } else {
             this.popTokenRangeNoop();
-            this.deleteContext();
+            this.deleteContext(undefined);
             return undefined;
         }
     }
@@ -1571,10 +1567,10 @@ export class Parser {
         if (this.isOnTokenKind(tokenKind)) {
             const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
             this.startContext(nodeKind);
-            const tokenRange: TokenRange = this.singleTokenRange(tokenKind);
 
+            const tokenRange: TokenRange = this.singleTokenRange(tokenKind);
             const maybeConstantKind: Option<Ast.ConstantKind> = Ast.constantKindFromTokenKind(tokenKind);
-            if (!maybeConstantKind) {
+            if (maybeConstantKind === undefined) {
                 throw new CommonError.InvariantError(`couldn't convert TokenKind=${tokenKind} into ConstantKind`);
             }
             const constantKind: Ast.ConstantKind = maybeConstantKind;
@@ -1588,6 +1584,7 @@ export class Parser {
                 literal: constantKind,
             };
             this.endContext(astNode);
+
             return astNode;
         } else {
             return undefined;
@@ -1782,7 +1779,7 @@ export class Parser {
             return astNode;
         } else {
             this.popTokenRangeNoop();
-            this.deleteContext();
+            this.deleteContext(undefined);
             return left;
         }
     }
@@ -1866,7 +1863,7 @@ export class Parser {
             return astNode;
         } else {
             this.popTokenRangeNoop();
-            this.deleteContext();
+            this.deleteContext(undefined);
             return first;
         }
     }
@@ -2218,7 +2215,7 @@ export class Parser {
         };
     }
 
-    private startContext(nodeKind: Ast.NodeKind): void {
+    private startContext(nodeKind: Ast.NodeKind): number {
         this.maybeCurrentContextNode = Context.addChild(
             this.contextState,
             this.maybeCurrentContextNode,
@@ -2226,7 +2223,9 @@ export class Parser {
             this.nodeIdCounter,
             this.maybeCurrentToken,
         );
+        const oldNodeIdCounter: number = this.nodeIdCounter;
         this.nodeIdCounter += 1;
+        return oldNodeIdCounter;
     }
 
     private endContext(astNode: Ast.TNode): void {
@@ -2239,14 +2238,22 @@ export class Parser {
         this.maybeCurrentContextNode = Context.endContext(this.contextState, this.maybeCurrentContextNode, astNode);
     }
 
-    private deleteContext(): void {
-        if (this.maybeCurrentContextNode === undefined) {
-            throw new CommonError.InvariantError(
-                "maybeContextNode should be truthy, can't end context if it doesn't exist.",
-            );
+    private deleteContext(maybeNodeId: Option<number>): void {
+        let nodeId: number;
+        if (maybeNodeId === undefined) {
+            if (this.maybeCurrentContextNode === undefined) {
+                throw new CommonError.InvariantError(
+                    "maybeContextNode should be truthy, can't end context if it doesn't exist.",
+                );
+            } else {
+                const currentContextNode: Context.Node = this.maybeCurrentContextNode;
+                nodeId = currentContextNode.nodeId;
+            }
+        } else {
+            nodeId = maybeNodeId;
         }
 
-        this.maybeCurrentContextNode = Context.deleteContext(this.contextState, this.maybeCurrentContextNode);
+        this.maybeCurrentContextNode = Context.deleteContext(this.contextState, nodeId);
     }
 
     private isNextTokenKind(tokenKind: TokenKind): boolean {

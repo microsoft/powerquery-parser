@@ -90,7 +90,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         state.leafNodeIds.push(contextNode.nodeId);
     }
 
-    // Setting mabyeAst indicates the ContextNode is complete.
+    // Setting mabyeAst marks the ContextNode as complete.
     contextNode.maybeAstNode = astNode;
 
     // Ending a context should return the context's parent node (if one exists).
@@ -109,17 +109,17 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
     return maybeParentNode;
 }
 
-export function deleteContext(state: State, node: Node): Option<Node> {
+export function deleteContext(state: State, nodeId: number): Option<Node> {
     const nodesById: ContextNodeMap = state.contextNodesById;
     const terminalNodeIds: number[] = state.leafNodeIds;
 
-    const maybeParentId: Option<number> = node.maybeParentId;
-    const nodeId: number = node.nodeId;
-
-    if (!nodesById.has(nodeId)) {
-        throw new CommonError.InvariantError(`node.nodeId not in state: ${nodeId}.`);
+    const maybeNode: Option<Node> = nodesById.get(nodeId);
+    if (maybeNode === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`nodeId not in state.`, details);
     }
-    nodesById.delete(nodeId);
+    const node: Node = maybeNode;
+    const maybeParentId: Option<number> = node.maybeParentId;
 
     const maybeTerminalIndex: Option<number> = terminalNodeIds.indexOf(nodeId);
     if (maybeTerminalIndex !== -1) {
