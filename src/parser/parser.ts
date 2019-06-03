@@ -49,7 +49,7 @@ export class Parser {
                 value: {
                     document,
                     nodesById: contextState.astNodesById,
-                    leafNodes: contextState.leafNodeIds.slice(),
+                    leafNodes: contextState.leafNodeIds,
                 },
             };
         } catch (e) {
