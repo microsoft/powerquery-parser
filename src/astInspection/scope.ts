@@ -99,21 +99,21 @@ function maybeGetXorNodeParent(state: InspectionState): Option<TXorNode> {
     return undefined;
 }
 
-function closestNode(
+function maybeClosestNode(
     position: Position,
     astNodesById: Map<number, Ast.TNode>,
     contextNodesById: Map<number, ParserContext.Node>,
-    terminalNodeIds: ReadonlyArray<number>,
-): TXorNode {
+    leafNodeIds: ReadonlyArray<number>,
+): Option<TXorNode> {
     let maybeClosestNode: Option<TXorNode>;
 
-    for (const nodeId of terminalNodeIds) {
-        let maybeXorNode: Option<TXorNode>;
+    for (const nodeId of leafNodeIds) {
+        let maybeCurrentXorNode: Option<TXorNode>;
 
         const maybeAstNode: Option<Ast.TNode> = astNodesById.get(nodeId);
         if (maybeAstNode) {
             const astNode: Ast.TNode = maybeAstNode;
-            maybeXorNode = {
+            maybeCurrentXorNode = {
                 kind: XorNodeKind.Ast,
                 node: astNode,
             };
@@ -122,31 +122,39 @@ function closestNode(
         const maybeContextNode: Option<ParserContext.Node> = contextNodesById.get(nodeId);
         if (maybeContextNode) {
             const contextNode: ParserContext.Node = maybeContextNode;
-            maybeXorNode = {
+            maybeCurrentXorNode = {
                 kind: XorNodeKind.Context,
                 node: contextNode,
             };
         }
 
         // couldn't find nodeId in either astNodesById nor contextNodesById
-        if (maybeXorNode === undefined) {
+        if (maybeCurrentXorNode === undefined) {
             const details: {} = { nodeId };
             throw new CommonError.InvariantError(`nodeId wasn't a astNode nor contextNode`, details);
         }
+        const currentXorNode: TXorNode = maybeCurrentXorNode;
+
+        if (isXorNodeCloser(position, maybeCurrentXorNode, currentXorNode)) {
+            maybeClosestNode = currentXorNode;
+        }
     }
+
+    return maybeClosestNode;
 }
 
+// Assumes both TXorNode parameters are leaf nodes.
 function isXorNodeCloser(position: Position, maybeCurrentNode: Option<TXorNode>, newNode: TXorNode) {
     if (maybeCurrentNode === undefined) {
         return newNode;
     }
     const currentNode: TXorNode = maybeCurrentNode;
 
-    let currentTokenPositionStart: TokenPosition;
+    let currentNodePositionStart: TokenPosition;
     switch (currentNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = currentNode.node;
-            currentTokenPositionStart = astNode.tokenRange.positionStart;
+            currentNodePositionStart = astNode.tokenRange.positionStart;
             break;
         }
 
@@ -158,7 +166,7 @@ function isXorNodeCloser(position: Position, maybeCurrentNode: Option<TXorNode>,
             }
             const tokenStart: Token = contextNode.maybeTokenStart;
 
-            currentTokenPositionStart = tokenStart.positionStart;
+            currentNodePositionStart = tokenStart.positionStart;
             break;
         }
 
@@ -166,29 +174,42 @@ function isXorNodeCloser(position: Position, maybeCurrentNode: Option<TXorNode>,
             throw isNever(currentNode);
     }
 
-    let newTokenPositionStart: TokenPosition;
-    switch (currentNode.kind) {
+    let newNodePositionStart: TokenPosition;
+    switch (newNode.kind) {
         case XorNodeKind.Ast: {
-            const astNode: Ast.TNode = currentNode.node;
-            newTokenPositionStart = astNode.tokenRange.positionStart;
+            const astNode: Ast.TNode = newNode.node;
+            newNodePositionStart = astNode.tokenRange.positionStart;
             break;
         }
 
         case XorNodeKind.Context: {
-            const contextNode: ParserContext.Node = currentNode.node;
+            const contextNode: ParserContext.Node = newNode.node;
             if (!contextNode.maybeTokenStart) {
                 const details: {} = { nodeId: contextNode.nodeId };
                 throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
             }
             const tokenStart: Token = contextNode.maybeTokenStart;
 
-            newTokenPositionStart = tokenStart.positionStart;
+            newNodePositionStart = tokenStart.positionStart;
             break;
         }
 
         default:
-            throw isNever(currentNode);
+            throw isNever(newNode);
     }
+
+    // Verifies newTokenPositionStart starts no later than the position argument.
+    if (newNodePositionStart.lineNumber > position.lineNumber) {
+        return currentNode;
+    }
+    else if (newNodePositionStart.lineNumber === position.lineNumber && newNodePositionStart.lineCodeUnit > position.lineCodeUnit) {
+        return currentNode;
+    }
+
+    // Both currentTokenPositionStart and newTokenPositionStart are <= position,
+    // so a quick comparison can be done by examining TokenPosition.codeUnit
+
+    return currentNodePositionStart.codeUnit < newNodePositionStart.codeUnit ? newNode : currentNode;
 }
 
 // function inspectContextState(contextState: ParserContext.State) {}
