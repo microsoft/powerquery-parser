@@ -1,6 +1,6 @@
+import { CommonError, isNever, Option } from "../common";
+import { Token, TokenPosition } from "../lexer";
 import { Ast, ParserContext } from "../parser";
-import { Option, isNever } from "../common";
-
 /* tslint:disable */
 
 // Inspections are done by starting at a given position.
@@ -97,6 +97,98 @@ function maybeGetXorNodeParent(state: InspectionState): Option<TXorNode> {
     }
 
     return undefined;
+}
+
+function closestNode(
+    position: Position,
+    astNodesById: Map<number, Ast.TNode>,
+    contextNodesById: Map<number, ParserContext.Node>,
+    terminalNodeIds: ReadonlyArray<number>,
+): TXorNode {
+    let maybeClosestNode: Option<TXorNode>;
+
+    for (const nodeId of terminalNodeIds) {
+        let maybeXorNode: Option<TXorNode>;
+
+        const maybeAstNode: Option<Ast.TNode> = astNodesById.get(nodeId);
+        if (maybeAstNode) {
+            const astNode: Ast.TNode = maybeAstNode;
+            maybeXorNode = {
+                kind: XorNodeKind.Ast,
+                node: astNode,
+            };
+        }
+
+        const maybeContextNode: Option<ParserContext.Node> = contextNodesById.get(nodeId);
+        if (maybeContextNode) {
+            const contextNode: ParserContext.Node = maybeContextNode;
+            maybeXorNode = {
+                kind: XorNodeKind.Context,
+                node: contextNode,
+            };
+        }
+
+        // couldn't find nodeId in either astNodesById nor contextNodesById
+        if (maybeXorNode === undefined) {
+            const details: {} = { nodeId };
+            throw new CommonError.InvariantError(`nodeId wasn't a astNode nor contextNode`, details);
+        }
+    }
+}
+
+function isXorNodeCloser(position: Position, maybeCurrentNode: Option<TXorNode>, newNode: TXorNode) {
+    if (maybeCurrentNode === undefined) {
+        return newNode;
+    }
+    const currentNode: TXorNode = maybeCurrentNode;
+
+    let currentTokenPositionStart: TokenPosition;
+    switch (currentNode.kind) {
+        case XorNodeKind.Ast: {
+            const astNode: Ast.TNode = currentNode.node;
+            currentTokenPositionStart = astNode.tokenRange.positionStart;
+            break;
+        }
+
+        case XorNodeKind.Context: {
+            const contextNode: ParserContext.Node = currentNode.node;
+            if (!contextNode.maybeTokenStart) {
+                const details: {} = { nodeId: contextNode.nodeId };
+                throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
+            }
+            const tokenStart: Token = contextNode.maybeTokenStart;
+
+            currentTokenPositionStart = tokenStart.positionStart;
+            break;
+        }
+
+        default:
+            throw isNever(currentNode);
+    }
+
+    let newTokenPositionStart: TokenPosition;
+    switch (currentNode.kind) {
+        case XorNodeKind.Ast: {
+            const astNode: Ast.TNode = currentNode.node;
+            newTokenPositionStart = astNode.tokenRange.positionStart;
+            break;
+        }
+
+        case XorNodeKind.Context: {
+            const contextNode: ParserContext.Node = currentNode.node;
+            if (!contextNode.maybeTokenStart) {
+                const details: {} = { nodeId: contextNode.nodeId };
+                throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
+            }
+            const tokenStart: Token = contextNode.maybeTokenStart;
+
+            newTokenPositionStart = tokenStart.positionStart;
+            break;
+        }
+
+        default:
+            throw isNever(currentNode);
+    }
 }
 
 // function inspectContextState(contextState: ParserContext.State) {}
