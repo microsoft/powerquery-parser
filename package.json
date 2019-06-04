@@ -37,6 +37,9 @@
     "lib/index.d.ts",
     "lib/index.js",
     "lib/index.js.map",
+    "lib/inspection.d.ts",
+    "lib/inspection.js",
+    "lib/inspection.js.map",
     "lib/jobs.d.ts",
     "lib/jobs.js",
     "lib/jobs.js.map"

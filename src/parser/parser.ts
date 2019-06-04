@@ -49,7 +49,7 @@ export class Parser {
                 value: {
                     document,
                     nodesById: contextState.astNodesById,
-                    leafNodes: contextState.leafNodeIds,
+                    leafNodeIds: contextState.leafNodeIds,
                 },
             };
         } catch (e) {
@@ -2361,7 +2361,7 @@ export class Parser {
 export interface ParseOk {
     readonly document: Ast.TDocument;
     readonly nodesById: Map<number, Ast.TNode>;
-    readonly leafNodes: ReadonlyArray<number>;
+    readonly leafNodeIds: ReadonlyArray<number>;
 }
 
 export function parse(lexerSnapshot: LexerSnapshot): TriedParse {

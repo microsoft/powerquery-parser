@@ -1,6 +1,7 @@
-import { CommonError, isNever, Option } from "../common";
-import { Token, TokenPosition } from "../lexer";
-import { Ast, ParserContext } from "../parser";
+import { CommonError, isNever, Option, Result, ResultKind } from "./common";
+import { Token, TokenPosition } from "./lexer";
+import { Ast, ParserContext, ParserError } from "./parser";
+import { ParseOk, TriedParse } from "./parser/parser";
 
 // Inspections are done by starting at a given position.
 // A given position is either in a token or somewhere between tokens (whitespace).
@@ -22,6 +23,8 @@ import { Ast, ParserContext } from "../parser";
 //  * all nodes are Context.Node
 //  * nodes are initially Ast.TNode, then they become Context.Node
 
+export type TriedInspect = Result<Inspection, CommonError.CommonError>;
+
 export interface Inspection {
     readonly isInEach: boolean;
     readonly isInFunction: boolean;
@@ -36,15 +39,96 @@ export interface Position {
     readonly lineCodeUnit: number;
 }
 
-export function inspect(
+export function tryFrom(position: Position, triedParse: TriedParse): TriedInspect {
+    try {
+        switch (triedParse.kind) {
+            case ResultKind.Ok:
+                const parseOk: ParseOk = triedParse.value;
+                return {
+                    kind: ResultKind.Ok,
+                    value: inspect(position, parseOk.nodesById, new Map(), parseOk.leafNodeIds),
+                };
+
+            case ResultKind.Err:
+                const error: ParserError.TParserError = triedParse.error;
+                if (!(error instanceof ParserError.ParserError)) {
+                    const details: {} = { error };
+                    throw new CommonError.InvariantError(
+                        `triedParse is an error, but is not instance of ParserError.ParserError`,
+                        details,
+                    );
+                }
+                const parserError: ParserError.ParserError = error;
+
+                return {
+                    kind: ResultKind.Ok,
+                    value: inspect(
+                        position,
+                        parserError.context.astNodesById,
+                        parserError.context.contextNodesById,
+                        parserError.context.leafNodeIds,
+                    ),
+                };
+
+            default:
+                throw isNever(triedParse);
+        }
+    } catch (e) {
+        return {
+            kind: ResultKind.Err,
+            error: CommonError.ensureCommonError(e),
+        };
+    }
+}
+
+type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
+
+const enum XorNodeKind {
+    Ast = "Ast",
+    Context = "Context",
+}
+
+const DefaultInspection: Inspection = {
+    isInEach: false,
+    isInFunction: false,
+    isInIdentifierExpression: false,
+    isInLeftHandAssignment: false,
+    isInRecord: false,
+    scope: [],
+};
+
+interface State {
+    // Values that are returned at the end of an inspection.
+    isInEach: boolean;
+    isInFunction: boolean;
+    isInIdentifierExpression: boolean;
+    isInLeftHandAssignment: boolean;
+    isInRecord: boolean;
+    scope: string[];
+
+    // Used to generate the inspection result.
+    currentXorNode: Option<TXorNode>;
+    maybePreviousXorNode: Option<TXorNode>;
+    readonly initialXorNode: TXorNode;
+    readonly astNodesById: Map<number, Ast.TNode>;
+    readonly contextNodesById: Map<number, ParserContext.Node>;
+    readonly leafNodeIds: ReadonlyArray<number>;
+}
+
+interface IXorNode<Kind, T> {
+    readonly kind: Kind & XorNodeKind;
+    readonly node: T;
+}
+
+function inspect(
     position: Position,
     astNodesById: Map<number, Ast.TNode>,
     contextNodesById: Map<number, ParserContext.Node>,
     leafNodeIds: ReadonlyArray<number>,
-): Option<Inspection> {
+): Inspection {
     const maybeState: Option<State> = stateFactory(position, astNodesById, contextNodesById, leafNodeIds);
     if (maybeState === undefined) {
-        return undefined;
+        return DefaultInspection;
     }
     const state: State = maybeState;
 
@@ -78,36 +162,6 @@ export function inspect(
         isInRecord: state.isInRecord,
         scope: state.scope,
     };
-}
-
-type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
-
-const enum XorNodeKind {
-    Ast = "Ast",
-    Context = "Context",
-}
-
-interface State {
-    // Values that are returned at the end of an inspection.
-    isInEach: boolean;
-    isInFunction: boolean;
-    isInIdentifierExpression: boolean;
-    isInLeftHandAssignment: boolean;
-    isInRecord: boolean;
-    scope: string[];
-
-    // Used to generate the inspection result.
-    currentXorNode: Option<TXorNode>;
-    maybePreviousXorNode: Option<TXorNode>;
-    readonly initialXorNode: TXorNode;
-    readonly astNodesById: Map<number, Ast.TNode>;
-    readonly contextNodesById: Map<number, ParserContext.Node>;
-    readonly leafNodeIds: ReadonlyArray<number>;
-}
-
-interface IXorNode<Kind, T> {
-    readonly kind: Kind & XorNodeKind;
-    readonly node: T;
 }
 
 function inspectAstNode(state: State, node: Ast.TNode): void {
