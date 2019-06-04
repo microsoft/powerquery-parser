@@ -78,7 +78,7 @@ interface State {
     isOnIdentifier: boolean;
     scope: string[];
 
-    // The internal state of the inspection.
+    // Used to generate the inspection result.
     readonly initialXorNode: TXorNode;
     readonly astNodesById: Map<number, Ast.TNode>;
     readonly contextNodesById: Map<number, ParserContext.Node>;
@@ -105,12 +105,12 @@ function stateFactory(
     const xorNode: TXorNode = maybeXorNode;
 
     return {
-        scope: [],
         isInEach: false,
         isInFunction: false,
         isInLeftHandAssignment: false,
         isInRecord: false,
         isOnIdentifier: false,
+        scope: [],
 
         initialXorNode: xorNode,
         astNodesById,
