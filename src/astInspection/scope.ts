@@ -25,9 +25,9 @@ import { Ast, ParserContext } from "../parser";
 export interface Inspection {
     readonly isInEach: boolean;
     readonly isInFunction: boolean;
+    readonly isInIdentifierExpression: boolean;
     readonly isInLeftHandAssignment: boolean;
     readonly isInRecord: boolean;
-    readonly isOnIdentifier: boolean;
     readonly scope: ReadonlyArray<string>;
 }
 
@@ -48,18 +48,34 @@ export function inspect(
     }
     const state: State = maybeState;
 
-    let maybeXorNode: Option<TXorNode> = state.initialXorNode;
-    while (maybeXorNode !== undefined) {
-        const xorNode: TXorNode = maybeXorNode;
-        maybeXorNode = maybeXorNodeParent(state, xorNode);
+    while (state.currentXorNode !== undefined) {
+        const xorNode: TXorNode = state.currentXorNode;
+
+        switch (xorNode.kind) {
+            case XorNodeKind.Ast: {
+                inspectAstNode(state, xorNode.node);
+                break;
+            }
+
+            case XorNodeKind.Context: {
+                inspectContextNode(state, xorNode.node);
+                break;
+            }
+
+            default:
+                throw isNever(xorNode);
+        }
+
+        state.maybePreviousXorNode = xorNode;
+        state.currentXorNode = maybeXorNodeParent(state, xorNode);
     }
 
     return {
         isInEach: state.isInEach,
         isInFunction: state.isInFunction,
+        isInIdentifierExpression: state.isInIdentifierExpression,
         isInLeftHandAssignment: state.isInLeftHandAssignment,
         isInRecord: state.isInRecord,
-        isOnIdentifier: state.isOnIdentifier,
         scope: state.scope,
     };
 }
@@ -75,12 +91,14 @@ interface State {
     // Values that are returned at the end of an inspection.
     isInEach: boolean;
     isInFunction: boolean;
+    isInIdentifierExpression: boolean;
     isInLeftHandAssignment: boolean;
     isInRecord: boolean;
-    isOnIdentifier: boolean;
     scope: string[];
 
     // Used to generate the inspection result.
+    currentXorNode: Option<TXorNode>;
+    maybePreviousXorNode: Option<TXorNode>;
     readonly initialXorNode: TXorNode;
     readonly astNodesById: Map<number, Ast.TNode>;
     readonly contextNodesById: Map<number, ParserContext.Node>;
@@ -90,6 +108,56 @@ interface State {
 interface IXorNode<Kind, T> {
     readonly kind: Kind & XorNodeKind;
     readonly node: T;
+}
+
+function inspectAstNode(state: State, node: Ast.TNode): void {
+    switch (node.kind) {
+        case Ast.NodeKind.EachExpression:
+            state.isInEach = true;
+            break;
+
+        // IdentifierExpression covers both inclusive and exclusive identifiers
+        case Ast.NodeKind.IdentifierExpression:
+            state.isInIdentifierExpression = true;
+            break;
+
+        case Ast.NodeKind.InvokeExpression:
+            state.isInFunction = true;
+            break;
+
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral:
+            state.isInRecord = true;
+            break;
+
+        default:
+            break;
+    }
+}
+
+function inspectContextNode(state: State, node: ParserContext.Node): void {
+    switch (node.nodeKind) {
+        case Ast.NodeKind.EachExpression:
+            state.isInEach = true;
+            break;
+
+        // IdentifierExpression covers both inclusive and exclusive identifiers
+        case Ast.NodeKind.IdentifierExpression:
+            state.isInIdentifierExpression = true;
+            break;
+
+        case Ast.NodeKind.InvokeExpression:
+            state.isInFunction = true;
+            break;
+
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral:
+            state.isInRecord = true;
+            break;
+
+        default:
+            break;
+    }
 }
 
 function stateFactory(
@@ -107,12 +175,14 @@ function stateFactory(
     return {
         isInEach: false,
         isInFunction: false,
+        isInIdentifierExpression: false,
         isInLeftHandAssignment: false,
         isInRecord: false,
-        isOnIdentifier: false,
         scope: [],
 
+        currentXorNode: xorNode,
         initialXorNode: xorNode,
+        maybePreviousXorNode: undefined,
         astNodesById,
         contextNodesById,
         leafNodeIds,
