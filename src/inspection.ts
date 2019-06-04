@@ -98,7 +98,7 @@ const DefaultInspection: Inspection = {
 };
 
 interface State {
-    // Values that are returned at the end of an inspection.
+    // Values that are evalauted then returned at the end of an inspection.
     isInEach: boolean;
     isInFunction: boolean;
     isInIdentifierExpression: boolean;
@@ -109,6 +109,7 @@ interface State {
     // Used to generate the inspection result.
     currentXorNode: Option<TXorNode>;
     maybePreviousXorNode: Option<TXorNode>;
+    readonly position: Position;
     readonly initialXorNode: TXorNode;
     readonly astNodesById: Map<number, Ast.TNode>;
     readonly contextNodesById: Map<number, ParserContext.Node>;
@@ -180,13 +181,21 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
 
         case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.RecordLiteral:
-            state.isInRecord = true;
+        case Ast.NodeKind.RecordLiteral: {
+            // Check if position is on closeWrapperConstant, eg. ']'
+            if (!isPositionOnTokenPosition(state.position, node.tokenRange.positionEnd)) {
+                state.isInRecord = true;
+            }
             break;
+        }
 
         default:
             break;
     }
+}
+
+function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosition): boolean {
+    return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
 }
 
 function inspectContextNode(state: State, node: ParserContext.Node): void {
@@ -234,6 +243,7 @@ function stateFactory(
         isInRecord: false,
         scope: [],
 
+        position,
         currentXorNode: xorNode,
         initialXorNode: xorNode,
         maybePreviousXorNode: undefined,
