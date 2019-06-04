@@ -2,8 +2,10 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
 import { Option, ResultKind } from "../../common";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
+import { Lexer, LexerSnapshot, TokenPosition, TriedLexerSnapshot } from "../../lexer";
 import { Parser } from "../../parser";
+
+type AbridgedNode = ReadonlyArray<[Inspection.NodeKind, Option<TokenPosition>, Option<TokenPosition>]>;
 
 function expectTriedParse(text: string): Parser.TriedParse {
     const state: Lexer.State = Lexer.stateFrom(text);
@@ -26,17 +28,37 @@ function expectTriedInspect(text: string, position: Inspection.Position): Inspec
     return Inspection.tryFrom(position, triedParse);
 }
 
-function expectInspectEquals(text: string, position: Inspection.Position, expected: Inspection.Inspection): void {
+function expectAbridgedNodes(text: string, position: Inspection.Position, expected: AbridgedNode): void {
     const triedInspect: Inspection.TriedInspect = expectTriedInspect(text, position);
     if (!(triedInspect.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok`);
     }
-    const actual: Inspection.Inspection = triedInspect.value;
-    expect(actual).deep.equal(expected);
+    const inspection: Inspection.Inspection = triedInspect.value;
+    const actual: AbridgedNode = inspection.nodes.map(node => [node.kind, node.positionStart, node.maybePositionEnd]);
+
+    expect(actual.length).to.equal(expected.length, "expected and actual lengths don't match");
+
+    for (let index: number = 0; index < expected.length; index += 1) {
+        const actualKind: Inspection.NodeKind = actual[index][0];
+        const expectedKind: Inspection.NodeKind = expected[index][0];
+        expect(actualKind).to.equal(expectedKind, `line: ${index}`);
+
+        const actualPositionStart: Option<TokenPosition> = actual[index][1];
+        const expectedPositionStart: Option<TokenPosition> = actual[index][1];
+        if (expectedPositionStart !== undefined) {
+            expect(actualPositionStart).deep.equal(expectedPositionStart, `line: ${index}`);
+        }
+
+        const actualPositionEnd: Option<TokenPosition> = actual[index][1];
+        const expectedPositionEnd: Option<TokenPosition> = actual[index][1];
+        if (expectedPositionEnd !== undefined) {
+            expect(actualPositionEnd).deep.equal(expectedPositionEnd, `line: ${index}`);
+        }
+    }
 }
 
 describe(`Inspection`, () => {
-    describe(`Flags`, () => {
+    describe(`Nodes`, () => {
         describe(`Record`, () => {
             it(`[] at (0, 0)`, () => {
                 const text: string = `[]`;
@@ -44,15 +66,8 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 0,
                 };
-                const expected: Inspection.Inspection = {
-                    isInEach: false,
-                    isInFunction: false,
-                    isInIdentifierExpression: false,
-                    isInLeftHandAssignment: false,
-                    isInRecord: false,
-                    scope: [],
-                };
-                expectInspectEquals(text, position, expected);
+                const expected: AbridgedNode = [];
+                expectAbridgedNodes(text, position, expected);
             });
 
             it(`[] at (0, 1)`, () => {
@@ -61,15 +76,8 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: Inspection.Inspection = {
-                    isInEach: false,
-                    isInFunction: false,
-                    isInIdentifierExpression: false,
-                    isInLeftHandAssignment: false,
-                    isInRecord: true,
-                    scope: [],
-                };
-                expectInspectEquals(text, position, expected);
+                const expected: AbridgedNode = [[Inspection.NodeKind.Record, undefined, undefined]];
+                expectAbridgedNodes(text, position, expected);
             });
 
             it(`[] at (0, 2)`, () => {
@@ -78,15 +86,8 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 2,
                 };
-                const expected: Inspection.Inspection = {
-                    isInEach: false,
-                    isInFunction: false,
-                    isInIdentifierExpression: false,
-                    isInLeftHandAssignment: false,
-                    isInRecord: false,
-                    scope: [],
-                };
-                expectInspectEquals(text, position, expected);
+                const expected: AbridgedNode = [];
+                expectAbridgedNodes(text, position, expected);
             });
         });
     });

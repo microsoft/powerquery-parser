@@ -1,7 +1,7 @@
-import { CommonError, isNever, Option, Result, ResultKind } from "./common";
-import { TokenPosition } from "./lexer";
-import { Ast, ParserContext, ParserError } from "./parser";
-import { ParseOk, TriedParse } from "./parser/parser";
+import { CommonError, isNever, Option, Result, ResultKind } from "../common";
+import { TokenPosition } from "../lexer";
+import { Ast, ParserContext, ParserError, TokenRange } from "../parser";
+import { ParseOk, TriedParse } from "../parser/parser";
 
 // Inspections are done by starting at a given position.
 // A given position is either in a token or somewhere between tokens (whitespace).
@@ -26,17 +26,32 @@ import { ParseOk, TriedParse } from "./parser/parser";
 export type TriedInspect = Result<Inspection, CommonError.CommonError>;
 
 export interface Inspection {
-    readonly isInEach: boolean;
-    readonly isInFunction: boolean;
-    readonly isInIdentifierExpression: boolean;
-    readonly isInLeftHandAssignment: boolean;
-    readonly isInRecord: boolean;
+    readonly nodes: ReadonlyArray<INode>;
     readonly scope: ReadonlyArray<string>;
 }
 
 export interface Position {
     readonly lineNumber: number;
     readonly lineCodeUnit: number;
+}
+
+export const enum NodeKind {
+    Record = "Record",
+    Each = "EachExpression",
+}
+
+export interface INode {
+    readonly kind: NodeKind;
+    readonly positionStart: TokenPosition;
+    readonly maybePositionEnd: Option<TokenPosition>;
+}
+
+export interface Record extends INode {
+    readonly kind: NodeKind.Record;
+}
+
+export interface Each extends INode {
+    readonly kind: NodeKind.Each;
 }
 
 export function tryFrom(position: Position, triedParse: TriedParse): TriedInspect {
@@ -89,21 +104,13 @@ const enum XorNodeKind {
 }
 
 const DefaultInspection: Inspection = {
-    isInEach: false,
-    isInFunction: false,
-    isInIdentifierExpression: false,
-    isInLeftHandAssignment: false,
-    isInRecord: false,
+    nodes: [],
     scope: [],
 };
 
 interface State {
     // Values that are evalauted then returned at the end of an inspection.
-    isInEach: boolean;
-    isInFunction: boolean;
-    isInIdentifierExpression: boolean;
-    isInLeftHandAssignment: boolean;
-    isInRecord: boolean;
+    nodes: INode[];
     scope: string[];
 
     // Used to generate the inspection result.
@@ -156,35 +163,42 @@ function inspect(
     }
 
     return {
-        isInEach: state.isInEach,
-        isInFunction: state.isInFunction,
-        isInIdentifierExpression: state.isInIdentifierExpression,
-        isInLeftHandAssignment: state.isInLeftHandAssignment,
-        isInRecord: state.isInRecord,
+        nodes: state.nodes,
         scope: state.scope,
     };
 }
 
 function inspectAstNode(state: State, node: Ast.TNode): void {
     switch (node.kind) {
-        case Ast.NodeKind.EachExpression:
-            state.isInEach = true;
+        case Ast.NodeKind.EachExpression: {
+            const tokenRange: TokenRange = node.tokenRange;
+            state.nodes.push({
+                kind: NodeKind.Each,
+                positionStart: tokenRange.positionStart,
+                maybePositionEnd: tokenRange.positionEnd,
+            });
             break;
+        }
 
-        // IdentifierExpression covers both inclusive and exclusive identifiers
-        case Ast.NodeKind.IdentifierExpression:
-            state.isInIdentifierExpression = true;
-            break;
+        // // IdentifierExpression covers both inclusive and exclusive identifiers
+        // case Ast.NodeKind.IdentifierExpression:
+        //     state.isInIdentifierExpression = true;
+        //     break;
 
-        case Ast.NodeKind.InvokeExpression:
-            state.isInFunction = true;
-            break;
+        // case Ast.NodeKind.InvokeExpression:
+        //     state.isInFunction = true;
+        //     break;
 
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecordLiteral: {
             // Check if position is on closeWrapperConstant, eg. ']'
-            if (!isPositionOnTokenPosition(state.position, node.tokenRange.positionEnd)) {
-                state.isInRecord = true;
+            const tokenRange: TokenRange = node.tokenRange;
+            if (!isPositionOnTokenPosition(state.position, tokenRange.positionEnd)) {
+                state.nodes.push({
+                    kind: NodeKind.Record,
+                    positionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                });
             }
             break;
         }
@@ -198,29 +212,30 @@ function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosit
     return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
 }
 
-function inspectContextNode(state: State, node: ParserContext.Node): void {
-    switch (node.nodeKind) {
-        case Ast.NodeKind.EachExpression:
-            state.isInEach = true;
-            break;
+function inspectContextNode(_: State, __: ParserContext.Node): void {
+    throw new Error(`todo`);
+    // switch (node.nodeKind) {
+    //     case Ast.NodeKind.EachExpression:
+    //         state.isInEach = true;
+    //         break;
 
-        // IdentifierExpression covers both inclusive and exclusive identifiers
-        case Ast.NodeKind.IdentifierExpression:
-            state.isInIdentifierExpression = true;
-            break;
+    //     // IdentifierExpression covers both inclusive and exclusive identifiers
+    //     case Ast.NodeKind.IdentifierExpression:
+    //         state.isInIdentifierExpression = true;
+    //         break;
 
-        case Ast.NodeKind.InvokeExpression:
-            state.isInFunction = true;
-            break;
+    //     case Ast.NodeKind.InvokeExpression:
+    //         state.isInFunction = true;
+    //         break;
 
-        case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.RecordLiteral:
-            state.isInRecord = true;
-            break;
+    //     case Ast.NodeKind.RecordExpression:
+    //     case Ast.NodeKind.RecordLiteral:
+    //         state.isInRecord = true;
+    //         break;
 
-        default:
-            break;
-    }
+    //     default:
+    //         break;
+    // }
 }
 
 function stateFactory(
@@ -236,11 +251,7 @@ function stateFactory(
     const xorNode: TXorNode = maybeXorNode;
 
     return {
-        isInEach: false,
-        isInFunction: false,
-        isInIdentifierExpression: false,
-        isInLeftHandAssignment: false,
-        isInRecord: false,
+        nodes: [],
         scope: [],
 
         position,
