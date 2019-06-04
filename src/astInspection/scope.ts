@@ -64,6 +64,8 @@ export function inspect(
     };
 }
 
+type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
+
 const enum XorNodeKind {
     Ast = "Ast",
     Context = "Context",
@@ -84,8 +86,6 @@ interface State {
     readonly contextNodesById: Map<number, ParserContext.Node>;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
-
-type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
 
 interface IXorNode<Kind, T> {
     readonly kind: Kind & XorNodeKind;
