@@ -295,12 +295,12 @@ function maybeClosestXorNode(
     let maybeClosestNode: Option<TXorNode>;
 
     for (const nodeId of leafNodeIds) {
-        let maybeCurrentXorNode: Option<TXorNode>;
+        let maybeNewXorNode: Option<TXorNode>;
 
         const maybeAstNode: Option<Ast.TNode> = astNodesById.get(nodeId);
         if (maybeAstNode) {
             const astNode: Ast.TNode = maybeAstNode;
-            maybeCurrentXorNode = {
+            maybeNewXorNode = {
                 kind: XorNodeKind.Ast,
                 node: astNode,
             };
@@ -309,28 +309,63 @@ function maybeClosestXorNode(
         const maybeContextNode: Option<ParserContext.Node> = contextNodesById.get(nodeId);
         if (maybeContextNode) {
             const contextNode: ParserContext.Node = maybeContextNode;
-            maybeCurrentXorNode = {
+            maybeNewXorNode = {
                 kind: XorNodeKind.Context,
                 node: contextNode,
             };
         }
 
         // couldn't find nodeId in either astNodesById nor contextNodesById
-        if (maybeCurrentXorNode === undefined) {
+        if (maybeNewXorNode === undefined) {
             const details: {} = { nodeId };
             throw new CommonError.InvariantError(`nodeId wasn't a astNode nor contextNode`, details);
         }
-        const currentXorNode: TXorNode = maybeCurrentXorNode;
-        maybeClosestNode = closerXorNode(position, maybeCurrentXorNode, currentXorNode);
+        const newNode: TXorNode = maybeNewXorNode;
+
+        maybeClosestNode = closerXorNode(position, maybeClosestNode, newNode);
     }
 
     return maybeClosestNode;
 }
 
 // Assumes both TXorNode parameters are leaf nodes.
-function closerXorNode(position: Position, maybeCurrentNode: Option<TXorNode>, newNode: TXorNode): TXorNode {
+function closerXorNode(position: Position, maybeCurrentNode: Option<TXorNode>, newNode: TXorNode): Option<TXorNode> {
+    let newNodePositionStart: TokenPosition;
+
     if (maybeCurrentNode === undefined) {
-        return newNode;
+        switch (newNode.kind) {
+            case XorNodeKind.Ast: {
+                const astNode: Ast.TNode = newNode.node;
+                newNodePositionStart = astNode.tokenRange.positionStart;
+                break;
+            }
+
+            case XorNodeKind.Context: {
+                const contextNode: ParserContext.Node = newNode.node;
+                if (!contextNode.maybeTokenStart) {
+                    const details: {} = { nodeId: contextNode.nodeId };
+                    throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
+                }
+                const tokenStart: Token = contextNode.maybeTokenStart;
+
+                newNodePositionStart = tokenStart.positionStart;
+                break;
+            }
+
+            default:
+                throw isNever(newNode);
+        }
+
+        if (newNodePositionStart.lineNumber > position.lineNumber) {
+            return undefined;
+        } else if (
+            newNodePositionStart.lineNumber === position.lineNumber &&
+            newNodePositionStart.lineCodeUnit >= position.lineCodeUnit
+        ) {
+            return undefined;
+        } else {
+            return newNode;
+        }
     }
     const currentNode: TXorNode = maybeCurrentNode;
 
@@ -358,7 +393,6 @@ function closerXorNode(position: Position, maybeCurrentNode: Option<TXorNode>, n
             throw isNever(currentNode);
     }
 
-    let newNodePositionStart: TokenPosition;
     switch (newNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = newNode.node;

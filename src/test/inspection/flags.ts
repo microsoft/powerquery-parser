@@ -37,12 +37,46 @@ function expectInspectEquals(text: string, position: Inspection.Position, expect
 
 describe(`Inspection`, () => {
     describe(`Flags`, () => {
-        describe(`EachExpression`, () => {
+        describe(`Record`, () => {
             it(`[] at (0, 0)`, () => {
                 const text: string = `[]`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
                     lineCodeUnit: 0,
+                };
+                const expected: Inspection.Inspection = {
+                    isInEach: false,
+                    isInFunction: false,
+                    isInIdentifierExpression: false,
+                    isInLeftHandAssignment: false,
+                    isInRecord: false,
+                    scope: [],
+                };
+                expectInspectEquals(text, position, expected);
+            });
+
+            it(`[] at (0, 1)`, () => {
+                const text: string = `[]`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: Inspection.Inspection = {
+                    isInEach: false,
+                    isInFunction: false,
+                    isInIdentifierExpression: false,
+                    isInLeftHandAssignment: false,
+                    isInRecord: true,
+                    scope: [],
+                };
+                expectInspectEquals(text, position, expected);
+            });
+
+            it(`[] at (0, 2)`, () => {
+                const text: string = `[]`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
                 };
                 const expected: Inspection.Inspection = {
                     isInEach: false,
