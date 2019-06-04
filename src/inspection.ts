@@ -1,5 +1,5 @@
 import { CommonError, isNever, Option, Result, ResultKind } from "./common";
-import { Token, TokenPosition } from "./lexer";
+import { TokenPosition } from "./lexer";
 import { Ast, ParserContext, ParserError } from "./parser";
 import { ParseOk, TriedParse } from "./parser/parser";
 
@@ -330,32 +330,11 @@ function maybeClosestXorNode(
 
 // Assumes both TXorNode parameters are leaf nodes.
 function closerXorNode(position: Position, maybeCurrentNode: Option<TXorNode>, newNode: TXorNode): Option<TXorNode> {
-    let newNodePositionStart: TokenPosition;
+    const newNodePositionStart: TokenPosition = expectTokenStart(newNode);
 
+    // If currentToken isn't set and newNode's start position is <= position: return newToken
+    // Else: return undefined
     if (maybeCurrentNode === undefined) {
-        switch (newNode.kind) {
-            case XorNodeKind.Ast: {
-                const astNode: Ast.TNode = newNode.node;
-                newNodePositionStart = astNode.tokenRange.positionStart;
-                break;
-            }
-
-            case XorNodeKind.Context: {
-                const contextNode: ParserContext.Node = newNode.node;
-                if (!contextNode.maybeTokenStart) {
-                    const details: {} = { nodeId: contextNode.nodeId };
-                    throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
-                }
-                const tokenStart: Token = contextNode.maybeTokenStart;
-
-                newNodePositionStart = tokenStart.positionStart;
-                break;
-            }
-
-            default:
-                throw isNever(newNode);
-        }
-
         if (newNodePositionStart.lineNumber > position.lineNumber) {
             return undefined;
         } else if (
@@ -368,53 +347,7 @@ function closerXorNode(position: Position, maybeCurrentNode: Option<TXorNode>, n
         }
     }
     const currentNode: TXorNode = maybeCurrentNode;
-
-    let currentNodePositionStart: TokenPosition;
-    switch (currentNode.kind) {
-        case XorNodeKind.Ast: {
-            const astNode: Ast.TNode = currentNode.node;
-            currentNodePositionStart = astNode.tokenRange.positionStart;
-            break;
-        }
-
-        case XorNodeKind.Context: {
-            const contextNode: ParserContext.Node = currentNode.node;
-            if (!contextNode.maybeTokenStart) {
-                const details: {} = { nodeId: contextNode.nodeId };
-                throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
-            }
-            const tokenStart: Token = contextNode.maybeTokenStart;
-
-            currentNodePositionStart = tokenStart.positionStart;
-            break;
-        }
-
-        default:
-            throw isNever(currentNode);
-    }
-
-    switch (newNode.kind) {
-        case XorNodeKind.Ast: {
-            const astNode: Ast.TNode = newNode.node;
-            newNodePositionStart = astNode.tokenRange.positionStart;
-            break;
-        }
-
-        case XorNodeKind.Context: {
-            const contextNode: ParserContext.Node = newNode.node;
-            if (!contextNode.maybeTokenStart) {
-                const details: {} = { nodeId: contextNode.nodeId };
-                throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
-            }
-            const tokenStart: Token = contextNode.maybeTokenStart;
-
-            newNodePositionStart = tokenStart.positionStart;
-            break;
-        }
-
-        default:
-            throw isNever(newNode);
-    }
+    const currentNodePositionStart: TokenPosition = expectTokenStart(currentNode);
 
     // Verifies newTokenPositionStart starts no later than the position argument.
     if (newNodePositionStart.lineNumber > position.lineNumber) {
@@ -429,4 +362,23 @@ function closerXorNode(position: Position, maybeCurrentNode: Option<TXorNode>, n
     // Both currentTokenPositionStart and newTokenPositionStart are <= position,
     // so a quick comparison can be done by examining TokenPosition.codeUnit
     return currentNodePositionStart.codeUnit < newNodePositionStart.codeUnit ? newNode : currentNode;
+}
+
+function expectTokenStart(xorNode: TXorNode): TokenPosition {
+    switch (xorNode.kind) {
+        case XorNodeKind.Ast:
+            return xorNode.node.tokenRange.positionStart;
+
+        case XorNodeKind.Context: {
+            const contextNode: ParserContext.Node = xorNode.node;
+            if (!contextNode.maybeTokenStart) {
+                const details: {} = { nodeId: contextNode.nodeId };
+                throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
+            }
+            return contextNode.maybeTokenStart.positionStart;
+        }
+
+        default:
+            throw isNever(xorNode);
+    }
 }
