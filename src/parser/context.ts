@@ -166,6 +166,6 @@ export function deepCopy(state: State): State {
 function deepCopyContextNode(node: Node): Node {
     return {
         ...node,
-        maybeAstNode: node.maybeAstNode !== undefined ? { ...node.maybeAstNode } : undefined,
+        childNodeIds: node.childNodeIds.slice(),
     };
 }
