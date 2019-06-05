@@ -732,7 +732,7 @@ export class Parser {
 
     // sub-item of 12.2.3.25 Type expression
     private readType(): Ast.TType {
-        const triedReadPrimaryType: TryReadPrimaryType = this.tryReadPrimaryType();
+        const triedReadPrimaryType: TriedReadPrimaryType = this.tryReadPrimaryType();
 
         if (triedReadPrimaryType.kind === ResultKind.Ok) {
             return triedReadPrimaryType.value;
@@ -743,7 +743,7 @@ export class Parser {
 
     // sub-item of 12.2.3.25 Type expression
     private readPrimaryType(): Ast.TPrimaryType {
-        const triedReadPrimaryType: TryReadPrimaryType = this.tryReadPrimaryType();
+        const triedReadPrimaryType: TriedReadPrimaryType = this.tryReadPrimaryType();
 
         if (triedReadPrimaryType.kind === ResultKind.Ok) {
             return triedReadPrimaryType.value;
@@ -752,7 +752,7 @@ export class Parser {
         }
     }
 
-    private tryReadPrimaryType(): TryReadPrimaryType {
+    private tryReadPrimaryType(): TriedReadPrimaryType {
         const backup: StateBackup = this.backupState();
 
         const isTableTypeNext: boolean =
@@ -791,7 +791,7 @@ export class Parser {
                 value: this.readNullableType(),
             };
         } else {
-            const triedReadPrimitiveType: TryReadPrimaryType = this.tryReadPrimitiveType();
+            const triedReadPrimitiveType: TriedReadPrimaryType = this.tryReadPrimitiveType();
 
             if (triedReadPrimitiveType.kind === ResultKind.Err) {
                 this.restoreBackup(backup);
@@ -1338,7 +1338,7 @@ export class Parser {
     }
 
     private readPrimitiveType(): Ast.PrimitiveType {
-        const triedReadPrimitiveType: TryReadPrimitiveType = this.tryReadPrimitiveType();
+        const triedReadPrimitiveType: TriedReadPrimitiveType = this.tryReadPrimitiveType();
         if (triedReadPrimitiveType.kind === ResultKind.Ok) {
             return triedReadPrimitiveType.value;
         } else {
@@ -1346,7 +1346,7 @@ export class Parser {
         }
     }
 
-    private tryReadPrimitiveType(): TryReadPrimitiveType {
+    private tryReadPrimitiveType(): TriedReadPrimitiveType {
         const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
         this.startContext(nodeKind);
         this.startTokenRange(nodeKind);
@@ -2324,9 +2324,12 @@ export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
     return parser.parse();
 }
 
-type TryReadPrimaryType = Result<Ast.TPrimaryType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError>;
+type TriedReadPrimaryType = Result<
+    Ast.TPrimaryType,
+    ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+>;
 
-type TryReadPrimitiveType = Result<
+type TriedReadPrimitiveType = Result<
     Ast.PrimitiveType,
     ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
