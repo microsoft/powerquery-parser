@@ -493,6 +493,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
             () => this.readExpression(),
             () => this.readTokenKindAsConstant(TokenKind.RightParenthesis),
+            false,
         );
     }
 
@@ -523,6 +524,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
             () => this.readCsv(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightParenthesis),
+            false,
         );
     }
 
@@ -534,6 +536,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsv(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            false,
         );
     }
 
@@ -548,6 +551,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readGeneralizedIdentifierPairedExpressions(continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            false,
         );
     }
 
@@ -565,6 +569,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readExpression(),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            false,
         );
 
         // hack to conditionally read '?' after closeWrapperConstant
@@ -598,84 +603,24 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
-        const nodeKind: Ast.NodeKind.FieldProjection = Ast.NodeKind.FieldProjection;
-        const originalNodeId: number = this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
-
-        const wrapped: Ast.IWrapped<
+        return this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
             Ast.NodeKind.FieldProjection,
-            ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>
-        > = this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
-            nodeKind,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readCsv(() => this.readFieldSelector(false), true),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            true,
         );
-
-        // hack to conditionally read '?' after closeWrapperConstant
-        const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
-        let astNode: Ast.FieldProjection;
-        if (maybeOptionalConstant) {
-            const newTokenRange: TokenRange = this.popTokenRange();
-            astNode = {
-                ...wrapped,
-                id: originalNodeId,
-                tokenRange: newTokenRange,
-                maybeOptionalConstant,
-            };
-        } else {
-            this.popTokenRangeNoop();
-            astNode = {
-                ...wrapped,
-                id: originalNodeId,
-                maybeOptionalConstant: undefined,
-            };
-        }
-
-        this.endContext(astNode);
-        return astNode;
     }
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldSelector(allowOptional: boolean): Ast.FieldSelector {
-        const nodeKind: Ast.NodeKind.FieldSelector = Ast.NodeKind.FieldSelector;
-        const nodeIdNumber: number = this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
-
-        const wrapped: Ast.IWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier> = this.readWrapped<
+        return this.readWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
             Ast.NodeKind.FieldSelector,
-            Ast.GeneralizedIdentifier
-        >(
-            nodeKind,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readGeneralizedIdentifier(),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            allowOptional,
         );
-
-        // hack to conditionally read '?' after closeWrapperConstant
-        const maybeOptionalConstant: Option<Ast.Constant> = allowOptional
-            ? this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark)
-            : undefined;
-        let astNode: Ast.FieldSelector;
-        if (maybeOptionalConstant) {
-            const newTokenRange: TokenRange = this.popTokenRange();
-            astNode = {
-                ...wrapped,
-                id: nodeIdNumber,
-                tokenRange: newTokenRange,
-                maybeOptionalConstant,
-            };
-        } else {
-            this.popTokenRangeNoop();
-            astNode = {
-                ...wrapped,
-                id: nodeIdNumber,
-                maybeOptionalConstant: undefined,
-            };
-        }
-
-        this.endContext(astNode);
-        return astNode;
     }
 
     // 12.2.3.21 Function expression
@@ -1113,6 +1058,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readFieldNamePairedAnyLiterals(continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            false,
         );
         return {
             literalKind: Ast.LiteralKind.Record,
@@ -1148,6 +1094,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsv(() => this.readAnyLiteral(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            false,
         );
         return {
             literalKind: Ast.LiteralKind.List,
@@ -1261,6 +1208,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readType(),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            false,
         );
     }
 
@@ -1927,7 +1875,8 @@ export class Parser {
         openConstantReader: () => Ast.Constant,
         contentReader: () => Content,
         closeConstantReader: () => Ast.Constant,
-    ): Ast.IWrapped<NodeKindVariant, Content> {
+        allowOptionalConstant: boolean,
+    ): WrappedRead<NodeKindVariant, Content> {
         this.startContext(nodeKind);
         this.startTokenRange(nodeKind);
 
@@ -1935,7 +1884,12 @@ export class Parser {
         const content: Content = contentReader();
         const closeWrapperConstant: Ast.Constant = closeConstantReader();
 
-        const wrapped: Ast.IWrapped<NodeKindVariant, Content> = {
+        let maybeOptionalConstant: Option<Ast.Constant>;
+        if (allowOptionalConstant) {
+            maybeOptionalConstant = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
+        }
+
+        const wrapped: WrappedRead<NodeKindVariant, Content> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             tokenRange: this.popTokenRange(),
@@ -1943,6 +1897,7 @@ export class Parser {
             openWrapperConstant,
             content,
             closeWrapperConstant,
+            maybeOptionalConstant,
         };
 
         // UNSAFE MARKER
@@ -2403,4 +2358,8 @@ interface ContextNodeMetadata {
     readonly id: number;
     readonly maybeParentId: Option<number>;
     readonly childIds: ReadonlyArray<number>;
+}
+
+interface WrappedRead<NodeKindVariant, Content> extends Ast.IWrapped<NodeKindVariant, Content> {
+    readonly maybeOptionalConstant: Option<Ast.Constant>;
 }
