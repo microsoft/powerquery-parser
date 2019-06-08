@@ -48,7 +48,7 @@ export class Parser {
                 kind: ResultKind.Ok,
                 value: {
                     document,
-                    nodesById: contextState.astNodesById,
+                    nodeIdMaps: contextState.nodeIdMaps,
                     leafNodeIds: contextState.leafNodeIds,
                 },
             };
@@ -2171,12 +2171,12 @@ export class Parser {
     }
 
     private startContext(nodeKind: Ast.NodeKind): number {
-        this.maybeCurrentContextNode = Context.addChild(
+        this.maybeCurrentContextNode = Context.startContext(
             this.contextState,
-            this.maybeCurrentContextNode,
             nodeKind,
             this.nodeIdCounter,
             this.maybeCurrentToken,
+            this.maybeCurrentContextNode,
         );
         const oldNodeIdCounter: number = this.nodeIdCounter;
         this.nodeIdCounter += 1;
@@ -2261,11 +2261,7 @@ export class Parser {
         }
 
         const contextNode: Context.Node = this.maybeCurrentContextNode;
-        return {
-            id: contextNode.nodeId,
-            maybeParentId: contextNode.maybeParentId,
-            childIds: contextNode.childNodeIds.slice(),
-        };
+        return { id: contextNode.nodeId };
     }
 
     // WARNING: Only updates tokenIndex and currentTokenKind,
@@ -2304,7 +2300,7 @@ export class Parser {
 
         if (backup.maybeContextNodeId) {
             this.maybeCurrentContextNode = Context.expectContextNode(
-                this.contextState.contextNodesById,
+                this.contextState.nodeIdMaps.contextNodeById,
                 backup.maybeContextNodeId,
             );
         } else {
@@ -2315,7 +2311,7 @@ export class Parser {
 
 export interface ParseOk {
     readonly document: Ast.TDocument;
-    readonly nodesById: Map<number, Ast.TNode>;
+    readonly nodeIdMaps: Context.NodeIdMaps;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
@@ -2359,8 +2355,6 @@ interface StateBackup {
 }
 interface ContextNodeMetadata {
     readonly id: number;
-    readonly maybeParentId: Option<number>;
-    readonly childIds: ReadonlyArray<number>;
 }
 
 interface WrappedRead<NodeKindVariant, Content> extends Ast.IWrapped<NodeKindVariant, Content> {
