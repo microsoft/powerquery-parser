@@ -15,7 +15,7 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
 function expectLexAndParseOk(text: string): LexAndParseOk {
     const triedLexAndParse: TriedLexAndParse = lexAndParse(text);
     if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok`);
+        throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }
     return triedLexAndParse.value;
 }
@@ -37,7 +37,7 @@ function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
     );
 
     if (!(triedTraverse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok`);
+        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok: ${triedTraverse.error.message}`);
     }
 
     return triedTraverse.value;
@@ -63,7 +63,7 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
     );
 
     if (!(triedTraverse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok`);
+        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok: ${triedTraverse.error.message}`);
     }
     const maybeAstNode: Option<Ast.TNode> = triedTraverse.value;
     if (!(maybeAstNode !== undefined)) {
@@ -188,7 +188,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} with multiple ${Ast.NodeKind.UnaryExpressionHelper}`, () => {
-        const text: string = `1`;
+        const text: string = `1 + 2 + 3 + 4`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
@@ -357,7 +357,7 @@ describe("Parser.NodeKind", () => {
         expectNodeKinds(text, expectedNodeKinds);
     });
 
-    it(`${Ast.NodeKind.FieldProjection}multiple`, () => {
+    it(`${Ast.NodeKind.FieldProjection} multiple`, () => {
         const text: string = `x[[y], [z]]`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.RecursivePrimaryExpression,
