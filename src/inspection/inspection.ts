@@ -80,11 +80,7 @@ export function tryFrom(position: Position, triedParse: TriedParse): TriedInspec
 
                 return {
                     kind: ResultKind.Ok,
-                    value: inspect(
-                        position,
-                        context.nodeIdMaps,
-                        context.leafNodeIds,
-                    ),
+                    value: inspect(position, context.nodeIdMaps, context.leafNodeIds),
                 };
             }
 
@@ -121,7 +117,7 @@ interface State {
     maybePreviousXorNode: Option<TXorNode>;
     readonly position: Position;
     readonly initialXorNode: TXorNode;
-    readonly nodeIdMaps: ParserContext.NodeIdMaps,
+    readonly nodeIdMaps: ParserContext.NodeIdMaps;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
@@ -215,33 +211,11 @@ function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosit
 
 function inspectContextNode(_: State, __: ParserContext.Node): void {
     throw new Error(`todo`);
-    // switch (node.nodeKind) {
-    //     case Ast.NodeKind.EachExpression:
-    //         state.isInEach = true;
-    //         break;
-
-    //     // IdentifierExpression covers both inclusive and exclusive identifiers
-    //     case Ast.NodeKind.IdentifierExpression:
-    //         state.isInIdentifierExpression = true;
-    //         break;
-
-    //     case Ast.NodeKind.InvokeExpression:
-    //         state.isInFunction = true;
-    //         break;
-
-    //     case Ast.NodeKind.RecordExpression:
-    //     case Ast.NodeKind.RecordLiteral:
-    //         state.isInRecord = true;
-    //         break;
-
-    //     default:
-    //         break;
-    // }
 }
 
 function stateFactory(
     position: Position,
-    nodeIdMaps: ParserContext.NodeIdMaps,\
+    nodeIdMaps: ParserContext.NodeIdMaps,
     leafNodeIds: ReadonlyArray<number>,
 ): Option<State> {
     const maybeXorNode: Option<TXorNode> = maybeClosestXorNode(position, nodeIdMaps, leafNodeIds);
@@ -317,7 +291,7 @@ function maybeClosestXorNode(
     for (const nodeId of leafNodeIds) {
         let maybeNewXorNode: Option<TXorNode>;
 
-        const maybeAstNode: Option<Ast.TNode> = astNodesById.get(nodeId);
+        const maybeAstNode: Option<Ast.TNode> = nodeIdMaps.astNodeById.get(nodeId);
         if (maybeAstNode) {
             const astNode: Ast.TNode = maybeAstNode;
             maybeNewXorNode = {
@@ -326,7 +300,7 @@ function maybeClosestXorNode(
             };
         }
 
-        const maybeContextNode: Option<ParserContext.Node> = contextNodesById.get(nodeId);
+        const maybeContextNode: Option<ParserContext.Node> = nodeIdMaps.contextNodeById.get(nodeId);
         if (maybeContextNode) {
             const contextNode: ParserContext.Node = maybeContextNode;
             maybeNewXorNode = {
