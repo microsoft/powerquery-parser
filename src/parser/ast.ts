@@ -68,8 +68,6 @@ export const enum NodeKind {
 export interface INode {
     readonly kind: NodeKind;
     readonly id: number;
-    readonly maybeParentId: Option<number>;
-    readonly childIds: ReadonlyArray<number>;
     readonly tokenRange: TokenRange;
     readonly isLeaf: boolean;
 }

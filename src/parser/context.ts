@@ -11,6 +11,8 @@ export interface State {
     readonly root: Root;
     readonly astNodesById: AstNodeMap;
     readonly contextNodesById: ContextNodeMap;
+    readonly parentIdById: Map<number, number>;
+    readonly childIdsById: Map<number, ReadonlyArray<number>>;
     leafNodeIds: number[];
 }
 
@@ -22,8 +24,6 @@ export interface Node {
     readonly nodeId: number;
     readonly nodeKind: Ast.NodeKind;
     readonly maybeTokenStart: Option<Token>;
-    readonly maybeParentId: Option<number>;
-    childNodeIds: number[];
     maybeAstNode: Option<Ast.TNode>;
 }
 
@@ -34,47 +34,59 @@ export function empty(): State {
         },
         astNodesById: new Map(),
         contextNodesById: new Map(),
+        parentIdById: new Map(),
+        childIdsById: new Map(),
         leafNodeIds: [],
     };
 }
 
 export function expectContextNode(nodesById: ContextNodeMap, nodeId: number): Node {
-    const maybeNode: Option<Node> = nodesById.get(nodeId);
-    if (maybeNode === undefined) {
-        throw new CommonError.InvariantError(`nodeId (${nodeId}) wasn't in State.`);
-    }
-    return maybeNode;
+    return expectInMap<Node>(nodesById, nodeId, "nodesById");
 }
 
-export function addChild(
+export function expectChildIds(
+    childIdsById: Map<number, ReadonlyArray<number>>,
+    nodeId: number,
+): ReadonlyArray<number> {
+    return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
+}
+
+export function startContext(
     state: State,
-    maybeParent: Option<Node>,
     nodeKind: Ast.NodeKind,
     nodeId: number,
     maybeTokenStart: Option<Token>,
+    maybeParentNode: Option<Node>,
 ): Node {
-    let maybeParentId: Option<number>;
-    if (maybeParent) {
-        const parent: Node = maybeParent;
-        maybeParentId = parent.nodeId;
-        parent.childNodeIds.push(nodeId);
-    } else {
-        maybeParentId = undefined;
+    // If the context is a child of an existing context: update the child/parent maps.
+    if (maybeParentNode) {
+        const parent: Node = maybeParentNode;
+        const parentNodeId: number = parent.nodeId;
+
+        state.parentIdById.set(nodeId, parentNodeId);
+
+        const maybeExistingChildren: Option<ReadonlyArray<number>> = state.childIdsById.get(parentNodeId);
+        if (maybeExistingChildren) {
+            const existingChildren: ReadonlyArray<number> = maybeExistingChildren;
+            state.childIdsById.set(parentNodeId, [nodeId, ...existingChildren]);
+        } else {
+            state.childIdsById.set(parentNodeId, [nodeId]);
+        }
     }
 
-    const child: Node = {
+    const node: Node = {
         nodeId,
         nodeKind,
         maybeTokenStart,
-        maybeParentId,
-        childNodeIds: [],
         maybeAstNode: undefined,
     };
-    state.contextNodesById.set(child.nodeId, child);
+    state.contextNodesById.set(nodeId, node);
 
-    return child;
+    return node;
 }
 
+// Marks a context as closed by assinging an Ast.TNode to maybeAstNode.
+// Returns the Node's parent context (if one exists).
 export function endContext(state: State, contextNode: Node, astNode: Ast.TNode): Option<Node> {
     if (contextNode.maybeAstNode !== undefined) {
         throw new CommonError.InvariantError("context was already ended");
@@ -90,17 +102,16 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         state.leafNodeIds.push(contextNode.nodeId);
     }
 
-    // Setting mabyeAst marks the ContextNode as complete.
+    // Setting mabyeAstNode marks the ContextNode as complete.
     contextNode.maybeAstNode = astNode;
 
     // Ending a context should return the context's parent node (if one exists).
     // Grab it before we delete the current context node from the State map.
-    const maybeParentId: Option<number> = contextNode.maybeParentId;
+    const maybeParentId: Option<number> = state.parentIdById.get(contextNode.nodeId);
     const maybeParentNode: Option<Node> =
-        maybeParentId !== undefined ? expectContextNode(state.contextNodesById, maybeParentId) : undefined;
+        maybeParentId !== undefined ? state.contextNodesById.get(maybeParentId) : undefined;
 
-    // Delete nodeId from contextNodeMap and add it to astNodeMap.
-    // An assert above ensures nodeIds are shared between the two node types.
+    // Move nodeId from contextNodeMap to astNodeMap.
     if (!state.contextNodesById.delete(contextNode.nodeId)) {
         throw new CommonError.InvariantError("can't end a context that doesn't belong to state");
     }
@@ -110,41 +121,61 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
 }
 
 export function deleteContext(state: State, nodeId: number): Option<Node> {
-    const nodesById: ContextNodeMap = state.contextNodesById;
-    const terminalNodeIds: number[] = state.leafNodeIds;
-
-    const maybeNode: Option<Node> = nodesById.get(nodeId);
+    // 'pop' the node out of the context map.
+    const maybeNode: Option<Node> = state.contextNodesById.get(nodeId);
     if (maybeNode === undefined) {
         const details: {} = { nodeId };
         throw new CommonError.InvariantError(`nodeId not in state.`, details);
     }
+    state.contextNodesById.delete(nodeId);
     const node: Node = maybeNode;
-    const maybeParentId: Option<number> = node.maybeParentId;
 
-    const maybeTerminalIndex: Option<number> = terminalNodeIds.indexOf(nodeId);
-    if (maybeTerminalIndex !== -1) {
-        const terminalIndex: number = maybeTerminalIndex;
-        state.leafNodeIds = [...terminalNodeIds.slice(0, terminalIndex), ...terminalNodeIds.slice(terminalIndex + 1)];
+    // If Node was a leaf node, remove it from the list of leaf nodes.
+    const leafNodeIds: number[] = state.leafNodeIds;
+    const maybeLeafIndex: Option<number> = leafNodeIds.indexOf(nodeId);
+    if (maybeLeafIndex !== -1) {
+        const leafIndex: number = maybeLeafIndex;
+        state.leafNodeIds = [...leafNodeIds.slice(0, leafIndex), ...leafNodeIds.slice(leafIndex + 1)];
     }
 
-    if (maybeParentId === undefined) {
-        return undefined;
+    // Link the Node's parents to the node's children.
+    const maybeParentNodeId: Option<number> = state.parentIdById.get(node.nodeId);
+    const maybeChildIds: Option<ReadonlyArray<number>> = state.childIdsById.get(node.nodeId);
+
+    // If the Node has a parent, remove the Node from the parent's list of children
+    if (maybeParentNodeId) {
+        const parentNode: Node = expectContextNode(state.contextNodesById, maybeParentNodeId);
+        const parentChildIds: ReadonlyArray<number> = expectChildIds(state.childIdsById, parentNode.nodeId);
+        const replacementIndex: number = parentChildIds.indexOf(node.nodeId);
+        if (replacementIndex === -1) {
+            const details: {} = {
+                parentNodeId: parentNode.nodeId,
+                childNodeId: node.nodeId,
+            };
+            throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
+        }
+
+        state.childIdsById.set(parentNode.nodeId, [
+            ...parentChildIds.slice(0, replacementIndex),
+            ...parentChildIds.slice(replacementIndex + 1),
+        ]);
     }
 
-    const parentId: number = maybeParentId;
-    const parent: Node = expectContextNode(state.contextNodesById, parentId);
-    const childNodeIds: number[] = parent.childNodeIds;
-    const childNodeIndex: number = childNodeIds.indexOf(nodeId);
+    // If the Node has children, update the children's parent to the Node's parent.
+    if (maybeParentNodeId && maybeChildIds) {
+        const parentNode: Node = expectContextNode(state.contextNodesById, maybeParentNodeId);
+        const childIds: ReadonlyArray<number> = maybeChildIds;
 
-    if (childNodeIndex === -1) {
-        throw new CommonError.InvariantError(
-            `nodeId ${nodeId} considers ${parentId} to be a parent, but isn't listed as a child of the parent.`,
-        );
+        for (const childId of childIds) {
+            state.parentIdById.set(childId, parentNode.nodeId);
+        }
+
+        // Add the Node's orphaned children to the Node's parent.
+        const parentChildIds: ReadonlyArray<number> = expectChildIds(state.childIdsById, parentNode.nodeId);
+        state.childIdsById.set(parentNode.nodeId, [...parentChildIds, ...childIds]);
     }
 
-    parent.childNodeIds = [...childNodeIds.slice(0, childNodeIndex), ...childNodeIds.slice(childNodeIndex + 1)];
-
-    return parent;
+    return maybeParentNodeId !== undefined ? expectContextNode(state.contextNodesById, maybeParentNodeId) : undefined;
 }
 
 export function deepCopy(state: State): State {
@@ -159,6 +190,8 @@ export function deepCopy(state: State): State {
         },
         astNodesById: new Map(state.astNodesById.entries()),
         contextNodesById: contextNodeById,
+        childIdsById: new Map(state.childIdsById.entries()),
+        parentIdById: new Map(state.parentIdById.entries()),
         leafNodeIds: state.leafNodeIds.slice(),
     };
 }
@@ -166,6 +199,14 @@ export function deepCopy(state: State): State {
 function deepCopyContextNode(node: Node): Node {
     return {
         ...node,
-        childNodeIds: node.childNodeIds.slice(),
     };
+}
+
+function expectInMap<T>(map: Map<number, T>, nodeId: number, mapName: string): T {
+    const maybeValue: Option<T> = map.get(nodeId);
+    if (maybeValue === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`nodeId wasn't in ${mapName}`, details);
+    }
+    return maybeValue;
 }

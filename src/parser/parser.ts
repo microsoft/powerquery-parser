@@ -2171,12 +2171,12 @@ export class Parser {
     }
 
     private startContext(nodeKind: Ast.NodeKind): number {
-        this.maybeCurrentContextNode = Context.addChild(
+        this.maybeCurrentContextNode = Context.startContext(
             this.contextState,
-            this.maybeCurrentContextNode,
             nodeKind,
             this.nodeIdCounter,
             this.maybeCurrentToken,
+            this.maybeCurrentContextNode,
         );
         const oldNodeIdCounter: number = this.nodeIdCounter;
         this.nodeIdCounter += 1;
@@ -2261,11 +2261,7 @@ export class Parser {
         }
 
         const contextNode: Context.Node = this.maybeCurrentContextNode;
-        return {
-            id: contextNode.nodeId,
-            maybeParentId: contextNode.maybeParentId,
-            childIds: contextNode.childNodeIds.slice(),
-        };
+        return { id: contextNode.nodeId };
     }
 
     // WARNING: Only updates tokenIndex and currentTokenKind,
@@ -2359,8 +2355,6 @@ interface StateBackup {
 }
 interface ContextNodeMetadata {
     readonly id: number;
-    readonly maybeParentId: Option<number>;
-    readonly childIds: ReadonlyArray<number>;
 }
 
 interface WrappedRead<NodeKindVariant, Content> extends Ast.IWrapped<NodeKindVariant, Content> {
