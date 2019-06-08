@@ -557,43 +557,13 @@ export class Parser {
 
     // 12.2.3.19 Item access expression
     private readItemAccessExpression(): Ast.ItemAccessExpression {
-        const nodeKind: Ast.NodeKind.ItemAccessExpression = Ast.NodeKind.ItemAccessExpression;
-        const nodeIdNumber: number = this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
-
-        const wrapped: Ast.IWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression> = this.readWrapped<
+        return this.readWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
             Ast.NodeKind.ItemAccessExpression,
-            Ast.TExpression
-        >(
-            nodeKind,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readExpression(),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
-            false,
+            true,
         );
-
-        // hack to conditionally read '?' after closeWrapperConstant
-        const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
-        let astNode: Ast.ItemAccessExpression;
-        if (maybeOptionalConstant) {
-            const newTokenRange: TokenRange = this.popTokenRange();
-            astNode = {
-                ...wrapped,
-                id: nodeIdNumber,
-                tokenRange: newTokenRange,
-                maybeOptionalConstant,
-            };
-        } else {
-            this.popTokenRangeNoop();
-            astNode = {
-                ...wrapped,
-                id: nodeIdNumber,
-                maybeOptionalConstant: undefined,
-            };
-        }
-
-        this.endContext(astNode);
-        return astNode;
     }
 
     // sub-item of 12.2.3.20 Field access expressions
