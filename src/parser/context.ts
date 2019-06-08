@@ -22,7 +22,7 @@ export interface Node {
     readonly nodeId: number;
     readonly nodeKind: Ast.NodeKind;
     readonly maybeTokenStart: Option<Token>;
-    readonly maybeParentId: Option<number>;
+    maybeParentId: Option<number>;
     childNodeIds: number[];
     maybeAstNode: Option<Ast.TNode>;
 }
@@ -127,22 +127,29 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         state.leafNodeIds = [...terminalNodeIds.slice(0, terminalIndex), ...terminalNodeIds.slice(terminalIndex + 1)];
     }
 
+    for (const childNodeId of node.childNodeIds) {
+        const child: Node = expectContextNode(nodesById, childNodeId);
+        child.maybeParentId = node.maybeParentId;
+    }
+
     if (maybeParentId === undefined) {
         return undefined;
     }
 
     const parentId: number = maybeParentId;
     const parent: Node = expectContextNode(state.contextNodesById, parentId);
-    const childNodeIds: number[] = parent.childNodeIds;
-    const childNodeIndex: number = childNodeIds.indexOf(nodeId);
+    const parentChildNodeIds: number[] = parent.childNodeIds;
+    const parentChildNodeIndex: number = parentChildNodeIds.indexOf(nodeId);
 
-    if (childNodeIndex === -1) {
+    if (parentChildNodeIndex === -1) {
         throw new CommonError.InvariantError(
             `nodeId ${nodeId} considers ${parentId} to be a parent, but isn't listed as a child of the parent.`,
         );
     }
-
-    parent.childNodeIds = [...childNodeIds.slice(0, childNodeIndex), ...childNodeIds.slice(childNodeIndex + 1)];
+    parent.childNodeIds = [
+        ...parentChildNodeIds.slice(0, parentChildNodeIndex),
+        ...parentChildNodeIds.slice(parentChildNodeIndex + 1),
+    ];
 
     return parent;
 }

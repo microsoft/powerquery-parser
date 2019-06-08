@@ -14,6 +14,8 @@
         "--colors",
         "--timeout",
         "999999",
+        "-g",
+        "UnaryExpression",
         "-r",
         "ts-node/register",
         "${workspaceFolder}/src/test/**/*.ts"

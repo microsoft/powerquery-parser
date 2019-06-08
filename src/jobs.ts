@@ -11,6 +11,7 @@ export type LexAndParseErr = LexerError.TLexerError | ParserError.TParserError;
 export interface LexAndParseOk {
     readonly ast: Ast.TDocument;
     readonly comments: ReadonlyArray<TComment>;
+    readonly nodesById: Map<number, Ast.TNode>;
 }
 
 export function lexAndParse(text: string): TriedLexAndParse {
@@ -41,6 +42,7 @@ export function lexAndParse(text: string): TriedLexAndParse {
         value: {
             ast: parseOk.document,
             comments: snapshot.comments,
+            nodesById: parseOk.nodesById,
         },
     };
 }

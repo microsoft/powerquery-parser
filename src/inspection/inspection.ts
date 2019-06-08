@@ -37,6 +37,7 @@ export interface Position {
 
 export const enum NodeKind {
     Record = "Record",
+    List = "List",
     Each = "EachExpression",
 }
 
@@ -188,6 +189,20 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
         // case Ast.NodeKind.InvokeExpression:
         //     state.isInFunction = true;
         //     break;
+
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral: {
+            // Check if position is on closeWrapperConstant, eg. '}'
+            const tokenRange: TokenRange = node.tokenRange;
+            if (!isPositionOnTokenPosition(state.position, tokenRange.positionEnd)) {
+                state.nodes.push({
+                    kind: NodeKind.List,
+                    positionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                });
+            }
+            break;
+        }
 
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecordLiteral: {

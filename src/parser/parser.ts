@@ -1735,11 +1735,11 @@ export class Parser {
     private readBinOpExpression<NodeKindVariant, Op, Operand>(
         nodeKind: NodeKindVariant & Ast.TBinOpExpressionNodeKind,
         operatorFrom: (tokenKind: Option<TokenKind>) => Option<Op & Ast.TUnaryExpressionHelperOperator>,
-        operandReader: () => Operand,
+        operandReader: () => Operand & Ast.TNode,
     ): Operand | Ast.IBinOpExpression<NodeKindVariant, Op, Operand> {
         this.startContext(nodeKind);
         this.startTokenRange(nodeKind);
-        const first: Operand = operandReader();
+        const first: Operand & Ast.TNode = operandReader();
 
         let maybeOperator: Option<Op & Ast.TUnaryExpressionHelperOperator> = operatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {

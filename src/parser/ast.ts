@@ -657,7 +657,7 @@ export interface RecordLiteral
 // 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
 export interface IBinOpExpression<NodeKindVariant, Operator, Operand> extends INode {
     readonly kind: NodeKindVariant & TBinOpExpressionNodeKind;
-    readonly first: Operand;
+    readonly first: Operand & TNode;
     readonly rest: ReadonlyArray<UnaryExpressionHelper<Operator, Operand>>;
 }
 
