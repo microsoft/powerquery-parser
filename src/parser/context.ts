@@ -46,8 +46,8 @@ export function empty(): State {
     };
 }
 
-export function expectContextNode(nodesById: ContextNodeMap, nodeId: number): Node {
-    return expectInMap<Node>(nodesById, nodeId, "nodesById");
+export function expectContextNode(contextNodeById: ContextNodeMap, nodeId: number): Node {
+    return expectInMap<Node>(contextNodeById, nodeId, "contextNodeById");
 }
 
 export function expectChildIds(
@@ -137,13 +137,11 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     const parentIdById: Map<number, number> = nodeIdMaps.parentIdById;
     const childIdsById: Map<number, ReadonlyArray<number>> = nodeIdMaps.childIdsById;
 
-    // 'pop' the node out of the context map.
     const maybeNode: Option<Node> = contextNodeById.get(nodeId);
     if (maybeNode === undefined) {
         const details: {} = { nodeId };
         throw new CommonError.InvariantError(`nodeId not in state.`, details);
     }
-    contextNodeById.delete(nodeId);
     const node: Node = maybeNode;
 
     // If Node was a leaf node, remove it from the list of leaf nodes.
@@ -159,7 +157,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     const maybeChildIds: Option<ReadonlyArray<number>> = childIdsById.get(node.nodeId);
 
     // If the Node has a parent, remove the Node from the parent's list of children
-    if (maybeParentNodeId) {
+    if (maybeParentNodeId !== undefined) {
         const parentNode: Node = expectContextNode(contextNodeById, maybeParentNodeId);
         const parentChildIds: ReadonlyArray<number> = expectChildIds(childIdsById, parentNode.nodeId);
         const replacementIndex: number = parentChildIds.indexOf(node.nodeId);
@@ -178,7 +176,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     }
 
     // If the Node has children, update the children's parent to the Node's parent.
-    if (maybeParentNodeId && maybeChildIds) {
+    if (maybeParentNodeId !== undefined && maybeChildIds) {
         const parentNode: Node = expectContextNode(contextNodeById, maybeParentNodeId);
         const childIds: ReadonlyArray<number> = maybeChildIds;
 
@@ -190,6 +188,29 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         const parentChildIds: ReadonlyArray<number> = expectChildIds(childIdsById, parentNode.nodeId);
         childIdsById.set(parentNode.nodeId, [...parentChildIds, ...childIds]);
     }
+    // The root is being deleted. Check if it has a single child context, then promote it if it exists.
+    else if (maybeChildIds) {
+        const childIds: ReadonlyArray<number> = maybeChildIds;
+        if (childIds.length !== 1) {
+            const details: {} = { childIds };
+            throw new CommonError.InvariantError(`root node was deleted and it had multiple children`, details);
+        }
+        const soloChildId: number = childIds[0];
+
+        // The solo child might be an astNode.
+        const maybeSoloNode: Option<Node> = contextNodeById.get(soloChildId);
+        if (maybeSoloNode) {
+            const soloNode: Node = expectContextNode(contextNodeById, soloChildId);
+            state.root.maybeNode = soloNode;
+        }
+
+        parentIdById.delete(soloChildId);
+    }
+
+    // Remove Node from existence.
+    contextNodeById.delete(node.nodeId);
+    childIdsById.delete(node.nodeId);
+    parentIdById.delete(node.nodeId);
 
     return maybeParentNodeId !== undefined ? expectContextNode(contextNodeById, maybeParentNodeId) : undefined;
 }
