@@ -57,14 +57,16 @@ export interface Each extends INode {
 export function tryFrom(position: Position, triedParse: TriedParse): TriedInspect {
     try {
         switch (triedParse.kind) {
-            case ResultKind.Ok:
+            case ResultKind.Ok: {
                 const parseOk: ParseOk = triedParse.value;
+                const nodeIdMaps: ParserContext.NodeIdMaps = parseOk.nodeIdMaps;
                 return {
                     kind: ResultKind.Ok,
-                    value: inspect(position, parseOk.nodesById, new Map(), parseOk.leafNodeIds),
+                    value: inspect(position, nodeIdMaps, parseOk.leafNodeIds),
                 };
+            }
 
-            case ResultKind.Err:
+            case ResultKind.Err: {
                 const error: ParserError.TParserError = triedParse.error;
                 if (!(error instanceof ParserError.ParserError)) {
                     const details: {} = { error };
@@ -74,16 +76,17 @@ export function tryFrom(position: Position, triedParse: TriedParse): TriedInspec
                     );
                 }
                 const parserError: ParserError.ParserError = error;
+                const context: ParserContext.State = parserError.context;
 
                 return {
                     kind: ResultKind.Ok,
                     value: inspect(
                         position,
-                        parserError.context.astNodesById,
-                        parserError.context.contextNodesById,
-                        parserError.context.leafNodeIds,
+                        context.nodeIdMaps,
+                        context.leafNodeIds,
                     ),
                 };
+            }
 
             default:
                 throw isNever(triedParse);
@@ -118,8 +121,7 @@ interface State {
     maybePreviousXorNode: Option<TXorNode>;
     readonly position: Position;
     readonly initialXorNode: TXorNode;
-    readonly astNodesById: Map<number, Ast.TNode>;
-    readonly contextNodesById: Map<number, ParserContext.Node>;
+    readonly nodeIdMaps: ParserContext.NodeIdMaps,
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
@@ -130,11 +132,10 @@ interface IXorNode<Kind, T> {
 
 function inspect(
     position: Position,
-    astNodesById: Map<number, Ast.TNode>,
-    contextNodesById: Map<number, ParserContext.Node>,
+    nodeIdMaps: ParserContext.NodeIdMaps,
     leafNodeIds: ReadonlyArray<number>,
 ): Inspection {
-    const maybeState: Option<State> = stateFactory(position, astNodesById, contextNodesById, leafNodeIds);
+    const maybeState: Option<State> = stateFactory(position, nodeIdMaps, leafNodeIds);
     if (maybeState === undefined) {
         return DefaultInspection;
     }
@@ -240,11 +241,10 @@ function inspectContextNode(_: State, __: ParserContext.Node): void {
 
 function stateFactory(
     position: Position,
-    astNodesById: Map<number, Ast.TNode>,
-    contextNodesById: Map<number, ParserContext.Node>,
+    nodeIdMaps: ParserContext.NodeIdMaps,\
     leafNodeIds: ReadonlyArray<number>,
 ): Option<State> {
-    const maybeXorNode: Option<TXorNode> = maybeClosestXorNode(position, astNodesById, contextNodesById, leafNodeIds);
+    const maybeXorNode: Option<TXorNode> = maybeClosestXorNode(position, nodeIdMaps, leafNodeIds);
     if (maybeXorNode === undefined) {
         return undefined;
     }
@@ -258,25 +258,25 @@ function stateFactory(
         currentXorNode: xorNode,
         initialXorNode: xorNode,
         maybePreviousXorNode: undefined,
-        astNodesById,
-        contextNodesById,
+        nodeIdMaps,
         leafNodeIds,
     };
 }
 
 function maybeXorNodeParent(state: State, xorNode: TXorNode): Option<TXorNode> {
+    const nodeIdMaps: ParserContext.NodeIdMaps = state.nodeIdMaps;
     let maybeParentNodeId: Option<number>;
 
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            maybeParentNodeId = astNode.maybeParentId;
+            maybeParentNodeId = nodeIdMaps.parentIdById.get(astNode.id);
             break;
         }
 
         case XorNodeKind.Context: {
             const contextNode: ParserContext.Node = xorNode.node;
-            maybeParentNodeId = contextNode.maybeParentId;
+            maybeParentNodeId = nodeIdMaps.parentIdById.get(contextNode.nodeId);
             break;
         }
 
@@ -288,7 +288,7 @@ function maybeXorNodeParent(state: State, xorNode: TXorNode): Option<TXorNode> {
         return undefined;
     }
 
-    const maybeAstParentNode: Option<Ast.TNode> = state.astNodesById.get(maybeParentNodeId);
+    const maybeAstParentNode: Option<Ast.TNode> = nodeIdMaps.astNodeById.get(maybeParentNodeId);
     if (maybeAstParentNode) {
         return {
             kind: XorNodeKind.Ast,
@@ -296,7 +296,7 @@ function maybeXorNodeParent(state: State, xorNode: TXorNode): Option<TXorNode> {
         };
     }
 
-    const maybeContextParentNode: Option<ParserContext.Node> = state.contextNodesById.get(maybeParentNodeId);
+    const maybeContextParentNode: Option<ParserContext.Node> = nodeIdMaps.contextNodeById.get(maybeParentNodeId);
     if (maybeContextParentNode) {
         return {
             kind: XorNodeKind.Context,
@@ -309,8 +309,7 @@ function maybeXorNodeParent(state: State, xorNode: TXorNode): Option<TXorNode> {
 
 function maybeClosestXorNode(
     position: Position,
-    astNodesById: Map<number, Ast.TNode>,
-    contextNodesById: Map<number, ParserContext.Node>,
+    nodeIdMaps: ParserContext.NodeIdMaps,
     leafNodeIds: ReadonlyArray<number>,
 ): Option<TXorNode> {
     let maybeClosestNode: Option<TXorNode>;
