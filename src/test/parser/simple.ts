@@ -27,7 +27,7 @@ function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
         Ast.NodeKind[]
     >(
         lexAndParseOk.ast,
-        lexAndParseOk.nodesById,
+        lexAndParseOk.nodeIdMaps,
         {
             result: [],
         },
@@ -50,7 +50,7 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
         Option<Ast.TNode>
     >(
         lexAndParseOk.ast,
-        lexAndParseOk.nodesById,
+        lexAndParseOk.nodeIdMaps,
         {
             result: undefined,
             nodeKind,

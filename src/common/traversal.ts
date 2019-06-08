@@ -35,11 +35,6 @@ export interface IState<T> {
     result: T;
 }
 
-export interface XorNodesById {
-    readonly astNodesById: Map<number, Ast.TNode>;
-    readonly contextNodesById: Map<number, ParserContext.Node>;
-}
-
 export interface IXorNode<Kind, T> {
     readonly kind: Kind & XorNodeKind;
     readonly node: T;
@@ -47,16 +42,16 @@ export interface IXorNode<Kind, T> {
 
 export function tryTraverseAst<State, StateType>(
     root: Ast.TNode,
-    nodesById: Map<number, Ast.TNode>,
+    nodeIdMaps: ParserContext.NodeIdMaps,
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<Ast.TNode, State, StateType, void>,
     maybeEarlyExitFn: Option<TEarlyExitFn<Ast.TNode, State, StateType>>,
 ): Result<StateType, CommonError.CommonError> {
     try {
-        traverse<Ast.TNode, Map<number, Ast.TNode>, State, StateType>(
+        traverse<Ast.TNode, ParserContext.NodeIdMaps, State, StateType>(
             root,
-            nodesById,
+            nodeIdMaps,
             state,
             strategy,
             visitNodeFn,
@@ -77,16 +72,16 @@ export function tryTraverseAst<State, StateType>(
 
 export function tryTraverseXor<State, StateType>(
     root: TXorNode,
-    nodesById: XorNodesById,
+    nodeIdMaps: ParserContext.NodeIdMaps,
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<TXorNode, State, StateType, void>,
     maybeEarlyExitFn: Option<TEarlyExitFn<TXorNode, State, StateType>>,
 ): Result<StateType, CommonError.CommonError> {
     try {
-        traverse<TXorNode, XorNodesById, State, StateType>(
+        traverse<TXorNode, ParserContext.NodeIdMaps, State, StateType>(
             root,
-            nodesById,
+            nodeIdMaps,
             state,
             strategy,
             visitNodeFn,
@@ -133,34 +128,27 @@ export function traverse<Node, NodesById, State, StateType>(
 export function expectAllAstChildren<State, StateType>(
     _state: State & IState<StateType>,
     astNode: Ast.TNode,
-    nodesById: Map<number, Ast.TNode>,
+    nodeIdMaps: ParserContext.NodeIdMaps,
 ): ReadonlyArray<Ast.TNode> {
-    const result: Ast.TNode[] = [];
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMaps.childIdsById.get(astNode.id);
 
-    for (const nodeId of astNode.childIds) {
-        const maybeChild: Option<Ast.TNode> = nodesById.get(nodeId);
-
-        if (maybeChild === undefined) {
-            const details: {} = { nodeId };
-            throw new CommonError.InvariantError(`nodeId should be nodesById`, details);
-        }
-
-        const child: Ast.TNode = maybeChild;
-        result.push(child);
+    if (maybeChildIds) {
+        const childIds: ReadonlyArray<number> = maybeChildIds;
+        return childIds.map(nodeId => ParserContext.expectAstNode(nodeIdMaps.astNodeById, nodeId));
+    } else {
+        return [];
     }
-
-    return result;
 }
 
 export function expectAllXorChildren<State, StateType>(
     _state: State & IState<StateType>,
     xorNode: TXorNode,
-    nodesById: XorNodesById,
+    nodeIdMaps: ParserContext.NodeIdMaps,
 ): ReadonlyArray<TXorNode> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return expectAllAstChildren(_state, astNode, nodesById.astNodesById).map(childAstNode => {
+            return expectAllAstChildren(_state, astNode, nodeIdMaps).map(childAstNode => {
                 return {
                     kind: XorNodeKind.Ast,
                     node: childAstNode,
@@ -170,30 +158,35 @@ export function expectAllXorChildren<State, StateType>(
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
             const contextNode: ParserContext.Node = xorNode.node;
-            for (const childNodeId of contextNode.childNodeIds) {
-                const maybeAstChild: Option<Ast.TNode> = nodesById.astNodesById.get(childNodeId);
-                if (maybeAstChild) {
-                    result.push({
-                        kind: XorNodeKind.Ast,
-                        node: maybeAstChild,
-                    });
-                    continue;
-                }
+            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMaps.childIdsById.get(contextNode.nodeId);
 
-                const maybeContextChild: Option<ParserContext.Node> = nodesById.contextNodesById.get(childNodeId);
-                if (maybeContextChild) {
-                    result.push({
-                        kind: XorNodeKind.Context,
-                        node: maybeContextChild,
-                    });
-                    continue;
-                }
+            if (maybeChildIds !== undefined) {
+                const childIds: ReadonlyArray<number> = maybeChildIds;
+                for (const childId of childIds) {
+                    const maybeAstChild: Option<Ast.TNode> = nodeIdMaps.astNodeById.get(childId);
+                    if (maybeAstChild) {
+                        result.push({
+                            kind: XorNodeKind.Ast,
+                            node: maybeAstChild,
+                        });
+                        continue;
+                    }
 
-                const details: {} = { nodeId: childNodeId };
-                throw new CommonError.InvariantError(
-                    `nodeId should be found in either astNodesById or contextNodesById`,
-                    details,
-                );
+                    const maybeContextChild: Option<ParserContext.Node> = nodeIdMaps.contextNodeById.get(childId);
+                    if (maybeContextChild) {
+                        result.push({
+                            kind: XorNodeKind.Context,
+                            node: maybeContextChild,
+                        });
+                        continue;
+                    }
+
+                    const details: {} = { nodeId: childId };
+                    throw new CommonError.InvariantError(
+                        `nodeId should be found in either astNodesById or contextNodesById`,
+                        details,
+                    );
+                }
             }
 
             return result;
