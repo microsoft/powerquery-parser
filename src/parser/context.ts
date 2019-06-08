@@ -81,7 +81,7 @@ export function startContext(
         const maybeExistingChildren: Option<ReadonlyArray<number>> = childIdsById.get(parentNodeId);
         if (maybeExistingChildren) {
             const existingChildren: ReadonlyArray<number> = maybeExistingChildren;
-            childIdsById.set(parentNodeId, [nodeId, ...existingChildren]);
+            childIdsById.set(parentNodeId, [...existingChildren, nodeId]);
         } else {
             childIdsById.set(parentNodeId, [nodeId]);
         }
