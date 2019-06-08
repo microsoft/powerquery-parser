@@ -48,7 +48,7 @@ export class Parser {
                 kind: ResultKind.Ok,
                 value: {
                     document,
-                    nodesById: contextState.astNodesById,
+                    nodeIdMaps: contextState.nodeIdMaps,
                     leafNodeIds: contextState.leafNodeIds,
                 },
             };
@@ -2300,7 +2300,7 @@ export class Parser {
 
         if (backup.maybeContextNodeId) {
             this.maybeCurrentContextNode = Context.expectContextNode(
-                this.contextState.contextNodesById,
+                this.contextState.nodeIdMaps.contextNodeById,
                 backup.maybeContextNodeId,
             );
         } else {
@@ -2311,7 +2311,7 @@ export class Parser {
 
 export interface ParseOk {
     readonly document: Ast.TDocument;
-    readonly nodesById: Map<number, Ast.TNode>;
+    readonly nodeIdMaps: Context.NodeIdMaps;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
