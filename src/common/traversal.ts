@@ -3,6 +3,8 @@
 import { CommonError, isNever, Option, Result, ResultKind } from ".";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 
+export type TriedTraverse<StateType> = Result<StateType, CommonError.CommonError>;
+
 export const enum XorNodeKind {
     Ast = "Ast",
     Context = "Context",
@@ -22,8 +24,8 @@ export type TVisitChildNodeFn<Node, State, StateType, Return> = (
     state: State & IState<StateType>,
 ) => Return;
 export type TEarlyExitFn<Node, State, StateType> = TVisitNodeFn<Node, State, StateType, boolean>;
-export type TExpandNodesFn<Node, NodesById, StateType> = (
-    state: IState<StateType>,
+export type TExpandNodesFn<Node, NodesById, State, StateType> = (
+    state: State & IState<StateType>,
     node: Node,
     collection: NodesById,
 ) => ReadonlyArray<Node>;
@@ -43,16 +45,17 @@ export function tryTraverseAst<State, StateType>(
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<Ast.TNode, State, StateType, void>,
+    expandNodesFn: TExpandNodesFn<Ast.TNode, NodeIdMap.Collection, State, StateType>,
     maybeEarlyExitFn: Option<TEarlyExitFn<Ast.TNode, State, StateType>>,
 ): Result<StateType, CommonError.CommonError> {
     try {
-        traverse<Ast.TNode, NodeIdMap.Collection, State, StateType>(
+        uncheckedTraverse<Ast.TNode, NodeIdMap.Collection, State, StateType>(
             root,
             nodeIdMapCollection,
             state,
             strategy,
             visitNodeFn,
-            expectAllAstChildren,
+            expandNodesFn,
             maybeEarlyExitFn,
         );
         return {
@@ -73,16 +76,17 @@ export function tryTraverseXor<State, StateType>(
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<TXorNode, State, StateType, void>,
+    expandNodesFn: TExpandNodesFn<TXorNode, NodeIdMap.Collection, State, StateType>,
     maybeEarlyExitFn: Option<TEarlyExitFn<TXorNode, State, StateType>>,
 ): Result<StateType, CommonError.CommonError> {
     try {
-        traverse<TXorNode, NodeIdMap.Collection, State, StateType>(
+        uncheckedTraverse<TXorNode, NodeIdMap.Collection, State, StateType>(
             root,
             nodeIdMapCollection,
             state,
             strategy,
             visitNodeFn,
-            expectAllXorChildren,
+            expandNodesFn,
             maybeEarlyExitFn,
         );
         return {
@@ -97,13 +101,13 @@ export function tryTraverseXor<State, StateType>(
     }
 }
 
-export function traverse<Node, NodesById, State, StateType>(
+export function uncheckedTraverse<Node, NodesById, State, StateType>(
     node: Node,
     nodesById: NodesById,
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<Node, State, StateType, void>,
-    expandNodesFn: TExpandNodesFn<Node, NodesById, StateType>,
+    expandNodesFn: TExpandNodesFn<Node, NodesById, State, StateType>,
     maybeEarlyExitFn: Option<TEarlyExitFn<Node, State, StateType>>,
 ): void {
     if (maybeEarlyExitFn && maybeEarlyExitFn(node, state)) {
@@ -113,7 +117,7 @@ export function traverse<Node, NodesById, State, StateType>(
     }
 
     for (const child of expandNodesFn(state, node, nodesById)) {
-        traverse(child, nodesById, state, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
+        uncheckedTraverse(child, nodesById, state, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
     }
 
     if (strategy === VisitNodeStrategy.DepthFirst) {
@@ -121,7 +125,7 @@ export function traverse<Node, NodesById, State, StateType>(
     }
 }
 
-export function expectAllAstChildren<State, StateType>(
+export function expectExpandAllAstChildren<State, StateType>(
     _state: State & IState<StateType>,
     astNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -136,7 +140,7 @@ export function expectAllAstChildren<State, StateType>(
     }
 }
 
-export function expectAllXorChildren<State, StateType>(
+export function expectExpandAllXorChildren<State, StateType>(
     _state: State & IState<StateType>,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -144,7 +148,7 @@ export function expectAllXorChildren<State, StateType>(
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return expectAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
+            return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
                 return {
                     kind: XorNodeKind.Ast,
                     node: childAstNode,
