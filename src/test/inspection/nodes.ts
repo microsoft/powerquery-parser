@@ -64,8 +64,8 @@ function expectAbridgedNodes(text: string, position: Inspection.Position, expect
 describe(`Inspection`, () => {
     describe(`Nodes`, () => {
         describe(`Record`, () => {
-            it(`[] at (0, 0)`, () => {
-                const text: string = `[]`;
+            it(`[a=1] at (0, 0)`, () => {
+                const text: string = `[a=1]`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
                     lineCodeUnit: 0,
@@ -74,8 +74,8 @@ describe(`Inspection`, () => {
                 expectAbridgedNodes(text, position, expected);
             });
 
-            it(`[] at (0, 1)`, () => {
-                const text: string = `[]`;
+            it(`[a=1] at (0, 1)`, () => {
+                const text: string = `[a=1]`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
                     lineCodeUnit: 1,
@@ -84,11 +84,11 @@ describe(`Inspection`, () => {
                 expectAbridgedNodes(text, position, expected);
             });
 
-            it(`[] at (0, 2)`, () => {
-                const text: string = `[]`;
+            it(`[a=1] at (0, 5)`, () => {
+                const text: string = `[a=1]`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
-                    lineCodeUnit: 2,
+                    lineCodeUnit: 5,
                 };
                 const expected: AbridgedNode = [];
                 expectAbridgedNodes(text, position, expected);
