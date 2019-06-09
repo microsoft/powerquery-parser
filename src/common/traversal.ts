@@ -5,6 +5,28 @@ import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 export type TriedTraverse<StateType> = Result<StateType, CommonError.CommonError>;
 
+// ParserContext keeps track of parent and children through a nodeId number,
+// it does not directly map to the parent/children instances as their change over time from
+// ParserContext.Node to Ast.TNode.
+// TXorNode adds the typing needed for traversal.
+export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
+
+export type TVisitNodeFn<Node, State, StateType, Return> = (node: Node, state: State & IState<StateType>) => Return;
+
+export type TVisitChildNodeFn<Node, State, StateType, Return> = (
+    parent: Node,
+    node: Node,
+    state: State & IState<StateType>,
+) => Return;
+
+export type TEarlyExitFn<Node, State, StateType> = TVisitNodeFn<Node, State, StateType, boolean>;
+
+export type TExpandNodesFn<Node, NodesById, State, StateType> = (
+    state: State & IState<StateType>,
+    node: Node,
+    collection: NodesById,
+) => ReadonlyArray<Node>;
+
 export const enum XorNodeKind {
     Ast = "Ast",
     Context = "Context",
@@ -14,21 +36,6 @@ export const enum VisitNodeStrategy {
     BreadthFirst = "BreadthFirst",
     DepthFirst = "DepthFirst",
 }
-
-export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
-
-export type TVisitNodeFn<Node, State, StateType, Return> = (node: Node, state: State & IState<StateType>) => Return;
-export type TVisitChildNodeFn<Node, State, StateType, Return> = (
-    parent: Node,
-    node: Node,
-    state: State & IState<StateType>,
-) => Return;
-export type TEarlyExitFn<Node, State, StateType> = TVisitNodeFn<Node, State, StateType, boolean>;
-export type TExpandNodesFn<Node, NodesById, State, StateType> = (
-    state: State & IState<StateType>,
-    node: Node,
-    collection: NodesById,
-) => ReadonlyArray<Node>;
 
 export interface IState<T> {
     result: T;
@@ -101,6 +108,7 @@ export function tryTraverseXor<State, StateType>(
     }
 }
 
+// Errors are uncaught. Catch them yourself as needed.
 export function uncheckedTraverse<Node, NodesById, State, StateType>(
     node: Node,
     nodesById: NodesById,
@@ -125,6 +133,7 @@ export function uncheckedTraverse<Node, NodesById, State, StateType>(
     }
 }
 
+// a TExpandNodesFn usable by tryTraverseAst which visits all nodes.
 export function expectExpandAllAstChildren<State, StateType>(
     _state: State & IState<StateType>,
     astNode: Ast.TNode,
@@ -140,6 +149,7 @@ export function expectExpandAllAstChildren<State, StateType>(
     }
 }
 
+// a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
 export function expectExpandAllXorChildren<State, StateType>(
     _state: State & IState<StateType>,
     xorNode: TXorNode,
