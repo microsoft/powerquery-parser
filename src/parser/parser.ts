@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { ParserContext } from ".";
+import { Ast, ParserContext, ParserError } from ".";
 import { CommonError } from "../common";
 import { isNever } from "../common/assert";
 import { Option } from "../common/option";
@@ -8,9 +8,6 @@ import { Result, ResultKind } from "../common/result";
 import { Keyword } from "../lexer/keywords";
 import { LexerSnapshot } from "../lexer/lexerSnapshot";
 import { Token, TokenKind, TokenPosition } from "../lexer/token";
-import * as Ast from "./ast";
-import * as Context from "./context";
-import * as ParserError from "./error";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 
 export type TriedParse = Result<ParseOk, ParserError.TParserError>;
@@ -24,8 +21,8 @@ export class Parser {
         private tokenIndex: number = 0,
         private readonly tokenRangeStack: TokenRangeStackElement[] = [],
         private nodeIdCounter: number = 0,
-        private contextState: Context.State = Context.empty(),
-        private maybeCurrentContextNode: Option<Context.Node> = undefined,
+        private contextState: ParserContext.State = ParserContext.empty(),
+        private maybeCurrentContextNode: Option<ParserContext.Node> = undefined,
     ) {
         if (this.lexerSnapshot.tokens.length) {
             this.maybeCurrentToken = this.lexerSnapshot.tokens[0];
@@ -44,7 +41,7 @@ export class Parser {
                 );
             }
 
-            const contextState: Context.State = this.contextState;
+            const contextState: ParserContext.State = this.contextState;
             return {
                 kind: ResultKind.Ok,
                 value: {
@@ -82,7 +79,7 @@ export class Parser {
                     throw maybeErr;
                 }
             } catch (expressionError) {
-                const expressionContextState: Context.State = Context.deepCopy(this.contextState);
+                const expressionContextState: ParserContext.State = ParserContext.deepCopy(this.contextState);
                 this.restoreBackup(backup);
                 try {
                     document = this.readSection();
@@ -2183,7 +2180,7 @@ export class Parser {
     }
 
     private startContext(nodeKind: Ast.NodeKind): number {
-        this.maybeCurrentContextNode = Context.startContext(
+        this.maybeCurrentContextNode = ParserContext.startContext(
             this.contextState,
             nodeKind,
             this.nodeIdCounter,
@@ -2202,7 +2199,11 @@ export class Parser {
             );
         }
 
-        this.maybeCurrentContextNode = Context.endContext(this.contextState, this.maybeCurrentContextNode, astNode);
+        this.maybeCurrentContextNode = ParserContext.endContext(
+            this.contextState,
+            this.maybeCurrentContextNode,
+            astNode,
+        );
     }
 
     private deleteContext(maybeNodeId: Option<number>): void {
@@ -2213,14 +2214,14 @@ export class Parser {
                     "maybeContextNode should be truthy, can't end context if it doesn't exist.",
                 );
             } else {
-                const currentContextNode: Context.Node = this.maybeCurrentContextNode;
+                const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
                 nodeId = currentContextNode.nodeId;
             }
         } else {
             nodeId = maybeNodeId;
         }
 
-        this.maybeCurrentContextNode = Context.deleteContext(this.contextState, nodeId);
+        this.maybeCurrentContextNode = ParserContext.deleteContext(this.contextState, nodeId);
     }
 
     private isNextTokenKind(tokenKind: TokenKind): boolean {
@@ -2272,7 +2273,7 @@ export class Parser {
             throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
         }
 
-        const contextNode: Context.Node = this.maybeCurrentContextNode;
+        const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
         return { id: contextNode.nodeId };
     }
 
@@ -2296,7 +2297,7 @@ export class Parser {
         return {
             tokenIndex: this.tokenIndex,
             tokenRangeStackLength: this.tokenRangeStack.length,
-            contextState: Context.deepCopy(this.contextState),
+            contextState: ParserContext.deepCopy(this.contextState),
             maybeContextNodeId:
                 this.maybeCurrentContextNode !== undefined ? this.maybeCurrentContextNode.nodeId : undefined,
         };
@@ -2311,7 +2312,7 @@ export class Parser {
         this.contextState = backup.contextState;
 
         if (backup.maybeContextNodeId) {
-            this.maybeCurrentContextNode = Context.expectContextNode(
+            this.maybeCurrentContextNode = ParserContext.expectContextNode(
                 this.contextState.nodeIdMaps.contextNodeById,
                 backup.maybeContextNodeId,
             );
@@ -2323,7 +2324,7 @@ export class Parser {
 
 export interface ParseOk {
     readonly document: Ast.TDocument;
-    readonly nodeIdMaps: Context.NodeIdMaps;
+    readonly nodeIdMaps: ParserContext.NodeIdMaps;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
@@ -2362,7 +2363,7 @@ interface TokenRangeStackElement {
 interface StateBackup {
     readonly tokenRangeStackLength: number;
     readonly tokenIndex: number;
-    readonly contextState: Context.State;
+    readonly contextState: ParserContext.State;
     readonly maybeContextNodeId: Option<number>;
 }
 interface ContextNodeMetadata {
