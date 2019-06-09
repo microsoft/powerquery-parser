@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { CommonError, isNever, Option, Result, ResultKind, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
-import { Ast, NodeIdMap, Parser, ParserContext, TokenRange } from "../parser";
+import { Ast, NodeIdMap, ParserContext, TokenRange } from "../parser";
 
 // Inspections start at a lineNumber / lineCodeUnit Position pair.
 // A given position is either in a token or somewhere between tokens (whitespace).
@@ -42,7 +42,7 @@ export interface Position {
 
 export interface INode {
     readonly kind: NodeKind;
-    readonly positionStart: TokenPosition;
+    readonly maybePositionStart: Option<TokenPosition>;
     readonly maybePositionEnd: Option<TokenPosition>;
 }
 
@@ -54,10 +54,11 @@ export interface Each extends INode {
     readonly kind: NodeKind.Each;
 }
 
-export function tryFrom(position: Position, parseOk: Parser.ParseOk): Result<Inspection, CommonError.CommonError> {
-    const nodeIdMapCollection: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
-    const leafNodeIds: ReadonlyArray<number> = parseOk.leafNodeIds;
-
+export function tryFrom(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): Result<Inspection, CommonError.CommonError> {
     const maybeXorNode: Option<Traverse.TXorNode> = maybeClosestXorNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeXorNode === undefined) {
         return {
@@ -180,7 +181,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
             const tokenRange: TokenRange = node.tokenRange;
             state.result.nodes.push({
                 kind: NodeKind.Each,
-                positionStart: tokenRange.positionStart,
+                maybePositionStart: tokenRange.positionStart,
                 maybePositionEnd: tokenRange.positionEnd,
             });
             break;
@@ -193,7 +194,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
             if (!isPositionOnTokenPosition(state.position, tokenRange.positionEnd)) {
                 state.result.nodes.push({
                     kind: NodeKind.List,
-                    positionStart: tokenRange.positionStart,
+                    maybePositionStart: tokenRange.positionStart,
                     maybePositionEnd: tokenRange.positionEnd,
                 });
             }
@@ -207,7 +208,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
             if (!isPositionOnTokenPosition(state.position, tokenRange.positionEnd)) {
                 state.result.nodes.push({
                     kind: NodeKind.Record,
-                    positionStart: tokenRange.positionStart,
+                    maybePositionStart: tokenRange.positionStart,
                     maybePositionEnd: tokenRange.positionEnd,
                 });
             }
@@ -219,8 +220,40 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
     }
 }
 
-function inspectContextNode(_: State, __: ParserContext.Node): void {
-    throw new Error(`todo`);
+function inspectContextNode(state: State, node: ParserContext.Node): void {
+    switch (node.nodeKind) {
+        case Ast.NodeKind.EachExpression: {
+            state.result.nodes.push({
+                kind: NodeKind.Each,
+                maybePositionStart: node.maybeTokenStart !== undefined ? node.maybeTokenStart.positionStart : undefined,
+                maybePositionEnd: undefined,
+            });
+            break;
+        }
+
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral: {
+            state.result.nodes.push({
+                kind: NodeKind.List,
+                maybePositionStart: node.maybeTokenStart !== undefined ? node.maybeTokenStart.positionStart : undefined,
+                maybePositionEnd: undefined,
+            });
+            break;
+        }
+
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral: {
+            state.result.nodes.push({
+                kind: NodeKind.Record,
+                maybePositionStart: node.maybeTokenStart !== undefined ? node.maybeTokenStart.positionStart : undefined,
+                maybePositionEnd: undefined,
+            });
+            break;
+        }
+
+        default:
+            break;
+    }
 }
 
 function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosition): boolean {
