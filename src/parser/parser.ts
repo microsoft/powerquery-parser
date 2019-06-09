@@ -1201,7 +1201,7 @@ export class Parser {
         const headParentId: number = maybeHeadParentId;
 
         // Remove head as a child of its current parent.
-        const parentChildIds: ReadonlyArray<number> = ParserContext.expectChildIds(
+        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(
             nodeIdMapCollection.childIdsById,
             headParentId,
         );
@@ -2312,7 +2312,7 @@ export class Parser {
         this.contextState = backup.contextState;
 
         if (backup.maybeContextNodeId) {
-            this.maybeCurrentContextNode = ParserContext.expectContextNode(
+            this.maybeCurrentContextNode = NodeIdMap.expectContextNode(
                 this.contextState.nodeIdMapCollection.contextNodeById,
                 backup.maybeContextNodeId,
             );

@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserContext } from ".";
+import { CommonError, Option } from "../common";
 
 export type AstNodeById = NumberMap<Ast.TNode>;
 
@@ -18,6 +19,21 @@ export interface Collection {
     readonly childIdsById: ChildIdsById;
 }
 
+export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
+    return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
+}
+
+export function expectContextNode(contextNodeById: ContextNodeById, nodeId: number): ParserContext.Node {
+    return expectInMap<ParserContext.Node>(contextNodeById, nodeId, "contextNodeById");
+}
+
+export function expectChildIds(
+    childIdsById: Map<number, ReadonlyArray<number>>,
+    nodeId: number,
+): ReadonlyArray<number> {
+    return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
+}
+
 export function deepCopyCollection(nodeIdMapCollection: Collection): Collection {
     const contextNodeById: ContextNodeById = new Map<number, ParserContext.Node>();
     nodeIdMapCollection.contextNodeById.forEach((value: ParserContext.Node, key: number) => {
@@ -32,3 +48,12 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
 }
 
 type NumberMap<T> = Map<number, T>;
+
+function expectInMap<T>(map: Map<number, T>, nodeId: number, mapName: string): T {
+    const maybeValue: Option<T> = map.get(nodeId);
+    if (maybeValue === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`nodeId wasn't in ${mapName}`, details);
+    }
+    return maybeValue;
+}

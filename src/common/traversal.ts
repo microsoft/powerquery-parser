@@ -130,7 +130,7 @@ export function expectAllAstChildren<State, StateType>(
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        return childIds.map(nodeId => ParserContext.expectAstNode(nodeIdMapCollection.astNodeById, nodeId));
+        return childIds.map(nodeId => NodeIdMap.expectAstNode(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
     }

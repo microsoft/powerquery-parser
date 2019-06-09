@@ -36,21 +36,6 @@ export function empty(): State {
     };
 }
 
-export function expectAstNode(astNodeById: NodeIdMap.AstNodeById, nodeId: number): Ast.TNode {
-    return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
-}
-
-export function expectContextNode(contextNodeById: NodeIdMap.ContextNodeById, nodeId: number): Node {
-    return expectInMap<Node>(contextNodeById, nodeId, "contextNodeById");
-}
-
-export function expectChildIds(
-    childIdsById: Map<number, ReadonlyArray<number>>,
-    nodeId: number,
-): ReadonlyArray<number> {
-    return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
-}
-
 export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
@@ -152,8 +137,8 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
 
     // If the Node has a parent, remove the Node from the parent's list of children
     if (maybeParentNodeId !== undefined) {
-        const parentNode: Node = expectContextNode(contextNodeById, maybeParentNodeId);
-        const parentChildIds: ReadonlyArray<number> = expectChildIds(childIdsById, parentNode.nodeId);
+        const parentNode: Node = NodeIdMap.expectContextNode(contextNodeById, maybeParentNodeId);
+        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(childIdsById, parentNode.nodeId);
         const replacementIndex: number = parentChildIds.indexOf(node.nodeId);
         if (replacementIndex === -1) {
             const details: {} = {
@@ -171,7 +156,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
 
     // If the Node has children, update the children's parent to the Node's parent.
     if (maybeParentNodeId !== undefined && maybeChildIds) {
-        const parentNode: Node = expectContextNode(contextNodeById, maybeParentNodeId);
+        const parentNode: Node = NodeIdMap.expectContextNode(contextNodeById, maybeParentNodeId);
         const childIds: ReadonlyArray<number> = maybeChildIds;
 
         for (const childId of childIds) {
@@ -179,7 +164,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         }
 
         // Add the Node's orphaned children to the Node's parent.
-        const parentChildIds: ReadonlyArray<number> = expectChildIds(childIdsById, parentNode.nodeId);
+        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(childIdsById, parentNode.nodeId);
         childIdsById.set(parentNode.nodeId, [...parentChildIds, ...childIds]);
     }
     // The root is being deleted. Check if it has a single child context, then promote it if it exists.
@@ -194,7 +179,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         // The solo child might be an astNode.
         const maybeSoloNode: Option<Node> = contextNodeById.get(soloChildId);
         if (maybeSoloNode) {
-            const soloNode: Node = expectContextNode(contextNodeById, soloChildId);
+            const soloNode: Node = NodeIdMap.expectContextNode(contextNodeById, soloChildId);
             state.root.maybeNode = soloNode;
         }
 
@@ -206,7 +191,9 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     childIdsById.delete(node.nodeId);
     parentIdById.delete(node.nodeId);
 
-    return maybeParentNodeId !== undefined ? expectContextNode(contextNodeById, maybeParentNodeId) : undefined;
+    return maybeParentNodeId !== undefined
+        ? NodeIdMap.expectContextNode(contextNodeById, maybeParentNodeId)
+        : undefined;
 }
 
 export function deepCopy(state: State): State {
@@ -223,13 +210,4 @@ export function deepCopy(state: State): State {
         nodeIdMapCollection: nodeIdMapCollection,
         leafNodeIds: state.leafNodeIds.slice(),
     };
-}
-
-function expectInMap<T>(map: Map<number, T>, nodeId: number, mapName: string): T {
-    const maybeValue: Option<T> = map.get(nodeId);
-    if (maybeValue === undefined) {
-        const details: {} = { nodeId };
-        throw new CommonError.InvariantError(`nodeId wasn't in ${mapName}`, details);
-    }
-    return maybeValue;
 }
