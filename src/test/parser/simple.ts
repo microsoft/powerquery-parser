@@ -33,6 +33,7 @@ function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
         },
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectNodeKindVisit,
+        Traverse.expectExpandAllAstChildren,
         undefined,
     );
 
@@ -59,6 +60,7 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
         },
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
+        Traverse.expectExpandAllAstChildren,
         nthNodeEarlyExit,
     );
 

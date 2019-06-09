@@ -7,7 +7,7 @@ import { Parser } from "../../parser";
 
 type AbridgedNode = ReadonlyArray<[Inspection.NodeKind, Option<TokenPosition>, Option<TokenPosition>]>;
 
-function expectTriedParse(text: string): Parser.TriedParse {
+function expectParseOk(text: string): Parser.ParseOk {
     const state: Lexer.State = Lexer.stateFrom(text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (!(maybeErrorLineMap === undefined)) {
@@ -20,12 +20,16 @@ function expectTriedParse(text: string): Parser.TriedParse {
     }
     const snapshot: LexerSnapshot = snapshotResult.value;
 
-    return Parser.parse(snapshot);
+    const triedParse: Parser.TriedParse = Parser.parse(snapshot);
+    if (!(triedParse.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Ok`);
+    }
+    return triedParse.value;
 }
 
 function expectTriedInspect(text: string, position: Inspection.Position): Inspection.TriedInspect {
-    const triedParse: Parser.TriedParse = expectTriedParse(text);
-    return Inspection.tryFrom(position, triedParse);
+    const parseOk: Parser.ParseOk = expectParseOk(text);
+    return Inspection.tryFrom(position, parseOk);
 }
 
 function expectAbridgedNodes(text: string, position: Inspection.Position, expected: AbridgedNode): void {
