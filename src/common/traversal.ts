@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError } from ".";
-import { Ast, ParserContext } from "../parser";
-import { isNever } from "./assert";
-import { Option } from "./option";
-import { Result, ResultKind } from "./result";
+import { CommonError, isNever, Option, Result, ResultKind } from ".";
+import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 export const enum XorNodeKind {
     Ast = "Ast",
@@ -42,16 +39,16 @@ export interface IXorNode<Kind, T> {
 
 export function tryTraverseAst<State, StateType>(
     root: Ast.TNode,
-    nodeIdMaps: ParserContext.NodeIdMaps,
+    nodeIdMapCollection: NodeIdMap.Collection,
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<Ast.TNode, State, StateType, void>,
     maybeEarlyExitFn: Option<TEarlyExitFn<Ast.TNode, State, StateType>>,
 ): Result<StateType, CommonError.CommonError> {
     try {
-        traverse<Ast.TNode, ParserContext.NodeIdMaps, State, StateType>(
+        traverse<Ast.TNode, NodeIdMap.Collection, State, StateType>(
             root,
-            nodeIdMaps,
+            nodeIdMapCollection,
             state,
             strategy,
             visitNodeFn,
@@ -72,16 +69,16 @@ export function tryTraverseAst<State, StateType>(
 
 export function tryTraverseXor<State, StateType>(
     root: TXorNode,
-    nodeIdMaps: ParserContext.NodeIdMaps,
+    nodeIdMapCollection: NodeIdMap.Collection,
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<TXorNode, State, StateType, void>,
     maybeEarlyExitFn: Option<TEarlyExitFn<TXorNode, State, StateType>>,
 ): Result<StateType, CommonError.CommonError> {
     try {
-        traverse<TXorNode, ParserContext.NodeIdMaps, State, StateType>(
+        traverse<TXorNode, NodeIdMap.Collection, State, StateType>(
             root,
-            nodeIdMaps,
+            nodeIdMapCollection,
             state,
             strategy,
             visitNodeFn,
@@ -127,13 +124,13 @@ export function traverse<Node, NodesById, State, StateType>(
 export function expectAllAstChildren<State, StateType>(
     _state: State & IState<StateType>,
     astNode: Ast.TNode,
-    nodeIdMaps: ParserContext.NodeIdMaps,
+    nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<Ast.TNode> {
-    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMaps.childIdsById.get(astNode.id);
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(astNode.id);
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        return childIds.map(nodeId => ParserContext.expectAstNode(nodeIdMaps.astNodeById, nodeId));
+        return childIds.map(nodeId => ParserContext.expectAstNode(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
     }
@@ -142,12 +139,12 @@ export function expectAllAstChildren<State, StateType>(
 export function expectAllXorChildren<State, StateType>(
     _state: State & IState<StateType>,
     xorNode: TXorNode,
-    nodeIdMaps: ParserContext.NodeIdMaps,
+    nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<TXorNode> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return expectAllAstChildren(_state, astNode, nodeIdMaps).map(childAstNode => {
+            return expectAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
                 return {
                     kind: XorNodeKind.Ast,
                     node: childAstNode,
@@ -157,12 +154,14 @@ export function expectAllXorChildren<State, StateType>(
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
             const contextNode: ParserContext.Node = xorNode.node;
-            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMaps.childIdsById.get(contextNode.nodeId);
+            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
+                contextNode.nodeId,
+            );
 
             if (maybeChildIds !== undefined) {
                 const childIds: ReadonlyArray<number> = maybeChildIds;
                 for (const childId of childIds) {
-                    const maybeAstChild: Option<Ast.TNode> = nodeIdMaps.astNodeById.get(childId);
+                    const maybeAstChild: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(childId);
                     if (maybeAstChild) {
                         result.push({
                             kind: XorNodeKind.Ast,
@@ -171,7 +170,9 @@ export function expectAllXorChildren<State, StateType>(
                         continue;
                     }
 
-                    const maybeContextChild: Option<ParserContext.Node> = nodeIdMaps.contextNodeById.get(childId);
+                    const maybeContextChild: Option<ParserContext.Node> = nodeIdMapCollection.contextNodeById.get(
+                        childId,
+                    );
                     if (maybeContextChild) {
                         result.push({
                             kind: XorNodeKind.Context,

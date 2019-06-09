@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Ast, ParserContext, ParserError } from ".";
+import { Ast, NodeIdMap, ParserContext, ParserError } from ".";
 import { CommonError } from "../common";
 import { isNever } from "../common/assert";
 import { Option } from "../common/option";
@@ -46,7 +46,7 @@ export class Parser {
                 kind: ResultKind.Ok,
                 value: {
                     document,
-                    nodeIdMaps: contextState.nodeIdMaps,
+                    nodeIdMapCollection: contextState.nodeIdMapCollection,
                     leafNodeIds: contextState.leafNodeIds,
                 },
             };
@@ -1189,11 +1189,11 @@ export class Parser {
         // The head of the recursive primary expression is created before the recursive primrary expression,
         // meaning the parent/child mapping for contexts are in reverse order.
         // The clean up for that happens here.
-        const nodeIdMaps: ParserContext.NodeIdMaps = this.contextState.nodeIdMaps;
+        const nodeIdMapCollection: NodeIdMap.Collection = this.contextState.nodeIdMapCollection;
         if (!this.maybeCurrentContextNode) {
             throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
         }
-        const maybeHeadParentId: Option<number> = nodeIdMaps.parentIdById.get(head.id);
+        const maybeHeadParentId: Option<number> = nodeIdMapCollection.parentIdById.get(head.id);
         if (maybeHeadParentId === undefined) {
             const details: {} = { nodeId: head.id };
             throw new CommonError.InvariantError(`head's nodeId isn't in parentIdById`, details);
@@ -1202,7 +1202,7 @@ export class Parser {
 
         // Remove head as a child of its current parent.
         const parentChildIds: ReadonlyArray<number> = ParserContext.expectChildIds(
-            nodeIdMaps.childIdsById,
+            nodeIdMapCollection.childIdsById,
             headParentId,
         );
         const replacementIndex: number = parentChildIds.indexOf(head.id);
@@ -1214,17 +1214,17 @@ export class Parser {
             throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
         }
 
-        nodeIdMaps.childIdsById.set(headParentId, [
+        nodeIdMapCollection.childIdsById.set(headParentId, [
             ...parentChildIds.slice(0, replacementIndex),
             ...parentChildIds.slice(replacementIndex + 1),
         ]);
 
         // Update mappings for head.
-        nodeIdMaps.astNodeById.set(head.id, head);
-        nodeIdMaps.parentIdById.set(head.id, this.maybeCurrentContextNode.nodeId);
+        nodeIdMapCollection.astNodeById.set(head.id, head);
+        nodeIdMapCollection.parentIdById.set(head.id, this.maybeCurrentContextNode.nodeId);
 
         // Mark head as a child of the recursive primary expression context (currentContextNode).
-        nodeIdMaps.childIdsById.set(this.maybeCurrentContextNode.nodeId, [head.id]);
+        nodeIdMapCollection.childIdsById.set(this.maybeCurrentContextNode.nodeId, [head.id]);
 
         // Begin normal parsing behavior.
         const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
@@ -2313,7 +2313,7 @@ export class Parser {
 
         if (backup.maybeContextNodeId) {
             this.maybeCurrentContextNode = ParserContext.expectContextNode(
-                this.contextState.nodeIdMaps.contextNodeById,
+                this.contextState.nodeIdMapCollection.contextNodeById,
                 backup.maybeContextNodeId,
             );
         } else {
@@ -2324,7 +2324,7 @@ export class Parser {
 
 export interface ParseOk {
     readonly document: Ast.TDocument;
-    readonly nodeIdMaps: ParserContext.NodeIdMaps;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
