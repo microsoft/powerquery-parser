@@ -25,7 +25,7 @@ export type TVisitChildNodeFn<Node, State, StateType, Return> = (
     state: State & IState<StateType>,
 ) => Return;
 export type TEarlyExitFn<Node, State, StateType> = TVisitNodeFn<Node, State, StateType, boolean>;
-export type TAddNodesFn<Node, NodesById, StateType> = (
+export type TExpandNodesFn<Node, NodesById, StateType> = (
     state: IState<StateType>,
     node: Node,
     collection: NodesById,
@@ -106,7 +106,7 @@ export function traverse<Node, NodesById, State, StateType>(
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<Node, State, StateType, void>,
-    addNodesFn: TAddNodesFn<Node, NodesById, StateType>,
+    expandNodesFn: TExpandNodesFn<Node, NodesById, StateType>,
     maybeEarlyExitFn: Option<TEarlyExitFn<Node, State, StateType>>,
 ): void {
     if (maybeEarlyExitFn && maybeEarlyExitFn(node, state)) {
@@ -115,9 +115,9 @@ export function traverse<Node, NodesById, State, StateType>(
         visitNodeFn(node, state);
     }
 
-    const children: ReadonlyArray<Node> = addNodesFn(state, node, nodesById);
+    const children: ReadonlyArray<Node> = expandNodesFn(state, node, nodesById);
     for (const child of children) {
-        traverse(child, nodesById, state, strategy, visitNodeFn, addNodesFn, maybeEarlyExitFn);
+        traverse(child, nodesById, state, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
     }
 
     if (strategy === VisitNodeStrategy.DepthFirst) {
