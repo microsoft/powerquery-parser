@@ -5,7 +5,7 @@ import { Option, ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TokenPosition, TriedLexerSnapshot } from "../../lexer";
 import { Parser, ParserError } from "../../parser";
 
-type AbridgedNode = ReadonlyArray<[Inspection.NodeKind, Option<TokenPosition>, Option<TokenPosition>]>;
+type AbridgedNode = ReadonlyArray<[Inspection.NodeKind, Option<TokenPosition>]>;
 
 function expectTriedParse(text: string): Parser.TriedParse {
     const state: Lexer.State = Lexer.stateFrom(text);
@@ -69,11 +69,7 @@ function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expecte
         throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok`);
     }
     const inspection: Inspection.Inspection = triedInspect.value;
-    const actual: AbridgedNode = inspection.nodes.map(node => [
-        node.kind,
-        node.maybePositionStart,
-        node.maybePositionEnd,
-    ]);
+    const actual: AbridgedNode = inspection.nodes.map(node => [node.kind, node.maybePositionStart]);
 
     expect(actual.length).to.equal(expected.length, "expected and actual lengths don't match");
 
@@ -83,16 +79,8 @@ function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expecte
         expect(actualKind).to.equal(expectedKind, `line: ${index}`);
 
         const actualPositionStart: Option<TokenPosition> = actual[index][1];
-        const expectedPositionStart: Option<TokenPosition> = actual[index][1];
-        if (expectedPositionStart !== undefined) {
-            expect(actualPositionStart).deep.equal(expectedPositionStart, `line: ${index}`);
-        }
-
-        const actualPositionEnd: Option<TokenPosition> = actual[index][1];
-        const expectedPositionEnd: Option<TokenPosition> = actual[index][1];
-        if (expectedPositionEnd !== undefined) {
-            expect(actualPositionEnd).deep.equal(expectedPositionEnd, `line: ${index}`);
-        }
+        const expectedPositionStart: Option<TokenPosition> = expected[index][1];
+        expect(actualPositionStart).deep.equal(expectedPositionStart, `line: ${index}`);
     }
 }
 
@@ -115,7 +103,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: AbridgedNode = [[Inspection.NodeKind.Record, undefined, undefined]];
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.Record,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
 
@@ -145,7 +142,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: AbridgedNode = [[Inspection.NodeKind.Record, undefined, undefined]];
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.Record,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
 
@@ -155,7 +161,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 5,
                 };
-                const expected: AbridgedNode = [[Inspection.NodeKind.Record, undefined, undefined]];
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.Record,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
         });
