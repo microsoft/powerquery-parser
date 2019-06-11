@@ -73,7 +73,6 @@ export function tryFrom(
             nodes: [],
             scope: [],
         },
-        currentXorNode: xorNode,
         maybePreviousXorNode: undefined,
         position,
         initialXorNode: xorNode,
@@ -92,7 +91,6 @@ export function tryFrom(
 }
 
 interface State extends Traverse.IState<Inspection> {
-    currentXorNode: Option<Traverse.TXorNode>;
     maybePreviousXorNode: Option<Traverse.TXorNode>;
     readonly position: Position;
     readonly initialXorNode: Traverse.TXorNode;
@@ -190,8 +188,12 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral: {
             // Check if position is on closeWrapperConstant, eg. '}'
+            const position: Position = state.position;
             const tokenRange: TokenRange = node.tokenRange;
-            if (!isPositionOnTokenPosition(state.position, tokenRange.positionEnd)) {
+            if (
+                isInTokenRange(position, tokenRange) &&
+                !isPositionOnTokenPosition(position, node.closeWrapperConstant.tokenRange.positionStart)
+            ) {
                 state.result.nodes.push({
                     kind: NodeKind.List,
                     maybePositionStart: tokenRange.positionStart,
@@ -204,8 +206,12 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecordLiteral: {
             // Check if position is on closeWrapperConstant, eg. ']'
+            const position: Position = state.position;
             const tokenRange: TokenRange = node.tokenRange;
-            if (!isPositionOnTokenPosition(state.position, tokenRange.positionEnd)) {
+            if (
+                isInTokenRange(position, tokenRange) &&
+                !isPositionOnTokenPosition(position, node.closeWrapperConstant.tokenRange.positionStart)
+            ) {
                 state.result.nodes.push({
                     kind: NodeKind.Record,
                     maybePositionStart: tokenRange.positionStart,
@@ -256,8 +262,32 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
     }
 }
 
+function isInTokenRange(position: Position, tokenRange: TokenRange): boolean {
+    const tokenRangePositionStart: TokenPosition = tokenRange.positionStart;
+    const tokenRangePositionEnd: TokenPosition = tokenRange.positionEnd;
+
+    if (
+        position.lineNumber < tokenRangePositionStart.lineNumber ||
+        position.lineNumber > tokenRangePositionEnd.lineNumber
+    ) {
+        return false;
+    } else if (
+        position.lineNumber === tokenRangePositionStart.lineNumber &&
+        position.lineCodeUnit < tokenRangePositionStart.lineCodeUnit
+    ) {
+        return false;
+    } else if (
+        position.lineNumber === tokenRangePositionEnd.lineNumber &&
+        position.lineCodeUnit >= tokenRangePositionEnd.lineCodeUnit
+    ) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosition): boolean {
-    return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
+    return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
 }
 
 function maybeClosestXorNode(
