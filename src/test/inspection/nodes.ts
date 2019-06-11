@@ -86,75 +86,132 @@ function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expecte
 
 describe(`Inspection`, () => {
     describe(`Nodes`, () => {
-        // describe(`List`, () => {
-        //     it(`{1} at (0, 0)`, () => {
-        //         const text: string = `{1}`;
-        //         const position: Inspection.Position = {
-        //             lineNumber: 0,
-        //             lineCodeUnit: 0,
-        //         };
-        //         const expected: AbridgedNode = [];
-        //         expectParseOkAbridgedNodesEqual(text, position, expected);
-        //     });
+        describe(`List`, () => {
+            it(`|{1}`, () => {
+                const text: string = `{1}`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedNode = [];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
 
-        //     it(`{1} at (0, 1)`, () => {
-        //         const text: string = `{1}`;
-        //         const position: Inspection.Position = {
-        //             lineNumber: 0,
-        //             lineCodeUnit: 1,
-        //         };
-        //         const expected: AbridgedNode = [
-        //             [
-        //                 Inspection.NodeKind.List,
-        //                 {
-        //                     lineCodeUnit: 0,
-        //                     lineNumber: 0,
-        //                     codeUnit: 0,
-        //                 },
-        //             ],
-        //         ];
-        //         expectParseOkAbridgedNodesEqual(text, position, expected);
-        //     });
+            it(`{|1}`, () => {
+                const text: string = `{1}`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.List,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
 
-        //     it(`{1} at (0, 2)`, () => {
-        //         const text: string = `{1}`;
-        //         const position: Inspection.Position = {
-        //             lineNumber: 0,
-        //             lineCodeUnit: 2,
-        //         };
-        //         const expected: AbridgedNode = [];
-        //         expectParseOkAbridgedNodesEqual(text, position, expected);
-        //     });
+            it(`{1|}`, () => {
+                const text: string = `{1}`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.List,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
 
-        //     it(`{1 at (0, 0)`, () => {
-        //         const text: string = `{1`;
-        //         const position: Inspection.Position = {
-        //             lineNumber: 0,
-        //             lineCodeUnit: 0,
-        //         };
-        //         const expected: AbridgedNode = [];
-        //         expectParseErrAbridgedNodesEqual(text, position, expected);
-        //     });
+            it(`{1}|`, () => {
+                const text: string = `{1}`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                };
+                const expected: AbridgedNode = [];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
 
-        //     it(`{1 at (0, 1)`, () => {
-        //         const text: string = `{1`;
-        //         const position: Inspection.Position = {
-        //             lineNumber: 0,
-        //             lineCodeUnit: 1,
-        //         };
-        //         const expected: AbridgedNode = [
-        //             [
-        //                 Inspection.NodeKind.List,
-        //                 {
-        //                     lineCodeUnit: 0,
-        //                     lineNumber: 0,
-        //                     codeUnit: 0,
-        //                 },
-        //             ],
-        //         ];
-        //         expectParseErrAbridgedNodesEqual(text, position, expected);
-        //     });
-        // });
+            it(`|{1`, () => {
+                const text: string = `{1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedNode = [];
+                expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`{|1`, () => {
+                const text: string = `{1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.List,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`{|1`, () => {
+                const text: string = `{1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.List,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`{1|`, () => {
+                const text: string = `{1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.List,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+        });
 
         describe(`Record`, () => {
             it(`|[a=1]`, () => {
