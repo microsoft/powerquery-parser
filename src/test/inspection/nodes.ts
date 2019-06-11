@@ -76,6 +76,120 @@ function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expecte
 
 describe(`Inspection`, () => {
     describe(`Nodes`, () => {
+        describe(`Each`, () => {
+            it(`|each 1`, () => {
+                const text: string = `each 1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedNode = [];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`|each 1`, () => {
+                const text: string = `each 1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.Each,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`|each`, () => {
+                const text: string = `each`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedNode = [];
+                expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`each|`, () => {
+                const text: string = `each`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.Each,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`each each 1|`, () => {
+                const text: string = `each each 1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 11,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.Each,
+                        {
+                            lineCodeUnit: 5,
+                            lineNumber: 0,
+                            codeUnit: 5,
+                        },
+                    ],
+                    [
+                        Inspection.NodeKind.Each,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
+
+            it(`each each|`, () => {
+                const text: string = `each each`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 9,
+                };
+                const expected: AbridgedNode = [
+                    [
+                        Inspection.NodeKind.Each,
+                        {
+                            lineCodeUnit: 5,
+                            lineNumber: 0,
+                            codeUnit: 5,
+                        },
+                    ],
+                    [
+                        Inspection.NodeKind.Each,
+                        {
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                            codeUnit: 0,
+                        },
+                    ],
+                ];
+                expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+        });
+
         describe(`List`, () => {
             it(`|{1}`, () => {
                 const text: string = `{1}`;
