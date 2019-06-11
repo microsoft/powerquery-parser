@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { CommonError, Option, Result, ResultKind, Traverse } from "../../common";
+import { Option, ResultKind, Traverse } from "../../common";
 import { lexAndParse, LexAndParseOk, TriedLexAndParse } from "../../jobs";
 import { Ast } from "../../parser";
 
