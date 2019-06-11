@@ -46,6 +46,7 @@ export interface IXorNode<Kind, T> {
     readonly node: T;
 }
 
+// sets Node and NodesById for tryTraverse
 export function tryTraverseAst<State, StateType>(
     root: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -54,29 +55,19 @@ export function tryTraverseAst<State, StateType>(
     visitNodeFn: TVisitNodeFn<Ast.TNode, State, StateType, void>,
     expandNodesFn: TExpandNodesFn<Ast.TNode, NodeIdMap.Collection, State, StateType>,
     maybeEarlyExitFn: Option<TEarlyExitFn<Ast.TNode, State, StateType>>,
-): Result<StateType, CommonError.CommonError> {
-    try {
-        uncheckedTraverse<Ast.TNode, NodeIdMap.Collection, State, StateType>(
-            root,
-            nodeIdMapCollection,
-            state,
-            strategy,
-            visitNodeFn,
-            expandNodesFn,
-            maybeEarlyExitFn,
-        );
-        return {
-            kind: ResultKind.Ok,
-            value: state.result,
-        };
-    } catch (e) {
-        return {
-            kind: ResultKind.Err,
-            error: CommonError.ensureCommonError(e),
-        };
-    }
+): TriedTraverse<StateType> {
+    return tryTraverse<Ast.TNode, NodeIdMap.Collection, State, StateType>(
+        root,
+        nodeIdMapCollection,
+        state,
+        strategy,
+        visitNodeFn,
+        expandNodesFn,
+        maybeEarlyExitFn,
+    );
 }
 
+// sets Node and NodesById for tryTraverse
 export function tryTraverseXor<State, StateType>(
     root: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -85,11 +76,31 @@ export function tryTraverseXor<State, StateType>(
     visitNodeFn: TVisitNodeFn<TXorNode, State, StateType, void>,
     expandNodesFn: TExpandNodesFn<TXorNode, NodeIdMap.Collection, State, StateType>,
     maybeEarlyExitFn: Option<TEarlyExitFn<TXorNode, State, StateType>>,
-): Result<StateType, CommonError.CommonError> {
+): TriedTraverse<StateType> {
+    return tryTraverse<TXorNode, NodeIdMap.Collection, State, StateType>(
+        root,
+        nodeIdMapCollection,
+        state,
+        strategy,
+        visitNodeFn,
+        expandNodesFn,
+        maybeEarlyExitFn,
+    );
+}
+
+export function tryTraverse<Node, NodesById, State, StateType>(
+    root: Node,
+    nodesById: NodesById,
+    state: State & IState<StateType>,
+    strategy: VisitNodeStrategy,
+    visitNodeFn: TVisitNodeFn<Node, State, StateType, void>,
+    expandNodesFn: TExpandNodesFn<Node, NodesById, State, StateType>,
+    maybeEarlyExitFn: Option<TEarlyExitFn<Node, State, StateType>>,
+): TriedTraverse<StateType> {
     try {
-        uncheckedTraverse<TXorNode, NodeIdMap.Collection, State, StateType>(
+        traverseRecursion<Node, NodesById, State, StateType>(
             root,
-            nodeIdMapCollection,
+            nodesById,
             state,
             strategy,
             visitNodeFn,
@@ -105,31 +116,6 @@ export function tryTraverseXor<State, StateType>(
             kind: ResultKind.Err,
             error: CommonError.ensureCommonError(e),
         };
-    }
-}
-
-// Errors are uncaught. Catch them yourself as needed.
-export function uncheckedTraverse<Node, NodesById, State, StateType>(
-    node: Node,
-    nodesById: NodesById,
-    state: State & IState<StateType>,
-    strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<Node, State, StateType, void>,
-    expandNodesFn: TExpandNodesFn<Node, NodesById, State, StateType>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<Node, State, StateType>>,
-): void {
-    if (maybeEarlyExitFn && maybeEarlyExitFn(node, state)) {
-        return;
-    } else if (strategy === VisitNodeStrategy.BreadthFirst) {
-        visitNodeFn(node, state);
-    }
-
-    for (const child of expandNodesFn(state, node, nodesById)) {
-        uncheckedTraverse(child, nodesById, state, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
-    }
-
-    if (strategy === VisitNodeStrategy.DepthFirst) {
-        visitNodeFn(node, state);
     }
 }
 
@@ -207,5 +193,29 @@ export function expectExpandAllXorChildren<State, StateType>(
         }
         default:
             throw isNever(xorNode);
+    }
+}
+
+function traverseRecursion<Node, NodesById, State, StateType>(
+    node: Node,
+    nodesById: NodesById,
+    state: State & IState<StateType>,
+    strategy: VisitNodeStrategy,
+    visitNodeFn: TVisitNodeFn<Node, State, StateType, void>,
+    expandNodesFn: TExpandNodesFn<Node, NodesById, State, StateType>,
+    maybeEarlyExitFn: Option<TEarlyExitFn<Node, State, StateType>>,
+): void {
+    if (maybeEarlyExitFn && maybeEarlyExitFn(node, state)) {
+        return;
+    } else if (strategy === VisitNodeStrategy.BreadthFirst) {
+        visitNodeFn(node, state);
+    }
+
+    for (const child of expandNodesFn(state, node, nodesById)) {
+        traverseRecursion(child, nodesById, state, strategy, visitNodeFn, expandNodesFn, maybeEarlyExitFn);
+    }
+
+    if (strategy === VisitNodeStrategy.DepthFirst) {
+        visitNodeFn(node, state);
     }
 }

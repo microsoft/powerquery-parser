@@ -48,7 +48,7 @@ export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Result<Inspection, CommonError.CommonError> {
+): Traverse.TriedTraverse<Inspection> {
     const maybeXorNode: Option<Traverse.TXorNode> = maybeClosestXorNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeXorNode === undefined) {
         return {

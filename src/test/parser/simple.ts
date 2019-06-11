@@ -22,7 +22,7 @@ function expectLexAndParseOk(text: string): LexAndParseOk {
 
 function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
     const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
-    const triedTraverse: Result<Ast.NodeKind[], CommonError.CommonError> = Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<Ast.NodeKind[]> = Traverse.tryTraverseAst<
         CollectAllNodeKindState,
         Ast.NodeKind[]
     >(
@@ -46,7 +46,7 @@ function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
 
 function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
     const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
-    const triedTraverse: Result<Option<Ast.TNode>, CommonError.CommonError> = Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<Option<Ast.TNode>> = Traverse.tryTraverseAst<
         NthNodeOfKindState,
         Option<Ast.TNode>
     >(
