@@ -37,6 +37,7 @@ export interface Root {
 
 export interface Node {
     readonly nodeId: number;
+    readonly tokenIndexStart: number;
     readonly nodeKind: Ast.NodeKind;
     readonly maybeTokenStart: Option<Token>;
     maybeAstNode: Option<Ast.TNode>;
@@ -61,6 +62,7 @@ export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
     nodeId: number,
+    tokenIndexStart: number,
     maybeTokenStart: Option<Token>,
     maybeParentNode: Option<Node>,
 ): Node {
@@ -85,6 +87,7 @@ export function startContext(
 
     const node: Node = {
         nodeId,
+        tokenIndexStart,
         nodeKind,
         maybeTokenStart,
         maybeAstNode: undefined,

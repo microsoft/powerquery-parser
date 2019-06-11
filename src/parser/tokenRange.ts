@@ -6,8 +6,8 @@ export type TokenRangeMap<T> = Map<string, T>;
 
 // keep track of how many tokens and code units make up a TNode in the range of [start, end).
 export interface TokenRange {
-    readonly startTokenIndex: number;
-    readonly endTokenIndex: number; // exclusive
+    readonly tokenIndexStart: number;
+    readonly tokenIndexEnd: number; // exclusive
     readonly positionStart: TokenPosition;
     readonly positionEnd: TokenPosition;
     readonly hash: string;
