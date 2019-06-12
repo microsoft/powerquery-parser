@@ -5,12 +5,6 @@ import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 export type TriedTraverse<StateType> = Result<StateType, CommonError.CommonError>;
 
-// ParserContext keeps track of parent and children through a nodeId number,
-// it does not directly map to the parent/children instances as their change over time from
-// ParserContext.Node to Ast.TNode.
-// TXorNode adds the typing needed for traversal.
-export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
-
 export type TVisitNodeFn<Node, State, StateType, Return> = (node: Node, state: State & IState<StateType>) => Return;
 
 export type TVisitChildNodeFn<Node, State, StateType, Return> = (
@@ -27,11 +21,6 @@ export type TExpandNodesFn<Node, NodesById, State, StateType> = (
     collection: NodesById,
 ) => ReadonlyArray<Node>;
 
-export const enum XorNodeKind {
-    Ast = "Ast",
-    Context = "Context",
-}
-
 export const enum VisitNodeStrategy {
     BreadthFirst = "BreadthFirst",
     DepthFirst = "DepthFirst",
@@ -39,11 +28,6 @@ export const enum VisitNodeStrategy {
 
 export interface IState<T> {
     result: T;
-}
-
-export interface IXorNode<Kind, T> {
-    readonly kind: Kind & XorNodeKind;
-    readonly node: T;
 }
 
 // sets Node and NodesById for tryTraverse
@@ -69,15 +53,15 @@ export function tryTraverseAst<State, StateType>(
 
 // sets Node and NodesById for tryTraverse
 export function tryTraverseXor<State, StateType>(
-    root: TXorNode,
+    root: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
     state: State & IState<StateType>,
     strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<TXorNode, State, StateType, void>,
-    expandNodesFn: TExpandNodesFn<TXorNode, NodeIdMap.Collection, State, StateType>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<TXorNode, State, StateType>>,
+    visitNodeFn: TVisitNodeFn<NodeIdMap.TXorNode, State, StateType, void>,
+    expandNodesFn: TExpandNodesFn<NodeIdMap.TXorNode, NodeIdMap.Collection, State, StateType>,
+    maybeEarlyExitFn: Option<TEarlyExitFn<NodeIdMap.TXorNode, State, StateType>>,
 ): TriedTraverse<StateType> {
-    return tryTraverse<TXorNode, NodeIdMap.Collection, State, StateType>(
+    return tryTraverse<NodeIdMap.TXorNode, NodeIdMap.Collection, State, StateType>(
         root,
         nodeIdMapCollection,
         state,
@@ -138,21 +122,21 @@ export function expectExpandAllAstChildren<State, StateType>(
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
 export function expectExpandAllXorChildren<State, StateType>(
     _state: State & IState<StateType>,
-    xorNode: TXorNode,
+    xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<TXorNode> {
+): ReadonlyArray<NodeIdMap.TXorNode> {
     switch (xorNode.kind) {
-        case XorNodeKind.Ast: {
+        case NodeIdMap.XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
             return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
                 return {
-                    kind: XorNodeKind.Ast,
+                    kind: NodeIdMap.XorNodeKind.Ast,
                     node: childAstNode,
                 };
             });
         }
-        case XorNodeKind.Context: {
-            const result: TXorNode[] = [];
+        case NodeIdMap.XorNodeKind.Context: {
+            const result: NodeIdMap.TXorNode[] = [];
             const contextNode: ParserContext.Node = xorNode.node;
             const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
                 contextNode.nodeId,
@@ -164,7 +148,7 @@ export function expectExpandAllXorChildren<State, StateType>(
                     const maybeAstChild: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(childId);
                     if (maybeAstChild) {
                         result.push({
-                            kind: XorNodeKind.Ast,
+                            kind: NodeIdMap.XorNodeKind.Ast,
                             node: maybeAstChild,
                         });
                         continue;
@@ -175,7 +159,7 @@ export function expectExpandAllXorChildren<State, StateType>(
                     );
                     if (maybeContextChild) {
                         result.push({
-                            kind: XorNodeKind.Context,
+                            kind: NodeIdMap.XorNodeKind.Context,
                             node: maybeContextChild,
                         });
                         continue;

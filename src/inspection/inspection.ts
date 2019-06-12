@@ -15,9 +15,9 @@ import { Ast, NodeIdMap, ParserContext, TokenRange } from "../parser";
 export type TriedInspect = Traverse.TriedTraverse<Inspection>;
 
 export const enum NodeKind {
-    Record = "Record",
-    List = "List",
     Each = "EachExpression",
+    List = "List",
+    Record = "Record",
 }
 
 export interface Inspection {
@@ -49,20 +49,21 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): Traverse.TriedTraverse<Inspection> {
-    const maybeXorNode: Option<Traverse.TXorNode> = maybeClosestXorNode(position, nodeIdMapCollection, leafNodeIds);
+    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeClosestXorNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeXorNode === undefined) {
         return {
             kind: ResultKind.Ok,
             value: DefaultInspection,
         };
     }
-    const xorNode: Traverse.TXorNode = maybeXorNode;
+    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
 
     const state: State = {
         result: {
             nodes: [],
             scope: [],
         },
+        isEachEncountered: false,
         maybePreviousXorNode: undefined,
         position,
         nodeIdMapCollection,
@@ -80,7 +81,8 @@ export function tryFrom(
 }
 
 interface State extends Traverse.IState<Inspection> {
-    maybePreviousXorNode: Option<Traverse.TXorNode>;
+    maybePreviousXorNode: Option<NodeIdMap.TXorNode>;
+    isEachEncountered: boolean;
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -93,19 +95,19 @@ const DefaultInspection: Inspection = {
 
 function addParentXorNode(
     _state: State & Traverse.IState<Inspection>,
-    xorNode: Traverse.TXorNode,
+    xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<Traverse.TXorNode> {
+): ReadonlyArray<NodeIdMap.TXorNode> {
     let maybeParentNodeId: Option<number>;
 
     switch (xorNode.kind) {
-        case Traverse.XorNodeKind.Ast: {
+        case NodeIdMap.XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
             maybeParentNodeId = nodeIdMapCollection.parentIdById.get(astNode.id);
             break;
         }
 
-        case Traverse.XorNodeKind.Context: {
+        case NodeIdMap.XorNodeKind.Context: {
             const contextNode: ParserContext.Node = xorNode.node;
             maybeParentNodeId = nodeIdMapCollection.parentIdById.get(contextNode.nodeId);
             break;
@@ -123,7 +125,7 @@ function addParentXorNode(
     if (maybeAstParentNode) {
         return [
             {
-                kind: Traverse.XorNodeKind.Ast,
+                kind: NodeIdMap.XorNodeKind.Ast,
                 node: maybeAstParentNode,
             },
         ];
@@ -135,7 +137,7 @@ function addParentXorNode(
     if (maybeContextParentNode) {
         return [
             {
-                kind: Traverse.XorNodeKind.Context,
+                kind: NodeIdMap.XorNodeKind.Context,
                 node: maybeContextParentNode,
             },
         ];
@@ -144,14 +146,14 @@ function addParentXorNode(
     return [];
 }
 
-function inspectXorNode(xorNode: Traverse.TXorNode, state: State): void {
+function inspectXorNode(xorNode: NodeIdMap.TXorNode, state: State): void {
     switch (xorNode.kind) {
-        case Traverse.XorNodeKind.Ast: {
+        case NodeIdMap.XorNodeKind.Ast: {
             inspectAstNode(state, xorNode.node);
             break;
         }
 
-        case Traverse.XorNodeKind.Context: {
+        case NodeIdMap.XorNodeKind.Context: {
             inspectContextNode(state, xorNode.node);
             break;
         }
@@ -164,6 +166,10 @@ function inspectXorNode(xorNode: Traverse.TXorNode, state: State): void {
 function inspectAstNode(state: State, node: Ast.TNode): void {
     switch (node.kind) {
         case Ast.NodeKind.EachExpression: {
+            if (!state.isEachEncountered) {
+                state.result.scope.push("_");
+            }
+
             const tokenRange: TokenRange = node.tokenRange;
             state.result.nodes.push({
                 kind: NodeKind.Each,
@@ -217,6 +223,11 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
 function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.nodeKind) {
         case Ast.NodeKind.EachExpression: {
+            if (!state.isEachEncountered) {
+                state.result.scope.push("_");
+            }
+            state.isEachEncountered = true;
+
             state.result.nodes.push({
                 kind: NodeKind.Each,
                 maybePositionStart: node.maybeTokenStart !== undefined ? node.maybeTokenStart.positionStart : undefined,
@@ -282,37 +293,11 @@ function maybeClosestXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Option<Traverse.TXorNode> {
-    let maybeClosestNode: Option<Traverse.TXorNode>;
+): Option<NodeIdMap.TXorNode> {
+    let maybeClosestNode: Option<NodeIdMap.TXorNode>;
 
     for (const nodeId of leafNodeIds) {
-        let maybeNewXorNode: Option<Traverse.TXorNode>;
-
-        const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
-        if (maybeAstNode) {
-            const astNode: Ast.TNode = maybeAstNode;
-            maybeNewXorNode = {
-                kind: Traverse.XorNodeKind.Ast,
-                node: astNode,
-            };
-        }
-
-        const maybeContextNode: Option<ParserContext.Node> = nodeIdMapCollection.contextNodeById.get(nodeId);
-        if (maybeContextNode) {
-            const contextNode: ParserContext.Node = maybeContextNode;
-            maybeNewXorNode = {
-                kind: Traverse.XorNodeKind.Context,
-                node: contextNode,
-            };
-        }
-
-        // couldn't find nodeId in either astNodesById nor contextNodesById
-        if (maybeNewXorNode === undefined) {
-            const details: {} = { nodeId };
-            throw new CommonError.InvariantError(`nodeId wasn't a astNode nor contextNode`, details);
-        }
-        const newNode: Traverse.TXorNode = maybeNewXorNode;
-
+        const newNode: NodeIdMap.TXorNode = NodeIdMap.expectXorNode(nodeIdMapCollection, nodeId);
         maybeClosestNode = closerXorNode(position, maybeClosestNode, newNode);
     }
 
@@ -322,9 +307,9 @@ function maybeClosestXorNode(
 // Assumes both TXorNode parameters are leaf nodes.
 function closerXorNode(
     position: Position,
-    maybeCurrentNode: Option<Traverse.TXorNode>,
-    newNode: Traverse.TXorNode,
-): Option<Traverse.TXorNode> {
+    maybeCurrentNode: Option<NodeIdMap.TXorNode>,
+    newNode: NodeIdMap.TXorNode,
+): Option<NodeIdMap.TXorNode> {
     const newNodePositionStart: TokenPosition = expectTokenStart(newNode);
 
     // If currentToken isn't set and newNode's start position is <= position: return newToken
@@ -341,7 +326,7 @@ function closerXorNode(
             return newNode;
         }
     }
-    const currentNode: Traverse.TXorNode = maybeCurrentNode;
+    const currentNode: NodeIdMap.TXorNode = maybeCurrentNode;
     const currentNodePositionStart: TokenPosition = expectTokenStart(currentNode);
 
     // Verifies newTokenPositionStart starts no later than the position argument.
@@ -359,12 +344,12 @@ function closerXorNode(
     return currentNodePositionStart.codeUnit < newNodePositionStart.codeUnit ? newNode : currentNode;
 }
 
-function expectTokenStart(xorNode: Traverse.TXorNode): TokenPosition {
+function expectTokenStart(xorNode: NodeIdMap.TXorNode): TokenPosition {
     switch (xorNode.kind) {
-        case Traverse.XorNodeKind.Ast:
+        case NodeIdMap.XorNodeKind.Ast:
             return xorNode.node.tokenRange.positionStart;
 
-        case Traverse.XorNodeKind.Context: {
+        case NodeIdMap.XorNodeKind.Context: {
             const contextNode: ParserContext.Node = xorNode.node;
             if (!contextNode.maybeTokenStart) {
                 const details: {} = { nodeId: contextNode.nodeId };
