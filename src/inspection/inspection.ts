@@ -99,8 +99,7 @@ function addParentXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
     let maybeParentNodeId: Option<number>;
-
-    switch (xorNode.kind) {
+    switch (xorNode.xorKind) {
         case NodeIdMap.XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
             maybeParentNodeId = nodeIdMapCollection.parentIdById.get(astNode.id);
@@ -109,7 +108,7 @@ function addParentXorNode(
 
         case NodeIdMap.XorNodeKind.Context: {
             const contextNode: ParserContext.Node = xorNode.node;
-            maybeParentNodeId = nodeIdMapCollection.parentIdById.get(contextNode.nodeId);
+            maybeParentNodeId = nodeIdMapCollection.parentIdById.get(contextNode.id);
             break;
         }
 
@@ -120,34 +119,43 @@ function addParentXorNode(
     if (maybeParentNodeId === undefined) {
         return [];
     }
+    const parentNodeId: number = maybeParentNodeId;
 
-    const maybeAstParentNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(maybeParentNodeId);
-    if (maybeAstParentNode) {
-        return [
-            {
-                kind: NodeIdMap.XorNodeKind.Ast,
-                node: maybeAstParentNode,
-            },
-        ];
+    const maybeParentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNode(nodeIdMapCollection, parentNodeId);
+    if (maybeParentXorNode === undefined) {
+        return [];
     }
+    const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
 
-    const maybeContextParentNode: Option<ParserContext.Node> = nodeIdMapCollection.contextNodeById.get(
-        maybeParentNodeId,
-    );
-    if (maybeContextParentNode) {
-        return [
-            {
-                kind: NodeIdMap.XorNodeKind.Context,
-                node: maybeContextParentNode,
-            },
-        ];
+    switch (parentXorNode.xorKind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const parentAstNode: Ast.TNode = parentXorNode.node;
+            return [
+                {
+                    xorKind: NodeIdMap.XorNodeKind.Ast,
+                    nodeKind: parentAstNode.kind,
+                    node: parentAstNode,
+                },
+            ];
+        }
+        case NodeIdMap.XorNodeKind.Context: {
+            const parentContextNode: ParserContext.Node = parentXorNode.node;
+            return [
+                {
+                    xorKind: NodeIdMap.XorNodeKind.Context,
+                    nodeKind: parentContextNode.kind,
+                    node: parentContextNode,
+                },
+            ];
+        }
+
+        default:
+            throw isNever(parentXorNode);
     }
-
-    return [];
 }
 
 function inspectXorNode(xorNode: NodeIdMap.TXorNode, state: State): void {
-    switch (xorNode.kind) {
+    switch (xorNode.xorKind) {
         case NodeIdMap.XorNodeKind.Ast: {
             inspectAstNode(state, xorNode.node);
             break;
@@ -237,7 +245,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
 }
 
 function inspectContextNode(state: State, node: ParserContext.Node): void {
-    switch (node.nodeKind) {
+    switch (node.kind) {
         case Ast.NodeKind.EachExpression: {
             if (!state.isEachEncountered) {
                 state.result.scope.push("_");
@@ -361,14 +369,14 @@ function closerXorNode(
 }
 
 function expectTokenStart(xorNode: NodeIdMap.TXorNode): TokenPosition {
-    switch (xorNode.kind) {
+    switch (xorNode.xorKind) {
         case NodeIdMap.XorNodeKind.Ast:
             return xorNode.node.tokenRange.positionStart;
 
         case NodeIdMap.XorNodeKind.Context: {
             const contextNode: ParserContext.Node = xorNode.node;
             if (!contextNode.maybeTokenStart) {
-                const details: {} = { nodeId: contextNode.nodeId };
+                const details: {} = { nodeId: contextNode.id };
                 throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
             }
             return contextNode.maybeTokenStart.positionStart;
@@ -396,12 +404,12 @@ function isParentOfNodeKind(
     }
     const parent: NodeIdMap.TXorNode = maybeParentNode;
 
-    switch (parent.kind) {
+    switch (parent.xorKind) {
         case NodeIdMap.XorNodeKind.Ast:
             return parent.node.kind === parentNodeKind;
 
         case NodeIdMap.XorNodeKind.Context:
-            return parent.node.nodeKind === parentNodeKind;
+            return parent.node.kind === parentNodeKind;
 
         default:
             throw isNever(parent);

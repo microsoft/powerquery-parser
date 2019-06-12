@@ -125,12 +125,13 @@ export function expectExpandAllXorChildren<State, StateType>(
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    switch (xorNode.kind) {
+    switch (xorNode.xorKind) {
         case NodeIdMap.XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
             return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
                 return {
-                    kind: NodeIdMap.XorNodeKind.Ast,
+                    xorKind: NodeIdMap.XorNodeKind.Ast,
+                    nodeKind: astNode.kind,
                     node: childAstNode,
                 };
             });
@@ -138,18 +139,18 @@ export function expectExpandAllXorChildren<State, StateType>(
         case NodeIdMap.XorNodeKind.Context: {
             const result: NodeIdMap.TXorNode[] = [];
             const contextNode: ParserContext.Node = xorNode.node;
-            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
-                contextNode.nodeId,
-            );
+            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(contextNode.id);
 
             if (maybeChildIds !== undefined) {
                 const childIds: ReadonlyArray<number> = maybeChildIds;
                 for (const childId of childIds) {
                     const maybeAstChild: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(childId);
                     if (maybeAstChild) {
+                        const astChild: Ast.TNode = maybeAstChild;
                         result.push({
-                            kind: NodeIdMap.XorNodeKind.Ast,
-                            node: maybeAstChild,
+                            xorKind: NodeIdMap.XorNodeKind.Ast,
+                            nodeKind: astChild.kind,
+                            node: astChild,
                         });
                         continue;
                     }
@@ -158,9 +159,11 @@ export function expectExpandAllXorChildren<State, StateType>(
                         childId,
                     );
                     if (maybeContextChild) {
+                        const contextChild: ParserContext.Node = maybeContextChild;
                         result.push({
-                            kind: NodeIdMap.XorNodeKind.Context,
-                            node: maybeContextChild,
+                            xorKind: NodeIdMap.XorNodeKind.Context,
+                            nodeKind: contextChild.kind,
+                            node: contextChild,
                         });
                         continue;
                     }

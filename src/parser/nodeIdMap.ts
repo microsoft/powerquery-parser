@@ -20,7 +20,8 @@ export type ChildIdsById = NumberMap<ReadonlyArray<number>>;
 export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
 
 export interface IXorNode<Kind, T> {
-    readonly kind: Kind & XorNodeKind;
+    readonly xorKind: Kind & XorNodeKind;
+    readonly nodeKind: Ast.NodeKind;
     readonly node: T;
 }
 
@@ -44,7 +45,8 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     if (maybeAstNode) {
         const astNode: Ast.TNode = maybeAstNode;
         return {
-            kind: XorNodeKind.Ast,
+            xorKind: XorNodeKind.Ast,
+            nodeKind: astNode.kind,
             node: astNode,
         };
     }
@@ -53,7 +55,8 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     if (maybeContextNode) {
         const contextNode: ParserContext.Node = maybeContextNode;
         return {
-            kind: XorNodeKind.Context,
+            xorKind: XorNodeKind.Context,
+            nodeKind: contextNode.kind,
             node: contextNode,
         };
     }

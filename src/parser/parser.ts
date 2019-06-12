@@ -1174,10 +1174,10 @@ export class Parser {
 
         // Update mappings for head.
         nodeIdMapCollection.astNodeById.set(head.id, head);
-        nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.nodeId);
+        nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
 
         // Mark head as a child of the recursive primary expression context (currentContextNode).
-        nodeIdMapCollection.childIdsById.set(currentContextNode.nodeId, [head.id]);
+        nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
 
         // Update start positions for recursive primary expression context
         const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
@@ -2088,7 +2088,7 @@ export class Parser {
                 );
             } else {
                 const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
-                nodeId = currentContextNode.nodeId;
+                nodeId = currentContextNode.id;
             }
         } else {
             nodeId = maybeNodeId;
@@ -2166,12 +2166,12 @@ export class Parser {
             tokenIndexEnd,
             positionStart: tokenStart.positionStart,
             positionEnd: tokenEnd.positionEnd,
-            hash: tokenRangeHashFrom(currentContextNode.nodeKind, tokenStart.positionStart, tokenEnd.positionEnd),
+            hash: tokenRangeHashFrom(currentContextNode.kind, tokenStart.positionStart, tokenEnd.positionEnd),
         };
 
         const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
         return {
-            id: contextNode.nodeId,
+            id: contextNode.id,
             tokenRange,
         };
     }
@@ -2197,7 +2197,7 @@ export class Parser {
             tokenIndex: this.tokenIndex,
             contextState: ParserContext.deepCopy(this.contextState),
             maybeContextNodeId:
-                this.maybeCurrentContextNode !== undefined ? this.maybeCurrentContextNode.nodeId : undefined,
+                this.maybeCurrentContextNode !== undefined ? this.maybeCurrentContextNode.id : undefined,
         };
     }
 
