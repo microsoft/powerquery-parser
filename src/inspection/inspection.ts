@@ -175,6 +175,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
     switch (node.kind) {
         case Ast.NodeKind.EachExpression: {
             if (!state.isEachEncountered) {
+                state.isEachEncountered = true;
                 state.result.scope.push("_");
             }
 
@@ -248,9 +249,9 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
         case Ast.NodeKind.EachExpression: {
             if (!state.isEachEncountered) {
+                state.isEachEncountered = true;
                 state.result.scope.push("_");
             }
-            state.isEachEncountered = true;
 
             state.result.nodes.push({
                 kind: NodeKind.Each,
