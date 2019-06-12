@@ -74,6 +74,36 @@ function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expecte
     expect(actual).deep.equal(expected);
 }
 
+function expectParserOkScopeEqual(text: string, position: Inspection.Position, expected: ReadonlyArray<string>): void {
+    const parseOk: Parser.ParseOk = expectParseOk(text);
+    const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
+        position,
+        parseOk.nodeIdMapCollection,
+        parseOk.leafNodeIds,
+    );
+    expectScopeEqual(triedInspect, expected);
+}
+
+// function expectParserErrScopeEqual(text: string, position: Inspection.Position, expected: AbridgedNode): void {
+//     const parserError: ParserError.ParserError = expectParseErr(text);
+//     const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
+//         position,
+//         parserError.context.nodeIdMapCollection,
+//         parserError.context.leafNodeIds,
+//     );
+//     expectAbridgedNodesEqual(triedInspect, expected);
+// }
+
+function expectScopeEqual(triedInspect: Inspection.TriedInspect, expected: ReadonlyArray<string>): void {
+    if (!(triedInspect.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok`);
+    }
+    const inspection: Inspection.Inspection = triedInspect.value;
+    const actual: ReadonlyArray<string> = inspection.scope;
+
+    expect(actual).deep.equal(expected);
+}
+
 describe(`Inspection`, () => {
     describe(`Nodes`, () => {
         describe(`Each`, () => {
@@ -549,6 +579,72 @@ describe(`Inspection`, () => {
                     ],
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
+            });
+        });
+    });
+
+    describe(`Scope`, () => {
+        describe(`Identifier`, () => {
+            it(`|foo`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`foo|`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                };
+                const expected: ReadonlyArray<string> = [`foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`f|oo`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: ReadonlyArray<string> = [`foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+        });
+
+        describe(`IdentifierExpression`, () => {
+            it(`|@foo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`@foo|`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: ReadonlyArray<string> = [`@foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`@|foo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: ReadonlyArray<string> = [`@foo`];
+                expectParserOkScopeEqual(text, position, expected);
             });
         });
     });

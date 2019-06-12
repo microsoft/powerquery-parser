@@ -179,6 +179,22 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
+        case Ast.NodeKind.Identifier:
+            if (!isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression)) {
+                state.result.scope.push(node.literal);
+            }
+            break;
+
+        case Ast.NodeKind.IdentifierExpression: {
+            let identifier: string = node.identifier.literal;
+            if (node.maybeInclusiveConstant) {
+                const inclusiveConstant: Ast.Constant = node.maybeInclusiveConstant;
+                identifier = inclusiveConstant.literal + identifier;
+            }
+            state.result.scope.push(identifier);
+            break;
+        }
+
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral: {
             // Check if position is on closeWrapperConstant, eg. '}'
@@ -360,5 +376,34 @@ function expectTokenStart(xorNode: NodeIdMap.TXorNode): TokenPosition {
 
         default:
             throw isNever(xorNode);
+    }
+}
+
+function isParentOfNodeKind(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    childId: number,
+    parentNodeKind: Ast.NodeKind,
+): boolean {
+    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
+    if (maybeParentNodeId === undefined) {
+        return false;
+    }
+    const parentNodeId: number = maybeParentNodeId;
+
+    const maybeParentNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNode(nodeIdMapCollection, parentNodeId);
+    if (maybeParentNode === undefined) {
+        return false;
+    }
+    const parent: NodeIdMap.TXorNode = maybeParentNode;
+
+    switch (parent.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return parent.node.kind === parentNodeKind;
+
+        case NodeIdMap.XorNodeKind.Context:
+            return parent.node.nodeKind === parentNodeKind;
+
+        default:
+            throw isNever(parent);
     }
 }
