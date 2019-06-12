@@ -261,6 +261,19 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
             break;
         }
 
+        case Ast.NodeKind.Identifier:
+            if (!isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression)) {
+                const maybeAstNode: Option<Ast.Identifier> = maybeCastAstNode<Ast.Identifier, Ast.NodeKind.Identifier>(
+                    node,
+                    Ast.NodeKind.Identifier,
+                );
+                if (maybeAstNode !== undefined) {
+                    const astNode: Ast.Identifier = maybeAstNode;
+                    state.result.scope.push(astNode.literal);
+                }
+            }
+            break;
+
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral: {
             state.result.nodes.push({
@@ -414,5 +427,19 @@ function isParentOfNodeKind(
 
         default:
             throw isNever(parent);
+    }
+}
+
+function maybeCastAstNode<T, Kind>(
+    contextNode: ParserContext.Node,
+    nodeKind: Ast.NodeKind & Kind,
+): Option<T & Ast.TNode> {
+    if (contextNode.maybeAstNode === undefined) {
+        return undefined;
+    }
+    const astNode: Ast.TNode = contextNode.maybeAstNode;
+
+    if (astNode.kind === nodeKind) {
+        return astNode as T & Ast.TNode;
     }
 }
