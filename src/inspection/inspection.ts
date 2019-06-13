@@ -263,10 +263,10 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
 
         case Ast.NodeKind.Identifier:
             if (!isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression)) {
-                const maybeAstNode: Option<Ast.Identifier> = maybeCastAstNode<Ast.Identifier, Ast.NodeKind.Identifier>(
-                    node,
-                    Ast.NodeKind.Identifier,
-                );
+                const maybeAstNode: Option<Ast.Identifier> = maybeCastAsAstNode<
+                    Ast.Identifier,
+                    Ast.NodeKind.Identifier
+                >(node, Ast.NodeKind.Identifier);
                 if (maybeAstNode !== undefined) {
                     const astNode: Ast.Identifier = maybeAstNode;
                     state.result.scope.push(astNode.literal);
@@ -275,8 +275,46 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
             break;
 
         case Ast.NodeKind.IdentifierExpression: {
-            // const identifier: string = "";
-            // const children: ReadonlyArray<NodeIdMap.TXorNode> = contextChildren(state.nodeIdMapCollection, node);
+            let identifier: string = "";
+            const children: ReadonlyArray<NodeIdMap.TXorNode> = contextChildren(state.nodeIdMapCollection, node);
+
+            if (children.length === 1 || children.length === 2) {
+                const firstChild: NodeIdMap.TXorNode = children[0];
+                if (firstChild.xorKind === NodeIdMap.XorNodeKind.Ast) {
+                    switch (firstChild.node.kind) {
+                        // inclusive constant `@`
+                        case Ast.NodeKind.Constant:
+                        // no inclusive constant
+                        case Ast.NodeKind.Identifier:
+                            identifier += firstChild.node.literal;
+                            break;
+
+                        default:
+                            const details: {} = { nodeKind: firstChild.node.kind };
+                            throw new CommonError.InvariantError(
+                                `identifierExpression has invalid Ast.NodeKind`,
+                                details,
+                            );
+                    }
+                }
+            }
+
+            if (children.length === 2) {
+                const secondChild: NodeIdMap.TXorNode = children[1];
+                if (secondChild.xorKind === NodeIdMap.XorNodeKind.Ast) {
+                    if (secondChild.node.kind !== Ast.NodeKind.Identifier) {
+                        const details: {} = { nodeKind: secondChild.node.kind };
+                        throw new CommonError.InvariantError(`identifierExpression has invalid Ast.NodeKind`, details);
+                    }
+
+                    identifier += secondChild.node.literal;
+                }
+            }
+
+            if (identifier) {
+                state.result.scope.push(identifier);
+            }
+
             break;
         }
 
@@ -436,7 +474,7 @@ function isParentOfNodeKind(
     }
 }
 
-function maybeCastAstNode<T, Kind>(
+function maybeCastAsAstNode<T, Kind>(
     contextNode: ParserContext.Node,
     nodeKind: Ast.NodeKind & Kind,
 ): Option<T & Ast.TNode> {
@@ -452,15 +490,15 @@ function maybeCastAstNode<T, Kind>(
     }
 }
 
-// function contextChildren(
-//     nodeIdMapCollection: NodeIdMap.Collection,
-//     parent: ParserContext.Node,
-// ): ReadonlyArray<NodeIdMap.TXorNode> {
-//     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parent.id);
-//     if (maybeChildIds === undefined) {
-//         return [];
-//     } else {
-//         const childIds: ReadonlyArray<number> = maybeChildIds;
-//         return NodeIdMap.expectXorNodes(nodeIdMapCollection, childIds);
-//     }
-// }
+function contextChildren(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    parent: ParserContext.Node,
+): ReadonlyArray<NodeIdMap.TXorNode> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parent.id);
+    if (maybeChildIds === undefined) {
+        return [];
+    } else {
+        const childIds: ReadonlyArray<number> = maybeChildIds;
+        return NodeIdMap.expectXorNodes(nodeIdMapCollection, childIds);
+    }
+}
