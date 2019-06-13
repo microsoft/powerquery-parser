@@ -274,6 +274,12 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
             }
             break;
 
+        case Ast.NodeKind.IdentifierExpression: {
+            // const identifier: string = "";
+            // const children: ReadonlyArray<NodeIdMap.TXorNode> = contextChildren(state.nodeIdMapCollection, node);
+            break;
+        }
+
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral: {
             state.result.nodes.push({
@@ -441,5 +447,20 @@ function maybeCastAstNode<T, Kind>(
 
     if (astNode.kind === nodeKind) {
         return astNode as T & Ast.TNode;
+    } else {
+        return undefined;
     }
 }
+
+// function contextChildren(
+//     nodeIdMapCollection: NodeIdMap.Collection,
+//     parent: ParserContext.Node,
+// ): ReadonlyArray<NodeIdMap.TXorNode> {
+//     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parent.id);
+//     if (maybeChildIds === undefined) {
+//         return [];
+//     } else {
+//         const childIds: ReadonlyArray<number> = maybeChildIds;
+//         return NodeIdMap.expectXorNodes(nodeIdMapCollection, childIds);
+//     }
+// }
