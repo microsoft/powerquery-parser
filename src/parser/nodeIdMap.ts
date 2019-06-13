@@ -74,10 +74,14 @@ export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): 
     return maybeNode;
 }
 
-export function expectChildIds(
-    childIdsById: Map<number, ReadonlyArray<number>>,
-    nodeId: number,
-): ReadonlyArray<number> {
+export function expectXorNodes(
+    nodeIdMapCollection: Collection,
+    nodeIds: ReadonlyArray<number>,
+): ReadonlyArray<TXorNode> {
+    return nodeIds.map(nodeId => expectXorNode(nodeIdMapCollection, nodeId));
+}
+
+export function expectChildIds(childIdsById: ChildIdsById, nodeId: number): ReadonlyArray<number> {
     return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
 }
 
