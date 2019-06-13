@@ -99,7 +99,7 @@ function addParentXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
     let maybeParentNodeId: Option<number>;
-    switch (xorNode.xorKind) {
+    switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
             maybeParentNodeId = nodeIdMapCollection.parentIdById.get(astNode.id);
@@ -127,13 +127,12 @@ function addParentXorNode(
     }
     const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
 
-    switch (parentXorNode.xorKind) {
+    switch (parentXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast: {
             const parentAstNode: Ast.TNode = parentXorNode.node;
             return [
                 {
-                    xorKind: NodeIdMap.XorNodeKind.Ast,
-                    nodeKind: parentAstNode.kind,
+                    kind: NodeIdMap.XorNodeKind.Ast,
                     node: parentAstNode,
                 },
             ];
@@ -142,8 +141,7 @@ function addParentXorNode(
             const parentContextNode: ParserContext.Node = parentXorNode.node;
             return [
                 {
-                    xorKind: NodeIdMap.XorNodeKind.Context,
-                    nodeKind: parentContextNode.kind,
+                    kind: NodeIdMap.XorNodeKind.Context,
                     node: parentContextNode,
                 },
             ];
@@ -155,7 +153,7 @@ function addParentXorNode(
 }
 
 function inspectXorNode(xorNode: NodeIdMap.TXorNode, state: State): void {
-    switch (xorNode.xorKind) {
+    switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast: {
             inspectAstNode(state, xorNode.node);
             break;
@@ -280,7 +278,7 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
 
             if (children.length === 1 || children.length === 2) {
                 const firstChild: NodeIdMap.TXorNode = children[0];
-                if (firstChild.xorKind === NodeIdMap.XorNodeKind.Ast) {
+                if (firstChild.kind === NodeIdMap.XorNodeKind.Ast) {
                     switch (firstChild.node.kind) {
                         // inclusive constant `@`
                         case Ast.NodeKind.Constant:
@@ -301,7 +299,7 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
 
             if (children.length === 2) {
                 const secondChild: NodeIdMap.TXorNode = children[1];
-                if (secondChild.xorKind === NodeIdMap.XorNodeKind.Ast) {
+                if (secondChild.kind === NodeIdMap.XorNodeKind.Ast) {
                     if (secondChild.node.kind !== Ast.NodeKind.Identifier) {
                         const details: {} = { nodeKind: secondChild.node.kind };
                         throw new CommonError.InvariantError(`identifierExpression has invalid Ast.NodeKind`, details);
@@ -427,7 +425,7 @@ function closerXorNode(
 }
 
 function expectTokenStart(xorNode: NodeIdMap.TXorNode): TokenPosition {
-    switch (xorNode.xorKind) {
+    switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
             return xorNode.node.tokenRange.positionStart;
 
@@ -462,7 +460,7 @@ function isParentOfNodeKind(
     }
     const parent: NodeIdMap.TXorNode = maybeParentNode;
 
-    switch (parent.xorKind) {
+    switch (parent.kind) {
         case NodeIdMap.XorNodeKind.Ast:
             return parent.node.kind === parentNodeKind;
 

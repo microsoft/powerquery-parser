@@ -125,13 +125,12 @@ export function expectExpandAllXorChildren<State, StateType>(
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    switch (xorNode.xorKind) {
+    switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
             return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
                 return {
-                    xorKind: NodeIdMap.XorNodeKind.Ast,
-                    nodeKind: astNode.kind,
+                    kind: NodeIdMap.XorNodeKind.Ast,
                     node: childAstNode,
                 };
             });
@@ -148,8 +147,7 @@ export function expectExpandAllXorChildren<State, StateType>(
                     if (maybeAstChild) {
                         const astChild: Ast.TNode = maybeAstChild;
                         result.push({
-                            xorKind: NodeIdMap.XorNodeKind.Ast,
-                            nodeKind: astChild.kind,
+                            kind: NodeIdMap.XorNodeKind.Ast,
                             node: astChild,
                         });
                         continue;
@@ -161,8 +159,7 @@ export function expectExpandAllXorChildren<State, StateType>(
                     if (maybeContextChild) {
                         const contextChild: ParserContext.Node = maybeContextChild;
                         result.push({
-                            xorKind: NodeIdMap.XorNodeKind.Context,
-                            nodeKind: contextChild.kind,
+                            kind: NodeIdMap.XorNodeKind.Context,
                             node: contextChild,
                         });
                         continue;
