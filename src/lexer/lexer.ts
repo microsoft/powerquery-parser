@@ -17,12 +17,12 @@ import { Keyword } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
 // The lexer
-//  * Takes a mostly functional approach, plus a few throws to propagate errors
-//  * Splits up text by line terminator, allowing line-by-line lexing
+//  * Takes a mostly functional approach, plus a few throws to propagate errors.
+//  * Splits up text on line terminators, allowing lexing on a per-line basis.
 
-// Call Lexer.stateFrom to instantiate a state instance
-// Lexer functions returns a new state object
-// LexerSnapshot.tryFrom freezes a lexer state
+// Call Lexer.stateFrom to instantiate a new State instance.
+// Lexer functions will return a new state object.
+// Call LexerSnapshot.tryFrom to perform a final validation pass before freezing the State.
 
 export type TriedLexerUpdate = Result<State, LexerError.LexerError>;
 
@@ -39,11 +39,12 @@ export const enum LineKind {
     Untouched = "Untouched",
 }
 
-// there are two categories of line tokenization contexts:
-//  * tokenize the entire line as usual
-//  * the line is a contiuation of a multiline token, eg. `"foo \n bar"`
+// A line's LineMode determines how its tokenized.
+// There are two broad categories for a LineMode:
+//  * Atomic (single) line tokenization (default)
+//  * Continuation of a multiline token (eg. multiline comment)
 //
-// comment, quoted identifier, and string are all multiline contexts
+// All LineModes other than Default are a type of multiline tokenization.
 export const enum LineMode {
     Comment = "Comment",
     Default = "Default",
@@ -59,29 +60,29 @@ export interface ILexerLine {
     readonly kind: LineKind;
     readonly text: string;
     readonly lineTerminator: string; // must be a valid Power Query newline character
-    readonly lineModeStart: LineMode; // previousLine's lineModeEnd || LineMode.Default
+    readonly lineModeStart: LineMode; // (the previous TLine's lineModeEnd) || LineMode.Default
     readonly lineModeEnd: LineMode;
     readonly tokens: ReadonlyArray<LineToken>;
 }
 
-// an error was thrown immediately, nothing was tokenized
+// An error was thrown before anything could be tokenized.
 export interface ErrorLine extends ILexerLine {
     readonly kind: LineKind.Error;
     readonly error: LexerError.TLexerError;
 }
 
-// the entire line was tokenized without issue
+// The line was tokenized without issue.
 export interface TouchedLine extends ILexerLine {
     readonly kind: LineKind.Touched;
 }
 
-// some tokens were read, but before eof was reached an error was thrown
+// Some tokens were read before an error was thrown.
 export interface TouchedWithErrorLine extends ILexerLine {
     readonly kind: LineKind.TouchedWithError;
     readonly error: LexerError.TLexerError;
 }
 
-// an line that has yet to be lexed
+// The line hasn't been lexed yet.
 export interface UntouchedLine extends ILexerLine {
     readonly kind: LineKind.Untouched;
 }
@@ -296,12 +297,14 @@ interface LineModeAlteringRead {
 
 // Attributes can't be readyonly.
 // In `updateRange` text is updated by adding existing existing lines as a suffix/prefix.
-// In `splitOnLineTerminators` lineTerminator is updated as the last must have no terminator, ""
+// In `splitOnLineTerminators` lineTerminator is updated as the last must have no terminator, eg. ""
 interface SplitLine {
     text: string;
     lineTerminator: string;
 }
 
+// Takes a string and splits it on all valid Power Query terminators.
+// The split lines retain what newline was used to create the split.
 function splitOnLineTerminators(startingText: string): SplitLine[] {
     let lines: SplitLine[] = startingText.split("\r\n").map((lineText: string) => {
         return {
@@ -390,57 +393,6 @@ function tokenizedLinesFrom(splitLines: ReadonlyArray<SplitLine>, previousLineMo
     return tokenizedLines;
 }
 
-// takes the return from a tokenizeX function to updates the line's state
-function updateLineState(
-    line: TLine,
-    tokenizePartialResult: PartialResult<TokenizeChanges, LexerError.TLexerError>,
-): TLine {
-    switch (tokenizePartialResult.kind) {
-        case PartialResultKind.Ok: {
-            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
-            const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
-
-            return {
-                kind: LineKind.Touched,
-                text: line.text,
-                lineTerminator: line.lineTerminator,
-                lineModeStart: line.lineModeStart,
-                lineModeEnd: tokenizeChanges.lineModeEnd,
-                tokens: newTokens,
-            };
-        }
-
-        case PartialResultKind.Partial: {
-            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
-            const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
-
-            return {
-                kind: LineKind.TouchedWithError,
-                text: line.text,
-                lineTerminator: line.lineTerminator,
-                lineModeStart: line.lineModeStart,
-                lineModeEnd: tokenizeChanges.lineModeEnd,
-                tokens: newTokens,
-                error: tokenizePartialResult.error,
-            };
-        }
-
-        case PartialResultKind.Err:
-            return {
-                kind: LineKind.Error,
-                text: line.text,
-                lineModeStart: line.lineModeStart,
-                lineTerminator: line.lineTerminator,
-                lineModeEnd: line.lineModeEnd,
-                tokens: line.tokens,
-                error: tokenizePartialResult.error,
-            };
-
-        default:
-            throw isNever(tokenizePartialResult);
-    }
-}
-
 // If an earlier line changed its lineModeEnd, eg. inserting a `"` to start a string literal,
 // then the proceeding lines would need to be retokenized.
 // Stops retokenizing when previous.lineModeEnd !== current.lineModeStart.
@@ -480,7 +432,7 @@ function retokenizeLines(
     }
 }
 
-// The main function of the lexer's tokenizer
+// The main function of the lexer's tokenizer.
 function tokenize(line: TLine, lineNumber: number): TLine {
     switch (line.kind) {
         // Cannot tokenize something that ended with an error,
@@ -627,6 +579,57 @@ function tokenize(line: TLine, lineNumber: number): TLine {
     }
 
     return updateLineState(line, partialTokenizeResult);
+}
+
+// Takes the return from a tokenizeX function to updates the TLine's state.
+function updateLineState(
+    line: TLine,
+    tokenizePartialResult: PartialResult<TokenizeChanges, LexerError.TLexerError>,
+): TLine {
+    switch (tokenizePartialResult.kind) {
+        case PartialResultKind.Ok: {
+            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+            const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
+
+            return {
+                kind: LineKind.Touched,
+                text: line.text,
+                lineTerminator: line.lineTerminator,
+                lineModeStart: line.lineModeStart,
+                lineModeEnd: tokenizeChanges.lineModeEnd,
+                tokens: newTokens,
+            };
+        }
+
+        case PartialResultKind.Partial: {
+            const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
+            const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
+
+            return {
+                kind: LineKind.TouchedWithError,
+                text: line.text,
+                lineTerminator: line.lineTerminator,
+                lineModeStart: line.lineModeStart,
+                lineModeEnd: tokenizeChanges.lineModeEnd,
+                tokens: newTokens,
+                error: tokenizePartialResult.error,
+            };
+        }
+
+        case PartialResultKind.Err:
+            return {
+                kind: LineKind.Error,
+                text: line.text,
+                lineModeStart: line.lineModeStart,
+                lineTerminator: line.lineTerminator,
+                lineModeEnd: line.lineModeEnd,
+                tokens: line.tokens,
+                error: tokenizePartialResult.error,
+            };
+
+        default:
+            throw isNever(tokenizePartialResult);
+    }
 }
 
 // read either "*/" or eof
