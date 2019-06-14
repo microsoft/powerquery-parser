@@ -167,7 +167,7 @@ export function tryUpdateRange(state: State, range: Range, text: string): TriedL
     };
 }
 
-export function deleteLine(state: State, lineNumber: number): TriedLexerUpdate {
+export function tryDeleteLine(state: State, lineNumber: number): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
     const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);

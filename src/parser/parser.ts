@@ -26,7 +26,7 @@ export class Parser {
         }
     }
 
-    public parse(): TriedParse {
+    public tryParse(): TriedParse {
         try {
             const document: Ast.TDocument = this.readDocument();
             if (this.maybeCurrentContextNode !== undefined) {
@@ -2225,9 +2225,9 @@ export interface ParseOk {
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
-export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
+export function tryParse(lexerSnapshot: LexerSnapshot): TriedParse {
     const parser: Parser = new Parser(lexerSnapshot);
-    return parser.parse();
+    return parser.tryParse();
 }
 
 type TriedReadPrimaryType = Result<

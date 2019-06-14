@@ -15,7 +15,7 @@ function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKi
     }
     const snapshot: LexerSnapshot = triedSnapshot.value;
 
-    const triedParse: TriedParse = Parser.parse(snapshot);
+    const triedParse: TriedParse = Parser.tryParse(snapshot);
 
     if (!(triedParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
