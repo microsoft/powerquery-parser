@@ -16,7 +16,7 @@ export class LexerSnapshot {
         public readonly lineTerminators: ReadonlyArray<LineTerminator>,
     ) {}
 
-    public static tryFrom(state: Lexer.State): Result<LexerSnapshot, LexerError.TLexerError> {
+    public static tryFrom(state: Lexer.State): TriedLexerSnapshot {
         try {
             return {
                 kind: ResultKind.Ok,

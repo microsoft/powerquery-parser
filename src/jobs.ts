@@ -14,7 +14,7 @@ export interface LexAndParseOk {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
 }
 
-export function lexAndParse(text: string): TriedLexAndParse {
+export function tryLexAndParse(text: string): TriedLexAndParse {
     const state: Lexer.State = Lexer.stateFrom(text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {

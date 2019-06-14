@@ -6,7 +6,7 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 ## How to use
 
-A minimal example can be found in [example.ts](src/example.ts) which uses the `lexAndParse` function located in [src/jobs.ts](src/jobs.ts).
+A minimal example can be found in [example.ts](src/example.ts) which uses the `tryLexAndParse` function located in [src/jobs.ts](src/jobs.ts).
 
 ## Things to note
 

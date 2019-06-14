@@ -1,18 +1,19 @@
 import { expect } from "chai";
 import "mocha";
-import { Result, ResultKind } from "../../common";
-import { lexAndParse, LexAndParseErr, LexAndParseOk } from "../../jobs";
+import { ResultKind } from "../../common";
+import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
 import { ParserError } from "../../parser";
 
 function expectParserInnerError(text: string): ParserError.TInnerParserError {
-    const parseResult: Result<LexAndParseOk, LexAndParseErr> = lexAndParse(text);
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
 
-    if (!(parseResult.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: parseResult.kind === ResultKind.Err ${JSON.stringify(parseResult)}`);
-    } else if (!(parseResult.error instanceof ParserError.ParserError)) {
-        throw new Error(`AssertFailed: parseResult.error instanceof ParserError: ${parseResult.error.message}`);
+    if (!(triedLexAndParse.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Err ${JSON.stringify(triedLexAndParse)}`);
+    } else if (!(triedLexAndParse.error instanceof ParserError.ParserError)) {
+        const errorMessage: string = triedLexAndParse.error.message;
+        throw new Error(`AssertFailed: triedLexAndParse.error instanceof ParserError: ${errorMessage}`);
     } else {
-        return parseResult.error.innerError;
+        return triedLexAndParse.error.innerError;
     }
 }
 

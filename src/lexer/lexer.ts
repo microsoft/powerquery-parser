@@ -107,7 +107,7 @@ export function appendLine(state: State, text: string, lineTerminator: string): 
     };
 }
 
-export function updateLine(state: State, lineNumber: number, text: string): TriedLexerUpdate {
+export function tryUpdateLine(state: State, lineNumber: number, text: string): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
     const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
@@ -120,10 +120,10 @@ export function updateLine(state: State, lineNumber: number, text: string): Trie
 
     const line: TLine = lines[lineNumber];
     const range: Range = rangeFrom(line, lineNumber);
-    return updateRange(state, range, text);
+    return tryUpdateRange(state, range, text);
 }
 
-export function updateRange(state: State, range: Range, text: string): TriedLexerUpdate {
+export function tryUpdateRange(state: State, range: Range, text: string): TriedLexerUpdate {
     const maybeError: Option<LexerError.BadRangeError> = maybeBadRangeError(state, range);
     if (maybeError) {
         return {

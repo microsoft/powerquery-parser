@@ -1,16 +1,16 @@
 import { expect } from "chai";
 import "mocha";
-import { Result, ResultKind } from "../../common";
+import { ResultKind } from "../../common";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 
 function expectBadLineNumberKind(lineNumber: number, expectedKind: LexerError.BadLineNumberKind): void {
     const state: Lexer.State = Lexer.stateFrom(`foo`);
-    const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateLine(state, lineNumber, `bar`);
-    if (!(updateRangeResult.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: updateRangeResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, `bar`);
+    if (!(triedLexerUpdate.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Err: ${JSON.stringify(state)}`);
     }
 
-    const error: LexerError.LexerError = updateRangeResult.error;
+    const error: LexerError.LexerError = triedLexerUpdate.error;
     if (!(error.innerError instanceof LexerError.BadLineNumberError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexerError.BadLineNumber: ${JSON.stringify(error)}`);
     }
@@ -43,12 +43,12 @@ function expectExpectedKind(text: string, expectedKind: LexerError.ExpectedKind)
 
 function expectBadRangeKind(range: Lexer.Range, expectedKind: LexerError.BadRangeKind): void {
     const state: Lexer.State = Lexer.stateFrom(`foo`);
-    const updateRangeResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateRange(state, range, `bar`);
-    if (!(updateRangeResult.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: updateRangeResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateRange(state, range, `bar`);
+    if (!(triedLexerUpdate.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Err: ${JSON.stringify(state)}`);
     }
 
-    const error: LexerError.LexerError = updateRangeResult.error;
+    const error: LexerError.LexerError = triedLexerUpdate.error;
     if (!(error.innerError instanceof LexerError.BadRangeError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexerError.BadRangeError: ${JSON.stringify(error)}`);
     }
