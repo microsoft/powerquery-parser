@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// similar to Result, except there's a third in-between state
-// representing when a job was partially completed before an error occured
+// A tri-state Result. The additional third state is for when a job was partially completed before an error occured,
+// and the work done wants to be saved/returned.
 export type PartialResult<T, E> = PartialOk<T> | PartialMixed<T, E> | PartialErr<E>;
 
 export const enum PartialResultKind {

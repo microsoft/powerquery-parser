@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import * as LexerError from "./error";
 import * as Lexer from "./lexer";
 

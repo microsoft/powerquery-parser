@@ -1,7 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { expect } from "chai";
 import "mocha";
 import { Option, ResultKind, Traverse } from "../../common";
-import { lexAndParse, LexAndParseOk, TriedLexAndParse } from "../../jobs";
+import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
 import { Ast } from "../../parser";
 
 interface CollectAllNodeKindState extends Traverse.IState<Ast.NodeKind[]> {}
@@ -13,7 +16,7 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
 }
 
 function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexAndParse = lexAndParse(text);
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
     if (!(triedLexAndParse.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }

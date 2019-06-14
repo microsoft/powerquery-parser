@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import { TokenPosition } from "./token";
 
 export type TComment = LineComment | MultilineComment;

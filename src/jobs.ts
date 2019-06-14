@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment, TriedLexerSnapshot } from "./lexer";
 import { Ast, NodeIdMap, Parser, ParserError } from "./parser";
@@ -14,7 +15,7 @@ export interface LexAndParseOk {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
 }
 
-export function lexAndParse(text: string): TriedLexAndParse {
+export function tryLexAndParse(text: string): TriedLexAndParse {
     const state: Lexer.State = Lexer.stateFrom(text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
@@ -31,7 +32,7 @@ export function lexAndParse(text: string): TriedLexAndParse {
     }
     const snapshot: LexerSnapshot = snapshotResult.value;
 
-    const parseResult: Parser.TriedParse = Parser.parse(snapshot);
+    const parseResult: Parser.TriedParse = Parser.tryParse(snapshot);
     if (parseResult.kind === ResultKind.Err) {
         return parseResult;
     }

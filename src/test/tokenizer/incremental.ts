@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
@@ -24,27 +27,25 @@ class MockDocument2 {
     }
 
     public applyChange(text: string, range: Lexer.Range): void {
-        const stateResult: TriedLexerUpdate = Lexer.updateRange(this.lexerState, range, text);
+        const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateRange(this.lexerState, range, text);
 
-        if (!(stateResult.kind === ResultKind.Ok)) {
-            throw new Error(
-                `AssertFailed:stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, undefined, 4)}`,
-            );
+        if (!(triedLexerUpdate.kind === ResultKind.Ok)) {
+            const stringifyedResult: string = JSON.stringify(triedLexerUpdate, undefined, 4);
+            throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Ok ${stringifyedResult}`);
         }
 
-        this.lexerState = stateResult.value;
+        this.lexerState = triedLexerUpdate.value;
     }
 
     public getText(): string {
-        const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(this.lexerState);
+        const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(this.lexerState);
 
-        if (!(snapshotResult.kind === ResultKind.Ok)) {
-            throw new Error(
-                `AssertFailed:snapshotResult.kind === ResultKind.Ok ${JSON.stringify(snapshotResult, undefined, 4)}`,
-            );
+        if (!(triedLexerSnapshot.kind === ResultKind.Ok)) {
+            const stringifyedResult: string = JSON.stringify(triedLexerSnapshot, undefined, 4);
+            throw new Error(`AssertFailed: triedLexerSnapshot.kind === ResultKind.Ok ${stringifyedResult}`);
         }
 
-        return snapshotResult.value.text;
+        return triedLexerSnapshot.value.text;
     }
 }
 

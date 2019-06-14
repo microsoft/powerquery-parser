@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 /* tslint:disable:no-console */
+
 import { Option, ResultKind } from "./common";
-import { lexAndParse, TriedLexAndParse } from "./jobs";
+import { TriedLexAndParse, tryLexAndParse } from "./jobs";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 
 parseText(`if true then 1 else 2`);
 
 // @ts-ignore
 function parseText(text: string): void {
-    const parseResult: TriedLexAndParse = lexAndParse(text);
+    const parseResult: TriedLexAndParse = tryLexAndParse(text);
     if (parseResult.kind === ResultKind.Ok) {
         console.log(JSON.stringify(parseResult.value, undefined, 4));
     } else {

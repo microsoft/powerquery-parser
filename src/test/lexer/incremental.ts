@@ -1,7 +1,11 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { expect } from "chai";
 import "mocha";
-import { Result, ResultKind } from "../../common";
-import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
+import { ResultKind } from "../../common";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
+import { TriedLexerUpdate } from "../../lexer/lexer";
 import { expectLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
@@ -20,14 +24,13 @@ function expectAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLi
 
 function expectLexerUpdateRangeOk(originalText: string, newText: string, range: Lexer.Range): Lexer.State {
     const state: Lexer.State = expectLexOk(originalText);
-    const stateResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateRange(state, range, newText);
-    if (!(stateResult.kind === ResultKind.Ok)) {
-        throw new Error(
-            `AssertFailed: stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, undefined, 4)}`,
-        );
+    const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateRange(state, range, newText);
+    if (!(triedLexerUpdate.kind === ResultKind.Ok)) {
+        const stringifyedResult: string = JSON.stringify(triedLexerUpdate, undefined, 4);
+        throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Ok ${stringifyedResult}`);
     }
 
-    return stateResult.value;
+    return triedLexerUpdate.value;
 }
 
 function expectLexerUpdateLine(
@@ -40,15 +43,14 @@ function expectLexerUpdateLine(
     let state: Lexer.State = expectLexOk(originalText);
     expectAbridgedTLexerLine(state, expectedOriginal);
 
-    const stateResult: Result<Lexer.State, LexerError.LexerError> = Lexer.updateLine(state, lineNumber, newText);
-    if (!(stateResult.kind === ResultKind.Ok)) {
-        throw new Error(
-            `AssertFailed: stateResult.kind === ResultKind.Ok ${JSON.stringify(stateResult, undefined, 4)}`,
-        );
+    const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, newText);
+    if (!(triedLexerUpdate.kind === ResultKind.Ok)) {
+        const stringifyedResult: string = JSON.stringify(triedLexerUpdate, undefined, 4);
+        throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Ok ${stringifyedResult}`);
     }
 
-    state = stateResult.value;
-    expectAbridgedTLexerLine(stateResult.value, expectedUpdate);
+    state = triedLexerUpdate.value;
+    expectAbridgedTLexerLine(triedLexerUpdate.value, expectedUpdate);
 
     return state;
 }

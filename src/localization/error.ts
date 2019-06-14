@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import { isNever, StringHelpers } from "../common";
 import { Option } from "../common/option";
 import { Lexer, LexerError, Token, TokenKind } from "../lexer";

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
@@ -36,7 +39,7 @@ function expectTriedParse(text: string): Parser.TriedParse {
     }
     const snapshot: LexerSnapshot = snapshotResult.value;
 
-    return Parser.parse(snapshot);
+    return Parser.tryParse(snapshot);
 }
 
 function expectParseErr(text: string): ParserError.ParserError {

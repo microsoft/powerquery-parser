@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import { Error as Localization } from "../localization";
 import { Option } from "./option";
 

@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Ast, NodeIdMap, ParserContext, ParserError } from ".";
-import { CommonError, isNever, Option, TypeUtils } from "../common";
-import { Result, ResultKind } from "../common/result";
-import { LexerSnapshot } from "../lexer/lexerSnapshot";
-import { Token, TokenKind } from "../lexer/token";
-import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
+
+import { Ast, NodeIdMap, ParserContext, ParserError, TokenRange, tokenRangeHashFrom } from ".";
+import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../common";
+import { LexerSnapshot, Token, TokenKind } from "../lexer";
 
 export type TriedParse = Result<ParseOk, ParserError.TParserError>;
 
@@ -26,7 +24,7 @@ export class Parser {
         }
     }
 
-    public parse(): TriedParse {
+    public tryParse(): TriedParse {
         try {
             const document: Ast.TDocument = this.readDocument();
             if (this.maybeCurrentContextNode !== undefined) {
@@ -2225,9 +2223,9 @@ export interface ParseOk {
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
-export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
+export function tryParse(lexerSnapshot: LexerSnapshot): TriedParse {
     const parser: Parser = new Parser(lexerSnapshot);
-    return parser.parse();
+    return parser.tryParse();
 }
 
 type TriedReadPrimaryType = Result<

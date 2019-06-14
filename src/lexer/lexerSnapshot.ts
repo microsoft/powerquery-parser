@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import { CommonError, Option, Result, ResultKind, StringHelpers } from "../common";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import * as LexerError from "./error";
@@ -16,7 +17,7 @@ export class LexerSnapshot {
         public readonly lineTerminators: ReadonlyArray<LineTerminator>,
     ) {}
 
-    public static tryFrom(state: Lexer.State): Result<LexerSnapshot, LexerError.TLexerError> {
+    public static tryFrom(state: Lexer.State): TriedLexerSnapshot {
         try {
             return {
                 kind: ResultKind.Ok,
