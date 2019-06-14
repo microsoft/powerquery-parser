@@ -25,9 +25,7 @@
     "tslint-config-prettier": "^1.18.0",
     "tslint-microsoft-contrib": "^6.2.0",
     "tslint-plugin-prettier": "^2.0.1",
-    "typescript": "^3.5.1",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.3.0"
+    "typescript": "^3.5.1"
   },
   "files": [
     "lib/common/*",
@@ -46,10 +44,6 @@
   ],
   "scripts": {
     "build": "node_modules\\.bin\\tsc",
-    "build-all": "npm run-script build & npm run-script build-webpack",
-    "build-webpack": "npm run-script build-webpack-prod & npm run-script build-webpack-dev",
-    "build-webpack-prod": "webpack --config webpack/prod.config.js",
-    "build-webpack-dev": "webpack --config webpack/dev.config.js",
     "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/**/*.ts"
   },
   "repository": {
