@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { Lexer, LineToken } from "../../lexer";
 
 export class Tokenizer implements TokensProvider {

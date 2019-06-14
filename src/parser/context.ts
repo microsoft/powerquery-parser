@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import { Ast, NodeIdMap } from ".";
 import { CommonError, Option } from "../common";
 import { Token } from "../lexer";

@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
 import { CommonError, Option, Pattern } from ".";

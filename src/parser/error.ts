@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError, StringHelpers } from "../common";
-import { Option } from "../common/option";
+
+import { Ast, ParserContext } from ".";
+import { CommonError, Option, StringHelpers } from "../common";
 import { Token, TokenKind } from "../lexer/token";
 import * as Localization from "../localization/error";
-import * as Ast from "./ast";
-import * as Context from "./context";
 
 export type TParserError = CommonError.CommonError | ParserError;
 
@@ -20,7 +19,7 @@ export type TInnerParserError =
     | UnusedTokensRemainError;
 
 export class ParserError extends Error {
-    constructor(readonly innerError: TInnerParserError, readonly context: Context.State) {
+    constructor(readonly innerError: TInnerParserError, readonly context: ParserContext.State) {
         super(innerError.message);
     }
 }

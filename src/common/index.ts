@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import * as CommonError from "./error";
 import * as Pattern from "./patterns";
 import * as StringHelpers from "./stringHelpers";

@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+
 import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment, TriedLexerSnapshot } from "./lexer";
 import { Ast, NodeIdMap, Parser, ParserError } from "./parser";
