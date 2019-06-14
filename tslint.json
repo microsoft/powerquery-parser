@@ -95,6 +95,7 @@
         "prefer-method-signature": false,
         "prefer-type-cast": false,
         "strict-boolean-expressions": false,
+        "switch-final-break": false,
         "type-literal-delimiter": false,
         "use-default-type-parameter": false
     },

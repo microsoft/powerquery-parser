@@ -1,16 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+import { Ast, NodeIdMap } from ".";
 import { CommonError, Option } from "../common";
 import { Token } from "../lexer";
-import * as Ast from "./ast";
 
-export type NodeMap = Map<number, Node>;
+// Parsing use to be one giant evaluation, leading to an all-or-nothing outcome which was unsuitable for a
+// document that was being live edited.
+//
+// Take the scenario where a user is in the process of adding another element to a ListExpression.
+// Once a comma is typed the parser would error out as it also expects the yet untyped element.
+// Under the one giant evaluation model there was no way to propegate what was parsed up to that point.
+//
+// Context is used as a workbook for Ast.TNodes that have started evaluation but haven't yet finished.
+// It starts out empty, with no children belonging to it.
+// Most (all non-leaf) Ast.TNode's require several sub-Ast.TNodes to be evalauted as well.
+// For each sub-Ast.TNode that begins evaluation another Context is created and linked as a child of the original.
+// This means if a Ast.TNode has N attributes of type Ast.TNode, then the Ast.TNode is fully evaluated there should be N
+// child contexts created belonging under the orignal Context.
+// Once the Ast.TNode evaluation is complete the result is saved on the Context under its maybeAstNode attribute.
+//
+// Back to the scenario listed above, where the user has entered `{1,}`, you could examine the context state to find:
+//  An incomplete ListExpression context with 3 children
+//  With the first child being an evaluated Ast.TNode of NodeKind.Constant: `{`
+//  With the second child being an evaluated Ast.TNode of NodeKind.Csv: `1,`
+//  With the third child being a yet-to-be evaluated Context of NodeKind.Csv
 
 export interface State {
     readonly root: Root;
-    readonly nodesById: NodeMap;
-    terminalNodeIds: number[];
-    nodeIdCounter: number;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    leafNodeIds: number[];
 }
 
 export interface Root {
@@ -18,11 +36,10 @@ export interface Root {
 }
 
 export interface Node {
-    readonly nodeId: number;
-    readonly nodeKind: Ast.NodeKind;
+    readonly id: number;
+    readonly kind: Ast.NodeKind;
+    readonly tokenIndexStart: number;
     readonly maybeTokenStart: Option<Token>;
-    readonly maybeParentId: Option<number>;
-    childNodeIds: number[];
     maybeAstNode: Option<Ast.TNode>;
 }
 
@@ -31,121 +48,190 @@ export function empty(): State {
         root: {
             maybeNode: undefined,
         },
-        nodesById: new Map(),
-        terminalNodeIds: [],
-        nodeIdCounter: 0,
+        nodeIdMapCollection: {
+            astNodeById: new Map(),
+            contextNodeById: new Map(),
+            parentIdById: new Map(),
+            childIdsById: new Map(),
+        },
+        leafNodeIds: [],
     };
 }
 
-export function expectNode(nodesById: NodeMap, nodeId: number): Node {
-    const maybeNode: Option<Node> = nodesById.get(nodeId);
-    if (maybeNode === undefined) {
-        throw new CommonError.InvariantError(`nodeId (${nodeId}) wasn't in State.`);
-    }
-    return maybeNode;
-}
-
-export function addChild(
+export function startContext(
     state: State,
-    maybeParent: Option<Node>,
     nodeKind: Ast.NodeKind,
-    tokenStart: Option<Token>,
+    nodeId: number,
+    tokenIndexStart: number,
+    maybeTokenStart: Option<Token>,
+    maybeParentNode: Option<Node>,
 ): Node {
-    state.nodeIdCounter += 1;
-    const newNodeId: number = state.nodeIdCounter;
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    let maybeParentId: Option<number>;
-    if (maybeParent) {
-        const parent: Node = maybeParent;
-        maybeParentId = parent.nodeId;
-        parent.childNodeIds.push(newNodeId);
-    } else {
-        maybeParentId = undefined;
+    // If the context is a child of an existing context: update the child/parent maps.
+    if (maybeParentNode) {
+        const childIdsById: Map<number, ReadonlyArray<number>> = nodeIdMapCollection.childIdsById;
+        const parent: Node = maybeParentNode;
+        const parentNodeId: number = parent.id;
+
+        nodeIdMapCollection.parentIdById.set(nodeId, parentNodeId);
+
+        const maybeExistingChildren: Option<ReadonlyArray<number>> = childIdsById.get(parentNodeId);
+        if (maybeExistingChildren) {
+            const existingChildren: ReadonlyArray<number> = maybeExistingChildren;
+            childIdsById.set(parentNodeId, [...existingChildren, nodeId]);
+        } else {
+            childIdsById.set(parentNodeId, [nodeId]);
+        }
     }
 
-    const child: Node = {
-        nodeId: state.nodeIdCounter,
-        nodeKind,
-        maybeTokenStart: tokenStart,
-        maybeParentId,
-        childNodeIds: [],
+    const node: Node = {
+        id: nodeId,
+        kind: nodeKind,
+        tokenIndexStart,
+        maybeTokenStart,
         maybeAstNode: undefined,
     };
-    state.nodesById.set(child.nodeId, child);
+    nodeIdMapCollection.contextNodeById.set(nodeId, node);
 
-    return child;
+    return node;
 }
 
-export function endContext(state: State, oldNode: Node, astNode: Ast.TNode): Option<Node> {
-    if (astNode.terminalNode) {
-        state.terminalNodeIds.push(oldNode.nodeId);
+// Marks a context as closed by assinging an Ast.TNode to maybeAstNode.
+// Returns the Node's parent context (if one exists).
+export function endContext(state: State, contextNode: Node, astNode: Ast.TNode): Option<Node> {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+
+    if (contextNode.maybeAstNode !== undefined) {
+        throw new CommonError.InvariantError("context was already ended");
+    } else if (contextNode.id !== astNode.id) {
+        const details: {} = {
+            contextNodeId: contextNode.id,
+            astNodeId: astNode.id,
+        };
+        throw new CommonError.InvariantError("contextNode and astNode have different nodeIds", details);
     }
 
-    oldNode.maybeAstNode = astNode;
-    const maybeParentId: Option<number> = oldNode.maybeParentId;
-    return maybeParentId !== undefined ? expectNode(state.nodesById, maybeParentId) : undefined;
+    if (astNode.isLeaf) {
+        state.leafNodeIds.push(contextNode.id);
+    }
+
+    // Setting mabyeAstNode marks the ContextNode as complete.
+    contextNode.maybeAstNode = astNode;
+
+    // Ending a context should return the context's parent node (if one exists).
+    // Grab it before we delete the current context node from the State map.
+    const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(contextNode.id);
+    const maybeParentNode: Option<Node> =
+        maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
+
+    // Move nodeId from contextNodeMap to astNodeMap.
+    if (!nodeIdMapCollection.contextNodeById.delete(contextNode.id)) {
+        throw new CommonError.InvariantError("can't end a context that doesn't belong to state");
+    }
+    nodeIdMapCollection.astNodeById.set(astNode.id, astNode);
+
+    return maybeParentNode;
 }
 
-export function deleteContext(state: State, node: Node): Option<Node> {
-    const nodesById: NodeMap = state.nodesById;
-    const terminalNodeIds: number[] = state.terminalNodeIds;
+export function deleteContext(state: State, nodeId: number): Option<Node> {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const contextNodeById: Map<number, Node> = nodeIdMapCollection.contextNodeById;
+    const parentIdById: Map<number, number> = nodeIdMapCollection.parentIdById;
+    const childIdsById: Map<number, ReadonlyArray<number>> = nodeIdMapCollection.childIdsById;
 
-    const maybeParentId: Option<number> = node.maybeParentId;
-    const nodeId: number = node.nodeId;
-
-    if (!nodesById.has(nodeId)) {
-        throw new CommonError.InvariantError(`node.nodeId not in state: ${nodeId}.`);
+    const maybeNode: Option<Node> = contextNodeById.get(nodeId);
+    if (maybeNode === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`nodeId not in state.`, details);
     }
-    nodesById.delete(nodeId);
+    const node: Node = maybeNode;
 
-    const maybeTerminalIndex: Option<number> = terminalNodeIds.indexOf(nodeId);
-    if (maybeTerminalIndex !== -1) {
-        const terminalIndex: number = maybeTerminalIndex;
-        state.terminalNodeIds = [
-            ...terminalNodeIds.slice(0, terminalIndex),
-            ...terminalNodeIds.slice(terminalIndex + 1),
-        ];
-    }
-
-    if (maybeParentId === undefined) {
-        return undefined;
+    // If Node was a leaf node, remove it from the list of leaf nodes.
+    const leafNodeIds: number[] = state.leafNodeIds;
+    const maybeLeafIndex: Option<number> = leafNodeIds.indexOf(nodeId);
+    if (maybeLeafIndex !== -1) {
+        const leafIndex: number = maybeLeafIndex;
+        state.leafNodeIds = [...leafNodeIds.slice(0, leafIndex), ...leafNodeIds.slice(leafIndex + 1)];
     }
 
-    const parentId: number = maybeParentId;
-    const parent: Node = expectNode(state.nodesById, parentId);
-    const childNodeIds: number[] = parent.childNodeIds;
-    const childNodeIndex: number = childNodeIds.indexOf(nodeId);
+    // Link the Node's parents to the node's children.
+    const maybeParentNodeId: Option<number> = parentIdById.get(node.id);
+    const maybeChildIds: Option<ReadonlyArray<number>> = childIdsById.get(node.id);
 
-    if (childNodeIndex === -1) {
-        throw new CommonError.InvariantError(
-            `nodeId ${nodeId} considers ${parentId} to be a parent, but isn't listed as a child of the parent.`,
-        );
+    // If the Node has a parent, remove the Node from the parent's list of children
+    if (maybeParentNodeId !== undefined) {
+        const parentNode: Node = NodeIdMap.expectContextNode(contextNodeById, maybeParentNodeId);
+        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(childIdsById, parentNode.id);
+        const replacementIndex: number = parentChildIds.indexOf(node.id);
+        if (replacementIndex === -1) {
+            const details: {} = {
+                parentNodeId: parentNode.id,
+                childNodeId: node.id,
+            };
+            throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
+        }
+
+        childIdsById.set(parentNode.id, [
+            ...parentChildIds.slice(0, replacementIndex),
+            ...parentChildIds.slice(replacementIndex + 1),
+        ]);
     }
 
-    parent.childNodeIds = [...childNodeIds.slice(0, childNodeIndex), ...childNodeIds.slice(childNodeIndex + 1)];
+    // If the Node has children, update the children's parent to the Node's parent.
+    if (maybeParentNodeId !== undefined && maybeChildIds) {
+        const parentNode: Node = NodeIdMap.expectContextNode(contextNodeById, maybeParentNodeId);
+        const childIds: ReadonlyArray<number> = maybeChildIds;
 
-    return parent;
+        for (const childId of childIds) {
+            parentIdById.set(childId, parentNode.id);
+        }
+
+        // Add the Node's orphaned children to the Node's parent.
+        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(childIdsById, parentNode.id);
+        childIdsById.set(parentNode.id, [...parentChildIds, ...childIds]);
+    }
+    // The root is being deleted. Check if it has a single child context, then promote it if it exists.
+    else if (maybeChildIds) {
+        const childIds: ReadonlyArray<number> = maybeChildIds;
+        if (childIds.length !== 1) {
+            const details: {} = { childIds };
+            throw new CommonError.InvariantError(`root node was deleted and it had multiple children`, details);
+        }
+        const soloChildId: number = childIds[0];
+
+        // The solo child might be an astNode.
+        const maybeSoloNode: Option<Node> = contextNodeById.get(soloChildId);
+        if (maybeSoloNode) {
+            const soloNode: Node = NodeIdMap.expectContextNode(contextNodeById, soloChildId);
+            state.root.maybeNode = soloNode;
+        }
+
+        parentIdById.delete(soloChildId);
+    }
+
+    // Remove Node from existence.
+    contextNodeById.delete(node.id);
+    childIdsById.delete(node.id);
+    parentIdById.delete(node.id);
+
+    return maybeParentNodeId !== undefined
+        ? NodeIdMap.expectContextNode(contextNodeById, maybeParentNodeId)
+        : undefined;
 }
 
 export function deepCopy(state: State): State {
-    const nodesById: NodeMap = new Map<number, Node>();
-    state.nodesById.forEach((value: Node, key: number) => {
-        nodesById.set(key, deepCopyNode(value));
-    });
+    const nodeIdMapCollection: NodeIdMap.Collection = NodeIdMap.deepCopyCollection(state.nodeIdMapCollection);
+    const maybeRootNode: Option<Node> =
+        state.root.maybeNode !== undefined
+            ? nodeIdMapCollection.contextNodeById.get(state.root.maybeNode.id)
+            : undefined;
 
     return {
         root: {
-            maybeNode: nodesById.get(0),
+            maybeNode: maybeRootNode,
         },
-        nodesById: nodesById,
-        terminalNodeIds: state.terminalNodeIds.slice(),
-        nodeIdCounter: state.nodeIdCounter,
-    };
-}
-
-function deepCopyNode(node: Node): Node {
-    return {
-        ...node,
-        maybeAstNode: node.maybeAstNode !== undefined ? { ...node.maybeAstNode } : undefined,
+        nodeIdMapCollection: nodeIdMapCollection,
+        leafNodeIds: state.leafNodeIds.slice(),
     };
 }

@@ -1,15 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { CommonError } from "../common";
-import { isNever } from "../common/assert";
-import { Option } from "../common/option";
+import { Ast, NodeIdMap, ParserContext, ParserError } from ".";
+import { CommonError, isNever, Option, TypeUtils } from "../common";
 import { Result, ResultKind } from "../common/result";
-import { Keyword } from "../lexer/keywords";
 import { LexerSnapshot } from "../lexer/lexerSnapshot";
-import { Token, TokenKind, TokenPosition } from "../lexer/token";
-import * as Ast from "./ast";
-import * as Context from "./context";
-import * as ParserError from "./error";
+import { Token, TokenKind } from "../lexer/token";
 import { TokenRange, tokenRangeHashFrom } from "./tokenRange";
 
 export type TriedParse = Result<ParseOk, ParserError.TParserError>;
@@ -21,9 +16,9 @@ export class Parser {
     public constructor(
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
-        private readonly tokenRangeStack: TokenRangeStackElement[] = [],
-        private contextState: Context.State = Context.empty(),
-        private maybeCurrentContextNode: Option<Context.Node> = undefined,
+        private nodeIdCounter: number = 0,
+        private contextState: ParserContext.State = ParserContext.empty(),
+        private maybeCurrentContextNode: Option<ParserContext.Node> = undefined,
     ) {
         if (this.lexerSnapshot.tokens.length) {
             this.maybeCurrentToken = this.lexerSnapshot.tokens[0];
@@ -42,11 +37,13 @@ export class Parser {
                 );
             }
 
+            const contextState: ParserContext.State = this.contextState;
             return {
                 kind: ResultKind.Ok,
                 value: {
                     document,
-                    nodesById: this.contextState.nodesById,
+                    nodeIdMapCollection: contextState.nodeIdMapCollection,
+                    leafNodeIds: contextState.leafNodeIds,
                 },
             };
         } catch (e) {
@@ -78,7 +75,7 @@ export class Parser {
                     throw maybeErr;
                 }
             } catch (expressionError) {
-                const expressionContextState: Context.State = Context.deepCopy(this.contextState);
+                const expressionContextState: ParserContext.State = ParserContext.deepCopy(this.contextState);
                 this.restoreBackup(backup);
                 try {
                     document = this.readSection();
@@ -99,7 +96,6 @@ export class Parser {
     private readSection(): Ast.Section {
         const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const maybeLiteralAttributes: Option<Ast.RecordLiteral> = this.maybeReadLiteralAttributes();
         const sectionConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordSection);
@@ -118,9 +114,9 @@ export class Parser {
         }
 
         const astNode: Ast.Section = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             maybeLiteralAttributes,
             sectionConstant,
             maybeName,
@@ -135,7 +131,6 @@ export class Parser {
     private readSectionMember(): Ast.SectionMember {
         const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const maybeLiteralAttributes: Option<Ast.RecordLiteral> = this.maybeReadLiteralAttributes();
         const maybeSharedConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.KeywordShared);
@@ -143,9 +138,9 @@ export class Parser {
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
 
         const astNode: Ast.SectionMember = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             maybeLiteralAttributes,
             maybeSharedConstant,
             namePairedExpression,
@@ -282,20 +277,18 @@ export class Parser {
         if (maybeOperator) {
             const nodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
             this.startContext(nodeKind);
-            this.startTokenRange(nodeKind);
 
             const expressions: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
 
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
                 this.startContext(helperNodeKind);
-                this.startTokenRange(helperNodeKind);
 
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
                 const expression: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
+                    ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
-                    tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+                    isLeaf: false,
                     inBinaryExpression: false,
                     operator: maybeOperator,
                     operatorConstant,
@@ -308,9 +301,9 @@ export class Parser {
             }
 
             const astNode: Ast.UnaryExpression = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 expressions,
             };
             this.endContext(astNode);
@@ -423,7 +416,6 @@ export class Parser {
     private readLiteralExpression(): Ast.LiteralExpression {
         const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const expectedTokenKinds: ReadonlyArray<TokenKind> = [
             TokenKind.HexLiteral,
@@ -447,9 +439,9 @@ export class Parser {
 
         const literal: string = this.readToken();
         const astNode: Ast.LiteralExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: true,
+            isLeaf: true,
             literal: literal,
             literalKind: maybeLiteralKind,
         };
@@ -461,15 +453,14 @@ export class Parser {
     private readIdentifierExpression(): Ast.IdentifierExpression {
         const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const maybeInclusiveConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.AtSign);
         const identifier: Ast.Identifier = this.readIdentifier();
 
         const astNode: Ast.IdentifierExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             maybeInclusiveConstant,
             identifier,
         };
@@ -484,6 +475,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
             () => this.readExpression(),
             () => this.readTokenKindAsConstant(TokenKind.RightParenthesis),
+            false,
         );
     }
 
@@ -491,14 +483,13 @@ export class Parser {
     private readNotImplementedExpression(): Ast.NotImplementedExpression {
         const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const ellipsisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Ellipsis);
 
         const astNode: Ast.NotImplementedExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             ellipsisConstant,
         };
         this.endContext(astNode);
@@ -513,6 +504,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
             () => this.readCsv(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightParenthesis),
+            false,
         );
     }
 
@@ -524,6 +516,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsv(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            false,
         );
     }
 
@@ -538,45 +531,19 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readGeneralizedIdentifierPairedExpressions(continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            false,
         );
     }
 
     // 12.2.3.19 Item access expression
     private readItemAccessExpression(): Ast.ItemAccessExpression {
-        const nodeKind: Ast.NodeKind.ItemAccessExpression = Ast.NodeKind.ItemAccessExpression;
-        this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
-
-        const maybeReturn: Ast.IWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression> = this.readWrapped<
+        return this.readWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
             Ast.NodeKind.ItemAccessExpression,
-            Ast.TExpression
-        >(
-            nodeKind,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readExpression(),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            true,
         );
-
-        // hack to conditionally read '?' after closeWrapperConstant
-        const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
-        let astNode: Ast.ItemAccessExpression;
-        if (maybeOptionalConstant) {
-            const newTokenRange: TokenRange = this.popTokenRange();
-            astNode = {
-                tokenRange: newTokenRange,
-                maybeOptionalConstant,
-                ...maybeReturn,
-            };
-        } else {
-            this.popTokenRangeNoop();
-            astNode = {
-                maybeOptionalConstant: undefined,
-                ...maybeReturn,
-            };
-        }
-
-        this.endContext(astNode);
-        return astNode;
     }
 
     // sub-item of 12.2.3.20 Field access expressions
@@ -586,89 +553,32 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
-        const nodeKind: Ast.NodeKind.FieldProjection = Ast.NodeKind.FieldProjection;
-        this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
-
-        const maybeReturn: Ast.IWrapped<
+        return this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
             Ast.NodeKind.FieldProjection,
-            ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>
-        > = this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
-            nodeKind,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readCsv(() => this.readFieldSelector(false), true),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            true,
         );
-
-        // hack to conditionally read '?' after closeWrapperConstant
-        const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
-        let astNode: Ast.FieldProjection;
-        if (maybeOptionalConstant) {
-            const newTokenRange: TokenRange = this.popTokenRange();
-            astNode = {
-                tokenRange: newTokenRange,
-                maybeOptionalConstant,
-                ...maybeReturn,
-            };
-        } else {
-            this.popTokenRangeNoop();
-            astNode = {
-                maybeOptionalConstant: undefined,
-                ...maybeReturn,
-            };
-        }
-
-        this.endContext(astNode);
-        return astNode;
     }
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldSelector(allowOptional: boolean): Ast.FieldSelector {
-        const nodeKind: Ast.NodeKind.FieldSelector = Ast.NodeKind.FieldSelector;
-        this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
-
-        const maybeReturn: Ast.IWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier> = this.readWrapped<
+        return this.readWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
             Ast.NodeKind.FieldSelector,
-            Ast.GeneralizedIdentifier
-        >(
-            nodeKind,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readGeneralizedIdentifier(),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            allowOptional,
         );
-
-        // hack to conditionally read '?' after closeWrapperConstant
-        const maybeOptionalConstant: Option<Ast.Constant> = allowOptional
-            ? this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark)
-            : undefined;
-        let astNode: Ast.FieldSelector;
-        if (maybeOptionalConstant) {
-            const newTokenRange: TokenRange = this.popTokenRange();
-            astNode = {
-                tokenRange: newTokenRange,
-                maybeOptionalConstant,
-                ...maybeReturn,
-            };
-        } else {
-            this.popTokenRangeNoop();
-            astNode = {
-                maybeOptionalConstant: undefined,
-                ...maybeReturn,
-            };
-        }
-
-        this.endContext(astNode);
-        return astNode;
     }
 
     // 12.2.3.21 Function expression
     private readFunctionExpression(): Ast.FunctionExpression {
         const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
-        const parameters: Ast.ParameterList<Option<Ast.AsNullablePrimitiveType>> = this.readParameterList(() =>
+        const parameters: Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>> = this.readParameterList(() =>
             this.maybeReadAsNullablePrimitiveType(),
         );
         const maybeFunctionReturnType: Option<Ast.AsNullablePrimitiveType> = this.maybeReadAsNullablePrimitiveType();
@@ -676,9 +586,9 @@ export class Parser {
         const expression: Ast.TExpression = this.readExpression();
 
         const astNode: Ast.FunctionExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             parameters,
             maybeFunctionReturnType,
             fatArrowConstant,
@@ -701,7 +611,6 @@ export class Parser {
     private readLetExpression(): Ast.LetExpression {
         const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const letConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordLet);
         const identifierExpressionPairedExpressions: ReadonlyArray<
@@ -711,9 +620,9 @@ export class Parser {
         const expression: Ast.TExpression = this.readExpression();
 
         const astNode: Ast.LetExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: Ast.NodeKind.LetExpression,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             letConstant,
             variableList: identifierExpressionPairedExpressions,
             inConstant,
@@ -727,7 +636,6 @@ export class Parser {
     private readIfExpression(): Ast.IfExpression {
         const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const ifConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordIf);
         const condition: Ast.TExpression = this.readExpression();
@@ -739,9 +647,9 @@ export class Parser {
         const falseExpression: Ast.TExpression = this.readExpression();
 
         const astNode: Ast.IfExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             ifConstant,
             condition,
             thenConstant,
@@ -768,7 +676,7 @@ export class Parser {
 
     // sub-item of 12.2.3.25 Type expression
     private readType(): Ast.TType {
-        const triedReadPrimaryType: TryReadPrimaryType = this.tryReadPrimaryType();
+        const triedReadPrimaryType: TriedReadPrimaryType = this.tryReadPrimaryType();
 
         if (triedReadPrimaryType.kind === ResultKind.Ok) {
             return triedReadPrimaryType.value;
@@ -779,7 +687,7 @@ export class Parser {
 
     // sub-item of 12.2.3.25 Type expression
     private readPrimaryType(): Ast.TPrimaryType {
-        const triedReadPrimaryType: TryReadPrimaryType = this.tryReadPrimaryType();
+        const triedReadPrimaryType: TriedReadPrimaryType = this.tryReadPrimaryType();
 
         if (triedReadPrimaryType.kind === ResultKind.Ok) {
             return triedReadPrimaryType.value;
@@ -788,7 +696,7 @@ export class Parser {
         }
     }
 
-    private tryReadPrimaryType(): TryReadPrimaryType {
+    private tryReadPrimaryType(): TriedReadPrimaryType {
         const backup: StateBackup = this.backupState();
 
         const isTableTypeNext: boolean =
@@ -827,7 +735,7 @@ export class Parser {
                 value: this.readNullableType(),
             };
         } else {
-            const triedReadPrimitiveType: TryReadPrimaryType = this.tryReadPrimitiveType();
+            const triedReadPrimitiveType: TriedReadPrimaryType = this.tryReadPrimitiveType();
 
             if (triedReadPrimitiveType.kind === ResultKind.Err) {
                 this.restoreBackup(backup);
@@ -840,14 +748,13 @@ export class Parser {
     private readRecordType(): Ast.RecordType {
         const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const fields: Ast.FieldSpecificationList = this.readFieldSpecificationList(true);
 
         const astNode: Ast.RecordType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             fields,
         };
         this.endContext(astNode);
@@ -858,7 +765,6 @@ export class Parser {
     private readTableType(): Ast.TableType {
         const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const tableConstant: Ast.Constant = this.readIdentifierConstantAsConstant(Ast.IdentifierConstant.Table);
         const maybeCurrentTokenKind: Option<TokenKind> = this.maybeCurrentTokenKind;
@@ -875,9 +781,9 @@ export class Parser {
         }
 
         const astNode: Ast.TableType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             tableConstant,
             rowType,
         };
@@ -889,7 +795,6 @@ export class Parser {
     private readFieldSpecificationList(allowOpenMarker: boolean): Ast.FieldSpecificationList {
         const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const leftBracketConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.LeftBracket);
         const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
@@ -911,11 +816,9 @@ export class Parser {
             } else if (this.isOnTokenKind(TokenKind.Identifier)) {
                 const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
                 this.startContext(csvNodeKind);
-                this.startTokenRange(csvNodeKind);
 
                 const fieldSpecificationNodeKind: Ast.NodeKind.FieldSpecification = Ast.NodeKind.FieldSpecification;
                 this.startContext(fieldSpecificationNodeKind);
-                this.startTokenRange(fieldSpecificationNodeKind);
 
                 const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadIdentifierConstantAsConstant(
                     Ast.IdentifierConstant.Optional,
@@ -928,9 +831,9 @@ export class Parser {
                 continueReadingValues = maybeCommaConstant !== undefined;
 
                 const field: Ast.FieldSpecification = {
+                    ...this.expectContextNodeMetadata(),
                     kind: fieldSpecificationNodeKind,
-                    tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+                    isLeaf: false,
                     maybeOptionalConstant,
                     name,
                     maybeFieldTypeSpeification,
@@ -938,9 +841,9 @@ export class Parser {
                 this.endContext(field);
 
                 const csv: Ast.ICsv<Ast.FieldSpecification> = {
+                    ...this.expectContextNodeMetadata(),
                     kind: csvNodeKind,
-                    tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+                    isLeaf: false,
                     node: field,
                     maybeCommaConstant,
                 };
@@ -954,9 +857,9 @@ export class Parser {
         const rightBracketConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightBracket);
 
         const astNode: Ast.FieldSpecificationList = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             openWrapperConstant: leftBracketConstant,
             content: fields,
             maybeOpenRecordMarkerConstant,
@@ -970,24 +873,22 @@ export class Parser {
     private maybeReadFieldTypeSpecification(): Option<Ast.FieldTypeSpecification> {
         const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const maybeEqualConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Equal);
         if (maybeEqualConstant) {
             const fieldType: Ast.TType = this.readType();
 
             const astNode: Ast.FieldTypeSpecification = {
+                ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.FieldTypeSpecification,
-                tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 equalConstant: maybeEqualConstant,
                 fieldType,
             };
             this.endContext(astNode);
             return astNode;
         } else {
-            this.popTokenRangeNoop();
-            this.deleteContext();
+            this.deleteContext(undefined);
             return undefined;
         }
     }
@@ -996,16 +897,15 @@ export class Parser {
     private readFunctionType(): Ast.FunctionType {
         const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const functionConstant: Ast.Constant = this.readIdentifierConstantAsConstant(Ast.IdentifierConstant.Function);
-        const parameters: Ast.ParameterList<Ast.AsType> = this.readParameterList(() => this.readAsType());
+        const parameters: Ast.IParameterList<Ast.AsType> = this.readParameterList(() => this.readAsType());
         const functionReturnType: Ast.AsType = this.readAsType();
 
         const astNode: Ast.FunctionType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             functionConstant,
             parameters,
             functionReturnType,
@@ -1036,7 +936,6 @@ export class Parser {
     private readErrorHandlingExpression(): Ast.ErrorHandlingExpression {
         const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const tryConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordTry);
         const protectedExpression: Ast.TExpression = this.readExpression();
@@ -1053,9 +952,9 @@ export class Parser {
         );
 
         const astNode: Ast.ErrorHandlingExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             tryConstant,
             protectedExpression,
             maybeOtherwiseExpression,
@@ -1086,6 +985,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readFieldNamePairedAnyLiterals(continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
+            false,
         );
         return {
             literalKind: Ast.LiteralKind.Record,
@@ -1121,6 +1021,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsv(() => this.readAnyLiteral(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            false,
         );
         return {
             literalKind: Ast.LiteralKind.List,
@@ -1138,19 +1039,18 @@ export class Parser {
         }
     }
 
-    private readParameterList<T>(typeReader: () => T): Ast.ParameterList<T> {
+    private readParameterList<T>(typeReader: () => T & Ast.TParameterType): Ast.IParameterList<T> {
         const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const leftParenthesisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.LeftParenthesis);
         let continueReadingValues: boolean = !this.isOnTokenKind(TokenKind.RightParenthesis);
         let reachedOptionalParameter: boolean = false;
 
-        const parameters: Ast.ICsv<Ast.Parameter<T>>[] = [];
+        const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
         while (continueReadingValues) {
-            this.startTokenRange(Ast.NodeKind.Csv);
-            this.startTokenRange(Ast.NodeKind.Parameter);
+            this.startContext(Ast.NodeKind.Csv);
+            this.startContext(Ast.NodeKind.Parameter);
             const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadIdentifierConstantAsConstant(
                 Ast.IdentifierConstant.Optional,
             );
@@ -1166,57 +1066,43 @@ export class Parser {
             }
 
             const name: Ast.Identifier = this.readIdentifier();
-            const maybeParameterType: T = typeReader();
-
-            const node: Ast.Parameter<T> = {
+            const maybeParameterType: T & Ast.TParameterType = typeReader();
+            const parameter: Ast.IParameter<T & Ast.TParameterType> = {
+                ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Parameter,
-                tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 maybeOptionalConstant,
                 name,
                 maybeParameterType,
             };
+            this.endContext(parameter);
 
             const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
             continueReadingValues = maybeCommaConstant !== undefined;
 
-            parameters.push({
+            const csv: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>> = {
+                ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Csv,
-                tokenRange: this.popTokenRange(),
-                terminalNode: false,
-                node,
+                isLeaf: false,
+                node: parameter,
                 maybeCommaConstant,
-            });
+            };
+            this.endContext(csv);
+
+            parameters.push(csv);
         }
 
         const rightParenthesisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightParenthesis);
 
-        const astNode: Ast.ParameterList<T> = {
+        const astNode: Ast.IParameterList<T & Ast.TParameterType> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             openWrapperConstant: leftParenthesisConstant,
             content: parameters,
             closeWrapperConstant: rightParenthesisConstant,
         };
-
-        // UNSAFE MARKER
-        //
-        // Purpose of code block:
-        //      End the context started within the same function.
-        //
-        // Why are you trying to avoid a safer approach?
-        //      endContext takes an Ast.TNode, but due to generics the parser
-        //      can't prove for all types A that Ast.ParameterList<A>
-        //      results in an Ast.TNode.
-        //
-        //      The alternative approach is let the callers of readParameterList
-        //      take the return and end the context themselves, which is messy.
-        //
-        // Why is it safe?
-        //      All Ast.ParameterList used by the parser are of Ast.TParameterList,
-        //      a sub type of Ast.TNode.
-        this.endContext((astNode as unknown) as Ast.TParameterList);
+        this.endContext(astNode);
         return astNode;
     }
 
@@ -1243,15 +1129,74 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readType(),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
+            false,
         );
     }
 
     private readRecursivePrimaryExpression(head: Ast.TPrimaryExpression): Ast.RecursivePrimaryExpression {
-        const tokenRangeStart: number = head.tokenRange.startTokenIndex;
         const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
         this.startContext(nodeKind);
-        this.startTokenRangeAt(nodeKind, tokenRangeStart);
 
+        // The head of the recursive primary expression is created before the recursive primrary expression,
+        // meaning the parent/child mapping for contexts are in reverse order.
+        // The clean up for that happens here.
+        const nodeIdMapCollection: NodeIdMap.Collection = this.contextState.nodeIdMapCollection;
+        if (this.maybeCurrentContextNode === undefined) {
+            throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
+        }
+        const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
+
+        const maybeHeadParentId: Option<number> = nodeIdMapCollection.parentIdById.get(head.id);
+        if (maybeHeadParentId === undefined) {
+            const details: {} = { nodeId: head.id };
+            throw new CommonError.InvariantError(`head's nodeId isn't in parentIdById`, details);
+        }
+        const headParentId: number = maybeHeadParentId;
+
+        // Remove head as a child of its current parent.
+        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(
+            nodeIdMapCollection.childIdsById,
+            headParentId,
+        );
+        const replacementIndex: number = parentChildIds.indexOf(head.id);
+        if (replacementIndex === -1) {
+            const details: {} = {
+                parentNodeId: headParentId,
+                childNodeId: head.id,
+            };
+            throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
+        }
+
+        nodeIdMapCollection.childIdsById.set(headParentId, [
+            ...parentChildIds.slice(0, replacementIndex),
+            ...parentChildIds.slice(replacementIndex + 1),
+        ]);
+
+        // Update mappings for head.
+        nodeIdMapCollection.astNodeById.set(head.id, head);
+        nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
+
+        // Mark head as a child of the recursive primary expression context (currentContextNode).
+        nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
+
+        // Update start positions for recursive primary expression context
+        const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
+        const mutableContext: TypeUtils.Writable<ParserContext.Node> = currentContextNode;
+        // UNSAFE MARKER
+        //
+        // Purpose of code block:
+        //      Shift the start of ParserContext from the default location (which doesn't include head),
+        //      to the left so that head is also included.
+        //
+        // Why are you trying to avoid a safer approach?
+        //      There isn't one? At least not without refactoring in ways which will make things messier.
+        //
+        // Why is it safe?
+        //      I'm only mutating start locations in the recursive expression to those on head.
+        mutableContext.maybeTokenStart = this.lexerSnapshot.tokens[recursiveTokenIndexStart];
+        mutableContext.tokenIndexStart = recursiveTokenIndexStart;
+
+        // Begin normal parsing behavior.
         const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
         let continueReadingValues: boolean = true;
 
@@ -1285,9 +1230,9 @@ export class Parser {
         }
 
         const astNode: Ast.RecursivePrimaryExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             head,
             recursiveExpressions,
         };
@@ -1299,13 +1244,12 @@ export class Parser {
         const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
         this.startContext(nodeKind);
 
-        const tokenRange: TokenRange = this.singleTokenRange(TokenKind.Identifier);
         const literal: string = this.readTokenKind(TokenKind.Identifier);
 
         const astNode: Ast.Identifier = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange,
-            terminalNode: true,
+            isLeaf: true,
             literal,
         };
         this.endContext(astNode);
@@ -1315,7 +1259,6 @@ export class Parser {
     private readGeneralizedIdentifier(): Ast.GeneralizedIdentifier {
         const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         let literal: string;
 
@@ -1359,9 +1302,9 @@ export class Parser {
         }
 
         const astNode: Ast.GeneralizedIdentifier = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: true,
+            isLeaf: true,
             literal,
         };
         this.endContext(astNode);
@@ -1369,7 +1312,7 @@ export class Parser {
     }
 
     private readPrimitiveType(): Ast.PrimitiveType {
-        const triedReadPrimitiveType: TryReadPrimitiveType = this.tryReadPrimitiveType();
+        const triedReadPrimitiveType: TriedReadPrimitiveType = this.tryReadPrimitiveType();
         if (triedReadPrimitiveType.kind === ResultKind.Ok) {
             return triedReadPrimitiveType.value;
         } else {
@@ -1377,10 +1320,9 @@ export class Parser {
         }
     }
 
-    private tryReadPrimitiveType(): TryReadPrimitiveType {
+    private tryReadPrimitiveType(): TriedReadPrimitiveType {
         const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const backup: StateBackup = this.backupState();
         const expectedTokenKinds: ReadonlyArray<TokenKind> = [
@@ -1443,9 +1385,9 @@ export class Parser {
         }
 
         const astNode: Ast.PrimitiveType = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             primitiveType,
         };
         this.endContext(astNode);
@@ -1545,22 +1487,22 @@ export class Parser {
         if (this.isOnTokenKind(tokenKind)) {
             const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
             this.startContext(nodeKind);
-            const tokenRange: TokenRange = this.singleTokenRange(tokenKind);
 
             const maybeConstantKind: Option<Ast.ConstantKind> = Ast.constantKindFromTokenKind(tokenKind);
-            if (!maybeConstantKind) {
+            if (maybeConstantKind === undefined) {
                 throw new CommonError.InvariantError(`couldn't convert TokenKind=${tokenKind} into ConstantKind`);
             }
             const constantKind: Ast.ConstantKind = maybeConstantKind;
 
             this.readToken();
             const astNode: Ast.Constant = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                tokenRange,
-                terminalNode: true,
+                isLeaf: true,
                 literal: constantKind,
             };
             this.endContext(astNode);
+
             return astNode;
         } else {
             return undefined;
@@ -1582,7 +1524,6 @@ export class Parser {
         if (this.isOnIdentifierConstant(identifierConstant)) {
             const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
             this.startContext(nodeKind);
-            const tokenRange: TokenRange = this.singleTokenRange(identifierConstant);
 
             const maybeConstantKind: Option<Ast.ConstantKind> = Ast.constantKindFromIdentifieConstant(
                 identifierConstant,
@@ -1595,9 +1536,9 @@ export class Parser {
 
             this.readToken();
             const astNode: Ast.Constant = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                tokenRange,
-                terminalNode: true,
+                isLeaf: true,
                 literal: maybeConstantKind,
             };
             this.endContext(astNode);
@@ -1610,14 +1551,13 @@ export class Parser {
     private readUnaryOperatorAsConstant(operator: Ast.TUnaryExpressionHelperOperator): Ast.Constant {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         this.startContext(nodeKind);
-        const tokenRange: TokenRange = this.singleTokenRange(operator);
 
         this.readToken();
 
         const astNode: Ast.Constant = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange,
-            terminalNode: true,
+            isLeaf: true,
             literal: operator,
         };
         this.endContext(astNode);
@@ -1627,25 +1567,23 @@ export class Parser {
     private readKeyword(): Ast.IdentifierExpression {
         const identifierExpressionNodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
         this.startContext(identifierExpressionNodeKind);
-        const identifierExpressionTokenRange: TokenRange = this.singleTokenRange(TokenKind.Identifier);
 
         const identifierNodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
         this.startContext(identifierNodeKind);
-        const identifierTokenRange: TokenRange = this.singleTokenRange(TokenKind.Identifier);
 
         const literal: string = this.readToken();
         const identifier: Ast.Identifier = {
+            ...this.expectContextNodeMetadata(),
             kind: identifierNodeKind,
-            tokenRange: identifierTokenRange,
-            terminalNode: true,
+            isLeaf: true,
             literal,
         };
         this.endContext(identifier);
 
         const identifierExpression: Ast.IdentifierExpression = {
+            ...this.expectContextNodeMetadata(),
             kind: identifierExpressionNodeKind,
-            tokenRange: identifierExpressionTokenRange,
-            terminalNode: false,
+            isLeaf: false,
             maybeInclusiveConstant: undefined,
             identifier,
         };
@@ -1713,7 +1651,6 @@ export class Parser {
         rightExpressionReader: () => R,
     ): L | Ast.IBinOpKeyword<NodeKindVariant, L, R> {
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const left: L = leftExpressionReader();
         const maybeConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(keywordTokenKind);
@@ -1722,9 +1659,9 @@ export class Parser {
             const right: R = rightExpressionReader();
 
             const astNode: Ast.IBinOpKeyword<NodeKindVariant, L, R> = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 left,
                 constant: maybeConstant,
                 right,
@@ -1744,13 +1681,12 @@ export class Parser {
             //      take the return and end the context themselves, which is messy.
             //
             // Why is it safe?
-            //      All Ast.IBinOpKeyword used by the parser are of Ast.TBinOpKeywordExpression,
+            //      All Ast.NodeKind.IBinOpKeyword used by the parser are of Ast.TBinOpKeywordExpression,
             //      a sub type of Ast.TNode.
             this.endContext((astNode as unknown) as Ast.TBinOpKeywordExpression);
             return astNode;
         } else {
-            this.popTokenRangeNoop();
-            this.deleteContext();
+            this.deleteContext(undefined);
             return left;
         }
     }
@@ -1758,39 +1694,78 @@ export class Parser {
     private readBinOpExpression<NodeKindVariant, Op, Operand>(
         nodeKind: NodeKindVariant & Ast.TBinOpExpressionNodeKind,
         operatorFrom: (tokenKind: Option<TokenKind>) => Option<Op & Ast.TUnaryExpressionHelperOperator>,
-        operandReader: () => Operand,
+        operandReader: () => Operand & Ast.TNode,
     ): Operand | Ast.IBinOpExpression<NodeKindVariant, Op, Operand> {
-        this.startTokenRange(nodeKind);
-        const first: Operand = operandReader();
+        this.startContext(nodeKind);
+        const first: Operand & Ast.TNode = operandReader();
 
         let maybeOperator: Option<Op & Ast.TUnaryExpressionHelperOperator> = operatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {
             const rest: Ast.UnaryExpressionHelper<Op, Operand>[] = [];
 
             while (maybeOperator) {
-                this.startTokenRange(Ast.NodeKind.UnaryExpressionHelper);
+                const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
+                this.startContext(helperNodeKind);
+
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
-                rest.push({
-                    kind: Ast.NodeKind.UnaryExpressionHelper,
-                    tokenRange: this.popTokenRange(),
-                    terminalNode: false,
+
+                const helper: Ast.UnaryExpressionHelper<Op, Operand> = {
+                    ...this.expectContextNodeMetadata(),
+                    kind: helperNodeKind,
+                    isLeaf: false,
                     inBinaryExpression: true,
                     operator: maybeOperator,
                     operatorConstant,
                     node: operandReader(),
-                });
+                };
+                rest.push(helper);
+                // UNSAFE MARKER
+                //
+                // Purpose of code block:
+                //      End the context started within the same function.
+                //
+                // Why are you trying to avoid a safer approach?
+                //      endContext takes an Ast.TNode, but due to generics the parser
+                //      can't prove for all types A, B, C that Ast.UnaryExpressionHelper<A, B>
+                //      results in an Ast.TNode.
+                //
+                //      The alternative approach is let the callers of readBinOpExpression
+                //      take the return and end the context themselves, which is messy.
+                //
+                // Why is it safe?
+                //      All Ast.NodeKind.UnaryExpressionHelper used by the parser are of Ast.TUnaryExpressionHelper,
+                //      a sub type of Ast.TNode.
+                this.endContext((helper as unknown) as Ast.TUnaryExpressionHelper);
                 maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
 
-            return {
+            const astNode: Ast.IBinOpExpression<NodeKindVariant, Op, Operand> = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 first,
                 rest,
             };
+            // UNSAFE MARKER
+            //
+            // Purpose of code block:
+            //      End the context started within the same function.
+            //
+            // Why are you trying to avoid a safer approach?
+            //      endContext takes an Ast.TNode, but due to generics the parser
+            //      can't prove for all types A, B, C that Ast.IBinOpExpression<A, B, C>
+            //      results in an Ast.TNode.
+            //
+            //      The alternative approach is let the callers of readBinOpExpression
+            //      take the return and end the context themselves, which is messy.
+            //
+            // Why is it safe?
+            //      All Ast.NodeKind.IBinOpExpression used by the parser are of Ast.TBinOpExpression,
+            //      a sub type of Ast.TNode.
+            this.endContext((astNode as unknown) as Ast.TBinOpExpression);
+            return astNode;
         } else {
-            this.popTokenRangeNoop();
+            this.deleteContext(undefined);
             return first;
         }
     }
@@ -1801,15 +1776,14 @@ export class Parser {
         pairedReader: () => Paired,
     ): Ast.IPairedConstant<NodeKindVariant, Paired> {
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const constant: Ast.Constant = constantReader();
         const paired: Paired = pairedReader();
 
         const pairedConstant: Ast.IPairedConstant<NodeKindVariant, Paired> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             constant,
             paired,
         };
@@ -1828,7 +1802,7 @@ export class Parser {
         //      take the return and end the context themselves, which is messy.
         //
         // Why is it safe?
-        //      All Ast.IPairedConstant used by the parser are of Ast.TPairedConstant,
+        //      All Ast.NodeKind.IPairedConstant used by the parser are of Ast.TPairedConstant,
         //      a sub type of Ast.TNode.
         this.endContext((pairedConstant as unknown) as Ast.TPairedConstant);
 
@@ -1853,21 +1827,27 @@ export class Parser {
         openConstantReader: () => Ast.Constant,
         contentReader: () => Content,
         closeConstantReader: () => Ast.Constant,
-    ): Ast.IWrapped<NodeKindVariant, Content> {
+        allowOptionalConstant: boolean,
+    ): WrappedRead<NodeKindVariant, Content> {
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const openWrapperConstant: Ast.Constant = openConstantReader();
         const content: Content = contentReader();
         const closeWrapperConstant: Ast.Constant = closeConstantReader();
 
-        const wrapped: Ast.IWrapped<NodeKindVariant, Content> = {
+        let maybeOptionalConstant: Option<Ast.Constant>;
+        if (allowOptionalConstant) {
+            maybeOptionalConstant = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
+        }
+
+        const wrapped: WrappedRead<NodeKindVariant, Content> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             openWrapperConstant,
             content,
             closeWrapperConstant,
+            maybeOptionalConstant,
         };
 
         // UNSAFE MARKER
@@ -1884,7 +1864,7 @@ export class Parser {
         //      take the return and end the context themselves, which is messy.
         //
         // Why is it safe?
-        //      All Ast.IWrapped used by the parser are of Ast.TWrapped,
+        //      All Ast.NodeKind.IWrapped used by the parser are of Ast.TWrapped,
         //      a sub type of Ast.TNode.
         this.endContext((wrapped as unknown) as Ast.TWrapped);
         return wrapped;
@@ -1896,16 +1876,15 @@ export class Parser {
         valueReader: () => Value,
     ): Ast.IKeyValuePair<NodeKindVariant, Key, Value> {
         this.startContext(nodeKind);
-        this.startTokenRange(nodeKind);
 
         const key: Key = keyReader();
         const equalConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Equal);
         const value: Value = valueReader();
 
         const keyValuePair: Ast.IKeyValuePair<NodeKindVariant, Key, Value> = {
+            ...this.expectContextNodeMetadata(),
             kind: nodeKind,
-            tokenRange: this.popTokenRange(),
-            terminalNode: false,
+            isLeaf: false,
             key,
             equalConstant,
             value,
@@ -1924,7 +1903,7 @@ export class Parser {
         //      take the return and end the context themselves, which is messy.
         //
         // Why is it safe?
-        //      All Ast.IKeyValuePair used by the parser are of Ast.TKeyValuePair,
+        //      All Ast.NodeKind.IKeyValuePair used by the parser are of Ast.TKeyValuePair,
         //      a sub type of Ast.TNode.
         this.endContext((keyValuePair as unknown) as Ast.TKeyValuePair);
         return keyValuePair;
@@ -1936,16 +1915,15 @@ export class Parser {
         while (continueReadingValues) {
             const nodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
             this.startContext(nodeKind);
-            this.startTokenRange(nodeKind);
 
             const node: T = valueReader();
             const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const value: Ast.ICsv<T> = {
+                ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
-                tokenRange: this.popTokenRange(),
-                terminalNode: false,
+                isLeaf: false,
                 node,
                 maybeCommaConstant,
             };
@@ -1964,7 +1942,7 @@ export class Parser {
             //      take the return and end the context themselves, which is messy.
             //
             // Why is it safe?
-            //      All Ast.Csv used by the parser are of Ast.TCsv,
+            //      All Ast.NodeKind.Csv used by the parser are of Ast.TCsv,
             //      a sub type of Ast.TNode.
             this.endContext((value as unknown) as Ast.TCsv);
         }
@@ -2075,76 +2053,16 @@ export class Parser {
         return new ParserError.UnterminatedBracketError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
     }
 
-    private startTokenRange(nodeKind: Ast.NodeKind): void {
-        this.startTokenRangeAt(nodeKind, this.tokenIndex);
-    }
-
-    private startTokenRangeAt(nodeKind: Ast.NodeKind, tokenIndex: number): void {
-        if (tokenIndex >= this.lexerSnapshot.tokens.length) {
-            const topOfTokenRangeStack: Ast.NodeKind = this.tokenRangeStack[this.tokenRangeStack.length - 1].nodeKind;
-            throw new ParserError.UnexpectedEndOfTokensError(topOfTokenRangeStack);
-        }
-
-        const currentToken: Token = this.lexerSnapshot.tokens[tokenIndex];
-        this.tokenRangeStack.push({
-            nodeKind,
-            tokenIndexStart: tokenIndex,
-            positionStart: currentToken.positionStart,
-        });
-    }
-
-    // faster version of popTokenRange, returns no value
-    private popTokenRangeNoop(): void {
-        if (!this.tokenRangeStack.pop()) {
-            throw new CommonError.InvariantError("tried to pop from an empty stack");
-        }
-    }
-
-    private popTokenRange(): TokenRange {
-        const maybeElement: Option<TokenRangeStackElement> = this.tokenRangeStack.pop();
-        if (maybeElement === undefined) {
-            throw new CommonError.InvariantError("tried to pop from an empty stack");
-        }
-
-        const element: TokenRangeStackElement = maybeElement;
-        const positionStart: TokenPosition = element.positionStart;
-        const endTokenIndex: number = this.tokenIndex;
-        const lastInclusiveToken: Token = this.lexerSnapshot.tokens[endTokenIndex - 1];
-
-        return {
-            startTokenIndex: element.tokenIndexStart,
-            endTokenIndex,
-            positionStart: element.positionStart,
-            positionEnd: lastInclusiveToken.positionEnd,
-            hash: tokenRangeHashFrom(maybeElement.nodeKind, positionStart, positionStart),
-        };
-    }
-
-    // create a TokenRange of length 1
-    private singleTokenRange(
-        tag: TokenKind | Keyword | Ast.IdentifierConstant | Ast.TUnaryExpressionHelperOperator,
-    ): TokenRange {
-        const tokenIndex: number = this.tokenIndex;
-        const token: Token = this.lexerSnapshot.tokens[tokenIndex];
-        const positionStart: TokenPosition = token.positionStart;
-        const positionEnd: TokenPosition = token.positionEnd;
-
-        return {
-            startTokenIndex: tokenIndex,
-            endTokenIndex: tokenIndex + 1,
-            positionStart,
-            positionEnd,
-            hash: tokenRangeHashFrom(tag, positionStart, positionEnd),
-        };
-    }
-
     private startContext(nodeKind: Ast.NodeKind): void {
-        this.maybeCurrentContextNode = Context.addChild(
+        this.maybeCurrentContextNode = ParserContext.startContext(
             this.contextState,
-            this.maybeCurrentContextNode,
             nodeKind,
+            this.nodeIdCounter,
+            this.tokenIndex,
             this.maybeCurrentToken,
+            this.maybeCurrentContextNode,
         );
+        this.nodeIdCounter += 1;
     }
 
     private endContext(astNode: Ast.TNode): void {
@@ -2154,17 +2072,29 @@ export class Parser {
             );
         }
 
-        this.maybeCurrentContextNode = Context.endContext(this.contextState, this.maybeCurrentContextNode, astNode);
+        this.maybeCurrentContextNode = ParserContext.endContext(
+            this.contextState,
+            this.maybeCurrentContextNode,
+            astNode,
+        );
     }
 
-    private deleteContext(): void {
-        if (this.maybeCurrentContextNode === undefined) {
-            throw new CommonError.InvariantError(
-                "maybeContextNode should be truthy, can't end context if it doesn't exist.",
-            );
+    private deleteContext(maybeNodeId: Option<number>): void {
+        let nodeId: number;
+        if (maybeNodeId === undefined) {
+            if (this.maybeCurrentContextNode === undefined) {
+                throw new CommonError.InvariantError(
+                    "maybeContextNode should be truthy, can't end context if it doesn't exist.",
+                );
+            } else {
+                const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
+                nodeId = currentContextNode.id;
+            }
+        } else {
+            nodeId = maybeNodeId;
         }
 
-        this.maybeCurrentContextNode = Context.deleteContext(this.contextState, this.maybeCurrentContextNode);
+        this.maybeCurrentContextNode = ParserContext.deleteContext(this.contextState, nodeId);
     }
 
     private isNextTokenKind(tokenKind: TokenKind): boolean {
@@ -2211,6 +2141,41 @@ export class Parser {
         }
     }
 
+    private expectContextNodeMetadata(): ContextNodeMetadata {
+        if (this.maybeCurrentContextNode === undefined) {
+            throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
+        }
+        const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
+
+        const maybeTokenStart: Option<Token> = currentContextNode.maybeTokenStart;
+        if (maybeTokenStart === undefined) {
+            throw new CommonError.InvariantError(`maybeTokenStart should be truthy`);
+        }
+        const tokenStart: Token = maybeTokenStart;
+
+        // inclusive token index
+        const tokenIndexEnd: number = this.tokenIndex - 1;
+        const maybeTokenEnd: Option<Token> = this.lexerSnapshot.tokens[tokenIndexEnd];
+        if (maybeTokenEnd === undefined) {
+            throw new CommonError.InvariantError(`maybeTokenEnd should be truthy`);
+        }
+        const tokenEnd: Token = maybeTokenEnd;
+
+        const tokenRange: TokenRange = {
+            tokenIndexStart: currentContextNode.tokenIndexStart,
+            tokenIndexEnd,
+            positionStart: tokenStart.positionStart,
+            positionEnd: tokenEnd.positionEnd,
+            hash: tokenRangeHashFrom(currentContextNode.kind, tokenStart.positionStart, tokenEnd.positionEnd),
+        };
+
+        const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
+        return {
+            id: contextNode.id,
+            tokenRange,
+        };
+    }
+
     // WARNING: Only updates tokenIndex and currentTokenKind,
     //          Manual management of TokenRangeStack is assumed.
     //          Best used in conjunction with backup/restore using ParserState.
@@ -2230,15 +2195,13 @@ export class Parser {
     private backupState(): StateBackup {
         return {
             tokenIndex: this.tokenIndex,
-            tokenRangeStackLength: this.tokenRangeStack.length,
-            contextState: Context.deepCopy(this.contextState),
+            contextState: ParserContext.deepCopy(this.contextState),
             maybeContextNodeId:
-                this.maybeCurrentContextNode !== undefined ? this.maybeCurrentContextNode.nodeId : undefined,
+                this.maybeCurrentContextNode !== undefined ? this.maybeCurrentContextNode.id : undefined,
         };
     }
 
     private restoreBackup(backup: StateBackup): void {
-        this.tokenRangeStack.length = backup.tokenRangeStackLength;
         this.tokenIndex = backup.tokenIndex;
         this.maybeCurrentToken = this.lexerSnapshot.tokens[this.tokenIndex];
         this.maybeCurrentTokenKind = this.maybeCurrentToken !== undefined ? this.maybeCurrentToken.kind : undefined;
@@ -2246,7 +2209,10 @@ export class Parser {
         this.contextState = backup.contextState;
 
         if (backup.maybeContextNodeId) {
-            this.maybeCurrentContextNode = Context.expectNode(this.contextState.nodesById, backup.maybeContextNodeId);
+            this.maybeCurrentContextNode = NodeIdMap.expectContextNode(
+                this.contextState.nodeIdMapCollection.contextNodeById,
+                backup.maybeContextNodeId,
+            );
         } else {
             this.maybeCurrentContextNode = undefined;
         }
@@ -2255,7 +2221,8 @@ export class Parser {
 
 export interface ParseOk {
     readonly document: Ast.TDocument;
-    readonly nodesById: Context.NodeMap;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
 }
 
 export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
@@ -2263,9 +2230,12 @@ export function parse(lexerSnapshot: LexerSnapshot): TriedParse {
     return parser.parse();
 }
 
-type TryReadPrimaryType = Result<Ast.TPrimaryType, ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError>;
+type TriedReadPrimaryType = Result<
+    Ast.TPrimaryType,
+    ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+>;
 
-type TryReadPrimitiveType = Result<
+type TriedReadPrimitiveType = Result<
     Ast.PrimitiveType,
     ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
@@ -2281,15 +2251,16 @@ const enum BracketDisambiguation {
     Record = "Record",
 }
 
-interface TokenRangeStackElement {
-    readonly nodeKind: Ast.NodeKind;
-    readonly tokenIndexStart: number;
-    readonly positionStart: TokenPosition;
+interface StateBackup {
+    readonly tokenIndex: number;
+    readonly contextState: ParserContext.State;
+    readonly maybeContextNodeId: Option<number>;
+}
+interface ContextNodeMetadata {
+    readonly id: number;
+    readonly tokenRange: TokenRange;
 }
 
-interface StateBackup {
-    readonly tokenRangeStackLength: number;
-    readonly tokenIndex: number;
-    readonly contextState: Context.State;
-    readonly maybeContextNodeId: Option<number>;
+interface WrappedRead<NodeKindVariant, Content> extends Ast.IWrapped<NodeKindVariant, Content> {
+    readonly maybeOptionalConstant: Option<Ast.Constant>;
 }

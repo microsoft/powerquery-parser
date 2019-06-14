@@ -67,8 +67,9 @@ export const enum NodeKind {
 
 export interface INode {
     readonly kind: NodeKind;
+    readonly id: number;
     readonly tokenRange: TokenRange;
-    readonly terminalNode: boolean;
+    readonly isLeaf: boolean;
 }
 
 export type TNode = TDocument | TAuxiliaryNodes;
@@ -86,13 +87,13 @@ export type TAuxiliaryNodes =
     | FieldTypeSpecification
     | GeneralizedIdentifier
     | Identifier
-    | Parameter<TParameterType>
     | SectionMember
     | TAnyLiteral
     | TCsv
     | TKeyValuePair
     | TNullablePrimitiveType
     | TPairedConstant
+    | TParameter
     | TParameterList
     | TType
     | TUnaryExpressionHelper
@@ -104,11 +105,12 @@ export type TCsv =
     | ICsv<GeneralizedIdentifierPairedAnyLiteral>
     | ICsv<GeneralizedIdentifierPairedExpression>
     | ICsv<IdentifierPairedExpression>
-    | ICsv<Parameter<TParameterType>>
+    | ICsv<TParameter>
     | ICsv<TAnyLiteral>
     | ICsv<TExpression>;
 
-export type TParameterList = ParameterList<TParameterType>;
+export type TParameter = IParameter<TParameterType>;
+export type TParameterList = IParameterList<TParameterType>;
 
 export type TRecursivePrimaryExpression =
     | RecursivePrimaryExpression
@@ -200,7 +202,7 @@ export type TDocument = Section | TExpression;
 
 export interface Section extends INode {
     readonly kind: NodeKind.Section;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly maybeLiteralAttributes: Option<RecordLiteral>;
     readonly sectionConstant: Constant;
     readonly maybeName: Option<Identifier>;
@@ -210,7 +212,7 @@ export interface Section extends INode {
 
 export interface SectionMember extends INode {
     readonly kind: NodeKind.SectionMember;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly maybeLiteralAttributes: Option<RecordLiteral>;
     readonly maybeSharedConstant: Option<Constant>;
     readonly namePairedExpression: IdentifierPairedExpression;
@@ -269,7 +271,7 @@ export interface NullablePrimitiveType extends IPairedConstant<NodeKind.Nullable
 
 export interface PrimitiveType extends INode {
     readonly kind: NodeKind.PrimitiveType;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly primitiveType: Constant;
 }
 
@@ -389,7 +391,7 @@ export type TUnaryExpression = UnaryExpression | TTypeExpression;
 
 export interface UnaryExpression extends INode {
     readonly kind: NodeKind.UnaryExpression;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly expressions: ReadonlyArray<UnaryExpressionHelper<UnaryOperator, TUnaryExpression>>;
 }
 
@@ -433,7 +435,7 @@ export type TPrimaryExpression =
 
 export interface LiteralExpression extends INode {
     readonly kind: NodeKind.LiteralExpression;
-    readonly terminalNode: true;
+    readonly isLeaf: true;
     readonly literal: string;
     readonly literalKind: LiteralKind;
 }
@@ -453,7 +455,7 @@ export const enum LiteralKind {
 
 export interface IdentifierExpression extends INode {
     readonly kind: NodeKind.IdentifierExpression;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly maybeInclusiveConstant: Option<Constant>;
     readonly identifier: Identifier;
 }
@@ -470,7 +472,7 @@ export interface ParenthesizedExpression extends IWrapped<NodeKind.Parenthesized
 
 export interface NotImplementedExpression extends INode {
     readonly kind: NodeKind.NotImplementedExpression;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly ellipsisConstant: Constant;
 }
 
@@ -524,8 +526,8 @@ export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, Read
 
 export interface FunctionExpression extends INode {
     readonly kind: NodeKind.FunctionExpression;
-    readonly terminalNode: false;
-    readonly parameters: ParameterList<Option<AsNullablePrimitiveType>>;
+    readonly isLeaf: false;
+    readonly parameters: IParameterList<Option<AsNullablePrimitiveType>>;
     readonly maybeFunctionReturnType: Option<AsNullablePrimitiveType>;
     readonly fatArrowConstant: Constant;
     readonly expression: TExpression;
@@ -555,7 +557,7 @@ export interface LetExpression extends INode {
 
 export interface IfExpression extends INode {
     readonly kind: NodeKind.IfExpression;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly ifConstant: Constant;
     readonly condition: TExpression;
     readonly thenConstant: Constant;
@@ -578,9 +580,9 @@ export type TPrimaryType = PrimitiveType | FunctionType | ListType | NullableTyp
 
 export interface FunctionType extends INode {
     readonly kind: NodeKind.FunctionType;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly functionConstant: Constant;
-    readonly parameters: ParameterList<AsType>;
+    readonly parameters: IParameterList<AsType>;
     readonly functionReturnType: AsType;
 }
 
@@ -590,13 +592,13 @@ export interface NullableType extends IPairedConstant<NodeKind.NullableType, TTy
 
 export interface RecordType extends INode {
     readonly kind: NodeKind.RecordType;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly fields: FieldSpecificationList;
 }
 
 export interface TableType extends INode {
     readonly kind: NodeKind.TableType;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly tableConstant: Constant;
     readonly rowType: FieldSpecificationList | TPrimaryExpression;
 }
@@ -613,7 +615,7 @@ export interface ErrorRaisingExpression extends IPairedConstant<NodeKind.ErrorRa
 
 export interface ErrorHandlingExpression extends INode {
     readonly kind: NodeKind.ErrorHandlingExpression;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly tryConstant: Constant;
     readonly protectedExpression: TExpression;
     readonly maybeOtherwiseExpression: Option<OtherwiseExpression>;
@@ -623,7 +625,7 @@ export interface OtherwiseExpression extends IPairedConstant<NodeKind.OtherwiseE
 
 export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly head: TPrimaryExpression;
     readonly recursiveExpressions: ReadonlyArray<TRecursivePrimaryExpression>;
 }
@@ -653,7 +655,7 @@ export interface RecordLiteral
 // 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
 export interface IBinOpExpression<NodeKindVariant, Operator, Operand> extends INode {
     readonly kind: NodeKindVariant & TBinOpExpressionNodeKind;
-    readonly first: Operand;
+    readonly first: Operand & TNode;
     readonly rest: ReadonlyArray<UnaryExpressionHelper<Operator, Operand>>;
 }
 
@@ -679,8 +681,8 @@ export interface IKeyValuePair<NodeKindVariant, Key, Value> extends INode {
     readonly value: Value;
 }
 
-// a (Constant, T) tuple
-// ex. EachExpression is a `each` Constant paired with a TExpression
+// A [Constant, T] tuple
+// eg. EachExpression is a `each` Constant paired with a TExpression
 export interface IPairedConstant<NodeKindVariant, Paired> extends INode {
     readonly kind: NodeKindVariant & TPairedConstantNodeKind;
     readonly constant: Constant;
@@ -702,7 +704,7 @@ export interface IWrapped<NodeKindVariant, Content> extends INode {
 // used by unary and binary expressions
 export interface UnaryExpressionHelper<Operator, Operand> extends INode {
     readonly kind: NodeKind.UnaryExpressionHelper;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly inBinaryExpression: boolean;
     readonly operator: Operator;
     readonly operatorConstant: Constant;
@@ -745,14 +747,15 @@ export interface IdentifierExpressionPairedExpression
 
 export type TParameterType = AsType | Option<AsNullablePrimitiveType>;
 
-export interface ParameterList<T> extends IWrapped<NodeKind.ParameterList, ReadonlyArray<ICsv<Parameter<T>>>> {}
+export interface IParameterList<T>
+    extends IWrapped<NodeKind.ParameterList, ReadonlyArray<ICsv<IParameter<T & TParameterType>>>> {}
 
-export interface Parameter<T> extends INode {
+export interface IParameter<T> extends INode {
     readonly kind: NodeKind.Parameter;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly maybeOptionalConstant: Option<Constant>;
     readonly name: Identifier;
-    readonly maybeParameterType: T;
+    readonly maybeParameterType: T & TParameterType;
 }
 
 export interface AsNullablePrimitiveType
@@ -766,13 +769,13 @@ export interface AsType extends IPairedConstant<NodeKind.AsType, TType> {}
 
 export interface Constant extends INode {
     readonly kind: NodeKind.Constant;
-    readonly terminalNode: true;
+    readonly isLeaf: true;
     readonly literal: string;
 }
 
 export interface FieldSpecification extends INode {
     readonly kind: NodeKind.FieldSpecification;
-    readonly terminalNode: false;
+    readonly isLeaf: false;
     readonly maybeOptionalConstant: Option<Constant>;
     readonly name: GeneralizedIdentifier;
     readonly maybeFieldTypeSpeification: Option<FieldTypeSpecification>;
@@ -791,13 +794,13 @@ export interface FieldTypeSpecification extends INode {
 
 export interface GeneralizedIdentifier extends INode {
     readonly kind: NodeKind.GeneralizedIdentifier;
-    readonly terminalNode: true;
+    readonly isLeaf: true;
     readonly literal: string;
 }
 
 export interface Identifier extends INode {
     readonly kind: NodeKind.Identifier;
-    readonly terminalNode: true;
+    readonly isLeaf: true;
     readonly literal: string;
 }
 

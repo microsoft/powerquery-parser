@@ -1,72 +1,79 @@
 import { expect } from "chai";
 import "mocha";
-import { CommonError, Option, Result, ResultKind, Traverse } from "../../common";
-import { lexAndParse, TriedLexAndParse } from "../../jobs";
+import { Option, ResultKind, Traverse } from "../../common";
+import { lexAndParse, LexAndParseOk, TriedLexAndParse } from "../../jobs";
 import { Ast } from "../../parser";
 
 interface CollectAllNodeKindState extends Traverse.IState<Ast.NodeKind[]> {}
-interface CollectAllNodeKindRequest extends Traverse.IRequest<CollectAllNodeKindState, Ast.NodeKind[]> {}
 
 interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
     readonly nodeKind: Ast.NodeKind;
     readonly nthRequired: number;
     nthCounter: number;
 }
-interface NthNodeOfKindRequest extends Traverse.IRequest<NthNodeOfKindState, Option<Ast.TNode>> {}
 
-function astFromText(text: string): Ast.TDocument {
-    const parseResult: TriedLexAndParse = lexAndParse(text);
-    if (parseResult.kind === ResultKind.Err) {
-        throw new Error(`parseResult.kind === ResultKind.Err: ${JSON.stringify(parseResult)}`);
+function expectLexAndParseOk(text: string): LexAndParseOk {
+    const triedLexAndParse: TriedLexAndParse = lexAndParse(text);
+    if (!(triedLexAndParse.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }
-
-    return parseResult.value.ast;
+    return triedLexAndParse.value;
 }
 
 function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
-    const ast: Ast.TDocument = astFromText(text);
-    const request: CollectAllNodeKindRequest = {
-        ast,
-        state: {
+    const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
+    const triedTraverse: Traverse.TriedTraverse<Ast.NodeKind[]> = Traverse.tryTraverseAst<
+        CollectAllNodeKindState,
+        Ast.NodeKind[]
+    >(
+        lexAndParseOk.ast,
+        lexAndParseOk.nodeIdMapCollection,
+        {
             result: [],
         },
-        visitNodeFn: collectNodeKindVisit,
-        visitNodeStrategy: Traverse.VisitNodeStrategy.BreadthFirst,
-        maybeEarlyExitFn: undefined,
-    };
+        Traverse.VisitNodeStrategy.BreadthFirst,
+        collectNodeKindVisit,
+        Traverse.expectExpandAllAstChildren,
+        undefined,
+    );
 
-    const traverseRequest: Result<Ast.NodeKind[], CommonError.CommonError> = Traverse.traverseAst(request);
-    if (traverseRequest.kind === ResultKind.Err) {
-        throw new Error(`traverseRequest.kind === ResultKind.Err: ${JSON.stringify(traverseRequest)}`);
+    if (!(triedTraverse.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok: ${triedTraverse.error.message}`);
     }
 
-    return traverseRequest.value;
+    return triedTraverse.value;
 }
 
 function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
-    const ast: Ast.TDocument = astFromText(text);
-    const request: NthNodeOfKindRequest = {
-        ast,
-        state: {
+    const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
+    const triedTraverse: Traverse.TriedTraverse<Option<Ast.TNode>> = Traverse.tryTraverseAst<
+        NthNodeOfKindState,
+        Option<Ast.TNode>
+    >(
+        lexAndParseOk.ast,
+        lexAndParseOk.nodeIdMapCollection,
+        {
             result: undefined,
             nodeKind,
             nthCounter: 0,
             nthRequired,
         },
-        visitNodeFn: nthNodeVisit,
-        visitNodeStrategy: Traverse.VisitNodeStrategy.BreadthFirst,
-        maybeEarlyExitFn: nthNodeEarlyExit,
-    };
+        Traverse.VisitNodeStrategy.BreadthFirst,
+        nthNodeVisit,
+        Traverse.expectExpandAllAstChildren,
+        nthNodeEarlyExit,
+    );
 
-    const traverseRequest: Result<Option<Ast.TNode>, CommonError.CommonError> = Traverse.traverseAst(request);
-    if (traverseRequest.kind === ResultKind.Err) {
-        throw new Error(`traverseRequest.kind === ResultKind.Err: ${JSON.stringify(traverseRequest)}`);
-    } else if (traverseRequest.value === undefined) {
-        throw new Error(`could not find nth NodeKind where nth=${nthRequired} and NodeKind=${nodeKind}`);
+    if (!(triedTraverse.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok: ${triedTraverse.error.message}`);
     }
+    const maybeAstNode: Option<Ast.TNode> = triedTraverse.value;
+    if (!(maybeAstNode !== undefined)) {
+        throw new Error(`AssertFailed: maybeAstNode !== undefined`);
+    }
+    const astNode: Ast.TNode = maybeAstNode;
 
-    const node: Ast.TNode = traverseRequest.value;
-    return node as T & Ast.TNode;
+    return astNode as T & Ast.TNode;
 }
 
 function collectNodeKindVisit(node: Ast.TNode, state: CollectAllNodeKindState): void {
@@ -88,16 +95,12 @@ function nthNodeEarlyExit(_: Ast.TNode, state: NthNodeOfKindState): boolean {
 
 function expectNodeKinds(text: string, expectedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
     const actualNodeKinds: ReadonlyArray<Ast.NodeKind> = collectNodeKindsFromAst(text);
-    const details: {} = {
-        actualNodeKinds,
-        expectedNodeKinds,
-    };
-    expect(actualNodeKinds).members(expectedNodeKinds, JSON.stringify(details, undefined, 4));
+    expect(actualNodeKinds).deep.equal(expectedNodeKinds);
 }
 
 describe("Parser.NodeKind", () => {
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Addition}`, () => {
-        const text: string = `1 + 1`;
+        const text: string = `1 + 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
@@ -115,7 +118,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.And}`, () => {
-        const text: string = `1 & 1`;
+        const text: string = `1 & 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
@@ -133,7 +136,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Division}`, () => {
-        const text: string = `1 / 1`;
+        const text: string = `1 / 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
@@ -151,7 +154,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Multiplication}`, () => {
-        const text: string = `1 * 1`;
+        const text: string = `1 * 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
@@ -169,7 +172,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Subtraction}`, () => {
-        const text: string = `1 - 1`;
+        const text: string = `1 - 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
@@ -187,7 +190,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.ArithmeticExpression} with multiple ${Ast.NodeKind.UnaryExpressionHelper}`, () => {
-        const text: string = `1 + 1 + 1 + 1`;
+        const text: string = `1 + 2 + 3 + 4`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ArithmeticExpression,
             Ast.NodeKind.LiteralExpression,
@@ -270,7 +273,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.EqualityExpression} ${Ast.EqualityOperator.EqualTo}`, () => {
-        const text: string = `1 = 1`;
+        const text: string = `1 = 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.EqualityExpression,
             Ast.NodeKind.LiteralExpression,
@@ -288,7 +291,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.EqualityExpression} ${Ast.EqualityOperator.NotEqualTo}`, () => {
-        const text: string = `1 <> 1`;
+        const text: string = `1 <> 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.EqualityExpression,
             Ast.NodeKind.LiteralExpression,
@@ -316,7 +319,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.ErrorHandlingExpression} otherwise`, () => {
-        const text: string = `try 1 otherwise 1`;
+        const text: string = `try 1 otherwise 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.ErrorHandlingExpression,
             Ast.NodeKind.Constant,
@@ -356,7 +359,7 @@ describe("Parser.NodeKind", () => {
         expectNodeKinds(text, expectedNodeKinds);
     });
 
-    it(`${Ast.NodeKind.FieldProjection}multiple`, () => {
+    it(`${Ast.NodeKind.FieldProjection} multiple`, () => {
         const text: string = `x[[y], [z]]`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.RecursivePrimaryExpression,
@@ -1051,7 +1054,7 @@ describe("Parser.NodeKind", () => {
     // Ast.NodeKind.RecursivePrimaryExpression covered by many
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.GreaterThan}`, () => {
-        const text: string = `1 > 1`;
+        const text: string = `1 > 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,
@@ -1069,7 +1072,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.GreaterThanEqualTo}`, () => {
-        const text: string = `1 >= 1`;
+        const text: string = `1 >= 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,
@@ -1087,7 +1090,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.LessThan}`, () => {
-        const text: string = `1 < 1`;
+        const text: string = `1 < 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,
@@ -1105,7 +1108,7 @@ describe("Parser.NodeKind", () => {
     });
 
     it(`${Ast.NodeKind.RelationalExpression} ${Ast.RelationalOperator.LessThanEqualTo}`, () => {
-        const text: string = `1 <= 1`;
+        const text: string = `1 <= 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
             Ast.NodeKind.RelationalExpression,
             Ast.NodeKind.LiteralExpression,

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment, TriedLexerSnapshot } from "./lexer";
-import { Ast, Parser, ParserError } from "./parser";
+import { Ast, NodeIdMap, Parser, ParserError } from "./parser";
 
 export type TriedLexAndParse = Result<LexAndParseOk, LexAndParseErr>;
 
@@ -11,6 +11,7 @@ export type LexAndParseErr = LexerError.TLexerError | ParserError.TParserError;
 export interface LexAndParseOk {
     readonly ast: Ast.TDocument;
     readonly comments: ReadonlyArray<TComment>;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
 }
 
 export function lexAndParse(text: string): TriedLexAndParse {
@@ -41,6 +42,7 @@ export function lexAndParse(text: string): TriedLexAndParse {
         value: {
             ast: parseOk.document,
             comments: snapshot.comments,
+            nodeIdMapCollection: parseOk.nodeIdMapCollection,
         },
     };
 }
