@@ -3,7 +3,7 @@
 
 import { CommonError, isNever, Option, ResultKind, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
-import { Ast, NodeIdMap, ParserContext, TokenRange } from "../parser";
+import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
 // If a leaf node doesn't exist at the given postion, then the closest node to the left is used (if one exists).
@@ -178,7 +178,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
                 state.result.scope.push("_");
             }
 
-            const tokenRange: TokenRange = node.tokenRange;
+            const tokenRange: Ast.TokenRange = node.tokenRange;
             state.result.nodes.push({
                 kind: NodeKind.Each,
                 maybePositionStart: tokenRange.positionStart,
@@ -207,7 +207,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
         case Ast.NodeKind.ListLiteral: {
             // Check if position is on closeWrapperConstant, eg. '}'
             const position: Position = state.position;
-            const tokenRange: TokenRange = node.tokenRange;
+            const tokenRange: Ast.TokenRange = node.tokenRange;
             if (
                 isInTokenRange(position, tokenRange) &&
                 !isPositionOnTokenPosition(position, node.closeWrapperConstant.tokenRange.positionStart)
@@ -225,7 +225,7 @@ function inspectAstNode(state: State, node: Ast.TNode): void {
         case Ast.NodeKind.RecordLiteral: {
             // Check if position is on closeWrapperConstant, eg. ']'
             const position: Position = state.position;
-            const tokenRange: TokenRange = node.tokenRange;
+            const tokenRange: Ast.TokenRange = node.tokenRange;
             if (
                 isInTokenRange(position, tokenRange) &&
                 !isPositionOnTokenPosition(position, node.closeWrapperConstant.tokenRange.positionStart)
@@ -342,7 +342,7 @@ function inspectContextNode(state: State, node: ParserContext.Node): void {
     }
 }
 
-function isInTokenRange(position: Position, tokenRange: TokenRange): boolean {
+function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
     const tokenRangePositionStart: TokenPosition = tokenRange.positionStart;
     const tokenRangePositionEnd: TokenPosition = tokenRange.positionEnd;
 

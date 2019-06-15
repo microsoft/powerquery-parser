@@ -39,6 +39,12 @@ export function expectContextNode(contextNodeById: ContextNodeById, nodeId: numb
     return expectInMap<ParserContext.Node>(contextNodeById, nodeId, "contextNodeById");
 }
 
+export function expectAstChildNodes(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<Ast.TNode> {
+    const childIds: ReadonlyArray<number> = expectChildIds(nodeIdMapCollection.childIdsById, parentId);
+    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+    return childIds.map(childId => expectAstNode(astNodeById, childId));
+}
+
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
     const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode) {
