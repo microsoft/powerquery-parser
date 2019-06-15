@@ -7,5 +7,4 @@ import * as ParserError from "./error";
 import * as NodeIdMap from "./nodeIdMap";
 import * as Parser from "./parser";
 
-export * from "./tokenRange";
 export { Ast, NodeIdMap, ParserError, Parser, ParserContext };

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext, ParserError, TokenRange, tokenRangeHashFrom } from ".";
+import { Ast, NodeIdMap, ParserContext, ParserError } from ".";
 import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../common";
 import { LexerSnapshot, Token, TokenKind } from "../lexer";
 
@@ -2159,12 +2159,11 @@ export class Parser {
         }
         const tokenEnd: Token = maybeTokenEnd;
 
-        const tokenRange: TokenRange = {
+        const tokenRange: Ast.TokenRange = {
             tokenIndexStart: currentContextNode.tokenIndexStart,
             tokenIndexEnd,
             positionStart: tokenStart.positionStart,
             positionEnd: tokenEnd.positionEnd,
-            hash: tokenRangeHashFrom(currentContextNode.kind, tokenStart.positionStart, tokenEnd.positionEnd),
         };
 
         const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
@@ -2256,7 +2255,7 @@ interface StateBackup {
 }
 interface ContextNodeMetadata {
     readonly id: number;
-    readonly tokenRange: TokenRange;
+    readonly tokenRange: Ast.TokenRange;
 }
 
 interface WrappedRead<NodeKindVariant, Content> extends Ast.IWrapped<NodeKindVariant, Content> {

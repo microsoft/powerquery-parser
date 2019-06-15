@@ -2,8 +2,7 @@
 // Licensed under the MIT license.
 
 import { Option } from "../common/option";
-import { TokenKind } from "../lexer/token";
-import { TokenRange } from "./tokenRange";
+import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
     ArithmeticExpression = "ArithmeticExpression",
@@ -71,6 +70,14 @@ export interface INode {
     readonly id: number;
     readonly tokenRange: TokenRange;
     readonly isLeaf: boolean;
+}
+
+// The [start, end) range of a Ast.TNode.
+export interface TokenRange {
+    readonly tokenIndexStart: number;
+    readonly tokenIndexEnd: number; // exclusive
+    readonly positionStart: TokenPosition;
+    readonly positionEnd: TokenPosition;
 }
 
 export type TNode = TDocument | TAuxiliaryNodes;
