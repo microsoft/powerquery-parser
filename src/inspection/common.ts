@@ -4,6 +4,7 @@
 import { isNever, Option, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
+import { TXorNode } from "../parser/nodeIdMap";
 
 export const enum NodeKind {
     Each = "EachExpression",
@@ -11,17 +12,16 @@ export const enum NodeKind {
     Record = "Record",
 }
 
-export interface State extends Traverse.IState<Inspection> {
+export interface State extends Traverse.IState<Inspected> {
     maybePreviousXorNode: Option<NodeIdMap.TXorNode>;
-    isEachEncountered: boolean;
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
-export interface Inspection {
+export interface Inspected {
     readonly nodes: INode[];
-    readonly scope: string[];
+    readonly scope: Map<string, TXorNode>;
 }
 
 export interface INode {
@@ -98,4 +98,11 @@ export function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): 
 
 export function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosition): boolean {
     return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
+}
+
+export function addToScopeIfNew(state: State, key: string, xorNode: TXorNode): void {
+    const scopeMap: Map<string, TXorNode> = state.result.scope;
+    if (!scopeMap.has(key)) {
+        scopeMap.set(key, xorNode);
+    }
 }

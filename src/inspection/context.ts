@@ -3,16 +3,13 @@
 
 import { CommonError, Option } from "../common";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { isParentOfNodeKind, NodeKind, State } from "./common";
+import { XorNodeKind } from "../parser/nodeIdMap";
+import { addToScopeIfNew, isParentOfNodeKind, NodeKind, State } from "./common";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
         case Ast.NodeKind.EachExpression: {
-            if (!state.isEachEncountered) {
-                state.isEachEncountered = true;
-                state.result.scope.push("_");
-            }
-
+            addContextToScopeIfNew(state, "_", node);
             state.result.nodes.push({
                 kind: NodeKind.Each,
                 maybePositionStart: node.maybeTokenStart !== undefined ? node.maybeTokenStart.positionStart : undefined,
@@ -29,7 +26,7 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
                 >(node, Ast.NodeKind.Identifier);
                 if (maybeAstNode !== undefined) {
                     const astNode: Ast.Identifier = maybeAstNode;
-                    state.result.scope.push(astNode.literal);
+                    addContextToScopeIfNew(state, astNode.literal, node);
                 }
             }
             break;
@@ -72,7 +69,7 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
             }
 
             if (identifier) {
-                state.result.scope.push(identifier);
+                addContextToScopeIfNew(state, identifier, node);
             }
 
             break;
@@ -130,4 +127,11 @@ function contextChildren(
         const childIds: ReadonlyArray<number> = maybeChildIds;
         return NodeIdMap.expectXorNodes(nodeIdMapCollection, childIds);
     }
+}
+
+function addContextToScopeIfNew(state: State, key: string, contextNode: ParserContext.Node): void {
+    addToScopeIfNew(state, key, {
+        kind: XorNodeKind.Context,
+        node: contextNode,
+    });
 }

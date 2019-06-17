@@ -2,16 +2,21 @@
 // Licensed under the MIT license.
 
 import { Ast } from "../parser";
-import { isInTokenRange, isParentOfNodeKind, isPositionOnTokenPosition, NodeKind, Position, State } from "./common";
+import { XorNodeKind } from "../parser/nodeIdMap";
+import {
+    addToScopeIfNew,
+    isInTokenRange,
+    isParentOfNodeKind,
+    isPositionOnTokenPosition,
+    NodeKind,
+    Position,
+    State,
+} from "./common";
 
 export function inspectAstNode(state: State, node: Ast.TNode): void {
     switch (node.kind) {
         case Ast.NodeKind.EachExpression: {
-            if (!state.isEachEncountered) {
-                state.isEachEncountered = true;
-                state.result.scope.push("_");
-            }
-
+            addAstToScopeIfNew(state, "_", node);
             const tokenRange: Ast.TokenRange = node.tokenRange;
             state.result.nodes.push({
                 kind: NodeKind.Each,
@@ -23,7 +28,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
 
         case Ast.NodeKind.Identifier:
             if (!isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression)) {
-                state.result.scope.push(node.literal);
+                addAstToScopeIfNew(state, node.literal, node);
             }
             break;
 
@@ -33,7 +38,8 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                 const inclusiveConstant: Ast.Constant = node.maybeInclusiveConstant;
                 identifier = inclusiveConstant.literal + identifier;
             }
-            state.result.scope.push(identifier);
+
+            addAstToScopeIfNew(state, identifier, node);
             break;
         }
 
@@ -76,4 +82,11 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
         default:
             break;
     }
+}
+
+function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
+    addToScopeIfNew(state, key, {
+        kind: XorNodeKind.Ast,
+        node: astNode,
+    });
 }

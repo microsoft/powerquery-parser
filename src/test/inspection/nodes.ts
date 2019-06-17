@@ -10,19 +10,25 @@ import { Parser, ParserError } from "../../parser";
 
 type AbridgedNode = ReadonlyArray<[Inspection.NodeKind, Option<TokenPosition>]>;
 
+type AbridgedScope = ReadonlyArray<string>;
+
 interface AbridgedInspection {
     readonly abridgedNode: AbridgedNode;
-    readonly scope: ReadonlyArray<string>;
+    readonly scope: AbridgedScope;
 }
 
-function abridgedNodeFrom(inspection: Inspection.Inspection): AbridgedNode {
+function abridgedNodeFrom(inspection: Inspection.Inspected): AbridgedNode {
     return inspection.nodes.map(node => [node.kind, node.maybePositionStart]);
 }
 
-function abridgedInspectionFrom(inspection: Inspection.Inspection): AbridgedInspection {
+function abridgedScopeFrom(inspection: Inspection.Inspected): AbridgedScope {
+    return [...inspection.scope.keys()];
+}
+
+function abridgedInspectionFrom(inspection: Inspection.Inspected): AbridgedInspection {
     return {
         abridgedNode: abridgedNodeFrom(inspection),
-        scope: inspection.scope,
+        scope: abridgedScopeFrom(inspection),
     };
 }
 
@@ -87,7 +93,7 @@ function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expecte
     if (!(triedInspect.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok: ${triedInspect.error.message}`);
     }
-    const inspection: Inspection.Inspection = triedInspect.value;
+    const inspection: Inspection.Inspected = triedInspect.value;
     const actual: AbridgedNode = inspection.nodes.map(node => [node.kind, node.maybePositionStart]);
 
     expect(actual).deep.equal(expected);
@@ -113,12 +119,12 @@ function expectParserOkScopeEqual(text: string, position: Inspection.Position, e
 //     expectAbridgedNodesEqual(triedInspect, expected);
 // }
 
-function expectScopeEqual(triedInspect: Inspection.TriedInspect, expected: ReadonlyArray<string>): void {
+function expectScopeEqual(triedInspect: Inspection.TriedInspect, expected: AbridgedScope): void {
     if (!(triedInspect.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok: ${triedInspect.error.message}`);
     }
-    const inspection: Inspection.Inspection = triedInspect.value;
-    const actual: ReadonlyArray<string> = inspection.scope;
+    const inspection: Inspection.Inspected = triedInspect.value;
+    const actual: ReadonlyArray<string> = abridgedScopeFrom(inspection);
 
     expect(actual).deep.equal(expected);
 }
@@ -155,7 +161,7 @@ function expectAbridgedInspectionEqual(triedInspect: Inspection.TriedInspect, ex
     if (!(triedInspect.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok: ${triedInspect.error.message}`);
     }
-    const inspection: Inspection.Inspection = triedInspect.value;
+    const inspection: Inspection.Inspected = triedInspect.value;
     const actual: AbridgedInspection = abridgedInspectionFrom(inspection);
 
     expect(actual).deep.equal(expected);

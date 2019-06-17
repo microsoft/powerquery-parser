@@ -5,7 +5,7 @@ import { CommonError, isNever, Option, ResultKind, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { inspectAstNode } from "./ast";
-import { Inspection, Position, State } from "./common";
+import { Inspected, Position, State } from "./common";
 import { inspectContextNode } from "./context";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
@@ -16,13 +16,13 @@ import { inspectContextNode } from "./context";
 //  * all nodes are ParserContext.Node
 //  * nodes are initially Ast.TNode, then they become ParserContext.Node
 
-export type TriedInspect = Traverse.TriedTraverse<Inspection>;
+export type TriedInspect = Traverse.TriedTraverse<Inspected>;
 
 export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Traverse.TriedTraverse<Inspection> {
+): Traverse.TriedTraverse<Inspected> {
     const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeClosestXorNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeXorNode === undefined) {
         return {
@@ -35,15 +35,14 @@ export function tryFrom(
     const state: State = {
         result: {
             nodes: [],
-            scope: [],
+            scope: new Map(),
         },
-        isEachEncountered: false,
         maybePreviousXorNode: undefined,
         position,
         nodeIdMapCollection,
         leafNodeIds,
     };
-    return Traverse.tryTraverseXor<State, Inspection>(
+    return Traverse.tryTraverseXor<State, Inspected>(
         xorNode,
         nodeIdMapCollection,
         state,
@@ -54,13 +53,13 @@ export function tryFrom(
     );
 }
 
-const DefaultInspection: Inspection = {
+const DefaultInspection: Inspected = {
     nodes: [],
-    scope: [],
+    scope: new Map(),
 };
 
 function addParentXorNode(
-    _state: State & Traverse.IState<Inspection>,
+    _state: State & Traverse.IState<Inspected>,
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
