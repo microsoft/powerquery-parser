@@ -11,6 +11,7 @@ export const enum NodeKind {
     AsType = "AsType",
     Constant = "Constant",
     Csv = "Csv",
+    CsvContainer = "CsvContainer",
     EachExpression = "EachExpression",
     EqualityExpression = "EqualityExpression",
     ErrorHandlingExpression = "ErrorHandlingExpression",
@@ -90,6 +91,7 @@ export type TNode = TDocument | TAuxiliaryNodes;
 
 export type TAuxiliaryNodes =
     | Constant
+    | TCsvContainer
     | FieldSpecification
     | FieldSpecificationList
     | FieldTypeSpecification
@@ -107,15 +109,17 @@ export type TAuxiliaryNodes =
     | TUnaryExpressionHelper
     | TWrapped;
 
-export type TCsv =
-    | ICsv<FieldSelector>
-    | ICsv<FieldSpecification>
-    | ICsv<GeneralizedIdentifierPairedAnyLiteral>
-    | ICsv<GeneralizedIdentifierPairedExpression>
-    | ICsv<IdentifierPairedExpression>
-    | ICsv<TParameter>
-    | ICsv<TAnyLiteral>
-    | ICsv<TExpression>;
+export type TCsvContainer = ICsvContainer<TCsv>;
+export type TCsv = ICsv<TCsvType>;
+export type TCsvType =
+    | FieldSelector
+    | FieldSpecification
+    | GeneralizedIdentifierPairedAnyLiteral
+    | GeneralizedIdentifierPairedExpression
+    | IdentifierPairedExpression
+    | TParameter
+    | TAnyLiteral
+    | TExpression;
 
 export type TParameter = IParameter<TParameterType>;
 export type TParameterList = IParameterList<TParameterType>;
@@ -488,20 +492,20 @@ export interface NotImplementedExpression extends INode {
 // ---------- 12.2.3.16 Invoke expression ----------
 // -------------------------------------------------
 
-export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, ReadonlyArray<ICsv<TExpression>>> {}
+export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, ICsvContainer<TExpression>> {}
 
 // -----------------------------------------------
 // ---------- 12.2.3.17 List expression ----------
 // -----------------------------------------------
 
-export interface ListExpression extends IWrapped<NodeKind.ListExpression, ReadonlyArray<ICsv<TExpression>>> {}
+export interface ListExpression extends IWrapped<NodeKind.ListExpression, ICsvContainer<TExpression>> {}
 
 // -------------------------------------------------
 // ---------- 12.2.3.18 Record expression ----------
 // -------------------------------------------------
 
 export interface RecordExpression
-    extends IWrapped<NodeKind.RecordExpression, ReadonlyArray<ICsv<GeneralizedIdentifierPairedExpression>>> {}
+    extends IWrapped<NodeKind.RecordExpression, ICsvContainer<GeneralizedIdentifierPairedExpression>> {}
 
 // ------------------------------------------------------
 // ---------- 12.2.3.19 Item access expression ----------
@@ -651,7 +655,7 @@ export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, ReadonlyArra
 }
 
 export interface RecordLiteral
-    extends IWrapped<NodeKind.RecordLiteral, ReadonlyArray<ICsv<GeneralizedIdentifierPairedAnyLiteral>>> {
+    extends IWrapped<NodeKind.RecordLiteral, ICsvContainer<GeneralizedIdentifierPairedAnyLiteral>> {
     readonly literalKind: LiteralKind.Record;
 }
 
@@ -674,6 +678,11 @@ export interface IBinOpKeyword<NodeKindVariant, L, R> extends INode {
     readonly left: L;
     readonly constant: Constant;
     readonly right: R;
+}
+
+export interface ICsvContainer<T> extends INode {
+    readonly kind: NodeKind.CsvContainer;
+    readonly elements: ReadonlyArray<ICsv<T & TCsvType>>;
 }
 
 export interface ICsv<T> extends INode {
@@ -756,7 +765,7 @@ export interface IdentifierExpressionPairedExpression
 export type TParameterType = AsType | Option<AsNullablePrimitiveType>;
 
 export interface IParameterList<T>
-    extends IWrapped<NodeKind.ParameterList, ReadonlyArray<ICsv<IParameter<T & TParameterType>>>> {}
+    extends IWrapped<NodeKind.ParameterList, ICsvContainer<IParameter<T & TParameterType>>> {}
 
 export interface IParameter<T> extends INode {
     readonly kind: NodeKind.Parameter;
