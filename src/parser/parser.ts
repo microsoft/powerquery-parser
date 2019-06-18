@@ -551,7 +551,7 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
-        return this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
+        return this.readWrapped<Ast.NodeKind.FieldProjection, Ast.ICsvContainer<Ast.FieldSelector>>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readCsv(() => this.readFieldSelector(false), true),
@@ -611,8 +611,8 @@ export class Parser {
         this.startContext(nodeKind);
 
         const letConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordLet);
-        const identifierExpressionPairedExpressions: ReadonlyArray<
-            Ast.ICsv<Ast.IdentifierPairedExpression>
+        const identifierExpressionPairedExpressions: Ast.ICsvContainer<
+            Ast.IdentifierPairedExpression
         > = this.readIdentifierPairedExpressions(true);
         const inConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordIn);
         const expression: Ast.TExpression = this.readExpression();
@@ -974,11 +974,8 @@ export class Parser {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBracket);
         const wrappedRead: Ast.IWrapped<
             Ast.NodeKind.RecordLiteral,
-            ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>
-        > = this.readWrapped<
-            Ast.NodeKind.RecordLiteral,
-            ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>
-        >(
+            Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral>
+        > = this.readWrapped<Ast.NodeKind.RecordLiteral, Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral>>(
             Ast.NodeKind.RecordLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readFieldNamePairedAnyLiterals(continueReadingValues),
@@ -993,7 +990,7 @@ export class Parser {
 
     private readFieldNamePairedAnyLiterals(
         continueReadingValues: boolean,
-    ): ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>> {
+    ): Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral> {
         return this.readCsv(
             () =>
                 this.readKeyValuePair<
@@ -1013,8 +1010,8 @@ export class Parser {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
         const wrappedRead: Ast.IWrapped<
             Ast.NodeKind.ListLiteral,
-            ReadonlyArray<Ast.ICsv<Ast.TAnyLiteral>>
-        > = this.readWrapped<Ast.NodeKind.ListLiteral, ReadonlyArray<Ast.ICsv<Ast.TAnyLiteral>>>(
+            Ast.ICsvContainer<Ast.TAnyLiteral>
+        > = this.readWrapped<Ast.NodeKind.ListLiteral, Ast.ICsvContainer<Ast.TAnyLiteral>>(
             Ast.NodeKind.ListLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsv(() => this.readAnyLiteral(), continueReadingValues),

@@ -527,7 +527,7 @@ export interface FieldSelector extends IWrapped<NodeKind.FieldSelector, Generali
     readonly maybeOptionalConstant: Option<Constant>;
 }
 
-export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ReadonlyArray<ICsv<FieldSelector>>> {
+export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ICsvContainer<FieldSelector>> {
     // located after closeWrapperConstant
     readonly maybeOptionalConstant: Option<Constant>;
 }
@@ -558,7 +558,7 @@ export interface EachExpression extends IPairedConstant<NodeKind.EachExpression,
 export interface LetExpression extends INode {
     readonly kind: NodeKind.LetExpression;
     readonly letConstant: Constant;
-    readonly variableList: ReadonlyArray<ICsv<IdentifierPairedExpression>>;
+    readonly variableList: ICsvContainer<IdentifierPairedExpression>;
     readonly inConstant: Constant;
     readonly expression: TExpression;
 }
@@ -650,7 +650,7 @@ export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryTyp
 
 export type TAnyLiteral = ListLiteral | LiteralExpression | RecordLiteral;
 
-export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, ReadonlyArray<ICsv<TAnyLiteral>>> {
+export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, ICsvContainer<TAnyLiteral>> {
     readonly literalKind: LiteralKind.List;
 }
 
@@ -798,7 +798,7 @@ export interface FieldSpecification extends INode {
     readonly maybeFieldTypeSpeification: Option<FieldTypeSpecification>;
 }
 export interface FieldSpecificationList
-    extends IWrapped<NodeKind.FieldSpecificationList, ReadonlyArray<ICsv<FieldSpecification>>> {
+    extends IWrapped<NodeKind.FieldSpecificationList, ICsvContainer<FieldSpecification>> {
     // located between content and closeWrapperConstant
     readonly maybeOpenRecordMarkerConstant: Option<Constant>;
 }
