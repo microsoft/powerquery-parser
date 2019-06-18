@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../..";
 import { Option, ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TokenPosition, TriedLexerSnapshot } from "../../lexer";
-import { Parser, ParserError } from "../../parser";
+import { Ast, Parser, ParserError } from "../../parser";
 
 type AbridgedNode = ReadonlyArray<[Inspection.NodeKind, Option<TokenPosition>]>;
 
@@ -99,7 +99,7 @@ function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expecte
     expect(actual).deep.equal(expected);
 }
 
-function expectParserOkScopeEqual(text: string, position: Inspection.Position, expected: ReadonlyArray<string>): void {
+function expectParserOkScopeEqual(text: string, position: Inspection.Position, expected: AbridgedScope): void {
     const parseOk: Parser.ParseOk = expectParseOk(text);
     const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
         position,
@@ -109,15 +109,15 @@ function expectParserOkScopeEqual(text: string, position: Inspection.Position, e
     expectScopeEqual(triedInspect, expected);
 }
 
-// function expectParserErrScopeEqual(text: string, position: Inspection.Position, expected: AbridgedNode): void {
-//     const parserError: ParserError.ParserError = expectParseErr(text);
-//     const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
-//         position,
-//         parserError.context.nodeIdMapCollection,
-//         parserError.context.leafNodeIds,
-//     );
-//     expectAbridgedNodesEqual(triedInspect, expected);
-// }
+function expectParserErrScopeEqual(text: string, position: Inspection.Position, expected: AbridgedScope): void {
+    const parserError: ParserError.ParserError = expectParseErr(text);
+    const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
+        position,
+        parserError.context.nodeIdMapCollection,
+        parserError.context.leafNodeIds,
+    );
+    expectScopeEqual(triedInspect, expected);
+}
 
 function expectScopeEqual(triedInspect: Inspection.TriedInspect, expected: AbridgedScope): void {
     if (!(triedInspect.kind === ResultKind.Ok)) {
@@ -169,7 +169,7 @@ function expectAbridgedInspectionEqual(triedInspect: Inspection.TriedInspect, ex
 
 describe(`Inspection`, () => {
     describe(`Nodes`, () => {
-        describe(`Each`, () => {
+        describe(`${Ast.NodeKind.EachExpression} (Ast & ParserContext)`, () => {
             it(`|each 1`, () => {
                 const text: string = `each 1`;
                 const position: Inspection.Position = {
@@ -301,7 +301,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`List`, () => {
+        describe(`${Ast.NodeKind.ListExpression} (Ast & ParserContext)`, () => {
             it(`|{1}`, () => {
                 const text: string = `{1}`;
                 const position: Inspection.Position = {
@@ -482,7 +482,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`Record`, () => {
+        describe(`${Ast.NodeKind.RecordExpression} (Ast & ParserContext)`, () => {
             it(`|[a=1]`, () => {
                 const text: string = `[a=1]`;
                 const position: Inspection.Position = {
@@ -665,7 +665,7 @@ describe(`Inspection`, () => {
     });
 
     describe(`Scope`, () => {
-        describe(`Identifier`, () => {
+        describe(`${Ast.NodeKind.Identifier} (Ast)`, () => {
             it(`|foo`, () => {
                 const text: string = `foo`;
                 const position: Inspection.Position = {
@@ -697,7 +697,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`IdentifierExpression`, () => {
+        describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
             it(`|@foo`, () => {
                 const text: string = `@foo`;
                 const position: Inspection.Position = {
@@ -729,7 +729,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`RecordLiteral`, () => {
+        describe(`${Ast.NodeKind.RecordExpression}/${Ast.NodeKind.RecordLiteral} (Ast)`, () => {
             it(`|[x=1] section;`, () => {
                 const text: string = `[x=1] section;`;
                 const position: Inspection.Position = {
@@ -808,6 +808,18 @@ describe(`Inspection`, () => {
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`];
                 expectParserOkScopeEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.RecordExpression}/${Ast.NodeKind.RecordLiteral} (ParserContext)`, () => {
+            it(`[x=1|`, () => {
+                const text: string = `[x=1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 9,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
+                expectParserErrScopeEqual(text, position, expected);
             });
         });
     });
