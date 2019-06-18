@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, NotYetImplementedError, Option } from "../common";
+import { CommonError, Option } from "../common";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { TXorNode, XorNodeKind } from "../parser/nodeIdMap";
+import { XorNodeKind } from "../parser/nodeIdMap";
 import { addToScopeIfNew, isParentOfNodeKind, NodeKind, State } from "./common";
-import { inspectRecordContent } from "./inspectAstNodes";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
@@ -104,6 +103,8 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
                 break;
             }
 
+            break;
+
             // const content: TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, node.id);
             // switch (content.kind) {
             //     case XorNodeKind.Ast:
@@ -137,7 +138,7 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
             //         throw isNever(content);
             // }
 
-            throw new NotYetImplementedError(``);
+            // throw new NotYetImplementedError(``);
         }
 
         default:

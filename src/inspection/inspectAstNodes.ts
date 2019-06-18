@@ -82,7 +82,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                     maybePositionEnd: tokenRange.positionEnd,
                 });
 
-                for (const csv of node.content) {
+                for (const csv of node.content.elements) {
                     const key: Ast.GeneralizedIdentifier = csv.node.key;
                     if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, position)) {
                         addAstToScopeIfNew(state, key.literal, node);

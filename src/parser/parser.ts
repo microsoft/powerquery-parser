@@ -799,6 +799,9 @@ export class Parser {
         let continueReadingValues: boolean = true;
         let maybeOpenRecordMarkerConstant: Option<Ast.Constant> = undefined;
 
+        const fieldContainerNodeKind: Ast.NodeKind.CsvContainer = Ast.NodeKind.CsvContainer;
+        this.startContext(fieldContainerNodeKind);
+
         while (continueReadingValues) {
             if (this.isOnTokenKind(TokenKind.Ellipsis)) {
                 if (allowOpenMarker) {
@@ -852,6 +855,14 @@ export class Parser {
             }
         }
 
+        const fieldContainer: Ast.ICsvContainer<Ast.FieldSpecification> = {
+            ...this.expectContextNodeMetadata(),
+            kind: fieldContainerNodeKind,
+            elements: fields,
+            isLeaf: false,
+        };
+        this.endContext((fieldContainer as unknown) as Ast.TCsvContainer);
+
         const rightBracketConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightBracket);
 
         const astNode: Ast.FieldSpecificationList = {
@@ -859,7 +870,7 @@ export class Parser {
             kind: nodeKind,
             isLeaf: false,
             openWrapperConstant: leftBracketConstant,
-            content: fields,
+            content: fieldContainer,
             maybeOpenRecordMarkerConstant,
             closeWrapperConstant: rightBracketConstant,
         };
@@ -1042,6 +1053,9 @@ export class Parser {
         let continueReadingValues: boolean = !this.isOnTokenKind(TokenKind.RightParenthesis);
         let reachedOptionalParameter: boolean = false;
 
+        const paramterContainerNodeKind: Ast.NodeKind.CsvContainer = Ast.NodeKind.CsvContainer;
+        this.startContext(paramterContainerNodeKind);
+
         const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
         while (continueReadingValues) {
             this.startContext(Ast.NodeKind.Csv);
@@ -1087,6 +1101,14 @@ export class Parser {
             parameters.push(csv);
         }
 
+        const parameterContainer: Ast.ICsvContainer<Ast.IParameter<T & Ast.TParameterType>> = {
+            ...this.expectContextNodeMetadata(),
+            kind: paramterContainerNodeKind,
+            elements: parameters,
+            isLeaf: false,
+        };
+        this.endContext((parameterContainer as unknown) as Ast.TCsvContainer);
+
         const rightParenthesisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightParenthesis);
 
         const astNode: Ast.IParameterList<T & Ast.TParameterType> = {
@@ -1094,7 +1116,7 @@ export class Parser {
             kind: nodeKind,
             isLeaf: false,
             openWrapperConstant: leftParenthesisConstant,
-            content: parameters,
+            content: parameterContainer,
             closeWrapperConstant: rightParenthesisConstant,
         };
         this.endContext(astNode);
@@ -1948,12 +1970,14 @@ export class Parser {
             this.endContext((element as unknown) as Ast.TCsv);
         }
 
-        return {
+        const astNode: Ast.ICsvContainer<T & Ast.TCsvType> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
             elements,
         };
+        this.endContext((astNode as unknown) as Ast.TCsvContainer);
+        return astNode;
     }
 
     private disambiguateParenthesis(): ParenthesisDisambiguation {
