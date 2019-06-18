@@ -570,7 +570,7 @@ describe(`Inspection`, () => {
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
 
-            it(`[a=|1`, () => {
+            it(`abc123 [a=|1`, () => {
                 const text: string = `[a=1`;
                 const position: Inspection.Position = {
                     lineNumber: 0,

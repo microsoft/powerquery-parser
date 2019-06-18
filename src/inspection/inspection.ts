@@ -4,9 +4,9 @@
 import { CommonError, isNever, Option, ResultKind, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { inspectAstNode } from "./ast";
 import { Inspected, Position, State } from "./common";
-import { inspectContextNode } from "./context";
+import { inspectAstNode } from "./inspectAstNodes";
+import { inspectContextNode } from "./inspectParserContextNodes";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
 // If a leaf node doesn't exist at the given postion, then the closest node to the left is used (if one exists).

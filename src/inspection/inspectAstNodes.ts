@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast } from "../parser";
-import { XorNodeKind } from "../parser/nodeIdMap";
+import { TXorNode, XorNodeKind } from "../parser/nodeIdMap";
 import {
     addToScopeIfNew,
     isInTokenRange,
@@ -95,6 +95,21 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
 
         default:
             break;
+    }
+}
+
+export function inspectRecordContent(
+    state: State,
+    parent: TXorNode,
+    content:
+        | ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>>
+        | ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>,
+): void {
+    for (const csv of content) {
+        const key: Ast.GeneralizedIdentifier = csv.node.key;
+        if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
+            addToScopeIfNew(state, key.literal, parent);
+        }
     }
 }
 
