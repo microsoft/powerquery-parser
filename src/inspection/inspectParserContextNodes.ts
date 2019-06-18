@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option } from "../common";
+import { CommonError, isNever, Option } from "../common";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { XorNodeKind } from "../parser/nodeIdMap";
+import { expectChildIds, TXorNode, XorNodeKind } from "../parser/nodeIdMap";
 import { addToScopeIfNew, isParentOfNodeKind, NodeKind, State } from "./common";
+import { inspectRecordCsvContainer as inspectRecordElements } from "./inspectAstNodes";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
@@ -103,42 +104,66 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
                 break;
             }
 
+            const csvContainerXorNode: TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, node.id);
+            switch (csvContainerXorNode.kind) {
+                case XorNodeKind.Ast:
+                    switch (csvContainerXorNode.node.kind) {
+                        case Ast.NodeKind.RecordExpression:
+                        case Ast.NodeKind.RecordLiteral:
+                            const csvContainerAstNode:
+                                | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
+                                | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral> =
+                                csvContainerXorNode.node.content;
+                            inspectRecordElements(
+                                state,
+                                {
+                                    kind: XorNodeKind.Context,
+                                    node,
+                                },
+                                csvContainerAstNode,
+                            );
+                            break;
+
+                        default: {
+                            const details: {} = { node };
+                            throw new CommonError.InvariantError(
+                                `nodeKind should be RecordExpression or RecordLiteral`,
+                                details,
+                            );
+                        }
+                    }
+                    break;
+
+                case XorNodeKind.Context:
+                    const csvContainerContextNode: ParserContext.Node = csvContainerXorNode.node;
+                    const csvContainerChildIds: ReadonlyArray<number> = expectChildIds(
+                        state.nodeIdMapCollection.childIdsById,
+                        csvContainerContextNode.id,
+                    );
+
+                    switch (csvContainerChildIds.length) {
+                        case 0:
+                            break;
+
+                        case 1:
+                            break;
+
+                        default: {
+                            const details: {} = { csvContainerXorNode, csvContainerChildIds };
+                            throw new CommonError.InvariantError(
+                                `CsvContainer should only have at most 1 childIds`,
+                                details,
+                            );
+                        }
+                    }
+
+                    break;
+
+                default:
+                    throw isNever(csvContainerXorNode);
+            }
+
             break;
-
-            // const content: TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, node.id);
-            // switch (content.kind) {
-            //     case XorNodeKind.Ast:
-            //         switch (content.node.kind) {
-            //             case Ast.NodeKind.RecordExpression:
-            //             case Ast.NodeKind.RecordLiteral:
-            //                 inspectRecordContent(
-            //                     state,
-            //                     {
-            //                         kind: XorNodeKind.Context,
-            //                         node,
-            //                     },
-            //                     content.node.content,
-            //                 );
-            //                 break;
-
-            //             default: {
-            //                 const details: {} = { node };
-            //                 throw new CommonError.InvariantError(
-            //                     `nodeKind should be RecordExpression or RecordLiteral`,
-            //                     details,
-            //                 );
-            //             }
-            //         }
-            //         break;
-
-            //     case XorNodeKind.Context:
-            //         break;
-
-            //     default:
-            //         throw isNever(content);
-            // }
-
-            // throw new NotYetImplementedError(``);
         }
 
         default:

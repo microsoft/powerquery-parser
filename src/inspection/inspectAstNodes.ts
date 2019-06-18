@@ -82,12 +82,14 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                     maybePositionEnd: tokenRange.positionEnd,
                 });
 
-                for (const csv of node.content.elements) {
-                    const key: Ast.GeneralizedIdentifier = csv.node.key;
-                    if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, position)) {
-                        addAstToScopeIfNew(state, key.literal, node);
-                    }
-                }
+                inspectRecordCsvContainer(
+                    state,
+                    {
+                        kind: XorNodeKind.Ast,
+                        node,
+                    },
+                    node.content,
+                );
             }
 
             break;
@@ -98,14 +100,14 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
     }
 }
 
-export function inspectRecordContent(
+export function inspectRecordCsvContainer(
     state: State,
     parent: TXorNode,
-    content:
-        | ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>>
-        | ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>,
+    container:
+        | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
+        | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral>,
 ): void {
-    for (const csv of content) {
+    for (const csv of container.elements) {
         const key: Ast.GeneralizedIdentifier = csv.node.key;
         if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
             addToScopeIfNew(state, key.literal, parent);
