@@ -7,11 +7,11 @@ import {
     addToScopeIfNew,
     isInTokenRange,
     isParentOfNodeKind,
+    isTokenPositionBeforePostiion,
     isTokenPositionOnPosition,
     NodeKind,
     Position,
     State,
-    isTokenPositionBeforePostiion,
 } from "./common";
 
 export function inspectAstNode(state: State, node: Ast.TNode): void {
@@ -24,6 +24,11 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                 maybePositionStart: tokenRange.positionStart,
                 maybePositionEnd: tokenRange.positionEnd,
             });
+            break;
+        }
+
+        case Ast.NodeKind.GeneralizedIdentifier: {
+            addAstToScopeIfNew(state, node.literal, node);
             break;
         }
 
@@ -76,12 +81,12 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                     maybePositionStart: tokenRange.positionStart,
                     maybePositionEnd: tokenRange.positionEnd,
                 });
-            }
 
-            for (const csv of node.content) {
-                const key: Ast.GeneralizedIdentifier = csv.node.key;
-                if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, position)) {
-                    addAstToScopeIfNew(state, key.literal, node);
+                for (const csv of node.content) {
+                    const key: Ast.GeneralizedIdentifier = csv.node.key;
+                    if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, position)) {
+                        addAstToScopeIfNew(state, key.literal, node);
+                    }
                 }
             }
 

@@ -39,11 +39,11 @@ function expectTriedParse(text: string): Parser.TriedParse {
         throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
     }
 
-    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (!(snapshotResult.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Ok`);
+    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    if (!(triedSnapshot.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedSnapshot.kind === ResultKind.Ok: ${triedSnapshot.error.message}`);
     }
-    const snapshot: LexerSnapshot = snapshotResult.value;
+    const snapshot: LexerSnapshot = triedSnapshot.value;
 
     return Parser.tryParse(snapshot);
 }
@@ -64,7 +64,7 @@ function expectParseErr(text: string): ParserError.ParserError {
 function expectParseOk(text: string): Parser.ParseOk {
     const triedParse: Parser.TriedParse = expectTriedParse(text);
     if (!(triedParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Ok`);
+        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Ok: ${triedParse.error.message}`);
     }
     return triedParse.value;
 }
@@ -725,6 +725,68 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 1,
                 };
                 const expected: ReadonlyArray<string> = [`@foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+        });
+
+        describe(`RecordLiteral`, () => {
+            it(`|[x=1] section;`, () => {
+                const text: string = `[x=1] section;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`[x=1] section;|`, () => {
+                const text: string = `[x=1] section;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 14,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`[x=1]| section;`, () => {
+                const text: string = `[x=1] section;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 5,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`[x=1|] section;`, () => {
+                const text: string = `[x=1] section;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`abc123 [x|=1] section;`, () => {
+                const text: string = `[x=1] section;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`[x=1|, y=2] section;`, () => {
+                const text: string = `[x=1, y=2] section;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
                 expectParserOkScopeEqual(text, position, expected);
             });
         });

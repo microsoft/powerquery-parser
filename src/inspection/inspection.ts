@@ -139,68 +139,81 @@ function maybeClosestXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): Option<NodeIdMap.TXorNode> {
-    let maybeClosestNode: Option<NodeIdMap.TXorNode>;
+    let maybeCurrentNode: Option<NodeIdMap.TXorNode>;
 
     for (const nodeId of leafNodeIds) {
         const newNode: NodeIdMap.TXorNode = NodeIdMap.expectXorNode(nodeIdMapCollection, nodeId);
-        maybeClosestNode = closerXorNode(position, maybeClosestNode, newNode);
+        maybeCurrentNode = closerXorNodeLeaf(position, maybeCurrentNode, newNode);
     }
 
-    return maybeClosestNode;
+    return maybeCurrentNode;
 }
 
 // Assumes both TXorNode parameters are leaf nodes.
-function closerXorNode(
+function closerXorNodeLeaf(
     position: Position,
     maybeCurrentNode: Option<NodeIdMap.TXorNode>,
     newNode: NodeIdMap.TXorNode,
 ): Option<NodeIdMap.TXorNode> {
-    const newNodePositionStart: TokenPosition = expectTokenStart(newNode);
+    const newNodePositionEnd: TokenPosition = expectTokenPositionEndLeaf(newNode);
 
     // If currentToken isn't set and newNode's start position is <= position: return newToken
     // Else: return undefined
     if (maybeCurrentNode === undefined) {
-        if (newNodePositionStart.lineNumber > position.lineNumber) {
+        const newNodePositionStart: TokenPosition = expectTokenPositionStartLeaf(newNode);
+        if (newNodePositionEnd.lineNumber > position.lineNumber) {
             return undefined;
         } else if (
-            newNodePositionStart.lineNumber === position.lineNumber &&
-            newNodePositionStart.lineCodeUnit >= position.lineCodeUnit
+            newNodePositionEnd.lineNumber === position.lineNumber &&
+            newNodePositionStart.lineCodeUnit < position.lineCodeUnit &&
+            newNodePositionEnd.lineCodeUnit >= position.lineCodeUnit
         ) {
-            return undefined;
-        } else {
             return newNode;
+        } else {
+            return undefined;
         }
     }
     const currentNode: NodeIdMap.TXorNode = maybeCurrentNode;
-    const currentNodePositionStart: TokenPosition = expectTokenStart(currentNode);
+    const currentNodePositionEnd: TokenPosition = expectTokenPositionEndLeaf(currentNode);
 
-    // Verifies newTokenPositionStart starts no later than the position argument.
-    if (newNodePositionStart.lineNumber > position.lineNumber) {
+    // Verifies newTokenPositionEnd starts no later than the position argument.
+    if (newNodePositionEnd.lineNumber > position.lineNumber) {
         return currentNode;
     } else if (
-        newNodePositionStart.lineNumber === position.lineNumber &&
-        newNodePositionStart.lineCodeUnit > position.lineCodeUnit
+        newNodePositionEnd.lineNumber === position.lineNumber &&
+        newNodePositionEnd.lineCodeUnit > position.lineCodeUnit
     ) {
         return currentNode;
     }
 
-    // Both currentTokenPositionStart and newTokenPositionStart are <= position,
+    // Both currentTokenPositionStart and newTokenPositionEnd are <= position,
     // so a quick comparison can be done by examining TokenPosition.codeUnit
-    return currentNodePositionStart.codeUnit < newNodePositionStart.codeUnit ? newNode : currentNode;
+    return currentNodePositionEnd.codeUnit < newNodePositionEnd.codeUnit ? newNode : currentNode;
 }
 
-function expectTokenStart(xorNode: NodeIdMap.TXorNode): TokenPosition {
+function expectTokenPositionStartLeaf(xorNode: NodeIdMap.TXorNode): TokenPosition {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
             return xorNode.node.tokenRange.positionStart;
 
         case NodeIdMap.XorNodeKind.Context: {
-            const contextNode: ParserContext.Node = xorNode.node;
-            if (!contextNode.maybeTokenStart) {
-                const details: {} = { nodeId: contextNode.id };
-                throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
-            }
-            return contextNode.maybeTokenStart.positionStart;
+            const details: {} = { xorNode };
+            throw new CommonError.InvariantError(`expect all leaf tokens to be of kind XorNodeKind.Ast`, details);
+        }
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
+function expectTokenPositionEndLeaf(xorNode: NodeIdMap.TXorNode): TokenPosition {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return xorNode.node.tokenRange.positionEnd;
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const details: {} = { xorNode };
+            throw new CommonError.InvariantError(`expect all leaf tokens to be of kind XorNodeKind.Ast`, details);
         }
 
         default:
