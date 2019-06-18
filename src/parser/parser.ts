@@ -500,7 +500,7 @@ export class Parser {
         return this.readWrapped<Ast.NodeKind.InvokeExpression, Ast.ICsvContainer<Ast.TExpression>>(
             Ast.NodeKind.InvokeExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
-            () => this.readCsv(() => this.readExpression(), continueReadingValues),
+            () => this.readCsvContainer(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightParenthesis),
             false,
         );
@@ -512,7 +512,7 @@ export class Parser {
         return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ICsvContainer<Ast.TExpression>>(
             Ast.NodeKind.ListExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
-            () => this.readCsv(() => this.readExpression(), continueReadingValues),
+            () => this.readCsvContainer(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
             false,
         );
@@ -554,7 +554,7 @@ export class Parser {
         return this.readWrapped<Ast.NodeKind.FieldProjection, Ast.ICsvContainer<Ast.FieldSelector>>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
-            () => this.readCsv(() => this.readFieldSelector(false), true),
+            () => this.readCsvContainer(() => this.readFieldSelector(false), true),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
             true,
         );
@@ -1002,7 +1002,7 @@ export class Parser {
     private readFieldNamePairedAnyLiterals(
         continueReadingValues: boolean,
     ): Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral> {
-        return this.readCsv(
+        return this.readCsvContainer(
             () =>
                 this.readKeyValuePair<
                     Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
@@ -1025,7 +1025,7 @@ export class Parser {
         > = this.readWrapped<Ast.NodeKind.ListLiteral, Ast.ICsvContainer<Ast.TAnyLiteral>>(
             Ast.NodeKind.ListLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
-            () => this.readCsv(() => this.readAnyLiteral(), continueReadingValues),
+            () => this.readCsvContainer(() => this.readAnyLiteral(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
             false,
         );
@@ -1417,13 +1417,13 @@ export class Parser {
     private readIdentifierPairedExpressions(
         continueReadingValues: boolean,
     ): Ast.ICsvContainer<Ast.IdentifierPairedExpression> {
-        return this.readCsv(() => this.readIdentifierPairedExpression(), continueReadingValues);
+        return this.readCsvContainer(() => this.readIdentifierPairedExpression(), continueReadingValues);
     }
 
     private readGeneralizedIdentifierPairedExpressions(
         continueReadingValues: boolean,
     ): Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression> {
-        return this.readCsv(() => this.readGeneralizedIdentifierPairedExpression(), continueReadingValues);
+        return this.readCsvContainer(() => this.readGeneralizedIdentifierPairedExpression(), continueReadingValues);
     }
 
     private readGeneralizedIdentifierPairedExpression(): Ast.GeneralizedIdentifierPairedExpression {
@@ -1926,7 +1926,7 @@ export class Parser {
         return keyValuePair;
     }
 
-    private readCsv<T>(
+    private readCsvContainer<T>(
         valueReader: () => T & Ast.TCsvType,
         continueReadingValues: boolean,
     ): Ast.ICsvContainer<T & Ast.TCsvType> {
@@ -1943,7 +1943,7 @@ export class Parser {
             const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
             continueReadingValues = maybeCommaConstant !== undefined;
 
-            const element: Ast.ICsv<T & Ast.TCsvType> = {
+            const element: Ast.TCsv & Ast.ICsv<T & Ast.TCsvType> = {
                 ...this.expectContextNodeMetadata(),
                 kind: csvNodeKind,
                 isLeaf: false,
@@ -1951,23 +1951,7 @@ export class Parser {
                 maybeCommaConstant,
             };
             elements.push(element);
-            // UNSAFE MARKER
-            //
-            // Purpose of code block:
-            //      End the context started within the same function.
-            //
-            // Why are you trying to avoid a safer approach?
-            //      endContext takes an Ast.TNode, but due to generics the parser
-            //      can't prove for all types T that Ast.ICsv<T>
-            //      results in an Ast.TNode.
-            //
-            //      The alternative approach is let the callers of readCsv
-            //      take the return and end the context themselves, which is messy.
-            //
-            // Why is it safe?
-            //      All Ast.NodeKind.Csv used by the parser are of Ast.TCsv,
-            //      a sub type of Ast.TNode.
-            this.endContext((element as unknown) as Ast.TCsv);
+            this.endContext(element);
         }
 
         const astNode: Ast.ICsvContainer<T & Ast.TCsvType> = {
@@ -1976,7 +1960,7 @@ export class Parser {
             isLeaf: false,
             elements,
         };
-        this.endContext((astNode as unknown) as Ast.TCsvContainer);
+        this.endContext(astNode);
         return astNode;
     }
 

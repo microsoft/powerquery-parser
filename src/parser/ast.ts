@@ -109,7 +109,7 @@ export type TAuxiliaryNodes =
     | TUnaryExpressionHelper
     | TWrapped;
 
-export type TCsvContainer = ICsvContainer<TCsv>;
+export type TCsvContainer = ICsvContainer<TCsvType>;
 export type TCsv = ICsv<TCsvType>;
 export type TCsvType =
     | FieldSelector
