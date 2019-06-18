@@ -770,7 +770,7 @@ describe(`Inspection`, () => {
                 expectParserOkScopeEqual(text, position, expected);
             });
 
-            it(`abc123 [x|=1] section;`, () => {
+            it(`[x|=1] section;`, () => {
                 const text: string = `[x=1] section;`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
