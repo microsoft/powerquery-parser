@@ -1929,7 +1929,7 @@ export class Parser {
     private readCsvContainer<T>(
         valueReader: () => T & Ast.TCsvType,
         continueReadingValues: boolean,
-    ): Ast.ICsvContainer<T & Ast.TCsvType> {
+    ): Ast.TCsvContainer & Ast.ICsvContainer<T & Ast.TCsvType> {
         const nodeKind: Ast.NodeKind.CsvContainer = Ast.NodeKind.CsvContainer;
         this.startContext(nodeKind);
 
