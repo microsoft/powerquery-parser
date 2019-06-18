@@ -7,10 +7,11 @@ import {
     addToScopeIfNew,
     isInTokenRange,
     isParentOfNodeKind,
-    isPositionOnTokenPosition,
+    isTokenPositionOnPosition,
     NodeKind,
     Position,
     State,
+    isTokenPositionBeforePostiion,
 } from "./common";
 
 export function inspectAstNode(state: State, node: Ast.TNode): void {
@@ -50,7 +51,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             const tokenRange: Ast.TokenRange = node.tokenRange;
             if (
                 isInTokenRange(position, tokenRange) &&
-                !isPositionOnTokenPosition(position, node.closeWrapperConstant.tokenRange.positionStart)
+                !isTokenPositionOnPosition(node.closeWrapperConstant.tokenRange.positionStart, position)
             ) {
                 state.result.nodes.push({
                     kind: NodeKind.List,
@@ -68,7 +69,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             const tokenRange: Ast.TokenRange = node.tokenRange;
             if (
                 isInTokenRange(position, tokenRange) &&
-                !isPositionOnTokenPosition(position, node.closeWrapperConstant.tokenRange.positionStart)
+                !isTokenPositionOnPosition(node.closeWrapperConstant.tokenRange.positionStart, position)
             ) {
                 state.result.nodes.push({
                     kind: NodeKind.Record,
@@ -76,6 +77,14 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                     maybePositionEnd: tokenRange.positionEnd,
                 });
             }
+
+            for (const csv of node.content) {
+                const key: Ast.GeneralizedIdentifier = csv.node.key;
+                if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, position)) {
+                    addAstToScopeIfNew(state, key.literal, node);
+                }
+            }
+
             break;
         }
 

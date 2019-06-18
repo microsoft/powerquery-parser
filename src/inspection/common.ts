@@ -96,7 +96,7 @@ export function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): 
     }
 }
 
-export function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosition): boolean {
+export function isTokenPositionOnPosition(tokenPosition: TokenPosition, position: Position): boolean {
     return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
 }
 
@@ -105,4 +105,11 @@ export function addToScopeIfNew(state: State, key: string, xorNode: TXorNode): v
     if (!scopeMap.has(key)) {
         scopeMap.set(key, xorNode);
     }
+}
+
+export function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
+    return (
+        tokenPosition.lineNumber < position.lineNumber ||
+        (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
+    );
 }
