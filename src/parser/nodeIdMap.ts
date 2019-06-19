@@ -67,6 +67,27 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
+export function maybeXorNodeChildAtIndex(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    childIndex: number,
+    childNodeKind: Ast.NodeKind,
+): Option<TXorNode> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+    const childIds: ReadonlyArray<number> = maybeChildIds;
+
+    if (childIndex >= maybeChildIds.length) {
+        return undefined;
+    }
+
+    const childAtIndex: TXorNode = expectXorNode(nodeIdMapCollection, childIds[childIndex]);
+
+    return childAtIndex.node.kind === childNodeKind ? childAtIndex : undefined;
+}
+
 export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const maybeNode: Option<TXorNode> = maybeXorNode(nodeIdMapCollection, nodeId);
     if (maybeNode === undefined) {

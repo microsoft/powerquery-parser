@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { isNever, Option, Traverse } from "../common";
+import { isNever, Option, Traverse, CommonError } from "../common";
 import { TokenPosition } from "../lexer";
-import { Ast, NodeIdMap } from "../parser";
-import { TXorNode } from "../parser/nodeIdMap";
+import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 export const enum NodeKind {
     Each = "EachExpression",
@@ -21,7 +20,7 @@ export interface State extends Traverse.IState<Inspected> {
 
 export interface Inspected {
     readonly nodes: INode[];
-    readonly scope: Map<string, TXorNode>;
+    readonly scope: Map<string, NodeIdMap.TXorNode>;
 }
 
 export interface INode {
@@ -100,8 +99,8 @@ export function isTokenPositionOnPosition(tokenPosition: TokenPosition, position
     return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
 }
 
-export function addToScopeIfNew(state: State, key: string, xorNode: TXorNode): void {
-    const scopeMap: Map<string, TXorNode> = state.result.scope;
+export function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
+    const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
     if (!scopeMap.has(key)) {
         scopeMap.set(key, xorNode);
     }
@@ -112,4 +111,38 @@ export function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, posi
         tokenPosition.lineNumber < position.lineNumber ||
         (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
     );
+}
+
+export function csvContainerXorNodes(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    root: NodeIdMap.TXorNode,
+): ReadonlyArray<NodeIdMap.TXorNode> {
+    switch (root.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            if (root.node.kind !== Ast.NodeKind.CsvContainer) {
+                const details: {} = { root };
+                throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
+            }
+
+            return root.node.elements.map(node => {
+                return {
+                    kind: NodeIdMap.XorNodeKind.Ast,
+                    node,
+                };
+            });
+
+        case NodeIdMap.XorNodeKind.Context:
+            if (root.node.kind !== Ast.NodeKind.CsvContainer) {
+                const details: {} = { root };
+                throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
+            }
+            const csvContainerContextNode: ParserContext.Node = root.node;
+
+            const maybeCsvIds: ReadonlyArray<number> = nodeIdMapCollection.childIdsById.get(root.no)
+
+            break;
+
+        default:
+            throw isNever(root);
+    }
 }

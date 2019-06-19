@@ -82,14 +82,12 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                     maybePositionEnd: tokenRange.positionEnd,
                 });
 
-                inspectRecordCsvContainer(
-                    state,
-                    {
-                        kind: XorNodeKind.Ast,
-                        node,
-                    },
-                    node.content,
-                );
+                for (const csv of node.content.elements) {
+                    const key: Ast.GeneralizedIdentifier = csv.node.key;
+                    if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
+                        addAstToScopeIfNew(state, key.literal, key);
+                    }
+                }
             }
 
             break;
@@ -97,21 +95,6 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
 
         default:
             break;
-    }
-}
-
-export function inspectRecordCsvContainer(
-    state: State,
-    parent: TXorNode,
-    container:
-        | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
-        | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral>,
-): void {
-    for (const csv of container.elements) {
-        const key: Ast.GeneralizedIdentifier = csv.node.key;
-        if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
-            addToScopeIfNew(state, key.literal, parent);
-        }
     }
 }
 

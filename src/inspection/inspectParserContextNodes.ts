@@ -5,7 +5,6 @@ import { CommonError, isNever, Option } from "../common";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { expectChildIds, TXorNode, XorNodeKind } from "../parser/nodeIdMap";
 import { addToScopeIfNew, isParentOfNodeKind, NodeKind, State } from "./common";
-import { inspectRecordCsvContainer as inspectRecordElements } from "./inspectAstNodes";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
@@ -94,74 +93,107 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
                 maybePositionEnd: undefined,
             });
 
-            const maybeChildIds: Option<ReadonlyArray<number>> = state.nodeIdMapCollection.childIdsById.get(node.id);
-            if (maybeChildIds === undefined) {
-                break;
-            }
-            // IWrapped.content (key value pair Csvs) haven't been read
-            const childIds: ReadonlyArray<number> = maybeChildIds;
-            if (childIds.length <= 1) {
-                break;
-            }
+            const maybeCsvContainerXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildAtIndex(
+                state.nodeIdMapCollection,
+                node.id,
+                1,
+                Ast.NodeKind.CsvContainer,
+            );
 
-            const csvContainerXorNode: TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, node.id);
-            switch (csvContainerXorNode.kind) {
-                case XorNodeKind.Ast:
-                    switch (csvContainerXorNode.node.kind) {
-                        case Ast.NodeKind.RecordExpression:
-                        case Ast.NodeKind.RecordLiteral:
-                            const csvContainerAstNode:
-                                | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
-                                | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral> =
-                                csvContainerXorNode.node.content;
-                            inspectRecordElements(
-                                state,
-                                {
-                                    kind: XorNodeKind.Context,
-                                    node,
-                                },
-                                csvContainerAstNode,
-                            );
-                            break;
+            if (maybeCsvContainerXorNode !== undefined) {
+                const csvContainerXorNode: NodeIdMap.TXorNode = maybeCsvContainerXorNode;
+                switch (csvContainerXorNode.kind) {
+                    case XorNodeKind.Ast: {
+                        const csvContainerAstNode:
+                            | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
+                            | Ast.ICsvContainer<
+                                  Ast.GeneralizedIdentifierPairedAnyLiteral
+                              > = csvContainerXorNode.node as
+                            | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
+                            | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral>;
 
-                        default: {
-                            const details: {} = { node };
-                            throw new CommonError.InvariantError(
-                                `nodeKind should be RecordExpression or RecordLiteral`,
-                                details,
-                            );
+                        for (const csv of csvContainerAstNode.elements) {
+
                         }
-                    }
-                    break;
-
-                case XorNodeKind.Context:
-                    const csvContainerContextNode: ParserContext.Node = csvContainerXorNode.node;
-                    const csvContainerChildIds: ReadonlyArray<number> = expectChildIds(
-                        state.nodeIdMapCollection.childIdsById,
-                        csvContainerContextNode.id,
-                    );
-
-                    switch (csvContainerChildIds.length) {
-                        case 0:
-                            break;
-
-                        case 1:
-                            break;
-
-                        default: {
-                            const details: {} = { csvContainerXorNode, csvContainerChildIds };
-                            throw new CommonError.InvariantError(
-                                `CsvContainer should only have at most 1 childIds`,
-                                details,
-                            );
-                        }
+                        break;
                     }
 
-                    break;
+                    case XorNodeKind.Context:
+                        break;
 
-                default:
-                    throw isNever(csvContainerXorNode);
+                    default:
+                        throw isNever(csvContainerXorNode);
+                }
             }
+
+            // const maybeChildIds: Option<ReadonlyArray<number>> = state.nodeIdMapCollection.childIdsById.get(node.id);
+            // if (maybeChildIds === undefined) {
+            //     break;
+            // }
+            // // IWrapped.content (key value pair Csvs) haven't been read
+            // const childIds: ReadonlyArray<number> = maybeChildIds;
+            // if (childIds.length <= 1) {
+            //     break;
+            // }
+
+            // const csvContainerXorNode: TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, node.id);
+            // switch (csvContainerXorNode.kind) {
+            //     case XorNodeKind.Ast:
+            //         switch (csvContainerXorNode.node.kind) {
+            //             case Ast.NodeKind.RecordExpression:
+            //             case Ast.NodeKind.RecordLiteral:
+            //                 const csvContainerAstNode:
+            //                     | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
+            //                     | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral> =
+            //                     csvContainerXorNode.node.content;
+            //                 inspectRecordCsvContainer(
+            //                     state,
+            //                     {
+            //                         kind: XorNodeKind.Context,
+            //                         node,
+            //                     },
+            //                     csvContainerAstNode,
+            //                 );
+            //                 break;
+
+            //             default: {
+            //                 const details: {} = { node };
+            //                 throw new CommonError.InvariantError(
+            //                     `nodeKind should be RecordExpression or RecordLiteral`,
+            //                     details,
+            //                 );
+            //             }
+            //         }
+            //         break;
+
+            //     case XorNodeKind.Context:
+            //         const csvContainerContextNode: ParserContext.Node = csvContainerXorNode.node;
+            //         const csvContainerChildIds: ReadonlyArray<number> = expectChildIds(
+            //             state.nodeIdMapCollection.childIdsById,
+            //             csvContainerContextNode.id,
+            //         );
+
+            //         switch (csvContainerChildIds.length) {
+            //             case 0:
+            //                 break;
+
+            //             case 1:
+            //                 break;
+
+            //             default: {
+            //                 const details: {} = { csvContainerXorNode, csvContainerChildIds };
+            //                 throw new CommonError.InvariantError(
+            //                     `CsvContainer should only have at most 1 childIds`,
+            //                     details,
+            //                 );
+            //             }
+            //         }
+
+            //         break;
+
+            //     default:
+            //         throw isNever(csvContainerXorNode);
+            // }
 
             break;
         }
