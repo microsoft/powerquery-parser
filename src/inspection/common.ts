@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { isNever, Option, Traverse, CommonError } from "../common";
+import { CommonError, isNever, Option, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 
@@ -113,7 +113,8 @@ export function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, posi
     );
 }
 
-export function csvContainerXorNodes(
+// equivalent to CsvContainer.elements.map(csv => csv.node), plus with TXorNode handling
+export function csvContainerChildXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     root: NodeIdMap.TXorNode,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
@@ -124,23 +125,39 @@ export function csvContainerXorNodes(
                 throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
             }
 
-            return root.node.elements.map(node => {
+            return root.node.elements.map(csv => {
                 return {
                     kind: NodeIdMap.XorNodeKind.Ast,
-                    node,
+                    node: csv.node,
                 };
             });
 
-        case NodeIdMap.XorNodeKind.Context:
+        case NodeIdMap.XorNodeKind.Context: {
             if (root.node.kind !== Ast.NodeKind.CsvContainer) {
                 const details: {} = { root };
                 throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
             }
             const csvContainerContextNode: ParserContext.Node = root.node;
 
-            const maybeCsvIds: ReadonlyArray<number> = nodeIdMapCollection.childIdsById.get(root.no)
+            const result: NodeIdMap.TXorNode[] = [];
 
-            break;
+            const maybeContainerChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
+                csvContainerContextNode.id,
+            );
+            if (maybeContainerChildIds !== undefined) {
+                const containerChildIds: ReadonlyArray<number> = maybeContainerChildIds;
+
+                for (const csvId of containerChildIds) {
+                    const maybeCsvChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(csvId);
+                    if (maybeCsvChildIds !== undefined) {
+                        const csvChildIds: ReadonlyArray<number> = maybeCsvChildIds;
+                        result.push(NodeIdMap.expectXorNode(nodeIdMapCollection, csvChildIds[0]));
+                    }
+                }
+            }
+
+            return result;
+        }
 
         default:
             throw isNever(root);

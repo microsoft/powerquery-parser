@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../parser";
-import { TXorNode, XorNodeKind } from "../parser/nodeIdMap";
+import { Ast, NodeIdMap } from "../parser";
 import {
     addToScopeIfNew,
     isInTokenRange,
@@ -98,9 +97,9 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
     }
 }
 
-function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
+export function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
     addToScopeIfNew(state, key, {
-        kind: XorNodeKind.Ast,
+        kind: NodeIdMap.XorNodeKind.Ast,
         node: astNode,
     });
 }

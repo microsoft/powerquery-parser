@@ -31,6 +31,11 @@ export interface Collection {
     readonly childIdsById: ChildIdsById;
 }
 
+export interface DrilldownStep {
+    readonly childIndex: number;
+    readonly allowedChildAstNodeKinds: ReadonlyArray<Ast.NodeKind>;
+}
+
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
 }
@@ -67,25 +72,59 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
+// A single step drilldown.
 export function maybeXorNodeChildAtIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     childIndex: number,
     childNodeKind: Ast.NodeKind,
 ): Option<TXorNode> {
-    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
-    if (maybeChildIds === undefined) {
-        return undefined;
+    return maybeXorNodeChildIndexDrilldown(nodeIdMapCollection, parentId, [
+        {
+            childIndex,
+            allowedChildAstNodeKinds: [childNodeKind],
+        },
+    ]);
+}
+
+// Drills down the root's children, and the child's children to find a given XorNode.
+//
+// If the childIndex in a DrilldownStep doesn't exist on a node (eg. 5 was given but the node only parsed 3 children),
+// then undefined is returned.
+//
+// If a child exists at that index, but its Ast.NodeKind doesn't match DrilldownStep.allowedChildAstNodeKinds,
+// then undefined is returned.
+export function maybeXorNodeChildIndexDrilldown(
+    nodeIdMapCollection: Collection,
+    rootId: number,
+    drilldown: ReadonlyArray<DrilldownStep>,
+): Option<TXorNode> {
+    const childIdsById: ChildIdsById = nodeIdMapCollection.childIdsById;
+
+    let maybeChildIds: Option<ReadonlyArray<number>> = childIdsById.get(rootId);
+    let maybeLatestChildXorNode: Option<TXorNode>;
+    for (const step of drilldown) {
+        const childIndex: number = step.childIndex;
+
+        if (maybeChildIds === undefined) {
+            return undefined;
+        }
+        const childIds: ReadonlyArray<number> = maybeChildIds;
+
+        if (childIndex >= childIds.length) {
+            return undefined;
+        }
+
+        const childAtIndex: TXorNode = expectXorNode(nodeIdMapCollection, childIds[childIndex]);
+        if (step.allowedChildAstNodeKinds.indexOf(childAtIndex.node.kind) === -1) {
+            return undefined;
+        }
+
+        maybeChildIds = childIdsById.get(childAtIndex.node.id);
+        maybeLatestChildXorNode = childAtIndex;
     }
-    const childIds: ReadonlyArray<number> = maybeChildIds;
 
-    if (childIndex >= maybeChildIds.length) {
-        return undefined;
-    }
-
-    const childAtIndex: TXorNode = expectXorNode(nodeIdMapCollection, childIds[childIndex]);
-
-    return childAtIndex.node.kind === childNodeKind ? childAtIndex : undefined;
+    return maybeLatestChildXorNode;
 }
 
 export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {

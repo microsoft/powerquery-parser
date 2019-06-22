@@ -3,8 +3,16 @@
 
 import { CommonError, isNever, Option } from "../common";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { expectChildIds, TXorNode, XorNodeKind } from "../parser/nodeIdMap";
-import { addToScopeIfNew, isParentOfNodeKind, NodeKind, State } from "./common";
+import { XorNodeKind } from "../parser/nodeIdMap";
+import {
+    addToScopeIfNew,
+    csvContainerChildXorNodes,
+    isParentOfNodeKind,
+    isTokenPositionBeforePostiion,
+    NodeKind,
+    State,
+} from "./common";
+import { addAstToScopeIfNew } from "./inspectAstNodes";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
@@ -93,107 +101,98 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
                 maybePositionEnd: undefined,
             });
 
+            const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
             const maybeCsvContainerXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildAtIndex(
                 state.nodeIdMapCollection,
                 node.id,
                 1,
                 Ast.NodeKind.CsvContainer,
             );
-
             if (maybeCsvContainerXorNode !== undefined) {
                 const csvContainerXorNode: NodeIdMap.TXorNode = maybeCsvContainerXorNode;
-                switch (csvContainerXorNode.kind) {
-                    case XorNodeKind.Ast: {
-                        const csvContainerAstNode:
-                            | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
-                            | Ast.ICsvContainer<
-                                  Ast.GeneralizedIdentifierPairedAnyLiteral
-                              > = csvContainerXorNode.node as
-                            | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
-                            | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral>;
 
-                        for (const csv of csvContainerAstNode.elements) {
+                for (const csvXorNode of csvContainerChildXorNodes(nodeIdMapCollection, csvContainerXorNode)) {
+                    switch (csvXorNode.kind) {
+                        // The child node is an Ast.TNode, which makes things way easier to logic out.
+                        case NodeIdMap.XorNodeKind.Ast: {
+                            const csvAstNode: Ast.TNode = csvXorNode.node;
 
+                            // Sanity check that we're matching the expected Ast.NodeKind.
+                            switch (csvAstNode.kind) {
+                                case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+                                case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
+                                    const key: Ast.GeneralizedIdentifier = csvAstNode.key;
+                                    if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
+                                        addAstToScopeIfNew(state, key.literal, key);
+                                    }
+                                    break;
+
+                                default:
+                                    const details: {} = { csvXorNode };
+                                    throw new CommonError.InvariantError(
+                                        `csvXorNode can should only be either GeneralizedIdentifierPairedExpression or GeneralizedIdentifierPairedAnyLiteral`,
+                                        details,
+                                    );
+                            }
+                            break;
                         }
-                        break;
+
+                        // The child is a ParserContext.Node, so more hack-y navigation.
+                        case NodeIdMap.XorNodeKind.Context: {
+                            const maybeKeyXorNode: Option<
+                                NodeIdMap.TXorNode
+                            > = NodeIdMap.maybeXorNodeChildIndexDrilldown(nodeIdMapCollection, csvXorNode.node.id, [
+                                {
+                                    childIndex: 0,
+                                    allowedChildAstNodeKinds: [
+                                        Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                                        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                                    ],
+                                },
+                                {
+                                    childIndex: 0,
+                                    allowedChildAstNodeKinds: [Ast.NodeKind.GeneralizedIdentifier],
+                                },
+                            ]);
+
+                            if (maybeKeyXorNode === undefined) {
+                                break;
+                            }
+                            const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
+
+                            switch (keyXorNode.kind) {
+                                case NodeIdMap.XorNodeKind.Ast: {
+                                    if (keyXorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifier) {
+                                        const details: {} = { keyXorNode };
+                                        throw new CommonError.InvariantError(
+                                            `keyXorNode can only be of kind GeneralizedIdentifier`,
+                                            details,
+                                        );
+                                    }
+                                    const keyAstNode: Ast.GeneralizedIdentifier = keyXorNode.node;
+                                    if (
+                                        isTokenPositionBeforePostiion(keyAstNode.tokenRange.positionEnd, state.position)
+                                    ) {
+                                        addToScopeIfNew(state, keyAstNode.literal, keyXorNode);
+                                    }
+                                    break;
+                                }
+
+                                case NodeIdMap.XorNodeKind.Context:
+                                    break;
+
+                                default:
+                                    throw isNever(keyXorNode);
+                            }
+
+                            break;
+                        }
+
+                        default:
+                            throw isNever(csvXorNode);
                     }
-
-                    case XorNodeKind.Context:
-                        break;
-
-                    default:
-                        throw isNever(csvContainerXorNode);
                 }
             }
-
-            // const maybeChildIds: Option<ReadonlyArray<number>> = state.nodeIdMapCollection.childIdsById.get(node.id);
-            // if (maybeChildIds === undefined) {
-            //     break;
-            // }
-            // // IWrapped.content (key value pair Csvs) haven't been read
-            // const childIds: ReadonlyArray<number> = maybeChildIds;
-            // if (childIds.length <= 1) {
-            //     break;
-            // }
-
-            // const csvContainerXorNode: TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, node.id);
-            // switch (csvContainerXorNode.kind) {
-            //     case XorNodeKind.Ast:
-            //         switch (csvContainerXorNode.node.kind) {
-            //             case Ast.NodeKind.RecordExpression:
-            //             case Ast.NodeKind.RecordLiteral:
-            //                 const csvContainerAstNode:
-            //                     | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedExpression>
-            //                     | Ast.ICsvContainer<Ast.GeneralizedIdentifierPairedAnyLiteral> =
-            //                     csvContainerXorNode.node.content;
-            //                 inspectRecordCsvContainer(
-            //                     state,
-            //                     {
-            //                         kind: XorNodeKind.Context,
-            //                         node,
-            //                     },
-            //                     csvContainerAstNode,
-            //                 );
-            //                 break;
-
-            //             default: {
-            //                 const details: {} = { node };
-            //                 throw new CommonError.InvariantError(
-            //                     `nodeKind should be RecordExpression or RecordLiteral`,
-            //                     details,
-            //                 );
-            //             }
-            //         }
-            //         break;
-
-            //     case XorNodeKind.Context:
-            //         const csvContainerContextNode: ParserContext.Node = csvContainerXorNode.node;
-            //         const csvContainerChildIds: ReadonlyArray<number> = expectChildIds(
-            //             state.nodeIdMapCollection.childIdsById,
-            //             csvContainerContextNode.id,
-            //         );
-
-            //         switch (csvContainerChildIds.length) {
-            //             case 0:
-            //                 break;
-
-            //             case 1:
-            //                 break;
-
-            //             default: {
-            //                 const details: {} = { csvContainerXorNode, csvContainerChildIds };
-            //                 throw new CommonError.InvariantError(
-            //                     `CsvContainer should only have at most 1 childIds`,
-            //                     details,
-            //                 );
-            //             }
-            //         }
-
-            //         break;
-
-            //     default:
-            //         throw isNever(csvContainerXorNode);
-            // }
 
             break;
         }
