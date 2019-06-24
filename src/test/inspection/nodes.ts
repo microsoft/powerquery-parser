@@ -862,5 +862,37 @@ describe(`Inspection`, () => {
                 expectParserErrScopeEqual(text, position, expected);
             });
         });
+
+        describe(`${Ast.NodeKind.SectionMember} (Ast)`, () => {
+            it(`s|ection foo; x = 1; y = 2;`, () => {
+                const text: string = `section foo; x = 1; y = 2;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1|; y = 2;`, () => {
+                const text: string = `section foo; x = 1; y = 2;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 18,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1; y = 2;|`, () => {
+                const text: string = `section foo; x = 1; y = 2;|`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 26,
+                };
+                const expected: ReadonlyArray<string> = [`x`, `y`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+        });
     });
 });

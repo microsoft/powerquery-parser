@@ -92,6 +92,15 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
+        case Ast.NodeKind.Section:
+            for (const sectionMember of node.sectionMembers) {
+                const sectionMemberName: Ast.Identifier = sectionMember.namePairedExpression.key;
+                if (isTokenPositionBeforePostiion(sectionMemberName.tokenRange.positionEnd, state.position)) {
+                    addAstToScopeIfNew(state, sectionMemberName.literal, sectionMemberName);
+                }
+            }
+            break;
+
         default:
             break;
     }
