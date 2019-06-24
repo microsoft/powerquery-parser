@@ -101,19 +101,9 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
                 maybePositionEnd: undefined,
             });
 
-            const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-            const maybeCsvContainerXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildAtIndex(
-                state.nodeIdMapCollection,
-                node.id,
-                1,
-                Ast.NodeKind.CsvContainer,
-            );
-            if (maybeCsvContainerXorNode !== undefined) {
-                const csvContainerXorNode: NodeIdMap.TXorNode = maybeCsvContainerXorNode;
-                for (const key of keysFromRecord(nodeIdMapCollection, csvContainerXorNode)) {
-                    if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
-                        addAstToScopeIfNew(state, key.literal, key);
-                    }
+            for (const key of keysFromRecord(state.nodeIdMapCollection, node.id)) {
+                if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
+                    addAstToScopeIfNew(state, key.literal, key);
                 }
             }
 
@@ -164,8 +154,20 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
 // Returns all record keys from a TXorNode
 function keysFromRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
-    csvContainerXorNode: NodeIdMap.TXorNode,
+    parentId: number,
 ): ReadonlyArray<Ast.GeneralizedIdentifier> {
+    // Try to grab the 2nd child (a CsvContainer) from parent (where the 1st child is the constant '[').
+    const maybeCsvContainerXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildAtIndex(
+        nodeIdMapCollection,
+        parentId,
+        1,
+        Ast.NodeKind.CsvContainer,
+    );
+    if (maybeCsvContainerXorNode === undefined) {
+        return [];
+    }
+
+    const csvContainerXorNode: NodeIdMap.TXorNode = maybeCsvContainerXorNode;
     const keys: Ast.GeneralizedIdentifier[] = [];
 
     // Iterate over all Ast.ICsv<_>.node
