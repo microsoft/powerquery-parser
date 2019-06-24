@@ -570,7 +570,7 @@ describe(`Inspection`, () => {
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
 
-            it(`abc123 [a=|1`, () => {
+            it(`[a=|1`, () => {
                 const text: string = `[a=1`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
@@ -816,7 +816,7 @@ describe(`Inspection`, () => {
                 const text: string = `[x=1`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
-                    lineCodeUnit: 9,
+                    lineCodeUnit: 4,
                 };
                 const expected: ReadonlyArray<string> = [`x`];
                 expectParserErrScopeEqual(text, position, expected);
