@@ -163,6 +163,7 @@ function keysFromRecord(
         1,
         Ast.NodeKind.CsvContainer,
     );
+    // No CsvContainer exists.
     if (maybeCsvContainerXorNode === undefined) {
         return [];
     }
@@ -196,8 +197,9 @@ function keysFromRecord(
 
             // The child is a ParserContext.Node, so more hack-y navigation.
             case NodeIdMap.XorNodeKind.Context: {
-                // Drill down starting at the ParserContext for ICsv<_>.node to grab the TXorNode for the
-                // GeneralizedIdentifier used by the RecordLiteral/RecordExpression key-value-pair if it exists.
+                // Starting from the Csv, try to perform a drilldown on the following path:
+                //  * GeneralizedIdentifierPairedAnyLiteral or GeneralizedIdentifierPairedExpression
+                //  * GeneralizedIdentifier
                 const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildIndexDrilldown(
                     nodeIdMapCollection,
                     csvXorNode.node.id,
@@ -216,14 +218,13 @@ function keysFromRecord(
                     ],
                 );
 
-                // The GeneralizedIdentifier doesn't exist because it wasn't parsed yet.
+                // A GeneralizedIdentifier TXorNode doesn't exist because it wasn't parsed.
                 if (maybeKeyXorNode === undefined) {
                     break;
                 }
                 const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
 
-                // The drill down returns a TXorNode.
-                // Since GeneralizedIdentifiers are atomicly parsed nothing can be done if it's not an Ast.TNode.
+                // While the drill down returns a TXorNode we only care about the Ast.TNode case.
                 if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
                     const keyAstNode: Ast.TNode = keyXorNode.node;
                     if (keyAstNode.kind !== Ast.NodeKind.GeneralizedIdentifier) {
