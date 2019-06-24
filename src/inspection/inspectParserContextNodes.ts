@@ -131,6 +131,7 @@ function maybeCastAsAstNode<T, Kind>(
     }
 }
 
+// Returns all children for parent as TXorNodes.
 function contextChildren(
     nodeIdMapCollection: NodeIdMap.Collection,
     parent: ParserContext.Node,
@@ -151,7 +152,7 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
     });
 }
 
-// Returns all record keys from a TXorNode
+// Returns all record keys (GeneralizedIdentifier) from a Record TXorNode.
 function keysFromRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
@@ -200,25 +201,14 @@ function keysFromRecord(
                 // Starting from the Csv, try to perform a drilldown on the following path:
                 //  * GeneralizedIdentifierPairedAnyLiteral or GeneralizedIdentifierPairedExpression
                 //  * GeneralizedIdentifier
-                const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildIndexDrilldown(
+                const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildAtIndex(
                     nodeIdMapCollection,
                     csvXorNode.node.id,
-                    [
-                        {
-                            childIndex: 0,
-                            allowedChildAstNodeKinds: [
-                                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-                                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                            ],
-                        },
-                        {
-                            childIndex: 0,
-                            allowedChildAstNodeKinds: [Ast.NodeKind.GeneralizedIdentifier],
-                        },
-                    ],
+                    0,
+                    Ast.NodeKind.GeneralizedIdentifier,
                 );
 
-                // A GeneralizedIdentifier TXorNode doesn't exist because it wasn't parsed.
+                // The GeneralizedIdentifier TXorNode doesn't exist because it wasn't parsed.
                 if (maybeKeyXorNode === undefined) {
                     break;
                 }
@@ -226,15 +216,8 @@ function keysFromRecord(
 
                 // While the drill down returns a TXorNode we only care about the Ast.TNode case.
                 if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-                    const keyAstNode: Ast.TNode = keyXorNode.node;
-                    if (keyAstNode.kind !== Ast.NodeKind.GeneralizedIdentifier) {
-                        const details: {} = { keyXorNode };
-                        throw new CommonError.InvariantError(
-                            `keyXorNode can only be of kind GeneralizedIdentifier`,
-                            details,
-                        );
-                    }
-                    keys.push(keyAstNode);
+                    // maybeXorNodeChildAtIndex ensured it's a GeneralizedIdentifier
+                    keys.push(keyXorNode.node as Ast.GeneralizedIdentifier);
                 }
 
                 break;

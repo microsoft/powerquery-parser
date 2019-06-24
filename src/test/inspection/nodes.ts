@@ -809,6 +809,16 @@ describe(`Inspection`, () => {
                 const expected: ReadonlyArray<string> = [`x`, `y`];
                 expectParserOkScopeEqual(text, position, expected);
             });
+
+            it(`[x=[y=1|]] section;`, () => {
+                const text: string = `[x=[y=1|]] section;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 7,
+                };
+                const expected: ReadonlyArray<string> = [`y`, `x`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
         });
 
         describe(`${Ast.NodeKind.RecordExpression}/${Ast.NodeKind.RecordLiteral} (ParserContext)`, () => {
@@ -839,6 +849,16 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 9,
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`];
+                expectParserErrScopeEqual(text, position, expected);
+            });
+
+            it(`[x=[y=1|`, () => {
+                const text: string = `[x=[y=1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 7,
+                };
+                const expected: ReadonlyArray<string> = [`y`, `x`];
                 expectParserErrScopeEqual(text, position, expected);
             });
         });
