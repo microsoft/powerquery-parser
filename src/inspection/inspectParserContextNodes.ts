@@ -68,6 +68,10 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
             break;
         }
 
+        case Ast.NodeKind.Section:
+            inspectSection(state, node);
+            break;
+
         default:
             break;
     }
@@ -100,7 +104,7 @@ function keysFromRecord(
     parentId: number,
 ): ReadonlyArray<Ast.GeneralizedIdentifier> {
     // Try to grab the 2nd child (a CsvContainer) from parent (where the 1st child is the constant '[').
-    const maybeCsvContainerXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildAtIndex(
+    const maybeCsvContainerXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(
         nodeIdMapCollection,
         parentId,
         1,
@@ -143,7 +147,7 @@ function keysFromRecord(
                 // Starting from the Csv, try to perform a drilldown on the following path:
                 //  * GeneralizedIdentifierPairedAnyLiteral or GeneralizedIdentifierPairedExpression
                 //  * GeneralizedIdentifier
-                const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNodeChildAtIndex(
+                const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(
                     nodeIdMapCollection,
                     csvXorNode.node.id,
                     0,
