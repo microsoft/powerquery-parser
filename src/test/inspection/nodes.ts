@@ -821,6 +821,26 @@ describe(`Inspection`, () => {
                 const expected: ReadonlyArray<string> = [`x`];
                 expectParserErrScopeEqual(text, position, expected);
             });
+
+            it(`[x=1|, y=1`, () => {
+                const text: string = `[x=1, y=1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
+                expectParserErrScopeEqual(text, position, expected);
+            });
+
+            it(`[x=1, y=1|`, () => {
+                const text: string = `[x=1, y=1`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 9,
+                };
+                const expected: ReadonlyArray<string> = [`x`, `y`];
+                expectParserErrScopeEqual(text, position, expected);
+            });
         });
     });
 });
