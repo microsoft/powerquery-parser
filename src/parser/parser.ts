@@ -1677,12 +1677,12 @@ export class Parser {
         }
     }
 
-    private readBinOpKeywordExpression<NodeKindVariant, L, KeywordTokenKindVariant, R>(
-        nodeKind: NodeKindVariant & Ast.TBinOpKeywordNodeKind,
+    private readBinOpKeywordExpression<Kind, L, KeywordKind, R>(
+        nodeKind: Kind & Ast.TBinOpKeywordNodeKind,
         leftExpressionReader: () => L,
-        keywordTokenKind: KeywordTokenKindVariant & TokenKind,
+        keywordTokenKind: KeywordKind & TokenKind,
         rightExpressionReader: () => R,
-    ): L | Ast.IBinOpKeyword<NodeKindVariant, L, R> {
+    ): L | Ast.IBinOpKeyword<Kind, L, R> {
         this.startContext(nodeKind);
 
         const left: L = leftExpressionReader();
@@ -1691,7 +1691,7 @@ export class Parser {
         if (maybeConstant) {
             const right: R = rightExpressionReader();
 
-            const astNode: Ast.IBinOpKeyword<NodeKindVariant, L, R> = {
+            const astNode: Ast.IBinOpKeyword<Kind, L, R> = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: false,
@@ -1724,11 +1724,11 @@ export class Parser {
         }
     }
 
-    private readBinOpExpression<NodeKindVariant, Op, Operand>(
-        nodeKind: NodeKindVariant & Ast.TBinOpExpressionNodeKind,
+    private readBinOpExpression<Kind, Op, Operand>(
+        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         operatorFrom: (tokenKind: Option<TokenKind>) => Option<Op & Ast.TUnaryExpressionHelperOperator>,
         operandReader: () => Operand & Ast.TNode,
-    ): Operand | Ast.IBinOpExpression<NodeKindVariant, Op, Operand> {
+    ): Operand | Ast.IBinOpExpression<Kind, Op, Operand> {
         this.startContext(nodeKind);
         const first: Operand & Ast.TNode = operandReader();
 
@@ -1772,7 +1772,7 @@ export class Parser {
                 maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
 
-            const astNode: Ast.IBinOpExpression<NodeKindVariant, Op, Operand> = {
+            const astNode: Ast.IBinOpExpression<Kind, Op, Operand> = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: false,
@@ -1803,17 +1803,17 @@ export class Parser {
         }
     }
 
-    private readPairedConstant<NodeKindVariant, Paired>(
-        nodeKind: NodeKindVariant & Ast.TPairedConstantNodeKind,
+    private readPairedConstant<Kind, Paired>(
+        nodeKind: Kind & Ast.TPairedConstantNodeKind,
         constantReader: () => Ast.Constant,
         pairedReader: () => Paired,
-    ): Ast.IPairedConstant<NodeKindVariant, Paired> {
+    ): Ast.IPairedConstant<Kind, Paired> {
         this.startContext(nodeKind);
 
         const constant: Ast.Constant = constantReader();
         const paired: Paired = pairedReader();
 
-        const pairedConstant: Ast.IPairedConstant<NodeKindVariant, Paired> = {
+        const pairedConstant: Ast.IPairedConstant<Kind, Paired> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -1842,26 +1842,26 @@ export class Parser {
         return pairedConstant;
     }
 
-    private maybeReadPairedConstant<NodeKindVariant, Paired>(
-        nodeKind: NodeKindVariant & Ast.TPairedConstantNodeKind,
+    private maybeReadPairedConstant<Kind, Paired>(
+        nodeKind: Kind & Ast.TPairedConstantNodeKind,
         condition: () => boolean,
         constantReader: () => Ast.Constant,
         pairedReader: () => Paired,
-    ): Option<Ast.IPairedConstant<NodeKindVariant, Paired>> {
+    ): Option<Ast.IPairedConstant<Kind, Paired>> {
         if (condition()) {
-            return this.readPairedConstant<NodeKindVariant, Paired>(nodeKind, constantReader, pairedReader);
+            return this.readPairedConstant<Kind, Paired>(nodeKind, constantReader, pairedReader);
         } else {
             return undefined;
         }
     }
 
-    private readWrapped<NodeKindVariant, Content>(
-        nodeKind: NodeKindVariant & Ast.TWrappedNodeKind,
+    private readWrapped<Kind, Content>(
+        nodeKind: Kind & Ast.TWrappedNodeKind,
         openConstantReader: () => Ast.Constant,
         contentReader: () => Content,
         closeConstantReader: () => Ast.Constant,
         allowOptionalConstant: boolean,
-    ): WrappedRead<NodeKindVariant, Content> {
+    ): WrappedRead<Kind, Content> {
         this.startContext(nodeKind);
 
         const openWrapperConstant: Ast.Constant = openConstantReader();
@@ -1873,7 +1873,7 @@ export class Parser {
             maybeOptionalConstant = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
         }
 
-        const wrapped: WrappedRead<NodeKindVariant, Content> = {
+        const wrapped: WrappedRead<Kind, Content> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -1903,18 +1903,18 @@ export class Parser {
         return wrapped;
     }
 
-    private readKeyValuePair<NodeKindVariant, Key, Value>(
-        nodeKind: NodeKindVariant & Ast.TKeyValuePairNodeKind,
+    private readKeyValuePair<Kind, Key, Value>(
+        nodeKind: Kind & Ast.TKeyValuePairNodeKind,
         keyReader: () => Key,
         valueReader: () => Value,
-    ): Ast.IKeyValuePair<NodeKindVariant, Key, Value> {
+    ): Ast.IKeyValuePair<Kind, Key, Value> {
         this.startContext(nodeKind);
 
         const key: Key = keyReader();
         const equalConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Equal);
         const value: Value = valueReader();
 
-        const keyValuePair: Ast.IKeyValuePair<NodeKindVariant, Key, Value> = {
+        const keyValuePair: Ast.IKeyValuePair<Kind, Key, Value> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -2290,6 +2290,6 @@ interface ContextNodeMetadata {
     readonly tokenRange: Ast.TokenRange;
 }
 
-interface WrappedRead<NodeKindVariant, Content> extends Ast.IWrapped<NodeKindVariant, Content> {
+interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
 }

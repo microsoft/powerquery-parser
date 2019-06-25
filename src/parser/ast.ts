@@ -111,6 +111,7 @@ export type TAuxiliaryNodes =
     | TWrapped;
 
 export type TArrayHelper = IArrayHelper<SectionMember, NodeKind.SectionMemberArray> | TCsvArray;
+export type TArrayHelperNodeKind = NodeKind.CsvArray | NodeKind.SectionMemberArray;
 
 export type TCsvArray = ICsvArray<TCsvType>;
 export type TCsv = ICsv<TCsvType>;
@@ -670,16 +671,16 @@ export interface RecordLiteral
 
 // IBinOpExpressions are expressed in terms of Operand followed by N <Operand, Operator> unary expressions.
 // 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
-export interface IBinOpExpression<NodeKindVariant, Operator, Operand> extends INode {
-    readonly kind: NodeKindVariant & TBinOpExpressionNodeKind;
+export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
+    readonly kind: Kind & TBinOpExpressionNodeKind;
     readonly first: Operand;
     readonly rest: ReadonlyArray<UnaryExpressionHelper<Operator, Operand>>;
 }
 
 // BinOp expressions which uses a keyword as operators,
 // ex. `1 is number`
-export interface IBinOpKeyword<NodeKindVariant, L, R> extends INode {
-    readonly kind: NodeKindVariant & TBinOpKeywordNodeKind;
+export interface IBinOpKeyword<Kind, L, R> extends INode {
+    readonly kind: Kind & TBinOpKeywordNodeKind;
     readonly left: L;
     readonly constant: Constant;
     readonly right: R;
@@ -688,7 +689,7 @@ export interface IBinOpKeyword<NodeKindVariant, L, R> extends INode {
 // Allows the ReadonlyArray to be treated as a TNode.
 // Without this wrapper ParserContext couldn't save partial progress for parsing an array.
 export interface IArrayHelper<T, Kind> extends INode {
-    readonly kind: Kind & NodeKind;
+    readonly kind: Kind & TArrayHelperNodeKind;
     readonly elements: ReadonlyArray<T>;
 }
 
@@ -700,8 +701,8 @@ export interface ICsv<T> extends INode {
     readonly maybeCommaConstant: Option<Constant>;
 }
 
-export interface IKeyValuePair<NodeKindVariant, Key, Value> extends INode {
-    readonly kind: NodeKindVariant & TKeyValuePairNodeKind;
+export interface IKeyValuePair<Kind, Key, Value> extends INode {
+    readonly kind: Kind & TKeyValuePairNodeKind;
     readonly key: Key;
     readonly equalConstant: Constant;
     readonly value: Value;
@@ -709,14 +710,14 @@ export interface IKeyValuePair<NodeKindVariant, Key, Value> extends INode {
 
 // A [Constant, T] tuple
 // eg. EachExpression is a `each` Constant paired with a TExpression
-export interface IPairedConstant<NodeKindVariant, Paired> extends INode {
-    readonly kind: NodeKindVariant & TPairedConstantNodeKind;
+export interface IPairedConstant<Kind, Paired> extends INode {
+    readonly kind: Kind & TPairedConstantNodeKind;
     readonly constant: Constant;
     readonly paired: Paired;
 }
 
-export interface IWrapped<NodeKindVariant, Content> extends INode {
-    readonly kind: NodeKindVariant & TWrappedNodeKind;
+export interface IWrapped<Kind, Content> extends INode {
+    readonly kind: Kind & TWrappedNodeKind;
     readonly openWrapperConstant: Constant;
     readonly content: Content;
     readonly closeWrapperConstant: Constant;
