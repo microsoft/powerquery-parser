@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap } from "../parser";
+import { Ast } from "../parser";
 import {
-    addToScopeIfNew,
+    addAstToScopeIfNew,
+    inspectSectionMemberArray,
     isInTokenRange,
     isParentOfNodeKind,
     isTokenPositionBeforePostiion,
@@ -93,22 +94,10 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
         }
 
         case Ast.NodeKind.Section:
-            for (const sectionMember of node.sectionMembers.elements) {
-                const sectionMemberName: Ast.Identifier = sectionMember.namePairedExpression.key;
-                if (isTokenPositionBeforePostiion(sectionMemberName.tokenRange.positionEnd, state.position)) {
-                    addAstToScopeIfNew(state, sectionMemberName.literal, sectionMemberName);
-                }
-            }
+            inspectSectionMemberArray(state, node.sectionMembers);
             break;
 
         default:
             break;
     }
-}
-
-export function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
-    addToScopeIfNew(state, key, {
-        kind: NodeIdMap.XorNodeKind.Ast,
-        node: astNode,
-    });
 }

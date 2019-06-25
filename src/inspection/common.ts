@@ -169,3 +169,19 @@ export function csvArrayChildrenXorNodes(
             throw isNever(root);
     }
 }
+
+export function inspectSectionMemberArray(state: State, sectionMemberArray: Ast.SectionMemberArray): void {
+    for (const sectionMember of sectionMemberArray.elements) {
+        const sectionMemberName: Ast.Identifier = sectionMember.namePairedExpression.key;
+        if (isTokenPositionBeforePostiion(sectionMemberName.tokenRange.positionEnd, state.position)) {
+            addAstToScopeIfNew(state, sectionMemberName.literal, sectionMemberName);
+        }
+    }
+}
+
+export function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
+    addToScopeIfNew(state, key, {
+        kind: NodeIdMap.XorNodeKind.Ast,
+        node: astNode,
+    });
+}

@@ -5,14 +5,15 @@ import { CommonError, isNever, Option } from "../common";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { XorNodeKind } from "../parser/nodeIdMap";
 import {
+    addAstToScopeIfNew,
     addToScopeIfNew,
     csvArrayChildrenXorNodes,
+    inspectSectionMemberArray,
     isParentOfNodeKind,
     isTokenPositionBeforePostiion,
     NodeKind,
     State,
 } from "./common";
-import { addAstToScopeIfNew } from "./inspectAstNodes";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
@@ -81,6 +82,7 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
 
             switch (sectionMemberArrayXorNode.kind) {
                 case NodeIdMap.XorNodeKind.Ast:
+                    inspectSectionMemberArray(state, sectionMemberArrayXorNode.node as Ast.SectionMemberArray);
                     break;
 
                 case NodeIdMap.XorNodeKind.Context:
