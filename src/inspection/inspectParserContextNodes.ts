@@ -69,7 +69,6 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
         }
 
         case Ast.NodeKind.Section:
-            inspectSection(state, node);
             break;
 
         default:

@@ -79,7 +79,7 @@ export function maybeNthChild(
     }
 
     const childIds: ReadonlyArray<number> = maybeChildIds;
-    if (childIds.length >= childIndex) {
+    if (childIndex >= childIds.length) {
         return undefined;
     }
 
