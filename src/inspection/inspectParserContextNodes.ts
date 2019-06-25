@@ -13,6 +13,7 @@ import {
     isTokenPositionBeforePostiion,
     NodeKind,
     State,
+    inspectSectionMember,
 } from "./common";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
@@ -85,8 +86,30 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
                     inspectSectionMemberArray(state, sectionMemberArrayXorNode.node as Ast.SectionMemberArray);
                     break;
 
-                case NodeIdMap.XorNodeKind.Context:
+                case NodeIdMap.XorNodeKind.Context: {
+                    const maybeChildren: Option<ReadonlyArray<NodeIdMap.TXorNode>> = maybeXorChildren(
+                        state.nodeIdMapCollection,
+                        node.id,
+                    );
+                    if (maybeChildren === undefined) {
+                        break;
+                    }
+                    const children: ReadonlyArray<NodeIdMap.TXorNode> = maybeChildren;
+                    for (const sectionMemberXorNode of children) {
+                        switch (sectionMemberXorNode.kind) {
+                            case NodeIdMap.XorNodeKind.Ast:
+                                inspectSectionMember(state, sectionMemberXorNode.node as Ast.SectionMember);
+                                break;
+
+                            case NodeIdMap.XorNodeKind.Context:
+                                break;
+
+                            default:
+                                throw isNever(sectionMemberXorNode);
+                        }
+                    }
                     break;
+                }
 
                 default:
                     throw isNever(sectionMemberArrayXorNode);
