@@ -99,6 +99,13 @@ export function isTokenPositionOnPosition(tokenPosition: TokenPosition, position
     return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
 }
 
+export function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
+    return (
+        tokenPosition.lineNumber < position.lineNumber ||
+        (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
+    );
+}
+
 export function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
     const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
     if (!scopeMap.has(key)) {
@@ -106,11 +113,11 @@ export function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TX
     }
 }
 
-export function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
-    return (
-        tokenPosition.lineNumber < position.lineNumber ||
-        (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
-    );
+export function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
+    addToScopeIfNew(state, key, {
+        kind: NodeIdMap.XorNodeKind.Ast,
+        node: astNode,
+    });
 }
 
 // Same as TCsvArray.elements.map(csv => csv.node), plus TXorNode handling.
@@ -177,11 +184,4 @@ export function inspectSectionMemberArray(state: State, sectionMemberArray: Ast.
             addAstToScopeIfNew(state, sectionMemberName.literal, sectionMemberName);
         }
     }
-}
-
-export function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
-    addToScopeIfNew(state, key, {
-        kind: NodeIdMap.XorNodeKind.Ast,
-        node: astNode,
-    });
 }

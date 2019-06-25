@@ -100,6 +100,13 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
     }
 }
 
+function addContextToScopeIfNew(state: State, key: string, contextNode: ParserContext.Node): void {
+    addToScopeIfNew(state, key, {
+        kind: XorNodeKind.Context,
+        node: contextNode,
+    });
+}
+
 // Returns all children for parent as TXorNodes.
 function contextChildren(
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -112,13 +119,6 @@ function contextChildren(
         const childIds: ReadonlyArray<number> = maybeChildIds;
         return NodeIdMap.expectXorNodes(nodeIdMapCollection, childIds);
     }
-}
-
-function addContextToScopeIfNew(state: State, key: string, contextNode: ParserContext.Node): void {
-    addToScopeIfNew(state, key, {
-        kind: XorNodeKind.Context,
-        node: contextNode,
-    });
 }
 
 // Returns all record keys (GeneralizedIdentifier) from a Record TXorNode.
