@@ -103,14 +103,9 @@ function keysFromRecord(
     parentId: number,
 ): ReadonlyArray<Ast.GeneralizedIdentifier> {
     // Try to grab the 2nd child (a TCsvARray) from parent (where the 1st child is the constant '[').
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(
-        nodeIdMapCollection,
-        parentId,
-        1,
-        Ast.NodeKind.CsvArray,
-    );
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(nodeIdMapCollection, parentId, 1);
     // No TCsvArray child exists.
-    if (maybeCsvArrayXorNode === undefined) {
+    if (maybeCsvArrayXorNode === undefined || maybeCsvArrayXorNode.node.kind !== Ast.NodeKind.CsvArray) {
         return [];
     }
 
@@ -152,11 +147,10 @@ function keysFromRecord(
                     nodeIdMapCollection,
                     csvXorNode.node.id,
                     0,
-                    Ast.NodeKind.GeneralizedIdentifier,
                 );
 
                 // The GeneralizedIdentifier TXorNode doesn't exist because it wasn't parsed.
-                if (maybeKeyXorNode === undefined) {
+                if (maybeKeyXorNode === undefined || maybeKeyXorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifier) {
                     break;
                 }
                 const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;

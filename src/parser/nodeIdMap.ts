@@ -67,12 +67,7 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
-export function maybeNthChild(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    childIndex: number,
-    childNodeKind: Ast.NodeKind,
-): Option<TXorNode> {
+export function maybeNthChild(nodeIdMapCollection: Collection, parentId: number, childIndex: number): Option<TXorNode> {
     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
     if (maybeChildIds === undefined) {
         return undefined;
@@ -83,8 +78,7 @@ export function maybeNthChild(
         return undefined;
     }
 
-    const nthChild: TXorNode = expectXorNode(nodeIdMapCollection, childIds[childIndex]);
-    return nthChild.node.kind === childNodeKind ? nthChild : undefined;
+    return expectXorNode(nodeIdMapCollection, childIds[childIndex]);
 }
 
 export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
