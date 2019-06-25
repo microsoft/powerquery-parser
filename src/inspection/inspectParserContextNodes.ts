@@ -3,7 +3,7 @@
 
 import { CommonError, isNever, Option } from "../common";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { XorNodeKind } from "../parser/nodeIdMap";
+import { maybeXorChildren, XorNodeKind } from "../parser/nodeIdMap";
 import {
     addAstToScopeIfNew,
     addToScopeIfNew,
@@ -107,20 +107,6 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
     });
 }
 
-// Returns all children for parent as TXorNodes.
-function contextChildren(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    parent: ParserContext.Node,
-): ReadonlyArray<NodeIdMap.TXorNode> {
-    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parent.id);
-    if (maybeChildIds === undefined) {
-        return [];
-    } else {
-        const childIds: ReadonlyArray<number> = maybeChildIds;
-        return NodeIdMap.expectXorNodes(nodeIdMapCollection, childIds);
-    }
-}
-
 // Returns all record keys (GeneralizedIdentifier) from a Record TXorNode.
 function keysFromRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -198,7 +184,14 @@ function keysFromRecord(
 
 function inspectIdentifierExpression(state: State, node: ParserContext.Node): void {
     let identifier: string = "";
-    const children: ReadonlyArray<NodeIdMap.TXorNode> = contextChildren(state.nodeIdMapCollection, node);
+    const maybeChildren: Option<ReadonlyArray<NodeIdMap.TXorNode>> = maybeXorChildren(
+        state.nodeIdMapCollection,
+        node.id,
+    );
+    if (maybeChildren === undefined) {
+        return undefined;
+    }
+    const children: ReadonlyArray<NodeIdMap.TXorNode> = maybeChildren;
 
     if (children.length === 1 || children.length === 2) {
         const firstChild: NodeIdMap.TXorNode = children[0];

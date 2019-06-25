@@ -31,20 +31,6 @@ export interface Collection {
     readonly childIdsById: ChildIdsById;
 }
 
-export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
-    return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
-}
-
-export function expectContextNode(contextNodeById: ContextNodeById, nodeId: number): ParserContext.Node {
-    return expectInMap<ParserContext.Node>(contextNodeById, nodeId, "contextNodeById");
-}
-
-export function expectAstChildNodes(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<Ast.TNode> {
-    const childIds: ReadonlyArray<number> = expectChildIds(nodeIdMapCollection.childIdsById, parentId);
-    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
-    return childIds.map(childId => expectAstNode(astNodeById, childId));
-}
-
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
     const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode) {
@@ -100,6 +86,24 @@ export function maybeChildByKind(
     }
 
     return undefined;
+}
+
+export function maybeXorChildren(nodeIdMapCollection: Collection, parentId: number): Option<ReadonlyArray<TXorNode>> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+    const childIds: ReadonlyArray<number> = maybeChildIds;
+
+    return expectXorNodes(nodeIdMapCollection, childIds);
+}
+
+export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
+    return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
+}
+
+export function expectContextNode(contextNodeById: ContextNodeById, nodeId: number): ParserContext.Node {
+    return expectInMap<ParserContext.Node>(contextNodeById, nodeId, "contextNodeById");
 }
 
 export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
