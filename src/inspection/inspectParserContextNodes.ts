@@ -69,7 +69,7 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
         }
 
         case Ast.NodeKind.Section: {
-            const maybeSectionMemberArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildOfKind(
+            const maybeSectionMemberArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByKind(
                 state.nodeIdMapCollection,
                 node.id,
                 Ast.NodeKind.SectionMemberArray,
