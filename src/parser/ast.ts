@@ -99,8 +99,8 @@ export type TAuxiliaryNodes =
     | Identifier
     | SectionMember
     | TAnyLiteral
+    | TArrayHelper
     | TCsv
-    | TCsvArray
     | TKeyValuePair
     | TNullablePrimitiveType
     | TPairedConstant
@@ -109,6 +109,8 @@ export type TAuxiliaryNodes =
     | TType
     | TUnaryExpressionHelper
     | TWrapped;
+
+export type TArrayHelper = IArrayHelper<SectionMember, NodeKind.SectionMemberArray> | TCsvArray;
 
 export type TCsvArray = ICsvArray<TCsvType>;
 export type TCsv = ICsv<TCsvType>;
@@ -220,7 +222,7 @@ export interface Section extends INode {
     readonly sectionConstant: Constant;
     readonly maybeName: Option<Identifier>;
     readonly semicolonConstant: Constant;
-    readonly sectionMembers: ReadonlyArray<SectionMember>;
+    readonly sectionMembers: SectionMemberArray;
 }
 
 export interface SectionMember extends INode {
@@ -231,6 +233,8 @@ export interface SectionMember extends INode {
     readonly namePairedExpression: IdentifierPairedExpression;
     readonly semicolonConstant: Constant;
 }
+
+export interface SectionMemberArray extends IArrayHelper<SectionMember, NodeKind.SectionMemberArray> {}
 
 // ------------------------------------------
 // ---------- 12.2.3.1 Expressions ----------

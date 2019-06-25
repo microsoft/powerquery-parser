@@ -651,6 +651,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
         ];
         expectNodeKinds(text, expectedNodeKinds);
     });
@@ -691,6 +692,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
             Ast.NodeKind.SectionMember,
             Ast.NodeKind.IdentifierPairedExpression,
             Ast.NodeKind.Identifier,
@@ -838,6 +840,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
         ];
         expectNodeKinds(text, expectedNodeKinds);
     });
@@ -860,6 +863,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
         ];
         expectNodeKinds(text, expectedNodeKinds);
     });
@@ -1162,6 +1166,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
         ];
         expectNodeKinds(text, expectedNodeKinds);
     });
@@ -1176,6 +1181,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
         ];
         expectNodeKinds(text, expectedNodeKinds);
     });
@@ -1187,6 +1193,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Constant,
             Ast.NodeKind.Identifier,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
         ];
         expectNodeKinds(text, expectedNodeKinds);
     });
@@ -1197,6 +1204,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
             Ast.NodeKind.SectionMember,
             Ast.NodeKind.IdentifierPairedExpression,
             Ast.NodeKind.Identifier,
@@ -1213,6 +1221,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
             Ast.NodeKind.SectionMember,
             Ast.NodeKind.IdentifierPairedExpression,
             Ast.NodeKind.Identifier,
@@ -1235,6 +1244,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
             Ast.NodeKind.SectionMember,
             Ast.NodeKind.IdentifierPairedExpression,
             Ast.NodeKind.Identifier,
@@ -1251,6 +1261,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
             Ast.NodeKind.SectionMember,
             Ast.NodeKind.RecordLiteral,
             Ast.NodeKind.Constant,
@@ -1271,6 +1282,7 @@ describe("Parser.NodeKind", () => {
             Ast.NodeKind.Section,
             Ast.NodeKind.Constant,
             Ast.NodeKind.Constant,
+            Ast.NodeKind.SectionMemberArray,
             Ast.NodeKind.SectionMember,
             Ast.NodeKind.Constant,
             Ast.NodeKind.IdentifierPairedExpression,

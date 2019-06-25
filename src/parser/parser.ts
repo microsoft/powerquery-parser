@@ -104,12 +104,7 @@ export class Parser {
         }
 
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
-
-        const totalTokens: number = this.lexerSnapshot.tokens.length;
-        const sectionMembers: Ast.SectionMember[] = [];
-        while (this.tokenIndex < totalTokens) {
-            sectionMembers.push(this.readSectionMember());
-        }
+        const sectionMembers: Ast.SectionMemberArray = this.readSectionMembers();
 
         const astNode: Ast.Section = {
             ...this.expectContextNodeMetadata(),
@@ -120,6 +115,27 @@ export class Parser {
             maybeName,
             semicolonConstant,
             sectionMembers,
+        };
+        this.endContext(astNode);
+        return astNode;
+    }
+
+    // sub-item of 12.2.2 Section Documents
+    private readSectionMembers(): Ast.SectionMemberArray {
+        const nodeKind: Ast.NodeKind.SectionMemberArray = Ast.NodeKind.SectionMemberArray;
+        this.startContext(nodeKind);
+
+        const totalTokens: number = this.lexerSnapshot.tokens.length;
+        const sectionMembers: Ast.SectionMember[] = [];
+        while (this.tokenIndex < totalTokens) {
+            sectionMembers.push(this.readSectionMember());
+        }
+
+        const astNode: Ast.SectionMemberArray = {
+            ...this.expectContextNodeMetadata(),
+            kind: nodeKind,
+            isLeaf: false,
+            elements: sectionMembers,
         };
         this.endContext(astNode);
         return astNode;
