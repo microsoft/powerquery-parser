@@ -107,7 +107,7 @@ function keysFromRecord(
         nodeIdMapCollection,
         parentId,
         1,
-        Ast.NodeKind.ArrayHelper,
+        Ast.NodeKind.CsvArray,
     );
     // No TCsvArray child exists.
     if (maybeCsvArrayXorNode === undefined) {

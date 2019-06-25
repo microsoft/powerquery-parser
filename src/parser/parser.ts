@@ -497,7 +497,7 @@ export class Parser {
     // 12.2.3.16 Invoke expression
     private readInvokeExpression(): Ast.InvokeExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightParenthesis);
-        return this.readWrapped<Ast.NodeKind.InvokeExpression, Ast.IArrayHelper<Ast.ICsv<Ast.TExpression>>>(
+        return this.readWrapped<Ast.NodeKind.InvokeExpression, Ast.ICsvArray<Ast.TExpression>>(
             Ast.NodeKind.InvokeExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
             () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
@@ -509,7 +509,7 @@ export class Parser {
     // 12.2.3.17 List expression
     private readListExpression(): Ast.ListExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.IArrayHelper<Ast.ICsv<Ast.TExpression>>>(
+        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ICsvArray<Ast.TExpression>>(
             Ast.NodeKind.ListExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
@@ -523,7 +523,7 @@ export class Parser {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBracket);
         return this.readWrapped<
             Ast.NodeKind.RecordExpression,
-            Ast.IArrayHelper<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>>
+            Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>
         >(
             Ast.NodeKind.RecordExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
@@ -551,7 +551,7 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
-        return this.readWrapped<Ast.NodeKind.FieldProjection, Ast.IArrayHelper<Ast.ICsv<Ast.FieldSelector>>>(
+        return this.readWrapped<Ast.NodeKind.FieldProjection, Ast.ICsvArray<Ast.FieldSelector>>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readCsvArray(() => this.readFieldSelector(false), true),
@@ -611,8 +611,8 @@ export class Parser {
         this.startContext(nodeKind);
 
         const letConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordLet);
-        const identifierExpressionPairedExpressions: Ast.IArrayHelper<
-            Ast.ICsv<Ast.IdentifierPairedExpression>
+        const identifierExpressionPairedExpressions: Ast.ICsvArray<
+            Ast.IdentifierPairedExpression
         > = this.readIdentifierPairedExpressions(true);
         const inConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordIn);
         const expression: Ast.TExpression = this.readExpression();
@@ -799,7 +799,7 @@ export class Parser {
         let continueReadingValues: boolean = true;
         let maybeOpenRecordMarkerConstant: Option<Ast.Constant> = undefined;
 
-        const fieldArrayNodeKind: Ast.NodeKind.ArrayHelper = Ast.NodeKind.ArrayHelper;
+        const fieldArrayNodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
         this.startContext(fieldArrayNodeKind);
 
         while (continueReadingValues) {
@@ -855,7 +855,7 @@ export class Parser {
             }
         }
 
-        const fieldArray: Ast.IArrayHelper<Ast.ICsv<Ast.FieldSpecification>> = {
+        const fieldArray: Ast.ICsvArray<Ast.FieldSpecification> = {
             ...this.expectContextNodeMetadata(),
             kind: fieldArrayNodeKind,
             elements: fields,
@@ -985,11 +985,8 @@ export class Parser {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBracket);
         const wrappedRead: Ast.IWrapped<
             Ast.NodeKind.RecordLiteral,
-            Ast.IArrayHelper<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>
-        > = this.readWrapped<
-            Ast.NodeKind.RecordLiteral,
-            Ast.IArrayHelper<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>
-        >(
+            Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>
+        > = this.readWrapped<Ast.NodeKind.RecordLiteral, Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>>(
             Ast.NodeKind.RecordLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readFieldNamePairedAnyLiterals(continueReadingValues),
@@ -1004,7 +1001,7 @@ export class Parser {
 
     private readFieldNamePairedAnyLiterals(
         continueReadingValues: boolean,
-    ): Ast.IArrayHelper<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>> {
+    ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
         return this.readCsvArray(
             () =>
                 this.readKeyValuePair<
@@ -1022,10 +1019,10 @@ export class Parser {
 
     private readListLiteral(): Ast.ListLiteral {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        const wrappedRead: Ast.IWrapped<
+        const wrappedRead: Ast.IWrapped<Ast.NodeKind.ListLiteral, Ast.ICsvArray<Ast.TAnyLiteral>> = this.readWrapped<
             Ast.NodeKind.ListLiteral,
-            Ast.IArrayHelper<Ast.ICsv<Ast.TAnyLiteral>>
-        > = this.readWrapped<Ast.NodeKind.ListLiteral, Ast.IArrayHelper<Ast.ICsv<Ast.TAnyLiteral>>>(
+            Ast.ICsvArray<Ast.TAnyLiteral>
+        >(
             Ast.NodeKind.ListLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsvArray(() => this.readAnyLiteral(), continueReadingValues),
@@ -1056,7 +1053,7 @@ export class Parser {
         let continueReadingValues: boolean = !this.isOnTokenKind(TokenKind.RightParenthesis);
         let reachedOptionalParameter: boolean = false;
 
-        const paramaterArrayNodeKind: Ast.NodeKind.ArrayHelper = Ast.NodeKind.ArrayHelper;
+        const paramaterArrayNodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
         this.startContext(paramaterArrayNodeKind);
 
         const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
@@ -1104,7 +1101,7 @@ export class Parser {
             parameters.push(csv);
         }
 
-        const parameterArray: Ast.IArrayHelper<Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>> = {
+        const parameterArray: Ast.ICsvArray<Ast.IParameter<T & Ast.TParameterType>> = {
             ...this.expectContextNodeMetadata(),
             kind: paramaterArrayNodeKind,
             elements: parameters,
@@ -1419,13 +1416,13 @@ export class Parser {
 
     private readIdentifierPairedExpressions(
         continueReadingValues: boolean,
-    ): Ast.IArrayHelper<Ast.ICsv<Ast.IdentifierPairedExpression>> {
+    ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
         return this.readCsvArray(() => this.readIdentifierPairedExpression(), continueReadingValues);
     }
 
     private readGeneralizedIdentifierPairedExpressions(
         continueReadingValues: boolean,
-    ): Ast.IArrayHelper<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>> {
+    ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
         return this.readCsvArray(() => this.readGeneralizedIdentifierPairedExpression(), continueReadingValues);
     }
 
@@ -1932,8 +1929,8 @@ export class Parser {
     private readCsvArray<T>(
         valueReader: () => T & Ast.TCsvType,
         continueReadingValues: boolean,
-    ): Ast.TCsvArray & Ast.IArrayHelper<Ast.ICsv<T & Ast.TCsvType>> {
-        const nodeKind: Ast.NodeKind.ArrayHelper = Ast.NodeKind.ArrayHelper;
+    ): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
+        const nodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
         this.startContext(nodeKind);
 
         const elements: Ast.ICsv<T & Ast.TCsvType>[] = [];
@@ -1957,7 +1954,7 @@ export class Parser {
             this.endContext(element);
         }
 
-        const astNode: Ast.IArrayHelper<Ast.ICsv<T & Ast.TCsvType>> = {
+        const astNode: Ast.ICsvArray<T & Ast.TCsvType> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
