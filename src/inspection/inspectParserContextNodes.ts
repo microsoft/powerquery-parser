@@ -68,8 +68,30 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
             break;
         }
 
-        case Ast.NodeKind.Section:
+        case Ast.NodeKind.Section: {
+            const maybeSectionMemberArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildOfKind(
+                state.nodeIdMapCollection,
+                node.id,
+                Ast.NodeKind.SectionMemberArray,
+            );
+            if (maybeSectionMemberArrayXorNode === undefined) {
+                break;
+            }
+            const sectionMemberArrayXorNode: NodeIdMap.TXorNode = maybeSectionMemberArrayXorNode;
+
+            switch (sectionMemberArrayXorNode.kind) {
+                case NodeIdMap.XorNodeKind.Ast:
+                    break;
+
+                case NodeIdMap.XorNodeKind.Context:
+                    break;
+
+                default:
+                    throw isNever(sectionMemberArrayXorNode);
+            }
+
             break;
+        }
 
         default:
             break;
@@ -155,9 +177,9 @@ function keysFromRecord(
                 }
                 const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
 
-                // While the drill down returns a TXorNode we only care about the Ast.TNode case.
+                // maybeNthChild returns a TXorNode, but we only care about the Ast.TNode case.
                 if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-                    // maybeXorNodeChildAtIndex ensured it's a GeneralizedIdentifier
+                    // We've already checked that it's a GeneralizedIdentifier
                     keys.push(keyXorNode.node as Ast.GeneralizedIdentifier);
                 }
 

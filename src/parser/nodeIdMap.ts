@@ -72,13 +72,34 @@ export function maybeNthChild(nodeIdMapCollection: Collection, parentId: number,
     if (maybeChildIds === undefined) {
         return undefined;
     }
-
     const childIds: ReadonlyArray<number> = maybeChildIds;
+
     if (childIndex >= childIds.length) {
         return undefined;
     }
 
     return expectXorNode(nodeIdMapCollection, childIds[childIndex]);
+}
+
+export function maybeChildByKind(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    nodeKind: Ast.NodeKind,
+): Option<TXorNode> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+    const childIds: ReadonlyArray<number> = maybeChildIds;
+
+    for (const childId of childIds) {
+        const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
+        if (xorNode.node.kind === nodeKind) {
+            return xorNode;
+        }
+    }
+
+    return undefined;
 }
 
 export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
