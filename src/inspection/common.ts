@@ -122,7 +122,10 @@ export function csvContainerChildXorNodes(
         case NodeIdMap.XorNodeKind.Ast:
             if (root.node.kind !== Ast.NodeKind.ContainerHelper) {
                 const details: {} = { root };
-                throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
+                throw new CommonError.InvariantError(
+                    `root must have a Ast.NodeKind of ${Ast.NodeKind.ContainerHelper}`,
+                    details,
+                );
             }
 
             return root.node.elements.map(csv => {
@@ -135,7 +138,10 @@ export function csvContainerChildXorNodes(
         case NodeIdMap.XorNodeKind.Context: {
             if (root.node.kind !== Ast.NodeKind.ContainerHelper) {
                 const details: {} = { root };
-                throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
+                throw new CommonError.InvariantError(
+                    `root must have a Ast.NodeKind of ${Ast.NodeKind.ContainerHelper}`,
+                    details,
+                );
             }
             const csvContainerContextNode: ParserContext.Node = root.node;
 
