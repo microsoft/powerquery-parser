@@ -107,7 +107,7 @@ function keysFromRecord(
         nodeIdMapCollection,
         parentId,
         1,
-        Ast.NodeKind.CsvContainer,
+        Ast.NodeKind.ArrayHelper,
     );
     // No CsvContainer exists.
     if (maybeCsvContainerXorNode === undefined) {
