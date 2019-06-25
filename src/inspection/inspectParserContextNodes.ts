@@ -134,7 +134,9 @@ function keysFromRecord(
                     default:
                         const details: {} = { csvXorNode };
                         throw new CommonError.InvariantError(
-                            `csvXorNode can should only be either GeneralizedIdentifierPairedExpression or GeneralizedIdentifierPairedAnyLiteral`,
+                            `csvXorNode can should only be either ${
+                                Ast.NodeKind.GeneralizedIdentifierPairedExpression
+                            } or ${Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral}`,
                             details,
                         );
                 }
