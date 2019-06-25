@@ -5,12 +5,12 @@ import { Option } from "../common/option";
 import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
-    ArrayHelper = "ArrayHelper",
     ArithmeticExpression = "ArithmeticExpression",
     AsExpression = "AsExpression",
     AsNullablePrimitiveType = "AsNullablePrimitiveType",
     AsType = "AsType",
     Constant = "Constant",
+    ContainerHelper = "ContainerHelper",
     Csv = "Csv",
     EachExpression = "EachExpression",
     EqualityExpression = "EqualityExpression",
@@ -109,7 +109,7 @@ export type TAuxiliaryNodes =
     | TUnaryExpressionHelper
     | TWrapped;
 
-export type TCsvArray = IArrayHelper<TCsv>;
+export type TCsvArray = IContainerHelper<TCsv>;
 export type TCsv = ICsv<TCsvType>;
 export type TCsvType =
     | FieldSelector
@@ -492,20 +492,20 @@ export interface NotImplementedExpression extends INode {
 // ---------- 12.2.3.16 Invoke expression ----------
 // -------------------------------------------------
 
-export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, IArrayHelper<ICsv<TExpression>>> {}
+export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, IContainerHelper<ICsv<TExpression>>> {}
 
 // -----------------------------------------------
 // ---------- 12.2.3.17 List expression ----------
 // -----------------------------------------------
 
-export interface ListExpression extends IWrapped<NodeKind.ListExpression, IArrayHelper<ICsv<TExpression>>> {}
+export interface ListExpression extends IWrapped<NodeKind.ListExpression, IContainerHelper<ICsv<TExpression>>> {}
 
 // -------------------------------------------------
 // ---------- 12.2.3.18 Record expression ----------
 // -------------------------------------------------
 
 export interface RecordExpression
-    extends IWrapped<NodeKind.RecordExpression, IArrayHelper<ICsv<GeneralizedIdentifierPairedExpression>>> {}
+    extends IWrapped<NodeKind.RecordExpression, IContainerHelper<ICsv<GeneralizedIdentifierPairedExpression>>> {}
 
 // ------------------------------------------------------
 // ---------- 12.2.3.19 Item access expression ----------
@@ -527,7 +527,7 @@ export interface FieldSelector extends IWrapped<NodeKind.FieldSelector, Generali
     readonly maybeOptionalConstant: Option<Constant>;
 }
 
-export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, IArrayHelper<ICsv<FieldSelector>>> {
+export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, IContainerHelper<ICsv<FieldSelector>>> {
     // located after closeWrapperConstant
     readonly maybeOptionalConstant: Option<Constant>;
 }
@@ -558,7 +558,7 @@ export interface EachExpression extends IPairedConstant<NodeKind.EachExpression,
 export interface LetExpression extends INode {
     readonly kind: NodeKind.LetExpression;
     readonly letConstant: Constant;
-    readonly variableList: IArrayHelper<ICsv<IdentifierPairedExpression>>;
+    readonly variableList: IContainerHelper<ICsv<IdentifierPairedExpression>>;
     readonly inConstant: Constant;
     readonly expression: TExpression;
 }
@@ -650,12 +650,12 @@ export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryTyp
 
 export type TAnyLiteral = ListLiteral | LiteralExpression | RecordLiteral;
 
-export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, IArrayHelper<ICsv<TAnyLiteral>>> {
+export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, IContainerHelper<ICsv<TAnyLiteral>>> {
     readonly literalKind: LiteralKind.List;
 }
 
 export interface RecordLiteral
-    extends IWrapped<NodeKind.RecordLiteral, IArrayHelper<ICsv<GeneralizedIdentifierPairedAnyLiteral>>> {
+    extends IWrapped<NodeKind.RecordLiteral, IContainerHelper<ICsv<GeneralizedIdentifierPairedAnyLiteral>>> {
     readonly literalKind: LiteralKind.Record;
 }
 
@@ -680,8 +680,8 @@ export interface IBinOpKeyword<NodeKindVariant, L, R> extends INode {
     readonly right: R;
 }
 
-export interface IArrayHelper<T> extends INode {
-    readonly kind: NodeKind.ArrayHelper;
+export interface IContainerHelper<T> extends INode {
+    readonly kind: NodeKind.ContainerHelper;
     readonly elements: ReadonlyArray<T>;
 }
 
@@ -765,7 +765,7 @@ export interface IdentifierExpressionPairedExpression
 export type TParameterType = AsType | Option<AsNullablePrimitiveType>;
 
 export interface IParameterList<T>
-    extends IWrapped<NodeKind.ParameterList, IArrayHelper<ICsv<IParameter<T & TParameterType>>>> {}
+    extends IWrapped<NodeKind.ParameterList, IContainerHelper<ICsv<IParameter<T & TParameterType>>>> {}
 
 export interface IParameter<T> extends INode {
     readonly kind: NodeKind.Parameter;
@@ -798,7 +798,7 @@ export interface FieldSpecification extends INode {
     readonly maybeFieldTypeSpeification: Option<FieldTypeSpecification>;
 }
 export interface FieldSpecificationList
-    extends IWrapped<NodeKind.FieldSpecificationList, IArrayHelper<ICsv<FieldSpecification>>> {
+    extends IWrapped<NodeKind.FieldSpecificationList, IContainerHelper<ICsv<FieldSpecification>>> {
     // located between content and closeWrapperConstant
     readonly maybeOpenRecordMarkerConstant: Option<Constant>;
 }

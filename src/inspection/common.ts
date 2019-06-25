@@ -120,7 +120,7 @@ export function csvContainerChildXorNodes(
 ): ReadonlyArray<NodeIdMap.TXorNode> {
     switch (root.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            if (root.node.kind !== Ast.NodeKind.ArrayHelper) {
+            if (root.node.kind !== Ast.NodeKind.ContainerHelper) {
                 const details: {} = { root };
                 throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
             }
@@ -133,7 +133,7 @@ export function csvContainerChildXorNodes(
             });
 
         case NodeIdMap.XorNodeKind.Context: {
-            if (root.node.kind !== Ast.NodeKind.ArrayHelper) {
+            if (root.node.kind !== Ast.NodeKind.ContainerHelper) {
                 const details: {} = { root };
                 throw new CommonError.InvariantError(`root must have a Ast.NodeKind of CsvContainer`, details);
             }
