@@ -6,7 +6,7 @@ import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { XorNodeKind } from "../parser/nodeIdMap";
 import {
     addToScopeIfNew,
-    csvContainerChildXorNodes,
+    csvArrayChildrenXorNodes,
     isParentOfNodeKind,
     isTokenPositionBeforePostiion,
     NodeKind,
@@ -102,23 +102,23 @@ function keysFromRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
 ): ReadonlyArray<Ast.GeneralizedIdentifier> {
-    // Try to grab the 2nd child (a CsvContainer) from parent (where the 1st child is the constant '[').
-    const maybeCsvContainerXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(
+    // Try to grab the 2nd child (a TCsvARray) from parent (where the 1st child is the constant '[').
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(
         nodeIdMapCollection,
         parentId,
         1,
-        Ast.NodeKind.ContainerHelper,
+        Ast.NodeKind.ArrayHelper,
     );
-    // No CsvContainer exists.
-    if (maybeCsvContainerXorNode === undefined) {
+    // No TCsvArray child exists.
+    if (maybeCsvArrayXorNode === undefined) {
         return [];
     }
 
-    const csvContainerXorNode: NodeIdMap.TXorNode = maybeCsvContainerXorNode;
+    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
     const keys: Ast.GeneralizedIdentifier[] = [];
 
     // Iterate over all Ast.ICsv<_>.node
-    for (const csvXorNode of csvContainerChildXorNodes(nodeIdMapCollection, csvContainerXorNode)) {
+    for (const csvXorNode of csvArrayChildrenXorNodes(nodeIdMapCollection, csvArrayXorNode)) {
         switch (csvXorNode.kind) {
             // The child node is an Ast.TNode, which makes things way easier to logic out.
             case NodeIdMap.XorNodeKind.Ast: {

@@ -113,17 +113,17 @@ export function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, posi
     );
 }
 
-// equivalent to CsvContainer.elements.map(csv => csv.node), plus with TXorNode handling
-export function csvContainerChildXorNodes(
+// Same as TCsvArray.elements.map(csv => csv.node), plus TXorNode handling.
+export function csvArrayChildrenXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     root: NodeIdMap.TXorNode,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
     switch (root.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            if (root.node.kind !== Ast.NodeKind.ContainerHelper) {
+            if (root.node.kind !== Ast.NodeKind.ArrayHelper) {
                 const details: {} = { root };
                 throw new CommonError.InvariantError(
-                    `root must have a Ast.NodeKind of ${Ast.NodeKind.ContainerHelper}`,
+                    `root must have a Ast.NodeKind of ${Ast.NodeKind.ArrayHelper}`,
                     details,
                 );
             }
@@ -136,24 +136,24 @@ export function csvContainerChildXorNodes(
             });
 
         case NodeIdMap.XorNodeKind.Context: {
-            if (root.node.kind !== Ast.NodeKind.ContainerHelper) {
+            if (root.node.kind !== Ast.NodeKind.ArrayHelper) {
                 const details: {} = { root };
                 throw new CommonError.InvariantError(
-                    `root must have a Ast.NodeKind of ${Ast.NodeKind.ContainerHelper}`,
+                    `root must have a Ast.NodeKind of ${Ast.NodeKind.ArrayHelper}`,
                     details,
                 );
             }
-            const csvContainerContextNode: ParserContext.Node = root.node;
+            const csvArrayContextNode: ParserContext.Node = root.node;
 
             const result: NodeIdMap.TXorNode[] = [];
 
-            const maybeContainerChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
-                csvContainerContextNode.id,
+            const maybeCsvArrayChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
+                csvArrayContextNode.id,
             );
-            if (maybeContainerChildIds !== undefined) {
-                const containerChildIds: ReadonlyArray<number> = maybeContainerChildIds;
+            if (maybeCsvArrayChildIds !== undefined) {
+                const csvArrayChildIds: ReadonlyArray<number> = maybeCsvArrayChildIds;
 
-                for (const csvId of containerChildIds) {
+                for (const csvId of csvArrayChildIds) {
                     const maybeCsvChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(csvId);
                     if (maybeCsvChildIds !== undefined) {
                         const csvChildIds: ReadonlyArray<number> = maybeCsvChildIds;
