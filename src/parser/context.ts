@@ -29,6 +29,7 @@ import { Token } from "../lexer";
 export interface State {
     readonly root: Root;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
+    idCounter: number;
     leafNodeIds: number[];
 }
 
@@ -55,6 +56,7 @@ export function empty(): State {
             parentIdById: new Map(),
             childIdsById: new Map(),
         },
+        idCounter: 0,
         leafNodeIds: [],
     };
 }
@@ -62,12 +64,13 @@ export function empty(): State {
 export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
-    nodeId: number,
     tokenIndexStart: number,
     maybeTokenStart: Option<Token>,
     maybeParentNode: Option<Node>,
 ): Node {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const nodeId: number = state.idCounter + 1;
+    state.idCounter += 1;
 
     // If the context is a child of an existing context: update the child/parent maps.
     if (maybeParentNode) {
@@ -233,6 +236,7 @@ export function deepCopy(state: State): State {
             maybeNode: maybeRootNode,
         },
         nodeIdMapCollection: nodeIdMapCollection,
+        idCounter: state.idCounter,
         leafNodeIds: state.leafNodeIds.slice(),
     };
 }

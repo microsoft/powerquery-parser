@@ -14,7 +14,6 @@ export class Parser {
     public constructor(
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
-        private nodeIdCounter: number = 0,
         private contextState: ParserContext.State = ParserContext.empty(),
         private maybeCurrentContextNode: Option<ParserContext.Node> = undefined,
     ) {
@@ -2087,12 +2086,10 @@ export class Parser {
         this.maybeCurrentContextNode = ParserContext.startContext(
             this.contextState,
             nodeKind,
-            this.nodeIdCounter,
             this.tokenIndex,
             this.maybeCurrentToken,
             this.maybeCurrentContextNode,
         );
-        this.nodeIdCounter += 1;
     }
 
     private endContext(astNode: Ast.TNode): void {
