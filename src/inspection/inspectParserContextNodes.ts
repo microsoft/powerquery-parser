@@ -8,12 +8,12 @@ import {
     addAstToScopeIfNew,
     addToScopeIfNew,
     csvArrayChildrenXorNodes,
+    inspectSectionMember,
     inspectSectionMemberArray,
     isParentOfNodeKind,
     isTokenPositionBeforePostiion,
     NodeKind,
     State,
-    inspectSectionMember,
 } from "./common";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
