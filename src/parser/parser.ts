@@ -95,11 +95,14 @@ export class Parser {
         this.startContext(nodeKind);
 
         const maybeLiteralAttributes: Option<Ast.RecordLiteral> = this.maybeReadLiteralAttributes();
+        this.incrementAttributeCounterIfUndefined(maybeLiteralAttributes);
         const sectionConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordSection);
 
         let maybeName: Option<Ast.Identifier>;
         if (this.isOnTokenKind(TokenKind.Identifier)) {
             maybeName = this.readIdentifier();
+        } else {
+            this.incrementAttributeCounter();
         }
 
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
@@ -146,7 +149,9 @@ export class Parser {
         this.startContext(nodeKind);
 
         const maybeLiteralAttributes: Option<Ast.RecordLiteral> = this.maybeReadLiteralAttributes();
+        this.incrementAttributeCounterIfUndefined(maybeLiteralAttributes);
         const maybeSharedConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.KeywordShared);
+        this.incrementAttributeCounterIfUndefined(maybeSharedConstant);
         const namePairedExpression: Ast.IdentifierPairedExpression = this.readIdentifierPairedExpression();
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
 
@@ -468,6 +473,7 @@ export class Parser {
         this.startContext(nodeKind);
 
         const maybeInclusiveConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.AtSign);
+        this.incrementAttributeCounterIfUndefined(maybeInclusiveConstant);
         const identifier: Ast.Identifier = this.readIdentifier();
 
         const astNode: Ast.IdentifierExpression = {
@@ -595,6 +601,7 @@ export class Parser {
             this.maybeReadAsNullablePrimitiveType(),
         );
         const maybeFunctionReturnType: Option<Ast.AsNullablePrimitiveType> = this.maybeReadAsNullablePrimitiveType();
+        this.incrementAttributeCounterIfUndefined(maybeFunctionReturnType);
         const fatArrowConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.FatArrow);
         const expression: Ast.TExpression = this.readExpression();
 
@@ -839,11 +846,17 @@ export class Parser {
                 const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadIdentifierConstantAsConstant(
                     Ast.IdentifierConstant.Optional,
                 );
+                this.incrementAttributeCounterIfUndefined(maybeOptionalConstant);
+
                 const name: Ast.GeneralizedIdentifier = this.readGeneralizedIdentifier();
+
                 const maybeFieldTypeSpeification: Option<
                     Ast.FieldTypeSpecification
                 > = this.maybeReadFieldTypeSpecification();
+                this.incrementAttributeCounterIfUndefined(maybeFieldTypeSpeification);
+
                 const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
+                this.incrementAttributeCounterIfUndefined(maybeCommaConstant);
                 continueReadingValues = maybeCommaConstant !== undefined;
 
                 const field: Ast.FieldSpecification = {
@@ -974,6 +987,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.KeywordOtherwise),
             () => this.readExpression(),
         );
+        this.incrementAttributeCounterIfUndefined(maybeOtherwiseExpression);
 
         const astNode: Ast.ErrorHandlingExpression = {
             ...this.expectContextNodeMetadata(),
@@ -1075,9 +1089,11 @@ export class Parser {
         while (continueReadingValues) {
             this.startContext(Ast.NodeKind.Csv);
             this.startContext(Ast.NodeKind.Parameter);
+
             const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadIdentifierConstantAsConstant(
                 Ast.IdentifierConstant.Optional,
             );
+            this.incrementAttributeCounterIfUndefined(maybeOptionalConstant);
 
             if (reachedOptionalParameter && !maybeOptionalConstant) {
                 const token: Token = this.expectTokenAt(this.tokenIndex);
@@ -1090,7 +1106,10 @@ export class Parser {
             }
 
             const name: Ast.Identifier = this.readIdentifier();
+
             const maybeParameterType: T & Ast.TParameterType = typeReader();
+            this.incrementAttributeCounterIfUndefined(maybeParameterType);
+
             const parameter: Ast.IParameter<T & Ast.TParameterType> = {
                 ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Parameter,
@@ -1102,6 +1121,7 @@ export class Parser {
             this.endContext(parameter);
 
             const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
+            this.incrementAttributeCounterIfUndefined(maybeCommaConstant);
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const csv: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>> = {
@@ -1496,7 +1516,7 @@ export class Parser {
 
     private readTokenKindAsConstant(tokenKind: TokenKind): Ast.Constant {
         const maybeConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(tokenKind);
-        if (!maybeConstant) {
+        if (maybeConstant === undefined) {
             const maybeErr: Option<ParserError.ExpectedTokenKindError> = this.expectTokenKind(tokenKind);
             if (maybeErr) {
                 throw maybeErr;
@@ -1505,8 +1525,11 @@ export class Parser {
                     expectedTokenKind: tokenKind,
                     actualTokenKind: this.maybeCurrentTokenKind,
                 };
+
                 throw new CommonError.InvariantError(
-                    "failures from maybeReadTokenKindAsConstant should be reportable by expectTokenKind",
+                    `failures from ${this.maybeReadTokenKindAsConstant.name} should be reportable by ${
+                        this.expectTokenKind.name
+                    }`,
                     details,
                 );
             }
@@ -1686,6 +1709,7 @@ export class Parser {
 
         const left: L = leftExpressionReader();
         const maybeConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(keywordTokenKind);
+        this.incrementAttributeCounterIfUndefined(maybeConstant);
 
         if (maybeConstant) {
             const right: R = rightExpressionReader();
@@ -1870,6 +1894,7 @@ export class Parser {
         let maybeOptionalConstant: Option<Ast.Constant>;
         if (allowOptionalConstant) {
             maybeOptionalConstant = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
+            this.incrementAttributeCounterIfUndefined(maybeOptionalConstant);
         }
 
         const wrapped: WrappedRead<Kind, Content> = {
@@ -1956,6 +1981,7 @@ export class Parser {
 
             const node: T & Ast.TCsvType = valueReader();
             const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
+            this.incrementAttributeCounterIfUndefined(maybeCommaConstant);
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const element: Ast.TCsv & Ast.ICsv<T & Ast.TCsvType> = {
@@ -2082,6 +2108,20 @@ export class Parser {
         return new ParserError.UnterminatedBracketError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
     }
 
+    private incrementAttributeCounter(): void {
+        if (this.maybeCurrentContextNode === undefined) {
+            throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
+        }
+        const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
+        currentContextNode.attributeCounter += 1;
+    }
+
+    private incrementAttributeCounterIfUndefined(node: Option<Ast.TNode>): void {
+        if (node === undefined) {
+            this.incrementAttributeCounter();
+        }
+    }
+
     private startContext(nodeKind: Ast.NodeKind): void {
         this.maybeCurrentContextNode = ParserContext.startContext(
             this.contextState,
@@ -2196,9 +2236,26 @@ export class Parser {
         };
 
         const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
+        const maybeParentId: Option<number> = this.contextState.nodeIdMapCollection.parentIdById.get(contextNode.id);
+        let maybeAttributeIndex: Option<number>;
+        if (maybeParentId !== undefined) {
+            const parentId: number = maybeParentId;
+            const maybeParentContextNode: Option<
+                ParserContext.Node
+            > = this.contextState.nodeIdMapCollection.contextNodeById.get(parentId);
+
+            if (maybeParentContextNode === undefined) {
+                const details: {} = { parentId };
+                throw new CommonError.InvariantError(`maybeParentNode should be truthy`, details);
+            }
+            const parentContextNode: ParserContext.Node = maybeParentContextNode;
+
+            maybeAttributeIndex = parentContextNode.attributeCounter;
+        }
+
         return {
             id: contextNode.id,
-            maybeAttributeIndex: contextNode.maybeAttributeIndex,
+            maybeAttributeIndex,
             tokenRange,
         };
     }

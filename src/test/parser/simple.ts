@@ -7,7 +7,9 @@ import { Option, ResultKind, Traverse } from "../../common";
 import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
 import { Ast } from "../../parser";
 
-interface CollectAllNodeKindState extends Traverse.IState<Ast.NodeKind[]> {}
+type AbridgedNode = [Ast.NodeKind, Option<number>];
+
+interface CollectAbridgeNodeState extends Traverse.IState<AbridgedNode[]> {}
 
 interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
     readonly nodeKind: Ast.NodeKind;
@@ -26,7 +28,7 @@ function expectLexAndParseOk(text: string): LexAndParseOk {
 function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
     const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
     const triedTraverse: Traverse.TriedTraverse<Ast.NodeKind[]> = Traverse.tryTraverseAst<
-        CollectAllNodeKindState,
+        CollectAbridgeNodeState,
         Ast.NodeKind[]
     >(
         lexAndParseOk.ast,
@@ -35,7 +37,31 @@ function collectNodeKindsFromAst(text: string): ReadonlyArray<Ast.NodeKind> {
             result: [],
         },
         Traverse.VisitNodeStrategy.BreadthFirst,
-        collectNodeKindVisit,
+        collectAbridgeNodeVisit,
+        Traverse.expectExpandAllAstChildren,
+        undefined,
+    );
+
+    if (!(triedTraverse.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok: ${triedTraverse.error.message}`);
+    }
+
+    return triedTraverse.value;
+}
+
+function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
+    const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
+    const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = Traverse.tryTraverseAst<
+        CollectAbridgeNodeState,
+        AbridgedNode[]
+    >(
+        lexAndParseOk.ast,
+        lexAndParseOk.nodeIdMapCollection,
+        {
+            result: [],
+        },
+        Traverse.VisitNodeStrategy.BreadthFirst,
+        collectAbridgeNodeVisit,
         Traverse.expectExpandAllAstChildren,
         undefined,
     );
@@ -79,8 +105,8 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
     return astNode as T & Ast.TNode;
 }
 
-function collectNodeKindVisit(node: Ast.TNode, state: CollectAllNodeKindState): void {
-    state.result.push(node.kind);
+function collectAbridgeNodeVisit(node: Ast.TNode, state: CollectAbridgeNodeState): void {
+    state.result.push([node.kind, node.maybeAttributeIndex]);
 }
 
 function nthNodeVisit(node: Ast.TNode, state: NthNodeOfKindState): void {
@@ -101,7 +127,12 @@ function expectNodeKinds(text: string, expectedNodeKinds: ReadonlyArray<Ast.Node
     expect(actualNodeKinds).deep.equal(expectedNodeKinds);
 }
 
-describe("Parser.NodeKind", () => {
+function expectAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>): void {
+    const actualNodeKinds: ReadonlyArray<AbridgedNode> = collectAbridgeNodeFromAst(text);
+    expect(actualNodeKinds).deep.equal(expected);
+}
+
+describe("Parser.AbridgedNode", () => {
     it(`${Ast.NodeKind.ArithmeticExpression} ${Ast.ArithmeticOperator.Addition}`, () => {
         const text: string = `1 + 2`;
         const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
@@ -1215,27 +1246,27 @@ describe("Parser.NodeKind", () => {
         expectNodeKinds(text, expectedNodeKinds);
     });
 
-    it(`${Ast.NodeKind.Section} members`, () => {
+    it(`abc123 ${Ast.NodeKind.Section} members`, () => {
         const text: string = `section; x = 1; y = 2;`;
-        const expectedNodeKinds: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.Section,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.SectionMemberArray,
-            Ast.NodeKind.SectionMember,
-            Ast.NodeKind.IdentifierPairedExpression,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.SectionMember,
-            Ast.NodeKind.IdentifierPairedExpression,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.Section, undefined],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Constant, 3],
+            [Ast.NodeKind.SectionMemberArray, 4],
+            [Ast.NodeKind.SectionMember, 0],
+            [Ast.NodeKind.IdentifierPairedExpression, 2],
+            [Ast.NodeKind.Identifier, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.LiteralExpression, 2],
+            [Ast.NodeKind.Constant, 3],
+            [Ast.NodeKind.SectionMember, 0],
+            [Ast.NodeKind.IdentifierPairedExpression, 2],
+            [Ast.NodeKind.Identifier, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.LiteralExpression, 2],
+            [Ast.NodeKind.Constant, 3],
         ];
-        expectNodeKinds(text, expectedNodeKinds);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.SectionMember}`, () => {
