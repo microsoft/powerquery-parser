@@ -88,6 +88,27 @@ export function maybeChildByKind(
     return undefined;
 }
 
+export function maybeChildByAttributeIndex(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+): Option<TXorNode> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+    const childIds: ReadonlyArray<number> = maybeChildIds;
+
+    for (const childId of childIds) {
+        const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
+        if (xorNode.node.maybeAttributeIndex === attributeIndex) {
+            return xorNode;
+        }
+    }
+
+    return undefined;
+}
+
 export function maybeXorChildren(nodeIdMapCollection: Collection, parentId: number): Option<ReadonlyArray<TXorNode>> {
     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
     if (maybeChildIds === undefined) {

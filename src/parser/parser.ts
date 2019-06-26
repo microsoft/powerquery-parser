@@ -2198,6 +2198,7 @@ export class Parser {
         const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
         return {
             id: contextNode.id,
+            maybeAttributeIndex: contextNode.maybeAttributeIndex,
             tokenRange,
         };
     }
@@ -2284,6 +2285,7 @@ interface StateBackup {
 }
 interface ContextNodeMetadata {
     readonly id: number;
+    readonly maybeAttributeIndex: Option<number>;
     readonly tokenRange: Ast.TokenRange;
 }
 

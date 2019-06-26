@@ -31,9 +31,9 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
         case Ast.NodeKind.Identifier:
             if (
                 !isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression) &&
-                node.maybeClosedAttributes
+                node.maybeAstNode
             ) {
-                const identifier: Ast.Identifier = node.maybeClosedAttributes.astNode as Ast.Identifier;
+                const identifier: Ast.Identifier = node.maybeAstNode as Ast.Identifier;
                 addContextToScopeIfNew(state, identifier.literal, node);
             }
             break;
@@ -207,6 +207,19 @@ function keysFromRecord(
 
 function inspectIdentifierExpression(state: State, node: ParserContext.Node): void {
     let identifier: string = "";
+
+    // const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    // const maybeInclusiveConstant: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+    //     nodeIdMapCollection,
+    //     node.id,
+    //     0,
+    // );
+    // const maybeIdentifier: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+    //     nodeIdMapCollection,
+    //     node.id,
+    //     1,
+    // );
+
     const maybeChildren: Option<ReadonlyArray<NodeIdMap.TXorNode>> = maybeXorChildren(
         state.nodeIdMapCollection,
         node.id,
@@ -229,7 +242,10 @@ function inspectIdentifierExpression(state: State, node: ParserContext.Node): vo
 
                 default:
                     const details: {} = { nodeKind: firstChild.node.kind };
-                    throw new CommonError.InvariantError(`identifierExpression has invalid Ast.NodeKind`, details);
+                    throw new CommonError.InvariantError(
+                        `${Ast.NodeKind.IdentifierExpression} has invalid Ast.NodeKind`,
+                        details,
+                    );
             }
         }
     }

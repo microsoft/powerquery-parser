@@ -43,12 +43,8 @@ export interface Node {
     readonly tokenIndexStart: number;
     readonly maybeTokenStart: Option<Token>;
     attributeCounter: number;
-    maybeClosedAttributes: Option<ClosedAttributes>;
-}
-
-export interface ClosedAttributes {
-    readonly astNode: Ast.TNode;
-    readonly maybeAttributeIndex: Option<number>;
+    maybeAstNode: Option<Ast.TNode>;
+    maybeAttributeIndex: Option<number>;
 }
 
 export function empty(): State {
@@ -101,7 +97,8 @@ export function startContext(
         tokenIndexStart,
         maybeTokenStart,
         attributeCounter: 0,
-        maybeClosedAttributes: undefined,
+        maybeAstNode: undefined,
+        maybeAttributeIndex: undefined,
     };
     nodeIdMapCollection.contextNodeById.set(nodeId, node);
 
@@ -113,7 +110,7 @@ export function startContext(
 export function endContext(state: State, contextNode: Node, astNode: Ast.TNode): Option<Node> {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    if (contextNode.maybeClosedAttributes !== undefined) {
+    if (contextNode.maybeAstNode !== undefined || contextNode.maybeAttributeIndex) {
         throw new CommonError.InvariantError("context was already ended");
     } else if (contextNode.id !== astNode.id) {
         const details: {} = {
@@ -132,17 +129,15 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
     const maybeParentNode: Option<Node> =
         maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
 
-    // Setting maybeClosedAttributes marks the ContextNode as complete.
+    // Setting maybeAttributeIndex and maybeAstNode marks the ContextNode as complete.
     let maybeAttributeIndex: Option<number>;
     if (maybeParentNode) {
         const parentNode: Node = maybeParentNode;
         maybeAttributeIndex = parentNode.attributeCounter;
         parentNode.attributeCounter += 1;
     }
-    contextNode.maybeClosedAttributes = {
-        astNode,
-        maybeAttributeIndex,
-    };
+    contextNode.maybeAttributeIndex = maybeAttributeIndex;
+    contextNode.maybeAstNode = astNode;
 
     // Move nodeId from contextNodeMap to astNodeMap.
     if (!nodeIdMapCollection.contextNodeById.delete(contextNode.id)) {
