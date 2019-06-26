@@ -31,9 +31,9 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
         case Ast.NodeKind.Identifier:
             if (
                 !isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression) &&
-                node.maybeAstNode
+                node.maybeClosedAttributes
             ) {
-                const identifier: Ast.Identifier = node.maybeAstNode as Ast.Identifier;
+                const identifier: Ast.Identifier = node.maybeClosedAttributes.astNode as Ast.Identifier;
                 addContextToScopeIfNew(state, identifier.literal, node);
             }
             break;

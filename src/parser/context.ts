@@ -42,7 +42,13 @@ export interface Node {
     readonly kind: Ast.NodeKind;
     readonly tokenIndexStart: number;
     readonly maybeTokenStart: Option<Token>;
-    maybeAstNode: Option<Ast.TNode>;
+    attributeCounter: number;
+    maybeClosedAttributes: Option<ClosedAttributes>;
+}
+
+export interface ClosedAttributes {
+    readonly astNode: Ast.TNode;
+    readonly maybeAttributeIndex: Option<number>;
 }
 
 export function empty(): State {
@@ -94,7 +100,8 @@ export function startContext(
         kind: nodeKind,
         tokenIndexStart,
         maybeTokenStart,
-        maybeAstNode: undefined,
+        attributeCounter: 0,
+        maybeClosedAttributes: undefined,
     };
     nodeIdMapCollection.contextNodeById.set(nodeId, node);
 
@@ -106,7 +113,7 @@ export function startContext(
 export function endContext(state: State, contextNode: Node, astNode: Ast.TNode): Option<Node> {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    if (contextNode.maybeAstNode !== undefined) {
+    if (contextNode.maybeClosedAttributes !== undefined) {
         throw new CommonError.InvariantError("context was already ended");
     } else if (contextNode.id !== astNode.id) {
         const details: {} = {
@@ -120,14 +127,22 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         state.leafNodeIds.push(contextNode.id);
     }
 
-    // Setting mabyeAstNode marks the ContextNode as complete.
-    contextNode.maybeAstNode = astNode;
-
     // Ending a context should return the context's parent node (if one exists).
-    // Grab it before we delete the current context node from the State map.
     const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(contextNode.id);
     const maybeParentNode: Option<Node> =
         maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
+
+    // Setting maybeClosedAttributes marks the ContextNode as complete.
+    let maybeAttributeIndex: Option<number>;
+    if (maybeParentNode) {
+        const parentNode: Node = maybeParentNode;
+        maybeAttributeIndex = parentNode.attributeCounter;
+        parentNode.attributeCounter += 1;
+    }
+    contextNode.maybeClosedAttributes = {
+        astNode,
+        maybeAttributeIndex,
+    };
 
     // Move nodeId from contextNodeMap to astNodeMap.
     if (!nodeIdMapCollection.contextNodeById.delete(contextNode.id)) {
