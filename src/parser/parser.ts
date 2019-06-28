@@ -298,6 +298,9 @@ export class Parser {
 
             const expressions: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
 
+            const unaryArrayNodeKind: Ast.NodeKind.UnaryExpressionHelperArray = Ast.NodeKind.UnaryExpressionHelperArray;
+            this.startContext(unaryArrayNodeKind);
+
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
                 this.startContext(helperNodeKind);
@@ -318,11 +321,22 @@ export class Parser {
                 maybeOperator = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
             }
 
+            const unaryArray: Ast.IArrayHelper<
+                Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>,
+                Ast.NodeKind.UnaryExpressionHelperArray
+            > = {
+                ...this.expectContextNodeMetadata(),
+                kind: unaryArrayNodeKind,
+                isLeaf: false,
+                elements: expressions,
+            };
+            this.endContext(unaryArray);
+
             const astNode: Ast.UnaryExpression = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: false,
-                expressions,
+                expressions: unaryArray,
             };
             this.endContext(astNode);
             return astNode;
