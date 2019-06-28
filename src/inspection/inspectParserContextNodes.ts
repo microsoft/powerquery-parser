@@ -206,63 +206,30 @@ function keysFromRecord(
 }
 
 function inspectIdentifierExpression(state: State, node: ParserContext.Node): void {
-    let identifier: string = "";
+    let result: string = "";
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    // const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    // const maybeInclusiveConstant: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
-    //     nodeIdMapCollection,
-    //     node.id,
-    //     0,
-    // );
-    // const maybeIdentifier: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
-    //     nodeIdMapCollection,
-    //     node.id,
-    //     1,
-    // );
-
-    const maybeChildren: Option<ReadonlyArray<NodeIdMap.TXorNode>> = maybeXorChildren(
-        state.nodeIdMapCollection,
+    const maybeInclusiveConstant: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        nodeIdMapCollection,
         node.id,
+        0,
     );
-    if (maybeChildren === undefined) {
-        return undefined;
-    }
-    const children: ReadonlyArray<NodeIdMap.TXorNode> = maybeChildren;
-
-    if (children.length === 1 || children.length === 2) {
-        const firstChild: NodeIdMap.TXorNode = children[0];
-        if (firstChild.kind === NodeIdMap.XorNodeKind.Ast) {
-            switch (firstChild.node.kind) {
-                // inclusive constant `@`
-                case Ast.NodeKind.Constant:
-                // no inclusive constant
-                case Ast.NodeKind.Identifier:
-                    identifier += firstChild.node.literal;
-                    break;
-
-                default:
-                    const details: {} = { nodeKind: firstChild.node.kind };
-                    throw new CommonError.InvariantError(
-                        `${Ast.NodeKind.IdentifierExpression} has invalid Ast.NodeKind`,
-                        details,
-                    );
-            }
-        }
+    if (maybeInclusiveConstant !== undefined && maybeInclusiveConstant.kind === NodeIdMap.XorNodeKind.Ast) {
+        const inclusiveConstant: Ast.Constant = maybeInclusiveConstant.node as Ast.Constant;
+        result += inclusiveConstant.literal;
     }
 
-    if (children.length === 2) {
-        const secondChild: NodeIdMap.TXorNode = children[1];
-        if (secondChild.kind === NodeIdMap.XorNodeKind.Ast) {
-            if (secondChild.node.kind !== Ast.NodeKind.Identifier) {
-                const details: {} = { nodeKind: secondChild.node.kind };
-                throw new CommonError.InvariantError(`identifierExpression has invalid Ast.NodeKind`, details);
-            }
-
-            identifier += secondChild.node.literal;
-        }
+    const maybeIdentifier: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        nodeIdMapCollection,
+        node.id,
+        1,
+    );
+    if (maybeIdentifier !== undefined && maybeIdentifier.kind === NodeIdMap.XorNodeKind.Ast) {
+        const identifier: Ast.Identifier = maybeIdentifier.node as Ast.Identifier;
+        result += identifier.literal;
     }
 
-    if (identifier.length) {
-        addContextToScopeIfNew(state, identifier, node);
+    if (result.length) {
+        addContextToScopeIfNew(state, result, node);
     }
 }
