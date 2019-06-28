@@ -296,14 +296,14 @@ export class Parser {
             const nodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
             this.startContext(nodeKind);
 
-            const expressions: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
+            const expressions: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
 
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
                 this.startContext(helperNodeKind);
 
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
-                const expression: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
+                const expression: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     isLeaf: false,
@@ -1757,7 +1757,7 @@ export class Parser {
 
         let maybeOperator: Option<Op & Ast.TUnaryExpressionHelperOperator> = operatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {
-            const rest: Ast.UnaryExpressionHelper<Op, Operand>[] = [];
+            const rest: Ast.IUnaryExpressionHelper<Op, Operand>[] = [];
 
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
@@ -1765,7 +1765,7 @@ export class Parser {
 
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
 
-                const helper: Ast.UnaryExpressionHelper<Op, Operand> = {
+                const helper: Ast.IUnaryExpressionHelper<Op, Operand> = {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     isLeaf: false,

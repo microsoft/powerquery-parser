@@ -411,7 +411,7 @@ export type TUnaryExpression = UnaryExpression | TTypeExpression;
 export interface UnaryExpression extends INode {
     readonly kind: NodeKind.UnaryExpression;
     readonly isLeaf: false;
-    readonly expressions: ReadonlyArray<UnaryExpressionHelper<UnaryOperator, TUnaryExpression>>;
+    readonly expressions: ReadonlyArray<IUnaryExpressionHelper<UnaryOperator, TUnaryExpression>>;
 }
 
 export const enum UnaryOperator {
@@ -675,7 +675,7 @@ export interface RecordLiteral
 export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
     readonly first: Operand;
-    readonly rest: ReadonlyArray<UnaryExpressionHelper<Operator, Operand>>;
+    readonly rest: ReadonlyArray<IUnaryExpressionHelper<Operator, Operand>>;
 }
 
 // BinOp expressions which uses a keyword as operators,
@@ -730,7 +730,7 @@ export interface IWrapped<Kind, Content> extends INode {
 
 // a (Operator, Operand) pair
 // used by unary and binary expressions
-export interface UnaryExpressionHelper<Operator, Operand> extends INode {
+export interface IUnaryExpressionHelper<Operator, Operand> extends INode {
     readonly kind: NodeKind.UnaryExpressionHelper;
     readonly isLeaf: false;
     readonly inBinaryExpression: boolean;
@@ -740,11 +740,11 @@ export interface UnaryExpressionHelper<Operator, Operand> extends INode {
 }
 
 export type TUnaryExpressionHelper =
-    | UnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>
-    | UnaryExpressionHelper<EqualityOperator, TEqualityExpression>
-    | UnaryExpressionHelper<LogicalOperator, TLogicalExpression>
-    | UnaryExpressionHelper<RelationalOperator, TRelationalExpression>
-    | UnaryExpressionHelper<UnaryOperator, TUnaryExpression>;
+    | IUnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>
+    | IUnaryExpressionHelper<EqualityOperator, TEqualityExpression>
+    | IUnaryExpressionHelper<LogicalOperator, TLogicalExpression>
+    | IUnaryExpressionHelper<RelationalOperator, TRelationalExpression>
+    | IUnaryExpressionHelper<UnaryOperator, TUnaryExpression>;
 
 export type TUnaryExpressionHelperOperator =
     | ArithmeticOperator
