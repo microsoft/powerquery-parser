@@ -71,50 +71,7 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
         }
 
         case Ast.NodeKind.Section: {
-            const maybeSectionMemberArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByKind(
-                state.nodeIdMapCollection,
-                node.id,
-                Ast.NodeKind.SectionMemberArray,
-            );
-            if (maybeSectionMemberArrayXorNode === undefined) {
-                break;
-            }
-            const sectionMemberArrayXorNode: NodeIdMap.TXorNode = maybeSectionMemberArrayXorNode;
-
-            switch (sectionMemberArrayXorNode.kind) {
-                case NodeIdMap.XorNodeKind.Ast:
-                    inspectSectionMemberArray(state, sectionMemberArrayXorNode.node as Ast.SectionMemberArray);
-                    break;
-
-                case NodeIdMap.XorNodeKind.Context: {
-                    const maybeChildren: Option<ReadonlyArray<NodeIdMap.TXorNode>> = maybeXorChildren(
-                        state.nodeIdMapCollection,
-                        node.id,
-                    );
-                    if (maybeChildren === undefined) {
-                        break;
-                    }
-                    const children: ReadonlyArray<NodeIdMap.TXorNode> = maybeChildren;
-                    for (const sectionMemberXorNode of children) {
-                        switch (sectionMemberXorNode.kind) {
-                            case NodeIdMap.XorNodeKind.Ast:
-                                inspectSectionMember(state, sectionMemberXorNode.node as Ast.SectionMember);
-                                break;
-
-                            case NodeIdMap.XorNodeKind.Context:
-                                break;
-
-                            default:
-                                throw isNever(sectionMemberXorNode);
-                        }
-                    }
-                    break;
-                }
-
-                default:
-                    throw isNever(sectionMemberArrayXorNode);
-            }
-
+            inspectSection(state, node);
             break;
         }
 
@@ -231,5 +188,51 @@ function inspectIdentifierExpression(state: State, node: ParserContext.Node): vo
 
     if (result.length) {
         addContextToScopeIfNew(state, result, node);
+    }
+}
+
+function inspectSection(state: State, node: ParserContext.Node): void {
+    const maybeSectionMemberArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        node.id,
+        4,
+    );
+    if (maybeSectionMemberArrayXorNode === undefined) {
+        return;
+    }
+    const sectionMemberArrayXorNode: NodeIdMap.TXorNode = maybeSectionMemberArrayXorNode;
+
+    switch (sectionMemberArrayXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            inspectSectionMemberArray(state, sectionMemberArrayXorNode.node as Ast.SectionMemberArray);
+            break;
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const maybeChildren: Option<ReadonlyArray<NodeIdMap.TXorNode>> = maybeXorChildren(
+                state.nodeIdMapCollection,
+                node.id,
+            );
+            if (maybeChildren === undefined) {
+                break;
+            }
+            const children: ReadonlyArray<NodeIdMap.TXorNode> = maybeChildren;
+            for (const sectionMemberXorNode of children) {
+                switch (sectionMemberXorNode.kind) {
+                    case NodeIdMap.XorNodeKind.Ast:
+                        inspectSectionMember(state, sectionMemberXorNode.node as Ast.SectionMember);
+                        break;
+
+                    case NodeIdMap.XorNodeKind.Context:
+                        break;
+
+                    default:
+                        throw isNever(sectionMemberXorNode);
+                }
+            }
+            break;
+        }
+
+        default:
+            throw isNever(sectionMemberArrayXorNode);
     }
 }
