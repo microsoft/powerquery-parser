@@ -1794,20 +1794,23 @@ export class Parser {
                 maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
 
-            const unaryArray: Ast.UnaryExpressionHelperArray = {
+            const unaryArray: Ast.IArrayHelper<
+                Ast.IUnaryExpressionHelper<Op, Operand>,
+                Ast.NodeKind.UnaryExpressionHelperArray
+            > = {
                 ...this.expectContextNodeMetadata(),
                 kind: unaryArrayNodeKind,
                 isLeaf: false,
-                elements: (rest as unknown) as Ast.TUnaryExpressionHelper[],
+                elements: rest,
             };
-            this.endContext(unaryArray);
+            this.endContext((unaryArray as unknown) as Ast.UnaryExpressionHelperArray);
 
             const astNode: Ast.IBinOpExpression<Kind, Op, Operand> = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: false,
                 first,
-                rest,
+                rest: unaryArray,
             };
             this.endContext((astNode as unknown) as Ast.TBinOpExpression);
             return astNode;

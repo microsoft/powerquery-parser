@@ -682,7 +682,7 @@ export interface RecordLiteral
 export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
     readonly first: Operand;
-    readonly rest: ReadonlyArray<IUnaryExpressionHelper<Operator, Operand>>;
+    readonly rest: IArrayHelper<IUnaryExpressionHelper<Operator, Operand>, NodeKind.UnaryExpressionHelperArray>;
 }
 
 // BinOp expressions which uses a keyword as operators,
