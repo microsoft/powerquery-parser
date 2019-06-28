@@ -53,6 +53,7 @@ export const enum NodeKind {
     RecordLiteral = "RecordLiteral",
     RecordType = "RecordType",
     RecursivePrimaryExpression = "RecursivePrimaryExpression",
+    RecursivePrimaryExpressionArray = "RecursivePrimaryExpressionArray",
     RelationalExpression = "RelationalExpression",
     Section = "Section",
     SectionMember = "SectionMember",
@@ -114,10 +115,12 @@ export type TAuxiliaryNodes =
 
 export type TArrayHelper =
     | IArrayHelper<SectionMember, NodeKind.SectionMemberArray>
+    | RecursivePrimaryExpressionArray
     | TCsvArray
     | UnaryExpressionHelperArray;
 export type TArrayHelperNodeKind =
     | NodeKind.CsvArray
+    | NodeKind.RecursivePrimaryExpressionArray
     | NodeKind.SectionMemberArray
     | NodeKind.UnaryExpressionHelperArray;
 
@@ -653,8 +656,11 @@ export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
     readonly isLeaf: false;
     readonly head: TPrimaryExpression;
-    readonly recursiveExpressions: ReadonlyArray<TRecursivePrimaryExpression>;
+    readonly recursiveExpressions: RecursivePrimaryExpressionArray;
 }
+
+export interface RecursivePrimaryExpressionArray
+    extends IArrayHelper<TRecursivePrimaryExpression, NodeKind.RecursivePrimaryExpressionArray> {}
 
 export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryType, TPrimaryType> {}
 

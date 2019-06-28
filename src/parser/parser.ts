@@ -1263,6 +1263,9 @@ export class Parser {
 
         // Begin normal parsing behavior.
         const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
+        const recursiveArrayNodeKind: Ast.NodeKind.RecursivePrimaryExpressionArray =
+            Ast.NodeKind.RecursivePrimaryExpressionArray;
+        this.startContext(recursiveArrayNodeKind);
         let continueReadingValues: boolean = true;
 
         while (continueReadingValues) {
@@ -1294,12 +1297,20 @@ export class Parser {
             }
         }
 
+        const recursiveArray: Ast.RecursivePrimaryExpressionArray = {
+            ...this.expectContextNodeMetadata(),
+            kind: recursiveArrayNodeKind,
+            isLeaf: false,
+            elements: recursiveExpressions,
+        };
+        this.endContext(recursiveArray);
+
         const astNode: Ast.RecursivePrimaryExpression = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
             head,
-            recursiveExpressions,
+            recursiveExpressions: recursiveArray,
         };
         this.endContext(astNode);
         return astNode;
