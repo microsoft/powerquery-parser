@@ -1233,7 +1233,7 @@ export class Parser {
 
         // Update start positions for recursive primary expression context
         const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-        const mutableContext: TypeUtils.Writable<ParserContext.Node> = currentContextNode;
+        const mutableContext: TypeUtils.StripReadonly<ParserContext.Node> = currentContextNode;
         // UNSAFE MARKER
         //
         // Purpose of code block:
@@ -2236,26 +2236,9 @@ export class Parser {
         };
 
         const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
-        const maybeParentId: Option<number> = this.contextState.nodeIdMapCollection.parentIdById.get(contextNode.id);
-        let maybeAttributeIndex: Option<number>;
-        if (maybeParentId !== undefined) {
-            const parentId: number = maybeParentId;
-            const maybeParentContextNode: Option<
-                ParserContext.Node
-            > = this.contextState.nodeIdMapCollection.contextNodeById.get(parentId);
-
-            if (maybeParentContextNode === undefined) {
-                const details: {} = { parentId };
-                throw new CommonError.InvariantError(`maybeParentNode should be truthy`, details);
-            }
-            const parentContextNode: ParserContext.Node = maybeParentContextNode;
-
-            maybeAttributeIndex = parentContextNode.attributeCounter;
-        }
-
         return {
             id: contextNode.id,
-            maybeAttributeIndex,
+            maybeAttributeIndex: currentContextNode.maybeAttributeIndex,
             tokenRange,
         };
     }

@@ -1246,7 +1246,7 @@ describe("Parser.AbridgedNode", () => {
         expectNodeKinds(text, expectedNodeKinds);
     });
 
-    it(`abc123 ${Ast.NodeKind.Section} members`, () => {
+    it(`${Ast.NodeKind.Section} members`, () => {
         const text: string = `section; x = 1; y = 2;`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.Section, undefined],
@@ -1259,7 +1259,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 1],
             [Ast.NodeKind.LiteralExpression, 2],
             [Ast.NodeKind.Constant, 3],
-            [Ast.NodeKind.SectionMember, 0],
+            [Ast.NodeKind.SectionMember, 1],
             [Ast.NodeKind.IdentifierPairedExpression, 2],
             [Ast.NodeKind.Identifier, 0],
             [Ast.NodeKind.Constant, 1],
