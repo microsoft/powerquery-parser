@@ -767,6 +767,12 @@ export type TUnaryExpressionHelperOperator =
     | LogicalOperator
     | RelationalOperator
     | UnaryOperator;
+export type TUnaryExpressionOperand =
+    | TArithmeticExpression
+    | TEqualityExpression
+    | TLogicalExpression
+    | TRelationalExpression
+    | TUnaryExpression;
 
 // ------------------------------------------
 // ---------- Key value pair nodes ----------

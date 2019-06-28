@@ -297,7 +297,6 @@ export class Parser {
             this.startContext(nodeKind);
 
             const expressions: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
-
             const unaryArrayNodeKind: Ast.NodeKind.UnaryExpressionHelperArray = Ast.NodeKind.UnaryExpressionHelperArray;
             this.startContext(unaryArrayNodeKind);
 
@@ -1763,15 +1762,17 @@ export class Parser {
 
     private readBinOpExpression<Kind, Op, Operand>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
-        operatorFrom: (tokenKind: Option<TokenKind>) => Option<Op & Ast.TUnaryExpressionHelperOperator>,
-        operandReader: () => Operand & Ast.TNode,
+        operatorFrom: (tokenKind: Option<TokenKind>) => Option<Ast.TUnaryExpressionHelperOperator & Op>,
+        operandReader: () => Ast.TUnaryExpressionOperand & Operand,
     ): Operand | Ast.IBinOpExpression<Kind, Op, Operand> {
         this.startContext(nodeKind);
-        const first: Operand & Ast.TNode = operandReader();
+        const first: Ast.TUnaryExpressionOperand & Operand = operandReader();
 
         let maybeOperator: Option<Op & Ast.TUnaryExpressionHelperOperator> = operatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {
             const rest: Ast.IUnaryExpressionHelper<Op, Operand>[] = [];
+            const unaryArrayNodeKind: Ast.NodeKind.UnaryExpressionHelperArray = Ast.NodeKind.UnaryExpressionHelperArray;
+            this.startContext(unaryArrayNodeKind);
 
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
@@ -1792,6 +1793,14 @@ export class Parser {
                 this.endContext((helper as unknown) as Ast.TUnaryExpressionHelper);
                 maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
+
+            const unaryArray: Ast.UnaryExpressionHelperArray = {
+                ...this.expectContextNodeMetadata(),
+                kind: unaryArrayNodeKind,
+                isLeaf: false,
+                elements: (rest as unknown) as Ast.TUnaryExpressionHelper[],
+            };
+            this.endContext(unaryArray);
 
             const astNode: Ast.IBinOpExpression<Kind, Op, Operand> = {
                 ...this.expectContextNodeMetadata(),
