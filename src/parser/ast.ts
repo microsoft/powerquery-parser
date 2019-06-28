@@ -752,6 +752,18 @@ export interface IUnaryExpressionHelper<Operator, Operand> extends INode {
 export interface UnaryExpressionHelperArray<Operator, Operand>
     extends IArrayHelper<IUnaryExpressionHelper<Operator, Operand>, NodeKind.UnaryExpressionHelperArray> {}
 
+export type TUnaryExpressionHelper =
+    | UnaryArithmeticExpressionHelper
+    | UnaryEqualityExpressionHelper
+    | UnaryLogicalExpressionHelper
+    | UnaryRelationalExpressionHelper
+    | UnaryUnaryExpressionHelper;
+export type UnaryArithmeticExpressionHelper = IUnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>;
+export type UnaryEqualityExpressionHelper = IUnaryExpressionHelper<EqualityOperator, TEqualityExpression>;
+export type UnaryLogicalExpressionHelper = IUnaryExpressionHelper<LogicalOperator, TLogicalExpression>;
+export type UnaryRelationalExpressionHelper = IUnaryExpressionHelper<RelationalOperator, TRelationalExpression>;
+export type UnaryUnaryExpressionHelper = IUnaryExpressionHelper<UnaryOperator, TUnaryExpression>;
+
 export type TUnaryExpressionHelperArray =
     | IArrayHelper<
           IUnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>,
@@ -764,13 +776,6 @@ export type TUnaryExpressionHelperArray =
           NodeKind.UnaryExpressionHelperArray
       >
     | IArrayHelper<IUnaryExpressionHelper<UnaryOperator, TUnaryExpression>, NodeKind.UnaryExpressionHelperArray>;
-
-export type TUnaryExpressionHelper =
-    | IUnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>
-    | IUnaryExpressionHelper<EqualityOperator, TEqualityExpression>
-    | IUnaryExpressionHelper<LogicalOperator, TLogicalExpression>
-    | IUnaryExpressionHelper<RelationalOperator, TRelationalExpression>
-    | IUnaryExpressionHelper<UnaryOperator, TUnaryExpression>;
 
 export type TUnaryExpressionHelperOperator =
     | ArithmeticOperator

@@ -1789,22 +1789,6 @@ export class Parser {
                     node: operandReader(),
                 };
                 rest.push(helper);
-                // UNSAFE MARKER
-                //
-                // Purpose of code block:
-                //      End the context started within the same function.
-                //
-                // Why are you trying to avoid a safer approach?
-                //      endContext takes an Ast.TNode, but due to generics the parser
-                //      can't prove for all types A, B, C that Ast.UnaryExpressionHelper<A, B>
-                //      results in an Ast.TNode.
-                //
-                //      The alternative approach is let the callers of readBinOpExpression
-                //      take the return and end the context themselves, which is messy.
-                //
-                // Why is it safe?
-                //      All Ast.NodeKind.UnaryExpressionHelper used by the parser are of Ast.TUnaryExpressionHelper,
-                //      a sub type of Ast.TNode.
                 this.endContext((helper as unknown) as Ast.TUnaryExpressionHelper);
                 maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
@@ -1816,22 +1800,6 @@ export class Parser {
                 first,
                 rest,
             };
-            // UNSAFE MARKER
-            //
-            // Purpose of code block:
-            //      End the context started within the same function.
-            //
-            // Why are you trying to avoid a safer approach?
-            //      endContext takes an Ast.TNode, but due to generics the parser
-            //      can't prove for all types A, B, C that Ast.IBinOpExpression<A, B, C>
-            //      results in an Ast.TNode.
-            //
-            //      The alternative approach is let the callers of readBinOpExpression
-            //      take the return and end the context themselves, which is messy.
-            //
-            // Why is it safe?
-            //      All Ast.NodeKind.IBinOpExpression used by the parser are of Ast.TBinOpExpression,
-            //      a sub type of Ast.TNode.
             this.endContext((astNode as unknown) as Ast.TBinOpExpression);
             return astNode;
         } else {
