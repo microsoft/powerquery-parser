@@ -729,6 +729,28 @@ describe(`Inspection`, () => {
             });
         });
 
+        describe(`${Ast.NodeKind.InvokeExpression} (Ast)`, () => {
+            it(`|foo(x)`, () => {
+                const text: string = `foo(x)`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`abc123 foo(x, y|)`, () => {
+                const text: string = `foo(x, y)`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 8,
+                };
+                const expected: ReadonlyArray<string> = [`y`, `x`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+        });
+
         describe(`${Ast.NodeKind.RecordExpression}/${Ast.NodeKind.RecordLiteral} (Ast)`, () => {
             it(`|[x=1] section;`, () => {
                 const text: string = `[x=1] section;`;

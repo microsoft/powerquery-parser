@@ -49,11 +49,28 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
+        case Ast.NodeKind.InvokeExpression: {
+            const args: Ast.ICsvArray<Ast.TExpression> = node.content;
+
+            for (const csv of args.elements) {
+                const arg: Ast.TExpression = csv.node;
+                if (
+                    arg.kind === Ast.NodeKind.IdentifierExpression &&
+                    isTokenPositionBeforePostiion(arg.tokenRange.positionEnd, state.position)
+                ) {
+                    inspectAstNode(state, arg);
+                }
+            }
+
+            break;
+        }
+
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral: {
             // Check if position is on closeWrapperConstant, eg. '}'
             const position: Position = state.position;
             const tokenRange: Ast.TokenRange = node.tokenRange;
+
             if (
                 isInTokenRange(position, tokenRange) &&
                 !isTokenPositionOnPosition(node.closeWrapperConstant.tokenRange.positionStart, position)
@@ -64,6 +81,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                     maybePositionEnd: tokenRange.positionEnd,
                 });
             }
+
             break;
         }
 
