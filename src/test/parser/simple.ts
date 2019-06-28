@@ -357,313 +357,316 @@ describe("Parser.AbridgedNode", () => {
 
     it(Ast.NodeKind.FieldProjection, () => {
         const text: string = `x[[y]]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.RecursivePrimaryExpression,
-            Ast.NodeKind.IdentifierExpression,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.FieldProjection,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSelector,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Ast.NodeKind.IdentifierExpression, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.RecursivePrimaryExpressionArray, 0],
+            [Ast.NodeKind.FieldProjection, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSelector, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FieldProjection} multiple`, () => {
         const text: string = `x[[y], [z]]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.RecursivePrimaryExpression,
-            Ast.NodeKind.IdentifierExpression,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.FieldProjection,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSelector,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSelector,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Ast.NodeKind.IdentifierExpression, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.RecursivePrimaryExpressionArray, 0],
+            [Ast.NodeKind.FieldProjection, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSelector, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Csv, 1],
+            [Ast.NodeKind.FieldSelector, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FieldProjection} optional`, () => {
         const text: string = `x[[y]]?`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.RecursivePrimaryExpression,
-            Ast.NodeKind.IdentifierExpression,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.FieldProjection,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSelector,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Ast.NodeKind.IdentifierExpression, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.RecursivePrimaryExpressionArray, 0],
+            [Ast.NodeKind.FieldProjection, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSelector, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 3],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(Ast.NodeKind.FieldSelector, () => {
         const text: string = `[x]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FieldSelector,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FieldSelector, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FieldSelector} optional`, () => {
         const text: string = `[x]?`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FieldSelector,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FieldSelector, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 3],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(Ast.NodeKind.FieldSpecification, () => {
         const text: string = `type [x]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.TypePrimaryType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.RecordType,
-            Ast.NodeKind.FieldSpecificationList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSpecification,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.TypePrimaryType, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.RecordType, 1],
+            [Ast.NodeKind.FieldSpecificationList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSpecification, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FieldSpecification} optional`, () => {
         const text: string = `type [optional x]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.TypePrimaryType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.RecordType,
-            Ast.NodeKind.FieldSpecificationList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSpecification,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.TypePrimaryType, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.RecordType, 1],
+            [Ast.NodeKind.FieldSpecificationList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSpecification, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FieldSpecification} FieldTypeSpecification`, () => {
         const text: string = `type [x = number]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.TypePrimaryType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.RecordType,
-            Ast.NodeKind.FieldSpecificationList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSpecification,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.FieldTypeSpecification,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.PrimitiveType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.TypePrimaryType, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.RecordType, 1],
+            [Ast.NodeKind.FieldSpecificationList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSpecification, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.FieldTypeSpecification, 2],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(Ast.NodeKind.FieldSpecificationList, () => {
         const text: string = `type [x]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.TypePrimaryType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.RecordType,
-            Ast.NodeKind.FieldSpecificationList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSpecification,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.TypePrimaryType, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.RecordType, 1],
+            [Ast.NodeKind.FieldSpecificationList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSpecification, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FieldSpecificationList}`, () => {
         const text: string = `type [x, ...]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.TypePrimaryType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.RecordType,
-            Ast.NodeKind.FieldSpecificationList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.FieldSpecification,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.TypePrimaryType, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.RecordType, 1],
+            [Ast.NodeKind.FieldSpecificationList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.FieldSpecification, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 4],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     // Ast.NodeKind.FieldTypeSpecification covered by FieldSpecification
 
     it(Ast.NodeKind.FunctionExpression, () => {
         const text: string = `() => 1`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FunctionExpression,
-            Ast.NodeKind.ParameterList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FunctionExpression, undefined],
+            [Ast.NodeKind.ParameterList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.LiteralExpression, 3],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList`, () => {
         const text: string = `(x) => 1`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FunctionExpression,
-            Ast.NodeKind.ParameterList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.Parameter,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FunctionExpression, undefined],
+            [Ast.NodeKind.ParameterList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.Parameter, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.LiteralExpression, 3],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} multiple ParameterList`, () => {
         const text: string = `(x, y, z) => 1`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FunctionExpression,
-            Ast.NodeKind.ParameterList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.Parameter,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.Parameter,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.Parameter,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FunctionExpression, undefined],
+            [Ast.NodeKind.ParameterList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.Parameter, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Csv, 1],
+            [Ast.NodeKind.Parameter, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Csv, 2],
+            [Ast.NodeKind.Parameter, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.LiteralExpression, 3],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList with optional`, () => {
         const text: string = `(optional x) => 1`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FunctionExpression,
-            Ast.NodeKind.ParameterList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.Parameter,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FunctionExpression, undefined],
+            [Ast.NodeKind.ParameterList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.Parameter, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.LiteralExpression, 3],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.FunctionExpression} ParameterList with AsNullablePrimitiveType`, () => {
         const text: string = `(x as nullable text) => 1`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FunctionExpression,
-            Ast.NodeKind.ParameterList,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.Parameter,
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.AsNullablePrimitiveType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.NullablePrimitiveType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.PrimitiveType,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FunctionExpression, undefined],
+            [Ast.NodeKind.ParameterList, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.Parameter, 0],
+            [Ast.NodeKind.Identifier, 1],
+            [Ast.NodeKind.AsNullablePrimitiveType, 2],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.NullablePrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.LiteralExpression, 3],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     // Ast.NodeKind.FieldTypeSpecification covered by AsType
 
     it(Ast.NodeKind.GeneralizedIdentifier, () => {
         const text: string = `[foo bar]`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.FieldSelector,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.FieldSelector, undefined],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 1],
+            [Ast.NodeKind.Constant, 2],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, () => {
         const text: string = `[x=1] section;`;
-        const expected: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.Section,
-            Ast.NodeKind.RecordLiteral,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.CsvArray,
-            Ast.NodeKind.Csv,
-            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-            Ast.NodeKind.GeneralizedIdentifier,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.LiteralExpression,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.Constant,
-            Ast.NodeKind.SectionMemberArray,
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.Section, undefined],
+            [Ast.NodeKind.RecordLiteral, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.CsvArray, 1],
+            [Ast.NodeKind.Csv, 0],
+            [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+            [Ast.NodeKind.GeneralizedIdentifier, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.LiteralExpression, 2],
+            [Ast.NodeKind.Constant, 2],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.Constant, 3],
+            [Ast.NodeKind.SectionMemberArray, 4],
         ];
-        expectNodeKinds(text, expected);
+        expectAbridgeNodes(text, expected);
     });
 
     it(Ast.NodeKind.GeneralizedIdentifierPairedExpression, () => {
