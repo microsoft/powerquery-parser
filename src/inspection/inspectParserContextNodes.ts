@@ -95,81 +95,6 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
     });
 }
 
-// Returns all record keys (GeneralizedIdentifier) from a Record TXorNode.
-function keysFromRecord(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    parentId: number,
-): ReadonlyArray<Ast.GeneralizedIdentifier> {
-    // Try to grab the 2nd child (a TCsvARray) from parent (where the 1st child is the constant '[').
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(nodeIdMapCollection, parentId, 1);
-    // No TCsvArray child exists.
-    if (maybeCsvArrayXorNode === undefined || maybeCsvArrayXorNode.node.kind !== Ast.NodeKind.CsvArray) {
-        return [];
-    }
-
-    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
-    const keys: Ast.GeneralizedIdentifier[] = [];
-
-    // Iterate over all Ast.ICsv<_>.node
-    for (const csvXorNode of csvArrayChildrenXorNodes(nodeIdMapCollection, csvArrayXorNode)) {
-        switch (csvXorNode.kind) {
-            // The child node is an Ast.TNode, which makes things way easier to logic out.
-            case NodeIdMap.XorNodeKind.Ast: {
-                const csvAstNode: Ast.TNode = csvXorNode.node;
-
-                // Sanity check that we're matching the expected Ast.NodeKind.
-                switch (csvAstNode.kind) {
-                    case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-                    case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
-                        keys.push(csvAstNode.key);
-                        break;
-
-                    default:
-                        const details: {} = { csvXorNode };
-                        throw new CommonError.InvariantError(
-                            `csvXorNode can should only be either ${
-                                Ast.NodeKind.GeneralizedIdentifierPairedExpression
-                            } or ${Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral}`,
-                            details,
-                        );
-                }
-                break;
-            }
-
-            // The child is a ParserContext.Node, so more hack-y navigation.
-            case NodeIdMap.XorNodeKind.Context: {
-                // Starting from the Csv, try to perform a drilldown on the following path:
-                //  * GeneralizedIdentifierPairedAnyLiteral or GeneralizedIdentifierPairedExpression
-                //  * GeneralizedIdentifier
-                const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNthChild(
-                    nodeIdMapCollection,
-                    csvXorNode.node.id,
-                    0,
-                );
-
-                // The GeneralizedIdentifier TXorNode doesn't exist because it wasn't parsed.
-                if (maybeKeyXorNode === undefined || maybeKeyXorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifier) {
-                    break;
-                }
-                const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
-
-                // maybeNthChild returns a TXorNode, but we only care about the Ast.TNode case.
-                if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-                    // We've already checked that it's a GeneralizedIdentifier
-                    keys.push(keyXorNode.node as Ast.GeneralizedIdentifier);
-                }
-
-                break;
-            }
-
-            default:
-                throw isNever(csvXorNode);
-        }
-    }
-
-    return keys;
-}
-
 function inspectIdentifierExpression(state: State, node: ParserContext.Node): void {
     let result: string = "";
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
@@ -301,4 +226,83 @@ function inspectSection(state: State, node: ParserContext.Node): void {
         default:
             throw isNever(sectionMemberArrayXorNode);
     }
+}
+
+// Returns all record keys (GeneralizedIdentifier) from a Record TXorNode.
+function keysFromRecord(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    parentId: number,
+): ReadonlyArray<Ast.GeneralizedIdentifier> {
+    // Try to grab the 2nd child (a TCsvARray) from parent (where the 1st child is the constant '[').
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        nodeIdMapCollection,
+        parentId,
+        1,
+    );
+    // No TCsvArray child exists.
+    if (maybeCsvArrayXorNode === undefined || maybeCsvArrayXorNode.node.kind !== Ast.NodeKind.CsvArray) {
+        return [];
+    }
+
+    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+    const keys: Ast.GeneralizedIdentifier[] = [];
+
+    // Iterate over all Ast.ICsv<_>.node
+    for (const csvXorNode of csvArrayChildrenXorNodes(nodeIdMapCollection, csvArrayXorNode)) {
+        switch (csvXorNode.kind) {
+            // The child node is an Ast.TNode, which makes things way easier to logic out.
+            case NodeIdMap.XorNodeKind.Ast: {
+                const csvAstNode: Ast.TNode = csvXorNode.node;
+
+                // Sanity check that we're matching the expected Ast.NodeKind.
+                switch (csvAstNode.kind) {
+                    case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+                    case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
+                        keys.push(csvAstNode.key);
+                        break;
+
+                    default:
+                        const details: {} = { csvXorNode };
+                        throw new CommonError.InvariantError(
+                            `csvXorNode can should only be either ${
+                                Ast.NodeKind.GeneralizedIdentifierPairedExpression
+                            } or ${Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral}`,
+                            details,
+                        );
+                }
+                break;
+            }
+
+            // The child is a ParserContext.Node, so more hack-y navigation.
+            case NodeIdMap.XorNodeKind.Context: {
+                // Starting from the Csv, try to perform a drilldown on the following path:
+                //  * GeneralizedIdentifierPairedAnyLiteral or GeneralizedIdentifierPairedExpression
+                //  * GeneralizedIdentifier
+                const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+                    nodeIdMapCollection,
+                    csvXorNode.node.id,
+                    0,
+                );
+
+                // The GeneralizedIdentifier TXorNode doesn't exist because it wasn't parsed.
+                if (maybeKeyXorNode === undefined || maybeKeyXorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifier) {
+                    break;
+                }
+                const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
+
+                // maybeChildByAttributeIndex returns a TXorNode, but we only care about the Ast.TNode case.
+                if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+                    // We've already checked that it's a GeneralizedIdentifier
+                    keys.push(keyXorNode.node as Ast.GeneralizedIdentifier);
+                }
+
+                break;
+            }
+
+            default:
+                throw isNever(csvXorNode);
+        }
+    }
+
+    return keys;
 }
