@@ -149,11 +149,46 @@ function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
             inspectAst.inspectInvokeExpressionContent(state, contentAstNode as Ast.ICsvArray<Ast.TExpression>);
             break;
 
-        case NodeIdMap.XorNodeKind.Context:
-            throw 1;
+        case NodeIdMap.XorNodeKind.Context: {
+            // Try to grab the 2nd child (a TCsvArray) from parent (where the 1st child is the constant '(').
+            const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+                state.nodeIdMapCollection,
+                node.id,
+                1,
+            );
+            // No TCsvArray child exists.
+            if (maybeCsvArrayXorNode === undefined) {
+                break;
+            }
+            const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+
+            for (const csvXorNode of csvArrayChildrenXorNodes(state.nodeIdMapCollection, csvArrayXorNode)) {
+                if (csvXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
+                    continue;
+                }
+
+                switch (csvXorNode.kind) {
+                    case NodeIdMap.XorNodeKind.Ast:
+                        const arg: Ast.TNode = csvXorNode.node;
+                        if (isTokenPositionBeforePostiion(arg.tokenRange.positionEnd, state.position)) {
+                            inspectAst.inspectAstNode(state, arg);
+                        }
+                        break;
+
+                    case NodeIdMap.XorNodeKind.Context:
+                        inspectIdentifierExpression(state, csvXorNode.node);
+                        break;
+
+                    default:
+                        throw isNever(csvXorNode);
+                }
+            }
+
+            break;
+        }
 
         default:
-            break;
+            throw isNever(contentXorNode);
     }
 }
 
@@ -233,14 +268,14 @@ function keysFromRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
 ): ReadonlyArray<Ast.GeneralizedIdentifier> {
-    // Try to grab the 2nd child (a TCsvARray) from parent (where the 1st child is the constant '[').
+    // Try to grab the 2nd child (a TCsvArray) from parent (where the 1st child is the constant '[').
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         nodeIdMapCollection,
         parentId,
         1,
     );
     // No TCsvArray child exists.
-    if (maybeCsvArrayXorNode === undefined || maybeCsvArrayXorNode.node.kind !== Ast.NodeKind.CsvArray) {
+    if (maybeCsvArrayXorNode === undefined) {
         return [];
     }
 
