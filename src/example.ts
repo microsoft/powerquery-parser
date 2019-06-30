@@ -57,6 +57,16 @@ function lexText(text: string): void {
     // Appending a line is easy.
     state = Lexer.appendLine(state, "// hello world", "\n");
 
+    // Updating a line number is also easy.
+    // Be aware that this is a Result due the potential of invalid line numbers.
+    // For fine-grained control there is also the method Lexer.tryUpdateRange which Lexer.tryUpdateLine calls directly.
+    const triedUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, state.lines.length - 1, "// goodbye world");
+    if (triedUpdate.kind === ResultKind.Err) {
+        console.log("Failed to update line");
+        return;
+    }
+    state = triedUpdate.value;
+
     // Once no more text is to be added / edited a LexerSnapshot should be created, which is an immutable copy that:
     //  * combines multiline tokens together
     //    (eg. StringLiteralStart + StringLiteralContent + StringLiteralEnd)
