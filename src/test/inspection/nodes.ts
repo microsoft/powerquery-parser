@@ -740,13 +740,13 @@ describe(`Inspection`, () => {
                 expectParserOkScopeEqual(text, position, expected);
             });
 
-            it(`abc123 foo(x, y|)`, () => {
+            it(`foo(x, y|)`, () => {
                 const text: string = `foo(x, y)`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
                     lineCodeUnit: 8,
                 };
-                const expected: ReadonlyArray<string> = [`y`, `x`];
+                const expected: ReadonlyArray<string> = [`y`, `x`, `foo`];
                 expectParserOkScopeEqual(text, position, expected);
             });
         });

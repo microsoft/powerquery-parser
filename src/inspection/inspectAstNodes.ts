@@ -111,6 +111,17 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
+        case Ast.NodeKind.RecursivePrimaryExpression: {
+            const head: Ast.TPrimaryExpression = node.head;
+            if (
+                head.kind === Ast.NodeKind.IdentifierExpression &&
+                isTokenPositionBeforePostiion(head.tokenRange.positionEnd, state.position)
+            ) {
+                inspectAstNode(state, head);
+            }
+            break;
+        }
+
         case Ast.NodeKind.Section:
             inspectSectionMemberArray(state, node.sectionMembers);
             break;
