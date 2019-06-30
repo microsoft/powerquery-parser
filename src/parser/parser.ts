@@ -531,7 +531,7 @@ export class Parser {
     // 12.2.3.16 Invoke expression
     private readInvokeExpression(): Ast.InvokeExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightParenthesis);
-        return this.readWrapped<Ast.NodeKind.InvokeExpression, Ast.ICsvArray<Ast.TExpression>>(
+        return this.readWrapped<Ast.NodeKind.InvokeExpression, Ast.InvokeExpression["content"]>(
             Ast.NodeKind.InvokeExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
             () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
@@ -543,7 +543,7 @@ export class Parser {
     // 12.2.3.17 List expression
     private readListExpression(): Ast.ListExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ICsvArray<Ast.TExpression>>(
+        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ListExpression["content"]>(
             Ast.NodeKind.ListExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
             () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
@@ -555,10 +555,7 @@ export class Parser {
     // 12.2.3.18 Record expression
     private readRecordExpression(): Ast.RecordExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBracket);
-        return this.readWrapped<
-            Ast.NodeKind.RecordExpression,
-            Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>
-        >(
+        return this.readWrapped<Ast.NodeKind.RecordExpression, Ast.RecordExpression["content"]>(
             Ast.NodeKind.RecordExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readGeneralizedIdentifierPairedExpressions(continueReadingValues),
@@ -585,7 +582,7 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
-        return this.readWrapped<Ast.NodeKind.FieldProjection, Ast.ICsvArray<Ast.FieldSelector>>(
+        return this.readWrapped<Ast.NodeKind.FieldProjection, Ast.FieldProjection["content"]>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readCsvArray(() => this.readFieldSelector(false), true),
@@ -1025,10 +1022,10 @@ export class Parser {
 
     private readRecordLiteral(): Ast.RecordLiteral {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBracket);
-        const wrappedRead: Ast.IWrapped<
+        const wrappedRead: Ast.IWrapped<Ast.NodeKind.RecordLiteral, Ast.RecordLiteral["content"]> = this.readWrapped<
             Ast.NodeKind.RecordLiteral,
-            Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>
-        > = this.readWrapped<Ast.NodeKind.RecordLiteral, Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>>(
+            Ast.RecordLiteral["content"]
+        >(
             Ast.NodeKind.RecordLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readFieldNamePairedAnyLiterals(continueReadingValues),
@@ -1061,9 +1058,9 @@ export class Parser {
 
     private readListLiteral(): Ast.ListLiteral {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        const wrappedRead: Ast.IWrapped<Ast.NodeKind.ListLiteral, Ast.ICsvArray<Ast.TAnyLiteral>> = this.readWrapped<
+        const wrappedRead: Ast.IWrapped<Ast.NodeKind.ListLiteral, Ast.ListLiteral["content"]> = this.readWrapped<
             Ast.NodeKind.ListLiteral,
-            Ast.ICsvArray<Ast.TAnyLiteral>
+            Ast.ListLiteral["content"]
         >(
             Ast.NodeKind.ListLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),

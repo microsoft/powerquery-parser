@@ -110,7 +110,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
     }
 }
 
-export function inspectInvokeExpressionContent(state: State, args: Ast.ICsvArray<Ast.TExpression>): void {
+export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExpression["content"]): void {
     for (const csv of args.elements) {
         const arg: Ast.TExpression = csv.node;
         if (
