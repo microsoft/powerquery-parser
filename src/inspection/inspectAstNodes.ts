@@ -4,7 +4,6 @@
 import { Ast } from "../parser";
 import {
     addAstToScopeIfNew,
-    inspectSectionMemberArray,
     isInTokenRange,
     isParentOfNodeKind,
     isTokenPositionBeforePostiion,
@@ -27,10 +26,9 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
-        case Ast.NodeKind.GeneralizedIdentifier: {
+        case Ast.NodeKind.GeneralizedIdentifier:
             addAstToScopeIfNew(state, node.literal, node);
             break;
-        }
 
         case Ast.NodeKind.Identifier:
             if (!isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression)) {
@@ -49,21 +47,9 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
-        case Ast.NodeKind.InvokeExpression: {
-            const args: Ast.ICsvArray<Ast.TExpression> = node.content;
-
-            for (const csv of args.elements) {
-                const arg: Ast.TExpression = csv.node;
-                if (
-                    arg.kind === Ast.NodeKind.IdentifierExpression &&
-                    isTokenPositionBeforePostiion(arg.tokenRange.positionEnd, state.position)
-                ) {
-                    inspectAstNode(state, arg);
-                }
-            }
-
+        case Ast.NodeKind.InvokeExpression:
+            inspectInvokeExpressionContent(state, node.content);
             break;
-        }
 
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral: {
@@ -111,16 +97,9 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
-        case Ast.NodeKind.RecursivePrimaryExpression: {
-            const head: Ast.TPrimaryExpression = node.head;
-            if (
-                head.kind === Ast.NodeKind.IdentifierExpression &&
-                isTokenPositionBeforePostiion(head.tokenRange.positionEnd, state.position)
-            ) {
-                inspectAstNode(state, head);
-            }
+        case Ast.NodeKind.RecursivePrimaryExpression:
+            inspectRecursivePrimaryExressionHead(state, node.head);
             break;
-        }
 
         case Ast.NodeKind.Section:
             inspectSectionMemberArray(state, node.sectionMembers);
@@ -128,5 +107,39 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
 
         default:
             break;
+    }
+}
+
+export function inspectInvokeExpressionContent(state: State, args: Ast.ICsvArray<Ast.TExpression>): void {
+    for (const csv of args.elements) {
+        const arg: Ast.TExpression = csv.node;
+        if (
+            arg.kind === Ast.NodeKind.IdentifierExpression &&
+            isTokenPositionBeforePostiion(arg.tokenRange.positionEnd, state.position)
+        ) {
+            inspectAstNode(state, arg);
+        }
+    }
+}
+
+export function inspectRecursivePrimaryExressionHead(state: State, head: Ast.TPrimaryExpression): void {
+    if (
+        head.kind === Ast.NodeKind.IdentifierExpression &&
+        isTokenPositionBeforePostiion(head.tokenRange.positionEnd, state.position)
+    ) {
+        inspectAstNode(state, head);
+    }
+}
+
+export function inspectSectionMemberArray(state: State, sectionMemberArray: Ast.SectionMemberArray): void {
+    for (const sectionMember of sectionMemberArray.elements) {
+        inspectSectionMember(state, sectionMember);
+    }
+}
+
+export function inspectSectionMember(state: State, sectionMember: Ast.SectionMember): void {
+    const sectionMemberName: Ast.Identifier = sectionMember.namePairedExpression.key;
+    if (isTokenPositionBeforePostiion(sectionMemberName.tokenRange.positionEnd, state.position)) {
+        addAstToScopeIfNew(state, sectionMemberName.literal, sectionMemberName);
     }
 }

@@ -8,13 +8,12 @@ import {
     addAstToScopeIfNew,
     addToScopeIfNew,
     csvArrayChildrenXorNodes,
-    inspectSectionMember,
-    inspectSectionMemberArray,
     isParentOfNodeKind,
     isTokenPositionBeforePostiion,
     NodeKind,
     State,
 } from "./common";
+import * as inspectAst from "./inspectAstNodes";
 
 export function inspectContextNode(state: State, node: ParserContext.Node): void {
     switch (node.kind) {
@@ -40,6 +39,11 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
 
         case Ast.NodeKind.IdentifierExpression: {
             inspectIdentifierExpression(state, node);
+            break;
+        }
+
+        case Ast.NodeKind.InvokeExpression: {
+            inspectInvokeExpression(state, node);
             break;
         }
 
@@ -69,6 +73,10 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
 
             break;
         }
+
+        case Ast.NodeKind.RecursivePrimaryExpression:
+            inspectRecursivePrimaryExpression(state, node);
+            break;
 
         case Ast.NodeKind.Section: {
             inspectSection(state, node);
@@ -191,6 +199,64 @@ function inspectIdentifierExpression(state: State, node: ParserContext.Node): vo
     }
 }
 
+function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
+    const maybeContentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        node.id,
+        1,
+    );
+    if (maybeContentXorNode === undefined) {
+        return;
+    }
+    const contentXorNode: NodeIdMap.TXorNode = maybeContentXorNode;
+
+    switch (contentXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            const contentAstNode: Ast.TNode = contentXorNode.node;
+            if (contentAstNode.kind !== Ast.NodeKind.CsvArray) {
+                const details: {} = { contentAstNode };
+                throw new CommonError.InvariantError(
+                    `expected contentAstNode.kind to be ${Ast.NodeKind.CsvArray}`,
+                    details,
+                );
+            }
+
+            inspectAst.inspectInvokeExpressionContent(state, contentAstNode as Ast.ICsvArray<Ast.TExpression>);
+            break;
+
+        case NodeIdMap.XorNodeKind.Context:
+            throw 1;
+
+        default:
+            break;
+    }
+}
+
+function inspectRecursivePrimaryExpression(state: State, node: ParserContext.Node): void {
+    const maybeHeadXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        node.id,
+        0,
+    );
+    if (maybeHeadXorNode === undefined) {
+        return;
+    }
+    const headXorNode: NodeIdMap.TXorNode = maybeHeadXorNode;
+    switch (headXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            if (headXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
+                return;
+            }
+            const headAstNode: Ast.IdentifierExpression = headXorNode.node;
+            inspectAst.inspectRecursivePrimaryExressionHead(state, headAstNode);
+            break;
+
+        case NodeIdMap.XorNodeKind.Context:
+        default:
+            break;
+    }
+}
+
 function inspectSection(state: State, node: ParserContext.Node): void {
     const maybeSectionMemberArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -204,7 +270,7 @@ function inspectSection(state: State, node: ParserContext.Node): void {
 
     switch (sectionMemberArrayXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            inspectSectionMemberArray(state, sectionMemberArrayXorNode.node as Ast.SectionMemberArray);
+            inspectAst.inspectSectionMemberArray(state, sectionMemberArrayXorNode.node as Ast.SectionMemberArray);
             break;
 
         case NodeIdMap.XorNodeKind.Context: {
@@ -219,7 +285,7 @@ function inspectSection(state: State, node: ParserContext.Node): void {
             for (const sectionMemberXorNode of children) {
                 switch (sectionMemberXorNode.kind) {
                     case NodeIdMap.XorNodeKind.Ast:
-                        inspectSectionMember(state, sectionMemberXorNode.node as Ast.SectionMember);
+                        inspectAst.inspectSectionMember(state, sectionMemberXorNode.node as Ast.SectionMember);
                         break;
 
                     case NodeIdMap.XorNodeKind.Context:
