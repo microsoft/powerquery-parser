@@ -771,6 +771,16 @@ describe(`Inspection`, () => {
                 const expected: ReadonlyArray<string> = [`y`, `x`, `foo`];
                 expectParserErrScopeEqual(text, position, expected);
             });
+
+            it(`foo(x, y|,`, () => {
+                const text: string = `foo(x, y,`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 8,
+                };
+                const expected: ReadonlyArray<string> = [`y`, `x`, `foo`];
+                expectParserErrScopeEqual(text, position, expected);
+            });
         });
 
         describe(`${Ast.NodeKind.RecordExpression}/${Ast.NodeKind.RecordLiteral} (Ast)`, () => {
