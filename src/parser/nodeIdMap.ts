@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserContext } from ".";
-import { CommonError, Option } from "../common";
+import { CommonError, isNever, Option } from "../common";
 
 export const enum XorNodeKind {
     Ast = "Ast",
@@ -92,17 +92,29 @@ export function maybeChildByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
+    maybeChildNodeKind: Option<Ast.NodeKind>,
 ): Option<TXorNode> {
+    // Grab the node's childIds.
     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
     if (maybeChildIds === undefined) {
         return undefined;
     }
     const childIds: ReadonlyArray<number> = maybeChildIds;
 
+    // Iterate over the children and try to find one which matches attributeIndex.
     for (const childId of childIds) {
         const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
-            return xorNode;
+            // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
+            if (maybeChildNodeKind !== undefined && xorNode.node.kind !== maybeChildNodeKind) {
+                const details: {} = {
+                    expected: maybeChildNodeKind,
+                    actual: xorNode.node.kind,
+                };
+                throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);
+            } else {
+                return xorNode;
+            }
         }
     }
 
@@ -117,6 +129,36 @@ export function maybeXorChildren(nodeIdMapCollection: Collection, parentId: numb
     const childIds: ReadonlyArray<number> = maybeChildIds;
 
     return expectXorNodes(nodeIdMapCollection, childIds);
+}
+
+export function maybeCastToAstNode<T>(xorNode: TXorNode, nodeKind: Ast.NodeKind): Option<T & Ast.TNode> {
+    if (xorNode.node.kind !== nodeKind) {
+        return undefined;
+    }
+
+    switch (xorNode.kind) {
+        case XorNodeKind.Ast:
+            return (xorNode.node as unknown) as T & Ast.TNode;
+
+        case XorNodeKind.Context:
+            return undefined;
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
+export function expectCastToAstNode<T>(xorNode: TXorNode, nodeKind: Ast.NodeKind): T & Ast.TNode {
+    const maybeAstNode: Option<T & Ast.TNode> = maybeCastToAstNode(xorNode, nodeKind);
+    if (maybeAstNode === undefined) {
+        const details: {} = {
+            expected: nodeKind,
+            actual: xorNode.node.kind,
+        };
+        throw new CommonError.InvariantError(`expected xorNode.node.kind to be ${nodeKind}`, details);
+    }
+
+    return maybeAstNode;
 }
 
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {

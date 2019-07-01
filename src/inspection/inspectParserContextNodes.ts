@@ -100,31 +100,79 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
 }
 
 function inspectFunctionExpression(state: State, node: ParserContext.Node): void {
-    const maybeParametersXorode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+    const maybeParametersXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
         node.id,
         0,
+        Ast.NodeKind.ParameterList,
     );
-    if (maybeParametersXorode === undefined) {
+    if (maybeParametersXorNode === undefined) {
         return;
     }
-    const parametersXorNode: NodeIdMap.TXorNode = maybeParametersXorode;
+    const parametersXorNode: NodeIdMap.TXorNode = maybeParametersXorNode;
 
     switch (parametersXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            const parmatersAstNode: Ast.TNode = parametersXorNode.node;
-            if (parmatersAstNode.kind !== Ast.NodeKind.ParameterList) {
-                const details: {} = { contentAstNode: parmatersAstNode };
-                throw new CommonError.InvariantError(
-                    `expected parmatersAstNode.kind to be ${Ast.NodeKind.ParameterList}`,
-                    details,
-                );
-            }
-
-            inspectAst.inspectParameterList(state, parmatersAstNode);
+            inspectAst.inspectParameterList(state, parametersXorNode.node as Ast.TParameterList);
             break;
 
         case NodeIdMap.XorNodeKind.Context: {
+            const maybeContentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+                state.nodeIdMapCollection,
+                node.id,
+                1,
+                Ast.NodeKind.CsvArray,
+            );
+            if (maybeContentXorNode === undefined) {
+                return;
+            }
+            const contentXorNode: NodeIdMap.TXorNode = maybeContentXorNode;
+
+            switch (contentXorNode.kind) {
+                case NodeIdMap.XorNodeKind.Ast:
+                    const contentAstNode: Ast.FunctionExpression["parameters"]["content"] = contentXorNode.node as Ast.FunctionExpression["parameters"]["content"];
+                    for (const csv of contentAstNode.elements) {
+                        if (!inspectAst.inspectParameter(state, csv.node)) {
+                            break;
+                        }
+                    }
+                    break;
+
+                case NodeIdMap.XorNodeKind.Context:
+                    for (const csvXorNode of csvArrayChildrenXorNodes(state.nodeIdMapCollection, contentXorNode)) {
+                        switch (csvXorNode.kind) {
+                            case NodeIdMap.XorNodeKind.Ast:
+                                const parameter: Ast.TParameter = NodeIdMap.expectCastToAstNode(
+                                    csvXorNode,
+                                    Ast.NodeKind.Parameter,
+                                );
+                                inspectAst.inspectParameter(state, parameter);
+                                break;
+
+                            case NodeIdMap.XorNodeKind.Context:
+                                // const parameterXorNode: NodeIdMap.TXorNode = csvXorNode.node;
+                                // switch (parameterXorNode.kind) {
+                                //     case NodeIdMap.XorNodeKind.Ast:
+                                //         break;
+
+                                //     case NodeIdMap.XorNodeKind.Context:
+                                //         break;
+
+                                //     default:
+                                //         throw isNever(parameterXorNode);
+                                // }
+                                break;
+
+                            default:
+                                throw isNever(csvXorNode);
+                        }
+                    }
+
+                    break;
+
+                default:
+                    throw isNever(contentXorNode);
+            }
             break;
         }
 
@@ -141,8 +189,9 @@ function inspectIdentifierExpression(state: State, node: ParserContext.Node): vo
         nodeIdMapCollection,
         node.id,
         0,
+        Ast.NodeKind.Constant,
     );
-    if (maybeInclusiveConstant !== undefined && maybeInclusiveConstant.kind === NodeIdMap.XorNodeKind.Ast) {
+    if (maybeInclusiveConstant !== undefined) {
         const inclusiveConstant: Ast.Constant = maybeInclusiveConstant.node as Ast.Constant;
         result += inclusiveConstant.literal;
     }
@@ -151,8 +200,9 @@ function inspectIdentifierExpression(state: State, node: ParserContext.Node): vo
         nodeIdMapCollection,
         node.id,
         1,
+        Ast.NodeKind.Identifier,
     );
-    if (maybeIdentifier !== undefined && maybeIdentifier.kind === NodeIdMap.XorNodeKind.Ast) {
+    if (maybeIdentifier !== undefined) {
         const identifier: Ast.Identifier = maybeIdentifier.node as Ast.Identifier;
         result += identifier.literal;
     }
@@ -167,6 +217,7 @@ function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
         state.nodeIdMapCollection,
         node.id,
         1,
+        Ast.NodeKind.CsvArray,
     );
     if (maybeContentXorNode === undefined) {
         return;
@@ -175,16 +226,11 @@ function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
 
     switch (contentXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            const contentAstNode: Ast.TNode = contentXorNode.node;
-            if (contentAstNode.kind !== Ast.NodeKind.CsvArray) {
-                const details: {} = { contentAstNode };
-                throw new CommonError.InvariantError(
-                    `expected contentAstNode.kind to be ${Ast.NodeKind.CsvArray}`,
-                    details,
-                );
-            }
-
-            inspectAst.inspectInvokeExpressionContent(state, contentAstNode as Ast.ICsvArray<Ast.TExpression>);
+            const contentAstNode: Ast.InvokeExpression["content"] = NodeIdMap.expectCastToAstNode(
+                contentXorNode,
+                Ast.NodeKind.CsvArray,
+            );
+            inspectAst.inspectInvokeExpressionContent(state, contentAstNode);
             break;
 
         case NodeIdMap.XorNodeKind.Context: {
@@ -193,6 +239,7 @@ function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
                 state.nodeIdMapCollection,
                 node.id,
                 1,
+                Ast.NodeKind.Csv,
             );
             // No TCsvArray child exists.
             if (maybeCsvArrayXorNode === undefined) {
@@ -231,10 +278,12 @@ function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
 }
 
 function inspectRecursivePrimaryExpression(state: State, node: ParserContext.Node): void {
+    // Don't validate Ast.NodeKind as the head can be many kinds.
     const maybeHeadXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
         node.id,
         0,
+        undefined,
     );
     if (maybeHeadXorNode === undefined) {
         return;
@@ -260,6 +309,7 @@ function inspectSection(state: State, node: ParserContext.Node): void {
         state.nodeIdMapCollection,
         node.id,
         4,
+        Ast.NodeKind.SectionMemberArray,
     );
     if (maybeSectionMemberArrayXorNode === undefined) {
         return;
@@ -311,6 +361,7 @@ function keysFromRecord(
         nodeIdMapCollection,
         parentId,
         1,
+        Ast.NodeKind.CsvArray,
     );
     // No TCsvArray child exists.
     if (maybeCsvArrayXorNode === undefined) {
@@ -355,6 +406,7 @@ function keysFromRecord(
                     nodeIdMapCollection,
                     csvXorNode.node.id,
                     0,
+                    Ast.NodeKind.GeneralizedIdentifier,
                 );
 
                 // The GeneralizedIdentifier TXorNode doesn't exist because it wasn't parsed.

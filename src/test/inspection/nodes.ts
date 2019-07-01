@@ -779,7 +779,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 0,
                 };
                 const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
+                expectParserErrScopeEqual(text, position, expected);
             });
 
             it(`(x|, y) =>`, () => {
@@ -789,7 +789,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 2,
                 };
                 const expected: ReadonlyArray<string> = [`x`];
-                expectParserOkScopeEqual(text, position, expected);
+                expectParserErrScopeEqual(text, position, expected);
             });
 
             it(`(x, y)| =>`, () => {
@@ -799,7 +799,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 6,
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`];
-                expectParserOkScopeEqual(text, position, expected);
+                expectParserErrScopeEqual(text, position, expected);
             });
 
             it(`(x, y) =>|`, () => {
@@ -809,7 +809,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 9,
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`];
-                expectParserOkScopeEqual(text, position, expected);
+                expectParserErrScopeEqual(text, position, expected);
             });
         });
 

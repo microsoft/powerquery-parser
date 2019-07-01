@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option } from "../common/option";
+import { CommonError, Option } from "../common";
 import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
@@ -1067,6 +1067,31 @@ export function constantKindFromTokenKind(tokenKind: TokenKind): Option<Constant
             return ConstantKind.Semicolon;
         default:
             return undefined;
+    }
+}
+
+// ---------------------------------------
+// ---------- casting functions ----------
+// ---------------------------------------
+
+export function maybeCastToKind<T>(node: TNode, kind: NodeKind): Option<T & TNode> {
+    if (node.kind !== kind) {
+        return undefined;
+    } else {
+        return (node as unknown) as T & TNode;
+    }
+}
+
+export function expectCastToKind<T>(node: TNode, kind: NodeKind): T & TNode {
+    const maybeNode: Option<T & TNode> = maybeCastToKind(node, kind);
+    if (maybeNode === undefined) {
+        const details: {} = {
+            expected: kind,
+            actual: node.kind,
+        };
+        throw new CommonError.InvariantError(`expected xorNode.node.kind to be ${kind}`, details);
+    } else {
+        return maybeNode;
     }
 }
 
