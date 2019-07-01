@@ -26,6 +26,13 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
+        case Ast.NodeKind.FunctionExpression: {
+            if (isTokenPositionBeforePostiion(node.parameters.tokenRange.positionEnd, state.position)) {
+                inspectAstNode(state, node.parameters);
+            }
+            break;
+        }
+
         case Ast.NodeKind.GeneralizedIdentifier:
             addAstToScopeIfNew(state, node.literal, node);
             break;
@@ -71,6 +78,10 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             break;
         }
 
+        case Ast.NodeKind.ParameterList:
+            inspectParameterList(state, node);
+            break;
+
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecordLiteral: {
             // Check if position is on closeWrapperConstant, eg. ']'
@@ -90,6 +101,8 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
                     const key: Ast.GeneralizedIdentifier = csv.node.key;
                     if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
                         addAstToScopeIfNew(state, key.literal, key);
+                    } else {
+                        break;
                     }
                 }
             }
@@ -110,6 +123,19 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
     }
 }
 
+export function inspectParameterList(state: State, parameterList: Ast.TParameterList): void {
+    for (const csv of parameterList.content.elements) {
+        const paramter: Ast.TParameter = csv.node;
+        const name: Ast.Identifier | Ast.GeneralizedIdentifier = paramter.name;
+
+        if (isTokenPositionBeforePostiion(name.tokenRange.positionEnd, state.position)) {
+            inspectAstNode(state, name);
+        } else {
+            break;
+        }
+    }
+}
+
 export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExpression["content"]): void {
     for (const csv of args.elements) {
         const arg: Ast.TExpression = csv.node;
@@ -118,6 +144,8 @@ export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExp
             isTokenPositionBeforePostiion(arg.tokenRange.positionEnd, state.position)
         ) {
             inspectAstNode(state, arg);
+        } else {
+            break;
         }
     }
 }
