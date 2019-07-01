@@ -27,6 +27,10 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
             break;
         }
 
+        case Ast.NodeKind.FunctionExpression:
+            inspectFunctionExpression(state, node);
+            break;
+
         case Ast.NodeKind.Identifier:
             if (
                 !isParentOfNodeKind(state.nodeIdMapCollection, node.id, Ast.NodeKind.IdentifierExpression) &&
@@ -93,6 +97,40 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
         kind: XorNodeKind.Context,
         node: contextNode,
     });
+}
+
+function inspectFunctionExpression(state: State, node: ParserContext.Node): void {
+    const maybeParametersXorode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        node.id,
+        0,
+    );
+    if (maybeParametersXorode === undefined) {
+        return;
+    }
+    const parametersXorNode: NodeIdMap.TXorNode = maybeParametersXorode;
+
+    switch (parametersXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            const parmatersAstNode: Ast.TNode = parametersXorNode.node;
+            if (parmatersAstNode.kind !== Ast.NodeKind.ParameterList) {
+                const details: {} = { contentAstNode: parmatersAstNode };
+                throw new CommonError.InvariantError(
+                    `expected parmatersAstNode.kind to be ${Ast.NodeKind.ParameterList}`,
+                    details,
+                );
+            }
+
+            inspectAst.inspectParameterList(state, parmatersAstNode);
+            break;
+
+        case NodeIdMap.XorNodeKind.Context: {
+            break;
+        }
+
+        default:
+            throw isNever(parametersXorNode);
+    }
 }
 
 function inspectIdentifierExpression(state: State, node: ParserContext.Node): void {

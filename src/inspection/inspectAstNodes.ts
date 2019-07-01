@@ -28,7 +28,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
 
         case Ast.NodeKind.FunctionExpression: {
             if (isTokenPositionBeforePostiion(node.parameters.tokenRange.positionEnd, state.position)) {
-                inspectAstNode(state, node.parameters);
+                inspectParameterList(state, node.parameters);
             }
             break;
         }
@@ -123,19 +123,6 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
     }
 }
 
-export function inspectParameterList(state: State, parameterList: Ast.TParameterList): void {
-    for (const csv of parameterList.content.elements) {
-        const paramter: Ast.TParameter = csv.node;
-        const name: Ast.Identifier | Ast.GeneralizedIdentifier = paramter.name;
-
-        if (isTokenPositionBeforePostiion(name.tokenRange.positionEnd, state.position)) {
-            inspectAstNode(state, name);
-        } else {
-            break;
-        }
-    }
-}
-
 export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExpression["content"]): void {
     for (const csv of args.elements) {
         const arg: Ast.TExpression = csv.node;
@@ -147,6 +134,24 @@ export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExp
         } else {
             break;
         }
+    }
+}
+
+export function inspectParameterList(state: State, parameterList: Ast.TParameterList): void {
+    for (const csv of parameterList.content.elements) {
+        if (!inspectParameter(state, csv.node)) {
+            break;
+        }
+    }
+}
+
+export function inspectParameter(state: State, parameter: Ast.TParameter): boolean {
+    const name: Ast.Identifier | Ast.GeneralizedIdentifier = parameter.name;
+    if (isTokenPositionBeforePostiion(name.tokenRange.positionEnd, state.position)) {
+        inspectAstNode(state, name);
+        return true;
+    } else {
+        return false;
     }
 }
 

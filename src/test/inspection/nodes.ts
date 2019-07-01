@@ -771,6 +771,48 @@ describe(`Inspection`, () => {
             });
         });
 
+        describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
+            it(`|(x) =>`, () => {
+                const text: string = `(x) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`(x|, y) =>`, () => {
+                const text: string = `(x, y) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`(x, y)| =>`, () => {
+                const text: string = `(x, y) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 6,
+                };
+                const expected: ReadonlyArray<string> = [`x`, `y`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`(x, y) =>|`, () => {
+                const text: string = `(x, y) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 9,
+                };
+                const expected: ReadonlyArray<string> = [`x`, `y`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+        });
+
         describe(`${Ast.NodeKind.InvokeExpression} (Ast)`, () => {
             it(`|foo(x)`, () => {
                 const text: string = `foo(x)`;
