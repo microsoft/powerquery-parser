@@ -43,16 +43,9 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             }
             break;
 
-        case Ast.NodeKind.IdentifierExpression: {
-            let identifier: string = node.identifier.literal;
-            if (node.maybeInclusiveConstant) {
-                const inclusiveConstant: Ast.Constant = node.maybeInclusiveConstant;
-                identifier = inclusiveConstant.literal + identifier;
-            }
-
-            addAstToScopeIfNew(state, identifier, node);
+        case Ast.NodeKind.IdentifierExpression:
+            inspectIdentifierExpression(state, node);
             break;
-        }
 
         case Ast.NodeKind.InvokeExpression:
             inspectInvokeExpressionContent(state, node.content);
@@ -121,6 +114,16 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
         default:
             break;
     }
+}
+
+export function inspectIdentifierExpression(state: State, node: Ast.IdentifierExpression): void {
+    let identifier: string = node.identifier.literal;
+    if (node.maybeInclusiveConstant) {
+        const inclusiveConstant: Ast.Constant = node.maybeInclusiveConstant;
+        identifier = inclusiveConstant.literal + identifier;
+    }
+
+    addAstToScopeIfNew(state, identifier, node);
 }
 
 export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExpression["content"]): void {

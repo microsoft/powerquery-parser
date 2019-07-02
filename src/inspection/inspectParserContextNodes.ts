@@ -100,6 +100,7 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
 }
 
 function inspectFunctionExpression(state: State, node: ParserContext.Node): void {
+    // Check if any part of the parameters were parsed.
     const maybeParametersXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
         node.id,
@@ -119,10 +120,11 @@ function inspectFunctionExpression(state: State, node: ParserContext.Node): void
         case NodeIdMap.XorNodeKind.Context: {
             const maybeContentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
                 state.nodeIdMapCollection,
-                node.id,
+                parametersXorNode.node.id,
                 1,
                 Ast.NodeKind.CsvArray,
             );
+            // No TCsvArray child exists.
             if (maybeContentXorNode === undefined) {
                 return;
             }
@@ -150,17 +152,45 @@ function inspectFunctionExpression(state: State, node: ParserContext.Node): void
                                 break;
 
                             case NodeIdMap.XorNodeKind.Context:
-                                // const parameterXorNode: NodeIdMap.TXorNode = csvXorNode.node;
-                                // switch (parameterXorNode.kind) {
-                                //     case NodeIdMap.XorNodeKind.Ast:
-                                //         break;
+                                {
+                                    const maybeNameXorNode: Option<
+                                        NodeIdMap.TXorNode
+                                    > = NodeIdMap.maybeChildByAttributeIndex(
+                                        state.nodeIdMapCollection,
+                                        csvXorNode.node.id,
+                                        0,
+                                        Ast.NodeKind.Parameter,
+                                    );
+                                    // No TParameter child exists.
+                                    if (maybeNameXorNode === undefined) {
+                                        return;
+                                    }
+                                    const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
 
-                                //     case NodeIdMap.XorNodeKind.Context:
-                                //         break;
+                                    switch (nameXorNode.kind) {
+                                        case NodeIdMap.XorNodeKind.Ast: {
+                                            const nameAstNode: Ast.Identifier = NodeIdMap.expectCastToAstNode(
+                                                nameXorNode,
+                                                Ast.NodeKind.Identifier,
+                                            );
+                                            if (
+                                                isTokenPositionBeforePostiion(
+                                                    nameAstNode.tokenRange.positionEnd,
+                                                    state.position,
+                                                )
+                                            ) {
+                                                addAstToScopeIfNew(state, nameAstNode.literal, nameAstNode);
+                                            }
+                                            break;
+                                        }
 
-                                //     default:
-                                //         throw isNever(parameterXorNode);
-                                // }
+                                        case NodeIdMap.XorNodeKind.Context:
+                                            break;
+
+                                        default:
+                                            throw isNever(nameXorNode);
+                                    }
+                                }
                                 break;
 
                             default:
@@ -185,6 +215,7 @@ function inspectIdentifierExpression(state: State, node: ParserContext.Node): vo
     let result: string = "";
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
+    // Add the optional inclusive constant `@` if it was parsed.
     const maybeInclusiveConstant: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         nodeIdMapCollection,
         node.id,
@@ -212,10 +243,10 @@ function inspectIdentifierExpression(state: State, node: ParserContext.Node): vo
     }
 }
 
-function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
+function inspectInvokeExpression(state: State, invokeExpression: ParserContext.Node): void {
     const maybeContentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
-        node.id,
+        invokeExpression.id,
         1,
         Ast.NodeKind.CsvArray,
     );
@@ -224,56 +255,30 @@ function inspectInvokeExpression(state: State, node: ParserContext.Node): void {
     }
     const contentXorNode: NodeIdMap.TXorNode = maybeContentXorNode;
 
-    switch (contentXorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
-            const contentAstNode: Ast.InvokeExpression["content"] = NodeIdMap.expectCastToAstNode(
-                contentXorNode,
-                Ast.NodeKind.CsvArray,
-            );
-            inspectAst.inspectInvokeExpressionContent(state, contentAstNode);
-            break;
-
-        case NodeIdMap.XorNodeKind.Context: {
-            // Try to grab the 2nd child (a TCsvArray) from parent (where the 1st child is the constant '(').
-            const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
-                state.nodeIdMapCollection,
-                node.id,
-                1,
-                Ast.NodeKind.Csv,
-            );
-            // No TCsvArray child exists.
-            if (maybeCsvArrayXorNode === undefined) {
+    for (const csvChildXorNode of csvArrayChildrenXorNodes(state.nodeIdMapCollection, contentXorNode)) {
+        switch (csvChildXorNode.kind) {
+            case NodeIdMap.XorNodeKind.Ast:
+                const csvChildAstNode: Ast.TNode = csvChildXorNode.node;
+                if (
+                    csvChildAstNode.kind === Ast.NodeKind.IdentifierExpression &&
+                    isTokenPositionBeforePostiion(csvChildAstNode.tokenRange.positionEnd, state.position)
+                ) {
+                    inspectAst.inspectIdentifierExpression(state, csvChildAstNode);
+                }
                 break;
-            }
-            const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
 
-            for (const csvXorNode of csvArrayChildrenXorNodes(state.nodeIdMapCollection, csvArrayXorNode)) {
-                if (csvXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
-                    continue;
+            case NodeIdMap.XorNodeKind.Context:
+                {
+                    const csvChildContextNode: ParserContext.Node = csvChildXorNode.node;
+                    if (csvChildContextNode.kind === Ast.NodeKind.Identifier) {
+                        inspectIdentifierExpression(state, csvChildContextNode);
+                    }
                 }
+                break;
 
-                switch (csvXorNode.kind) {
-                    case NodeIdMap.XorNodeKind.Ast:
-                        const arg: Ast.TNode = csvXorNode.node;
-                        if (isTokenPositionBeforePostiion(arg.tokenRange.positionEnd, state.position)) {
-                            inspectAst.inspectAstNode(state, arg);
-                        }
-                        break;
-
-                    case NodeIdMap.XorNodeKind.Context:
-                        inspectIdentifierExpression(state, csvXorNode.node);
-                        break;
-
-                    default:
-                        throw isNever(csvXorNode);
-                }
-            }
-
-            break;
+            default:
+                throw isNever(csvChildXorNode);
         }
-
-        default:
-            throw isNever(contentXorNode);
     }
 }
 
