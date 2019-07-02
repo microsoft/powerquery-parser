@@ -6,11 +6,13 @@ import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 export const enum NodeKind {
-    Each = "EachExpression",
+    EachExpression = "EachExpression",
     InvokeExpression = "InvokeExpression",
     List = "List",
     Record = "Record",
 }
+
+export type TNode = EachExpression | InvokeExpression | List | Record;
 
 export interface State extends Traverse.IState<Inspected> {
     maybePreviousXorNode: Option<NodeIdMap.TXorNode>;
@@ -20,7 +22,7 @@ export interface State extends Traverse.IState<Inspected> {
 }
 
 export interface Inspected {
-    readonly nodes: INode[];
+    readonly nodes: TNode[];
     readonly scope: Map<string, NodeIdMap.TXorNode>;
 }
 
@@ -35,12 +37,20 @@ export interface Position {
     readonly lineCodeUnit: number;
 }
 
-export interface Record extends INode {
-    readonly kind: NodeKind.Record;
+export interface EachExpression extends INode {
+    readonly kind: NodeKind.EachExpression;
 }
 
-export interface Each extends INode {
-    readonly kind: NodeKind.Each;
+export interface InvokeExpression extends INode {
+    readonly kind: NodeKind.InvokeExpression;
+}
+
+export interface List extends INode {
+    readonly kind: NodeKind.List;
+}
+
+export interface Record extends INode {
+    readonly kind: NodeKind.Record;
 }
 
 export function isParentOfNodeKind(
