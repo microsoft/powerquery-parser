@@ -6,7 +6,7 @@ import {
     addAstToScopeIfNew,
     isInTokenRange,
     isParentOfNodeKind,
-    isTokenPositionBeforePostiion,
+    isTokenPositionBeforePostiion as isTokenPositionBeforePostion,
     isTokenPositionOnPosition,
     NodeKind,
     Position,
@@ -27,7 +27,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
         }
 
         case Ast.NodeKind.FunctionExpression: {
-            if (isTokenPositionBeforePostiion(node.parameters.tokenRange.positionEnd, state.position)) {
+            if (isTokenPositionBeforePostion(node.parameters.tokenRange.positionEnd, state.position)) {
                 inspectParameterList(state, node.parameters);
             }
             break;
@@ -92,7 +92,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
 
                 for (const csv of node.content.elements) {
                     const key: Ast.GeneralizedIdentifier = csv.node.key;
-                    if (isTokenPositionBeforePostiion(key.tokenRange.positionEnd, state.position)) {
+                    if (isTokenPositionBeforePostion(key.tokenRange.positionEnd, state.position)) {
                         addAstToScopeIfNew(state, key.literal, key);
                     } else {
                         break;
@@ -131,7 +131,7 @@ export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExp
         const arg: Ast.TExpression = csv.node;
         if (
             arg.kind === Ast.NodeKind.IdentifierExpression &&
-            isTokenPositionBeforePostiion(arg.tokenRange.positionEnd, state.position)
+            isTokenPositionBeforePostion(arg.tokenRange.positionEnd, state.position)
         ) {
             inspectAstNode(state, arg);
         } else {
@@ -150,7 +150,7 @@ export function inspectParameterList(state: State, parameterList: Ast.TParameter
 
 export function inspectParameter(state: State, parameter: Ast.TParameter): boolean {
     const name: Ast.Identifier | Ast.GeneralizedIdentifier = parameter.name;
-    if (isTokenPositionBeforePostiion(name.tokenRange.positionEnd, state.position)) {
+    if (isTokenPositionBeforePostion(name.tokenRange.positionEnd, state.position)) {
         inspectAstNode(state, name);
         return true;
     } else {
@@ -161,7 +161,7 @@ export function inspectParameter(state: State, parameter: Ast.TParameter): boole
 export function inspectRecursivePrimaryExressionHead(state: State, head: Ast.TPrimaryExpression): void {
     if (
         head.kind === Ast.NodeKind.IdentifierExpression &&
-        isTokenPositionBeforePostiion(head.tokenRange.positionEnd, state.position)
+        isTokenPositionBeforePostion(head.tokenRange.positionEnd, state.position)
     ) {
         inspectAstNode(state, head);
     }
@@ -175,7 +175,7 @@ export function inspectSectionMemberArray(state: State, sectionMemberArray: Ast.
 
 export function inspectSectionMember(state: State, sectionMember: Ast.SectionMember): void {
     const sectionMemberName: Ast.Identifier = sectionMember.namePairedExpression.key;
-    if (isTokenPositionBeforePostiion(sectionMemberName.tokenRange.positionEnd, state.position)) {
+    if (isTokenPositionBeforePostion(sectionMemberName.tokenRange.positionEnd, state.position)) {
         addAstToScopeIfNew(state, sectionMemberName.literal, sectionMemberName);
     }
 }
