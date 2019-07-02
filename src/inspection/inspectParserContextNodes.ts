@@ -20,7 +20,7 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
         case Ast.NodeKind.EachExpression: {
             addContextToScopeIfNew(state, "_", node);
             state.result.nodes.push({
-                kind: NodeKind.Each,
+                kind: NodeKind.EachExpression,
                 maybePositionStart: node.maybeTokenStart !== undefined ? node.maybeTokenStart.positionStart : undefined,
                 maybePositionEnd: undefined,
             });

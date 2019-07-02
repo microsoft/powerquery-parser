@@ -19,7 +19,7 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             addAstToScopeIfNew(state, "_", node);
             const tokenRange: Ast.TokenRange = node.tokenRange;
             state.result.nodes.push({
-                kind: NodeKind.Each,
+                kind: NodeKind.EachExpression,
                 maybePositionStart: tokenRange.positionStart,
                 maybePositionEnd: tokenRange.positionEnd,
             });

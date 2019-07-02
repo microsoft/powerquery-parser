@@ -192,7 +192,7 @@ describe(`Inspection`, () => {
                 const expected: AbridgedInspection = {
                     abridgedNode: [
                         [
-                            Inspection.NodeKind.Each,
+                            Inspection.NodeKind.EachExpression,
                             {
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
@@ -227,7 +227,7 @@ describe(`Inspection`, () => {
                 const expected: AbridgedInspection = {
                     abridgedNode: [
                         [
-                            Inspection.NodeKind.Each,
+                            Inspection.NodeKind.EachExpression,
                             {
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
@@ -249,7 +249,7 @@ describe(`Inspection`, () => {
                 const expected: AbridgedInspection = {
                     abridgedNode: [
                         [
-                            Inspection.NodeKind.Each,
+                            Inspection.NodeKind.EachExpression,
                             {
                                 lineCodeUnit: 5,
                                 lineNumber: 0,
@@ -257,7 +257,7 @@ describe(`Inspection`, () => {
                             },
                         ],
                         [
-                            Inspection.NodeKind.Each,
+                            Inspection.NodeKind.EachExpression,
                             {
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
@@ -279,7 +279,7 @@ describe(`Inspection`, () => {
                 const expected: AbridgedInspection = {
                     abridgedNode: [
                         [
-                            Inspection.NodeKind.Each,
+                            Inspection.NodeKind.EachExpression,
                             {
                                 lineCodeUnit: 5,
                                 lineNumber: 0,
@@ -287,7 +287,7 @@ describe(`Inspection`, () => {
                             },
                         ],
                         [
-                            Inspection.NodeKind.Each,
+                            Inspection.NodeKind.EachExpression,
                             {
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
