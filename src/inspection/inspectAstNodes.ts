@@ -47,9 +47,16 @@ export function inspectAstNode(state: State, node: Ast.TNode): void {
             inspectIdentifierExpression(state, node);
             break;
 
-        case Ast.NodeKind.InvokeExpression:
+        case Ast.NodeKind.InvokeExpression: {
             inspectInvokeExpressionContent(state, node.content);
+            const tokenRange: Ast.TokenRange = node.tokenRange;
+            state.result.nodes.push({
+                kind: NodeKind.InvokeExpression,
+                maybePositionStart: tokenRange.positionStart,
+                maybePositionEnd: tokenRange.positionEnd,
+            });
             break;
+        }
 
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral: {

@@ -48,6 +48,11 @@ export function inspectContextNode(state: State, node: ParserContext.Node): void
 
         case Ast.NodeKind.InvokeExpression: {
             inspectInvokeExpression(state, node);
+            state.result.nodes.push({
+                kind: NodeKind.InvokeExpression,
+                maybePositionStart: node.maybeTokenStart !== undefined ? node.maybeTokenStart.positionStart : undefined,
+                maybePositionEnd: undefined,
+            });
             break;
         }
 

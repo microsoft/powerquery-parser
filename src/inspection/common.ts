@@ -7,6 +7,7 @@ import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 export const enum NodeKind {
     Each = "EachExpression",
+    InvokeExpression = "InvokeExpression",
     List = "List",
     Record = "Record",
 }
