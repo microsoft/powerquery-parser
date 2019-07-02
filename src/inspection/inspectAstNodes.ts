@@ -126,7 +126,7 @@ export function inspectIdentifierExpression(state: State, node: Ast.IdentifierEx
     addAstToScopeIfNew(state, identifier, node);
 }
 
-export function inspectInvokeExpressionContent(state: State, args: Ast.InvokeExpression["content"]): void {
+export function inspectInvokeExpressionContent(state: State, args: Ast.ICsvArray<Ast.TExpression>): void {
     for (const csv of args.elements) {
         const arg: Ast.TExpression = csv.node;
         if (
