@@ -846,7 +846,7 @@ describe(`Inspection`, () => {
                 expectParserErrScopeEqual(text, position, expected);
             });
 
-            it(`foo(x, y|`, () => {
+            it(`abc123 foo(x, y|`, () => {
                 const text: string = `foo(x, y`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
