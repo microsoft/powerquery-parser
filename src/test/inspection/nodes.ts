@@ -846,7 +846,7 @@ describe(`Inspection`, () => {
                 expectParserErrScopeEqual(text, position, expected);
             });
 
-            it(`abc123 foo(x, y|`, () => {
+            it(`foo(x, y|`, () => {
                 const text: string = `foo(x, y`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
@@ -1030,6 +1030,38 @@ describe(`Inspection`, () => {
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`];
                 expectParserOkScopeEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
+            it(`s|ection foo; x = 1; y = 2`, () => {
+                const text: string = `section foo; x = 1; y = 2`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserErrScopeEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1|; y = 2`, () => {
+                const text: string = `section foo; x = 1; y = 2`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 18,
+                };
+                const expected: ReadonlyArray<string> = [`x`];
+                expectParserErrScopeEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1; y = 2|`, () => {
+                const text: string = `section foo; x = 1; y = 2|`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 25,
+                };
+                const expected: ReadonlyArray<string> = [`x`, `y`];
+                expectParserErrScopeEqual(text, position, expected);
             });
         });
     });

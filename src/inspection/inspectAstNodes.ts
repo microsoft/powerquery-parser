@@ -181,7 +181,10 @@ export function inspectSectionMemberArray(state: State, sectionMemberArray: Ast.
 }
 
 export function inspectSectionMember(state: State, sectionMember: Ast.SectionMember): void {
-    const sectionMemberName: Ast.Identifier = sectionMember.namePairedExpression.key;
+    inspectSectionMemberName(state, sectionMember.namePairedExpression.key);
+}
+
+export function inspectSectionMemberName(state: State, sectionMemberName: Ast.Identifier): void {
     if (isTokenPositionBeforePostion(sectionMemberName.tokenRange.positionEnd, state.position)) {
         addAstToScopeIfNew(state, sectionMemberName.literal, sectionMemberName);
     }

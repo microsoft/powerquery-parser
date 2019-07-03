@@ -325,7 +325,7 @@ function inspectSection(state: State, node: ParserContext.Node): void {
         case NodeIdMap.XorNodeKind.Context: {
             const maybeChildren: Option<ReadonlyArray<NodeIdMap.TXorNode>> = maybeXorChildren(
                 state.nodeIdMapCollection,
-                node.id,
+                sectionMemberArrayXorNode.node.id,
             );
             if (maybeChildren === undefined) {
                 break;
@@ -338,6 +338,7 @@ function inspectSection(state: State, node: ParserContext.Node): void {
                         break;
 
                     case NodeIdMap.XorNodeKind.Context:
+                        inspectSectionMember(state, sectionMemberXorNode.node);
                         break;
 
                     default:
@@ -349,6 +350,51 @@ function inspectSection(state: State, node: ParserContext.Node): void {
 
         default:
             throw isNever(sectionMemberArrayXorNode);
+    }
+}
+
+function inspectSectionMember(state: State, node: ParserContext.Node): void {
+    const maybeNamePairedExpressionXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        node.id,
+        2,
+        Ast.NodeKind.IdentifierPairedExpression,
+    );
+    if (maybeNamePairedExpressionXorNode === undefined) {
+        return;
+    }
+    const namePairedExpressionXorNode: NodeIdMap.TXorNode = maybeNamePairedExpressionXorNode;
+
+    switch (namePairedExpressionXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const namePairedExpression: Ast.IdentifierPairedExpression = namePairedExpressionXorNode.node as Ast.IdentifierPairedExpression;
+            inspectAst.inspectSectionMemberName(state, namePairedExpression.key);
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const namePairedExpression: ParserContext.Node = namePairedExpressionXorNode.node;
+            const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+                state.nodeIdMapCollection,
+                namePairedExpression.id,
+                0,
+                Ast.NodeKind.Identifier,
+            );
+            if (
+                maybeNameXorNode === undefined ||
+                maybeNameXorNode.kind !== NodeIdMap.XorNodeKind.Ast ||
+                maybeNameXorNode.node.kind !== Ast.NodeKind.Identifier
+            ) {
+                return;
+            }
+            const name: Ast.Identifier = maybeNameXorNode.node;
+
+            inspectAst.inspectSectionMemberName(state, name);
+            break;
+        }
+
+        default:
+            throw isNever(namePairedExpressionXorNode);
     }
 }
 
