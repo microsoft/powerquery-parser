@@ -40,12 +40,12 @@ export interface MultipleChildByAttributeIndexRequest {
 export interface FirstDrilldown {
     readonly rootNodeId: number;
     readonly attributeIndex: number;
-    readonly maybeNodeKind: Option<Ast.NodeKind>;
+    readonly maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>;
 }
 
 export interface Drilldown {
     readonly attributeIndex: number;
-    readonly maybeNodeKind: Option<Ast.NodeKind>;
+    readonly maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>;
 }
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
@@ -113,7 +113,7 @@ export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAtt
         nodeIdMapCollection,
         firstDrilldown.rootNodeId,
         firstDrilldown.attributeIndex,
-        firstDrilldown.maybeNodeKind,
+        firstDrilldown.maybeAllowedNodeKinds,
     );
 
     for (const drilldown of request.drilldowns) {
@@ -125,7 +125,7 @@ export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAtt
             nodeIdMapCollection,
             maybeChildXorNode.node.id,
             drilldown.attributeIndex,
-            drilldown.maybeNodeKind,
+            drilldown.maybeAllowedNodeKinds,
         );
     }
 
@@ -136,7 +136,7 @@ export function maybeChildByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
-    maybeChildNodeKind: Option<Ast.NodeKind>,
+    maybeChildNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>,
 ): Option<TXorNode> {
     // Grab the node's childIds.
     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
@@ -150,9 +150,9 @@ export function maybeChildByAttributeIndex(
         const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
             // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
-            if (maybeChildNodeKind !== undefined && xorNode.node.kind !== maybeChildNodeKind) {
+            if (maybeChildNodeKinds === undefined || maybeChildNodeKinds.indexOf(xorNode.node.kind) === -1) {
                 const details: {} = {
-                    expected: maybeChildNodeKind,
+                    expected: maybeChildNodeKinds,
                     actual: xorNode.node.kind,
                 };
                 throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);

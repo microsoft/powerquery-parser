@@ -3,8 +3,8 @@
 
 import { CommonError, isNever, Option, ResultKind, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
-import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { INode, TNode } from "./node";
+import { NodeIdMap, ParserContext } from "../parser";
+import { TNode } from "./node";
 import { visitNode } from "./visitNode";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.

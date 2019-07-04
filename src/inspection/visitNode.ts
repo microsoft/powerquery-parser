@@ -2,6 +2,7 @@ import { CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
+import { NodeKind } from "./node";
 
 export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
     // tslint:disable-next-line: switch-default
@@ -17,6 +18,11 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
         case Ast.NodeKind.IdentifierExpression:
             inspectIdentifierExpression(state, xorNode);
             break;
+
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral:
+            inspectRecordExpressionOrLiteral(state, xorNode);
+            break;
     }
 }
 
@@ -30,12 +36,12 @@ function inspectFunctionExpression(state: State, xorNode: NodeIdMap.TXorNode): v
         firstDrilldown: {
             rootNodeId: xorNode.node.id,
             attributeIndex: 0,
-            maybeNodeKind: Ast.NodeKind.ParameterList,
+            maybeAllowedNodeKinds: [Ast.NodeKind.ParameterList],
         },
         drilldowns: [
             {
                 attributeIndex: 1,
-                maybeNodeKind: Ast.NodeKind.CsvArray,
+                maybeAllowedNodeKinds: [Ast.NodeKind.CsvArray],
             },
         ],
     };
@@ -53,7 +59,7 @@ function inspectFunctionExpression(state: State, xorNode: NodeIdMap.TXorNode): v
         csvArrayXorNode,
         {
             attributeIndex: 0,
-            maybeNodeKind: Ast.NodeKind.Parameter,
+            maybeAllowedNodeKinds: [Ast.NodeKind.Parameter],
         },
         [],
     );
@@ -63,15 +69,30 @@ function inspectFunctionExpression(state: State, xorNode: NodeIdMap.TXorNode): v
     }
 }
 
-function inspectIdentifier(state: State, identifierXorNode: NodeIdMap.TXorNode): void {
-    // A context for Ast.Identifier is a context with no values,
+function inspectGeneralizedIdentifier(state: State, xorNode: NodeIdMap.TXorNode): void {
+    // A context for Ast.GeneralizedIdentifier is a context with no values,
     // meaning we can only operate when the arg's XorNodeKind is Ast.
-    if (identifierXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-        if (identifierXorNode.node.kind !== Ast.NodeKind.Identifier) {
-            throw expectedNodeKindError(identifierXorNode, Ast.NodeKind.Identifier);
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        if (xorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifier) {
+            throw expectedNodeKindError(xorNode, Ast.NodeKind.GeneralizedIdentifier);
         }
 
-        const identifier: Ast.Identifier = identifierXorNode.node;
+        const generalizedIdentifier: Ast.GeneralizedIdentifier = xorNode.node;
+        if (isTokenPositionOnOrBeforeBeforePostiion(generalizedIdentifier.tokenRange.positionEnd, state.position)) {
+            addAstToScopeIfNew(state, generalizedIdentifier.literal, generalizedIdentifier);
+        }
+    }
+}
+
+function inspectIdentifier(state: State, xorNode: NodeIdMap.TXorNode): void {
+    // A context for Ast.Identifier is a context with no values,
+    // meaning we can only operate when the arg's XorNodeKind is Ast.
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        if (xorNode.node.kind !== Ast.NodeKind.Identifier) {
+            throw expectedNodeKindError(xorNode, Ast.NodeKind.Identifier);
+        }
+
+        const identifier: Ast.Identifier = xorNode.node;
         if (isTokenPositionOnOrBeforeBeforePostiion(identifier.tokenRange.positionEnd, state.position)) {
             addAstToScopeIfNew(state, identifier.literal, identifier);
         }
@@ -105,7 +126,7 @@ function inspectIdentifierExpression(state: State, xorNode: NodeIdMap.TXorNode):
                 nodeIdMapCollection,
                 xorNode.node.id,
                 0,
-                Ast.NodeKind.Constant,
+                [Ast.NodeKind.Constant],
             );
             if (maybeInclusiveConstant !== undefined) {
                 const inclusiveConstant: Ast.Constant = maybeInclusiveConstant.node as Ast.Constant;
@@ -116,7 +137,7 @@ function inspectIdentifierExpression(state: State, xorNode: NodeIdMap.TXorNode):
                 nodeIdMapCollection,
                 xorNode.node.id,
                 1,
-                Ast.NodeKind.Identifier,
+                [Ast.NodeKind.Identifier],
             );
             if (maybeIdentifier !== undefined) {
                 const identifier: Ast.Identifier = maybeIdentifier.node as Ast.Identifier;
@@ -140,13 +161,86 @@ function inspectParameter(state: State, parameter: NodeIdMap.TXorNode): void {
         state.nodeIdMapCollection,
         parameter.node.id,
         1,
-        Ast.NodeKind.Identifier,
+        [Ast.NodeKind.Identifier],
     );
     if (maybeNameXorNode === undefined) {
         return;
     }
     const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
     inspectIdentifier(state, nameXorNode);
+}
+
+// RecordExpression | RecordLiteral
+function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap.TXorNode): void {
+    switch (recordXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const record: Ast.RecordExpression | Ast.RecordLiteral = recordXorNode.node as
+                | Ast.RecordExpression
+                | Ast.RecordLiteral;
+            const position: Position = state.position;
+            const tokenRange: Ast.TokenRange = record.tokenRange;
+            // Check if position is on closeWrapperConstant (']').
+            // The check isn't needed for a context node as the final attribute is the closeWrapperConstant,
+            // and as it's a context node it hasn't parsed all attributes.
+            if (isTokenPositionOnPosition(record.closeWrapperConstant.tokenRange.positionEnd, position)) {
+                return;
+            }
+            if (isInTokenRange(position, tokenRange)) {
+                state.result.nodes.push({
+                    kind: NodeKind.Record,
+                    maybePositionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                });
+            }
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context:
+            state.result.nodes.push({
+                kind: NodeKind.Record,
+                maybePositionStart:
+                    recordXorNode.node.maybeTokenStart !== undefined
+                        ? recordXorNode.node.maybeTokenStart.positionStart
+                        : undefined,
+                maybePositionEnd: undefined,
+            });
+            break;
+
+        default:
+            throw isNever(recordXorNode);
+    }
+
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        recordXorNode.node.id,
+        1,
+        [Ast.NodeKind.CsvArray],
+    );
+    if (maybeCsvArrayXorNode === undefined) {
+        return;
+    }
+    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+
+    const keyXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = csvArrayXorNodeDrilldown(
+        state,
+        csvArrayXorNode,
+        {
+            attributeIndex: 0,
+            maybeAllowedNodeKinds: [
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+            ],
+        },
+        [
+            {
+                attributeIndex: 0,
+                maybeAllowedNodeKinds: [Ast.NodeKind.GeneralizedIdentifier],
+            },
+        ],
+    );
+    for (const key of keyXorNodes) {
+        inspectGeneralizedIdentifier(state, key);
+    }
 }
 
 function expectedNodeKindError(xorNode: NodeIdMap.TXorNode, expected: Ast.NodeKind): CommonError.InvariantError {
