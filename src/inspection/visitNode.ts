@@ -23,12 +23,69 @@ function inspectFunctionExpression(state: State, xorNode: NodeIdMap.TXorNode): v
 
     const drilldownToCsvArrayRequest: NodeIdMap.MultipleChildByAttributeIndexRequest = {
         nodeIdMapCollection: state.nodeIdMapCollection,
-        firstDrilldown: [xorNode.node.id, 0, Ast.NodeKind.ParameterList],
-        drilldowns: [[1, Ast.NodeKind.CsvArray]],
+        firstDrilldown: {
+            rootNodeId: xorNode.node.id,
+            attributeIndex: 0,
+            maybeNodeKind: Ast.NodeKind.ParameterList,
+        },
+        drilldowns: [
+            {
+                attributeIndex: 1,
+                maybeNodeKind: Ast.NodeKind.CsvArray,
+            },
+        ],
     };
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeMultipleChildByAttributeRequest(
         drilldownToCsvArrayRequest,
     );
+
+    if (maybeCsvArrayXorNode === undefined) {
+        return undefined;
+    }
+    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+
+    const parameterXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = csvArrayXorNodeDrilldown(
+        state,
+        csvArrayXorNode,
+        {
+            attributeIndex: 0,
+            maybeNodeKind: Ast.NodeKind.Parameter,
+        },
+        [],
+    );
+
+    for (const parameterXorNode of parameterXorNodes) {
+        inspectParameter(state, parameterXorNode);
+    }
+}
+
+function inspectParameter(state: State, parameter: NodeIdMap.TXorNode): void {
+    const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        parameter.node.id,
+        1,
+        Ast.NodeKind.Identifier,
+    );
+    if (maybeNameXorNode === undefined) {
+        return;
+    }
+    const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
+
+    switch (nameXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const name: Ast.Identifier = nameXorNode.node as Ast.Identifier;
+            if (isTokenPositionBeforePostiion(name.tokenRange.positionEnd, state.position)) {
+                addAstToScopeIfNew(state, name.literal, name);
+            }
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context:
+            break;
+
+        default:
+            throw isNever(nameXorNode);
+    }
 }
 
 function inspectIdentifierExpression(state: State, xorNode: NodeIdMap.TXorNode): void {
@@ -146,7 +203,7 @@ function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean
     }
 }
 
-export function isTokenPositionOnPosition(tokenPosition: TokenPosition, position: Position): boolean {
+function isTokenPositionOnPosition(tokenPosition: TokenPosition, position: Position): boolean {
     return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
 }
 
@@ -178,59 +235,142 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
     });
 }
 
-// Same as TCsvArray.elements.map(csv => csv.node), plus TXorNode handling.
-export function csvArrayChildrenXorNodes(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    root: NodeIdMap.TXorNode,
+function csvArrayXorNodeDrilldown(
+    state: State,
+    csvArrayXorNode: NodeIdMap.TXorNode,
+    firstDrilldown: NodeIdMap.Drilldown,
+    drilldowns: ReadonlyArray<NodeIdMap.Drilldown>,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    switch (root.kind) {
+    if (csvArrayXorNode.node.kind !== Ast.NodeKind.CsvArray) {
+        throw expectedNodeKindError(csvArrayXorNode, Ast.NodeKind.CsvArray);
+    }
+
+    const result: NodeIdMap.TXorNode[] = [];
+    switch (csvArrayXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            if (root.node.kind !== Ast.NodeKind.CsvArray) {
-                const details: {} = { root };
-                throw new CommonError.InvariantError(
-                    `root must have a Ast.NodeKind of ${Ast.NodeKind.CsvArray}`,
-                    details,
-                );
-            }
-
-            return root.node.elements.map(csv => {
-                return {
-                    kind: NodeIdMap.XorNodeKind.Ast,
-                    node: csv.node,
+            const csvArray: Ast.TCsvArray = csvArrayXorNode.node as Ast.TCsvArray;
+            for (const csv of csvArray.elements) {
+                const request: NodeIdMap.MultipleChildByAttributeIndexRequest = {
+                    nodeIdMapCollection: state.nodeIdMapCollection,
+                    firstDrilldown: {
+                        rootNodeId: csv.id,
+                        ...firstDrilldown,
+                    },
+                    drilldowns,
                 };
-            });
-
-        case NodeIdMap.XorNodeKind.Context: {
-            if (root.node.kind !== Ast.NodeKind.CsvArray) {
-                const details: {} = { root };
-                throw new CommonError.InvariantError(
-                    `root must have a Ast.NodeKind of ${Ast.NodeKind.CsvArray}`,
-                    details,
+                const maybeChildXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeMultipleChildByAttributeRequest(
+                    request,
                 );
+                if (maybeChildXorNode === undefined) {
+                    const details: {} = { csvArrayXorNode, firstDrilldown, drilldowns };
+                    throw new CommonError.InvariantError(
+                        `Child drilldown for Ast doesn't exist. Double check Drilldown parameters.`,
+                        details,
+                    );
+                } else if (maybeChildXorNode.kind !== NodeIdMap.XorNodeKind.Ast) {
+                    const details: {} = { csvArrayXorNode };
+                    throw new CommonError.InvariantError(`Child of Ast is not an Ast node.`, details);
+                } else {
+                    result.push(maybeChildXorNode);
+                }
             }
-            const csvArrayContextNode: ParserContext.Node = root.node;
+            break;
 
-            const result: NodeIdMap.TXorNode[] = [];
-
-            const maybeCsvArrayChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
-                csvArrayContextNode.id,
+        case NodeIdMap.XorNodeKind.Context:
+            const maybeCsvXorNodes: Option<ReadonlyArray<NodeIdMap.TXorNode>> = NodeIdMap.maybeXorChildren(
+                state.nodeIdMapCollection,
+                csvArrayXorNode.node.id,
             );
-            if (maybeCsvArrayChildIds !== undefined) {
-                const csvArrayChildIds: ReadonlyArray<number> = maybeCsvArrayChildIds;
+            if (maybeCsvXorNodes === undefined) {
+                return [];
+            }
+            const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = maybeCsvXorNodes;
 
-                for (const csvId of csvArrayChildIds) {
-                    const maybeCsvChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(csvId);
-                    if (maybeCsvChildIds !== undefined) {
-                        const csvChildIds: ReadonlyArray<number> = maybeCsvChildIds;
-                        result.push(NodeIdMap.expectXorNode(nodeIdMapCollection, csvChildIds[0]));
-                    }
+            for (const csvXorNode of csvXorNodes) {
+                const request: NodeIdMap.MultipleChildByAttributeIndexRequest = {
+                    nodeIdMapCollection: state.nodeIdMapCollection,
+                    firstDrilldown: {
+                        rootNodeId: csvXorNode.node.id,
+                        ...firstDrilldown,
+                    },
+                    drilldowns,
+                };
+                const maybeChildXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeMultipleChildByAttributeRequest(
+                    request,
+                );
+                if (maybeChildXorNode === undefined) {
+                    const details: {} = { csvArrayXorNode, firstDrilldown, drilldowns };
+                    throw new CommonError.InvariantError(
+                        `Child drilldown for Ast doesn't exist. Double check Drilldown parameters.`,
+                        details,
+                    );
+                } else {
+                    result.push(maybeChildXorNode);
                 }
             }
 
-            return result;
-        }
+            break;
 
         default:
-            throw isNever(root);
+            throw isNever(csvArrayXorNode);
     }
+
+    return result;
 }
+
+// // Same as TCsvArray.elements.map(csv => csv.node), plus TXorNode handling.
+// export function csvArrayChildrenXorNodes(
+//     nodeIdMapCollection: NodeIdMap.Collection,
+//     root: NodeIdMap.TXorNode,
+// ): ReadonlyArray<NodeIdMap.TXorNode> {
+//     switch (root.kind) {
+//         case NodeIdMap.XorNodeKind.Ast:
+//             if (root.node.kind !== Ast.NodeKind.CsvArray) {
+//                 const details: {} = { root };
+//                 throw new CommonError.InvariantError(
+//                     `root must have a Ast.NodeKind of ${Ast.NodeKind.CsvArray}`,
+//                     details,
+//                 );
+//             }
+
+//             return root.node.elements.map(csv => {
+//                 return {
+//                     kind: NodeIdMap.XorNodeKind.Ast,
+//                     node: csv.node,
+//                 };
+//             });
+
+//         case NodeIdMap.XorNodeKind.Context: {
+//             if (root.node.kind !== Ast.NodeKind.CsvArray) {
+//                 const details: {} = { root };
+//                 throw new CommonError.InvariantError(
+//                     `root must have a Ast.NodeKind of ${Ast.NodeKind.CsvArray}`,
+//                     details,
+//                 );
+//             }
+//             const csvArrayContextNode: ParserContext.Node = root.node;
+
+//             const result: NodeIdMap.TXorNode[] = [];
+
+//             const maybeCsvArrayChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(
+//                 csvArrayContextNode.id,
+//             );
+//             if (maybeCsvArrayChildIds !== undefined) {
+//                 const csvArrayChildIds: ReadonlyArray<number> = maybeCsvArrayChildIds;
+
+//                 for (const csvId of csvArrayChildIds) {
+//                     const maybeCsvChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(csvId);
+//                     if (maybeCsvChildIds !== undefined) {
+//                         const csvChildIds: ReadonlyArray<number> = maybeCsvChildIds;
+//                         result.push(NodeIdMap.expectXorNode(nodeIdMapCollection, csvChildIds[0]));
+//                     }
+//                 }
+//             }
+
+//             return result;
+//         }
+
+//         default:
+//             throw isNever(root);
+//     }
+// }

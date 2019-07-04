@@ -33,8 +33,19 @@ export interface Collection {
 
 export interface MultipleChildByAttributeIndexRequest {
     readonly nodeIdMapCollection: Collection;
-    readonly firstDrilldown: [number, number, Option<Ast.NodeKind>];
-    readonly drilldowns: ReadonlyArray<[number, Option<Ast.NodeKind>]>;
+    readonly firstDrilldown: FirstDrilldown;
+    readonly drilldowns: ReadonlyArray<Drilldown>;
+}
+
+export interface FirstDrilldown {
+    readonly rootNodeId: number;
+    readonly attributeIndex: number;
+    readonly maybeNodeKind: Option<Ast.NodeKind>;
+}
+
+export interface Drilldown {
+    readonly attributeIndex: number;
+    readonly maybeNodeKind: Option<Ast.NodeKind>;
 }
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
@@ -96,11 +107,13 @@ export function maybeChildByKind(
 
 export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
+    const firstDrilldown: FirstDrilldown = request.firstDrilldown;
+
     let maybeChildXorNode: Option<TXorNode> = maybeChildByAttributeIndex(
         nodeIdMapCollection,
-        request.firstDrilldown[0],
-        request.firstDrilldown[1],
-        request.firstDrilldown[2],
+        firstDrilldown.rootNodeId,
+        firstDrilldown.attributeIndex,
+        firstDrilldown.maybeNodeKind,
     );
 
     for (const drilldown of request.drilldowns) {
@@ -111,8 +124,8 @@ export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAtt
         maybeChildXorNode = maybeChildByAttributeIndex(
             nodeIdMapCollection,
             maybeChildXorNode.node.id,
-            drilldown[0],
-            drilldown[1],
+            drilldown.attributeIndex,
+            drilldown.maybeNodeKind,
         );
     }
 
