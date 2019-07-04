@@ -31,6 +31,12 @@ export interface Collection {
     readonly childIdsById: ChildIdsById;
 }
 
+export interface MultipleChildByAttributeIndexRequest {
+    readonly nodeIdMapCollection: Collection;
+    readonly firstDrilldown: [number, number, Option<Ast.NodeKind>];
+    readonly drilldowns: ReadonlyArray<[number, Option<Ast.NodeKind>]>;
+}
+
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
     const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode) {
@@ -86,6 +92,31 @@ export function maybeChildByKind(
     }
 
     return undefined;
+}
+
+export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
+    const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
+    let maybeChildXorNode: Option<TXorNode> = maybeChildByAttributeIndex(
+        nodeIdMapCollection,
+        request.firstDrilldown[0],
+        request.firstDrilldown[1],
+        request.firstDrilldown[2],
+    );
+
+    for (const drilldown of request.drilldowns) {
+        if (maybeChildXorNode === undefined) {
+            return maybeChildXorNode;
+        }
+
+        maybeChildXorNode = maybeChildByAttributeIndex(
+            nodeIdMapCollection,
+            maybeChildXorNode.node.id,
+            drilldown[0],
+            drilldown[1],
+        );
+    }
+
+    return maybeChildXorNode;
 }
 
 export function maybeChildByAttributeIndex(

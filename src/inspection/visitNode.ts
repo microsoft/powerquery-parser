@@ -6,10 +6,29 @@ import { Position, State } from "./inspection";
 export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
     // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
+        case Ast.NodeKind.FunctionExpression:
+            inspectFunctionExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.IdentifierExpression:
             inspectIdentifierExpression(state, xorNode);
             break;
     }
+}
+
+function inspectFunctionExpression(state: State, xorNode: NodeIdMap.TXorNode): void {
+    if (xorNode.node.kind !== Ast.NodeKind.FunctionExpression) {
+        throw expectedNodeKindError(xorNode, Ast.NodeKind.FunctionExpression);
+    }
+
+    const drilldownToCsvArrayRequest: NodeIdMap.MultipleChildByAttributeIndexRequest = {
+        nodeIdMapCollection: state.nodeIdMapCollection,
+        firstDrilldown: [xorNode.node.id, 0, Ast.NodeKind.ParameterList],
+        drilldowns: [[1, Ast.NodeKind.CsvArray]],
+    };
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeMultipleChildByAttributeRequest(
+        drilldownToCsvArrayRequest,
+    );
 }
 
 function inspectIdentifierExpression(state: State, xorNode: NodeIdMap.TXorNode): void {

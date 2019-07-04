@@ -697,7 +697,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
+        describe(`abc123 ${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
             it(`|(x) => z`, () => {
                 const text: string = `(x) => z`;
                 const position: Inspection.Position = {
