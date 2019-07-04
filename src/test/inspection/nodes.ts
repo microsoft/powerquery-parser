@@ -665,38 +665,6 @@ describe(`Inspection`, () => {
     });
 
     describe(`Scope`, () => {
-        describe(`${Ast.NodeKind.Identifier} (Ast)`, () => {
-            it(`|foo`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`foo|`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 3,
-                };
-                const expected: ReadonlyArray<string> = [`foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`f|oo`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
-                const expected: ReadonlyArray<string> = [`foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-        });
-
         describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
             it(`|@foo`, () => {
                 const text: string = `@foo`;

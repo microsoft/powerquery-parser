@@ -1,59 +1,80 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
-import { CommonError, isNever, Option, Traverse } from "../common";
+import { CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
+import { Position, State } from "./inspection";
 
-export const enum NodeKind {
-    EachExpression = "EachExpression",
-    InvokeExpression = "InvokeExpression",
-    List = "List",
-    Record = "Record",
+export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
+    // tslint:disable-next-line: switch-default
+    switch (xorNode.node.kind) {
+        case Ast.NodeKind.IdentifierExpression:
+            inspectIdentifierExpression(state, xorNode);
+            break;
+    }
 }
 
-export type TNode = EachExpression | InvokeExpression | List | Record;
+function inspectIdentifierExpression(state: State, xorNode: NodeIdMap.TXorNode): void {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            if (xorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
+                throw expectedNodeKindError(xorNode, Ast.NodeKind.IdentifierExpression);
+            }
 
-export interface State extends Traverse.IState<Inspected> {
-    maybePreviousXorNode: Option<NodeIdMap.TXorNode>;
-    readonly position: Position;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
+            const identifierExpression: Ast.IdentifierExpression = xorNode.node;
+            let key: string = identifierExpression.identifier.literal;
+            if (identifierExpression.maybeInclusiveConstant) {
+                const inclusiveConstant: Ast.Constant = identifierExpression.maybeInclusiveConstant;
+                key = inclusiveConstant.literal + key;
+            }
+
+            addAstToScopeIfNew(state, key, identifierExpression);
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            let key: string = "";
+            const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+
+            // Add the optional inclusive constant `@` if it was parsed.
+            const maybeInclusiveConstant: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+                nodeIdMapCollection,
+                xorNode.node.id,
+                0,
+                Ast.NodeKind.Constant,
+            );
+            if (maybeInclusiveConstant !== undefined) {
+                const inclusiveConstant: Ast.Constant = maybeInclusiveConstant.node as Ast.Constant;
+                key += inclusiveConstant.literal;
+            }
+
+            const maybeIdentifier: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+                nodeIdMapCollection,
+                xorNode.node.id,
+                1,
+                Ast.NodeKind.Identifier,
+            );
+            if (maybeIdentifier !== undefined) {
+                const identifier: Ast.Identifier = maybeIdentifier.node as Ast.Identifier;
+                key += identifier.literal;
+            }
+
+            if (key.length) {
+                addContextToScopeIfNew(state, key, xorNode.node);
+            }
+
+            break;
+        }
+
+        default:
+            throw isNever(xorNode);
+    }
 }
 
-export interface Inspected {
-    readonly nodes: TNode[];
-    readonly scope: Map<string, NodeIdMap.TXorNode>;
+function expectedNodeKindError(xorNode: NodeIdMap.TXorNode, expected: Ast.NodeKind): CommonError.InvariantError {
+    const details: {} = { xorNode };
+    return new CommonError.InvariantError(`expected xorNode to be of kind ${expected}`, details);
 }
 
-export interface INode {
-    readonly kind: NodeKind;
-    readonly maybePositionStart: Option<TokenPosition>;
-    readonly maybePositionEnd: Option<TokenPosition>;
-}
-
-export interface Position {
-    readonly lineNumber: number;
-    readonly lineCodeUnit: number;
-}
-
-export interface EachExpression extends INode {
-    readonly kind: NodeKind.EachExpression;
-}
-
-export interface InvokeExpression extends INode {
-    readonly kind: NodeKind.InvokeExpression;
-}
-
-export interface List extends INode {
-    readonly kind: NodeKind.List;
-}
-
-export interface Record extends INode {
-    readonly kind: NodeKind.Record;
-}
-
-export function isParentOfNodeKind(
+function isParentOfNodeKind(
     nodeIdMapCollection: NodeIdMap.Collection,
     childId: number,
     parentNodeKind: Ast.NodeKind,
@@ -82,7 +103,7 @@ export function isParentOfNodeKind(
     }
 }
 
-export function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
+function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
     const tokenRangePositionStart: TokenPosition = tokenRange.positionStart;
     const tokenRangePositionEnd: TokenPosition = tokenRange.positionEnd;
 
@@ -110,24 +131,31 @@ export function isTokenPositionOnPosition(tokenPosition: TokenPosition, position
     return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
 }
 
-export function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
+function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
     return (
         tokenPosition.lineNumber < position.lineNumber ||
         (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
     );
 }
 
-export function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
+function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
     const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
     if (!scopeMap.has(key)) {
         scopeMap.set(key, xorNode);
     }
 }
 
-export function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
+function addAstToScopeIfNew(state: State, key: string, astNode: Ast.TNode): void {
     addToScopeIfNew(state, key, {
         kind: NodeIdMap.XorNodeKind.Ast,
         node: astNode,
+    });
+}
+
+function addContextToScopeIfNew(state: State, key: string, contextNode: ParserContext.Node): void {
+    addToScopeIfNew(state, key, {
+        kind: NodeIdMap.XorNodeKind.Context,
+        node: contextNode,
     });
 }
 
