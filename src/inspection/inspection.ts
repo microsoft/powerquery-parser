@@ -81,24 +81,7 @@ function addParentXorNode(
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    let maybeParentNodeId: Option<number>;
-    switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
-            const astNode: Ast.TNode = xorNode.node;
-            maybeParentNodeId = nodeIdMapCollection.parentIdById.get(astNode.id);
-            break;
-        }
-
-        case NodeIdMap.XorNodeKind.Context: {
-            const contextNode: ParserContext.Node = xorNode.node;
-            maybeParentNodeId = nodeIdMapCollection.parentIdById.get(contextNode.id);
-            break;
-        }
-
-        default:
-            throw isNever(xorNode);
-    }
-
+    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(xorNode.node.id);
     if (maybeParentNodeId === undefined) {
         return [];
     }
@@ -107,31 +90,9 @@ function addParentXorNode(
     const maybeParentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNode(nodeIdMapCollection, parentNodeId);
     if (maybeParentXorNode === undefined) {
         return [];
-    }
-    const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
-
-    switch (parentXorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
-            const parentAstNode: Ast.TNode = parentXorNode.node;
-            return [
-                {
-                    kind: NodeIdMap.XorNodeKind.Ast,
-                    node: parentAstNode,
-                },
-            ];
-        }
-        case NodeIdMap.XorNodeKind.Context: {
-            const parentContextNode: ParserContext.Node = parentXorNode.node;
-            return [
-                {
-                    kind: NodeIdMap.XorNodeKind.Context,
-                    node: parentContextNode,
-                },
-            ];
-        }
-
-        default:
-            throw isNever(parentXorNode);
+    } else {
+        const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
+        return [parentXorNode];
     }
 }
 
