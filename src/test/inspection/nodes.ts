@@ -697,7 +697,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
+        describe(`abc123 ${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
             it(`|(x) => z`, () => {
                 const text: string = `(x) => z`;
                 const position: Inspection.Position = {
@@ -708,7 +708,7 @@ describe(`Inspection`, () => {
                 expectParserOkScopeEqual(text, position, expected);
             });
 
-            it(`abc123 (x|, y) => z`, () => {
+            it(`(x|, y) => z`, () => {
                 const text: string = `(x, y) => z`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
@@ -739,7 +739,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
+        describe(`abc123 ${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
             it(`|(x) =>`, () => {
                 const text: string = `(x) =>`;
                 const position: Inspection.Position = {

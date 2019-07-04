@@ -10,6 +10,10 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
             inspectFunctionExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.Identifier:
+            inspectIdentifier(state, xorNode);
+            break;
+
         case Ast.NodeKind.IdentifierExpression:
             inspectIdentifierExpression(state, xorNode);
             break;
@@ -59,32 +63,18 @@ function inspectFunctionExpression(state: State, xorNode: NodeIdMap.TXorNode): v
     }
 }
 
-function inspectParameter(state: State, parameter: NodeIdMap.TXorNode): void {
-    const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
-        state.nodeIdMapCollection,
-        parameter.node.id,
-        1,
-        Ast.NodeKind.Identifier,
-    );
-    if (maybeNameXorNode === undefined) {
-        return;
-    }
-    const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
-
-    switch (nameXorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
-            const name: Ast.Identifier = nameXorNode.node as Ast.Identifier;
-            if (isTokenPositionBeforePostiion(name.tokenRange.positionEnd, state.position)) {
-                addAstToScopeIfNew(state, name.literal, name);
-            }
-            break;
+function inspectIdentifier(state: State, identifierXorNode: NodeIdMap.TXorNode): void {
+    // A context for Ast.Identifier is a context with no values,
+    // meaning we can only operate when the arg's XorNodeKind is Ast.
+    if (identifierXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        if (identifierXorNode.node.kind !== Ast.NodeKind.Identifier) {
+            throw expectedNodeKindError(identifierXorNode, Ast.NodeKind.Identifier);
         }
 
-        case NodeIdMap.XorNodeKind.Context:
-            break;
-
-        default:
-            throw isNever(nameXorNode);
+        const identifier: Ast.Identifier = identifierXorNode.node;
+        if (isTokenPositionOnOrBeforeBeforePostiion(identifier.tokenRange.positionEnd, state.position)) {
+            addAstToScopeIfNew(state, identifier.literal, identifier);
+        }
     }
 }
 
@@ -143,6 +133,20 @@ function inspectIdentifierExpression(state: State, xorNode: NodeIdMap.TXorNode):
         default:
             throw isNever(xorNode);
     }
+}
+
+function inspectParameter(state: State, parameter: NodeIdMap.TXorNode): void {
+    const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        parameter.node.id,
+        1,
+        Ast.NodeKind.Identifier,
+    );
+    if (maybeNameXorNode === undefined) {
+        return;
+    }
+    const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
+    inspectIdentifier(state, nameXorNode);
 }
 
 function expectedNodeKindError(xorNode: NodeIdMap.TXorNode, expected: Ast.NodeKind): CommonError.InvariantError {
@@ -204,7 +208,7 @@ function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean
 }
 
 function isTokenPositionOnPosition(tokenPosition: TokenPosition, position: Position): boolean {
-    return position.lineNumber !== tokenPosition.lineNumber && position.lineCodeUnit !== tokenPosition.lineCodeUnit;
+    return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
 }
 
 function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
@@ -212,6 +216,10 @@ function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: P
         tokenPosition.lineNumber < position.lineNumber ||
         (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
     );
+}
+
+function isTokenPositionOnOrBeforeBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
+    return isTokenPositionOnPosition(tokenPosition, position) || isTokenPositionBeforePostiion(tokenPosition, position);
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
