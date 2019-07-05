@@ -150,9 +150,9 @@ export function maybeChildByAttributeIndex(
         const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
             // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
-            if (maybeChildNodeKinds === undefined || maybeChildNodeKinds.indexOf(xorNode.node.kind) === -1) {
+            if (maybeChildNodeKinds !== undefined && maybeChildNodeKinds.indexOf(xorNode.node.kind) === -1) {
                 const details: {} = {
-                    childId: childId,
+                    childId,
                     expectedAny: maybeChildNodeKinds,
                     actual: xorNode.node.kind,
                 };
