@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { Option } from "../common";
 import { TokenPosition } from "../lexer";
 
