@@ -122,14 +122,6 @@ function inspectIdentifierExpression(state: State, identifierExprXorNode: NodeId
             if (identifierExprXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
                 throw expectedNodeKindError(identifierExprXorNode, Ast.NodeKind.IdentifierExpression);
             }
-            if (
-                !isTokenPositionOnOrBeforeBeforePostion(
-                    identifierExprXorNode.node.tokenRange.positionEnd,
-                    state.position,
-                )
-            ) {
-                return;
-            }
 
             const identifierExpression: Ast.IdentifierExpression = identifierExprXorNode.node;
             let key: string = identifierExpression.identifier.literal;
