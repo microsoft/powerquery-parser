@@ -152,7 +152,8 @@ export function maybeChildByAttributeIndex(
             // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
             if (maybeChildNodeKinds === undefined || maybeChildNodeKinds.indexOf(xorNode.node.kind) === -1) {
                 const details: {} = {
-                    expected: maybeChildNodeKinds,
+                    childId: childId,
+                    expectedAny: maybeChildNodeKinds,
                     actual: xorNode.node.kind,
                 };
                 throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);
