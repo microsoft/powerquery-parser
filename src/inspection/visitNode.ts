@@ -2,7 +2,7 @@ import { CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
-import { NodeKind } from "./node";
+import { TNode, NodeKind } from "./node";
 
 export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
     // tslint:disable-next-line: switch-default
@@ -23,6 +23,10 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
             inspectIdentifierExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.InvokeExpression:
+            inspectInvokeExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListType:
             inspectListExpressionOrLiteral(state, xorNode);
@@ -40,36 +44,7 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
 }
 function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
     addToScopeIfNew(state, "_", eachExprXorNode);
-
-    switch (eachExprXorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
-            const eachExpr: Ast.EachExpression = eachExprXorNode.node as Ast.EachExpression;
-            const position: Position = state.position;
-            const tokenRange: Ast.TokenRange = eachExpr.tokenRange;
-            if (isInTokenRange(position, tokenRange)) {
-                state.result.nodes.push({
-                    kind: NodeKind.EachExpression,
-                    maybePositionStart: tokenRange.positionStart,
-                    maybePositionEnd: tokenRange.positionEnd,
-                });
-            }
-            break;
-        }
-
-        case NodeIdMap.XorNodeKind.Context:
-            state.result.nodes.push({
-                kind: NodeKind.EachExpression,
-                maybePositionStart:
-                    eachExprXorNode.node.maybeTokenStart !== undefined
-                        ? eachExprXorNode.node.maybeTokenStart.positionStart
-                        : undefined,
-                maybePositionEnd: undefined,
-            });
-            break;
-
-        default:
-            throw isNever(eachExprXorNode);
-    }
+    state.result.nodes.push(basicNodeFromXorNode(eachExprXorNode, NodeKind.EachExpression));
 }
 
 function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.TXorNode): void {
@@ -204,6 +179,10 @@ function inspectIdentifierExpression(state: State, identifierExprXorNode: NodeId
     }
 }
 
+function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXorNode): void {
+
+}
+
 function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXorNode): void {
     switch (listXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast: {
@@ -217,24 +196,13 @@ function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXo
                 return;
             }
             if (isInTokenRange(position, tokenRange)) {
-                state.result.nodes.push({
-                    kind: NodeKind.List,
-                    maybePositionStart: tokenRange.positionStart,
-                    maybePositionEnd: tokenRange.positionEnd,
-                });
+                state.result.nodes.push(basicNodeFromAst(list, NodeKind.List));
             }
             break;
         }
 
         case NodeIdMap.XorNodeKind.Context:
-            state.result.nodes.push({
-                kind: NodeKind.List,
-                maybePositionStart:
-                    listXorNode.node.maybeTokenStart !== undefined
-                        ? listXorNode.node.maybeTokenStart.positionStart
-                        : undefined,
-                maybePositionEnd: undefined,
-            });
+            state.result.nodes.push(basicNodeFromContext(listXorNode.node, NodeKind.List));
             break;
 
         default:
@@ -271,24 +239,13 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
                 return;
             }
             if (isInTokenRange(position, tokenRange)) {
-                state.result.nodes.push({
-                    kind: NodeKind.Record,
-                    maybePositionStart: tokenRange.positionStart,
-                    maybePositionEnd: tokenRange.positionEnd,
-                });
+                state.result.nodes.push(basicNodeFromAst(record, NodeKind.Record));
             }
             break;
         }
 
         case NodeIdMap.XorNodeKind.Context:
-            state.result.nodes.push({
-                kind: NodeKind.Record,
-                maybePositionStart:
-                    recordXorNode.node.maybeTokenStart !== undefined
-                        ? recordXorNode.node.maybeTokenStart.positionStart
-                        : undefined,
-                maybePositionEnd: undefined,
-            });
+            state.result.nodes.push(basicNodeFromContext(recordXorNode.node, NodeKind.Record));
             break;
 
         default:
@@ -533,4 +490,35 @@ function csvArrayXorNodeDrilldown(
     }
 
     return result;
+}
+
+function basicNodeFromAst(astNode: Ast.TNode, kind: NodeKind): TNode {
+    const tokenRange: Ast.TokenRange = astNode.tokenRange;
+    return {
+        kind,
+        maybePositionStart: tokenRange.positionStart,
+        maybePositionEnd: tokenRange.positionEnd,
+    };
+}
+
+function basicNodeFromContext(contextNode: ParserContext.Node, kind: NodeKind): TNode {
+    return {
+        kind,
+        maybePositionStart:
+            contextNode.maybeTokenStart !== undefined ? contextNode.maybeTokenStart.positionStart : undefined,
+        maybePositionEnd: undefined,
+    };
+}
+
+function basicNodeFromXorNode(xorNode: NodeIdMap.TXorNode, kind: NodeKind): TNode {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return basicNodeFromAst(xorNode.node, kind);
+
+        case NodeIdMap.XorNodeKind.Context:
+            return basicNodeFromContext(xorNode.node, kind);
+
+        default:
+            throw isNever(xorNode);
+    }
 }
