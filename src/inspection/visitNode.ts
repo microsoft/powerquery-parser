@@ -7,6 +7,10 @@ import { NodeKind } from "./node";
 export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
     // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
+        case Ast.NodeKind.EachExpression:
+            inspectEachExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.FunctionExpression:
             inspectFunctionExpression(state, xorNode);
             break;
@@ -32,6 +36,39 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
         case Ast.NodeKind.Section:
             inspectSection(state, xorNode);
             break;
+    }
+}
+function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
+    addToScopeIfNew(state, "_", eachExprXorNode);
+
+    switch (eachExprXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const eachExpr: Ast.EachExpression = eachExprXorNode.node as Ast.EachExpression;
+            const position: Position = state.position;
+            const tokenRange: Ast.TokenRange = eachExpr.tokenRange;
+            if (isInTokenRange(position, tokenRange)) {
+                state.result.nodes.push({
+                    kind: NodeKind.EachExpression,
+                    maybePositionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                });
+            }
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context:
+            state.result.nodes.push({
+                kind: NodeKind.EachExpression,
+                maybePositionStart:
+                    eachExprXorNode.node.maybeTokenStart !== undefined
+                        ? eachExprXorNode.node.maybeTokenStart.positionStart
+                        : undefined,
+                maybePositionEnd: undefined,
+            });
+            break;
+
+        default:
+            throw isNever(eachExprXorNode);
     }
 }
 
