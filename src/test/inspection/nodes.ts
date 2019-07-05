@@ -686,7 +686,7 @@ describe(`Inspection`, () => {
                 expectParserOkScopeEqual(text, position, expected);
             });
 
-            it(`@|foo`, () => {
+            it(`abc123 @|foo`, () => {
                 const text: string = `@foo`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
@@ -798,7 +798,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 8,
                 };
-                const expected: ReadonlyArray<string> = [`y`, `x`, `foo`];
+                const expected: ReadonlyArray<string> = [`x`, `y`, `foo`];
                 expectParserOkScopeEqual(text, position, expected);
             });
         });
@@ -830,7 +830,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 8,
                 };
-                const expected: ReadonlyArray<string> = [`y`, `x`, `foo`];
+                const expected: ReadonlyArray<string> = [`x`, `y`, `foo`];
                 expectParserErrScopeEqual(text, position, expected);
             });
         });

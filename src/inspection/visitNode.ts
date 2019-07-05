@@ -37,6 +37,10 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
             inspectRecordExpressionOrLiteral(state, xorNode);
             break;
 
+        case Ast.NodeKind.RecursivePrimaryExpression:
+            inspectRecursivePrimaryExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.Section:
             inspectSection(state, xorNode);
             break;
@@ -118,6 +122,14 @@ function inspectIdentifierExpression(state: State, identifierExprXorNode: NodeId
             if (identifierExprXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
                 throw expectedNodeKindError(identifierExprXorNode, Ast.NodeKind.IdentifierExpression);
             }
+            if (
+                !isTokenPositionOnOrBeforeBeforePostion(
+                    identifierExprXorNode.node.tokenRange.positionEnd,
+                    state.position,
+                )
+            ) {
+                return;
+            }
 
             const identifierExpression: Ast.IdentifierExpression = identifierExprXorNode.node;
             let key: string = identifierExpression.identifier.literal;
@@ -184,6 +196,18 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         return;
     }
     const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+
+    const argXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = nodesOnCsvFromCsvArray(
+        state.nodeIdMapCollection,
+        csvArrayXorNode,
+    );
+    for (const argXorNode of argXorNodes) {
+        if (argXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
+            continue;
+        }
+
+        inspectIdentifierExpression(state, argXorNode);
+    }
 }
 
 function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXorNode): void {
@@ -278,6 +302,20 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
     for (const key of keyXorNodes) {
         inspectGeneralizedIdentifier(state, key);
     }
+}
+
+function inspectRecursivePrimaryExpression(state: State, recursivePrimaryExprXorNode: NodeIdMap.TXorNode): void {
+    const maybeHeadXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        recursivePrimaryExprXorNode.node.id,
+        0,
+        undefined,
+    );
+    if (maybeHeadXorNode === undefined || maybeHeadXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
+        return;
+    }
+    const headXorNode: NodeIdMap.TXorNode = maybeHeadXorNode;
+    inspectIdentifierExpression(state, headXorNode);
 }
 
 function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void {
@@ -390,7 +428,7 @@ function isTokenPositionOnPosition(tokenPosition: TokenPosition, position: Posit
     return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
 }
 
-function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: Position): boolean {
+function isTokenPositionBeforePostion(tokenPosition: TokenPosition, position: Position): boolean {
     return (
         tokenPosition.lineNumber < position.lineNumber ||
         (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
@@ -398,7 +436,7 @@ function isTokenPositionBeforePostiion(tokenPosition: TokenPosition, position: P
 }
 
 function isTokenPositionOnOrBeforeBeforePostion(tokenPosition: TokenPosition, position: Position): boolean {
-    return isTokenPositionOnPosition(tokenPosition, position) || isTokenPositionBeforePostiion(tokenPosition, position);
+    return isTokenPositionOnPosition(tokenPosition, position) || isTokenPositionBeforePostion(tokenPosition, position);
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
