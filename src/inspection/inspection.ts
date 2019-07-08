@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Option, ResultKind, Traverse } from "../common";
+import { Option, ResultKind, Traverse } from "../common";
 import { TokenPosition } from "../lexer";
-import { NodeIdMap, ParserContext } from "../parser";
+import { Ast, NodeIdMap } from "../parser";
 import { TNode } from "./node";
 import { visitNode } from "./visitNode";
 
@@ -40,14 +40,14 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): Traverse.TriedTraverse<Inspected> {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeClosestXorNode(position, nodeIdMapCollection, leafNodeIds);
-    if (maybeXorNode === undefined) {
+    const maybeClosestLeaf: Option<Ast.TNode> = maybeClosestAstNode(position, nodeIdMapCollection, leafNodeIds);
+    if (maybeClosestLeaf === undefined) {
         return {
             kind: ResultKind.Ok,
             value: DefaultInspection,
         };
     }
-    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+    const closestLeaf: Ast.TNode = maybeClosestLeaf;
 
     const state: State = {
         result: {
@@ -60,8 +60,13 @@ export function tryFrom(
         nodeIdMapCollection,
         leafNodeIds,
     };
+    const root: NodeIdMap.TXorNode = {
+        kind: NodeIdMap.XorNodeKind.Ast,
+        node: closestLeaf,
+    };
+
     return Traverse.tryTraverseXor<State, Inspected>(
-        xorNode,
+        root,
         nodeIdMapCollection,
         state,
         Traverse.VisitNodeStrategy.BreadthFirst,
@@ -76,6 +81,8 @@ const DefaultInspection: Inspected = {
     scope: new Map(),
 };
 
+// Used as expandNodesFn.
+// Returns the XorNode's parent if one exists.
 function addParentXorNode(
     _state: State & Traverse.IState<Inspected>,
     xorNode: NodeIdMap.TXorNode,
@@ -96,28 +103,29 @@ function addParentXorNode(
     }
 }
 
-function maybeClosestXorNode(
+// Either returns a XorNode used as the root for a traverse, or returns undefined. The options are:
+//  * the XorNode at the given position
+//  * the closest XorNode to the left of the given position
+//  * undefined
+function maybeClosestAstNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Option<NodeIdMap.TXorNode> {
-    let maybeClosestNode: Option<NodeIdMap.TXorNode>;
+): Option<Ast.TNode> {
+    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
+    let maybeClosestNode: Option<Ast.TNode>;
 
     for (const nodeId of leafNodeIds) {
-        const newNode: NodeIdMap.TXorNode = NodeIdMap.expectXorNode(nodeIdMapCollection, nodeId);
+        const newNode: Ast.TNode = NodeIdMap.expectAstNode(astNodeById, nodeId);
         maybeClosestNode = closerXorNode(position, maybeClosestNode, newNode);
     }
 
     return maybeClosestNode;
 }
 
-// Assumes both TXorNode parameters are leaf nodes.
-function closerXorNode(
-    position: Position,
-    maybeCurrentNode: Option<NodeIdMap.TXorNode>,
-    newNode: NodeIdMap.TXorNode,
-): Option<NodeIdMap.TXorNode> {
-    const newNodePositionStart: TokenPosition = expectTokenStart(newNode);
+// Assumes both XorNode parameters are leaf nodes.
+function closerXorNode(position: Position, maybeCurrentNode: Option<Ast.TNode>, newNode: Ast.TNode): Option<Ast.TNode> {
+    const newNodePositionStart: TokenPosition = newNode.tokenRange.positionStart;
 
     // If currentToken isn't set and newNode's start position is <= position: return newToken
     // Else: return undefined
@@ -133,8 +141,8 @@ function closerXorNode(
             return newNode;
         }
     }
-    const currentNode: NodeIdMap.TXorNode = maybeCurrentNode;
-    const currentNodePositionStart: TokenPosition = expectTokenStart(currentNode);
+    const currentNode: Ast.TNode = maybeCurrentNode;
+    const currentNodePositionStart: TokenPosition = currentNode.tokenRange.positionStart;
 
     // Verifies newTokenPositionStart starts no later than the position argument.
     if (newNodePositionStart.lineNumber > position.lineNumber) {
@@ -149,23 +157,4 @@ function closerXorNode(
     // Both currentTokenPositionStart and newTokenPositionStart are <= position,
     // so a quick comparison can be done by examining TokenPosition.codeUnit
     return currentNodePositionStart.codeUnit < newNodePositionStart.codeUnit ? newNode : currentNode;
-}
-
-function expectTokenStart(xorNode: NodeIdMap.TXorNode): TokenPosition {
-    switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
-            return xorNode.node.tokenRange.positionStart;
-
-        case NodeIdMap.XorNodeKind.Context: {
-            const contextNode: ParserContext.Node = xorNode.node;
-            if (!contextNode.maybeTokenStart) {
-                const details: {} = { nodeId: contextNode.id };
-                throw new CommonError.InvariantError(`contextNode.maybeTokenStart should be truthy`, details);
-            }
-            return contextNode.maybeTokenStart.positionStart;
-        }
-
-        default:
-            throw isNever(xorNode);
-    }
 }
