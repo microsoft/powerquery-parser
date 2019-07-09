@@ -25,6 +25,7 @@ export interface EachExpression extends INode {
 
 export interface InvokeExpression extends INode {
     readonly kind: NodeKind.InvokeExpression;
+    readonly maybeName: Option<string>;
 }
 
 export interface List extends INode {

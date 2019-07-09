@@ -51,7 +51,35 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
 }
 function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
     addToScopeIfNew(state, "_", eachExprXorNode);
-    state.result.nodes.push(basicNodeFromXorNode(eachExprXorNode, NodeKind.EachExpression));
+
+    let maybePositionStart: Option<TokenPosition>;
+    let maybePositionEnd: Option<TokenPosition>;
+    switch (eachExprXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const tokenRange: Ast.TokenRange = eachExprXorNode.node.tokenRange;
+            maybePositionStart = tokenRange.positionStart;
+            maybePositionEnd = tokenRange.positionEnd;
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const eachExpr: ParserContext.Node = eachExprXorNode.node;
+            maybePositionStart =
+                eachExpr.maybeTokenStart !== undefined ? eachExpr.maybeTokenStart.positionStart : undefined;
+            maybePositionEnd = undefined;
+            break;
+        }
+
+        default:
+            throw isNever(eachExprXorNode);
+    }
+
+    const node: TNode = {
+        kind: NodeKind.EachExpression,
+        maybePositionStart,
+        maybePositionEnd,
+    };
+    state.result.nodes.push(node);
 }
 
 function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.TXorNode): void {
@@ -218,14 +246,26 @@ function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXo
                 return;
             }
             if (isInTokenRange(position, tokenRange)) {
-                state.result.nodes.push(basicNodeFromAst(list, NodeKind.List));
+                const node: TNode = {
+                    kind: NodeKind.List,
+                    maybePositionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                };
+                state.result.nodes.push(node);
             }
             break;
         }
 
-        case NodeIdMap.XorNodeKind.Context:
-            state.result.nodes.push(basicNodeFromContext(listXorNode.node, NodeKind.List));
+        case NodeIdMap.XorNodeKind.Context: {
+            const list: ParserContext.Node = listXorNode.node;
+            const node: TNode = {
+                kind: NodeKind.List,
+                maybePositionStart: list.maybeTokenStart !== undefined ? list.maybeTokenStart.positionStart : undefined,
+                maybePositionEnd: undefined,
+            };
+            state.result.nodes.push(node);
             break;
+        }
 
         default:
             throw isNever(listXorNode);
@@ -263,13 +303,27 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
                 return;
             }
             if (isInTokenRange(position, tokenRange)) {
-                state.result.nodes.push(basicNodeFromAst(record, NodeKind.Record));
+                const node: TNode = {
+                    kind: NodeKind.Record,
+                    maybePositionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                };
+                state.result.nodes.push(node);
             }
             break;
         }
 
         case NodeIdMap.XorNodeKind.Context:
-            state.result.nodes.push(basicNodeFromContext(recordXorNode.node, NodeKind.Record));
+            {
+                const record: ParserContext.Node = recordXorNode.node;
+                const node: TNode = {
+                    kind: NodeKind.Record,
+                    maybePositionStart:
+                        record.maybeTokenStart !== undefined ? record.maybeTokenStart.positionStart : undefined,
+                    maybePositionEnd: undefined,
+                };
+                state.result.nodes.push(node);
+            }
             break;
 
         default:
@@ -482,35 +536,4 @@ function nodesOnCsvFromCsvArray(
     }
 
     return result;
-}
-
-function basicNodeFromAst(astNode: Ast.TNode, kind: NodeKind): TNode {
-    const tokenRange: Ast.TokenRange = astNode.tokenRange;
-    return {
-        kind,
-        maybePositionStart: tokenRange.positionStart,
-        maybePositionEnd: tokenRange.positionEnd,
-    };
-}
-
-function basicNodeFromContext(contextNode: ParserContext.Node, kind: NodeKind): TNode {
-    return {
-        kind,
-        maybePositionStart:
-            contextNode.maybeTokenStart !== undefined ? contextNode.maybeTokenStart.positionStart : undefined,
-        maybePositionEnd: undefined,
-    };
-}
-
-function basicNodeFromXorNode(xorNode: NodeIdMap.TXorNode, kind: NodeKind): TNode {
-    switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
-            return basicNodeFromAst(xorNode.node, kind);
-
-        case NodeIdMap.XorNodeKind.Context:
-            return basicNodeFromContext(xorNode.node, kind);
-
-        default:
-            throw isNever(xorNode);
-    }
 }
