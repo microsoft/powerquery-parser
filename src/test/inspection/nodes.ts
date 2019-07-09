@@ -322,6 +322,99 @@ describe(`Inspection`, () => {
             });
         });
 
+        describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
+            it(`|foo`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`f|oo`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`foo`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`foo|`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`foo`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`|@foo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`@|foo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`@foo`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`@f|oo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`@foo`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`@foo|`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`@foo`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+        });
+
         describe(`${Ast.NodeKind.InvokeExpression} (Ast & ParserContext)`, () => {
             // it(`abc123 foo(x, y|)`, () => {
             //     const text: string = `foo(x, y)`;
@@ -832,78 +925,6 @@ describe(`Inspection`, () => {
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`];
                 expectParserErrScopeEqual(text, position, expected);
-            });
-        });
-
-        describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
-            it(`|foo`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`f|oo`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
-                const expected: ReadonlyArray<string> = [`foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`foo|`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 3,
-                };
-                const expected: ReadonlyArray<string> = [`foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`|@foo`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`@|foo`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
-                const expected: ReadonlyArray<string> = [`@foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`@f|oo`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 2,
-                };
-                const expected: ReadonlyArray<string> = [`@foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`@foo|`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 4,
-                };
-                const expected: ReadonlyArray<string> = [`@foo`];
-                expectParserOkScopeEqual(text, position, expected);
             });
         });
 
