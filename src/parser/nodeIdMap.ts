@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserContext } from ".";
-import { CommonError, isNever, Option } from "../common";
+import { CommonError, Option } from "../common";
 
 export const enum XorNodeKind {
     Ast = "Ast",
@@ -98,6 +98,15 @@ export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAtt
     return maybeChildXorNode;
 }
 
+// Both Ast.TNode and ParserContext.Node store an attribute index,
+// which when not undefined represents which child index they are under for their parent.
+//
+// This function grabs the parent and if they have a child matching the attribute index it is returned as an XorNode.
+// If the parent doesn't have a matching child that means (assuming a valid attributeIndex is given) the parent is
+// a ParserContext.Node which failed to fully parse all of their attributes.
+//
+// An optional array of Ast.NodeKind can be given for validation purposes.
+// If the child's node kind isn't in the given array, then an exception is thrown.
 export function maybeChildByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
@@ -130,23 +139,6 @@ export function maybeChildByAttributeIndex(
     }
 
     return undefined;
-}
-
-export function maybeCastToAstNode<T>(xorNode: TXorNode, nodeKind: Ast.NodeKind): Option<T & Ast.TNode> {
-    if (xorNode.node.kind !== nodeKind) {
-        return undefined;
-    }
-
-    switch (xorNode.kind) {
-        case XorNodeKind.Ast:
-            return (xorNode.node as unknown) as T & Ast.TNode;
-
-        case XorNodeKind.Context:
-            return undefined;
-
-        default:
-            throw isNever(xorNode);
-    }
 }
 
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
@@ -194,8 +186,10 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
         contextNodeById.set(key, { ...value });
     });
     return {
+        // Ast.TNode is readonly so a shallow copy should be safe
         astNodeById: new Map(nodeIdMapCollection.astNodeById.entries()),
         contextNodeById,
+        // Shallow copies of Map<number, number. is safe
         childIdsById: new Map(nodeIdMapCollection.childIdsById.entries()),
         parentIdById: new Map(nodeIdMapCollection.parentIdById.entries()),
     };
