@@ -330,14 +330,10 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
     }
     const sectionMemberArrayXorNode: NodeIdMap.TXorNode = maybeSectionMemberArrayXorNode;
 
-    const maybeSectionMemberXorNodes: Option<ReadonlyArray<NodeIdMap.TXorNode>> = NodeIdMap.maybeXorChildren(
+    const sectionMemberXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMap.expectXorChildren(
         nodeIdMapCollection,
         sectionMemberArrayXorNode.node.id,
     );
-    if (maybeSectionMemberXorNodes === undefined) {
-        return;
-    }
-    const sectionMemberXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = maybeSectionMemberXorNodes;
 
     for (const sectionMember of sectionMemberXorNodes) {
         const request: NodeIdMap.MultipleChildByAttributeIndexRequest = {
@@ -464,14 +460,10 @@ function nodesOnCsvFromCsvArray(
     nodeIdMapCollection: NodeIdMap.Collection,
     csvArrayXorNode: NodeIdMap.TXorNode,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    const maybeCsvXorNodes: Option<ReadonlyArray<NodeIdMap.TXorNode>> = NodeIdMap.maybeXorChildren(
+    const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMap.expectXorChildren(
         nodeIdMapCollection,
         csvArrayXorNode.node.id,
     );
-    if (maybeCsvXorNodes === undefined) {
-        return [];
-    }
-    const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = maybeCsvXorNodes;
 
     const result: NodeIdMap.TXorNode[] = [];
     for (const csvXorNode of csvXorNodes) {

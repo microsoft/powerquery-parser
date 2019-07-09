@@ -166,16 +166,6 @@ export function maybeChildByAttributeIndex(
     return undefined;
 }
 
-export function maybeXorChildren(nodeIdMapCollection: Collection, parentId: number): Option<ReadonlyArray<TXorNode>> {
-    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
-    if (maybeChildIds === undefined) {
-        return undefined;
-    }
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
-    return expectXorNodes(nodeIdMapCollection, childIds);
-}
-
 export function maybeCastToAstNode<T>(xorNode: TXorNode, nodeKind: Ast.NodeKind): Option<T & Ast.TNode> {
     if (xorNode.node.kind !== nodeKind) {
         return undefined;
@@ -233,6 +223,16 @@ export function expectXorNodes(
 
 export function expectChildIds(childIdsById: ChildIdsById, nodeId: number): ReadonlyArray<number> {
     return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
+}
+
+export function expectXorChildren(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<TXorNode> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
+    if (maybeChildIds === undefined) {
+        return [];
+    }
+    const childIds: ReadonlyArray<number> = maybeChildIds;
+
+    return expectXorNodes(nodeIdMapCollection, childIds);
 }
 
 export function deepCopyCollection(nodeIdMapCollection: Collection): Collection {
