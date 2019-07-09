@@ -231,6 +231,76 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
 
         inspectIdentifierExpression(state, argXorNode);
     }
+
+    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
+    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
+    let maybeName: Option<string>;
+    if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
+        const nodeIdMapColletion: NodeIdMap.Collection = state.nodeIdMapCollection;
+
+        // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
+        const recursiveArrayXorNode: NodeIdMap.TXorNode = NodeIdMap.expectParentXorNode(
+            nodeIdMapColletion,
+            invokeExprXorNode.node.id,
+        );
+        const recursiveExprXorNode: NodeIdMap.TXorNode = NodeIdMap.expectParentXorNode(
+            nodeIdMapColletion,
+            recursiveArrayXorNode.node.id,
+        );
+        const headXorNode: NodeIdMap.TXorNode = NodeIdMap.expectChildByAttributeIndex(
+            nodeIdMapColletion,
+            recursiveExprXorNode.node.id,
+            0,
+            undefined,
+        );
+        if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+            if (headXorNode.kind !== NodeIdMap.XorNodeKind.Ast) {
+                const details: {} = {
+                    identifierExpressionNodeId: headXorNode.node.id,
+                    invokeExpressionNodeId: invokeExprXorNode.node.id,
+                };
+                throw new CommonError.InvariantError(
+                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                    details,
+                );
+            }
+
+            const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
+            maybeName =
+                identifierExpression.maybeInclusiveConstant === undefined
+                    ? identifierExpression.identifier.literal
+                    : identifierExpression.maybeInclusiveConstant.literal + identifierExpression.identifier.literal;
+        }
+
+        let maybePositionStart: Option<TokenPosition>;
+        let maybePositionEnd: Option<TokenPosition>;
+        switch (invokeExprXorNode.kind) {
+            case NodeIdMap.XorNodeKind.Ast: {
+                const tokenRange: Ast.TokenRange = invokeExprXorNode.node.tokenRange;
+                maybePositionStart = tokenRange.positionStart;
+                maybePositionEnd = tokenRange.positionEnd;
+                break;
+            }
+
+            case NodeIdMap.XorNodeKind.Context: {
+                const eachExpr: ParserContext.Node = invokeExprXorNode.node;
+                maybePositionStart =
+                    eachExpr.maybeTokenStart !== undefined ? eachExpr.maybeTokenStart.positionStart : undefined;
+                maybePositionEnd = undefined;
+                break;
+            }
+
+            default:
+                throw isNever(invokeExprXorNode);
+        }
+
+        state.result.nodes.push({
+            kind: NodeKind.InvokeExpression,
+            maybePositionEnd,
+            maybePositionStart,
+            maybeName,
+        });
+    }
 }
 
 function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXorNode): void {
