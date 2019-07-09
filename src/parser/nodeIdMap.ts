@@ -70,41 +70,7 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
-export function maybeNthChild(nodeIdMapCollection: Collection, parentId: number, childIndex: number): Option<TXorNode> {
-    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
-    if (maybeChildIds === undefined) {
-        return undefined;
-    }
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
-    if (childIndex >= childIds.length) {
-        return undefined;
-    }
-
-    return expectXorNode(nodeIdMapCollection, childIds[childIndex]);
-}
-
-export function maybeChildByKind(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    nodeKind: Ast.NodeKind,
-): Option<TXorNode> {
-    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
-    if (maybeChildIds === undefined) {
-        return undefined;
-    }
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
-    for (const childId of childIds) {
-        const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
-        if (xorNode.node.kind === nodeKind) {
-            return xorNode;
-        }
-    }
-
-    return undefined;
-}
-
+// Helper function for Repeatedly calling maybeChildByAttributeIndex.
 export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
     const firstDrilldown: FirstDrilldown = request.firstDrilldown;
@@ -183,19 +149,6 @@ export function maybeCastToAstNode<T>(xorNode: TXorNode, nodeKind: Ast.NodeKind)
     }
 }
 
-export function expectCastToAstNode<T>(xorNode: TXorNode, nodeKind: Ast.NodeKind): T & Ast.TNode {
-    const maybeAstNode: Option<T & Ast.TNode> = maybeCastToAstNode(xorNode, nodeKind);
-    if (maybeAstNode === undefined) {
-        const details: {} = {
-            expected: nodeKind,
-            actual: xorNode.node.kind,
-        };
-        throw new CommonError.InvariantError(`expected xorNode.node.kind to be ${nodeKind}`, details);
-    }
-
-    return maybeAstNode;
-}
-
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
 }
@@ -242,7 +195,7 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
     });
     return {
         astNodeById: new Map(nodeIdMapCollection.astNodeById.entries()),
-        contextNodeById: contextNodeById,
+        contextNodeById,
         childIdsById: new Map(nodeIdMapCollection.childIdsById.entries()),
         parentIdById: new Map(nodeIdMapCollection.parentIdById.entries()),
     };
