@@ -2137,7 +2137,7 @@ export class Parser {
     private endContext(astNode: Ast.TNode): void {
         if (this.maybeCurrentContextNode === undefined) {
             throw new CommonError.InvariantError(
-                "maybeContextNode should be truthy, can't end context if it doesn't exist.",
+                "maybeContextNode should be truthy, can't end a context if it doesn't exist.",
             );
         }
 
@@ -2153,7 +2153,7 @@ export class Parser {
         if (maybeNodeId === undefined) {
             if (this.maybeCurrentContextNode === undefined) {
                 throw new CommonError.InvariantError(
-                    "maybeContextNode should be truthy, can't end context if it doesn't exist.",
+                    "maybeContextNode should be truthy, can't delete a context if it doesn't exist.",
                 );
             } else {
                 const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;

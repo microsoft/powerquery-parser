@@ -172,7 +172,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     const maybeParentId: Option<number> = parentIdById.get(nodeId);
     const maybeChildIds: Option<ReadonlyArray<number>> = childIdsById.get(nodeId);
 
-    // Not a leaf Node.
+    // Not a leaf node.
     if (maybeChildIds !== undefined) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
         if (childIds.length !== 1) {
@@ -183,9 +183,8 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
             throw new CommonError.InvariantError(`childIds.length !== 0`, details);
         }
         const childId: number = childIds[0];
-        // const childNode: Node = isSome(contextNodeById.get(childId), `contextNodeById.get(childId)`, { childId });
 
-        // Not a leaf Node, is the Root node.
+        // Not a leaf node, is the Root node.
         // Promote the child to the root if it's a Context node.
         if (maybeParentId === undefined) {
             const maybeChildContext: Option<Node> = contextNodeById.get(childId);
@@ -194,7 +193,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
                 state.root.maybeNode = childContext;
             }
         }
-        // Not a leaf Node, not the Root node.
+        // Not a leaf node, not the Root node.
         // Replace the node from the list of children under the node's parent using the node's child
         else {
             const parentId: number = maybeParentId;
@@ -206,20 +205,21 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         const mutableChildXorNode: TypeUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
         mutableChildXorNode.maybeAttributeIndex = node.maybeAttributeIndex;
     }
-    // Is a leaf Node, not root Node.
+    // Is a leaf node, not root node.
     // Delete the node from the list of children under the node's parent.
     else if (maybeParentId) {
         const parentId: number = maybeParentId;
         removeOrReplaceChildId(nodeIdMapCollection, parentId, nodeId, undefined);
     }
-    // Else is root Node, is Leaf Node.
+    // Else is root node, is leaf node.
     // No children updates need to be taken.
 
-    // Remove Node from existence.
+    // Remove the node from existence.
     contextNodeById.delete(nodeId);
     childIdsById.delete(nodeId);
     parentIdById.delete(nodeId);
 
+    // Return the node's parent if it exits
     return maybeParentId !== undefined ? NodeIdMap.expectContextNode(contextNodeById, maybeParentId) : undefined;
 }
 
