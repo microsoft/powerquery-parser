@@ -5,20 +5,15 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
 import { Option, ResultKind } from "../../common";
-import { Lexer, LexerSnapshot, TokenPosition, TriedLexerSnapshot } from "../../lexer";
+import { NodeKind, TNode } from "../../inspection";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { Ast, Parser, ParserError } from "../../parser";
-
-type AbridgedNode = ReadonlyArray<[Inspection.NodeKind, Option<TokenPosition>]>;
 
 type AbridgedScope = ReadonlyArray<string>;
 
 interface AbridgedInspection {
-    readonly abridgedNode: AbridgedNode;
+    readonly nodes: ReadonlyArray<TNode>;
     readonly scope: AbridgedScope;
-}
-
-function abridgedNodeFrom(inspection: Inspection.Inspected): AbridgedNode {
-    return inspection.nodes.map(node => [node.kind, node.maybePositionStart]);
 }
 
 function abridgedScopeFrom(inspection: Inspection.Inspected): AbridgedScope {
@@ -27,7 +22,7 @@ function abridgedScopeFrom(inspection: Inspection.Inspected): AbridgedScope {
 
 function abridgedInspectionFrom(inspection: Inspection.Inspected): AbridgedInspection {
     return {
-        abridgedNode: abridgedNodeFrom(inspection),
+        nodes: inspection.nodes,
         scope: abridgedScopeFrom(inspection),
     };
 }
@@ -69,32 +64,40 @@ function expectParseOk(text: string): Parser.ParseOk {
     return triedParse.value;
 }
 
-function expectParseOkAbridgedNodesEqual(text: string, position: Inspection.Position, expected: AbridgedNode): void {
+function expectParseOkAbridgedNodesEqual(
+    text: string,
+    position: Inspection.Position,
+    expected: ReadonlyArray<TNode>,
+): void {
     const parseOk: Parser.ParseOk = expectParseOk(text);
     const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
         position,
         parseOk.nodeIdMapCollection,
         parseOk.leafNodeIds,
     );
-    expectAbridgedNodesEqual(triedInspect, expected);
+    expectNodesEqual(triedInspect, expected);
 }
 
-function expectParseErrAbridgedNodesEqual(text: string, position: Inspection.Position, expected: AbridgedNode): void {
+function expectParseErrAbridgedNodesEqual(
+    text: string,
+    position: Inspection.Position,
+    expected: ReadonlyArray<TNode>,
+): void {
     const parserError: ParserError.ParserError = expectParseErr(text);
     const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
         position,
         parserError.context.nodeIdMapCollection,
         parserError.context.leafNodeIds,
     );
-    expectAbridgedNodesEqual(triedInspect, expected);
+    expectNodesEqual(triedInspect, expected);
 }
 
-function expectAbridgedNodesEqual(triedInspect: Inspection.TriedInspect, expected: AbridgedNode): void {
+function expectNodesEqual(triedInspect: Inspection.TriedInspect, expected: ReadonlyArray<TNode>): void {
     if (!(triedInspect.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok: ${triedInspect.error.message}`);
     }
     const inspection: Inspection.Inspected = triedInspect.value;
-    const actual: AbridgedNode = inspection.nodes.map(node => [node.kind, node.maybePositionStart]);
+    const actual: ReadonlyArray<TNode> = inspection.nodes;
 
     expect(actual).deep.equal(expected);
 }
@@ -177,7 +180,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 0,
                 };
                 const expected: AbridgedInspection = {
-                    abridgedNode: [],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -190,15 +193,20 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    abridgedNode: [
-                        [
-                            Inspection.NodeKind.EachExpression,
-                            {
+                    nodes: [
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 0,
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
-                                codeUnit: 0,
                             },
-                        ],
+                            maybePositionEnd: {
+                                codeUnit: 6,
+                                lineCodeUnit: 6,
+                                lineNumber: 0,
+                            },
+                        },
                     ],
                     scope: [`_`],
                 };
@@ -212,7 +220,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 0,
                 };
                 const expected: AbridgedInspection = {
-                    abridgedNode: [],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -225,15 +233,16 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    abridgedNode: [
-                        [
-                            Inspection.NodeKind.EachExpression,
-                            {
+                    nodes: [
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 0,
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
-                                codeUnit: 0,
                             },
-                        ],
+                            maybePositionEnd: undefined,
+                        },
                     ],
                     scope: [`_`],
                 };
@@ -247,23 +256,33 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 11,
                 };
                 const expected: AbridgedInspection = {
-                    abridgedNode: [
-                        [
-                            Inspection.NodeKind.EachExpression,
-                            {
+                    nodes: [
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 5,
                                 lineCodeUnit: 5,
                                 lineNumber: 0,
-                                codeUnit: 5,
                             },
-                        ],
-                        [
-                            Inspection.NodeKind.EachExpression,
-                            {
+                            maybePositionEnd: {
+                                codeUnit: 11,
+                                lineCodeUnit: 11,
+                                lineNumber: 0,
+                            },
+                        },
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 0,
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
-                                codeUnit: 0,
                             },
-                        ],
+                            maybePositionEnd: {
+                                codeUnit: 11,
+                                lineCodeUnit: 11,
+                                lineNumber: 0,
+                            },
+                        },
                     ],
                     scope: [`_`],
                 };
@@ -277,28 +296,45 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 9,
                 };
                 const expected: AbridgedInspection = {
-                    abridgedNode: [
-                        [
-                            Inspection.NodeKind.EachExpression,
-                            {
+                    nodes: [
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 5,
                                 lineCodeUnit: 5,
                                 lineNumber: 0,
-                                codeUnit: 5,
                             },
-                        ],
-                        [
-                            Inspection.NodeKind.EachExpression,
-                            {
+                            maybePositionEnd: undefined,
+                        },
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 0,
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
-                                codeUnit: 0,
                             },
-                        ],
+                            maybePositionEnd: undefined,
+                        },
                     ],
                     scope: [`_`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
+        });
+
+        describe(`${Ast.NodeKind.InvokeExpression} (Ast & ParserContext)`, () => {
+            // it(`abc123 foo(x, y|)`, () => {
+            //     const text: string = `foo(x, y)`;
+            //     const position: Inspection.Position = {
+            //         lineNumber: 0,
+            //         lineCodeUnit: 8,
+            //     };
+            //     const expected: AbridgedInspection = {
+            //         nodes: [],
+            //         scope: [],
+            //     };
+            //     expectParseOkAbridgedInspectionEqual(text, position, expected);
+            // });
         });
 
         describe(`${Ast.NodeKind.ListExpression} (Ast & ParserContext)`, () => {
@@ -308,7 +344,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 0,
                 };
-                const expected: AbridgedNode = [];
+                const expected: ReadonlyArray<TNode> = [];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
 
@@ -318,15 +354,20 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: {
+                            codeUnit: 3,
+                            lineCodeUnit: 3,
+                            lineNumber: 0,
+                        },
+                    },
                 ];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
@@ -337,15 +378,20 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 2,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: {
+                            codeUnit: 3,
+                            lineCodeUnit: 3,
+                            lineNumber: 0,
+                        },
+                    },
                 ];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
@@ -356,7 +402,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 3,
                 };
-                const expected: AbridgedNode = [];
+                const expected: ReadonlyArray<TNode> = [];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
 
@@ -366,7 +412,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 0,
                 };
-                const expected: AbridgedNode = [];
+                const expected: ReadonlyArray<TNode> = [];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
 
@@ -376,15 +422,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: undefined,
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -395,15 +442,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: undefined,
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -414,15 +462,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 2,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: undefined,
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -433,23 +482,33 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 2,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 1,
                             lineCodeUnit: 1,
                             lineNumber: 0,
-                            codeUnit: 1,
                         },
-                    ],
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                        maybePositionEnd: {
+                            codeUnit: 4,
+                            lineCodeUnit: 4,
+                            lineNumber: 0,
+                        },
+                    },
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: {
+                            codeUnit: 5,
+                            lineCodeUnit: 5,
+                            lineNumber: 0,
+                        },
+                    },
                 ];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
@@ -460,23 +519,25 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 2,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionEnd: undefined,
+                        maybePositionStart: {
+                            codeUnit: 1,
                             lineCodeUnit: 1,
                             lineNumber: 0,
-                            codeUnit: 1,
                         },
-                    ],
-                    [
-                        Inspection.NodeKind.List,
-                        {
+                    },
+                    {
+                        kind: NodeKind.List,
+                        maybePositionEnd: undefined,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -489,7 +550,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 0,
                 };
-                const expected: AbridgedNode = [];
+                const expected: ReadonlyArray<TNode> = [];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
 
@@ -499,15 +560,20 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: {
+                            codeUnit: 5,
+                            lineCodeUnit: 5,
+                            lineNumber: 0,
+                        },
+                    },
                 ];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
@@ -518,15 +584,20 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 4,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: {
+                            codeUnit: 5,
+                            lineCodeUnit: 5,
+                            lineNumber: 0,
+                        },
+                    },
                 ];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
@@ -537,7 +608,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 5,
                 };
-                const expected: AbridgedNode = [];
+                const expected: ReadonlyArray<TNode> = [];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
 
@@ -547,7 +618,7 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 0,
                 };
-                const expected: AbridgedNode = [];
+                const expected: ReadonlyArray<TNode> = [];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
 
@@ -557,15 +628,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 1,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: undefined,
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -576,15 +648,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 3,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: undefined,
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -595,15 +668,16 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 4,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: undefined,
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -614,23 +688,33 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 4,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 3,
                             lineCodeUnit: 3,
                             lineNumber: 0,
-                            codeUnit: 3,
                         },
-                    ],
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                        maybePositionEnd: {
+                            codeUnit: 9,
+                            lineCodeUnit: 9,
+                            lineNumber: 0,
+                        },
+                    },
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: {
+                            codeUnit: 10,
+                            lineCodeUnit: 10,
+                            lineNumber: 0,
+                        },
+                    },
                 ];
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
@@ -641,23 +725,25 @@ describe(`Inspection`, () => {
                     lineNumber: 0,
                     lineCodeUnit: 4,
                 };
-                const expected: AbridgedNode = [
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 3,
                             lineCodeUnit: 3,
                             lineNumber: 0,
-                            codeUnit: 3,
                         },
-                    ],
-                    [
-                        Inspection.NodeKind.Record,
-                        {
+                        maybePositionEnd: undefined,
+                    },
+                    {
+                        kind: NodeKind.Record,
+                        maybePositionStart: {
+                            codeUnit: 0,
                             lineCodeUnit: 0,
                             lineNumber: 0,
-                            codeUnit: 0,
                         },
-                    ],
+                        maybePositionEnd: undefined,
+                    },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
             });
@@ -665,78 +751,6 @@ describe(`Inspection`, () => {
     });
 
     describe(`Scope`, () => {
-        describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
-            it(`|foo`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`f|oo`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
-                const expected: ReadonlyArray<string> = [`foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`foo|`, () => {
-                const text: string = `foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 3,
-                };
-                const expected: ReadonlyArray<string> = [`foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`|@foo`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`@|foo`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
-                const expected: ReadonlyArray<string> = [`@foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`@f|oo`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 2,
-                };
-                const expected: ReadonlyArray<string> = [`@foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`@foo|`, () => {
-                const text: string = `@foo`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 4,
-                };
-                const expected: ReadonlyArray<string> = [`@foo`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-        });
-
         describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
             it(`|(x) => z`, () => {
                 const text: string = `(x) => z`;
@@ -818,6 +832,78 @@ describe(`Inspection`, () => {
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`];
                 expectParserErrScopeEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
+            it(`|foo`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`f|oo`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: ReadonlyArray<string> = [`foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`foo|`, () => {
+                const text: string = `foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 3,
+                };
+                const expected: ReadonlyArray<string> = [`foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`|@foo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: ReadonlyArray<string> = [];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`@|foo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: ReadonlyArray<string> = [`@foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`@f|oo`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: ReadonlyArray<string> = [`@foo`];
+                expectParserOkScopeEqual(text, position, expected);
+            });
+
+            it(`@foo|`, () => {
+                const text: string = `@foo`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 4,
+                };
+                const expected: ReadonlyArray<string> = [`@foo`];
+                expectParserOkScopeEqual(text, position, expected);
             });
         });
 
