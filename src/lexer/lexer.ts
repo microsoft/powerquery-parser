@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { LexerError } from ".";
 import {
     CommonError,
     isNever,
@@ -10,9 +11,8 @@ import {
     Pattern,
     Result,
     ResultKind,
-    StringHelpers,
+    StringUtils,
 } from "../common";
-import * as LexerError from "./error";
 import { Keyword } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
@@ -361,8 +361,8 @@ function lineFrom(text: string, lineTerminator: string, lineModeStart: LineMode)
     };
 }
 
-function graphemePositionFrom(text: string, lineNumber: number, lineCodeUnit: number): StringHelpers.GraphemePosition {
-    return StringHelpers.graphemePositionFrom(text, lineCodeUnit, lineNumber, undefined);
+function graphemePositionFrom(text: string, lineNumber: number, lineCodeUnit: number): StringUtils.GraphemePosition {
+    return StringUtils.graphemePositionFrom(text, lineCodeUnit, lineNumber, undefined);
 }
 
 function rangeFrom(line: TLine, lineNumber: number): Range {
@@ -833,11 +833,7 @@ function drainWhitespace(text: string, position: number): number {
     let continueDraining: boolean = text[position] !== undefined;
 
     while (continueDraining) {
-        const maybeLength: Option<number> = StringHelpers.maybeRegexMatchLength(
-            Pattern.RegExpWhitespace,
-            text,
-            position,
-        );
+        const maybeLength: Option<number> = StringUtils.maybeRegexMatchLength(Pattern.RegExpWhitespace, text, position);
         if (maybeLength) {
             position += maybeLength;
         } else {
@@ -1026,7 +1022,7 @@ function readRestOfLine(lineTokenKind: LineTokenKind, text: string, positionStar
 }
 
 function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): Option<number> {
-    const maybeLength: Option<number> = StringHelpers.maybeRegexMatchLength(pattern, text, positionStart);
+    const maybeLength: Option<number> = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 
