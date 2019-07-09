@@ -3,7 +3,7 @@
 
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
-import { CommonError, Option, Pattern } from ".";
+import { CommonError, Option } from ".";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
@@ -52,19 +52,6 @@ export function graphemePositionFrom(
         columnNumber: columnNumberFrom(text, lineCodeUnit),
         maybeCodeUnit,
     };
-}
-
-export function maybeNewlineKindAt(text: string, index: number): Option<NewlineKind> {
-    if (maybeRegexMatchLength(Pattern.RegExpNewline, text, index)) {
-        // test for CARRIAGE RETURN + LINE FEED
-        if (text[index] === "\r" && text[index + 1] === "\n") {
-            return NewlineKind.DoubleCharacter;
-        } else {
-            return NewlineKind.SingleCharacter;
-        }
-    } else {
-        return undefined;
-    }
 }
 
 export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): Option<number> {
