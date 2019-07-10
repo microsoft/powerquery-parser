@@ -3,11 +3,11 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../..";
-import { Option, ResultKind } from "../../common";
-import { NodeKind, TNode } from "../../inspection";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { Ast, Parser, ParserError } from "../../parser";
+import { Inspection } from "..";
+import { Option, ResultKind } from "../common";
+import { NodeKind, TNode } from "../inspection";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
+import { Ast, Parser, ParserError } from "../parser";
 
 type AbridgedScope = ReadonlyArray<string>;
 
