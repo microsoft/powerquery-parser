@@ -977,6 +977,89 @@ describe(`Inspection`, () => {
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
         });
+
+        describe(`${Ast.NodeKind.SectionMember} (Ast)`, () => {
+            it(`s|ection foo; x = 1; y = 2;`, () => {
+                const text: string = `section foo; x = 1; y = 2;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1|; y = 2;`, () => {
+                const text: string = `section foo; x = 1; y = 2;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 18,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`],
+                };
+
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1; y = 2;|`, () => {
+                const text: string = `section foo; x = 1; y = 2;|`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 26,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`, `y`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
+            it(`s|ection foo; x = 1; y = 2`, () => {
+                const text: string = `section foo; x = 1; y = 2`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 1,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1|; y = 2`, () => {
+                const text: string = `section foo; x = 1; y = 2`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 18,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1; y = 2|`, () => {
+                const text: string = `section foo; x = 1; y = 2|`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 25,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`, `y`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+        });
     });
 
     describe(`Scope`, () => {
@@ -1030,70 +1113,6 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 8,
                 };
                 const expected: ReadonlyArray<string> = [`x`, `y`, `foo`];
-                expectParserErrScopeEqual(text, position, expected);
-            });
-        });
-
-        describe(`${Ast.NodeKind.SectionMember} (Ast)`, () => {
-            it(`s|ection foo; x = 1; y = 2;`, () => {
-                const text: string = `section foo; x = 1; y = 2;`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`section foo; x = 1|; y = 2;`, () => {
-                const text: string = `section foo; x = 1; y = 2;`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 18,
-                };
-                const expected: ReadonlyArray<string> = [`x`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`section foo; x = 1; y = 2;|`, () => {
-                const text: string = `section foo; x = 1; y = 2;|`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 26,
-                };
-                const expected: ReadonlyArray<string> = [`x`, `y`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-        });
-
-        describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
-            it(`s|ection foo; x = 1; y = 2`, () => {
-                const text: string = `section foo; x = 1; y = 2`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserErrScopeEqual(text, position, expected);
-            });
-
-            it(`section foo; x = 1|; y = 2`, () => {
-                const text: string = `section foo; x = 1; y = 2`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 18,
-                };
-                const expected: ReadonlyArray<string> = [`x`];
-                expectParserErrScopeEqual(text, position, expected);
-            });
-
-            it(`section foo; x = 1; y = 2|`, () => {
-                const text: string = `section foo; x = 1; y = 2|`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 25,
-                };
-                const expected: ReadonlyArray<string> = [`x`, `y`];
                 expectParserErrScopeEqual(text, position, expected);
             });
         });
