@@ -753,21 +753,21 @@ describe(`Inspection`, () => {
                     nodes: [
                         {
                             kind: NodeKind.List,
-                            maybePositionEnd: undefined,
                             maybePositionStart: {
                                 codeUnit: 1,
                                 lineCodeUnit: 1,
                                 lineNumber: 0,
                             },
+                            maybePositionEnd: undefined,
                         },
                         {
                             kind: NodeKind.List,
-                            maybePositionEnd: undefined,
                             maybePositionStart: {
                                 codeUnit: 0,
                                 lineCodeUnit: 0,
                                 lineNumber: 0,
                             },
+                            maybePositionEnd: undefined,
                         },
                     ],
                     scope: [],
