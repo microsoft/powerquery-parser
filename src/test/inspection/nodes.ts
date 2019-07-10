@@ -134,7 +134,7 @@ function expectAbridgedInspectionEqual(triedInspect: Inspection.TriedInspect, ex
 
 describe(`Inspection`, () => {
     describe(`Nodes`, () => {
-        describe(`${Ast.NodeKind.EachExpression} (Ast & ParserContext)`, () => {
+        describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
             it(`|each 1`, () => {
                 const text: string = `each 1`;
                 const position: Inspection.Position = {
@@ -175,6 +175,40 @@ describe(`Inspection`, () => {
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
 
+            it(`each each|`, () => {
+                const text: string = `each each`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 9,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 5,
+                                lineCodeUnit: 5,
+                                lineNumber: 0,
+                            },
+                            maybePositionEnd: undefined,
+                        },
+                        {
+                            kind: NodeKind.EachExpression,
+                            maybePositionStart: {
+                                codeUnit: 0,
+                                lineCodeUnit: 0,
+                                lineNumber: 0,
+                            },
+                            maybePositionEnd: undefined,
+                        },
+                    ],
+                    scope: [`_`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.EachExpression} (ParserContext)`, () => {
             it(`|each`, () => {
                 const text: string = `each`;
                 const position: Inspection.Position = {
@@ -249,38 +283,6 @@ describe(`Inspection`, () => {
                     scope: [`_`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
-            });
-
-            it(`each each|`, () => {
-                const text: string = `each each`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 9,
-                };
-                const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 5,
-                                lineCodeUnit: 5,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
-                    scope: [`_`],
-                };
-                expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
         });
 
@@ -485,7 +487,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.InvokeExpression} (Ast & ParserContext)`, () => {
+        describe(`${Ast.NodeKind.InvokeExpression} (TODO)`, () => {
             // it(`abc123 foo(x, y|)`, () => {
             //     const text: string = `foo(x, y)`;
             //     const position: Inspection.Position = {
