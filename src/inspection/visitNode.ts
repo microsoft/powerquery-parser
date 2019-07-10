@@ -209,6 +209,16 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         throw expectedNodeKindError(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
     }
 
+    // Check if position is on closeWrapperConstant (')').
+    // The check isn't needed for a context node as the final attribute is the closeWrapperConstant,
+    // and as it's a context node it hasn't parsed all attributes.
+    if (invokeExprXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        const invokeExpr: Ast.InvokeExpression = invokeExprXorNode.node as Ast.InvokeExpression;
+        if (isTokenPositionOnPosition(invokeExpr.closeWrapperConstant.tokenRange.positionEnd, state.position)) {
+            return;
+        }
+    }
+
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,

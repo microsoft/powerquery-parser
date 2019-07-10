@@ -497,6 +497,48 @@ describe(`Inspection`, () => {
             };
             expectParseOkAbridgedInspectionEqual(text, position, expected);
         });
+
+        it(`foo(x, y)|`, () => {
+            const text: string = `foo(x, y)`;
+            const position: Inspection.Position = {
+                lineNumber: 0,
+                lineCodeUnit: 9,
+            };
+            const expected: AbridgedInspection = {
+                nodes: [],
+                scope: [`foo`],
+            };
+            expectParseOkAbridgedInspectionEqual(text, position, expected);
+        });
+
+        it(`[x](x|)`, () => {
+            const text: string = `[x](x)`;
+            const position: Inspection.Position = {
+                lineNumber: 0,
+                lineCodeUnit: 5,
+            };
+            const expected: AbridgedInspection = {
+                nodes: [
+                    {
+                        kind: NodeKind.InvokeExpression,
+
+                        maybePositionStart: {
+                            codeUnit: 3,
+                            lineCodeUnit: 3,
+                            lineNumber: 0,
+                        },
+                        maybePositionEnd: {
+                            codeUnit: 6,
+                            lineCodeUnit: 6,
+                            lineNumber: 0,
+                        },
+                        maybeName: undefined,
+                    },
+                ],
+                scope: [`x`],
+            };
+            expectParseOkAbridgedInspectionEqual(text, position, expected);
+        });
     });
 
     describe(`${Ast.NodeKind.InvokeExpression} (ParserContext)`, () => {
