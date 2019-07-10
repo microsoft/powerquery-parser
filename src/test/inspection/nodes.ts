@@ -322,6 +322,114 @@ describe(`Inspection`, () => {
             });
         });
 
+        describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
+            it(`|(x) => z`, () => {
+                const text: string = `(x) => z`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(x|, y) => z`, () => {
+                const text: string = `(x, y) => z`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(x, y)| => z`, () => {
+                const text: string = `(x, y) => z`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 6,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`, `y`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(x, y) => z|`, () => {
+                const text: string = `(x, y) => z`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 11,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`z`, `x`, `y`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
+            it(`|(x) =>`, () => {
+                const text: string = `(x) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 0,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(x|, y) =>`, () => {
+                const text: string = `(x, y) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`z`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(x, y)| =>`, () => {
+                const text: string = `(x, y) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 6,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`, `y`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(x, y) =>|`, () => {
+                const text: string = `(x, y) =>`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 9,
+                };
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`x`, `y`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+        });
+
         describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
             it(`|foo`, () => {
                 const text: string = `foo`;
@@ -430,7 +538,7 @@ describe(`Inspection`, () => {
             // });
         });
 
-        describe(`${Ast.NodeKind.ListExpression} (Ast & ParserContext)`, () => {
+        describe(`${Ast.NodeKind.ListExpression} (Ast)`, () => {
             it(`|{1}`, () => {
                 const text: string = `{1}`;
                 const position: Inspection.Position = {
@@ -499,6 +607,45 @@ describe(`Inspection`, () => {
                 expectParseOkAbridgedNodesEqual(text, position, expected);
             });
 
+            it(`{{|1}}`, () => {
+                const text: string = `{{1}}`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 2,
+                };
+                const expected: ReadonlyArray<TNode> = [
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 1,
+                            lineCodeUnit: 1,
+                            lineNumber: 0,
+                        },
+                        maybePositionEnd: {
+                            codeUnit: 4,
+                            lineCodeUnit: 4,
+                            lineNumber: 0,
+                        },
+                    },
+                    {
+                        kind: NodeKind.List,
+                        maybePositionStart: {
+                            codeUnit: 0,
+                            lineCodeUnit: 0,
+                            lineNumber: 0,
+                        },
+                        maybePositionEnd: {
+                            codeUnit: 5,
+                            lineCodeUnit: 5,
+                            lineNumber: 0,
+                        },
+                    },
+                ];
+                expectParseOkAbridgedNodesEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.ListExpression} (ParserContext)`, () => {
             it(`|{1`, () => {
                 const text: string = `{1`;
                 const position: Inspection.Position = {
@@ -567,43 +714,6 @@ describe(`Inspection`, () => {
                     },
                 ];
                 expectParseErrAbridgedNodesEqual(text, position, expected);
-            });
-
-            it(`{{|1}}`, () => {
-                const text: string = `{{1}}`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 2,
-                };
-                const expected: ReadonlyArray<TNode> = [
-                    {
-                        kind: NodeKind.List,
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
-                        maybePositionEnd: {
-                            codeUnit: 4,
-                            lineCodeUnit: 4,
-                            lineNumber: 0,
-                        },
-                    },
-                    {
-                        kind: NodeKind.List,
-                        maybePositionStart: {
-                            codeUnit: 0,
-                            lineCodeUnit: 0,
-                            lineNumber: 0,
-                        },
-                        maybePositionEnd: {
-                            codeUnit: 5,
-                            lineCodeUnit: 5,
-                            lineNumber: 0,
-                        },
-                    },
-                ];
-                expectParseOkAbridgedNodesEqual(text, position, expected);
             });
 
             it(`{{|1`, () => {
@@ -844,90 +954,6 @@ describe(`Inspection`, () => {
     });
 
     describe(`Scope`, () => {
-        describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
-            it(`|(x) => z`, () => {
-                const text: string = `(x) => z`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`(x|, y) => z`, () => {
-                const text: string = `(x, y) => z`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 2,
-                };
-                const expected: ReadonlyArray<string> = [`x`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`(x, y)| => z`, () => {
-                const text: string = `(x, y) => z`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 6,
-                };
-                const expected: ReadonlyArray<string> = [`x`, `y`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-
-            it(`(x, y) => z|`, () => {
-                const text: string = `(x, y) => z`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 11,
-                };
-                const expected: ReadonlyArray<string> = [`z`, `x`, `y`];
-                expectParserOkScopeEqual(text, position, expected);
-            });
-        });
-
-        describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
-            it(`|(x) =>`, () => {
-                const text: string = `(x) =>`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 0,
-                };
-                const expected: ReadonlyArray<string> = [];
-                expectParserErrScopeEqual(text, position, expected);
-            });
-
-            it(`(x|, y) =>`, () => {
-                const text: string = `(x, y) =>`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 2,
-                };
-                const expected: ReadonlyArray<string> = [`x`];
-                expectParserErrScopeEqual(text, position, expected);
-            });
-
-            it(`(x, y)| =>`, () => {
-                const text: string = `(x, y) =>`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 6,
-                };
-                const expected: ReadonlyArray<string> = [`x`, `y`];
-                expectParserErrScopeEqual(text, position, expected);
-            });
-
-            it(`(x, y) =>|`, () => {
-                const text: string = `(x, y) =>`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 9,
-                };
-                const expected: ReadonlyArray<string> = [`x`, `y`];
-                expectParserErrScopeEqual(text, position, expected);
-            });
-        });
-
         describe(`${Ast.NodeKind.InvokeExpression} (Ast)`, () => {
             it(`|foo(x)`, () => {
                 const text: string = `foo(x)`;
