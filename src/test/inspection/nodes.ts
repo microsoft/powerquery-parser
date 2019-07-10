@@ -511,8 +511,8 @@ describe(`Inspection`, () => {
             expectParseOkAbridgedInspectionEqual(text, position, expected);
         });
 
-        it(`[x](x|)`, () => {
-            const text: string = `[x](x)`;
+        it(`[x](y|)`, () => {
+            const text: string = `[x](y)`;
             const position: Inspection.Position = {
                 lineNumber: 0,
                 lineCodeUnit: 5,
@@ -535,7 +535,7 @@ describe(`Inspection`, () => {
                         maybeName: undefined,
                     },
                 ],
-                scope: [`x`],
+                scope: [`y`],
             };
             expectParseOkAbridgedInspectionEqual(text, position, expected);
         });
@@ -570,8 +570,8 @@ describe(`Inspection`, () => {
                             lineCodeUnit: 3,
                             lineNumber: 0,
                         },
-                        maybePositionEnd: undefined,
                         maybeName: "foo",
+                        maybePositionEnd: undefined,
                     },
                 ],
                 scope: [`y`, `x`, `foo`],
@@ -579,26 +579,27 @@ describe(`Inspection`, () => {
             expectParseErrAbridgedInspectionEqual(text, position, expected);
         });
 
-        it(`foo(x, y|,`, () => {
-            const text: string = `foo(x, y,`;
+        it(`[x](y|`, () => {
+            const text: string = `[x](y`;
             const position: Inspection.Position = {
                 lineNumber: 0,
-                lineCodeUnit: 8,
+                lineCodeUnit: 5,
             };
             const expected: AbridgedInspection = {
                 nodes: [
                     {
                         kind: NodeKind.InvokeExpression,
+
                         maybePositionStart: {
                             codeUnit: 3,
                             lineCodeUnit: 3,
                             lineNumber: 0,
                         },
                         maybePositionEnd: undefined,
-                        maybeName: "foo",
+                        maybeName: undefined,
                     },
                 ],
-                scope: [`x`, `y`, `foo`],
+                scope: [`y`],
             };
             expectParseErrAbridgedInspectionEqual(text, position, expected);
         });
