@@ -219,29 +219,6 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         }
     }
 
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
-        state.nodeIdMapCollection,
-        invokeExprXorNode.node.id,
-        1,
-        [Ast.NodeKind.CsvArray],
-    );
-    if (maybeCsvArrayXorNode === undefined) {
-        return;
-    }
-    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
-
-    const argXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = nodesOnCsvFromCsvArray(
-        state.nodeIdMapCollection,
-        csvArrayXorNode,
-    );
-    for (const argXorNode of argXorNodes) {
-        if (argXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
-            continue;
-        }
-
-        inspectIdentifierExpression(state, argXorNode);
-    }
-
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
     let maybeName: Option<string>;
@@ -281,36 +258,65 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
                     ? identifierExpression.identifier.literal
                     : identifierExpression.maybeInclusiveConstant.literal + identifierExpression.identifier.literal;
         }
+    }
 
-        let maybePositionStart: Option<TokenPosition>;
-        let maybePositionEnd: Option<TokenPosition>;
-        switch (invokeExprXorNode.kind) {
-            case NodeIdMap.XorNodeKind.Ast: {
-                const tokenRange: Ast.TokenRange = invokeExprXorNode.node.tokenRange;
-                maybePositionStart = tokenRange.positionStart;
-                maybePositionEnd = tokenRange.positionEnd;
-                break;
-            }
-
-            case NodeIdMap.XorNodeKind.Context: {
-                const eachExpr: ParserContext.Node = invokeExprXorNode.node;
-                maybePositionStart =
-                    eachExpr.maybeTokenStart !== undefined ? eachExpr.maybeTokenStart.positionStart : undefined;
-                maybePositionEnd = undefined;
-                break;
-            }
-
-            default:
-                throw isNever(invokeExprXorNode);
+    let maybePositionStart: Option<TokenPosition>;
+    let maybePositionEnd: Option<TokenPosition>;
+    switch (invokeExprXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const tokenRange: Ast.TokenRange = invokeExprXorNode.node.tokenRange;
+            maybePositionStart = tokenRange.positionStart;
+            maybePositionEnd = tokenRange.positionEnd;
+            break;
         }
 
+        case NodeIdMap.XorNodeKind.Context: {
+            const invokeExpr: ParserContext.Node = invokeExprXorNode.node;
+            maybePositionStart =
+                invokeExpr.maybeTokenStart !== undefined ? invokeExpr.maybeTokenStart.positionStart : undefined;
+            maybePositionEnd = undefined;
+            break;
+        }
+
+        default:
+            throw isNever(invokeExprXorNode);
+    }
+
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        invokeExprXorNode.node.id,
+        1,
+        [Ast.NodeKind.CsvArray],
+    );
+    if (maybeCsvArrayXorNode === undefined) {
         state.result.nodes.push({
             kind: NodeKind.InvokeExpression,
             maybePositionEnd,
             maybePositionStart,
             maybeName,
         });
+        return;
     }
+    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+
+    const argXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = nodesOnCsvFromCsvArray(
+        state.nodeIdMapCollection,
+        csvArrayXorNode,
+    );
+    for (const argXorNode of argXorNodes) {
+        if (argXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
+            continue;
+        }
+
+        inspectIdentifierExpression(state, argXorNode);
+    }
+
+    state.result.nodes.push({
+        kind: NodeKind.InvokeExpression,
+        maybePositionEnd,
+        maybePositionStart,
+        maybeName,
+    });
 }
 
 function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXorNode): void {
