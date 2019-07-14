@@ -282,6 +282,8 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
             throw isNever(invokeExprXorNode);
     }
 
+    // Grab arguments if they exist.
+    // If they do not, return where maybeArguments is undefined.
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
@@ -294,6 +296,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
             maybePositionEnd,
             maybePositionStart,
             maybeName,
+            maybeArguments: undefined,
         });
         return;
     }
@@ -303,12 +306,36 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         state.nodeIdMapCollection,
         csvArrayXorNode,
     );
-    for (const argXorNode of argXorNodes) {
-        if (argXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
-            continue;
+
+    const position: Position = state.position;
+    let positionArgumentIndex: Option<number>;
+
+    const numArguments: number = argXorNodes.length;
+    for (let index: number = 0; index < numArguments; index += 1) {
+        const argXorNode: NodeIdMap.TXorNode = argXorNodes[index];
+        if (argXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+            inspectIdentifierExpression(state, argXorNode);
         }
 
-        inspectIdentifierExpression(state, argXorNode);
+        switch (argXorNode.kind) {
+            case NodeIdMap.XorNodeKind.Ast:
+                if (isTokenPositionOnOrBeforeBeforePostion(argXorNode.node.tokenRange.positionEnd, position)) {
+                    positionArgumentIndex = index;
+                }
+                break;
+
+            case NodeIdMap.XorNodeKind.Context:
+                positionArgumentIndex = index;
+                break;
+
+            default:
+                throw isNever(argXorNode);
+        }
+    }
+
+    if (positionArgumentIndex === undefined) {
+        const details: {} = { invokeExprId: invokeExprXorNode.node.id };
+        throw new CommonError.InvariantError(`couldn't find the argument index that position is on`, details);
     }
 
     state.result.nodes.push({
@@ -316,6 +343,15 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         maybePositionEnd,
         maybePositionStart,
         maybeName,
+        maybeArguments: {
+            // Handles off-by-one errors in the case of `foo(|`.
+            // Assumes only the last XorNode might be a ParserContext.Node
+            numArguments:
+                argXorNodes[argXorNodes.length - 1].kind === NodeIdMap.XorNodeKind.Context
+                    ? numArguments - 1
+                    : numArguments,
+            positionArgumentIndex,
+        },
     });
 }
 
