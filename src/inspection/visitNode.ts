@@ -356,7 +356,7 @@ function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXo
             if (isTokenPositionOnPosition(list.closeWrapperConstant.tokenRange.positionEnd, position)) {
                 return;
             }
-            if (isInTokenRange(position, tokenRange)) {
+            if (isPositionOnTokenRange(position, tokenRange)) {
                 const node: TNode = {
                     kind: NodeKind.List,
                     maybePositionStart: tokenRange.positionStart,
@@ -413,7 +413,7 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
             if (isTokenPositionOnPosition(record.closeWrapperConstant.tokenRange.positionEnd, position)) {
                 return;
             }
-            if (isInTokenRange(position, tokenRange)) {
+            if (isPositionOnTokenRange(position, tokenRange)) {
                 const node: TNode = {
                     kind: NodeKind.Record,
                     maybePositionStart: tokenRange.positionStart,
@@ -556,30 +556,6 @@ function isParentOfNodeKind(
 
         default:
             throw isNever(parent);
-    }
-}
-
-function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
-    const tokenRangePositionStart: TokenPosition = tokenRange.positionStart;
-    const tokenRangePositionEnd: TokenPosition = tokenRange.positionEnd;
-
-    if (
-        position.lineNumber < tokenRangePositionStart.lineNumber ||
-        position.lineNumber > tokenRangePositionEnd.lineNumber
-    ) {
-        return false;
-    } else if (
-        position.lineNumber === tokenRangePositionStart.lineNumber &&
-        position.lineCodeUnit < tokenRangePositionStart.lineCodeUnit
-    ) {
-        return false;
-    } else if (
-        position.lineNumber === tokenRangePositionEnd.lineNumber &&
-        position.lineCodeUnit >= tokenRangePositionEnd.lineCodeUnit
-    ) {
-        return false;
-    } else {
-        return true;
     }
 }
 
