@@ -344,7 +344,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         maybePositionStart,
         maybeName,
         maybeArguments: {
-            // Handles off-by-one errors in the case of `foo(|`.
+            // Handles off-by-one errors due to trailing ParserContext.Node, eg. `foo(|`.
             // Assumes only the last XorNode might be a ParserContext.Node
             numArguments:
                 argXorNodes[argXorNodes.length - 1].kind === NodeIdMap.XorNodeKind.Context
