@@ -283,7 +283,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
     }
 
     // Grab arguments if they exist.
-    // If they do not, return where maybeArguments is undefined.
+    // If they do not, return a Node where maybeArguments is undefined.
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
