@@ -317,19 +317,8 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
             inspectIdentifierExpression(state, argXorNode);
         }
 
-        switch (argXorNode.kind) {
-            case NodeIdMap.XorNodeKind.Ast:
-                if (isTokenPositionOnOrBeforeBeforePostion(argXorNode.node.tokenRange.positionEnd, position)) {
-                    positionArgumentIndex = index;
-                }
-                break;
-
-            case NodeIdMap.XorNodeKind.Context:
-                positionArgumentIndex = index;
-                break;
-
-            default:
-                throw isNever(argXorNode);
+        if (isPositionOnXorNode(position, argXorNode, true)) {
+            positionArgumentIndex = index;
         }
     }
 
@@ -603,6 +592,43 @@ function isTokenPositionBeforePostion(tokenPosition: TokenPosition, position: Po
         tokenPosition.lineNumber < position.lineNumber ||
         (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
     );
+}
+
+function isPositionOnXorNode(position: Position, xorNode: NodeIdMap.TXorNode, isContextNodeTruthy: boolean): boolean {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return isPositionOnTokenRange(position, xorNode.node.tokenRange);
+
+        case NodeIdMap.XorNodeKind.Context:
+            if (!isContextNodeTruthy) {
+                throw new CommonError.InvariantError(`todo?`);
+            } else {
+                return true;
+            }
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
+function isPositionOnTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
+    const tokenRangeStart: TokenPosition = tokenRange.positionStart;
+    if (
+        tokenRangeStart.lineNumber < position.lineNumber ||
+        (tokenRangeStart.lineNumber === position.lineNumber && tokenRangeStart.lineCodeUnit > position.lineCodeUnit)
+    ) {
+        return false;
+    }
+
+    const tokenRangeEnd: TokenPosition = tokenRange.positionEnd;
+    if (
+        tokenRangeEnd.lineNumber > position.lineNumber ||
+        (tokenRangeEnd.lineNumber === position.lineNumber && tokenRangeEnd.lineCodeUnit < position.lineCodeUnit)
+    ) {
+        return false;
+    }
+
+    return true;
 }
 
 function isTokenPositionOnOrBeforeBeforePostion(tokenPosition: TokenPosition, position: Position): boolean {

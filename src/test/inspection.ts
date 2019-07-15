@@ -619,7 +619,7 @@ describe(`Inspection`, () => {
             expectParseErrAbridgedInspectionEqual(text, position, expected);
         });
 
-        it(`[x](y|`, () => {
+        it(`abc123 [x](y|`, () => {
             const text: string = `[x](y`;
             const position: Inspection.Position = {
                 lineNumber: 0,

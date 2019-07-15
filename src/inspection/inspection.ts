@@ -19,6 +19,7 @@ export type TriedInspect = Traverse.TriedTraverse<Inspected>;
 
 export interface State extends Traverse.IState<Inspected> {
     maybePreviousXorNode: Option<NodeIdMap.TXorNode>;
+    maybeOnIdentifier: Option<Ast.Identifier | Ast.IdentifierExpression | Ast.GeneralizedIdentifier>;
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -54,6 +55,7 @@ export function tryFrom(
             scope: new Map(),
         },
         maybePreviousXorNode: undefined,
+        maybeOnIdentifier: undefined,
         position,
         nodeIdMapCollection,
         leafNodeIds,
