@@ -6,17 +6,21 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 ## How to use
 
-A minimal example can be found in [example.ts](src/example.ts) which uses the `tryLexAndParse` function located in [src/jobs.ts](src/jobs.ts).
+A few minimal code samples can be found in [example.ts](src/example.ts).
+
+If you're planning on parsing static documents then you should use the `tryLexAndParse` function located in [src/jobs.ts](src/jobs.ts). This function attempts to lex a document, pass the results to the parser, and then return the outcome.
+
+If you're planning to perform repeated lexing and parses, such as being a part of a Visual Studi Code extension, then for performance reasons you should avoid the `tryLexAndParse` helper function. Instead you should create a Lexer instance and as your text changes update the lexer using the public APIs located in [src/lexer/lexer.ts](src/lexer/lexer.ts). Once you need to parse the document follow the same steps in `src/jobs.ts`; create a LexerSnapshot and pass the result to the parser.
 
 ## Things to note
 
-### Language Specification
+### Parser
 
-The Power Query/M language has an [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) which was used. A few differences were found between the specification used (October 2016) and by the internal parser. These differences are were marked down in [spec/notes.md](spec/notes.md)
+The parser is a rather naive recursive descent parser with limited backtracking. It mostly follows [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [spec/notes.md](spec/notes.md)
 
-### Error Handling
+### Style
 
-The project tries avoiding using `try/catch` blocks. Instead it prefers to use the `Result` type to carry exceptions between boundaries, and `Option` for explicit nullability. This means library users should assume public functions won't throw an uncaught exception.
+This project uses [prettier](https://github.com/prettier/prettier) as the primary source of style enforcement. Additional style requirements are located in [style.md](style.md).
 
 ## How to build
 
