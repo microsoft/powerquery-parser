@@ -16,7 +16,7 @@ If you're planning to perform repeated lexing and parses, such as being a part o
 
 ### Parser
 
-The parser is a rather naive recursive descent parser with limited backtracking. It mostly follows [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [spec/notes.md](spec/notes.md)
+The parser is a rather naive recursive descent parser with limited backtracking. It mostly follows [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md)
 
 ### Style
 
