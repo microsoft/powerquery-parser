@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { isNever, StringHelpers } from "../common";
+import { isNever, StringUtils } from "../common";
 import { Option } from "../common/option";
 import { Lexer, LexerError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
@@ -76,7 +76,7 @@ export function lexerEndOfStream(): string {
     return `The lexer reached end-of-stream.`;
 }
 
-export function lexerExpected(graphemePosition: StringHelpers.GraphemePosition, kind: LexerError.ExpectedKind): string {
+export function lexerExpected(graphemePosition: StringUtils.GraphemePosition, kind: LexerError.ExpectedKind): string {
     switch (kind) {
         case LexerError.ExpectedKind.HexLiteral:
             return `Expected hex literal on line ${graphemePosition.lineNumber}, column ${
@@ -102,20 +102,20 @@ export function lexerErrorLineMap(errorLineMap: Lexer.ErrorLineMap): string {
     return `Error on line(s): ${[...errorLineMap.keys()]}`;
 }
 
-export function lexerUnexpectedEof(graphemePosition: StringHelpers.GraphemePosition): string {
+export function lexerUnexpectedEof(graphemePosition: StringUtils.GraphemePosition): string {
     return `Reached EOF while attempting to lex on line ${graphemePosition.lineNumber}, column ${
         graphemePosition.columnNumber
     }.`;
 }
 
-export function lexerUnexpectedRead(graphemePosition: StringHelpers.GraphemePosition): string {
+export function lexerUnexpectedRead(graphemePosition: StringUtils.GraphemePosition): string {
     return `Unexpected read while attempting to lex on line ${graphemePosition.lineNumber}, column ${
         graphemePosition.columnNumber
     }.`;
 }
 
 export function lexerUnterminatedMultilineToken(
-    graphemePosition: StringHelpers.GraphemePosition,
+    graphemePosition: StringUtils.GraphemePosition,
     kind: LexerError.UnterminatedMultilineTokenKind,
 ): string {
     switch (kind) {
@@ -157,14 +157,14 @@ export function parserExpectedTokenKind(
 
 export function parserInvalidLiteralValue(
     currentTokenData: string,
-    positionStart: StringHelpers.GraphemePosition,
+    positionStart: StringUtils.GraphemePosition,
 ): string {
     return `Expected to find a literal on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }, but ${currentTokenData} was found instead.`;
 }
 
-export function parserInvalidPrimitiveType(token: Token, positionStart: StringHelpers.GraphemePosition): string {
+export function parserInvalidPrimitiveType(token: Token, positionStart: StringUtils.GraphemePosition): string {
     return `Expected to find a primitive literal on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }, but ${token.data} was found instead.`;
@@ -186,7 +186,7 @@ export function parserExpectedAnyTokenKind(
     }
 }
 
-export function parserRequiredParameterAfterOptionalParameter(positionStart: StringHelpers.GraphemePosition): string {
+export function parserRequiredParameterAfterOptionalParameter(positionStart: StringUtils.GraphemePosition): string {
     return `Cannot have a non-optional parameter after an optional parameter. Line ${
         positionStart.lineNumber
     }, column ${positionStart.columnNumber}.`;
@@ -196,17 +196,17 @@ export function parserUnexpectedEndOfTokens(nodeKindOnStack: Ast.NodeKind): stri
     return `Reached end of tokens while attempting to parse ${nodeKindOnStack}.`;
 }
 
-export function parserUnterminatedBracket(positionStart: StringHelpers.GraphemePosition): string {
+export function parserUnterminatedBracket(positionStart: StringUtils.GraphemePosition): string {
     return `Unterminated bracket starting on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}.`;
 }
 
-export function parserUnterminatedParentheses(positionStart: StringHelpers.GraphemePosition): string {
+export function parserUnterminatedParentheses(positionStart: StringUtils.GraphemePosition): string {
     return `Unterminated parentheses starting on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }.`;
 }
 
-export function parserUnusedTokensRemain(positionStart: StringHelpers.GraphemePosition): string {
+export function parserUnusedTokensRemain(positionStart: StringUtils.GraphemePosition): string {
     return `Finished parsing, but more tokens remain starting on line ${positionStart.lineNumber}, column ${
         positionStart.columnNumber
     }.`;

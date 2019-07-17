@@ -14,7 +14,6 @@ export class Parser {
     public constructor(
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
-        private nodeIdCounter: number = 0,
         private contextState: ParserContext.State = ParserContext.empty(),
         private maybeCurrentContextNode: Option<ParserContext.Node> = undefined,
     ) {
@@ -96,20 +95,18 @@ export class Parser {
         this.startContext(nodeKind);
 
         const maybeLiteralAttributes: Option<Ast.RecordLiteral> = this.maybeReadLiteralAttributes();
+        this.incrementAttributeCounterIfUndefined(maybeLiteralAttributes);
         const sectionConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordSection);
 
         let maybeName: Option<Ast.Identifier>;
         if (this.isOnTokenKind(TokenKind.Identifier)) {
             maybeName = this.readIdentifier();
+        } else {
+            this.incrementAttributeCounter();
         }
 
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
-
-        const totalTokens: number = this.lexerSnapshot.tokens.length;
-        const sectionMembers: Ast.SectionMember[] = [];
-        while (this.tokenIndex < totalTokens) {
-            sectionMembers.push(this.readSectionMember());
-        }
+        const sectionMembers: Ast.SectionMemberArray = this.readSectionMembers();
 
         const astNode: Ast.Section = {
             ...this.expectContextNodeMetadata(),
@@ -126,12 +123,35 @@ export class Parser {
     }
 
     // sub-item of 12.2.2 Section Documents
+    private readSectionMembers(): Ast.SectionMemberArray {
+        const nodeKind: Ast.NodeKind.SectionMemberArray = Ast.NodeKind.SectionMemberArray;
+        this.startContext(nodeKind);
+
+        const totalTokens: number = this.lexerSnapshot.tokens.length;
+        const sectionMembers: Ast.SectionMember[] = [];
+        while (this.tokenIndex < totalTokens) {
+            sectionMembers.push(this.readSectionMember());
+        }
+
+        const astNode: Ast.SectionMemberArray = {
+            ...this.expectContextNodeMetadata(),
+            kind: nodeKind,
+            isLeaf: false,
+            elements: sectionMembers,
+        };
+        this.endContext(astNode);
+        return astNode;
+    }
+
+    // sub-item of 12.2.2 Section Documents
     private readSectionMember(): Ast.SectionMember {
         const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
         this.startContext(nodeKind);
 
         const maybeLiteralAttributes: Option<Ast.RecordLiteral> = this.maybeReadLiteralAttributes();
+        this.incrementAttributeCounterIfUndefined(maybeLiteralAttributes);
         const maybeSharedConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.KeywordShared);
+        this.incrementAttributeCounterIfUndefined(maybeSharedConstant);
         const namePairedExpression: Ast.IdentifierPairedExpression = this.readIdentifierPairedExpression();
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
 
@@ -276,14 +296,16 @@ export class Parser {
             const nodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
             this.startContext(nodeKind);
 
-            const expressions: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
+            const expressions: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
+            const unaryArrayNodeKind: Ast.NodeKind.UnaryExpressionHelperArray = Ast.NodeKind.UnaryExpressionHelperArray;
+            this.startContext(unaryArrayNodeKind);
 
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
                 this.startContext(helperNodeKind);
 
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
-                const expression: Ast.UnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
+                const expression: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     isLeaf: false,
@@ -298,11 +320,22 @@ export class Parser {
                 maybeOperator = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
             }
 
+            const unaryArray: Ast.IArrayHelper<
+                Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>,
+                Ast.NodeKind.UnaryExpressionHelperArray
+            > = {
+                ...this.expectContextNodeMetadata(),
+                kind: unaryArrayNodeKind,
+                isLeaf: false,
+                elements: expressions,
+            };
+            this.endContext(unaryArray);
+
             const astNode: Ast.UnaryExpression = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: false,
-                expressions,
+                expressions: unaryArray,
             };
             this.endContext(astNode);
             return astNode;
@@ -453,6 +486,7 @@ export class Parser {
         this.startContext(nodeKind);
 
         const maybeInclusiveConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.AtSign);
+        this.incrementAttributeCounterIfUndefined(maybeInclusiveConstant);
         const identifier: Ast.Identifier = this.readIdentifier();
 
         const astNode: Ast.IdentifierExpression = {
@@ -497,10 +531,10 @@ export class Parser {
     // 12.2.3.16 Invoke expression
     private readInvokeExpression(): Ast.InvokeExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightParenthesis);
-        return this.readWrapped<Ast.NodeKind.InvokeExpression, ReadonlyArray<Ast.ICsv<Ast.TExpression>>>(
+        return this.readWrapped<Ast.NodeKind.InvokeExpression, Ast.InvokeExpression["content"]>(
             Ast.NodeKind.InvokeExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftParenthesis),
-            () => this.readCsv(() => this.readExpression(), continueReadingValues),
+            () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightParenthesis),
             false,
         );
@@ -509,10 +543,10 @@ export class Parser {
     // 12.2.3.17 List expression
     private readListExpression(): Ast.ListExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        return this.readWrapped<Ast.NodeKind.ListExpression, ReadonlyArray<Ast.ICsv<Ast.TExpression>>>(
+        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ListExpression["content"]>(
             Ast.NodeKind.ListExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
-            () => this.readCsv(() => this.readExpression(), continueReadingValues),
+            () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
             false,
         );
@@ -521,10 +555,7 @@ export class Parser {
     // 12.2.3.18 Record expression
     private readRecordExpression(): Ast.RecordExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBracket);
-        return this.readWrapped<
-            Ast.NodeKind.RecordExpression,
-            ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>>
-        >(
+        return this.readWrapped<Ast.NodeKind.RecordExpression, Ast.RecordExpression["content"]>(
             Ast.NodeKind.RecordExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
             () => this.readGeneralizedIdentifierPairedExpressions(continueReadingValues),
@@ -551,10 +582,10 @@ export class Parser {
 
     // sub-item of 12.2.3.20 Field access expressions
     private readFieldProjection(): Ast.FieldProjection {
-        return this.readWrapped<Ast.NodeKind.FieldProjection, ReadonlyArray<Ast.ICsv<Ast.FieldSelector>>>(
+        return this.readWrapped<Ast.NodeKind.FieldProjection, Ast.FieldProjection["content"]>(
             Ast.NodeKind.FieldProjection,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
-            () => this.readCsv(() => this.readFieldSelector(false), true),
+            () => this.readCsvArray(() => this.readFieldSelector(false), true),
             () => this.readTokenKindAsConstant(TokenKind.RightBracket),
             true,
         );
@@ -580,6 +611,7 @@ export class Parser {
             this.maybeReadAsNullablePrimitiveType(),
         );
         const maybeFunctionReturnType: Option<Ast.AsNullablePrimitiveType> = this.maybeReadAsNullablePrimitiveType();
+        this.incrementAttributeCounterIfUndefined(maybeFunctionReturnType);
         const fatArrowConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.FatArrow);
         const expression: Ast.TExpression = this.readExpression();
 
@@ -611,8 +643,8 @@ export class Parser {
         this.startContext(nodeKind);
 
         const letConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordLet);
-        const identifierExpressionPairedExpressions: ReadonlyArray<
-            Ast.ICsv<Ast.IdentifierPairedExpression>
+        const identifierExpressionPairedExpressions: Ast.ICsvArray<
+            Ast.IdentifierPairedExpression
         > = this.readIdentifierPairedExpressions(true);
         const inConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.KeywordIn);
         const expression: Ast.TExpression = this.readExpression();
@@ -799,6 +831,9 @@ export class Parser {
         let continueReadingValues: boolean = true;
         let maybeOpenRecordMarkerConstant: Option<Ast.Constant> = undefined;
 
+        const fieldArrayNodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
+        this.startContext(fieldArrayNodeKind);
+
         while (continueReadingValues) {
             if (this.isOnTokenKind(TokenKind.Ellipsis)) {
                 if (allowOpenMarker) {
@@ -821,11 +856,17 @@ export class Parser {
                 const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadIdentifierConstantAsConstant(
                     Ast.IdentifierConstant.Optional,
                 );
+                this.incrementAttributeCounterIfUndefined(maybeOptionalConstant);
+
                 const name: Ast.GeneralizedIdentifier = this.readGeneralizedIdentifier();
+
                 const maybeFieldTypeSpeification: Option<
                     Ast.FieldTypeSpecification
                 > = this.maybeReadFieldTypeSpecification();
+                this.incrementAttributeCounterIfUndefined(maybeFieldTypeSpeification);
+
                 const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
+                this.incrementAttributeCounterIfUndefined(maybeCommaConstant);
                 continueReadingValues = maybeCommaConstant !== undefined;
 
                 const field: Ast.FieldSpecification = {
@@ -852,6 +893,14 @@ export class Parser {
             }
         }
 
+        const fieldArray: Ast.ICsvArray<Ast.FieldSpecification> = {
+            ...this.expectContextNodeMetadata(),
+            kind: fieldArrayNodeKind,
+            elements: fields,
+            isLeaf: false,
+        };
+        this.endContext((fieldArray as unknown) as Ast.TCsvArray);
+
         const rightBracketConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightBracket);
 
         const astNode: Ast.FieldSpecificationList = {
@@ -859,7 +908,7 @@ export class Parser {
             kind: nodeKind,
             isLeaf: false,
             openWrapperConstant: leftBracketConstant,
-            content: fields,
+            content: fieldArray,
             maybeOpenRecordMarkerConstant,
             closeWrapperConstant: rightBracketConstant,
         };
@@ -948,6 +997,7 @@ export class Parser {
             () => this.readTokenKindAsConstant(TokenKind.KeywordOtherwise),
             () => this.readExpression(),
         );
+        this.incrementAttributeCounterIfUndefined(maybeOtherwiseExpression);
 
         const astNode: Ast.ErrorHandlingExpression = {
             ...this.expectContextNodeMetadata(),
@@ -972,12 +1022,9 @@ export class Parser {
 
     private readRecordLiteral(): Ast.RecordLiteral {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBracket);
-        const wrappedRead: Ast.IWrapped<
+        const wrappedRead: Ast.IWrapped<Ast.NodeKind.RecordLiteral, Ast.RecordLiteral["content"]> = this.readWrapped<
             Ast.NodeKind.RecordLiteral,
-            ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>
-        > = this.readWrapped<
-            Ast.NodeKind.RecordLiteral,
-            ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>>
+            Ast.RecordLiteral["content"]
         >(
             Ast.NodeKind.RecordLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBracket),
@@ -993,8 +1040,8 @@ export class Parser {
 
     private readFieldNamePairedAnyLiterals(
         continueReadingValues: boolean,
-    ): ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedAnyLiteral>> {
-        return this.readCsv(
+    ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
+        return this.readCsvArray(
             () =>
                 this.readKeyValuePair<
                     Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
@@ -1011,13 +1058,13 @@ export class Parser {
 
     private readListLiteral(): Ast.ListLiteral {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        const wrappedRead: Ast.IWrapped<
+        const wrappedRead: Ast.IWrapped<Ast.NodeKind.ListLiteral, Ast.ListLiteral["content"]> = this.readWrapped<
             Ast.NodeKind.ListLiteral,
-            ReadonlyArray<Ast.ICsv<Ast.TAnyLiteral>>
-        > = this.readWrapped<Ast.NodeKind.ListLiteral, ReadonlyArray<Ast.ICsv<Ast.TAnyLiteral>>>(
+            Ast.ListLiteral["content"]
+        >(
             Ast.NodeKind.ListLiteral,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
-            () => this.readCsv(() => this.readAnyLiteral(), continueReadingValues),
+            () => this.readCsvArray(() => this.readAnyLiteral(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
             false,
         );
@@ -1045,13 +1092,18 @@ export class Parser {
         let continueReadingValues: boolean = !this.isOnTokenKind(TokenKind.RightParenthesis);
         let reachedOptionalParameter: boolean = false;
 
+        const paramaterArrayNodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
+        this.startContext(paramaterArrayNodeKind);
+
         const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
         while (continueReadingValues) {
             this.startContext(Ast.NodeKind.Csv);
             this.startContext(Ast.NodeKind.Parameter);
+
             const maybeOptionalConstant: Option<Ast.Constant> = this.maybeReadIdentifierConstantAsConstant(
                 Ast.IdentifierConstant.Optional,
             );
+            this.incrementAttributeCounterIfUndefined(maybeOptionalConstant);
 
             if (reachedOptionalParameter && !maybeOptionalConstant) {
                 const token: Token = this.expectTokenAt(this.tokenIndex);
@@ -1064,7 +1116,10 @@ export class Parser {
             }
 
             const name: Ast.Identifier = this.readIdentifier();
+
             const maybeParameterType: T & Ast.TParameterType = typeReader();
+            this.incrementAttributeCounterIfUndefined(maybeParameterType);
+
             const parameter: Ast.IParameter<T & Ast.TParameterType> = {
                 ...this.expectContextNodeMetadata(),
                 kind: Ast.NodeKind.Parameter,
@@ -1076,6 +1131,7 @@ export class Parser {
             this.endContext(parameter);
 
             const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
+            this.incrementAttributeCounterIfUndefined(maybeCommaConstant);
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const csv: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>> = {
@@ -1090,6 +1146,14 @@ export class Parser {
             parameters.push(csv);
         }
 
+        const parameterArray: Ast.ICsvArray<Ast.IParameter<T & Ast.TParameterType>> = {
+            ...this.expectContextNodeMetadata(),
+            kind: paramaterArrayNodeKind,
+            elements: parameters,
+            isLeaf: false,
+        };
+        this.endContext((parameterArray as unknown) as Ast.TCsvArray);
+
         const rightParenthesisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightParenthesis);
 
         const astNode: Ast.IParameterList<T & Ast.TParameterType> = {
@@ -1097,7 +1161,7 @@ export class Parser {
             kind: nodeKind,
             isLeaf: false,
             openWrapperConstant: leftParenthesisConstant,
-            content: parameters,
+            content: parameterArray,
             closeWrapperConstant: rightParenthesisConstant,
         };
         this.endContext(astNode);
@@ -1179,7 +1243,7 @@ export class Parser {
 
         // Update start positions for recursive primary expression context
         const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-        const mutableContext: TypeUtils.Writable<ParserContext.Node> = currentContextNode;
+        const mutableContext: TypeUtils.StripReadonly<ParserContext.Node> = currentContextNode;
         // UNSAFE MARKER
         //
         // Purpose of code block:
@@ -1196,6 +1260,9 @@ export class Parser {
 
         // Begin normal parsing behavior.
         const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
+        const recursiveArrayNodeKind: Ast.NodeKind.RecursivePrimaryExpressionArray =
+            Ast.NodeKind.RecursivePrimaryExpressionArray;
+        this.startContext(recursiveArrayNodeKind);
         let continueReadingValues: boolean = true;
 
         while (continueReadingValues) {
@@ -1227,12 +1294,20 @@ export class Parser {
             }
         }
 
+        const recursiveArray: Ast.RecursivePrimaryExpressionArray = {
+            ...this.expectContextNodeMetadata(),
+            kind: recursiveArrayNodeKind,
+            isLeaf: false,
+            elements: recursiveExpressions,
+        };
+        this.endContext(recursiveArray);
+
         const astNode: Ast.RecursivePrimaryExpression = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
             head,
-            recursiveExpressions,
+            recursiveExpressions: recursiveArray,
         };
         this.endContext(astNode);
         return astNode;
@@ -1397,14 +1472,14 @@ export class Parser {
 
     private readIdentifierPairedExpressions(
         continueReadingValues: boolean,
-    ): ReadonlyArray<Ast.ICsv<Ast.IdentifierPairedExpression>> {
-        return this.readCsv(() => this.readIdentifierPairedExpression(), continueReadingValues);
+    ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
+        return this.readCsvArray(() => this.readIdentifierPairedExpression(), continueReadingValues);
     }
 
     private readGeneralizedIdentifierPairedExpressions(
         continueReadingValues: boolean,
-    ): ReadonlyArray<Ast.ICsv<Ast.GeneralizedIdentifierPairedExpression>> {
-        return this.readCsv(() => this.readGeneralizedIdentifierPairedExpression(), continueReadingValues);
+    ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
+        return this.readCsvArray(() => this.readGeneralizedIdentifierPairedExpression(), continueReadingValues);
     }
 
     private readGeneralizedIdentifierPairedExpression(): Ast.GeneralizedIdentifierPairedExpression {
@@ -1462,7 +1537,7 @@ export class Parser {
 
     private readTokenKindAsConstant(tokenKind: TokenKind): Ast.Constant {
         const maybeConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(tokenKind);
-        if (!maybeConstant) {
+        if (maybeConstant === undefined) {
             const maybeErr: Option<ParserError.ExpectedTokenKindError> = this.expectTokenKind(tokenKind);
             if (maybeErr) {
                 throw maybeErr;
@@ -1471,8 +1546,11 @@ export class Parser {
                     expectedTokenKind: tokenKind,
                     actualTokenKind: this.maybeCurrentTokenKind,
                 };
+
                 throw new CommonError.InvariantError(
-                    "failures from maybeReadTokenKindAsConstant should be reportable by expectTokenKind",
+                    `failures from ${this.maybeReadTokenKindAsConstant.name} should be reportable by ${
+                        this.expectTokenKind.name
+                    }`,
                     details,
                 );
             }
@@ -1642,21 +1720,22 @@ export class Parser {
         }
     }
 
-    private readBinOpKeywordExpression<NodeKindVariant, L, KeywordTokenKindVariant, R>(
-        nodeKind: NodeKindVariant & Ast.TBinOpKeywordNodeKind,
+    private readBinOpKeywordExpression<Kind, L, KeywordKind, R>(
+        nodeKind: Kind & Ast.TBinOpKeywordNodeKind,
         leftExpressionReader: () => L,
-        keywordTokenKind: KeywordTokenKindVariant & TokenKind,
+        keywordTokenKind: KeywordKind & TokenKind,
         rightExpressionReader: () => R,
-    ): L | Ast.IBinOpKeyword<NodeKindVariant, L, R> {
+    ): L | Ast.IBinOpKeyword<Kind, L, R> {
         this.startContext(nodeKind);
 
         const left: L = leftExpressionReader();
         const maybeConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(keywordTokenKind);
+        this.incrementAttributeCounterIfUndefined(maybeConstant);
 
         if (maybeConstant) {
             const right: R = rightExpressionReader();
 
-            const astNode: Ast.IBinOpKeyword<NodeKindVariant, L, R> = {
+            const astNode: Ast.IBinOpKeyword<Kind, L, R> = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: false,
@@ -1689,17 +1768,19 @@ export class Parser {
         }
     }
 
-    private readBinOpExpression<NodeKindVariant, Op, Operand>(
-        nodeKind: NodeKindVariant & Ast.TBinOpExpressionNodeKind,
-        operatorFrom: (tokenKind: Option<TokenKind>) => Option<Op & Ast.TUnaryExpressionHelperOperator>,
-        operandReader: () => Operand & Ast.TNode,
-    ): Operand | Ast.IBinOpExpression<NodeKindVariant, Op, Operand> {
+    private readBinOpExpression<Kind, Op, Operand>(
+        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
+        operatorFrom: (tokenKind: Option<TokenKind>) => Option<Ast.TUnaryExpressionHelperOperator & Op>,
+        operandReader: () => Ast.TUnaryExpressionOperand & Operand,
+    ): Operand | Ast.IBinOpExpression<Kind, Op, Operand> {
         this.startContext(nodeKind);
-        const first: Operand & Ast.TNode = operandReader();
+        const first: Ast.TUnaryExpressionOperand & Operand = operandReader();
 
         let maybeOperator: Option<Op & Ast.TUnaryExpressionHelperOperator> = operatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {
-            const rest: Ast.UnaryExpressionHelper<Op, Operand>[] = [];
+            const rest: Ast.IUnaryExpressionHelper<Op, Operand>[] = [];
+            const unaryArrayNodeKind: Ast.NodeKind.UnaryExpressionHelperArray = Ast.NodeKind.UnaryExpressionHelperArray;
+            this.startContext(unaryArrayNodeKind);
 
             while (maybeOperator) {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
@@ -1707,7 +1788,7 @@ export class Parser {
 
                 const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
 
-                const helper: Ast.UnaryExpressionHelper<Op, Operand> = {
+                const helper: Ast.IUnaryExpressionHelper<Op, Operand> = {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     isLeaf: false,
@@ -1717,49 +1798,28 @@ export class Parser {
                     node: operandReader(),
                 };
                 rest.push(helper);
-                // UNSAFE MARKER
-                //
-                // Purpose of code block:
-                //      End the context started within the same function.
-                //
-                // Why are you trying to avoid a safer approach?
-                //      endContext takes an Ast.TNode, but due to generics the parser
-                //      can't prove for all types A, B, C that Ast.UnaryExpressionHelper<A, B>
-                //      results in an Ast.TNode.
-                //
-                //      The alternative approach is let the callers of readBinOpExpression
-                //      take the return and end the context themselves, which is messy.
-                //
-                // Why is it safe?
-                //      All Ast.NodeKind.UnaryExpressionHelper used by the parser are of Ast.TUnaryExpressionHelper,
-                //      a sub type of Ast.TNode.
                 this.endContext((helper as unknown) as Ast.TUnaryExpressionHelper);
                 maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
 
-            const astNode: Ast.IBinOpExpression<NodeKindVariant, Op, Operand> = {
+            const unaryArray: Ast.IArrayHelper<
+                Ast.IUnaryExpressionHelper<Op, Operand>,
+                Ast.NodeKind.UnaryExpressionHelperArray
+            > = {
+                ...this.expectContextNodeMetadata(),
+                kind: unaryArrayNodeKind,
+                isLeaf: false,
+                elements: rest,
+            };
+            this.endContext((unaryArray as unknown) as Ast.UnaryExpressionHelperArray);
+
+            const astNode: Ast.IBinOpExpression<Kind, Op, Operand> = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: false,
                 first,
-                rest,
+                rest: unaryArray,
             };
-            // UNSAFE MARKER
-            //
-            // Purpose of code block:
-            //      End the context started within the same function.
-            //
-            // Why are you trying to avoid a safer approach?
-            //      endContext takes an Ast.TNode, but due to generics the parser
-            //      can't prove for all types A, B, C that Ast.IBinOpExpression<A, B, C>
-            //      results in an Ast.TNode.
-            //
-            //      The alternative approach is let the callers of readBinOpExpression
-            //      take the return and end the context themselves, which is messy.
-            //
-            // Why is it safe?
-            //      All Ast.NodeKind.IBinOpExpression used by the parser are of Ast.TBinOpExpression,
-            //      a sub type of Ast.TNode.
             this.endContext((astNode as unknown) as Ast.TBinOpExpression);
             return astNode;
         } else {
@@ -1768,17 +1828,17 @@ export class Parser {
         }
     }
 
-    private readPairedConstant<NodeKindVariant, Paired>(
-        nodeKind: NodeKindVariant & Ast.TPairedConstantNodeKind,
+    private readPairedConstant<Kind, Paired>(
+        nodeKind: Kind & Ast.TPairedConstantNodeKind,
         constantReader: () => Ast.Constant,
         pairedReader: () => Paired,
-    ): Ast.IPairedConstant<NodeKindVariant, Paired> {
+    ): Ast.IPairedConstant<Kind, Paired> {
         this.startContext(nodeKind);
 
         const constant: Ast.Constant = constantReader();
         const paired: Paired = pairedReader();
 
-        const pairedConstant: Ast.IPairedConstant<NodeKindVariant, Paired> = {
+        const pairedConstant: Ast.IPairedConstant<Kind, Paired> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -1807,26 +1867,26 @@ export class Parser {
         return pairedConstant;
     }
 
-    private maybeReadPairedConstant<NodeKindVariant, Paired>(
-        nodeKind: NodeKindVariant & Ast.TPairedConstantNodeKind,
+    private maybeReadPairedConstant<Kind, Paired>(
+        nodeKind: Kind & Ast.TPairedConstantNodeKind,
         condition: () => boolean,
         constantReader: () => Ast.Constant,
         pairedReader: () => Paired,
-    ): Option<Ast.IPairedConstant<NodeKindVariant, Paired>> {
+    ): Option<Ast.IPairedConstant<Kind, Paired>> {
         if (condition()) {
-            return this.readPairedConstant<NodeKindVariant, Paired>(nodeKind, constantReader, pairedReader);
+            return this.readPairedConstant<Kind, Paired>(nodeKind, constantReader, pairedReader);
         } else {
             return undefined;
         }
     }
 
-    private readWrapped<NodeKindVariant, Content>(
-        nodeKind: NodeKindVariant & Ast.TWrappedNodeKind,
+    private readWrapped<Kind, Content>(
+        nodeKind: Kind & Ast.TWrappedNodeKind,
         openConstantReader: () => Ast.Constant,
         contentReader: () => Content,
         closeConstantReader: () => Ast.Constant,
         allowOptionalConstant: boolean,
-    ): WrappedRead<NodeKindVariant, Content> {
+    ): WrappedRead<Kind, Content> {
         this.startContext(nodeKind);
 
         const openWrapperConstant: Ast.Constant = openConstantReader();
@@ -1836,9 +1896,10 @@ export class Parser {
         let maybeOptionalConstant: Option<Ast.Constant>;
         if (allowOptionalConstant) {
             maybeOptionalConstant = this.maybeReadTokenKindAsConstant(TokenKind.QuestionMark);
+            this.incrementAttributeCounterIfUndefined(maybeOptionalConstant);
         }
 
-        const wrapped: WrappedRead<NodeKindVariant, Content> = {
+        const wrapped: WrappedRead<Kind, Content> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -1868,18 +1929,18 @@ export class Parser {
         return wrapped;
     }
 
-    private readKeyValuePair<NodeKindVariant, Key, Value>(
-        nodeKind: NodeKindVariant & Ast.TKeyValuePairNodeKind,
+    private readKeyValuePair<Kind, Key, Value>(
+        nodeKind: Kind & Ast.TKeyValuePairNodeKind,
         keyReader: () => Key,
         valueReader: () => Value,
-    ): Ast.IKeyValuePair<NodeKindVariant, Key, Value> {
+    ): Ast.IKeyValuePair<Kind, Key, Value> {
         this.startContext(nodeKind);
 
         const key: Key = keyReader();
         const equalConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Equal);
         const value: Value = valueReader();
 
-        const keyValuePair: Ast.IKeyValuePair<NodeKindVariant, Key, Value> = {
+        const keyValuePair: Ast.IKeyValuePair<Kind, Key, Value> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -1907,45 +1968,43 @@ export class Parser {
         return keyValuePair;
     }
 
-    private readCsv<T>(valueReader: () => T, continueReadingValues: boolean): ReadonlyArray<Ast.ICsv<T>> {
-        const values: Ast.ICsv<T>[] = [];
+    private readCsvArray<T>(
+        valueReader: () => T & Ast.TCsvType,
+        continueReadingValues: boolean,
+    ): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
+        const nodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
+        this.startContext(nodeKind);
+
+        const elements: Ast.ICsv<T & Ast.TCsvType>[] = [];
 
         while (continueReadingValues) {
-            const nodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
-            this.startContext(nodeKind);
+            const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
+            this.startContext(csvNodeKind);
 
-            const node: T = valueReader();
+            const node: T & Ast.TCsvType = valueReader();
             const maybeCommaConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.Comma);
+            this.incrementAttributeCounterIfUndefined(maybeCommaConstant);
             continueReadingValues = maybeCommaConstant !== undefined;
 
-            const value: Ast.ICsv<T> = {
+            const element: Ast.TCsv & Ast.ICsv<T & Ast.TCsvType> = {
                 ...this.expectContextNodeMetadata(),
-                kind: nodeKind,
+                kind: csvNodeKind,
                 isLeaf: false,
                 node,
                 maybeCommaConstant,
             };
-            values.push(value);
-            // UNSAFE MARKER
-            //
-            // Purpose of code block:
-            //      End the context started within the same function.
-            //
-            // Why are you trying to avoid a safer approach?
-            //      endContext takes an Ast.TNode, but due to generics the parser
-            //      can't prove for all types T that Ast.ICsv<T>
-            //      results in an Ast.TNode.
-            //
-            //      The alternative approach is let the callers of readCsv
-            //      take the return and end the context themselves, which is messy.
-            //
-            // Why is it safe?
-            //      All Ast.NodeKind.Csv used by the parser are of Ast.TCsv,
-            //      a sub type of Ast.TNode.
-            this.endContext((value as unknown) as Ast.TCsv);
+            elements.push(element);
+            this.endContext(element);
         }
 
-        return values;
+        const astNode: Ast.ICsvArray<T & Ast.TCsvType> = {
+            ...this.expectContextNodeMetadata(),
+            kind: nodeKind,
+            isLeaf: false,
+            elements,
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     private disambiguateParenthesis(): ParenthesisDisambiguation {
@@ -2051,22 +2110,34 @@ export class Parser {
         return new ParserError.UnterminatedBracketError(token, this.lexerSnapshot.graphemePositionStartFrom(token));
     }
 
+    private incrementAttributeCounter(): void {
+        if (this.maybeCurrentContextNode === undefined) {
+            throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
+        }
+        const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
+        currentContextNode.attributeCounter += 1;
+    }
+
+    private incrementAttributeCounterIfUndefined(node: Option<Ast.TNode>): void {
+        if (node === undefined) {
+            this.incrementAttributeCounter();
+        }
+    }
+
     private startContext(nodeKind: Ast.NodeKind): void {
         this.maybeCurrentContextNode = ParserContext.startContext(
             this.contextState,
             nodeKind,
-            this.nodeIdCounter,
             this.tokenIndex,
             this.maybeCurrentToken,
             this.maybeCurrentContextNode,
         );
-        this.nodeIdCounter += 1;
     }
 
     private endContext(astNode: Ast.TNode): void {
         if (this.maybeCurrentContextNode === undefined) {
             throw new CommonError.InvariantError(
-                "maybeContextNode should be truthy, can't end context if it doesn't exist.",
+                "maybeContextNode should be truthy, can't end a context if it doesn't exist.",
             );
         }
 
@@ -2082,7 +2153,7 @@ export class Parser {
         if (maybeNodeId === undefined) {
             if (this.maybeCurrentContextNode === undefined) {
                 throw new CommonError.InvariantError(
-                    "maybeContextNode should be truthy, can't end context if it doesn't exist.",
+                    "maybeContextNode should be truthy, can't delete a context if it doesn't exist.",
                 );
             } else {
                 const currentContextNode: ParserContext.Node = this.maybeCurrentContextNode;
@@ -2169,6 +2240,7 @@ export class Parser {
         const contextNode: ParserContext.Node = this.maybeCurrentContextNode;
         return {
             id: contextNode.id,
+            maybeAttributeIndex: currentContextNode.maybeAttributeIndex,
             tokenRange,
         };
     }
@@ -2255,9 +2327,10 @@ interface StateBackup {
 }
 interface ContextNodeMetadata {
     readonly id: number;
+    readonly maybeAttributeIndex: Option<number>;
     readonly tokenRange: Ast.TokenRange;
 }
 
-interface WrappedRead<NodeKindVariant, Content> extends Ast.IWrapped<NodeKindVariant, Content> {
+interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
 }

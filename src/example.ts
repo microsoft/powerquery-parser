@@ -6,35 +6,46 @@
 import { Option, ResultKind } from "./common";
 import { TriedLexAndParse, tryLexAndParse } from "./jobs";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import { ParserError } from "./parser";
 
 parseText(`if true then 1 else 2`);
 
 // @ts-ignore
 function parseText(text: string): void {
-    const parseResult: TriedLexAndParse = tryLexAndParse(text);
-    if (parseResult.kind === ResultKind.Ok) {
-        console.log(JSON.stringify(parseResult.value, undefined, 4));
-    } else {
-        console.log(parseResult.error.message);
-        console.log(JSON.stringify(parseResult.error, undefined, 4));
+    // Try lexing and parsing the argument which returns a Result object.
+    // A Result is a union of (Ok<T> | Err<E>).
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
+
+    // If the Result is an Ok, then log the jsonified abstract syntax tree (AST) which was parsed.
+    if (triedLexAndParse.kind === ResultKind.Ok) {
+        console.log(JSON.stringify(triedLexAndParse.value, undefined, 4));
+    }
+    // Else the Result is an Err, then log the jsonified error.
+    else {
+        console.log(triedLexAndParse.error.message);
+        console.log(JSON.stringify(triedLexAndParse.error, undefined, 4));
+
+        // If the error occured during parsing, then log the jsonified parsing context,
+        // which is what was parsed up until the error was thrown.
+        if (triedLexAndParse.error instanceof ParserError.ParserError) {
+            console.log(JSON.stringify(triedLexAndParse.error.context, undefined, 4));
+        }
     }
 }
 
 // @ts-ignore
 function lexText(text: string): void {
-    // state isn't const as calling Lexer functions return a new state object.
+    // State is let instead of const as calling Lexer functions return a new state object.
 
-    // the returned state will be in an error state if `text` can't be lex'd.
-    // use Lexer.isErrorState to validate if needed
+    // An error state is returned if the argument can't be lexed.
+    // Use either the typeguard Lexer.isErrorState to discover if it's an error state,
+    // or Lexer.maybeErrorLineMap to quickly get all lines with errors.
+    // Note: At this point all errors are isolated to a single line.
+    //       Checks for multiline errors, such as an unterminated string, have not been processed.
     let state: Lexer.State = Lexer.stateFrom(text);
 
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
-        // handle the error(s).
-        //
-        // note: these are errors isolated to indiviudal lines,
-        //       meaning multiline errors such as an unterminated string are not
-        //       considered an error at this stage.
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
 
         for (const [lineNumber, errorLine] of errorLineMap.entries()) {
@@ -43,26 +54,36 @@ function lexText(text: string): void {
         return;
     }
 
-    // let's add one extra line.
-    // note: adding new lines can introduce new errors,
-    //       meaning you might want to check for them using maybeErrorLineMap again
+    // Appending a line is easy.
     state = Lexer.appendLine(state, "// hello world", "\n");
 
-    // a snapshot should be created once no more text is to be added.
-    // a snapshot is an immutable copy which:
-    //      * combines multiline tokens together
-    //        (eg. StringLiteralStart + StringLiteralContent + StringLiteralEnd)
-    //      * checks for multiline errors
-    //        (eg. unterminated string error)
-    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (snapshotResult.kind === ResultKind.Err) {
-        // a multiline error was found
-        const error: LexerError.LexerError = snapshotResult.error;
-        console.log(error.innerError.message);
-        console.log(JSON.stringify(error.innerError, undefined, 4));
-    } else {
-        const snapshot: LexerSnapshot = snapshotResult.value;
+    // Updating a line number is also easy.
+    // Be aware that this is a Result due the potential of invalid line numbers.
+    // For fine-grained control there is also the method Lexer.tryUpdateRange which Lexer.tryUpdateLine calls directly.
+    const triedUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, state.lines.length - 1, "// goodbye world");
+    if (triedUpdate.kind === ResultKind.Err) {
+        console.log("Failed to update line");
+        return;
+    }
+    state = triedUpdate.value;
+
+    // Once no more text is to be added / edited a LexerSnapshot should be created, which is an immutable copy that:
+    //  * combines multiline tokens together
+    //    (eg. StringLiteralStart + StringLiteralContent + StringLiteralEnd)
+    //  * checks for multiline errors
+    //    (eg. unterminated string error)
+
+    // Creating a LexerSnapshot is a Result due to potential multiline token errors.
+    const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    if (triedLexerSnapshot.kind === ResultKind.Ok) {
+        const snapshot: LexerSnapshot = triedLexerSnapshot.value;
         console.log(`numTokens: ${snapshot.tokens}`);
         console.log(`numComments: ${snapshot.comments}`);
+    }
+    // A multiline token error was thrown.
+    else {
+        const error: LexerError.LexerError = triedLexerSnapshot.error;
+        console.log(error.innerError.message);
+        console.log(JSON.stringify(error.innerError, undefined, 4));
     }
 }

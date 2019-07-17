@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserContext } from ".";
-import { CommonError, Option, StringHelpers } from "../common";
+import { CommonError, Option, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
 import * as Localization from "../localization/error";
 
@@ -40,13 +40,13 @@ export class ExpectedTokenKindError extends Error {
 }
 
 export class InvalidPrimitiveTypeError extends Error {
-    constructor(readonly token: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+    constructor(readonly token: Token, readonly positionStart: StringUtils.GraphemePosition) {
         super(Localization.parserInvalidPrimitiveType(token, positionStart));
     }
 }
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
-    constructor(readonly missingOptionalToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+    constructor(readonly missingOptionalToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
         super(Localization.parserRequiredParameterAfterOptionalParameter(positionStart));
     }
 }
@@ -58,19 +58,19 @@ export class UnexpectedEndOfTokensError extends Error {
 }
 
 export class UnterminatedBracketError extends Error {
-    constructor(readonly openBracketToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+    constructor(readonly openBracketToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
         super(Localization.parserUnterminatedBracket(positionStart));
     }
 }
 
 export class UnterminatedParenthesesError extends Error {
-    constructor(readonly openParenthesesToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+    constructor(readonly openParenthesesToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
         super(Localization.parserUnterminatedParentheses(positionStart));
     }
 }
 
 export class UnusedTokensRemainError extends Error {
-    constructor(readonly firstUnusedToken: Token, readonly positionStart: StringHelpers.GraphemePosition) {
+    constructor(readonly firstUnusedToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
         super(Localization.parserUnusedTokensRemain(positionStart));
     }
 }

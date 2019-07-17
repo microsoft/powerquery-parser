@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result, ResultKind, StringHelpers } from "../common";
+import { Lexer, LexerError } from ".";
+import { CommonError, Option, Result, ResultKind, StringUtils } from "../common";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
-import * as LexerError from "./error";
-import * as Lexer from "./lexer";
 import { IToken, LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
 
 export type TriedLexerSnapshot = Result<LexerSnapshot, LexerError.TLexerError>;
@@ -41,7 +40,7 @@ export class LexerSnapshot {
         text: string,
         lineTerminators: ReadonlyArray<LineTerminator>,
         flatLineToken: Token | FlatLineToken,
-    ): StringHelpers.GraphemePosition {
+    ): StringUtils.GraphemePosition {
         const positionStart: TokenPosition = flatLineToken.positionStart;
         const positionEnd: TokenPosition = flatLineToken.positionEnd;
 
@@ -57,7 +56,7 @@ export class LexerSnapshot {
             }
         }
 
-        return StringHelpers.graphemePositionFrom(
+        return StringUtils.graphemePositionFrom(
             text.substring(substringPositionStart, substringPositionEnd),
             positionStart.lineCodeUnit,
             positionStart.lineNumber,
@@ -65,7 +64,7 @@ export class LexerSnapshot {
         );
     }
 
-    public graphemePositionStartFrom(token: Token): StringHelpers.GraphemePosition {
+    public graphemePositionStartFrom(token: Token): StringUtils.GraphemePosition {
         return LexerSnapshot.graphemePositionStartFrom(this.text, this.lineTerminators, token);
     }
 
