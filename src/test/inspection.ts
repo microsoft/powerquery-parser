@@ -547,6 +547,39 @@ describe(`Inspection`, () => {
             };
             expectParseOkAbridgedInspectionEqual(text, position, expected);
         });
+
+        it(`foo(|)`, () => {
+            const text: string = `foo()`;
+            const position: Inspection.Position = {
+                lineNumber: 0,
+                lineCodeUnit: 4,
+            };
+            const expected: AbridgedInspection = {
+                nodes: [
+                    {
+                        kind: NodeKind.InvokeExpression,
+
+                        maybePositionStart: {
+                            codeUnit: 3,
+                            lineCodeUnit: 3,
+                            lineNumber: 0,
+                        },
+                        maybePositionEnd: {
+                            codeUnit: 5,
+                            lineCodeUnit: 5,
+                            lineNumber: 0,
+                        },
+                        maybeName: `foo`,
+                        maybeArguments: {
+                            numArguments: 0,
+                            positionArgumentIndex: 0,
+                        },
+                    },
+                ],
+                scope: [`foo`],
+            };
+            expectParseOkAbridgedInspectionEqual(text, position, expected);
+        });
     });
 
     describe(`${Ast.NodeKind.InvokeExpression} (ParserContext)`, () => {
@@ -609,7 +642,7 @@ describe(`Inspection`, () => {
                         maybeName: "foo",
                         maybePositionEnd: undefined,
                         maybeArguments: {
-                            numArguments: 0,
+                            numArguments: 1,
                             positionArgumentIndex: 0,
                         },
                     },
@@ -619,7 +652,7 @@ describe(`Inspection`, () => {
             expectParseErrAbridgedInspectionEqual(text, position, expected);
         });
 
-        it(`abc123 [x](y|`, () => {
+        it(`[x](y|`, () => {
             const text: string = `[x](y`;
             const position: Inspection.Position = {
                 lineNumber: 0,
