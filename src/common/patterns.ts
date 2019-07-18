@@ -7,18 +7,6 @@ export const RegExpIdentifier: RegExp = RegExp(
     "yu",
 );
 
-// Not mentioned: CARRIAGE RETURN + LINE FEED
-export const RegExpNewline: RegExp = RegExp(
-    // tslint:disable-next-line: prefer-template
-    "\u000D" + // CARRIAGE RETURN
-    "|\u000A" + // LINE FEED
-    "|\u0085" + // NEXT LINE
-    "|\u2028" + // LINE SEPARATOR
-        "|\u2029", // PARAGRAPH SEPARATOR
-
-    "y",
-);
-
 export const RegExpWhitespace: RegExp = RegExp(
     "[" +
     "\u0020" + // SPACE

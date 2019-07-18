@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option } from "../common/option";
+import { CommonError, Option } from "../common";
 import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
@@ -11,6 +11,7 @@ export const enum NodeKind {
     AsType = "AsType",
     Constant = "Constant",
     Csv = "Csv",
+    CsvArray = "CsvArray",
     EachExpression = "EachExpression",
     EqualityExpression = "EqualityExpression",
     ErrorHandlingExpression = "ErrorHandlingExpression",
@@ -52,13 +53,16 @@ export const enum NodeKind {
     RecordLiteral = "RecordLiteral",
     RecordType = "RecordType",
     RecursivePrimaryExpression = "RecursivePrimaryExpression",
+    RecursivePrimaryExpressionArray = "RecursivePrimaryExpressionArray",
     RelationalExpression = "RelationalExpression",
     Section = "Section",
     SectionMember = "SectionMember",
+    SectionMemberArray = "SectionMemberArray",
     TableType = "TableType",
     TypePrimaryType = "TypePrimaryType",
     UnaryExpression = "UnaryExpression",
     UnaryExpressionHelper = "UnaryExpressionHelper",
+    UnaryExpressionHelperArray = "UnaryExpressionHelperArray",
 }
 
 // -------------------------------------
@@ -68,6 +72,7 @@ export const enum NodeKind {
 export interface INode {
     readonly kind: NodeKind;
     readonly id: number;
+    readonly maybeAttributeIndex: Option<number>;
     readonly tokenRange: TokenRange;
     readonly isLeaf: boolean;
 }
@@ -97,6 +102,7 @@ export type TAuxiliaryNodes =
     | Identifier
     | SectionMember
     | TAnyLiteral
+    | TArrayHelper
     | TCsv
     | TKeyValuePair
     | TNullablePrimitiveType
@@ -107,15 +113,28 @@ export type TAuxiliaryNodes =
     | TUnaryExpressionHelper
     | TWrapped;
 
-export type TCsv =
-    | ICsv<FieldSelector>
-    | ICsv<FieldSpecification>
-    | ICsv<GeneralizedIdentifierPairedAnyLiteral>
-    | ICsv<GeneralizedIdentifierPairedExpression>
-    | ICsv<IdentifierPairedExpression>
-    | ICsv<TParameter>
-    | ICsv<TAnyLiteral>
-    | ICsv<TExpression>;
+export type TArrayHelper =
+    | IArrayHelper<SectionMember, NodeKind.SectionMemberArray>
+    | RecursivePrimaryExpressionArray
+    | TCsvArray
+    | UnaryExpressionHelperArray;
+export type TArrayHelperNodeKind =
+    | NodeKind.CsvArray
+    | NodeKind.RecursivePrimaryExpressionArray
+    | NodeKind.SectionMemberArray
+    | NodeKind.UnaryExpressionHelperArray;
+
+export type TCsvArray = ICsvArray<TCsvType>;
+export type TCsv = ICsv<TCsvType>;
+export type TCsvType =
+    | FieldSelector
+    | FieldSpecification
+    | GeneralizedIdentifierPairedAnyLiteral
+    | GeneralizedIdentifierPairedExpression
+    | IdentifierPairedExpression
+    | TParameter
+    | TAnyLiteral
+    | TExpression;
 
 export type TParameter = IParameter<TParameterType>;
 export type TParameterList = IParameterList<TParameterType>;
@@ -215,7 +234,7 @@ export interface Section extends INode {
     readonly sectionConstant: Constant;
     readonly maybeName: Option<Identifier>;
     readonly semicolonConstant: Constant;
-    readonly sectionMembers: ReadonlyArray<SectionMember>;
+    readonly sectionMembers: SectionMemberArray;
 }
 
 export interface SectionMember extends INode {
@@ -226,6 +245,8 @@ export interface SectionMember extends INode {
     readonly namePairedExpression: IdentifierPairedExpression;
     readonly semicolonConstant: Constant;
 }
+
+export interface SectionMemberArray extends IArrayHelper<SectionMember, NodeKind.SectionMemberArray> {}
 
 // ------------------------------------------
 // ---------- 12.2.3.1 Expressions ----------
@@ -400,7 +421,7 @@ export type TUnaryExpression = UnaryExpression | TTypeExpression;
 export interface UnaryExpression extends INode {
     readonly kind: NodeKind.UnaryExpression;
     readonly isLeaf: false;
-    readonly expressions: ReadonlyArray<UnaryExpressionHelper<UnaryOperator, TUnaryExpression>>;
+    readonly expressions: IArrayHelper<UnaryUnaryExpressionHelper, NodeKind.UnaryExpressionHelperArray>;
 }
 
 export const enum UnaryOperator {
@@ -488,20 +509,20 @@ export interface NotImplementedExpression extends INode {
 // ---------- 12.2.3.16 Invoke expression ----------
 // -------------------------------------------------
 
-export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, ReadonlyArray<ICsv<TExpression>>> {}
+export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, ICsvArray<TExpression>> {}
 
 // -----------------------------------------------
 // ---------- 12.2.3.17 List expression ----------
 // -----------------------------------------------
 
-export interface ListExpression extends IWrapped<NodeKind.ListExpression, ReadonlyArray<ICsv<TExpression>>> {}
+export interface ListExpression extends IWrapped<NodeKind.ListExpression, ICsvArray<TExpression>> {}
 
 // -------------------------------------------------
 // ---------- 12.2.3.18 Record expression ----------
 // -------------------------------------------------
 
 export interface RecordExpression
-    extends IWrapped<NodeKind.RecordExpression, ReadonlyArray<ICsv<GeneralizedIdentifierPairedExpression>>> {}
+    extends IWrapped<NodeKind.RecordExpression, ICsvArray<GeneralizedIdentifierPairedExpression>> {}
 
 // ------------------------------------------------------
 // ---------- 12.2.3.19 Item access expression ----------
@@ -523,7 +544,7 @@ export interface FieldSelector extends IWrapped<NodeKind.FieldSelector, Generali
     readonly maybeOptionalConstant: Option<Constant>;
 }
 
-export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ReadonlyArray<ICsv<FieldSelector>>> {
+export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ICsvArray<FieldSelector>> {
     // located after closeWrapperConstant
     readonly maybeOptionalConstant: Option<Constant>;
 }
@@ -554,7 +575,7 @@ export interface EachExpression extends IPairedConstant<NodeKind.EachExpression,
 export interface LetExpression extends INode {
     readonly kind: NodeKind.LetExpression;
     readonly letConstant: Constant;
-    readonly variableList: ReadonlyArray<ICsv<IdentifierPairedExpression>>;
+    readonly variableList: ICsvArray<IdentifierPairedExpression>;
     readonly inConstant: Constant;
     readonly expression: TExpression;
 }
@@ -635,8 +656,11 @@ export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
     readonly isLeaf: false;
     readonly head: TPrimaryExpression;
-    readonly recursiveExpressions: ReadonlyArray<TRecursivePrimaryExpression>;
+    readonly recursiveExpressions: RecursivePrimaryExpressionArray;
 }
+
+export interface RecursivePrimaryExpressionArray
+    extends IArrayHelper<TRecursivePrimaryExpression, NodeKind.RecursivePrimaryExpressionArray> {}
 
 export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryType, TPrimaryType> {}
 
@@ -646,12 +670,12 @@ export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryTyp
 
 export type TAnyLiteral = ListLiteral | LiteralExpression | RecordLiteral;
 
-export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, ReadonlyArray<ICsv<TAnyLiteral>>> {
+export interface ListLiteral extends IWrapped<NodeKind.ListLiteral, ICsvArray<TAnyLiteral>> {
     readonly literalKind: LiteralKind.List;
 }
 
 export interface RecordLiteral
-    extends IWrapped<NodeKind.RecordLiteral, ReadonlyArray<ICsv<GeneralizedIdentifierPairedAnyLiteral>>> {
+    extends IWrapped<NodeKind.RecordLiteral, ICsvArray<GeneralizedIdentifierPairedAnyLiteral>> {
     readonly literalKind: LiteralKind.Record;
 }
 
@@ -661,20 +685,29 @@ export interface RecordLiteral
 
 // IBinOpExpressions are expressed in terms of Operand followed by N <Operand, Operator> unary expressions.
 // 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
-export interface IBinOpExpression<NodeKindVariant, Operator, Operand> extends INode {
-    readonly kind: NodeKindVariant & TBinOpExpressionNodeKind;
+export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
+    readonly kind: Kind & TBinOpExpressionNodeKind;
     readonly first: Operand;
-    readonly rest: ReadonlyArray<UnaryExpressionHelper<Operator, Operand>>;
+    readonly rest: IArrayHelper<IUnaryExpressionHelper<Operator, Operand>, NodeKind.UnaryExpressionHelperArray>;
 }
 
 // BinOp expressions which uses a keyword as operators,
 // ex. `1 is number`
-export interface IBinOpKeyword<NodeKindVariant, L, R> extends INode {
-    readonly kind: NodeKindVariant & TBinOpKeywordNodeKind;
+export interface IBinOpKeyword<Kind, L, R> extends INode {
+    readonly kind: Kind & TBinOpKeywordNodeKind;
     readonly left: L;
     readonly constant: Constant;
     readonly right: R;
 }
+
+// Allows the ReadonlyArray to be treated as a TNode.
+// Without this wrapper ParserContext couldn't save partial progress for parsing an array.
+export interface IArrayHelper<T, Kind> extends INode {
+    readonly kind: Kind & TArrayHelperNodeKind;
+    readonly elements: ReadonlyArray<T>;
+}
+
+export interface ICsvArray<T> extends IArrayHelper<ICsv<T & TCsvType>, NodeKind.CsvArray> {}
 
 export interface ICsv<T> extends INode {
     readonly kind: NodeKind.Csv;
@@ -682,8 +715,8 @@ export interface ICsv<T> extends INode {
     readonly maybeCommaConstant: Option<Constant>;
 }
 
-export interface IKeyValuePair<NodeKindVariant, Key, Value> extends INode {
-    readonly kind: NodeKindVariant & TKeyValuePairNodeKind;
+export interface IKeyValuePair<Kind, Key, Value> extends INode {
+    readonly kind: Kind & TKeyValuePairNodeKind;
     readonly key: Key;
     readonly equalConstant: Constant;
     readonly value: Value;
@@ -691,14 +724,14 @@ export interface IKeyValuePair<NodeKindVariant, Key, Value> extends INode {
 
 // A [Constant, T] tuple
 // eg. EachExpression is a `each` Constant paired with a TExpression
-export interface IPairedConstant<NodeKindVariant, Paired> extends INode {
-    readonly kind: NodeKindVariant & TPairedConstantNodeKind;
+export interface IPairedConstant<Kind, Paired> extends INode {
+    readonly kind: Kind & TPairedConstantNodeKind;
     readonly constant: Constant;
     readonly paired: Paired;
 }
 
-export interface IWrapped<NodeKindVariant, Content> extends INode {
-    readonly kind: NodeKindVariant & TWrappedNodeKind;
+export interface IWrapped<Kind, Content> extends INode {
+    readonly kind: Kind & TWrappedNodeKind;
     readonly openWrapperConstant: Constant;
     readonly content: Content;
     readonly closeWrapperConstant: Constant;
@@ -710,7 +743,7 @@ export interface IWrapped<NodeKindVariant, Content> extends INode {
 
 // a (Operator, Operand) pair
 // used by unary and binary expressions
-export interface UnaryExpressionHelper<Operator, Operand> extends INode {
+export interface IUnaryExpressionHelper<Operator, Operand> extends INode {
     readonly kind: NodeKind.UnaryExpressionHelper;
     readonly isLeaf: false;
     readonly inBinaryExpression: boolean;
@@ -719,12 +752,20 @@ export interface UnaryExpressionHelper<Operator, Operand> extends INode {
     readonly node: Operand;
 }
 
+export interface UnaryExpressionHelperArray
+    extends IArrayHelper<TUnaryExpressionHelper, NodeKind.UnaryExpressionHelperArray> {}
+
 export type TUnaryExpressionHelper =
-    | UnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>
-    | UnaryExpressionHelper<EqualityOperator, TEqualityExpression>
-    | UnaryExpressionHelper<LogicalOperator, TLogicalExpression>
-    | UnaryExpressionHelper<RelationalOperator, TRelationalExpression>
-    | UnaryExpressionHelper<UnaryOperator, TUnaryExpression>;
+    | UnaryArithmeticExpressionHelper
+    | UnaryEqualityExpressionHelper
+    | UnaryLogicalExpressionHelper
+    | UnaryRelationalExpressionHelper
+    | UnaryUnaryExpressionHelper;
+export type UnaryArithmeticExpressionHelper = IUnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>;
+export type UnaryEqualityExpressionHelper = IUnaryExpressionHelper<EqualityOperator, TEqualityExpression>;
+export type UnaryLogicalExpressionHelper = IUnaryExpressionHelper<LogicalOperator, TLogicalExpression>;
+export type UnaryRelationalExpressionHelper = IUnaryExpressionHelper<RelationalOperator, TRelationalExpression>;
+export type UnaryUnaryExpressionHelper = IUnaryExpressionHelper<UnaryOperator, TUnaryExpression>;
 
 export type TUnaryExpressionHelperOperator =
     | ArithmeticOperator
@@ -732,6 +773,12 @@ export type TUnaryExpressionHelperOperator =
     | LogicalOperator
     | RelationalOperator
     | UnaryOperator;
+export type TUnaryExpressionOperand =
+    | TArithmeticExpression
+    | TEqualityExpression
+    | TLogicalExpression
+    | TRelationalExpression
+    | TUnaryExpression;
 
 // ------------------------------------------
 // ---------- Key value pair nodes ----------
@@ -756,7 +803,7 @@ export interface IdentifierExpressionPairedExpression
 export type TParameterType = AsType | Option<AsNullablePrimitiveType>;
 
 export interface IParameterList<T>
-    extends IWrapped<NodeKind.ParameterList, ReadonlyArray<ICsv<IParameter<T & TParameterType>>>> {}
+    extends IWrapped<NodeKind.ParameterList, ICsvArray<IParameter<T & TParameterType>>> {}
 
 export interface IParameter<T> extends INode {
     readonly kind: NodeKind.Parameter;
@@ -789,7 +836,7 @@ export interface FieldSpecification extends INode {
     readonly maybeFieldTypeSpeification: Option<FieldTypeSpecification>;
 }
 export interface FieldSpecificationList
-    extends IWrapped<NodeKind.FieldSpecificationList, ReadonlyArray<ICsv<FieldSpecification>>> {
+    extends IWrapped<NodeKind.FieldSpecificationList, ICsvArray<FieldSpecification>> {
     // located between content and closeWrapperConstant
     readonly maybeOpenRecordMarkerConstant: Option<Constant>;
 }
@@ -1020,6 +1067,31 @@ export function constantKindFromTokenKind(tokenKind: TokenKind): Option<Constant
             return ConstantKind.Semicolon;
         default:
             return undefined;
+    }
+}
+
+// ---------------------------------------
+// ---------- casting functions ----------
+// ---------------------------------------
+
+export function maybeCastToKind<T>(node: TNode, kind: NodeKind): Option<T & TNode> {
+    if (node.kind !== kind) {
+        return undefined;
+    } else {
+        return (node as unknown) as T & TNode;
+    }
+}
+
+export function expectCastToKind<T>(node: TNode, kind: NodeKind): T & TNode {
+    const maybeNode: Option<T & TNode> = maybeCastToKind(node, kind);
+    if (maybeNode === undefined) {
+        const details: {} = {
+            expected: kind,
+            actual: node.kind,
+        };
+        throw new CommonError.InvariantError(`expected xorNode.node.kind to be ${kind}`, details);
+    } else {
+        return maybeNode;
     }
 }
 

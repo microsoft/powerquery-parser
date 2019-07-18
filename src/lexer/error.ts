@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, StringHelpers } from "../common";
+import {Lexer } from ".";
+import { CommonError, StringUtils } from "../common";
 import * as Localization from "../localization/error";
-import * as Lexer from "./lexer";
 
 export type TLexerError = CommonError.CommonError | LexerError;
 
@@ -84,26 +84,26 @@ export class EndOfStreamError extends Error {
 }
 
 export class ExpectedError extends Error {
-    constructor(readonly graphemePosition: StringHelpers.GraphemePosition, readonly kind: ExpectedKind) {
+    constructor(readonly graphemePosition: StringUtils.GraphemePosition, readonly kind: ExpectedKind) {
         super(Localization.lexerExpected(graphemePosition, kind));
     }
 }
 
 export class UnexpectedEofError extends Error {
-    constructor(readonly graphemePosition: StringHelpers.GraphemePosition) {
+    constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
         super(Localization.lexerUnexpectedEof(graphemePosition));
     }
 }
 
 export class UnexpectedReadError extends Error {
-    constructor(readonly graphemePosition: StringHelpers.GraphemePosition) {
+    constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
         super(Localization.lexerUnexpectedRead(graphemePosition));
     }
 }
 
 export class UnterminatedMultilineTokenError extends Error {
     constructor(
-        readonly graphemePosition: StringHelpers.GraphemePosition,
+        readonly graphemePosition: StringUtils.GraphemePosition,
         readonly kind: UnterminatedMultilineTokenKind,
     ) {
         super(Localization.lexerUnterminatedMultilineToken(graphemePosition, kind));
