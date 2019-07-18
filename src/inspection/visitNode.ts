@@ -308,7 +308,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
     );
 
     const position: Position = state.position;
-    let positionArgumentIndex: Option<number>;
+    let maybePositionArgumentIndex: Option<number>;
 
     const numArguments: number = argXorNodes.length;
     for (let index: number = 0; index < numArguments; index += 1) {
@@ -318,14 +318,10 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         }
 
         if (isPositionOnXorNode(position, argXorNode, true)) {
-            positionArgumentIndex = index;
+            maybePositionArgumentIndex = index;
         }
     }
-
-    if (positionArgumentIndex === undefined) {
-        const details: {} = { invokeExprId: invokeExprXorNode.node.id };
-        throw new CommonError.InvariantError(`couldn't find the argument index that position is on`, details);
-    }
+    const positionArgumentIndex: number = maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0;
 
     state.result.nodes.push({
         kind: NodeKind.InvokeExpression,
@@ -333,12 +329,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         maybePositionStart,
         maybeName,
         maybeArguments: {
-            // Handles off-by-one errors due to trailing ParserContext.Node, eg. `foo(|`.
-            // Assumes only the last XorNode might be a ParserContext.Node
-            numArguments:
-                argXorNodes[argXorNodes.length - 1].kind === NodeIdMap.XorNodeKind.Context
-                    ? numArguments - 1
-                    : numArguments,
+            numArguments,
             positionArgumentIndex,
         },
     });
