@@ -332,3 +332,4 @@ ASALocalRun/
 xunit.xml
 test-results.xml
 tsconfig.tsbuildinfo
+*.tgz
