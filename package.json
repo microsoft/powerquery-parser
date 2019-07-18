@@ -1,7 +1,7 @@
 {
   "name": "@microsoft/powerquery-parser",
   "version": "0.1.13",
-  "description": "A parser for the Power Query language.",
+  "description": "A parser for the Power Query/M formula language.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "keywords": [
@@ -46,7 +46,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Microsoft/powerquery-parser.git"
+    "url": "git+https://github.com/microsoft/powerquery-parser.git"
   },
   "prettier": {
     "trailingComma": "all",
@@ -55,10 +55,10 @@
     "singleQuote": false,
     "printWidth": 120
   },
-  "author": "Jordan Bolton",
+  "author": "Microsoft",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Microsoft/powerquery-parser/issues"
+    "url": "https://github.com/microsoft/powerquery-parser/issues"
   },
-  "homepage": "https://github.com/Microsoft/powerquery-parser#readme"
+  "homepage": "https://github.com/microsoft/powerquery-parser#readme"
 }
