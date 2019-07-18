@@ -51,7 +51,35 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
 }
 function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
     addToScopeIfNew(state, "_", eachExprXorNode);
-    state.result.nodes.push(basicNodeFromXorNode(eachExprXorNode, NodeKind.EachExpression));
+
+    let maybePositionStart: Option<TokenPosition>;
+    let maybePositionEnd: Option<TokenPosition>;
+    switch (eachExprXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const tokenRange: Ast.TokenRange = eachExprXorNode.node.tokenRange;
+            maybePositionStart = tokenRange.positionStart;
+            maybePositionEnd = tokenRange.positionEnd;
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const eachExpr: ParserContext.Node = eachExprXorNode.node;
+            maybePositionStart =
+                eachExpr.maybeTokenStart !== undefined ? eachExpr.maybeTokenStart.positionStart : undefined;
+            maybePositionEnd = undefined;
+            break;
+        }
+
+        default:
+            throw isNever(eachExprXorNode);
+    }
+
+    const node: TNode = {
+        kind: NodeKind.EachExpression,
+        maybePositionStart,
+        maybePositionEnd,
+    };
+    state.result.nodes.push(node);
 }
 
 function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.TXorNode): void {
@@ -181,6 +209,81 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         throw expectedNodeKindError(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
     }
 
+    // Check if position is on closeWrapperConstant (')').
+    // The check isn't needed for a context node as the final attribute is the closeWrapperConstant,
+    // and as it's a context node it hasn't parsed all attributes.
+    if (invokeExprXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        const invokeExpr: Ast.InvokeExpression = invokeExprXorNode.node as Ast.InvokeExpression;
+        if (isTokenPositionOnPosition(invokeExpr.closeWrapperConstant.tokenRange.positionEnd, state.position)) {
+            return;
+        }
+    }
+
+    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
+    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
+    let maybeName: Option<string>;
+    if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
+        const nodeIdMapColletion: NodeIdMap.Collection = state.nodeIdMapCollection;
+
+        // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
+        const recursiveArrayXorNode: NodeIdMap.TXorNode = NodeIdMap.expectParentXorNode(
+            nodeIdMapColletion,
+            invokeExprXorNode.node.id,
+        );
+        const recursiveExprXorNode: NodeIdMap.TXorNode = NodeIdMap.expectParentXorNode(
+            nodeIdMapColletion,
+            recursiveArrayXorNode.node.id,
+        );
+        const headXorNode: NodeIdMap.TXorNode = NodeIdMap.expectChildByAttributeIndex(
+            nodeIdMapColletion,
+            recursiveExprXorNode.node.id,
+            0,
+            undefined,
+        );
+        if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+            if (headXorNode.kind !== NodeIdMap.XorNodeKind.Ast) {
+                const details: {} = {
+                    identifierExpressionNodeId: headXorNode.node.id,
+                    invokeExpressionNodeId: invokeExprXorNode.node.id,
+                };
+                throw new CommonError.InvariantError(
+                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                    details,
+                );
+            }
+
+            const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
+            maybeName =
+                identifierExpression.maybeInclusiveConstant === undefined
+                    ? identifierExpression.identifier.literal
+                    : identifierExpression.maybeInclusiveConstant.literal + identifierExpression.identifier.literal;
+        }
+    }
+
+    let maybePositionStart: Option<TokenPosition>;
+    let maybePositionEnd: Option<TokenPosition>;
+    switch (invokeExprXorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const tokenRange: Ast.TokenRange = invokeExprXorNode.node.tokenRange;
+            maybePositionStart = tokenRange.positionStart;
+            maybePositionEnd = tokenRange.positionEnd;
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const invokeExpr: ParserContext.Node = invokeExprXorNode.node;
+            maybePositionStart =
+                invokeExpr.maybeTokenStart !== undefined ? invokeExpr.maybeTokenStart.positionStart : undefined;
+            maybePositionEnd = undefined;
+            break;
+        }
+
+        default:
+            throw isNever(invokeExprXorNode);
+    }
+
+    // Grab arguments if they exist.
+    // If they do not, return a Node where maybeArguments is undefined.
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
@@ -188,6 +291,13 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         [Ast.NodeKind.CsvArray],
     );
     if (maybeCsvArrayXorNode === undefined) {
+        state.result.nodes.push({
+            kind: NodeKind.InvokeExpression,
+            maybePositionEnd,
+            maybePositionStart,
+            maybeName,
+            maybeArguments: undefined,
+        });
         return;
     }
     const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
@@ -196,13 +306,42 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         state.nodeIdMapCollection,
         csvArrayXorNode,
     );
-    for (const argXorNode of argXorNodes) {
-        if (argXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
-            continue;
+
+    const position: Position = state.position;
+    let positionArgumentIndex: Option<number>;
+
+    const numArguments: number = argXorNodes.length;
+    for (let index: number = 0; index < numArguments; index += 1) {
+        const argXorNode: NodeIdMap.TXorNode = argXorNodes[index];
+        if (argXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+            inspectIdentifierExpression(state, argXorNode);
         }
 
-        inspectIdentifierExpression(state, argXorNode);
+        if (isPositionOnXorNode(position, argXorNode, true)) {
+            positionArgumentIndex = index;
+        }
     }
+
+    if (positionArgumentIndex === undefined) {
+        const details: {} = { invokeExprId: invokeExprXorNode.node.id };
+        throw new CommonError.InvariantError(`couldn't find the argument index that position is on`, details);
+    }
+
+    state.result.nodes.push({
+        kind: NodeKind.InvokeExpression,
+        maybePositionEnd,
+        maybePositionStart,
+        maybeName,
+        maybeArguments: {
+            // Handles off-by-one errors due to trailing ParserContext.Node, eg. `foo(|`.
+            // Assumes only the last XorNode might be a ParserContext.Node
+            numArguments:
+                argXorNodes[argXorNodes.length - 1].kind === NodeIdMap.XorNodeKind.Context
+                    ? numArguments - 1
+                    : numArguments,
+            positionArgumentIndex,
+        },
+    });
 }
 
 function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXorNode): void {
@@ -217,15 +356,27 @@ function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXo
             if (isTokenPositionOnPosition(list.closeWrapperConstant.tokenRange.positionEnd, position)) {
                 return;
             }
-            if (isInTokenRange(position, tokenRange)) {
-                state.result.nodes.push(basicNodeFromAst(list, NodeKind.List));
+            if (isPositionOnTokenRange(position, tokenRange)) {
+                const node: TNode = {
+                    kind: NodeKind.List,
+                    maybePositionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                };
+                state.result.nodes.push(node);
             }
             break;
         }
 
-        case NodeIdMap.XorNodeKind.Context:
-            state.result.nodes.push(basicNodeFromContext(listXorNode.node, NodeKind.List));
+        case NodeIdMap.XorNodeKind.Context: {
+            const list: ParserContext.Node = listXorNode.node;
+            const node: TNode = {
+                kind: NodeKind.List,
+                maybePositionStart: list.maybeTokenStart !== undefined ? list.maybeTokenStart.positionStart : undefined,
+                maybePositionEnd: undefined,
+            };
+            state.result.nodes.push(node);
             break;
+        }
 
         default:
             throw isNever(listXorNode);
@@ -262,14 +413,28 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
             if (isTokenPositionOnPosition(record.closeWrapperConstant.tokenRange.positionEnd, position)) {
                 return;
             }
-            if (isInTokenRange(position, tokenRange)) {
-                state.result.nodes.push(basicNodeFromAst(record, NodeKind.Record));
+            if (isPositionOnTokenRange(position, tokenRange)) {
+                const node: TNode = {
+                    kind: NodeKind.Record,
+                    maybePositionStart: tokenRange.positionStart,
+                    maybePositionEnd: tokenRange.positionEnd,
+                };
+                state.result.nodes.push(node);
             }
             break;
         }
 
         case NodeIdMap.XorNodeKind.Context:
-            state.result.nodes.push(basicNodeFromContext(recordXorNode.node, NodeKind.Record));
+            {
+                const record: ParserContext.Node = recordXorNode.node;
+                const node: TNode = {
+                    kind: NodeKind.Record,
+                    maybePositionStart:
+                        record.maybeTokenStart !== undefined ? record.maybeTokenStart.positionStart : undefined,
+                    maybePositionEnd: undefined,
+                };
+                state.result.nodes.push(node);
+            }
             break;
 
         default:
@@ -394,30 +559,6 @@ function isParentOfNodeKind(
     }
 }
 
-function isInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
-    const tokenRangePositionStart: TokenPosition = tokenRange.positionStart;
-    const tokenRangePositionEnd: TokenPosition = tokenRange.positionEnd;
-
-    if (
-        position.lineNumber < tokenRangePositionStart.lineNumber ||
-        position.lineNumber > tokenRangePositionEnd.lineNumber
-    ) {
-        return false;
-    } else if (
-        position.lineNumber === tokenRangePositionStart.lineNumber &&
-        position.lineCodeUnit < tokenRangePositionStart.lineCodeUnit
-    ) {
-        return false;
-    } else if (
-        position.lineNumber === tokenRangePositionEnd.lineNumber &&
-        position.lineCodeUnit >= tokenRangePositionEnd.lineCodeUnit
-    ) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
 function isTokenPositionOnPosition(tokenPosition: TokenPosition, position: Position): boolean {
     return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
 }
@@ -427,6 +568,43 @@ function isTokenPositionBeforePostion(tokenPosition: TokenPosition, position: Po
         tokenPosition.lineNumber < position.lineNumber ||
         (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
     );
+}
+
+function isPositionOnXorNode(position: Position, xorNode: NodeIdMap.TXorNode, isContextNodeTruthy: boolean): boolean {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return isPositionOnTokenRange(position, xorNode.node.tokenRange);
+
+        case NodeIdMap.XorNodeKind.Context:
+            if (!isContextNodeTruthy) {
+                throw new CommonError.InvariantError(`todo?`);
+            } else {
+                return true;
+            }
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
+function isPositionOnTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
+    const tokenRangeStart: TokenPosition = tokenRange.positionStart;
+    if (
+        tokenRangeStart.lineNumber < position.lineNumber ||
+        (tokenRangeStart.lineNumber === position.lineNumber && tokenRangeStart.lineCodeUnit > position.lineCodeUnit)
+    ) {
+        return false;
+    }
+
+    const tokenRangeEnd: TokenPosition = tokenRange.positionEnd;
+    if (
+        tokenRangeEnd.lineNumber > position.lineNumber ||
+        (tokenRangeEnd.lineNumber === position.lineNumber && tokenRangeEnd.lineCodeUnit < position.lineCodeUnit)
+    ) {
+        return false;
+    }
+
+    return true;
 }
 
 function isTokenPositionOnOrBeforeBeforePostion(tokenPosition: TokenPosition, position: Position): boolean {
@@ -482,35 +660,4 @@ function nodesOnCsvFromCsvArray(
     }
 
     return result;
-}
-
-function basicNodeFromAst(astNode: Ast.TNode, kind: NodeKind): TNode {
-    const tokenRange: Ast.TokenRange = astNode.tokenRange;
-    return {
-        kind,
-        maybePositionStart: tokenRange.positionStart,
-        maybePositionEnd: tokenRange.positionEnd,
-    };
-}
-
-function basicNodeFromContext(contextNode: ParserContext.Node, kind: NodeKind): TNode {
-    return {
-        kind,
-        maybePositionStart:
-            contextNode.maybeTokenStart !== undefined ? contextNode.maybeTokenStart.positionStart : undefined,
-        maybePositionEnd: undefined,
-    };
-}
-
-function basicNodeFromXorNode(xorNode: NodeIdMap.TXorNode, kind: NodeKind): TNode {
-    switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
-            return basicNodeFromAst(xorNode.node, kind);
-
-        case NodeIdMap.XorNodeKind.Context:
-            return basicNodeFromContext(xorNode.node, kind);
-
-        default:
-            throw isNever(xorNode);
-    }
 }

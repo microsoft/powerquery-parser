@@ -70,6 +70,16 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
+export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: number): Option<TXorNode> {
+    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
+    if (maybeParentNodeId === undefined) {
+        return undefined;
+    }
+    const parentNodeId: number = maybeParentNodeId;
+
+    return maybeXorNode(nodeIdMapCollection, parentNodeId);
+}
+
 // Helper function for Repeatedly calling maybeChildByAttributeIndex.
 export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
@@ -154,6 +164,36 @@ export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): 
     if (maybeNode === undefined) {
         const details: {} = { nodeId };
         throw new CommonError.InvariantError(`nodeId wasn't a astNode nor contextNode`, details);
+    }
+
+    return maybeNode;
+}
+
+export function expectParentXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+    const maybeNode: Option<TXorNode> = maybeParentXorNode(nodeIdMapCollection, nodeId);
+    if (maybeNode === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`nodeId doesn't have a parent`, details);
+    }
+
+    return maybeNode;
+}
+
+export function expectChildByAttributeIndex(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    maybeChildNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>,
+): TXorNode {
+    const maybeNode: Option<TXorNode> = maybeChildByAttributeIndex(
+        nodeIdMapCollection,
+        parentId,
+        attributeIndex,
+        maybeChildNodeKinds,
+    );
+    if (maybeNode === undefined) {
+        const details: {} = { parentId, attributeIndex };
+        throw new CommonError.InvariantError(`parentId doesn't have a child at given index`, details);
     }
 
     return maybeNode;

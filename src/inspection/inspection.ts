@@ -19,7 +19,7 @@ export type TriedInspect = Traverse.TriedTraverse<Inspected>;
 
 export interface State extends Traverse.IState<Inspected> {
     maybePreviousXorNode: Option<NodeIdMap.TXorNode>;
-    isEachEncountered: boolean;
+    maybeOnIdentifier: Option<Ast.Identifier | Ast.IdentifierExpression | Ast.GeneralizedIdentifier>;
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -54,8 +54,8 @@ export function tryFrom(
             nodes: [],
             scope: new Map(),
         },
-        isEachEncountered: false,
         maybePreviousXorNode: undefined,
+        maybeOnIdentifier: undefined,
         position,
         nodeIdMapCollection,
         leafNodeIds,
@@ -88,19 +88,8 @@ function addParentXorNode(
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(xorNode.node.id);
-    if (maybeParentNodeId === undefined) {
-        return [];
-    }
-    const parentNodeId: number = maybeParentNodeId;
-
-    const maybeParentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNode(nodeIdMapCollection, parentNodeId);
-    if (maybeParentXorNode === undefined) {
-        return [];
-    } else {
-        const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
-        return [parentXorNode];
-    }
+    const maybeParent: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeParentXorNode(nodeIdMapCollection, xorNode.node.id);
+    return maybeParent !== undefined ? [maybeParent] : [];
 }
 
 // Either returns a XorNode used as the root for a traverse, or returns undefined. The options are:
