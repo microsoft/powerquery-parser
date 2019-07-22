@@ -31,6 +31,10 @@ export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
             inspectInvokeExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.LetExpression:
+            inspectLetExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListType:
             inspectListExpressionOrLiteral(state, xorNode);
@@ -336,6 +340,47 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
     });
 }
 
+function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode): void {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+        nodeIdMapCollection,
+        letExprXorNode.node.id,
+        1,
+        [Ast.NodeKind.CsvArray],
+    );
+    if (maybeCsvArrayXorNode === undefined) {
+        return;
+    }
+    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+
+    for (const keyValuePairXorNode of nodesOnCsvFromCsvArray(nodeIdMapCollection, csvArrayXorNode)) {
+        const keyValuePairId: number = keyValuePairXorNode.node.id;
+
+        const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+            nodeIdMapCollection,
+            keyValuePairId,
+            0,
+            [Ast.NodeKind.Identifier],
+        );
+        if (maybeKeyXorNode === undefined) {
+            continue;
+        }
+        const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
+
+        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+            nodeIdMapCollection,
+            keyValuePairId,
+            2,
+            undefined,
+        );
+        if (maybeValueXorNode) {
+            const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
+            maybeSetPositionIdentifier(state, keyXorNode, valueXorNode);
+        }
+    }
+}
+
 function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXorNode): void {
     switch (listXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast: {
@@ -445,9 +490,11 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
     const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
 
     for (const keyValuePairXorNode of nodesOnCsvFromCsvArray(nodeIdMapCollection, csvArrayXorNode)) {
+        const keyValuePairId: number = keyValuePairXorNode.node.id;
+
         const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
             nodeIdMapCollection,
-            keyValuePairXorNode.node.id,
+            keyValuePairId,
             0,
             [Ast.NodeKind.GeneralizedIdentifier],
         );
@@ -459,7 +506,7 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
 
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
             nodeIdMapCollection,
-            keyValuePairXorNode.node.id,
+            keyValuePairId,
             2,
             undefined,
         );
@@ -670,7 +717,7 @@ function maybeSetPositionIdentifier(
         // Nothing to assign as position wasn't on an identifier
         state.maybePositionIdentifier === undefined ||
         // Already assigned the result
-        state.result.maybePositionIdentifier === undefined
+        state.result.maybePositionIdentifier !== undefined
     ) {
         return;
     }

@@ -116,18 +116,44 @@ function expectPositionIdentifierEqual(
         inspection.maybePositionIdentifier,
     );
 
-    expect(actual).deep.equal(expected, JSON.stringify(actual));
+    expect(actual).deep.equal(expected);
 }
 
 describe(`Inspection`, () => {
     describe(`AbridgedPositionIdentifier`, () => {
+        it(`let x = 1, y = 2 in x| * y`, () => {
+            const text: string = `let x = 1, y = 2 in x * y`;
+            const position: Inspection.Position = {
+                lineNumber: 0,
+                lineCodeUnit: 21,
+            };
+            const expected: TAbridgedPositionIdentifier = {
+                kind: PositionIdentifierKind.Local,
+                identifierLiteral: `x`,
+                maybeDefinitionPositionStart: {
+                    lineNumber: 0,
+                    lineCodeUnit: 8,
+                    codeUnit: 8,
+                },
+            };
+            expectParseOkPositionIdentifierEqual(text, position, expected);
+        });
+
         it(`let x = 1, y = 2 in x * y|`, () => {
             const text: string = `let x = 1, y = 2 in x * y`;
             const position: Inspection.Position = {
                 lineNumber: 0,
                 lineCodeUnit: 24,
             };
-            const expected: TAbridgedPositionIdentifier = (0 as unknown) as TAbridgedPositionIdentifier;
+            const expected: TAbridgedPositionIdentifier = {
+                kind: PositionIdentifierKind.Local,
+                identifierLiteral: `y`,
+                maybeDefinitionPositionStart: {
+                    lineNumber: 0,
+                    lineCodeUnit: 15,
+                    codeUnit: 15,
+                },
+            };
             expectParseOkPositionIdentifierEqual(text, position, expected);
         });
     });
