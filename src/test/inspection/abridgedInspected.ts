@@ -3,11 +3,11 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "..";
-import { isNever, Option, ResultKind } from "../common";
-import { NodeKind, PositionIdentifierKind, TNode, TPositionIdentifier } from "../inspection";
-import { Lexer, LexerSnapshot, Token, TokenPosition, TriedLexerSnapshot } from "../lexer";
-import { Ast, NodeIdMap, Parser, ParserError } from "../parser";
+import { Inspection } from "../..";
+import { ResultKind } from "../../common";
+import { NodeKind, TNode } from "../../inspection";
+import { Ast, Parser, ParserError } from "../../parser";
+import { expectParseErr, expectParseOk } from "./common";
 
 type AbridgedScope = ReadonlyArray<string>;
 
@@ -16,114 +16,11 @@ interface AbridgedInspection {
     readonly scope: AbridgedScope;
 }
 
-type TAbridgedPositionIdentifier = AbridgedLocalIdentifier | AbridgedUndefinedIdentifier;
-
-interface IAbridgedPositionIdentifier {
-    readonly kind: PositionIdentifierKind;
-    readonly identifierLiteral: string;
-}
-
-interface AbridgedLocalIdentifier extends IAbridgedPositionIdentifier {
-    readonly kind: PositionIdentifierKind.Local;
-    readonly maybeDefinitionPositionStart: Option<TokenPosition>;
-}
-
-interface AbridgedUndefinedIdentifier extends IAbridgedPositionIdentifier {
-    readonly kind: PositionIdentifierKind.Undefined;
-}
-
 function abridgedInspectionFrom(inspection: Inspection.Inspected): AbridgedInspection {
     return {
         nodes: inspection.nodes,
         scope: [...inspection.scope.keys()],
     };
-}
-
-function abridgedMaybePositionIdentifierFrom(
-    maybePositionIdentifier: Option<TPositionIdentifier>,
-): Option<TAbridgedPositionIdentifier> {
-    if (maybePositionIdentifier === undefined) {
-        return undefined;
-    }
-    const positionIdentifier: TPositionIdentifier = maybePositionIdentifier;
-
-    switch (positionIdentifier.kind) {
-        case PositionIdentifierKind.Local: {
-            const definition: NodeIdMap.TXorNode = positionIdentifier.definition;
-
-            let maybeDefinitionPositionStart: Option<TokenPosition>;
-            switch (definition.kind) {
-                case NodeIdMap.XorNodeKind.Ast:
-                    maybeDefinitionPositionStart = definition.node.tokenRange.positionStart;
-                    break;
-
-                case NodeIdMap.XorNodeKind.Context: {
-                    const maybeTokenStart: Option<Token> = definition.node.maybeTokenStart;
-                    if (maybeTokenStart !== undefined) {
-                        const tokenStart: Token = maybeTokenStart;
-                        maybeDefinitionPositionStart = tokenStart.positionStart;
-                    }
-
-                    break;
-                }
-
-                default:
-                    throw isNever(definition);
-            }
-
-            return {
-                kind: positionIdentifier.kind,
-                identifierLiteral: positionIdentifier.identifier.literal,
-                maybeDefinitionPositionStart,
-            };
-        }
-
-        case PositionIdentifierKind.Undefined:
-            return {
-                kind: positionIdentifier.kind,
-                identifierLiteral: positionIdentifier.identifier.literal,
-            };
-
-        default:
-            throw isNever(positionIdentifier);
-    }
-}
-
-function expectTriedParse(text: string): Parser.TriedParse {
-    const state: Lexer.State = Lexer.stateFrom(text);
-    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
-    if (!(maybeErrorLineMap === undefined)) {
-        throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
-    }
-
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (!(triedSnapshot.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedSnapshot.kind === ResultKind.Ok: ${triedSnapshot.error.message}`);
-    }
-    const snapshot: LexerSnapshot = triedSnapshot.value;
-
-    return Parser.tryParse(snapshot);
-}
-
-function expectParseErr(text: string): ParserError.ParserError {
-    const triedParse: Parser.TriedParse = expectTriedParse(text);
-    if (!(triedParse.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
-    }
-
-    if (!(triedParse.error instanceof ParserError.ParserError)) {
-        throw new Error(`AssertFailed: triedParse.error instanceof ParserError: ${triedParse.error.message}`);
-    }
-
-    return triedParse.error;
-}
-
-function expectParseOk(text: string): Parser.ParseOk {
-    const triedParse: Parser.TriedParse = expectTriedParse(text);
-    if (!(triedParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Ok: ${triedParse.error.message}`);
-    }
-    return triedParse.value;
 }
 
 function expectParseOkAbridgedInspectionEqual(
@@ -162,49 +59,6 @@ function expectAbridgedInspectionEqual(triedInspect: Inspection.TriedInspect, ex
     const actual: AbridgedInspection = abridgedInspectionFrom(inspection);
 
     expect(actual).deep.equal(expected);
-}
-
-function expectParseOkPositionIdentifierEqual(
-    text: string,
-    position: Inspection.Position,
-    expected: Option<TAbridgedPositionIdentifier>,
-): void {
-    const parseOk: Parser.ParseOk = expectParseOk(text);
-    const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
-        position,
-        parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
-    );
-    expectPositionIdentifierEqual(triedInspect, expected);
-}
-
-// function expectParseErrPositionIdentifierEqual(
-//     text: string,
-//     position: Inspection.Position,
-//     expected: Option<TAbridgedPositionIdentifier>,
-// ): void {
-//     const parserError: ParserError.ParserError = expectParseErr(text);
-//     const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
-//         position,
-//         parserError.context.nodeIdMapCollection,
-//         parserError.context.leafNodeIds,
-//     );
-//     expectPositionIdentifierEqual(triedInspect, expected);
-// }
-
-function expectPositionIdentifierEqual(
-    triedInspect: Inspection.TriedInspect,
-    expected: Option<TAbridgedPositionIdentifier>,
-): void {
-    if (!(triedInspect.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok: ${triedInspect.error.message}`);
-    }
-    const inspection: Inspection.Inspected = triedInspect.value;
-    const actual: Option<TAbridgedPositionIdentifier> = abridgedMaybePositionIdentifierFrom(
-        inspection.maybePositionIdentifier,
-    );
-
-    expect(actual).deep.equal(expected, JSON.stringify(actual));
 }
 
 describe(`Inspection`, () => {
@@ -1223,18 +1077,6 @@ describe(`Inspection`, () => {
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
-        });
-    });
-
-    describe(`Inspected.maybePositionIdentifier`, () => {
-        it(`let x = 1, y = 2 in x * y|`, () => {
-            const text: string = `let x = 1, y = 2 in x * y`;
-            const position: Inspection.Position = {
-                lineNumber: 0,
-                lineCodeUnit: 24,
-            };
-            const expected: TAbridgedPositionIdentifier = (0 as unknown) as TAbridgedPositionIdentifier;
-            expectParseOkPositionIdentifierEqual(text, position, expected);
         });
     });
 });
