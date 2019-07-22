@@ -157,7 +157,7 @@ describe(`Inspection`, () => {
                 const text: string = `let x = 1, y = 2 in x * y`;
                 const position: Inspection.Position = {
                     lineNumber: 0,
-                    lineCodeUnit: 24,
+                    lineCodeUnit: 25,
                 };
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Local,

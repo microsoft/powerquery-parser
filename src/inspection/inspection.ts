@@ -140,9 +140,9 @@ function addParentXorNode(
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 
-// Either returns a XorNode used as the root for a traverse, or returns undefined. The options are:
-//  * the XorNode at the given position
-//  * the closest XorNode to the left of the given position
+// Either returns a Ast.TNode used as the root for a traverse, or returns undefined. The options are:
+//  * the Ast.TNode at the given position
+//  * the closest Ast.TNode to the left of the given position
 //  * undefined
 function maybeClosestAstNode(
     position: Position,
@@ -185,12 +185,12 @@ function closerAstNode(position: Position, maybeCurrentNode: Option<Ast.TNode>, 
         return currentNode;
     } else if (
         newNodePositionStart.lineNumber === position.lineNumber &&
-        newNodePositionStart.lineCodeUnit > position.lineCodeUnit
+        newNodePositionStart.lineCodeUnit >= position.lineCodeUnit
     ) {
         return currentNode;
     }
 
-    // Both currentTokenPositionStart and newTokenPositionStart are <= position,
-    // so a quick comparison can be done by examining TokenPosition.codeUnit
-    return currentNodePositionStart.codeUnit < newNodePositionStart.codeUnit ? newNode : currentNode;
+    // Already checked (currentTokenPositionStart <= Position && newTokenPositionStart <= Position),
+    // so grab the right most Node by checking TokenPosition.codeUnit
+    return newNodePositionStart.codeUnit > currentNodePositionStart.codeUnit ? newNode : currentNode;
 }

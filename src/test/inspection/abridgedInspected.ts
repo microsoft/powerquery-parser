@@ -457,7 +457,7 @@ describe(`Inspection`, () => {
                             },
                         },
                     ],
-                    scope: [`x`, `y`, `foo`],
+                    scope: [`y`, `x`, `foo`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
