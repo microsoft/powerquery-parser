@@ -188,6 +188,24 @@ describe(`Inspection`, () => {
                 };
                 expectParseOkPositionIdentifierEqual(text, position, expected);
             });
+
+            it(`section; foo = 1; bar = foo|;`, () => {
+                const text: string = `section; foo = 1; bar = foo;`;
+                const position: Inspection.Position = {
+                    lineNumber: 0,
+                    lineCodeUnit: 27,
+                };
+                const expected: TAbridgedPositionIdentifier = {
+                    kind: PositionIdentifierKind.Local,
+                    identifierLiteral: `foo`,
+                    maybeDefinitionPositionStart: {
+                        lineNumber: 0,
+                        lineCodeUnit: 15,
+                        codeUnit: 15,
+                    },
+                };
+                expectParseOkPositionIdentifierEqual(text, position, expected);
+            });
         });
 
         describe("ParserContext", () => {

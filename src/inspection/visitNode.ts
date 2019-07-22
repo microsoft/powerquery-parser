@@ -551,27 +551,41 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
     );
 
     for (const sectionMember of sectionMemberXorNodes) {
-        const request: NodeIdMap.MultipleChildByAttributeIndexRequest = {
+        const maybeIdentifierPairedExprXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
             nodeIdMapCollection,
-            firstDrilldown: {
-                rootNodeId: sectionMember.node.id,
-                attributeIndex: 2,
-                maybeAllowedNodeKinds: [Ast.NodeKind.IdentifierPairedExpression],
-            },
-            drilldowns: [
-                {
-                    attributeIndex: 0,
-                    maybeAllowedNodeKinds: [Ast.NodeKind.Identifier],
-                },
-            ],
-        };
+            sectionMember.node.id,
+            2,
+            [Ast.NodeKind.IdentifierPairedExpression],
+        );
+        if (maybeIdentifierPairedExprXorNode === undefined) {
+            continue;
+        }
+        const identifierPairedExprXorNode: NodeIdMap.TXorNode = maybeIdentifierPairedExprXorNode;
+        const identifierPairedExprId: number = identifierPairedExprXorNode.node.id;
 
-        const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeMultipleChildByAttributeRequest(request);
+        const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+            nodeIdMapCollection,
+            identifierPairedExprId,
+            0,
+            [Ast.NodeKind.Identifier],
+        );
         if (maybeNameXorNode === undefined) {
-            break;
+            continue;
         }
         const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
         inspectIdentifier(state, nameXorNode);
+
+        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+            nodeIdMapCollection,
+            identifierPairedExprId,
+            2,
+            undefined,
+        );
+
+        if (maybeValueXorNode) {
+            const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
+            maybeSetPositionIdentifier(state, nameXorNode, valueXorNode);
+        }
     }
 }
 
