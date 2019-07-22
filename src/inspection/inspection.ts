@@ -19,7 +19,7 @@ import { visitNode } from "./visitNode";
 export type TriedInspect = Traverse.TriedTraverse<Inspected>;
 
 export interface State extends Traverse.IState<UnfrozenInspected> {
-    readonly maybePositionIdentifier: Option<Ast.Identifier>;
+    readonly maybePositionIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -87,7 +87,7 @@ const DefaultInspection: Inspected = {
 function maybePositionIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     closestLeaf: Ast.TNode,
-): Option<Ast.Identifier> {
+): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
     if (closestLeaf.kind === Ast.NodeKind.Constant && closestLeaf.literal === `@`) {
         const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(closestLeaf.id);
@@ -98,7 +98,10 @@ function maybePositionIdentifier(
 
         const parent: Ast.TNode = NodeIdMap.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
         return parent.kind === Ast.NodeKind.IdentifierExpression ? parent.identifier : undefined;
-    } else if (closestLeaf.kind === Ast.NodeKind.Identifier) {
+    } else if (
+        closestLeaf.kind === Ast.NodeKind.Identifier ||
+        closestLeaf.kind === Ast.NodeKind.GeneralizedIdentifier
+    ) {
         return closestLeaf;
     } else {
         return undefined;

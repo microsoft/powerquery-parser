@@ -9,7 +9,7 @@ export const enum PositionIdentifierKind {
 
 export interface IPositionIdentifier {
     readonly kind: PositionIdentifierKind;
-    readonly identifier: Ast.Identifier;
+    readonly identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 }
 
 export interface LocalIdentifier extends IPositionIdentifier {
