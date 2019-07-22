@@ -80,7 +80,7 @@ export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: num
     return maybeXorNode(nodeIdMapCollection, parentNodeId);
 }
 
-// Helper function for Repeatedly calling maybeChildByAttributeIndex.
+// Helper function for repeatedly calling maybeChildByAttributeIndex.
 export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
     const firstDrilldown: FirstDrilldown = request.firstDrilldown;

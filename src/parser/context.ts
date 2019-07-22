@@ -45,9 +45,8 @@ export interface Node {
     // Incremented for each child context created with the Node as its parent,
     // and decremented for each child context deleted.
     attributeCounter: number;
-    // maybeAstNode assigned in endContext.
-    maybeAstNode: Option<Ast.TNode>;
     maybeAttributeIndex: Option<number>;
+    isClosed: boolean;
 }
 
 export function empty(): State {
@@ -104,7 +103,7 @@ export function startContext(
         tokenIndexStart,
         maybeTokenStart,
         attributeCounter: 0,
-        maybeAstNode: undefined,
+        isClosed: false,
         maybeAttributeIndex,
     };
     nodeIdMapCollection.contextNodeById.set(nodeId, node);
@@ -112,20 +111,11 @@ export function startContext(
     return node;
 }
 
-// Marks a context as closed by assinging an Ast.TNode to maybeAstNode.
 // Returns the Node's parent context (if one exists).
 export function endContext(state: State, contextNode: Node, astNode: Ast.TNode): Option<Node> {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    if (contextNode.maybeAstNode !== undefined) {
-        throw new CommonError.InvariantError("context was already ended");
-    } else if (contextNode.id !== astNode.id) {
-        const details: {} = {
-            contextNodeId: contextNode.id,
-            astNodeId: astNode.id,
-        };
-        throw new CommonError.InvariantError("contextNode and astNode have different nodeIds", details);
-    }
+    contextNode.isClosed = true;
 
     if (astNode.isLeaf) {
         state.leafNodeIds.push(contextNode.id);
@@ -135,9 +125,6 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
     const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(contextNode.id);
     const maybeParentNode: Option<Node> =
         maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
-
-    // Setting maybeAstNode marks the ContextNode as complete.
-    contextNode.maybeAstNode = astNode;
 
     // Move nodeId from contextNodeMap to astNodeMap.
     if (!nodeIdMapCollection.contextNodeById.delete(contextNode.id)) {
