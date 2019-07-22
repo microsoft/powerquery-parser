@@ -2,10 +2,11 @@
 // Licensed under the MIT license.
 
 import { Option, ResultKind, Traverse, TypeUtils } from "../common";
+import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
 import { TNode } from "./node";
-import { TPositionIdentifier } from "./positionIdentifier";
+import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 import { visitNode } from "./visitNode";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
@@ -65,7 +66,7 @@ export function tryFrom(
         leafNodeIds,
     };
 
-    return Traverse.tryTraverseXor<State, UnfrozenInspected>(
+    const triedTraverse: TriedTraverse<UnfrozenInspected> = Traverse.tryTraverseXor<State, UnfrozenInspected>(
         root,
         nodeIdMapCollection,
         state,
@@ -74,6 +75,26 @@ export function tryFrom(
         addParentXorNode,
         undefined,
     );
+    // If an identifier is at the given Position but its definition wasn't found during the inspection,
+    // then create an UndefinedIdentifier for maybePositionIdentifier.
+    if (
+        triedTraverse.kind === ResultKind.Ok &&
+        state.maybePositionIdentifier &&
+        state.result.maybePositionIdentifier === undefined
+    ) {
+        return {
+            kind: ResultKind.Ok,
+            value: {
+                ...triedTraverse.value,
+                maybePositionIdentifier: {
+                    kind: PositionIdentifierKind.Undefined,
+                    identifier: state.maybePositionIdentifier,
+                },
+            },
+        };
+    } else {
+        return triedTraverse;
+    }
 }
 
 type UnfrozenInspected = TypeUtils.StripReadonly<Inspected>;

@@ -6,6 +6,7 @@ import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
 import { NodeKind, TNode } from "./node";
+import { PositionIdentifierKind } from "./positionIdentifier";
 
 export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
     // tslint:disable-next-line: switch-default
@@ -317,7 +318,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
             inspectIdentifierExpression(state, argXorNode);
         }
 
-        if (isPositionOnXorNode(position, argXorNode, true)) {
+        if (isPositionOnXorNode(position, argXorNode)) {
             maybePositionArgumentIndex = index;
         }
     }
@@ -455,6 +456,17 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
         }
         const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
         inspectGeneralizedIdentifier(state, keyXorNode);
+
+        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
+            nodeIdMapCollection,
+            keyValuePairXorNode.node.id,
+            2,
+            undefined,
+        );
+        if (maybeValueXorNode) {
+            const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
+            maybeSetPositionIdentifier(state, keyXorNode, valueXorNode);
+        }
     }
 }
 
@@ -561,17 +573,13 @@ function isTokenPositionBeforePostion(tokenPosition: TokenPosition, position: Po
     );
 }
 
-function isPositionOnXorNode(position: Position, xorNode: NodeIdMap.TXorNode, isContextNodeTruthy: boolean): boolean {
+function isPositionOnXorNode(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
             return isPositionOnTokenRange(position, xorNode.node.tokenRange);
 
         case NodeIdMap.XorNodeKind.Context:
-            if (!isContextNodeTruthy) {
-                throw new CommonError.InvariantError(`todo?`);
-            } else {
-                return true;
-            }
+            return true;
 
         default:
             throw isNever(xorNode);
@@ -651,4 +659,41 @@ function nodesOnCsvFromCsvArray(
     }
 
     return result;
+}
+
+function maybeSetPositionIdentifier(
+    state: State,
+    keyXorNode: NodeIdMap.TXorNode,
+    valueXorNode: NodeIdMap.TXorNode,
+): void {
+    if (
+        // Nothing to assign as position wasn't on an identifier
+        state.maybePositionIdentifier === undefined ||
+        // Already assigned the result
+        state.result.maybePositionIdentifier === undefined
+    ) {
+        return;
+    }
+    if (keyXorNode.kind !== NodeIdMap.XorNodeKind.Ast) {
+        const details: {} = { keyXorNode };
+        throw new CommonError.InvariantError(`keyXorNode should be an Ast node`, details);
+    }
+
+    const keyAstNode: Ast.TNode = keyXorNode.node;
+    if (keyAstNode.kind !== Ast.NodeKind.GeneralizedIdentifier && keyAstNode.kind !== Ast.NodeKind.Identifier) {
+        const details: {} = { keyAstNodeKind: keyAstNode.kind };
+        throw new CommonError.InvariantError(
+            `keyAstNode is neither ${Ast.NodeKind.GeneralizedIdentifier} nor ${Ast.NodeKind.Identifier}`,
+            details,
+        );
+    }
+    const key: Ast.GeneralizedIdentifier | Ast.Identifier = keyAstNode;
+
+    if (key.literal === state.maybePositionIdentifier.literal) {
+        state.result.maybePositionIdentifier = {
+            kind: PositionIdentifierKind.Local,
+            identifier: key,
+            definition: valueXorNode,
+        };
+    }
 }
