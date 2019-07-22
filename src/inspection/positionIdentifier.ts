@@ -14,7 +14,7 @@ export interface IPositionIdentifier {
 
 export interface LocalIdentifier extends IPositionIdentifier {
     readonly kind: PositionIdentifierKind.Local;
-    readonly defiinition: NodeIdMap.TXorNode;
+    readonly definition: NodeIdMap.TXorNode;
 }
 
 export interface UndefinedIdentifier extends IPositionIdentifier {
