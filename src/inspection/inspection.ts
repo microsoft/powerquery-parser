@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option, ResultKind, Traverse } from "../common";
+import { Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
 import { TNode } from "./node";
+import { TPositionIdentifier } from "./positionIdentifier";
 import { visitNode } from "./visitNode";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
@@ -17,9 +18,8 @@ import { visitNode } from "./visitNode";
 
 export type TriedInspect = Traverse.TriedTraverse<Inspected>;
 
-export interface State extends Traverse.IState<Inspected> {
-    maybePreviousXorNode: Option<NodeIdMap.TXorNode>;
-    maybeOnIdentifier: Option<Ast.Identifier | Ast.IdentifierExpression | Ast.GeneralizedIdentifier>;
+export interface State extends Traverse.IState<UnfrozenInspected> {
+    readonly maybePositionIdentifier: Option<Ast.Identifier>;
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -28,6 +28,7 @@ export interface State extends Traverse.IState<Inspected> {
 export interface Inspected {
     readonly nodes: TNode[];
     readonly scope: Map<string, NodeIdMap.TXorNode>;
+    readonly maybePositionIdentifier: Option<TPositionIdentifier>;
 }
 
 export interface Position {
@@ -39,7 +40,7 @@ export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Traverse.TriedTraverse<Inspected> {
+): TriedInspect {
     const maybeClosestLeaf: Option<Ast.TNode> = maybeClosestAstNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeClosestLeaf === undefined) {
         return {
@@ -48,24 +49,23 @@ export function tryFrom(
         };
     }
     const closestLeaf: Ast.TNode = maybeClosestLeaf;
-
-    const state: State = {
-        result: {
-            nodes: [],
-            scope: new Map(),
-        },
-        maybePreviousXorNode: undefined,
-        maybeOnIdentifier: undefined,
-        position,
-        nodeIdMapCollection,
-        leafNodeIds,
-    };
     const root: NodeIdMap.TXorNode = {
         kind: NodeIdMap.XorNodeKind.Ast,
         node: closestLeaf,
     };
+    const state: State = {
+        result: {
+            nodes: [],
+            scope: new Map(),
+            maybePositionIdentifier: undefined,
+        },
+        maybePositionIdentifier: maybePositionIdentifier(nodeIdMapCollection, closestLeaf),
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+    };
 
-    return Traverse.tryTraverseXor<State, Inspected>(
+    return Traverse.tryTraverseXor<State, UnfrozenInspected>(
         root,
         nodeIdMapCollection,
         state,
@@ -76,15 +76,39 @@ export function tryFrom(
     );
 }
 
+type UnfrozenInspected = TypeUtils.StripReadonly<Inspected>;
+
 const DefaultInspection: Inspected = {
     nodes: [],
     scope: new Map(),
+    maybePositionIdentifier: undefined,
 };
+
+function maybePositionIdentifier(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    closestLeaf: Ast.TNode,
+): Option<Ast.Identifier> {
+    // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
+    if (closestLeaf.kind === Ast.NodeKind.Constant && closestLeaf.literal === `@`) {
+        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(closestLeaf.id);
+        if (maybeParentId === undefined) {
+            return undefined;
+        }
+        const parentId: number = maybeParentId;
+
+        const parent: Ast.TNode = NodeIdMap.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
+        return parent.kind === Ast.NodeKind.IdentifierExpression ? parent.identifier : undefined;
+    } else if (closestLeaf.kind === Ast.NodeKind.Identifier) {
+        return closestLeaf;
+    } else {
+        return undefined;
+    }
+}
 
 // Used as expandNodesFn.
 // Returns the XorNode's parent if one exists.
 function addParentXorNode(
-    _state: State & Traverse.IState<Inspected>,
+    _state: State & Traverse.IState<UnfrozenInspected>,
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
@@ -106,14 +130,13 @@ function maybeClosestAstNode(
 
     for (const nodeId of leafNodeIds) {
         const newNode: Ast.TNode = NodeIdMap.expectAstNode(astNodeById, nodeId);
-        maybeClosestNode = closerXorNode(position, maybeClosestNode, newNode);
+        maybeClosestNode = closerAstNode(position, maybeClosestNode, newNode);
     }
 
     return maybeClosestNode;
 }
 
-// Assumes both XorNode parameters are leaf nodes.
-function closerXorNode(position: Position, maybeCurrentNode: Option<Ast.TNode>, newNode: Ast.TNode): Option<Ast.TNode> {
+function closerAstNode(position: Position, maybeCurrentNode: Option<Ast.TNode>, newNode: Ast.TNode): Option<Ast.TNode> {
     const newNodePositionStart: TokenPosition = newNode.tokenRange.positionStart;
 
     // If currentToken isn't set and newNode's start position is <= position: return newToken
