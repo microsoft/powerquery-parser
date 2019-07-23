@@ -1590,7 +1590,8 @@ export class Parser {
 
             const maybeConstantKind: Option<Ast.ConstantKind> = Ast.constantKindFromTokenKind(tokenKind);
             if (maybeConstantKind === undefined) {
-                throw new CommonError.InvariantError(`couldn't convert TokenKind=${tokenKind} into ConstantKind`);
+                const details: {} = { tokenKind };
+                throw new CommonError.InvariantError(`couldn't convert TokenKind into ConstantKind`, details);
             }
             const constantKind: Ast.ConstantKind = maybeConstantKind;
 
@@ -1612,9 +1613,8 @@ export class Parser {
     private readIdentifierConstantAsConstant(identifierConstant: Ast.IdentifierConstant): Ast.Constant {
         const maybeConstant: Option<Ast.Constant> = this.maybeReadIdentifierConstantAsConstant(identifierConstant);
         if (!maybeConstant) {
-            throw new CommonError.InvariantError(
-                `couldn't convert IdentifierConstant=${identifierConstant} into ConstantKind`,
-            );
+            const details: {} = { identifierConstant };
+            throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
         }
 
         return maybeConstant;
@@ -1629,9 +1629,8 @@ export class Parser {
                 identifierConstant,
             );
             if (!maybeConstantKind) {
-                throw new CommonError.InvariantError(
-                    `couldn't convert IdentifierConstant=${identifierConstant} into ConstantKind`,
-                );
+                const details: {} = { identifierConstant };
+                throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
             }
 
             this.readToken();
