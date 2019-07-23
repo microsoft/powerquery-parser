@@ -205,24 +205,30 @@ export class Parser {
 
     // 12.2.3.2 Logical expressions
     private readLogicalExpression(): Ast.TLogicalExpression {
-        return this.readBinOpExpression<Ast.NodeKind.LogicalExpression, Ast.LogicalOperator, Ast.TLogicalExpression>(
+        return this.readBinOpExpression<
             Ast.NodeKind.LogicalExpression,
-            Ast.logicalOperatorFrom,
+            Ast.TLogicalExpression,
+            Ast.LogicalOperator,
+            Ast.TLogicalExpression
+        >(
+            Ast.NodeKind.LogicalExpression,
+            () => this.readIsExpression(),
+            maybeCurrentTokenKind => Ast.logicalOperatorFrom(maybeCurrentTokenKind),
             () => this.readIsExpression(),
         );
     }
 
     // 12.2.3.3 Is expression
     private readIsExpression(): Ast.TIsExpression {
-        return this.readBinOpExpression2<
+        return this.readBinOpExpression<
             Ast.NodeKind.IsExpression,
             Ast.TAsExpression,
-            Ast.Constant,
+            Ast.ConstantKind.Is,
             Ast.TNullablePrimitiveType
         >(
             Ast.NodeKind.IsExpression,
             () => this.readAsExpression(),
-            () => this.maybeReadTokenKindAsConstant(TokenKind.KeywordIs),
+            maybeCurrentTokenKind => (maybeCurrentTokenKind ? Ast.ConstantKind.Is : undefined),
             () => this.readNullablePrimitiveType(),
         );
     }
@@ -242,24 +248,30 @@ export class Parser {
 
     // 12.2.3.4 As expression
     private readAsExpression(): Ast.TAsExpression {
-        return this.readBinOpExpression2<
+        return this.readBinOpExpression<
             Ast.NodeKind.AsExpression,
             Ast.TEqualityExpression,
-            Ast.Constant,
+            Ast.ConstantKind.As,
             Ast.TNullablePrimitiveType
         >(
             Ast.NodeKind.AsExpression,
             () => this.readEqualityExpression(),
-            () => this.maybeReadTokenKindAsConstant(TokenKind.KeywordAs),
+            maybeCurrentTokenKind => (maybeCurrentTokenKind ? Ast.ConstantKind.As : undefined),
             () => this.readNullablePrimitiveType(),
         );
     }
 
     // 12.2.3.5 Equality expression
     private readEqualityExpression(): Ast.TEqualityExpression {
-        return this.readBinOpExpression<Ast.NodeKind.EqualityExpression, Ast.EqualityOperator, Ast.TEqualityExpression>(
+        return this.readBinOpExpression<
             Ast.NodeKind.EqualityExpression,
-            Ast.equalityOperatorFrom,
+            Ast.TEqualityExpression,
+            Ast.EqualityOperator,
+            Ast.TEqualityExpression
+        >(
+            Ast.NodeKind.EqualityExpression,
+            () => this.readRelationalExpression(),
+            maybeCurrentTokenKind => Ast.equalityOperatorFrom(maybeCurrentTokenKind),
             () => this.readRelationalExpression(),
         );
     }
@@ -268,18 +280,30 @@ export class Parser {
     private readRelationalExpression(): Ast.TRelationalExpression {
         return this.readBinOpExpression<
             Ast.NodeKind.RelationalExpression,
+            Ast.TArithmeticExpression,
             Ast.RelationalOperator,
-            Ast.TRelationalExpression
-        >(Ast.NodeKind.RelationalExpression, Ast.relationalOperatorFrom, () => this.readArithmeticExpression());
+            Ast.TArithmeticExpression
+        >(
+            Ast.NodeKind.RelationalExpression,
+            () => this.readArithmeticExpression(),
+            maybeCurrentTokenKind => Ast.relationalOperatorFrom(maybeCurrentTokenKind),
+            () => this.readArithmeticExpression(),
+        );
     }
 
     // 12.2.3.7 Arithmetic expressions
     private readArithmeticExpression(): Ast.TArithmeticExpression {
         return this.readBinOpExpression<
             Ast.NodeKind.ArithmeticExpression,
+            Ast.TMetadataExpression,
             Ast.ArithmeticOperator,
-            Ast.TArithmeticExpression
-        >(Ast.NodeKind.ArithmeticExpression, Ast.arithmeticOperatorFrom, () => this.readMetadataExpression());
+            Ast.TMetadataExpression
+        >(
+            Ast.NodeKind.ArithmeticExpression,
+            () => this.readMetadataExpression(),
+            maybeCurrentTokenKind => Ast.arithmeticOperatorFrom(maybeCurrentTokenKind),
+            () => this.readMetadataExpression(),
+        );
     }
 
     // 12.2.3.8 Metadata expression
@@ -1768,7 +1792,7 @@ export class Parser {
         }
     }
 
-    private readBinOpExpression2<Kind, Head, Operator, Operand>(
+    private readBinOpExpression<Kind, Head, Operator, Operand>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         headReader: () => Head,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
