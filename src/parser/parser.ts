@@ -896,7 +896,7 @@ export class Parser {
             elements: fields,
             isLeaf: false,
         };
-        this.endContext((fieldArray as unknown) as Ast.TCsvArray);
+        this.endContext(fieldArray);
 
         const rightBracketConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightBracket);
 
@@ -1149,7 +1149,7 @@ export class Parser {
             elements: parameters,
             isLeaf: false,
         };
-        this.endContext((parameterArray as unknown) as Ast.TCsvArray);
+        this.endContext(parameterArray);
 
         const rightParenthesisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightParenthesis);
 
