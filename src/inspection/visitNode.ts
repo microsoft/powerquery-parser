@@ -102,7 +102,7 @@ function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.
         drilldowns: [
             {
                 attributeIndex: 1,
-                maybeAllowedNodeKinds: [Ast.NodeKind.ArrayHelper],
+                maybeAllowedNodeKinds: [Ast.NodeKind.ArrayWrapper],
             },
         ],
     };
@@ -293,7 +293,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
         1,
-        [Ast.NodeKind.ArrayHelper],
+        [Ast.NodeKind.ArrayWrapper],
     );
     if (maybeCsvArrayXorNode === undefined) {
         state.result.nodes.push({
@@ -347,7 +347,7 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
         nodeIdMapCollection,
         letExprXorNode.node.id,
         1,
-        [Ast.NodeKind.ArrayHelper],
+        [Ast.NodeKind.ArrayWrapper],
     );
     if (maybeCsvArrayXorNode === undefined) {
         return;
@@ -482,7 +482,7 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
         nodeIdMapCollection,
         recordXorNode.node.id,
         1,
-        [Ast.NodeKind.ArrayHelper],
+        [Ast.NodeKind.ArrayWrapper],
     );
     if (maybeCsvArrayXorNode === undefined) {
         return;
@@ -538,7 +538,7 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
         nodeIdMapCollection,
         sectionXorNode.node.id,
         4,
-        [Ast.NodeKind.ArrayHelper],
+        [Ast.NodeKind.ArrayWrapper],
     );
     if (maybeSectionMemberArrayXorNode === undefined) {
         return;

@@ -5,8 +5,8 @@ import { CommonError, Option } from "../common";
 import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
-    ArrayHelper = "ArrayHelper",
     ArithmeticExpression = "ArithmeticExpression",
+    ArrayWrapper = "ArrayWrapper",
     AsExpression = "AsExpression",
     AsNullablePrimitiveType = "AsNullablePrimitiveType",
     AsType = "AsType",
@@ -100,7 +100,7 @@ export type TAuxiliaryNodes =
     | Identifier
     | SectionMember
     | TAnyLiteral
-    | TArrayHelper
+    | TArrayWrapper
     | TCsv
     | TKeyValuePair
     | TNullablePrimitiveType
@@ -111,10 +111,10 @@ export type TAuxiliaryNodes =
     | TUnaryExpressionHelper
     | TWrapped;
 
-export type TArrayHelper =
-    | IArrayHelper<SectionMember>
-    | IArrayHelper<TRecursivePrimaryExpression>
-    | IArrayHelper<TUnaryExpressionHelper>
+export type TArrayWrapper =
+    | IArrayWrapper<SectionMember>
+    | IArrayWrapper<TRecursivePrimaryExpression>
+    | IArrayWrapper<TUnaryExpressionHelper>
     | TCsvArray;
 
 export type TCsvArray = ICsvArray<TCsvType>;
@@ -227,7 +227,7 @@ export interface Section extends INode {
     readonly sectionConstant: Constant;
     readonly maybeName: Option<Identifier>;
     readonly semicolonConstant: Constant;
-    readonly sectionMembers: IArrayHelper<SectionMember>;
+    readonly sectionMembers: IArrayWrapper<SectionMember>;
 }
 
 export interface SectionMember extends INode {
@@ -412,7 +412,7 @@ export type TUnaryExpression = UnaryExpression | TTypeExpression;
 export interface UnaryExpression extends INode {
     readonly kind: NodeKind.UnaryExpression;
     readonly isLeaf: false;
-    readonly expressions: IArrayHelper<UnaryUnaryExpressionHelper>;
+    readonly expressions: IArrayWrapper<UnaryUnaryExpressionHelper>;
 }
 
 export const enum UnaryOperator {
@@ -647,7 +647,7 @@ export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
     readonly isLeaf: false;
     readonly head: TPrimaryExpression;
-    readonly recursiveExpressions: IArrayHelper<TRecursivePrimaryExpression>;
+    readonly recursiveExpressions: IArrayWrapper<TRecursivePrimaryExpression>;
 }
 
 export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryType, TPrimaryType> {}
@@ -676,7 +676,7 @@ export interface RecordLiteral
 export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
     readonly first: Operand;
-    readonly rest: IArrayHelper<IUnaryExpressionHelper<Operator, Operand>>;
+    readonly rest: IArrayWrapper<IUnaryExpressionHelper<Operator, Operand>>;
 }
 
 // BinOp expressions which uses a keyword as operators,
@@ -690,12 +690,12 @@ export interface IBinOpKeyword<Kind, L, R> extends INode {
 
 // Allows the ReadonlyArray to be treated as a TNode.
 // Without this wrapper ParserContext couldn't save partial progress for parsing an array.
-export interface IArrayHelper<T> extends INode {
-    readonly kind: NodeKind.ArrayHelper;
+export interface IArrayWrapper<T> extends INode {
+    readonly kind: NodeKind.ArrayWrapper;
     readonly elements: ReadonlyArray<T>;
 }
 
-export interface ICsvArray<T> extends IArrayHelper<ICsv<T & TCsvType>> {}
+export interface ICsvArray<T> extends IArrayWrapper<ICsv<T & TCsvType>> {}
 
 export interface ICsv<T> extends INode {
     readonly kind: NodeKind.Csv;
