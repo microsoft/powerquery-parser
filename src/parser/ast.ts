@@ -947,6 +947,22 @@ export const enum ConstantKind {
     Table = "table",
     Text = "text",
     Time = "time",
+
+    // ArithmeticOperator
+    Asterisk = "*",
+    Division = "/",
+    Plus = "+",
+    Minus = "-",
+
+    // LogicalOperator
+    And = "and",
+    Or = "or",
+
+    // RelationalOperator
+    LessThan = "<",
+    LessThanEqualTo = "<=",
+    GreaterThan = ">",
+    GreaterThanEqualTo = ">=",
 }
 
 export const enum IdentifierConstant {
@@ -1098,6 +1114,30 @@ export function constantKindFromTokenKind(tokenKind: TokenKind): Option<Constant
             return ConstantKind.RightParenthesis;
         case TokenKind.Semicolon:
             return ConstantKind.Semicolon;
+
+        case TokenKind.Asterisk:
+            return ConstantKind.Asterisk;
+        case TokenKind.Division:
+            return ConstantKind.Division;
+        case TokenKind.Plus:
+            return ConstantKind.Plus;
+        case TokenKind.Minus:
+            return ConstantKind.Minus;
+
+        case TokenKind.KeywordAnd:
+            return ConstantKind.And;
+        case TokenKind.KeywordOr:
+            return ConstantKind.Or;
+
+        case TokenKind.LessThan:
+            return ConstantKind.LessThan;
+        case TokenKind.LessThanEqualTo:
+            return ConstantKind.LessThanEqualTo;
+        case TokenKind.GreaterThan:
+            return ConstantKind.GreaterThan;
+        case TokenKind.GreaterThanEqualTo:
+            return ConstantKind.GreaterThanEqualTo;
+
         default:
             return undefined;
     }
