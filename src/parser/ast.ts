@@ -112,6 +112,7 @@ export type TAuxiliaryNodes =
     | TWrapped;
 
 export type TArrayWrapper =
+    | IArrayWrapper<AsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
     | IArrayWrapper<TRecursivePrimaryExpression>
     | IArrayWrapper<TUnaryExpressionHelper>
@@ -301,8 +302,12 @@ export interface PrimitiveType extends INode {
 
 export type TAsExpression = AsExpression | TEqualityExpression;
 
-export interface AsExpression
-    extends IBinOpKeyword<NodeKind.AsExpression, TEqualityExpression, TNullablePrimitiveType> {}
+export interface AsExpression extends INode {
+    readonly kind: NodeKind.AsExpression;
+    readonly isLeaf: false;
+    readonly head: TEqualityExpression;
+    readonly rest: IArrayWrapper<AsNullablePrimitiveType>;
+}
 
 // --------------------------------------------------
 // ---------- 12.2.3.5 Equality expression ----------

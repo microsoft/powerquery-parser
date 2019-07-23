@@ -239,14 +239,56 @@ export class Parser {
 
     // 12.2.3.4 As expression
     private readAsExpression(): Ast.TAsExpression {
-        return this.readBinOpKeywordExpression<
-            Ast.NodeKind.AsExpression,
-            Ast.TEqualityExpression,
-            TokenKind.KeywordAs,
-            Ast.TNullablePrimitiveType
-        >(Ast.NodeKind.AsExpression, () => this.readEqualityExpression(), TokenKind.KeywordAs, () =>
-            this.readNullablePrimitiveType(),
-        );
+        const asExpressionNodeKind: Ast.NodeKind.AsExpression = Ast.NodeKind.AsExpression;
+        this.startContext(asExpressionNodeKind);
+
+        const head: Ast.TEqualityExpression = this.readEqualityExpression();
+
+        if (this.isOnTokenKind(TokenKind.KeywordAs)) {
+            const arrayWrapperNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+            this.startContext(arrayWrapperNodeKind);
+
+            const elements: Ast.AsNullablePrimitiveType[] = [];
+            while (this.isOnTokenKind(TokenKind.KeywordAs)) {
+                elements.push(
+                    this.readPairedConstant<Ast.NodeKind.AsNullablePrimitiveType, Ast.TNullablePrimitiveType>(
+                        Ast.NodeKind.AsNullablePrimitiveType,
+                        () => this.readTokenKindAsConstant(TokenKind.KeywordAs),
+                        () => this.readNullablePrimitiveType(),
+                    ),
+                );
+            }
+
+            const arrayWrapper: Ast.IArrayWrapper<Ast.AsNullablePrimitiveType> = {
+                ...this.expectContextNodeMetadata(),
+                kind: arrayWrapperNodeKind,
+                isLeaf: false,
+                elements,
+            };
+            this.endContext(arrayWrapper);
+
+            const asExpression: Ast.AsExpression = {
+                ...this.expectContextNodeMetadata(),
+                kind: Ast.NodeKind.AsExpression,
+                isLeaf: false,
+                head,
+                rest: arrayWrapper,
+            };
+            this.endContext(asExpression);
+            return asExpression;
+        } else {
+            this.deleteContext(undefined);
+            return head;
+        }
+
+        // return this.readBinOpKeywordExpression<
+        //     Ast.NodeKind.AsExpression,
+        //     Ast.TEqualityExpression,
+        //     TokenKind.KeywordAs,
+        //     Ast.TNullablePrimitiveType
+        // >(Ast.NodeKind.AsExpression, () => this.readEqualityExpression(), TokenKind.KeywordAs, () =>
+        //     this.readNullablePrimitiveType(),
+        // );
     }
 
     // 12.2.3.5 Equality expression

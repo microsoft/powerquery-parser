@@ -208,8 +208,10 @@ describe("Parser.AbridgedNode", () => {
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.AsExpression, undefined],
             [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.PrimitiveType, 2],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.AsNullablePrimitiveType, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
         ];
         expectAbridgeNodes(text, expected);
@@ -220,8 +222,28 @@ describe("Parser.AbridgedNode", () => {
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.AsExpression, undefined],
             [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.NullablePrimitiveType, 2],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.AsNullablePrimitiveType, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.NullablePrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+        ];
+        expectAbridgeNodes(text, expected);
+    });
+
+    it(Ast.NodeKind.AsNullablePrimitiveType, () => {
+        const text: string = `1 as number as number`;
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.AsExpression, undefined],
+            [Ast.NodeKind.LiteralExpression, 0],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.AsNullablePrimitiveType, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.AsNullablePrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.PrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
