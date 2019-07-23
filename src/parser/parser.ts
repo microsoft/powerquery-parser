@@ -214,54 +214,17 @@ export class Parser {
 
     // 12.2.3.3 Is expression
     private readIsExpression(): Ast.TIsExpression {
-        return this.readBinOpExpression2<Ast.NodeKind.IsExpression, Ast.TAsExpression, Ast.Constant, Ast.NullablePrimitiveType>(
+        return this.readBinOpExpression2<
+            Ast.NodeKind.IsExpression,
+            Ast.TAsExpression,
+            Ast.Constant,
+            Ast.TNullablePrimitiveType
+        >(
             Ast.NodeKind.IsExpression,
             () => this.readAsExpression(),
             () => this.maybeReadTokenKindAsConstant(TokenKind.KeywordIs),
             () => this.readNullablePrimitiveType(),
         );
-
-        // const isExpressionNodeKind: Ast.NodeKind.IsExpression = Ast.NodeKind.IsExpression;
-        // this.startContext(isExpressionNodeKind);
-
-        // const head: Ast.TAsExpression = this.readAsExpression();
-
-        // if (this.isOnTokenKind(TokenKind.KeywordIs)) {
-        //     const arrayWrapperNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-        //     this.startContext(arrayWrapperNodeKind);
-
-        //     const elements: Ast.IsNullablePrimitiveType[] = [];
-        //     while (this.isOnTokenKind(TokenKind.KeywordIs)) {
-        //         elements.push(
-        //             this.readPairedConstant<Ast.NodeKind.IsNullablePrimitiveType, Ast.TNullablePrimitiveType>(
-        //                 Ast.NodeKind.IsNullablePrimitiveType,
-        //                 () => this.readTokenKindAsConstant(TokenKind.KeywordIs),
-        //                 () => this.readNullablePrimitiveType(),
-        //             ),
-        //         );
-        //     }
-
-        //     const arrayWrapper: Ast.IArrayWrapper<Ast.IsNullablePrimitiveType> = {
-        //         ...this.expectContextNodeMetadata(),
-        //         kind: arrayWrapperNodeKind,
-        //         isLeaf: false,
-        //         elements,
-        //     };
-        //     this.endContext(arrayWrapper);
-
-        //     const isExpression: Ast.IsExpression = {
-        //         ...this.expectContextNodeMetadata(),
-        //         kind: isExpressionNodeKind,
-        //         isLeaf: false,
-        //         head,
-        //         rest: arrayWrapper,
-        //     };
-        //     this.endContext(isExpression);
-        //     return isExpression;
-        // } else {
-        //     this.deleteContext(undefined);
-        //     return head;
-        // }
     }
 
     // sub-item of 12.2.3.3 Is expression
@@ -279,47 +242,17 @@ export class Parser {
 
     // 12.2.3.4 As expression
     private readAsExpression(): Ast.TAsExpression {
-        const asExpressionNodeKind: Ast.NodeKind.AsExpression = Ast.NodeKind.AsExpression;
-        this.startContext(asExpressionNodeKind);
-
-        const head: Ast.TEqualityExpression = this.readEqualityExpression();
-
-        if (this.isOnTokenKind(TokenKind.KeywordAs)) {
-            const arrayWrapperNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-            this.startContext(arrayWrapperNodeKind);
-
-            const elements: Ast.AsNullablePrimitiveType[] = [];
-            while (this.isOnTokenKind(TokenKind.KeywordAs)) {
-                elements.push(
-                    this.readPairedConstant<Ast.NodeKind.AsNullablePrimitiveType, Ast.TNullablePrimitiveType>(
-                        Ast.NodeKind.AsNullablePrimitiveType,
-                        () => this.readTokenKindAsConstant(TokenKind.KeywordAs),
-                        () => this.readNullablePrimitiveType(),
-                    ),
-                );
-            }
-
-            const arrayWrapper: Ast.IArrayWrapper<Ast.AsNullablePrimitiveType> = {
-                ...this.expectContextNodeMetadata(),
-                kind: arrayWrapperNodeKind,
-                isLeaf: false,
-                elements,
-            };
-            this.endContext(arrayWrapper);
-
-            const asExpression: Ast.AsExpression = {
-                ...this.expectContextNodeMetadata(),
-                kind: Ast.NodeKind.AsExpression,
-                isLeaf: false,
-                head,
-                rest: arrayWrapper,
-            };
-            this.endContext(asExpression);
-            return asExpression;
-        } else {
-            this.deleteContext(undefined);
-            return head;
-        }
+        return this.readBinOpExpression2<
+            Ast.NodeKind.AsExpression,
+            Ast.TEqualityExpression,
+            Ast.Constant,
+            Ast.TNullablePrimitiveType
+        >(
+            Ast.NodeKind.AsExpression,
+            () => this.readEqualityExpression(),
+            () => this.maybeReadTokenKindAsConstant(TokenKind.KeywordAs),
+            () => this.readNullablePrimitiveType(),
+        );
     }
 
     // 12.2.3.5 Equality expression
@@ -377,14 +310,12 @@ export class Parser {
                 const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
                 this.startContext(helperNodeKind);
 
-                const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
                 const expression: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     isLeaf: false,
                     inBinaryExpression: false,
                     operator: maybeOperator,
-                    operatorConstant,
                     node: this.readUnaryExpression(),
                 };
                 expressions.push(expression);
@@ -1837,98 +1768,42 @@ export class Parser {
         }
     }
 
-    private readBinOpExpression<Kind, Op, Operand>(
-        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
-        operatorFrom: (tokenKind: Option<TokenKind>) => Option<Ast.TUnaryExpressionHelperOperator & Op>,
-        operandReader: () => Ast.TUnaryExpressionOperand & Operand,
-    ): Operand | Ast.IBinOpExpression<Kind, Op, Operand> {
-        this.startContext(nodeKind);
-        const first: Ast.TUnaryExpressionOperand & Operand = operandReader();
-
-        let maybeOperator: Option<Op & Ast.TUnaryExpressionHelperOperator> = operatorFrom(this.maybeCurrentTokenKind);
-        if (maybeOperator) {
-            const rest: Ast.IUnaryExpressionHelper<Op, Operand>[] = [];
-            const unaryArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-            this.startContext(unaryArrayNodeKind);
-
-            while (maybeOperator) {
-                const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
-                this.startContext(helperNodeKind);
-
-                const operatorConstant: Ast.Constant = this.readUnaryOperatorAsConstant(maybeOperator);
-
-                const helper: Ast.IUnaryExpressionHelper<Op, Operand> = {
-                    ...this.expectContextNodeMetadata(),
-                    kind: helperNodeKind,
-                    isLeaf: false,
-                    inBinaryExpression: true,
-                    operator: maybeOperator,
-                    operatorConstant,
-                    node: operandReader(),
-                };
-                rest.push(helper);
-                this.endContext((helper as unknown) as Ast.TUnaryExpressionHelper);
-                maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
-            }
-
-            const unaryArray: Ast.IArrayWrapper<Ast.IUnaryExpressionHelper<Op, Operand>> = {
-                ...this.expectContextNodeMetadata(),
-                kind: unaryArrayNodeKind,
-                isLeaf: false,
-                elements: rest,
-            };
-            this.endContext((unaryArray as unknown) as Ast.TNode);
-
-            const astNode: Ast.IBinOpExpression<Kind, Op, Operand> = {
-                ...this.expectContextNodeMetadata(),
-                kind: nodeKind,
-                isLeaf: false,
-                first,
-                rest: unaryArray,
-            };
-            this.endContext((astNode as unknown) as Ast.TBinOpExpression);
-            return astNode;
-        } else {
-            this.deleteContext(undefined);
-            return first;
-        }
-    }
-
     private readBinOpExpression2<Kind, Head, Operator, Operand>(
-        nodeKind: Kind & Ast.TBinOpExpression2NodeKind,
+        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         headReader: () => Head,
-        operatorReader: () => Option<Operator>,
+        maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
         operandReader: () => Operand,
     ): Head | Ast.IBinOpExpression2<Kind, Head, Operator, Operand> {
         this.startContext(nodeKind);
         const head: Head = headReader();
 
-        let maybeOperator: Option<Operator> = operatorReader();
+        let maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {
-            const rest: Ast.IUnaryExpressionHelper<Operator, Operand>[] = [];
-            const unaryArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-            this.startContext(unaryArrayNodeKind);
+            const rest: Ast.IBinOpExpressionHelper<Operator, Operand>[] = [];
+            const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+            this.startContext(arrayNodeKind);
 
             while (maybeOperator) {
-                const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
+                const helperNodeKind: Ast.NodeKind.BinOpExpressionHelper = Ast.NodeKind.BinOpExpressionHelper;
                 this.startContext(helperNodeKind);
 
-                const helper: Ast.IUnaryExpressionHelper<Operator, Operand> = {
+                const helper: Ast.IBinOpExpressionHelper<Operator, Operand> = {
                     ...this.expectContextNodeMetadata(),
                     kind: helperNodeKind,
                     isLeaf: false,
                     inBinaryExpression: true,
                     operator: maybeOperator,
+                    operatorConstant: this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind),
                     node: operandReader(),
                 };
                 rest.push(helper);
-                this.endContext((helper as unknown) as Ast.TUnaryExpressionHelper);
-                maybeOperator = operatorReader();
+                this.endContext((helper as unknown) as Ast.TBinOpExpressionHelper);
+                maybeOperator = maybeOperatorFrom(this.maybeCurrentTokenKind);
             }
 
-            const unaryArray: Ast.IArrayWrapper<Ast.IUnaryExpressionHelper<Operator, Operand>> = {
+            const unaryArray: Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = {
                 ...this.expectContextNodeMetadata(),
-                kind: unaryArrayNodeKind,
+                kind: arrayNodeKind,
                 isLeaf: false,
                 elements: rest,
             };
@@ -1941,7 +1816,7 @@ export class Parser {
                 head,
                 rest: unaryArray,
             };
-            this.endContext((astNode as unknown) as Ast.TBinOpExpression2);
+            this.endContext((astNode as unknown) as Ast.TBinOpExpression);
             return astNode;
         } else {
             this.deleteContext(undefined);
