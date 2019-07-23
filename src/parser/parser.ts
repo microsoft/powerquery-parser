@@ -106,7 +106,7 @@ export class Parser {
         }
 
         const semicolonConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.Semicolon);
-        const sectionMembers: Ast.SectionMemberArray = this.readSectionMembers();
+        const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = this.readSectionMembers();
 
         const astNode: Ast.Section = {
             ...this.expectContextNodeMetadata(),
@@ -123,8 +123,8 @@ export class Parser {
     }
 
     // sub-item of 12.2.2 Section Documents
-    private readSectionMembers(): Ast.SectionMemberArray {
-        const nodeKind: Ast.NodeKind.SectionMemberArray = Ast.NodeKind.SectionMemberArray;
+    private readSectionMembers(): Ast.IArrayWrapper<Ast.SectionMember> {
+        const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
         this.startContext(nodeKind);
 
         const totalTokens: number = this.lexerSnapshot.tokens.length;
@@ -133,7 +133,7 @@ export class Parser {
             sectionMembers.push(this.readSectionMember());
         }
 
-        const astNode: Ast.SectionMemberArray = {
+        const astNode: Ast.IArrayWrapper<Ast.SectionMember> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -297,7 +297,7 @@ export class Parser {
             this.startContext(nodeKind);
 
             const expressions: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
-            const unaryArrayNodeKind: Ast.NodeKind.UnaryExpressionHelperArray = Ast.NodeKind.UnaryExpressionHelperArray;
+            const unaryArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
             this.startContext(unaryArrayNodeKind);
 
             while (maybeOperator) {
@@ -320,10 +320,7 @@ export class Parser {
                 maybeOperator = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
             }
 
-            const unaryArray: Ast.IArrayHelper<
-                Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>,
-                Ast.NodeKind.UnaryExpressionHelperArray
-            > = {
+            const unaryArray: Ast.IArrayWrapper<Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>> = {
                 ...this.expectContextNodeMetadata(),
                 kind: unaryArrayNodeKind,
                 isLeaf: false,
@@ -831,7 +828,7 @@ export class Parser {
         let continueReadingValues: boolean = true;
         let maybeOpenRecordMarkerConstant: Option<Ast.Constant> = undefined;
 
-        const fieldArrayNodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
+        const fieldArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
         this.startContext(fieldArrayNodeKind);
 
         while (continueReadingValues) {
@@ -899,7 +896,7 @@ export class Parser {
             elements: fields,
             isLeaf: false,
         };
-        this.endContext((fieldArray as unknown) as Ast.TCsvArray);
+        this.endContext(fieldArray);
 
         const rightBracketConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightBracket);
 
@@ -1092,7 +1089,7 @@ export class Parser {
         let continueReadingValues: boolean = !this.isOnTokenKind(TokenKind.RightParenthesis);
         let reachedOptionalParameter: boolean = false;
 
-        const paramaterArrayNodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
+        const paramaterArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
         this.startContext(paramaterArrayNodeKind);
 
         const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
@@ -1152,7 +1149,7 @@ export class Parser {
             elements: parameters,
             isLeaf: false,
         };
-        this.endContext((parameterArray as unknown) as Ast.TCsvArray);
+        this.endContext(parameterArray);
 
         const rightParenthesisConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.RightParenthesis);
 
@@ -1260,8 +1257,7 @@ export class Parser {
 
         // Begin normal parsing behavior.
         const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
-        const recursiveArrayNodeKind: Ast.NodeKind.RecursivePrimaryExpressionArray =
-            Ast.NodeKind.RecursivePrimaryExpressionArray;
+        const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
         this.startContext(recursiveArrayNodeKind);
         let continueReadingValues: boolean = true;
 
@@ -1294,7 +1290,7 @@ export class Parser {
             }
         }
 
-        const recursiveArray: Ast.RecursivePrimaryExpressionArray = {
+        const recursiveArray: Ast.IArrayWrapper<Ast.TRecursivePrimaryExpression> = {
             ...this.expectContextNodeMetadata(),
             kind: recursiveArrayNodeKind,
             isLeaf: false,
@@ -1779,7 +1775,7 @@ export class Parser {
         let maybeOperator: Option<Op & Ast.TUnaryExpressionHelperOperator> = operatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator) {
             const rest: Ast.IUnaryExpressionHelper<Op, Operand>[] = [];
-            const unaryArrayNodeKind: Ast.NodeKind.UnaryExpressionHelperArray = Ast.NodeKind.UnaryExpressionHelperArray;
+            const unaryArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
             this.startContext(unaryArrayNodeKind);
 
             while (maybeOperator) {
@@ -1802,16 +1798,13 @@ export class Parser {
                 maybeOperator = operatorFrom(this.maybeCurrentTokenKind);
             }
 
-            const unaryArray: Ast.IArrayHelper<
-                Ast.IUnaryExpressionHelper<Op, Operand>,
-                Ast.NodeKind.UnaryExpressionHelperArray
-            > = {
+            const unaryArray: Ast.IArrayWrapper<Ast.IUnaryExpressionHelper<Op, Operand>> = {
                 ...this.expectContextNodeMetadata(),
                 kind: unaryArrayNodeKind,
                 isLeaf: false,
                 elements: rest,
             };
-            this.endContext((unaryArray as unknown) as Ast.UnaryExpressionHelperArray);
+            this.endContext((unaryArray as unknown) as Ast.TNode);
 
             const astNode: Ast.IBinOpExpression<Kind, Op, Operand> = {
                 ...this.expectContextNodeMetadata(),
@@ -1972,7 +1965,7 @@ export class Parser {
         valueReader: () => T & Ast.TCsvType,
         continueReadingValues: boolean,
     ): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
-        const nodeKind: Ast.NodeKind.CsvArray = Ast.NodeKind.CsvArray;
+        const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
         this.startContext(nodeKind);
 
         const elements: Ast.ICsv<T & Ast.TCsvType>[] = [];
