@@ -233,7 +233,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.AsNullablePrimitiveType, () => {
+    it(`${Ast.NodeKind.AsNullablePrimitiveType} multiple AsExpression`, () => {
         const text: string = `1 as number as number`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.AsExpression, undefined],
@@ -749,13 +749,33 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.IsExpression, () => {
+    it(`${Ast.NodeKind.IsExpression}`, () => {
         const text: string = `1 is number`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.IsExpression, undefined],
             [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.PrimitiveType, 2],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.IsNullablePrimitiveType, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+        ];
+        expectAbridgeNodes(text, expected);
+    });
+
+    it(`${Ast.NodeKind.IsExpression} multiple IsExpression`, () => {
+        const text: string = `1 is number is number`;
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.IsExpression, undefined],
+            [Ast.NodeKind.LiteralExpression, 0],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.IsNullablePrimitiveType, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.IsNullablePrimitiveType, 1],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.PrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
         ];
         expectAbridgeNodes(text, expected);
@@ -994,13 +1014,14 @@ describe("Parser.AbridgedNode", () => {
     });
 
     it(Ast.NodeKind.NullablePrimitiveType, () => {
-        const text: string = `x is nullable number`;
+        const text: string = `1 is nullable number`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.IsExpression, undefined],
-            [Ast.NodeKind.IdentifierExpression, 0],
-            [Ast.NodeKind.Identifier, 1],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.NullablePrimitiveType, 2],
+            [Ast.NodeKind.LiteralExpression, 0],
+            [Ast.NodeKind.ArrayWrapper, 1],
+            [Ast.NodeKind.IsNullablePrimitiveType, 0],
+            [Ast.NodeKind.Constant, 0],
+            [Ast.NodeKind.NullablePrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.PrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],

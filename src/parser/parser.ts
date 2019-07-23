@@ -214,14 +214,47 @@ export class Parser {
 
     // 12.2.3.3 Is expression
     private readIsExpression(): Ast.TIsExpression {
-        return this.readBinOpKeywordExpression<
-            Ast.NodeKind.IsExpression,
-            Ast.TAsExpression,
-            TokenKind.KeywordIs,
-            Ast.TNullablePrimitiveType
-        >(Ast.NodeKind.IsExpression, () => this.readAsExpression(), TokenKind.KeywordIs, () =>
-            this.readNullablePrimitiveType(),
-        );
+        const isExpressionNodeKind: Ast.NodeKind.IsExpression = Ast.NodeKind.IsExpression;
+        this.startContext(isExpressionNodeKind);
+
+        const head: Ast.TAsExpression = this.readAsExpression();
+
+        if (this.isOnTokenKind(TokenKind.KeywordIs)) {
+            const arrayWrapperNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+            this.startContext(arrayWrapperNodeKind);
+
+            const elements: Ast.IsNullablePrimitiveType[] = [];
+            while (this.isOnTokenKind(TokenKind.KeywordIs)) {
+                elements.push(
+                    this.readPairedConstant<Ast.NodeKind.IsNullablePrimitiveType, Ast.TNullablePrimitiveType>(
+                        Ast.NodeKind.IsNullablePrimitiveType,
+                        () => this.readTokenKindAsConstant(TokenKind.KeywordIs),
+                        () => this.readNullablePrimitiveType(),
+                    ),
+                );
+            }
+
+            const arrayWrapper: Ast.IArrayWrapper<Ast.IsNullablePrimitiveType> = {
+                ...this.expectContextNodeMetadata(),
+                kind: arrayWrapperNodeKind,
+                isLeaf: false,
+                elements,
+            };
+            this.endContext(arrayWrapper);
+
+            const isExpression: Ast.IsExpression = {
+                ...this.expectContextNodeMetadata(),
+                kind: isExpressionNodeKind,
+                isLeaf: false,
+                head,
+                rest: arrayWrapper,
+            };
+            this.endContext(isExpression);
+            return isExpression;
+        } else {
+            this.deleteContext(undefined);
+            return head;
+        }
     }
 
     // sub-item of 12.2.3.3 Is expression
@@ -280,15 +313,6 @@ export class Parser {
             this.deleteContext(undefined);
             return head;
         }
-
-        // return this.readBinOpKeywordExpression<
-        //     Ast.NodeKind.AsExpression,
-        //     Ast.TEqualityExpression,
-        //     TokenKind.KeywordAs,
-        //     Ast.TNullablePrimitiveType
-        // >(Ast.NodeKind.AsExpression, () => this.readEqualityExpression(), TokenKind.KeywordAs, () =>
-        //     this.readNullablePrimitiveType(),
-        // );
     }
 
     // 12.2.3.5 Equality expression

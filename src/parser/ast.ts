@@ -33,6 +33,7 @@ export const enum NodeKind {
     IfExpression = "IfExpression",
     InvokeExpression = "InvokeExpression",
     IsExpression = "IsExpression",
+    IsNullablePrimitiveType = "IsNullablePrimitiveType",
     ItemAccessExpression = "ItemAccessExpression",
     LetExpression = "LetExpression",
     ListExpression = "ListExpression",
@@ -113,6 +114,7 @@ export type TAuxiliaryNodes =
 
 export type TArrayWrapper =
     | IArrayWrapper<AsNullablePrimitiveType>
+    | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
     | IArrayWrapper<TRecursivePrimaryExpression>
     | IArrayWrapper<TUnaryExpressionHelper>
@@ -169,6 +171,7 @@ export type TPairedConstant =
     | AsType
     | EachExpression
     | ErrorRaisingExpression
+    | IsNullablePrimitiveType
     | NullablePrimitiveType
     | NullableType
     | OtherwiseExpression
@@ -178,6 +181,7 @@ export type TPairedConstantNodeKind =
     | NodeKind.AsType
     | NodeKind.EachExpression
     | NodeKind.ErrorRaisingExpression
+    | NodeKind.IsNullablePrimitiveType
     | NodeKind.NullablePrimitiveType
     | NodeKind.NullableType
     | NodeKind.OtherwiseExpression
@@ -286,9 +290,17 @@ export type TIsExpression = IsExpression | TAsExpression;
 
 export type TNullablePrimitiveType = NullablePrimitiveType | PrimitiveType;
 
-export interface IsExpression extends IBinOpKeyword<NodeKind.IsExpression, TAsExpression, TNullablePrimitiveType> {}
+export interface IsExpression extends INode {
+    readonly kind: NodeKind.IsExpression;
+    readonly isLeaf: false;
+    readonly head: TAsExpression;
+    readonly rest: IArrayWrapper<IsNullablePrimitiveType>;
+}
 
 export interface NullablePrimitiveType extends IPairedConstant<NodeKind.NullablePrimitiveType, PrimitiveType> {}
+
+export interface IsNullablePrimitiveType
+    extends IPairedConstant<NodeKind.IsNullablePrimitiveType, TNullablePrimitiveType> {}
 
 export interface PrimitiveType extends INode {
     readonly kind: NodeKind.PrimitiveType;
