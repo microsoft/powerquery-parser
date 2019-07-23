@@ -152,6 +152,10 @@ export type TBinOpExpressionNodeKind =
     | NodeKind.LogicalExpression
     | NodeKind.RelationalExpression;
 
+export type TBinOpExpression2 = AsExpression | IsExpression;
+
+export type TBinOpExpression2NodeKind = NodeKind.AsExpression | NodeKind.IsExpression;
+
 export type TBinOpKeywordExpression = IsExpression | AsExpression | MetadataExpression;
 export type TBinOpKeywordNodeKind = NodeKind.IsExpression | NodeKind.AsExpression | NodeKind.MetadataExpression;
 
@@ -290,12 +294,15 @@ export type TIsExpression = IsExpression | TAsExpression;
 
 export type TNullablePrimitiveType = NullablePrimitiveType | PrimitiveType;
 
-export interface IsExpression extends INode {
-    readonly kind: NodeKind.IsExpression;
-    readonly isLeaf: false;
-    readonly head: TAsExpression;
-    readonly rest: IArrayWrapper<IsNullablePrimitiveType>;
-}
+// export interface IsExpression extends INode {
+//     readonly kind: NodeKind.IsExpression;
+//     readonly isLeaf: false;
+//     readonly head: TAsExpression;
+//     readonly rest: IArrayWrapper<IsNullablePrimitiveType>;
+// }
+
+export interface IsExpression
+    extends IBinOpExpression2<NodeKind.IsExpression, TAsExpression, Constant, TNullablePrimitiveType> {}
 
 export interface NullablePrimitiveType extends IPairedConstant<NodeKind.NullablePrimitiveType, PrimitiveType> {}
 
@@ -314,12 +321,15 @@ export interface PrimitiveType extends INode {
 
 export type TAsExpression = AsExpression | TEqualityExpression;
 
-export interface AsExpression extends INode {
-    readonly kind: NodeKind.AsExpression;
-    readonly isLeaf: false;
-    readonly head: TEqualityExpression;
-    readonly rest: IArrayWrapper<AsNullablePrimitiveType>;
-}
+export interface AsExpression
+    extends IBinOpExpression2<NodeKind.AsExpression, TEqualityExpression, Constant, TNullablePrimitiveType> {}
+
+// export interface AsExpression extends INode {
+//     readonly kind: NodeKind.AsExpression;
+//     readonly isLeaf: false;
+//     readonly head: TEqualityExpression;
+//     readonly rest: IArrayWrapper<AsNullablePrimitiveType>;
+// }
 
 // --------------------------------------------------
 // ---------- 12.2.3.5 Equality expression ----------
@@ -696,6 +706,12 @@ export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
     readonly rest: IArrayWrapper<IUnaryExpressionHelper<Operator, Operand>>;
 }
 
+export interface IBinOpExpression2<Kind, Head, Operator, Operand> extends INode {
+    readonly kind: Kind & TBinOpExpression2NodeKind;
+    readonly head: Head;
+    readonly rest: IArrayWrapper<IUnaryExpressionHelper<Operator, Operand>>;
+}
+
 // BinOp expressions which uses a keyword as operators,
 // ex. `1 is number`
 export interface IBinOpKeyword<Kind, L, R> extends INode {
@@ -753,7 +769,6 @@ export interface IUnaryExpressionHelper<Operator, Operand> extends INode {
     readonly isLeaf: false;
     readonly inBinaryExpression: boolean;
     readonly operator: Operator;
-    readonly operatorConstant: Constant;
     readonly node: Operand;
 }
 
