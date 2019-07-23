@@ -210,6 +210,13 @@ export function expectChildIds(childIdsById: ChildIdsById, nodeId: number): Read
     return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
 }
 
+export function expectAstChildren(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<Ast.TNode> {
+    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+    return expectChildIds(nodeIdMapCollection.childIdsById, parentId).map(childId =>
+        expectAstNode(astNodeById, childId),
+    );
+}
+
 export function expectXorChildren(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<TXorNode> {
     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
     if (maybeChildIds === undefined) {
