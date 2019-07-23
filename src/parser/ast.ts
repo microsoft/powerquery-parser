@@ -5,13 +5,13 @@ import { CommonError, Option } from "../common";
 import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
+    ArrayHelper = "ArrayHelper",
     ArithmeticExpression = "ArithmeticExpression",
     AsExpression = "AsExpression",
     AsNullablePrimitiveType = "AsNullablePrimitiveType",
     AsType = "AsType",
     Constant = "Constant",
     Csv = "Csv",
-    CsvArray = "CsvArray",
     EachExpression = "EachExpression",
     EqualityExpression = "EqualityExpression",
     ErrorHandlingExpression = "ErrorHandlingExpression",
@@ -57,12 +57,10 @@ export const enum NodeKind {
     RelationalExpression = "RelationalExpression",
     Section = "Section",
     SectionMember = "SectionMember",
-    SectionMemberArray = "SectionMemberArray",
     TableType = "TableType",
     TypePrimaryType = "TypePrimaryType",
     UnaryExpression = "UnaryExpression",
     UnaryExpressionHelper = "UnaryExpressionHelper",
-    UnaryExpressionHelperArray = "UnaryExpressionHelperArray",
 }
 
 // -------------------------------------
@@ -114,15 +112,10 @@ export type TAuxiliaryNodes =
     | TWrapped;
 
 export type TArrayHelper =
-    | IArrayHelper<SectionMember, NodeKind.SectionMemberArray>
-    | RecursivePrimaryExpressionArray
-    | TCsvArray
-    | UnaryExpressionHelperArray;
-export type TArrayHelperNodeKind =
-    | NodeKind.CsvArray
-    | NodeKind.RecursivePrimaryExpressionArray
-    | NodeKind.SectionMemberArray
-    | NodeKind.UnaryExpressionHelperArray;
+    | IArrayHelper<SectionMember>
+    | IArrayHelper<TRecursivePrimaryExpression>
+    | IArrayHelper<TUnaryExpressionHelper>
+    | TCsvArray;
 
 export type TCsvArray = ICsvArray<TCsvType>;
 export type TCsv = ICsv<TCsvType>;
@@ -234,7 +227,7 @@ export interface Section extends INode {
     readonly sectionConstant: Constant;
     readonly maybeName: Option<Identifier>;
     readonly semicolonConstant: Constant;
-    readonly sectionMembers: SectionMemberArray;
+    readonly sectionMembers: IArrayHelper<SectionMember>;
 }
 
 export interface SectionMember extends INode {
@@ -245,8 +238,6 @@ export interface SectionMember extends INode {
     readonly namePairedExpression: IdentifierPairedExpression;
     readonly semicolonConstant: Constant;
 }
-
-export interface SectionMemberArray extends IArrayHelper<SectionMember, NodeKind.SectionMemberArray> {}
 
 // ------------------------------------------
 // ---------- 12.2.3.1 Expressions ----------
@@ -421,7 +412,7 @@ export type TUnaryExpression = UnaryExpression | TTypeExpression;
 export interface UnaryExpression extends INode {
     readonly kind: NodeKind.UnaryExpression;
     readonly isLeaf: false;
-    readonly expressions: IArrayHelper<UnaryUnaryExpressionHelper, NodeKind.UnaryExpressionHelperArray>;
+    readonly expressions: IArrayHelper<UnaryUnaryExpressionHelper>;
 }
 
 export const enum UnaryOperator {
@@ -656,11 +647,8 @@ export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
     readonly isLeaf: false;
     readonly head: TPrimaryExpression;
-    readonly recursiveExpressions: RecursivePrimaryExpressionArray;
+    readonly recursiveExpressions: IArrayHelper<TRecursivePrimaryExpression>;
 }
-
-export interface RecursivePrimaryExpressionArray
-    extends IArrayHelper<TRecursivePrimaryExpression, NodeKind.RecursivePrimaryExpressionArray> {}
 
 export interface TypePrimaryType extends IPairedConstant<NodeKind.TypePrimaryType, TPrimaryType> {}
 
@@ -688,7 +676,7 @@ export interface RecordLiteral
 export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
     readonly first: Operand;
-    readonly rest: IArrayHelper<IUnaryExpressionHelper<Operator, Operand>, NodeKind.UnaryExpressionHelperArray>;
+    readonly rest: IArrayHelper<IUnaryExpressionHelper<Operator, Operand>>;
 }
 
 // BinOp expressions which uses a keyword as operators,
@@ -702,12 +690,12 @@ export interface IBinOpKeyword<Kind, L, R> extends INode {
 
 // Allows the ReadonlyArray to be treated as a TNode.
 // Without this wrapper ParserContext couldn't save partial progress for parsing an array.
-export interface IArrayHelper<T, Kind> extends INode {
-    readonly kind: Kind & TArrayHelperNodeKind;
+export interface IArrayHelper<T> extends INode {
+    readonly kind: NodeKind.ArrayHelper;
     readonly elements: ReadonlyArray<T>;
 }
 
-export interface ICsvArray<T> extends IArrayHelper<ICsv<T & TCsvType>, NodeKind.CsvArray> {}
+export interface ICsvArray<T> extends IArrayHelper<ICsv<T & TCsvType>> {}
 
 export interface ICsv<T> extends INode {
     readonly kind: NodeKind.Csv;
@@ -751,9 +739,6 @@ export interface IUnaryExpressionHelper<Operator, Operand> extends INode {
     readonly operatorConstant: Constant;
     readonly node: Operand;
 }
-
-export interface UnaryExpressionHelperArray
-    extends IArrayHelper<TUnaryExpressionHelper, NodeKind.UnaryExpressionHelperArray> {}
 
 export type TUnaryExpressionHelper =
     | UnaryArithmeticExpressionHelper

@@ -102,7 +102,7 @@ function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.
         drilldowns: [
             {
                 attributeIndex: 1,
-                maybeAllowedNodeKinds: [Ast.NodeKind.CsvArray],
+                maybeAllowedNodeKinds: [Ast.NodeKind.ArrayHelper],
             },
         ],
     };
@@ -293,7 +293,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
         1,
-        [Ast.NodeKind.CsvArray],
+        [Ast.NodeKind.ArrayHelper],
     );
     if (maybeCsvArrayXorNode === undefined) {
         state.result.nodes.push({
@@ -347,7 +347,7 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
         nodeIdMapCollection,
         letExprXorNode.node.id,
         1,
-        [Ast.NodeKind.CsvArray],
+        [Ast.NodeKind.ArrayHelper],
     );
     if (maybeCsvArrayXorNode === undefined) {
         return;
@@ -482,7 +482,7 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
         nodeIdMapCollection,
         recordXorNode.node.id,
         1,
-        [Ast.NodeKind.CsvArray],
+        [Ast.NodeKind.ArrayHelper],
     );
     if (maybeCsvArrayXorNode === undefined) {
         return;
@@ -538,7 +538,7 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
         nodeIdMapCollection,
         sectionXorNode.node.id,
         4,
-        [Ast.NodeKind.SectionMemberArray],
+        [Ast.NodeKind.ArrayHelper],
     );
     if (maybeSectionMemberArrayXorNode === undefined) {
         return;
@@ -692,7 +692,7 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
     });
 }
 
-// Takes an XorNode of Ast.NodeKind.CsvArray and returns CsvArray.elements.map(csv => csv.node),
+// Takes an XorNode TCsvArray and returns collection.elements.map(csv => csv.node),
 // plus extra for TXorNode handling.
 function nodesOnCsvFromCsvArray(
     nodeIdMapCollection: NodeIdMap.Collection,
