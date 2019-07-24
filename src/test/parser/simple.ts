@@ -816,79 +816,83 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.ListExpression, () => {
-        const text: string = `{1, 2}`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.ListExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Csv, 0],
-            [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.Csv, 1],
-            [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 2],
-        ];
-        expectAbridgeNodes(text, expected);
+    describe(`${Ast.NodeKind.ListExpression}`, () => {
+        it(`{1, 2}`, () => {
+            const text: string = `{1, 2}`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Csv, 1],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 2],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+
+        it(`{}`, () => {
+            const text: string = `{}`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.ListExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
     });
 
-    it(`${Ast.NodeKind.ListExpression} empty`, () => {
-        const text: string = `{}`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.ListExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Constant, 2],
-        ];
-        expectAbridgeNodes(text, expected);
-    });
+    describe(`${Ast.NodeKind.ListLiteral}`, () => {
+        it(`[foo = {1}] section;`, () => {
+            const text: string = `[foo = {1}] section;`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.RecordLiteral, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ListLiteral, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
 
-    it(Ast.NodeKind.ListLiteral, () => {
-        const text: string = `[foo = {1}] section;`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.Section, undefined],
-            [Ast.NodeKind.RecordLiteral, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Csv, 0],
-            [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-            [Ast.NodeKind.GeneralizedIdentifier, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.ListLiteral, 2],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Csv, 0],
-            [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.Constant, 3],
-            [Ast.NodeKind.ArrayWrapper, 4],
-        ];
-        expectAbridgeNodes(text, expected);
-    });
-
-    it(`${Ast.NodeKind.ListLiteral} empty`, () => {
-        const text: string = `[foo = {}] section;`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.Section, undefined],
-            [Ast.NodeKind.RecordLiteral, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Csv, 0],
-            [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-            [Ast.NodeKind.GeneralizedIdentifier, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.ListLiteral, 2],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.Constant, 3],
-            [Ast.NodeKind.ArrayWrapper, 4],
-        ];
-        expectAbridgeNodes(text, expected);
+        it(`[foo = {}] section;`, () => {
+            const text: string = `[foo = {}] section;`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.Section, undefined],
+                [Ast.NodeKind.RecordLiteral, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ListLiteral, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.ArrayWrapper, 4],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
     });
 
     it(Ast.NodeKind.ListType, () => {
