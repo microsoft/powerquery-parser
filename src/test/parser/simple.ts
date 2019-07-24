@@ -1362,48 +1362,47 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.TypePrimaryType covered by many
 
-    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Negative}`, () => {
-        const text: string = `-1`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.UnaryExpression, undefined],
-            [Ast.NodeKind.ArrayWrapper, 0],
-            [Ast.NodeKind.UnaryExpressionHelper, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.LiteralExpression, 1],
-        ];
-        expectAbridgeNodes(text, expected);
+    describe(`${Ast.NodeKind.UnaryExpression}`, () => {
+        it(`-1`, () => {
+            const text: string = `-1`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.UnaryExpression, undefined],
+                [Ast.NodeKind.ArrayWrapper, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+            ];
+            expectAbridgeNodes(text, expected);
 
-        const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Negative);
-    });
+            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Negative);
+        });
 
-    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Not}`, () => {
-        const text: string = `not 1`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.UnaryExpression, undefined],
-            [Ast.NodeKind.ArrayWrapper, 0],
-            [Ast.NodeKind.UnaryExpressionHelper, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.LiteralExpression, 1],
-        ];
-        expectAbridgeNodes(text, expected);
+        it(`not 1`, () => {
+            const text: string = `not 1`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.UnaryExpression, undefined],
+                [Ast.NodeKind.ArrayWrapper, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+            ];
+            expectAbridgeNodes(text, expected);
 
-        const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Not);
-    });
+            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Not);
+        });
 
-    it(`${Ast.NodeKind.UnaryExpression} ${Ast.UnaryOperator.Positive}`, () => {
-        const text: string = `+1`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.UnaryExpression, undefined],
-            [Ast.NodeKind.ArrayWrapper, 0],
-            [Ast.NodeKind.UnaryExpressionHelper, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.LiteralExpression, 1],
-        ];
-        expectAbridgeNodes(text, expected);
+        it(`+1`, () => {
+            const text: string = `+1`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.UnaryExpression, undefined],
+                [Ast.NodeKind.ArrayWrapper, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+            ];
+            expectAbridgeNodes(text, expected);
 
-        const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-        expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Positive);
+            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Positive);
+        });
     });
 });
