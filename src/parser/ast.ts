@@ -275,7 +275,7 @@ export type TExpression =
 export type TLogicalExpression = LogicalExpression | TIsExpression;
 
 export interface LogicalExpression
-    extends IBinOpExpression2<NodeKind.LogicalExpression, TLogicalExpression, LogicalOperator, TLogicalExpression> {}
+    extends IBinOpExpression<NodeKind.LogicalExpression, TLogicalExpression, LogicalOperator, TLogicalExpression> {}
 
 export const enum LogicalOperator {
     And = "and",
@@ -302,7 +302,7 @@ export type TIsExpression = IsExpression | TAsExpression;
 export type TNullablePrimitiveType = NullablePrimitiveType | PrimitiveType;
 
 export interface IsExpression
-    extends IBinOpExpression2<NodeKind.IsExpression, TAsExpression, ConstantKind.Is, TNullablePrimitiveType> {}
+    extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, ConstantKind.Is, TNullablePrimitiveType> {}
 
 export interface NullablePrimitiveType extends IPairedConstant<NodeKind.NullablePrimitiveType, PrimitiveType> {}
 
@@ -322,7 +322,7 @@ export interface PrimitiveType extends INode {
 export type TAsExpression = AsExpression | TEqualityExpression;
 
 export interface AsExpression
-    extends IBinOpExpression2<NodeKind.AsExpression, TEqualityExpression, ConstantKind.As, TNullablePrimitiveType> {}
+    extends IBinOpExpression<NodeKind.AsExpression, TEqualityExpression, ConstantKind.As, TNullablePrimitiveType> {}
 
 // --------------------------------------------------
 // ---------- 12.2.3.5 Equality expression ----------
@@ -331,12 +331,7 @@ export interface AsExpression
 export type TEqualityExpression = EqualityExpression | TRelationalExpression;
 
 export interface EqualityExpression
-    extends IBinOpExpression2<
-        NodeKind.EqualityExpression,
-        TEqualityExpression,
-        EqualityOperator,
-        TEqualityExpression
-    > {}
+    extends IBinOpExpression<NodeKind.EqualityExpression, TEqualityExpression, EqualityOperator, TEqualityExpression> {}
 
 export const enum EqualityOperator {
     EqualTo = "=",
@@ -361,7 +356,7 @@ export function equalityOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<
 export type TRelationalExpression = RelationalExpression | TArithmeticExpression;
 
 export interface RelationalExpression
-    extends IBinOpExpression2<
+    extends IBinOpExpression<
         NodeKind.RelationalExpression,
         TRelationalExpression,
         RelationalOperator,
@@ -397,7 +392,7 @@ export function relationalOperatorFrom(maybeTokenKind: Option<TokenKind>): Optio
 export type TArithmeticExpression = ArithmeticExpression | TMetadataExpression;
 
 export interface ArithmeticExpression
-    extends IBinOpExpression2<
+    extends IBinOpExpression<
         NodeKind.ArithmeticExpression,
         TArithmeticExpression,
         ArithmeticOperator,
@@ -709,25 +704,19 @@ export interface RecordLiteral
 
 // IBinOpExpressions are expressed in terms of Operand followed by N <Operand, Operator> unary expressions.
 // 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
-export interface IBinOpExpression<Kind, Operator, Operand> extends INode {
+export interface IBinOpExpression<Kind, Head, Operator, Operand> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
-    readonly first: Operand;
-    readonly rest: IArrayWrapper<IBinOpExpressionHelper<Operator, Operand>>;
+    readonly head: Head;
+    readonly rest: IArrayWrapper<BinOpExpressionHelper<Operator, Operand>>;
 }
 
-export interface IBinOpExpressionHelper<Operator, Operand> extends INode {
+export interface BinOpExpressionHelper<Operator, Operand> extends INode {
     readonly kind: NodeKind.BinOpExpressionHelper;
     readonly isLeaf: false;
     readonly inBinaryExpression: boolean;
     readonly operatorConstant: Constant;
     readonly node: Operand;
     readonly operator: Operator;
-}
-
-export interface IBinOpExpression2<Kind, Head, Operator, Operand> extends INode {
-    readonly kind: Kind & TBinOpExpressionNodeKind;
-    readonly head: Head;
-    readonly rest: IArrayWrapper<IBinOpExpressionHelper<Operator, Operand>>;
 }
 
 // BinOp expressions which uses a keyword as operators,
