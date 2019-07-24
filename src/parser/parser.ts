@@ -228,7 +228,7 @@ export class Parser {
         >(
             Ast.NodeKind.IsExpression,
             () => this.readAsExpression(),
-            maybeCurrentTokenKind => (maybeCurrentTokenKind ? Ast.ConstantKind.Is : undefined),
+            maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordIs ? Ast.ConstantKind.Is : undefined),
             () => this.readNullablePrimitiveType(),
         );
     }
@@ -256,7 +256,7 @@ export class Parser {
         >(
             Ast.NodeKind.AsExpression,
             () => this.readEqualityExpression(),
-            maybeCurrentTokenKind => (maybeCurrentTokenKind ? Ast.ConstantKind.As : undefined),
+            maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordAs ? Ast.ConstantKind.As : undefined),
             () => this.readNullablePrimitiveType(),
         );
     }
