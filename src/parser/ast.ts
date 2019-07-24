@@ -62,7 +62,6 @@ export const enum NodeKind {
     TableType = "TableType",
     TypePrimaryType = "TypePrimaryType",
     UnaryExpression = "UnaryExpression",
-    UnaryExpressionHelper = "UnaryExpressionHelper",
 }
 
 // -------------------------------------
@@ -110,7 +109,6 @@ export type TAuxiliaryNodes =
     | TParameter
     | TParameterList
     | TType
-    | TUnaryExpressionHelper
     | TWrapped;
 
 export type TArrayWrapper =
@@ -119,7 +117,6 @@ export type TArrayWrapper =
     | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
     | IArrayWrapper<TRecursivePrimaryExpression>
-    | IArrayWrapper<TUnaryExpressionHelper>
     | TCsvArray;
 
 export type TCsvArray = ICsvArray<TCsvType>;
@@ -764,45 +761,6 @@ export interface IWrapped<Kind, Content> extends INode {
     readonly content: Content;
     readonly closeWrapperConstant: Constant;
 }
-
-// -------------------------------------------
-// ---------- UnaryExpressionHelper ----------
-// -------------------------------------------
-
-// a (Operator, Operand) pair
-// used by unary and binary expressions
-export interface IUnaryExpressionHelper<Operator, Operand> extends INode {
-    readonly kind: NodeKind.UnaryExpressionHelper;
-    readonly isLeaf: false;
-    readonly inBinaryExpression: boolean;
-    readonly operator: Operator;
-    readonly node: Operand;
-}
-
-export type TUnaryExpressionHelper =
-    | UnaryArithmeticExpressionHelper
-    | UnaryEqualityExpressionHelper
-    | UnaryLogicalExpressionHelper
-    | UnaryRelationalExpressionHelper
-    | UnaryUnaryExpressionHelper;
-export type UnaryArithmeticExpressionHelper = IUnaryExpressionHelper<ArithmeticOperator, TArithmeticExpression>;
-export type UnaryEqualityExpressionHelper = IUnaryExpressionHelper<EqualityOperator, TEqualityExpression>;
-export type UnaryLogicalExpressionHelper = IUnaryExpressionHelper<LogicalOperator, TLogicalExpression>;
-export type UnaryRelationalExpressionHelper = IUnaryExpressionHelper<RelationalOperator, TRelationalExpression>;
-export type UnaryUnaryExpressionHelper = IUnaryExpressionHelper<UnaryOperator, TUnaryExpression>;
-
-export type TUnaryExpressionHelperOperator =
-    | ArithmeticOperator
-    | EqualityOperator
-    | LogicalOperator
-    | RelationalOperator
-    | UnaryOperator;
-export type TUnaryExpressionOperand =
-    | TArithmeticExpression
-    | TEqualityExpression
-    | TLogicalExpression
-    | TRelationalExpression
-    | TUnaryExpression;
 
 // ------------------------------------------
 // ---------- Key value pair nodes ----------
