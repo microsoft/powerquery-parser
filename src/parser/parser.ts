@@ -321,52 +321,40 @@ export class Parser {
     // 12.2.3.9 Unary expression
     private readUnaryExpression(): Ast.TUnaryExpression {
         let maybeOperator: Option<Ast.UnaryOperator> = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
-
-        if (maybeOperator) {
-            const nodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
-            this.startContext(nodeKind);
-
-            const expressions: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>[] = [];
-            const unaryArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-            this.startContext(unaryArrayNodeKind);
-
-            while (maybeOperator) {
-                const helperNodeKind: Ast.NodeKind.UnaryExpressionHelper = Ast.NodeKind.UnaryExpressionHelper;
-                this.startContext(helperNodeKind);
-
-                const expression: Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression> = {
-                    ...this.expectContextNodeMetadata(),
-                    kind: helperNodeKind,
-                    isLeaf: false,
-                    inBinaryExpression: false,
-                    operator: maybeOperator,
-                    node: this.readUnaryExpression(),
-                };
-                expressions.push(expression);
-                this.endContext(expression);
-
-                maybeOperator = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
-            }
-
-            const unaryArray: Ast.IArrayWrapper<Ast.IUnaryExpressionHelper<Ast.UnaryOperator, Ast.TUnaryExpression>> = {
-                ...this.expectContextNodeMetadata(),
-                kind: unaryArrayNodeKind,
-                isLeaf: false,
-                elements: expressions,
-            };
-            this.endContext(unaryArray);
-
-            const astNode: Ast.UnaryExpression = {
-                ...this.expectContextNodeMetadata(),
-                kind: nodeKind,
-                isLeaf: false,
-                expressions: unaryArray,
-            };
-            this.endContext(astNode);
-            return astNode;
-        } else {
+        if (maybeOperator === undefined) {
             return this.readTypeExpression();
         }
+
+        const unaryNodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
+        this.startContext(unaryNodeKind);
+
+        const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+        this.startContext(arrayNodeKind);
+
+        const operatorConstants: Ast.Constant[] = [];
+        while (maybeOperator) {
+            operatorConstants.push(this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind));
+            maybeOperator = Ast.unaryOperatorFrom(this.maybeCurrentTokenKind);
+        }
+        const operators: Ast.IArrayWrapper<Ast.Constant> = {
+            ...this.expectContextNodeMetadata(),
+            kind: arrayNodeKind,
+            isLeaf: false,
+            elements: operatorConstants,
+        };
+        this.endContext(operators);
+
+        const typeExpression: Ast.TTypeExpression = this.readTypeExpression();
+
+        const astNode: Ast.UnaryExpression = {
+            ...this.expectContextNodeMetadata(),
+            kind: unaryNodeKind,
+            isLeaf: false,
+            operators,
+            typeExpression,
+        };
+        this.endContext(astNode);
+        return astNode;
     }
 
     // 12.2.3.10 Primary expression
@@ -1588,19 +1576,12 @@ export class Parser {
             const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
             this.startContext(nodeKind);
 
-            const maybeConstantKind: Option<Ast.ConstantKind> = Ast.constantKindFromTokenKind(tokenKind);
-            if (maybeConstantKind === undefined) {
-                const details: {} = { tokenKind };
-                throw new CommonError.InvariantError(`couldn't convert TokenKind into ConstantKind`, details);
-            }
-            const constantKind: Ast.ConstantKind = maybeConstantKind;
-
-            this.readToken();
+            const literal: string = this.readToken();
             const astNode: Ast.Constant = {
                 ...this.expectContextNodeMetadata(),
                 kind: nodeKind,
                 isLeaf: true,
-                literal: constantKind,
+                literal,
             };
             this.endContext(astNode);
 

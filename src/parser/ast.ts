@@ -115,6 +115,7 @@ export type TAuxiliaryNodes =
 
 export type TArrayWrapper =
     | IArrayWrapper<AsNullablePrimitiveType>
+    | IArrayWrapper<Constant>
     | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
     | IArrayWrapper<TRecursivePrimaryExpression>
@@ -446,7 +447,8 @@ export type TUnaryExpression = UnaryExpression | TTypeExpression;
 export interface UnaryExpression extends INode {
     readonly kind: NodeKind.UnaryExpression;
     readonly isLeaf: false;
-    readonly expressions: IArrayWrapper<UnaryUnaryExpressionHelper>;
+    readonly operators: IArrayWrapper<Constant>;
+    readonly typeExpression: TTypeExpression;
 }
 
 export const enum UnaryOperator {
@@ -1049,95 +1051,6 @@ export function constantKindFromIdentifieConstant(identifierConstant: Identifier
             return ConstantKind.Text;
         case IdentifierConstant.Time:
             return ConstantKind.Time;
-        default:
-            return undefined;
-    }
-}
-
-export function constantKindFromTokenKind(tokenKind: TokenKind): Option<ConstantKind> {
-    switch (tokenKind) {
-        case TokenKind.AtSign:
-            return ConstantKind.AtSign;
-        case TokenKind.Comma:
-            return ConstantKind.Comma;
-        case TokenKind.Ellipsis:
-            return ConstantKind.Ellipsis;
-        case TokenKind.Equal:
-            return ConstantKind.Equal;
-        case TokenKind.FatArrow:
-            return ConstantKind.FatArrow;
-        case TokenKind.KeywordAs:
-            return ConstantKind.As;
-        case TokenKind.KeywordEach:
-            return ConstantKind.Each;
-        case TokenKind.KeywordElse:
-            return ConstantKind.Else;
-        case TokenKind.KeywordError:
-            return ConstantKind.Error;
-        case TokenKind.KeywordIf:
-            return ConstantKind.If;
-        case TokenKind.KeywordIn:
-            return ConstantKind.In;
-        case TokenKind.KeywordIs:
-            return ConstantKind.Is;
-        case TokenKind.KeywordLet:
-            return ConstantKind.Let;
-        case TokenKind.KeywordMeta:
-            return ConstantKind.Meta;
-        case TokenKind.KeywordOtherwise:
-            return ConstantKind.Otherwise;
-        case TokenKind.KeywordSection:
-            return ConstantKind.Section;
-        case TokenKind.KeywordShared:
-            return ConstantKind.Shared;
-        case TokenKind.KeywordThen:
-            return ConstantKind.Then;
-        case TokenKind.KeywordTry:
-            return ConstantKind.Try;
-        case TokenKind.KeywordType:
-            return ConstantKind.Type;
-        case TokenKind.LeftBrace:
-            return ConstantKind.LeftBrace;
-        case TokenKind.LeftBracket:
-            return ConstantKind.LeftBracket;
-        case TokenKind.LeftParenthesis:
-            return ConstantKind.LeftParenthesis;
-        case TokenKind.NullLiteral:
-            return ConstantKind.Null;
-        case TokenKind.QuestionMark:
-            return ConstantKind.QuestionMark;
-        case TokenKind.RightBrace:
-            return ConstantKind.RightBrace;
-        case TokenKind.RightBracket:
-            return ConstantKind.RightBracket;
-        case TokenKind.RightParenthesis:
-            return ConstantKind.RightParenthesis;
-        case TokenKind.Semicolon:
-            return ConstantKind.Semicolon;
-
-        case TokenKind.Asterisk:
-            return ConstantKind.Asterisk;
-        case TokenKind.Division:
-            return ConstantKind.Division;
-        case TokenKind.Plus:
-            return ConstantKind.Plus;
-        case TokenKind.Minus:
-            return ConstantKind.Minus;
-
-        case TokenKind.KeywordAnd:
-            return ConstantKind.And;
-        case TokenKind.KeywordOr:
-            return ConstantKind.Or;
-
-        case TokenKind.LessThan:
-            return ConstantKind.LessThan;
-        case TokenKind.LessThanEqualTo:
-            return ConstantKind.LessThanEqualTo;
-        case TokenKind.GreaterThan:
-            return ConstantKind.GreaterThan;
-        case TokenKind.GreaterThanEqualTo:
-            return ConstantKind.GreaterThanEqualTo;
-
         default:
             return undefined;
     }
