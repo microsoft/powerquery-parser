@@ -224,47 +224,10 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         }
     }
 
-    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
-    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
-    let maybeName: Option<string>;
-    if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
-        const nodeIdMapColletion: NodeIdMap.Collection = state.nodeIdMapCollection;
-
-        // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
-        const recursiveArrayXorNode: NodeIdMap.TXorNode = NodeIdMap.expectParentXorNode(
-            nodeIdMapColletion,
-            invokeExprXorNode.node.id,
-        );
-        const recursiveExprXorNode: NodeIdMap.TXorNode = NodeIdMap.expectParentXorNode(
-            nodeIdMapColletion,
-            recursiveArrayXorNode.node.id,
-        );
-        const headXorNode: NodeIdMap.TXorNode = NodeIdMap.expectChildByAttributeIndex(
-            nodeIdMapColletion,
-            recursiveExprXorNode.node.id,
-            0,
-            undefined,
-        );
-        if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-            if (headXorNode.kind !== NodeIdMap.XorNodeKind.Ast) {
-                const details: {} = {
-                    identifierExpressionNodeId: headXorNode.node.id,
-                    invokeExpressionNodeId: invokeExprXorNode.node.id,
-                };
-                throw new CommonError.InvariantError(
-                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
-                    details,
-                );
-            }
-
-            const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
-            maybeName =
-                identifierExpression.maybeInclusiveConstant === undefined
-                    ? identifierExpression.identifier.literal
-                    : identifierExpression.maybeInclusiveConstant.literal + identifierExpression.identifier.literal;
-        }
-    }
-
+    const maybeName: Option<string> = NodeIdMap.maybeInvokeExpressionName(
+        state.nodeIdMapCollection,
+        invokeExprXorNode.node.id,
+    );
     let maybePositionStart: Option<TokenPosition>;
     let maybePositionEnd: Option<TokenPosition>;
     switch (invokeExprXorNode.kind) {

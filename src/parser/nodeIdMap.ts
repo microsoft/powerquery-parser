@@ -151,6 +151,53 @@ export function maybeChildByAttributeIndex(
     return undefined;
 }
 
+export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeId: number): Option<string> {
+    const invokeExprXorNode: TXorNode = expectXorNode(nodeIdMapCollection, nodeId);
+
+    if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
+        const details: {} = { invokeExprXorNode };
+        throw new CommonError.InvariantError(
+            `expected invokeExprXorNode to have a Ast.NodeKind of ${Ast.NodeKind.InvokeExpression}`,
+            details,
+        );
+    }
+
+    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
+    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
+    let maybeName: Option<string>;
+    if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
+        // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
+        const recursiveArrayXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, invokeExprXorNode.node.id);
+        const recursiveExprXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, recursiveArrayXorNode.node.id);
+        const headXorNode: TXorNode = expectChildByAttributeIndex(
+            nodeIdMapCollection,
+            recursiveExprXorNode.node.id,
+            0,
+            undefined,
+        );
+        if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+            if (headXorNode.kind !== XorNodeKind.Ast) {
+                const details: {} = {
+                    identifierExpressionNodeId: headXorNode.node.id,
+                    invokeExpressionNodeId: invokeExprXorNode.node.id,
+                };
+                throw new CommonError.InvariantError(
+                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                    details,
+                );
+            }
+
+            const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
+            maybeName =
+                identifierExpression.maybeInclusiveConstant === undefined
+                    ? identifierExpression.identifier.literal
+                    : identifierExpression.maybeInclusiveConstant.literal + identifierExpression.identifier.literal;
+        }
+    }
+
+    return maybeName;
+}
+
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
 }
