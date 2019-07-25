@@ -118,6 +118,7 @@ export type TArrayWrapper =
     | IArrayWrapper<Constant>
     | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
+    | IArrayWrapper<TBinOpExpressionHelper>
     | IArrayWrapper<TRecursivePrimaryExpression>
     | TCsvArray;
 
