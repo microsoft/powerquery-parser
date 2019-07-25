@@ -174,6 +174,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         // Not a leaf node, is the Root node.
         // Promote the child to the root if it's a Context node.
         if (maybeParentId === undefined) {
+            parentIdById.delete(childId);
             const maybeChildContext: Option<Node> = contextNodeById.get(childId);
             if (maybeChildContext) {
                 const childContext: Node = maybeChildContext;
