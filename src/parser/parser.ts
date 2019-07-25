@@ -1780,7 +1780,6 @@ export class Parser {
                 ...this.expectContextNodeMetadata(),
                 kind: elementNodeKind,
                 isLeaf: false,
-                inBinaryExpression: true,
                 operator: maybeOperator,
                 operatorConstant: this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind),
                 node: operandReader(),

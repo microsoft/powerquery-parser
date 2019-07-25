@@ -709,7 +709,6 @@ export type TBinOpExpressionHelper =
 export interface IBinOpExpressionHelper<Operator, Operand> extends INode {
     readonly kind: NodeKind.BinOpExpressionHelper;
     readonly isLeaf: false;
-    readonly inBinaryExpression: boolean;
     readonly operatorConstant: Constant;
     readonly node: Operand;
     readonly operator: Operator;
