@@ -1736,13 +1736,13 @@ export class Parser {
 
         const maybeRest:
             | undefined
-            | Ast.IArrayWrapper<Ast.BinOpExpressionHelper<Operator, Operand>> = this.maybeReadBinOpExpressionHelpers(
+            | Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = this.maybeReadBinOpExpressionHelpers(
             maybeOperatorFrom,
             operandReader,
         );
 
         if (maybeRest) {
-            const rest: Ast.IArrayWrapper<Ast.BinOpExpressionHelper<Operator, Operand>> = maybeRest;
+            const rest: Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = maybeRest;
 
             const astNode: Ast.IBinOpExpression<Kind, Head, Operator, Operand> = {
                 ...this.expectContextNodeMetadata(),
@@ -1762,7 +1762,7 @@ export class Parser {
     private maybeReadBinOpExpressionHelpers<Operator, Operand>(
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
         operandReader: () => Operand,
-    ): undefined | Ast.IArrayWrapper<Ast.BinOpExpressionHelper<Operator, Operand>> {
+    ): undefined | Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> {
         let maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator === undefined) {
             return undefined;
@@ -1770,13 +1770,13 @@ export class Parser {
 
         const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
         this.startContext(arrayNodeKind);
-        const elements: Ast.BinOpExpressionHelper<Operator, Operand>[] = [];
+        const elements: Ast.IBinOpExpressionHelper<Operator, Operand>[] = [];
 
         while (maybeOperator) {
             const elementNodeKind: Ast.NodeKind.BinOpExpressionHelper = Ast.NodeKind.BinOpExpressionHelper;
             this.startContext(elementNodeKind);
 
-            const helper: Ast.BinOpExpressionHelper<Operator, Operand> = {
+            const helper: Ast.IBinOpExpressionHelper<Operator, Operand> = {
                 ...this.expectContextNodeMetadata(),
                 kind: elementNodeKind,
                 isLeaf: false,
@@ -1790,7 +1790,7 @@ export class Parser {
             maybeOperator = maybeOperatorFrom(this.maybeCurrentTokenKind);
         }
 
-        const unaryArray: Ast.IArrayWrapper<Ast.BinOpExpressionHelper<Operator, Operand>> = {
+        const unaryArray: Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = {
             ...this.expectContextNodeMetadata(),
             kind: arrayNodeKind,
             isLeaf: false,
