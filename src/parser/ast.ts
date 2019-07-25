@@ -102,6 +102,8 @@ export type TAuxiliaryNodes =
     | SectionMember
     | TAnyLiteral
     | TArrayWrapper
+    | TBinOpExpression
+    | TBinOpExpressionHelper
     | TCsv
     | TKeyValuePair
     | TNullablePrimitiveType
@@ -143,14 +145,6 @@ export type TRecursivePrimaryExpression =
 // -----------------------------------
 // ---------- Node subtypes ----------
 // -----------------------------------
-
-export type TBinOpExpression =
-    | ArithmeticExpression
-    | AsExpression
-    | EqualityExpression
-    | IsExpression
-    | LogicalExpression
-    | RelationalExpression;
 
 export type TBinOpExpressionNodeKind =
     | NodeKind.ArithmeticExpression
@@ -271,25 +265,6 @@ export type TExpression =
 
 export type TLogicalExpression = LogicalExpression | TIsExpression;
 
-export interface LogicalExpression
-    extends IBinOpExpression<NodeKind.LogicalExpression, TLogicalExpression, LogicalOperator, TLogicalExpression> {}
-
-export const enum LogicalOperator {
-    And = "and",
-    Or = "or",
-}
-
-export function logicalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<LogicalOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.KeywordAnd:
-            return LogicalOperator.And;
-        case TokenKind.KeywordOr:
-            return LogicalOperator.Or;
-        default:
-            return undefined;
-    }
-}
-
 // --------------------------------------------
 // ---------- 12.2.3.3 Is expression ----------
 // --------------------------------------------
@@ -297,9 +272,6 @@ export function logicalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<L
 export type TIsExpression = IsExpression | TAsExpression;
 
 export type TNullablePrimitiveType = NullablePrimitiveType | PrimitiveType;
-
-export interface IsExpression
-    extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, ConstantKind.Is, TNullablePrimitiveType> {}
 
 export interface NullablePrimitiveType extends IPairedConstant<NodeKind.NullablePrimitiveType, PrimitiveType> {}
 
@@ -318,47 +290,17 @@ export interface PrimitiveType extends INode {
 
 export type TAsExpression = AsExpression | TEqualityExpression;
 
-export interface AsExpression
-    extends IBinOpExpression<NodeKind.AsExpression, TEqualityExpression, ConstantKind.As, TNullablePrimitiveType> {}
-
 // --------------------------------------------------
 // ---------- 12.2.3.5 Equality expression ----------
 // --------------------------------------------------
 
 export type TEqualityExpression = EqualityExpression | TRelationalExpression;
 
-export interface EqualityExpression
-    extends IBinOpExpression<NodeKind.EqualityExpression, TEqualityExpression, EqualityOperator, TEqualityExpression> {}
-
-export const enum EqualityOperator {
-    EqualTo = "=",
-    NotEqualTo = "<>",
-}
-
-export function equalityOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<EqualityOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.Equal:
-            return EqualityOperator.EqualTo;
-        case TokenKind.NotEqual:
-            return EqualityOperator.NotEqualTo;
-        default:
-            return undefined;
-    }
-}
-
 // ----------------------------------------------------
 // ---------- 12.2.3.6 Relational expression ----------
 // ----------------------------------------------------
 
 export type TRelationalExpression = RelationalExpression | TArithmeticExpression;
-
-export interface RelationalExpression
-    extends IBinOpExpression<
-        NodeKind.RelationalExpression,
-        TRelationalExpression,
-        RelationalOperator,
-        TRelationalExpression
-    > {}
 
 export const enum RelationalOperator {
     LessThan = "<",
@@ -387,39 +329,6 @@ export function relationalOperatorFrom(maybeTokenKind: Option<TokenKind>): Optio
 // -----------------------------------------------------
 
 export type TArithmeticExpression = ArithmeticExpression | TMetadataExpression;
-
-export interface ArithmeticExpression
-    extends IBinOpExpression<
-        NodeKind.ArithmeticExpression,
-        TArithmeticExpression,
-        ArithmeticOperator,
-        TArithmeticExpression
-    > {}
-
-export const enum ArithmeticOperator {
-    Multiplication = "*",
-    Division = "/",
-    Addition = "+",
-    Subtraction = "-",
-    And = "&",
-}
-
-export function arithmeticOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<ArithmeticOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.Asterisk:
-            return ArithmeticOperator.Multiplication;
-        case TokenKind.Division:
-            return ArithmeticOperator.Division;
-        case TokenKind.Plus:
-            return ArithmeticOperator.Addition;
-        case TokenKind.Minus:
-            return ArithmeticOperator.Subtraction;
-        case TokenKind.Ampersand:
-            return ArithmeticOperator.And;
-        default:
-            return undefined;
-    }
-}
 
 // --------------------------------------------------
 // ---------- 12.2.3.8 Metadata expression ----------
@@ -699,23 +608,6 @@ export interface RecordLiteral
 // ---------- Abstract interfaces ----------
 // -----------------------------------------
 
-// IBinOpExpressions are expressed in terms of Operand followed by N <Operand, Operator> unary expressions.
-// 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
-export interface IBinOpExpression<Kind, Head, Operator, Operand> extends INode {
-    readonly kind: Kind & TBinOpExpressionNodeKind;
-    readonly head: Head;
-    readonly rest: IArrayWrapper<BinOpExpressionHelper<Operator, Operand>>;
-}
-
-export interface BinOpExpressionHelper<Operator, Operand> extends INode {
-    readonly kind: NodeKind.BinOpExpressionHelper;
-    readonly isLeaf: false;
-    readonly inBinaryExpression: boolean;
-    readonly operatorConstant: Constant;
-    readonly node: Operand;
-    readonly operator: Operator;
-}
-
 // BinOp expressions which uses a keyword as operators,
 // ex. `1 is number`
 export interface IBinOpKeyword<Kind, L, R> extends INode {
@@ -760,6 +652,148 @@ export interface IWrapped<Kind, Content> extends INode {
     readonly openWrapperConstant: Constant;
     readonly content: Content;
     readonly closeWrapperConstant: Constant;
+}
+
+// --------------------------------------
+// ---------- IBinOpExpression ----------
+// --------------------------------------
+
+// IBinOpExpressions are expressed in terms of Operand followed by N <Operand, Operator> unary expressions.
+// 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
+export type TBinOpExpression =
+    | ArithmeticExpression
+    | AsExpression
+    | EqualityExpression
+    | IsExpression
+    | LogicalExpression
+    | RelationalExpression;
+
+export interface IBinOpExpression<Kind, Head, Operator, Operand> extends INode {
+    readonly kind: Kind & TBinOpExpressionNodeKind;
+    readonly head: Head;
+    readonly rest: IArrayWrapper<BinOpExpressionHelper<Operator, Operand>>;
+}
+
+export interface ArithmeticExpression
+    extends IBinOpExpression<
+        NodeKind.ArithmeticExpression,
+        TArithmeticExpression,
+        ArithmeticOperator,
+        TArithmeticExpression
+    > {}
+
+export interface AsExpression
+    extends IBinOpExpression<NodeKind.AsExpression, TEqualityExpression, ConstantKind.As, TNullablePrimitiveType> {}
+
+export interface EqualityExpression
+    extends IBinOpExpression<NodeKind.EqualityExpression, TEqualityExpression, EqualityOperator, TEqualityExpression> {}
+
+export interface IsExpression
+    extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, ConstantKind.Is, TNullablePrimitiveType> {}
+
+export interface LogicalExpression
+    extends IBinOpExpression<NodeKind.LogicalExpression, TLogicalExpression, LogicalOperator, TLogicalExpression> {}
+
+export interface RelationalExpression
+    extends IBinOpExpression<
+        NodeKind.RelationalExpression,
+        TRelationalExpression,
+        RelationalOperator,
+        TRelationalExpression
+    > {}
+
+// --------------------------------------------
+// ---------- IBinOpExpressionHelper ----------
+// --------------------------------------------
+
+export type TBinOpExpressionHelper =
+    | ArithmeticExpressionHelper
+    | AsExpressionHelper
+    | EqualityExpressionHelper
+    | IsExpressionHelper
+    | LogicalExpressionHelper
+    | RelationalExpressionHelper;
+
+export interface BinOpExpressionHelper<Operator, Operand> extends INode {
+    readonly kind: NodeKind.BinOpExpressionHelper;
+    readonly isLeaf: false;
+    readonly inBinaryExpression: boolean;
+    readonly operatorConstant: Constant;
+    readonly node: Operand;
+    readonly operator: Operator;
+}
+
+export interface ArithmeticExpressionHelper extends BinOpExpressionHelper<ArithmeticOperator, TArithmeticExpression> {}
+
+export interface AsExpressionHelper extends BinOpExpressionHelper<ConstantKind.As, TNullablePrimitiveType> {}
+
+export interface EqualityExpressionHelper extends BinOpExpressionHelper<EqualityOperator, TEqualityExpression> {}
+
+export interface IsExpressionHelper extends BinOpExpressionHelper<ConstantKind.Is, TNullablePrimitiveType> {}
+
+export interface LogicalExpressionHelper extends BinOpExpressionHelper<LogicalOperator, TLogicalExpression> {}
+
+export interface RelationalExpressionHelper extends BinOpExpressionHelper<RelationalOperator, TRelationalExpression> {}
+
+// ------------------------------------------------
+// ---------- IBinOpExpression Operators ----------
+// ------------------------------------------------
+
+export const enum ArithmeticOperator {
+    Multiplication = "*",
+    Division = "/",
+    Addition = "+",
+    Subtraction = "-",
+    And = "&",
+}
+
+export function arithmeticOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<ArithmeticOperator> {
+    switch (maybeTokenKind) {
+        case TokenKind.Asterisk:
+            return ArithmeticOperator.Multiplication;
+        case TokenKind.Division:
+            return ArithmeticOperator.Division;
+        case TokenKind.Plus:
+            return ArithmeticOperator.Addition;
+        case TokenKind.Minus:
+            return ArithmeticOperator.Subtraction;
+        case TokenKind.Ampersand:
+            return ArithmeticOperator.And;
+        default:
+            return undefined;
+    }
+}
+
+export const enum EqualityOperator {
+    EqualTo = "=",
+    NotEqualTo = "<>",
+}
+
+export function equalityOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<EqualityOperator> {
+    switch (maybeTokenKind) {
+        case TokenKind.Equal:
+            return EqualityOperator.EqualTo;
+        case TokenKind.NotEqual:
+            return EqualityOperator.NotEqualTo;
+        default:
+            return undefined;
+    }
+}
+
+export const enum LogicalOperator {
+    And = "and",
+    Or = "or",
+}
+
+export function logicalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<LogicalOperator> {
+    switch (maybeTokenKind) {
+        case TokenKind.KeywordAnd:
+            return LogicalOperator.And;
+        case TokenKind.KeywordOr:
+            return LogicalOperator.Or;
+        default:
+            return undefined;
+    }
 }
 
 // ------------------------------------------
@@ -1058,15 +1092,17 @@ export function isIdentifierConstant(maybeIdentifierConstant: string): maybeIden
     }
 }
 
-// export function isTBinOpExpression(node: TNode): node is TBinOpExpression {
-//     switch (node.kind) {
-//         case NodeKind.ArithmeticExpression:
-//         case NodeKind.EqualityExpression:
-//         case NodeKind.LogicalExpression:
-//         case NodeKind.RelationalExpression:
-//             return true;
+export function isTBinOpExpression(node: TNode): node is TBinOpExpression {
+    switch (node.kind) {
+        case NodeKind.ArithmeticExpression:
+        case NodeKind.AsExpression:
+        case NodeKind.EqualityExpression:
+        case NodeKind.IsExpression:
+        case NodeKind.LogicalExpression:
+        case NodeKind.RelationalExpression:
+            return true;
 
-//         default:
-//             return false;
-//     }
-// }
+        default:
+            return false;
+    }
+}
