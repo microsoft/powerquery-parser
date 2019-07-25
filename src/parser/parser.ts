@@ -1736,7 +1736,7 @@ export class Parser {
 
         const maybeRest:
             | undefined
-            | Ast.IArrayWrapper<Ast.BinOpExpressionHelper<Operator, Operand>> = this.maybeReadUnaryExpressionHelpers(
+            | Ast.IArrayWrapper<Ast.BinOpExpressionHelper<Operator, Operand>> = this.maybeReadBinOpExpressionHelpers(
             maybeOperatorFrom,
             operandReader,
         );
@@ -1759,7 +1759,7 @@ export class Parser {
         }
     }
 
-    private maybeReadUnaryExpressionHelpers<Operator, Operand>(
+    private maybeReadBinOpExpressionHelpers<Operator, Operand>(
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
         operandReader: () => Operand,
     ): undefined | Ast.IArrayWrapper<Ast.BinOpExpressionHelper<Operator, Operand>> {
