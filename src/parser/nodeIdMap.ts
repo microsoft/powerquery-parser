@@ -80,6 +80,16 @@ export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: num
     return maybeXorNode(nodeIdMapCollection, parentNodeId);
 }
 
+export function maybeParentAstNode(nodeIdMapCollection: Collection, childId: number): Option<Ast.TNode> {
+    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
+    if (maybeParentNodeId === undefined) {
+        return undefined;
+    }
+    const parentNodeId: number = maybeParentNodeId;
+
+    return nodeIdMapCollection.astNodeById.get(parentNodeId);
+}
+
 export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: number): Option<ReadonlyArray<Ast.TNode>> {
     const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
     if (maybeChildIds === undefined) {
@@ -229,6 +239,16 @@ export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): 
 
 export function expectParentXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const maybeNode: Option<TXorNode> = maybeParentXorNode(nodeIdMapCollection, nodeId);
+    if (maybeNode === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`nodeId doesn't have a parent`, details);
+    }
+
+    return maybeNode;
+}
+
+export function expectParentAstNode(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+    const maybeNode: Option<Ast.TNode> = maybeParentAstNode(nodeIdMapCollection, nodeId);
     if (maybeNode === undefined) {
         const details: {} = { nodeId };
         throw new CommonError.InvariantError(`nodeId doesn't have a parent`, details);
