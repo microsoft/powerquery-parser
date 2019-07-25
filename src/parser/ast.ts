@@ -731,6 +731,14 @@ export interface RelationalExpressionHelper extends IBinOpExpressionHelper<Relat
 // ---------- IBinOpExpression Operators ----------
 // ------------------------------------------------
 
+export type TBinOpExpressionOperator =
+    | ArithmeticOperator
+    | EqualityOperator
+    | LogicalOperator
+    | RelationalOperator
+    | ConstantKind.As
+    | ConstantKind.Is;
+
 export const enum ArithmeticOperator {
     Multiplication = "*",
     Division = "/",
