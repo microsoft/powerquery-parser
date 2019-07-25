@@ -154,9 +154,6 @@ export type TBinOpExpressionNodeKind =
     | NodeKind.LogicalExpression
     | NodeKind.RelationalExpression;
 
-export type TBinOpKeywordExpression = IsExpression | AsExpression | MetadataExpression;
-export type TBinOpKeywordNodeKind = NodeKind.IsExpression | NodeKind.AsExpression | NodeKind.MetadataExpression;
-
 export type TKeyValuePair =
     | GeneralizedIdentifierPairedAnyLiteral
     | GeneralizedIdentifierPairedExpression
@@ -336,8 +333,12 @@ export type TArithmeticExpression = ArithmeticExpression | TMetadataExpression;
 
 export type TMetadataExpression = MetadataExpression | TUnaryExpression;
 
-export interface MetadataExpression
-    extends IBinOpKeyword<NodeKind.MetadataExpression, TUnaryExpression, TUnaryExpression> {}
+export interface MetadataExpression extends INode {
+    readonly kind: NodeKind.MetadataExpression;
+    readonly left: TUnaryExpression;
+    readonly constant: Constant;
+    readonly right: TUnaryExpression;
+}
 
 // -----------------------------------------------
 // ---------- 12.2.3.9 Unary expression ----------
@@ -607,15 +608,6 @@ export interface RecordLiteral
 // -----------------------------------------
 // ---------- Abstract interfaces ----------
 // -----------------------------------------
-
-// BinOp expressions which uses a keyword as operators,
-// ex. `1 is number`
-export interface IBinOpKeyword<Kind, L, R> extends INode {
-    readonly kind: Kind & TBinOpKeywordNodeKind;
-    readonly left: L;
-    readonly constant: Constant;
-    readonly right: R;
-}
 
 // Allows the ReadonlyArray to be treated as a TNode.
 // Without this wrapper ParserContext couldn't save partial progress for parsing an array.

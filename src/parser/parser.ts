@@ -308,14 +308,31 @@ export class Parser {
 
     // 12.2.3.8 Metadata expression
     private readMetadataExpression(): Ast.TMetadataExpression {
-        return this.readBinOpKeywordExpression<
-            Ast.NodeKind.MetadataExpression,
-            Ast.TUnaryExpression,
-            TokenKind.KeywordMeta,
-            Ast.TUnaryExpression
-        >(Ast.NodeKind.MetadataExpression, () => this.readUnaryExpression(), TokenKind.KeywordMeta, () =>
-            this.readUnaryExpression(),
-        );
+        const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
+        this.startContext(nodeKind);
+
+        const left: Ast.TUnaryExpression = this.readUnaryExpression();
+        const maybeConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(TokenKind.KeywordMeta);
+        this.incrementAttributeCounterIfUndefined(maybeConstant);
+
+        if (maybeConstant) {
+            const right: Ast.TUnaryExpression = this.readUnaryExpression();
+
+            const astNode: Ast.MetadataExpression = {
+                ...this.expectContextNodeMetadata(),
+                kind: nodeKind,
+                isLeaf: false,
+                left,
+                constant: maybeConstant,
+                right,
+            };
+
+            this.endContext(astNode);
+            return astNode;
+        } else {
+            this.deleteContext(undefined);
+            return left;
+        }
     }
 
     // 12.2.3.9 Unary expression
@@ -1705,54 +1722,6 @@ export class Parser {
             return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
         } else {
             return undefined;
-        }
-    }
-
-    private readBinOpKeywordExpression<Kind, L, KeywordKind, R>(
-        nodeKind: Kind & Ast.TBinOpKeywordNodeKind,
-        leftExpressionReader: () => L,
-        keywordTokenKind: KeywordKind & TokenKind,
-        rightExpressionReader: () => R,
-    ): L | Ast.IBinOpKeyword<Kind, L, R> {
-        this.startContext(nodeKind);
-
-        const left: L = leftExpressionReader();
-        const maybeConstant: Option<Ast.Constant> = this.maybeReadTokenKindAsConstant(keywordTokenKind);
-        this.incrementAttributeCounterIfUndefined(maybeConstant);
-
-        if (maybeConstant) {
-            const right: R = rightExpressionReader();
-
-            const astNode: Ast.IBinOpKeyword<Kind, L, R> = {
-                ...this.expectContextNodeMetadata(),
-                kind: nodeKind,
-                isLeaf: false,
-                left,
-                constant: maybeConstant,
-                right,
-            };
-
-            // UNSAFE MARKER
-            //
-            // Purpose of code block:
-            //      End the context started within the same function.
-            //
-            // Why are you trying to avoid a safer approach?
-            //      endContext takes an Ast.TNode, but due to generics the parser
-            //      can't prove for all types A, B, C, D that Ast.IBinOpKeyword<A, B, C, D>
-            //      results in an Ast.TNode.
-            //
-            //      The alternative approach is let the callers of readBinOpKeywordExpression
-            //      take the return and end the context themselves, which is messy.
-            //
-            // Why is it safe?
-            //      All Ast.NodeKind.IBinOpKeyword used by the parser are of Ast.TBinOpKeywordExpression,
-            //      a sub type of Ast.TNode.
-            this.endContext((astNode as unknown) as Ast.TBinOpKeywordExpression);
-            return astNode;
-        } else {
-            this.deleteContext(undefined);
-            return left;
         }
     }
 
