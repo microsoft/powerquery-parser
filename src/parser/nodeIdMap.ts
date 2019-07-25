@@ -80,6 +80,17 @@ export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: num
     return maybeXorNode(nodeIdMapCollection, parentNodeId);
 }
 
+export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: number): Option<ReadonlyArray<Ast.TNode>> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+    const childIds: ReadonlyArray<number> = maybeChildIds;
+
+    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+    return childIds.map(childId => expectAstNode(astNodeById, childId));
+}
+
 // Helper function for repeatedly calling maybeChildByAttributeIndex.
 export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
