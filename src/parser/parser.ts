@@ -1725,46 +1725,12 @@ export class Parser {
         }
     }
 
-    private readBinOpExpression<Kind, Head, Operator, Operand>(
-        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
-        headReader: () => Head,
-        maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
-        operandReader: () => Operand,
-    ): Head | Ast.IBinOpExpression<Kind, Head, Operator, Operand> {
-        this.startContext(nodeKind);
-        const head: Head = headReader();
-
-        const maybeRest:
-            | undefined
-            | Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = this.maybeReadBinOpExpressionHelpers(
-            maybeOperatorFrom,
-            operandReader,
-        );
-
-        if (maybeRest) {
-            const rest: Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = maybeRest;
-
-            const astNode: Ast.IBinOpExpression<Kind, Head, Operator, Operand> = {
-                ...this.expectContextNodeMetadata(),
-                kind: nodeKind,
-                isLeaf: false,
-                head,
-                rest,
-            };
-            this.endContext((astNode as unknown) as Ast.TNode);
-            return astNode;
-        } else {
-            this.deleteContext(undefined);
-            return head;
-        }
-    }
-
-    private readBinOpExpression2<Kind, Left, Operator, Right>(
+    private readBinOpExpression<Kind, Left, Operator, Right>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         leftReader: () => Left,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
         rightReader: () => Right,
-    ): Left | Ast.IBinOpExpression2<Kind, Left, Operator, Right> {
+    ): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
         this.startContext(nodeKind);
         const left: Left = leftReader();
 
@@ -1778,7 +1744,7 @@ export class Parser {
         const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
         const right: Right = rightReader();
 
-        const astNode: Ast.IBinOpExpression2<Kind, Left, Operator, Right> = {
+        const astNode: Ast.IBinOpExpression<Kind, Left, Operator, Right> = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: false,
@@ -1789,47 +1755,6 @@ export class Parser {
         };
         this.endContext((astNode as unknown) as Ast.TNode);
         return astNode;
-    }
-
-    private maybeReadBinOpExpressionHelpers<Operator, Operand>(
-        maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
-        operandReader: () => Operand,
-    ): undefined | Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> {
-        let maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
-        if (maybeOperator === undefined) {
-            return undefined;
-        }
-
-        const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-        this.startContext(arrayNodeKind);
-        const elements: Ast.IBinOpExpressionHelper<Operator, Operand>[] = [];
-
-        while (maybeOperator) {
-            const elementNodeKind: Ast.NodeKind.BinOpExpressionHelper = Ast.NodeKind.BinOpExpressionHelper;
-            this.startContext(elementNodeKind);
-
-            const helper: Ast.IBinOpExpressionHelper<Operator, Operand> = {
-                ...this.expectContextNodeMetadata(),
-                kind: elementNodeKind,
-                isLeaf: false,
-                operator: maybeOperator,
-                operatorConstant: this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind),
-                node: operandReader(),
-            };
-            elements.push(helper);
-            this.endContext((helper as unknown) as Ast.TNode);
-            maybeOperator = maybeOperatorFrom(this.maybeCurrentTokenKind);
-        }
-
-        const unaryArray: Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = {
-            ...this.expectContextNodeMetadata(),
-            kind: arrayNodeKind,
-            isLeaf: false,
-            elements,
-        };
-        this.endContext((unaryArray as unknown) as Ast.TNode);
-
-        return unaryArray;
     }
 
     private readPairedConstant<Kind, Paired>(

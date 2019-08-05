@@ -661,13 +661,7 @@ export type TBinOpExpression =
     | LogicalExpression
     | RelationalExpression;
 
-export interface IBinOpExpression<Kind, Head, Operator, Operand> extends INode {
-    readonly kind: Kind & TBinOpExpressionNodeKind;
-    readonly head: Head;
-    readonly rest: IArrayWrapper<IBinOpExpressionHelper<Operator, Operand>>;
-}
-
-export interface IBinOpExpression2<Kind, Left, Operator, Right> extends INode {
+export interface IBinOpExpression<Kind, Left, Operator, Right> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
     readonly left: Left;
     readonly operator: Operator;
