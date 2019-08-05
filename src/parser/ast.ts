@@ -667,6 +667,14 @@ export interface IBinOpExpression<Kind, Head, Operator, Operand> extends INode {
     readonly rest: IArrayWrapper<IBinOpExpressionHelper<Operator, Operand>>;
 }
 
+export interface IBinOpExpression2<Kind, Left, Operator, Right> extends INode {
+    readonly kind: Kind & TBinOpExpressionNodeKind;
+    readonly left: Left;
+    readonly operator: Operator;
+    readonly operatorConstant: Constant;
+    readonly right: Right;
+}
+
 export interface ArithmeticExpression
     extends IBinOpExpression<
         NodeKind.ArithmeticExpression,

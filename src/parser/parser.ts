@@ -1759,6 +1759,38 @@ export class Parser {
         }
     }
 
+    private readBinOpExpression2<Kind, Left, Operator, Right>(
+        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
+        leftReader: () => Left,
+        maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
+        rightReader: () => Right,
+    ): Left | Ast.IBinOpExpression2<Kind, Left, Operator, Right> {
+        this.startContext(nodeKind);
+        const left: Left = leftReader();
+
+        const maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
+        if (maybeOperator === undefined) {
+            this.deleteContext(undefined);
+            return left;
+        }
+        const operator: Operator = maybeOperator;
+
+        const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
+        const right: Right = rightReader();
+
+        const astNode: Ast.IBinOpExpression2<Kind, Left, Operator, Right> = {
+            ...this.expectContextNodeMetadata(),
+            kind: nodeKind,
+            isLeaf: false,
+            left,
+            operator,
+            operatorConstant,
+            right,
+        };
+        this.endContext((astNode as unknown) as Ast.TNode);
+        return astNode;
+    }
+
     private maybeReadBinOpExpressionHelpers<Operator, Operand>(
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
         operandReader: () => Operand,
