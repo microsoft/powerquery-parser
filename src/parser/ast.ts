@@ -666,7 +666,7 @@ export interface IBinOpExpression<Kind, Left, Operator, Right> extends INode {
     readonly left: Left;
     readonly operator: Operator;
     readonly operatorConstant: Constant;
-    readonly right: Right;
+    readonly right: Right | IBinOpExpression<Kind, Left, Operator, Right>;
 }
 
 export interface ArithmeticExpression

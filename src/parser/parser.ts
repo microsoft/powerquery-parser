@@ -1729,32 +1729,46 @@ export class Parser {
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         leftReader: () => Left,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
-        rightReader: () => Right,
+        rightReader: () => Right | Ast.IBinOpExpression<Kind, Left, Operator, Right>,
     ): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
         this.startContext(nodeKind);
         const left: Left = leftReader();
 
-        const maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
+        let maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator === undefined) {
             this.deleteContext(undefined);
             return left;
         }
-        const operator: Operator = maybeOperator;
 
-        const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
-        const right: Right = rightReader();
+        const binOpRightReads: BinOpRightRead<Kind, Left, Operator, Right>[] = [];
+        while (maybeOperator) {
+            const operator: Operator = maybeOperator;
+            const currentTokenKind: TokenKind = this.maybeCurrentTokenKind as TokenKind;
+            const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(currentTokenKind);
+            const right: Right | Ast.IBinOpExpression<Kind, Left, Operator, Right> = rightReader();
 
-        const astNode: Ast.IBinOpExpression<Kind, Left, Operator, Right> = {
-            ...this.expectContextNodeMetadata(),
-            kind: nodeKind,
-            isLeaf: false,
-            left,
-            operator,
-            operatorConstant,
-            right,
-        };
-        this.endContext((astNode as unknown) as Ast.TNode);
-        return astNode;
+            binOpRightReads.push({
+                operator,
+                operatorConstant,
+                right,
+            });
+
+            maybeOperator = maybeOperatorFrom(this.maybeCurrentTokenKind);
+        }
+
+        if (binOpRightReads.length === 1) {
+            const astNode: Ast.IBinOpExpression<Kind, Left, Operator, Right> = {
+                ...this.expectContextNodeMetadata(),
+                ...binOpRightReads[0],
+                kind: nodeKind,
+                isLeaf: false,
+                left,
+            };
+            this.endContext((astNode as unknown) as Ast.TNode);
+            return astNode;
+        } else {
+            throw 1;
+        }
     }
 
     private readPairedConstant<Kind, Paired>(
@@ -2262,4 +2276,10 @@ interface ContextNodeMetadata {
 
 interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
+}
+
+interface BinOpRightRead<Kind, Left, Operator, Right> {
+    readonly operator: Operator;
+    readonly operatorConstant: Ast.Constant;
+    readonly right: Right | Ast.IBinOpExpression<Kind, Left, Operator, Right>;
 }
