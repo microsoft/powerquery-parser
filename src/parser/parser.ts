@@ -1284,7 +1284,7 @@ export class Parser {
         //      There isn't one? At least not without refactoring in ways which will make things messier.
         //
         // Why is it safe?
-        //      I'm only mutating start locations in the recursive expression to those on head.
+        //      I'm only mutating start location in the recursive expression to one already parsed , the head.
         mutableContext.maybeTokenStart = this.lexerSnapshot.tokens[recursiveTokenIndexStart];
         mutableContext.tokenIndexStart = recursiveTokenIndexStart;
 
@@ -1873,23 +1873,6 @@ export class Parser {
             closeWrapperConstant,
             maybeOptionalConstant,
         };
-
-        // UNSAFE MARKER
-        //
-        // Purpose of code block:
-        //      End the context started within the same function.
-        //
-        // Why are you trying to avoid a safer approach?
-        //      endContext takes an Ast.TNode, but due to generics the parser
-        //      can't prove for all types A, B that Ast.IWrapped<A, B>
-        //      results in an Ast.TNode.
-        //
-        //      The alternative approach is let the callers of readWrapped
-        //      take the return and end the context themselves, which is messy.
-        //
-        // Why is it safe?
-        //      All Ast.NodeKind.IWrapped used by the parser are of Ast.TWrapped,
-        //      a sub type of Ast.TNode.
         this.endContext((wrapped as unknown) as Ast.TWrapped);
         return wrapped;
     }
@@ -1913,22 +1896,6 @@ export class Parser {
             equalConstant,
             value,
         };
-        // UNSAFE MARKER
-        //
-        // Purpose of code block:
-        //      End the context started within the same function.
-        //
-        // Why are you trying to avoid a safer approach?
-        //      endContext takes an Ast.TNode, but due to generics the parser
-        //      can't prove for all types A, B, C that Ast.IKeyValuePair<A, B, C>
-        //      results in an Ast.TNode.
-        //
-        //      The alternative approach is let the callers of readKeyValuePair
-        //      take the return and end the context themselves, which is messy.
-        //
-        // Why is it safe?
-        //      All Ast.NodeKind.IKeyValuePair used by the parser are of Ast.TKeyValuePair,
-        //      a sub type of Ast.TNode.
         this.endContext((keyValuePair as unknown) as Ast.TKeyValuePair);
         return keyValuePair;
     }
