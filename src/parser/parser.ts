@@ -1724,7 +1724,6 @@ export class Parser {
         this.startContext(nodeKind);
         const left: Operand = operandReader();
 
-        // If no operator: delete the Context for IBinOpExpression then return Operand
         const maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator === undefined) {
             this.deleteContext(undefined);
