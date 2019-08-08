@@ -205,20 +205,22 @@ export class Parser {
 
     // 12.2.3.2 Logical expressions
     private readLogicalExpression(): Ast.TLogicalExpression {
-        return this.recursiveReadBinOpExpressionOneOperand<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.LogicalExpression,
             Ast.TLogicalExpression,
-            Ast.LogicalOperator
+            Ast.LogicalOperator,
+            Ast.TLogicalExpression
         >(
             Ast.NodeKind.LogicalExpression,
             () => this.readIsExpression(),
             maybeCurrentTokenKind => Ast.logicalOperatorFrom(maybeCurrentTokenKind),
+            () => this.readIsExpression(),
         );
     }
 
     // 12.2.3.3 Is expression
     private readIsExpression(): Ast.TIsExpression {
-        return this.recursiveReadBinOpExpressionTwoOperand<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.IsExpression,
             Ast.TAsExpression,
             Ast.ConstantKind.Is,
@@ -246,7 +248,7 @@ export class Parser {
 
     // 12.2.3.4 As expression
     private readAsExpression(): Ast.TAsExpression {
-        return this.recursiveReadBinOpExpressionTwoOperand<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.AsExpression,
             Ast.TEqualityExpression,
             Ast.ConstantKind.As,
@@ -261,40 +263,46 @@ export class Parser {
 
     // 12.2.3.5 Equality expression
     private readEqualityExpression(): Ast.TEqualityExpression {
-        return this.recursiveReadBinOpExpressionOneOperand<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.EqualityExpression,
             Ast.TEqualityExpression,
-            Ast.EqualityOperator
+            Ast.EqualityOperator,
+            Ast.TEqualityExpression
         >(
             Ast.NodeKind.EqualityExpression,
             () => this.readRelationalExpression(),
             maybeCurrentTokenKind => Ast.equalityOperatorFrom(maybeCurrentTokenKind),
+            () => this.readRelationalExpression(),
         );
     }
 
     // 12.2.3.6 Relational expression
     private readRelationalExpression(): Ast.TRelationalExpression {
-        return this.recursiveReadBinOpExpressionOneOperand<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.RelationalExpression,
             Ast.TArithmeticExpression,
-            Ast.RelationalOperator
+            Ast.RelationalOperator,
+            Ast.TArithmeticExpression
         >(
             Ast.NodeKind.RelationalExpression,
             () => this.readArithmeticExpression(),
             maybeCurrentTokenKind => Ast.relationalOperatorFrom(maybeCurrentTokenKind),
+            () => this.readArithmeticExpression(),
         );
     }
 
     // 12.2.3.7 Arithmetic expressions
     private readArithmeticExpression(): Ast.TArithmeticExpression {
-        return this.recursiveReadBinOpExpressionOneOperand<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.ArithmeticExpression,
             Ast.TMetadataExpression,
-            Ast.ArithmeticOperator
+            Ast.ArithmeticOperator,
+            Ast.TMetadataExpression
         >(
             Ast.NodeKind.ArithmeticExpression,
             () => this.readMetadataExpression(),
             maybeCurrentTokenKind => Ast.arithmeticOperatorFrom(maybeCurrentTokenKind),
+            () => this.readMetadataExpression(),
         );
     }
 
@@ -1716,45 +1724,7 @@ export class Parser {
             return undefined;
         }
     }
-    private recursiveReadBinOpExpressionOneOperand<Kind, Operand, Operator>(
-        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
-        operandReader: () => Operand,
-        maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
-    ): Operand | Ast.IBinOpExpression<Kind, Operand, Operator, Operand> {
-        this.startContext(nodeKind);
-        const left: Operand = operandReader();
-
-        const maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
-        if (maybeOperator === undefined) {
-            this.deleteContext(undefined);
-            return left;
-        }
-        const operator: Operator = maybeOperator;
-        const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
-
-        const right:
-            | Operand
-            | Ast.IBinOpExpression<Kind, Operand, Operator, Operand> = this.recursiveReadBinOpExpressionOneOperand<
-            Kind,
-            Operand,
-            Operator
-        >(nodeKind, operandReader, maybeOperatorFrom);
-
-        const astNode: Ast.IBinOpExpression<Kind, Operand, Operator, Operand> = {
-            ...this.expectContextNodeMetadata(),
-            kind: nodeKind,
-            isLeaf: false,
-            left,
-            operator,
-            operatorConstant,
-            right,
-        };
-        this.endContext((astNode as unknown) as Ast.TNode);
-
-        return astNode;
-    }
-
-    private recursiveReadBinOpExpressionTwoOperand<Kind, Left, Operator, Right>(
+    private recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         leftReader: () => Left,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
@@ -1773,7 +1743,7 @@ export class Parser {
         const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
         const right:
             | Right
-            | Ast.IBinOpExpression<Kind, Right, Operator, Right> = this.recursiveReadBinOpExpressionTwoOperandHelper<
+            | Ast.IBinOpExpression<Kind, Right, Operator, Right> = this.recursiveReadBinOpExpressionHelper<
             Kind,
             Operator,
             Right
@@ -1793,7 +1763,7 @@ export class Parser {
         return astNode;
     }
 
-    private recursiveReadBinOpExpressionTwoOperandHelper<Kind, Operator, Right>(
+    private recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
         rightReader: () => Right,
@@ -1810,7 +1780,7 @@ export class Parser {
         const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
         const right:
             | Right
-            | Ast.IBinOpExpression<Kind, Right, Operator, Right> = this.recursiveReadBinOpExpressionTwoOperandHelper<
+            | Ast.IBinOpExpression<Kind, Right, Operator, Right> = this.recursiveReadBinOpExpressionHelper<
             Kind,
             Operator,
             Right
