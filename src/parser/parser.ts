@@ -294,7 +294,7 @@ export class Parser {
         >(
             Ast.NodeKind.ArithmeticExpression,
             () => this.readMetadataExpression(),
-            maybeCurrentTokenKind => Ast.arithmeticOperatorFrom(maybeCurrentTokenKind)
+            maybeCurrentTokenKind => Ast.arithmeticOperatorFrom(maybeCurrentTokenKind),
         );
     }
 
