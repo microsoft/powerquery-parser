@@ -10,7 +10,6 @@ export const enum NodeKind {
     AsExpression = "AsExpression",
     AsNullablePrimitiveType = "AsNullablePrimitiveType",
     AsType = "AsType",
-    BinOpExpressionHelper = "BinOpExpressionHelper",
     Constant = "Constant",
     Csv = "Csv",
     EachExpression = "EachExpression",
@@ -103,7 +102,6 @@ export type TAuxiliaryNodes =
     | TAnyLiteral
     | TArrayWrapper
     | TBinOpExpression
-    | TBinOpExpressionHelper
     | TCsv
     | TKeyValuePair
     | TNullablePrimitiveType
@@ -118,7 +116,6 @@ export type TArrayWrapper =
     | IArrayWrapper<Constant>
     | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
-    | IArrayWrapper<TBinOpExpressionHelper>
     | IArrayWrapper<TRecursivePrimaryExpression>
     | TCsvArray;
 
@@ -700,38 +697,6 @@ export interface RelationalExpression
         RelationalOperator,
         TRelationalExpression
     > {}
-
-// --------------------------------------------
-// ---------- IBinOpExpressionHelper ----------
-// --------------------------------------------
-
-export type TBinOpExpressionHelper =
-    | ArithmeticExpressionHelper
-    | AsExpressionHelper
-    | EqualityExpressionHelper
-    | IsExpressionHelper
-    | LogicalExpressionHelper
-    | RelationalExpressionHelper;
-
-export interface IBinOpExpressionHelper<Operator, Operand> extends INode {
-    readonly kind: NodeKind.BinOpExpressionHelper;
-    readonly isLeaf: false;
-    readonly operatorConstant: Constant;
-    readonly node: Operand;
-    readonly operator: Operator;
-}
-
-export interface ArithmeticExpressionHelper extends IBinOpExpressionHelper<ArithmeticOperator, TArithmeticExpression> {}
-
-export interface AsExpressionHelper extends IBinOpExpressionHelper<ConstantKind.As, TNullablePrimitiveType> {}
-
-export interface EqualityExpressionHelper extends IBinOpExpressionHelper<EqualityOperator, TEqualityExpression> {}
-
-export interface IsExpressionHelper extends IBinOpExpressionHelper<ConstantKind.Is, TNullablePrimitiveType> {}
-
-export interface LogicalExpressionHelper extends IBinOpExpressionHelper<LogicalOperator, TLogicalExpression> {}
-
-export interface RelationalExpressionHelper extends IBinOpExpressionHelper<RelationalOperator, TRelationalExpression> {}
 
 // ------------------------------------------------
 // ---------- IBinOpExpression Operators ----------
