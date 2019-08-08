@@ -110,10 +110,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -126,10 +124,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -142,10 +138,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -158,10 +152,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -174,10 +166,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -190,16 +180,14 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ArithmeticExpression, 2],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ArithmeticExpression, 2],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
         });
@@ -211,10 +199,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.AsExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
             expectAbridgeNodes(text, expected);
@@ -267,10 +253,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.EqualityExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -283,10 +267,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.EqualityExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -739,10 +721,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.IsExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
             expectAbridgeNodes(text, expected);
@@ -753,14 +733,12 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.IsExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.IsExpression, 2],
+                [Ast.NodeKind.PrimitiveType, 0],
                 [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.BinOpExpressionHelper, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
             expectAbridgeNodes(text, expected);
@@ -995,10 +973,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
         });
@@ -1008,10 +984,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.LogicalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
         });
@@ -1042,10 +1016,8 @@ describe("Parser.AbridgedNode", () => {
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.IsExpression, undefined],
             [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.BinOpExpressionHelper, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.NullablePrimitiveType, 1],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.NullablePrimitiveType, 2],
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.PrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
@@ -1162,10 +1134,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.RelationalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -1178,10 +1148,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.RelationalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -1194,10 +1162,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.RelationalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 
@@ -1210,10 +1176,8 @@ describe("Parser.AbridgedNode", () => {
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.RelationalExpression, undefined],
                 [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.BinOpExpressionHelper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
 

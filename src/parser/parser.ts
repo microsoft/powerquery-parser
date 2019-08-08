@@ -205,7 +205,7 @@ export class Parser {
 
     // 12.2.3.2 Logical expressions
     private readLogicalExpression(): Ast.TLogicalExpression {
-        return this.readBinOpExpression<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.LogicalExpression,
             Ast.TLogicalExpression,
             Ast.LogicalOperator,
@@ -220,7 +220,7 @@ export class Parser {
 
     // 12.2.3.3 Is expression
     private readIsExpression(): Ast.TIsExpression {
-        return this.readBinOpExpression<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.IsExpression,
             Ast.TAsExpression,
             Ast.ConstantKind.Is,
@@ -248,7 +248,7 @@ export class Parser {
 
     // 12.2.3.4 As expression
     private readAsExpression(): Ast.TAsExpression {
-        return this.readBinOpExpression<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.AsExpression,
             Ast.TEqualityExpression,
             Ast.ConstantKind.As,
@@ -263,7 +263,7 @@ export class Parser {
 
     // 12.2.3.5 Equality expression
     private readEqualityExpression(): Ast.TEqualityExpression {
-        return this.readBinOpExpression<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.EqualityExpression,
             Ast.TEqualityExpression,
             Ast.EqualityOperator,
@@ -278,7 +278,7 @@ export class Parser {
 
     // 12.2.3.6 Relational expression
     private readRelationalExpression(): Ast.TRelationalExpression {
-        return this.readBinOpExpression<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.RelationalExpression,
             Ast.TArithmeticExpression,
             Ast.RelationalOperator,
@@ -293,7 +293,7 @@ export class Parser {
 
     // 12.2.3.7 Arithmetic expressions
     private readArithmeticExpression(): Ast.TArithmeticExpression {
-        return this.readBinOpExpression<
+        return this.recursiveReadBinOpExpression<
             Ast.NodeKind.ArithmeticExpression,
             Ast.TMetadataExpression,
             Ast.ArithmeticOperator,
@@ -1284,7 +1284,7 @@ export class Parser {
         //      There isn't one? At least not without refactoring in ways which will make things messier.
         //
         // Why is it safe?
-        //      I'm only mutating start locations in the recursive expression to those on head.
+        //      I'm only mutating start location in the recursive expression to one already parsed , the head.
         mutableContext.maybeTokenStart = this.lexerSnapshot.tokens[recursiveTokenIndexStart];
         mutableContext.tokenIndexStart = recursiveTokenIndexStart;
 
@@ -1725,79 +1725,88 @@ export class Parser {
         }
     }
 
-    private readBinOpExpression<Kind, Head, Operator, Operand>(
+    // Given the string `1 + 2 + 3` the function will parse the `1 +`,
+    // then pass the remainder of the string `2 + 3` into recursiveReadBinOpExpressionHelper.
+    // The helper function is nearly a copy except it replaces Left and leftReader with Right and rightReader.
+    //
+    // The reason the code is duplicated across two functions is because I can't think of a cleaner way to do it.
+    private recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
-        headReader: () => Head,
+        leftReader: () => Left,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
-        operandReader: () => Operand,
-    ): Head | Ast.IBinOpExpression<Kind, Head, Operator, Operand> {
+        rightReader: () => Right,
+    ): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
         this.startContext(nodeKind);
-        const head: Head = headReader();
+        const left: Left = leftReader();
 
-        const maybeRest:
-            | undefined
-            | Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = this.maybeReadBinOpExpressionHelpers(
-            maybeOperatorFrom,
-            operandReader,
-        );
-
-        if (maybeRest) {
-            const rest: Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = maybeRest;
-
-            const astNode: Ast.IBinOpExpression<Kind, Head, Operator, Operand> = {
-                ...this.expectContextNodeMetadata(),
-                kind: nodeKind,
-                isLeaf: false,
-                head,
-                rest,
-            };
-            this.endContext((astNode as unknown) as Ast.TNode);
-            return astNode;
-        } else {
+        // If no operator, return Left
+        const maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
+        if (maybeOperator === undefined) {
             this.deleteContext(undefined);
-            return head;
+            return left;
         }
+        const operator: Operator = maybeOperator;
+        const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
+        const right:
+            | Right
+            | Ast.IBinOpExpression<Kind, Right, Operator, Right> = this.recursiveReadBinOpExpressionHelper<
+            Kind,
+            Operator,
+            Right
+        >(nodeKind, maybeOperatorFrom, rightReader);
+
+        const astNode: Ast.IBinOpExpression<Kind, Left, Operator, Right> = {
+            ...this.expectContextNodeMetadata(),
+            kind: nodeKind,
+            isLeaf: false,
+            left,
+            operator,
+            operatorConstant,
+            right,
+        };
+        this.endContext((astNode as unknown) as Ast.TNode);
+
+        return astNode;
     }
 
-    private maybeReadBinOpExpressionHelpers<Operator, Operand>(
+    // Given the string `1 + 2 + 3` the function will recursively parse 2 Ast nodes,
+    // where their TokenRange's are represented by brackets:
+    // 1 + [2 + [3]]
+    private recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
+        nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
-        operandReader: () => Operand,
-    ): undefined | Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> {
-        let maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
+        rightReader: () => Right,
+    ): Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> {
+        this.startContext(nodeKind);
+        const rightAsLeft: Right = rightReader();
+
+        const maybeOperator: Option<Operator> = maybeOperatorFrom(this.maybeCurrentTokenKind);
         if (maybeOperator === undefined) {
-            return undefined;
+            this.deleteContext(undefined);
+            return rightAsLeft;
         }
+        const operator: Operator = maybeOperator;
+        const operatorConstant: Ast.Constant = this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind);
+        const right:
+            | Right
+            | Ast.IBinOpExpression<Kind, Right, Operator, Right> = this.recursiveReadBinOpExpressionHelper<
+            Kind,
+            Operator,
+            Right
+        >(nodeKind, maybeOperatorFrom, rightReader);
 
-        const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-        this.startContext(arrayNodeKind);
-        const elements: Ast.IBinOpExpressionHelper<Operator, Operand>[] = [];
-
-        while (maybeOperator) {
-            const elementNodeKind: Ast.NodeKind.BinOpExpressionHelper = Ast.NodeKind.BinOpExpressionHelper;
-            this.startContext(elementNodeKind);
-
-            const helper: Ast.IBinOpExpressionHelper<Operator, Operand> = {
-                ...this.expectContextNodeMetadata(),
-                kind: elementNodeKind,
-                isLeaf: false,
-                operator: maybeOperator,
-                operatorConstant: this.readTokenKindAsConstant(this.maybeCurrentTokenKind as TokenKind),
-                node: operandReader(),
-            };
-            elements.push(helper);
-            this.endContext((helper as unknown) as Ast.TNode);
-            maybeOperator = maybeOperatorFrom(this.maybeCurrentTokenKind);
-        }
-
-        const unaryArray: Ast.IArrayWrapper<Ast.IBinOpExpressionHelper<Operator, Operand>> = {
+        const astNode: Ast.IBinOpExpression<Kind, Right, Operator, Right> = {
             ...this.expectContextNodeMetadata(),
-            kind: arrayNodeKind,
+            kind: nodeKind,
             isLeaf: false,
-            elements,
+            left: rightAsLeft,
+            operator,
+            operatorConstant,
+            right,
         };
-        this.endContext((unaryArray as unknown) as Ast.TNode);
+        this.endContext((astNode as unknown) as Ast.TNode);
 
-        return unaryArray;
+        return astNode;
     }
 
     private readPairedConstant<Kind, Paired>(
@@ -1818,22 +1827,6 @@ export class Parser {
             paired,
         };
 
-        // UNSAFE MARKER
-        //
-        // Purpose of code block:
-        //      End the context started within the same function.
-        //
-        // Why are you trying to avoid a safer approach?
-        //      endContext takes an Ast.TNode, but due to generics the parser
-        //      can't prove for all types A, B that Ast.IPairedConstant<A, B>
-        //      results in an Ast.TNode.
-        //
-        //      The alternative approach is let the callers of readPairedConstant
-        //      take the return and end the context themselves, which is messy.
-        //
-        // Why is it safe?
-        //      All Ast.NodeKind.IPairedConstant used by the parser are of Ast.TPairedConstant,
-        //      a sub type of Ast.TNode.
         this.endContext((pairedConstant as unknown) as Ast.TPairedConstant);
 
         return pairedConstant;
@@ -1880,23 +1873,6 @@ export class Parser {
             closeWrapperConstant,
             maybeOptionalConstant,
         };
-
-        // UNSAFE MARKER
-        //
-        // Purpose of code block:
-        //      End the context started within the same function.
-        //
-        // Why are you trying to avoid a safer approach?
-        //      endContext takes an Ast.TNode, but due to generics the parser
-        //      can't prove for all types A, B that Ast.IWrapped<A, B>
-        //      results in an Ast.TNode.
-        //
-        //      The alternative approach is let the callers of readWrapped
-        //      take the return and end the context themselves, which is messy.
-        //
-        // Why is it safe?
-        //      All Ast.NodeKind.IWrapped used by the parser are of Ast.TWrapped,
-        //      a sub type of Ast.TNode.
         this.endContext((wrapped as unknown) as Ast.TWrapped);
         return wrapped;
     }
@@ -1920,22 +1896,6 @@ export class Parser {
             equalConstant,
             value,
         };
-        // UNSAFE MARKER
-        //
-        // Purpose of code block:
-        //      End the context started within the same function.
-        //
-        // Why are you trying to avoid a safer approach?
-        //      endContext takes an Ast.TNode, but due to generics the parser
-        //      can't prove for all types A, B, C that Ast.IKeyValuePair<A, B, C>
-        //      results in an Ast.TNode.
-        //
-        //      The alternative approach is let the callers of readKeyValuePair
-        //      take the return and end the context themselves, which is messy.
-        //
-        // Why is it safe?
-        //      All Ast.NodeKind.IKeyValuePair used by the parser are of Ast.TKeyValuePair,
-        //      a sub type of Ast.TNode.
         this.endContext((keyValuePair as unknown) as Ast.TKeyValuePair);
         return keyValuePair;
     }
