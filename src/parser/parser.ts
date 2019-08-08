@@ -1724,6 +1724,10 @@ export class Parser {
             return undefined;
         }
     }
+
+    // Given the string `1 + 2 + 3` the function will parse the `1 +`,
+    // then pass the remainder of the string `2 + 3` into recursiveReadBinOpExpressionHelper
+    // which operates virtually the same, except it replaces Left+leftReader with Right+rightReader.
     private recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         leftReader: () => Left,
@@ -1763,6 +1767,9 @@ export class Parser {
         return astNode;
     }
 
+    // Given the string `1 + 2 + 3` the function will recursively parse 2 Ast nodes,
+    // where their TokenRange's are represented by brackets:
+    // 1 + [2 + [3]]
     private recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
