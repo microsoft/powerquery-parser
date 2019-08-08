@@ -80,6 +80,27 @@ export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: num
     return maybeXorNode(nodeIdMapCollection, parentNodeId);
 }
 
+export function maybeParentAstNode(nodeIdMapCollection: Collection, childId: number): Option<Ast.TNode> {
+    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
+    if (maybeParentNodeId === undefined) {
+        return undefined;
+    }
+    const parentNodeId: number = maybeParentNodeId;
+
+    return nodeIdMapCollection.astNodeById.get(parentNodeId);
+}
+
+export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: number): Option<ReadonlyArray<Ast.TNode>> {
+    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(parentId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+    const childIds: ReadonlyArray<number> = maybeChildIds;
+
+    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+    return childIds.map(childId => expectAstNode(astNodeById, childId));
+}
+
 // Helper function for repeatedly calling maybeChildByAttributeIndex.
 export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
@@ -151,6 +172,53 @@ export function maybeChildByAttributeIndex(
     return undefined;
 }
 
+export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeId: number): Option<string> {
+    const invokeExprXorNode: TXorNode = expectXorNode(nodeIdMapCollection, nodeId);
+
+    if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
+        const details: {} = { invokeExprXorNode };
+        throw new CommonError.InvariantError(
+            `expected invokeExprXorNode to have a Ast.NodeKind of ${Ast.NodeKind.InvokeExpression}`,
+            details,
+        );
+    }
+
+    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
+    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
+    let maybeName: Option<string>;
+    if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
+        // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
+        const recursiveArrayXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, invokeExprXorNode.node.id);
+        const recursiveExprXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, recursiveArrayXorNode.node.id);
+        const headXorNode: TXorNode = expectChildByAttributeIndex(
+            nodeIdMapCollection,
+            recursiveExprXorNode.node.id,
+            0,
+            undefined,
+        );
+        if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+            if (headXorNode.kind !== XorNodeKind.Ast) {
+                const details: {} = {
+                    identifierExpressionNodeId: headXorNode.node.id,
+                    invokeExpressionNodeId: invokeExprXorNode.node.id,
+                };
+                throw new CommonError.InvariantError(
+                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                    details,
+                );
+            }
+
+            const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
+            maybeName =
+                identifierExpression.maybeInclusiveConstant === undefined
+                    ? identifierExpression.identifier.literal
+                    : identifierExpression.maybeInclusiveConstant.literal + identifierExpression.identifier.literal;
+        }
+    }
+
+    return maybeName;
+}
+
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
 }
@@ -171,6 +239,16 @@ export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): 
 
 export function expectParentXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const maybeNode: Option<TXorNode> = maybeParentXorNode(nodeIdMapCollection, nodeId);
+    if (maybeNode === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`nodeId doesn't have a parent`, details);
+    }
+
+    return maybeNode;
+}
+
+export function expectParentAstNode(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+    const maybeNode: Option<Ast.TNode> = maybeParentAstNode(nodeIdMapCollection, nodeId);
     if (maybeNode === undefined) {
         const details: {} = { nodeId };
         throw new CommonError.InvariantError(`nodeId doesn't have a parent`, details);
@@ -208,6 +286,13 @@ export function expectXorNodes(
 
 export function expectChildIds(childIdsById: ChildIdsById, nodeId: number): ReadonlyArray<number> {
     return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
+}
+
+export function expectAstChildren(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<Ast.TNode> {
+    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+    return expectChildIds(nodeIdMapCollection.childIdsById, parentId).map(childId =>
+        expectAstNode(astNodeById, childId),
+    );
 }
 
 export function expectXorChildren(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<TXorNode> {

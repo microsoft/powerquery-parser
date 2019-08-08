@@ -64,3 +64,22 @@ export function maybeRegexMatchLength(pattern: RegExp, text: string, index: numb
         return matches[0].length;
     }
 }
+
+export function maybeNewlineKindAt(text: string, index: number): Option<NewlineKind> {
+    const chr1: string = text[index];
+
+    switch (chr1) {
+        case `\u000d`: {
+            const chr2: string = text[index + 1];
+            return chr2 === `\u000a` ? NewlineKind.DoubleCharacter : NewlineKind.SingleCharacter;
+        }
+
+        case `\u000a`:
+        case `\u0085`:
+        case `\u2028`:
+            return NewlineKind.SingleCharacter;
+
+        default:
+            return undefined;
+    }
+}
