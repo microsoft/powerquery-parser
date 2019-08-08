@@ -1726,8 +1726,10 @@ export class Parser {
     }
 
     // Given the string `1 + 2 + 3` the function will parse the `1 +`,
-    // then pass the remainder of the string `2 + 3` into recursiveReadBinOpExpressionHelper
-    // which operates virtually the same, except it replaces Left+leftReader with Right+rightReader.
+    // then pass the remainder of the string `2 + 3` into recursiveReadBinOpExpressionHelper.
+    // The helper function is nearly a copy except it replaces Left and leftReader with Right and rightReader.
+    //
+    // The reason the code is duplicated across two functions is because I can't think of a cleaner way to do it.
     private recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
         leftReader: () => Left,
