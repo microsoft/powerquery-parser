@@ -4,7 +4,7 @@ import * as path from "path";
 import { ResultKind } from "../../common";
 import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
 
-const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".pq", ".mout"];
+const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
 function isDirectory(maybePath: string): boolean {
     return statSync(maybePath).isDirectory();
