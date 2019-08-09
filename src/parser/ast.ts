@@ -528,9 +528,8 @@ export interface IfExpression extends INode {
 
 export type TTypeExpression = TPrimaryExpression | TypePrimaryType;
 
-export type TType = // Technically TExpression should be ParenthesizedExpression,
-    // but I'm matching the Microsoft's official parser.
-    TExpression | TPrimaryType;
+// Technically TExpression should be ParenthesizedExpression, but I'm matching Microsoft's C# parser.
+export type TType = TExpression | TPrimaryType;
 
 export type TPrimaryType = PrimitiveType | FunctionType | ListType | NullableType | RecordType | TableType;
 
