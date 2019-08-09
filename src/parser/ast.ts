@@ -651,12 +651,16 @@ export interface IWrapped<Kind, Content> extends INode {
 // IBinOpExpressions are expressed in terms of Operand followed by N <Operand, Operator> unary expressions.
 // 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
 export type TBinOpExpression =
+    // Named expression constructs
     | ArithmeticExpression
     | AsExpression
     | EqualityExpression
     | IsExpression
     | LogicalExpression
-    | RelationalExpression;
+    | RelationalExpression
+    // Subtypes created by recursiveReadBinOpExpressionHelper.
+    | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, ConstantKind.As, TNullablePrimitiveType>
+    | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, ConstantKind.Is, TNullablePrimitiveType>;
 
 export interface IBinOpExpression<Kind, Left, Operator, Right> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
