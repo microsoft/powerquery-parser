@@ -55,8 +55,12 @@ describe("files", () => {
     const fileDirectory: string = path.join(path.dirname(__filename), "files");
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
-        it(testNameFromFilePath(filepath), () => {
-            const contents: string = readFileSync(filepath, "utf8");
+        const testName: string = testNameFromFilePath(filepath);
+
+        it(testName, () => {
+            let contents: string = readFileSync(filepath, "utf8");
+            contents = contents.replace(/^\uFEFF/, "");
+
             const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents);
             if (!(triedLexAndParse.kind === ResultKind.Ok)) {
                 throw triedLexAndParse.error;
