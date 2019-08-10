@@ -776,6 +776,26 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
+    describe(`keywords`, () => {
+        it(`#sections`, () => {
+            const text: string = `#sections`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+
+        it(`#shared`, () => {
+            const text: string = `#shared`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+    });
+
     it(Ast.NodeKind.LetExpression, () => {
         const text: string = `let x = 1 in x`;
         const expected: ReadonlyArray<AbridgedNode> = [

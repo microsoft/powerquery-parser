@@ -421,8 +421,13 @@ export class Parser {
                     primaryExpression = this.readNotImplementedExpression();
                     break;
 
+                case TokenKind.KeywordHashSections:
+                    primaryExpression = this.readKeyword();
+                    break;
+
                 case TokenKind.KeywordHashShared:
-                    throw new CommonError.NotYetImplementedError("todo");
+                    primaryExpression = this.readKeyword();
+                    break;
 
                 case TokenKind.KeywordHashBinary:
                     primaryExpression = this.readKeyword();
@@ -1648,6 +1653,9 @@ export class Parser {
     private readKeyword(): Ast.IdentifierExpression {
         const identifierExpressionNodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
         this.startContext(identifierExpressionNodeKind);
+
+        // Keywords can't have a "@" prefix constant
+        this.incrementAttributeCounter();
 
         const identifierNodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
         this.startContext(identifierNodeKind);
