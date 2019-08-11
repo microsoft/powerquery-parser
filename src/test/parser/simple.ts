@@ -1122,7 +1122,19 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    // Ast.NodeKind.PrimitiveType covered by many
+    describe(`${Ast.NodeKind.PrimitiveType}`, () => {
+        it(`1 as time`, () => {
+            const text: string = `1 as time`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.AsExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+    });
 
     describe(`${Ast.NodeKind.RecordExpression}`, () => {
         it(`[x=1]`, () => {

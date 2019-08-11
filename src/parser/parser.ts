@@ -1461,6 +1461,7 @@ export class Parser {
                 case Ast.IdentifierConstant.Record:
                 case Ast.IdentifierConstant.Table:
                 case Ast.IdentifierConstant.Text:
+                case Ast.IdentifierConstant.Time:
                     primitiveType = this.readIdentifierConstantAsConstant(currentTokenData);
                     break;
 
