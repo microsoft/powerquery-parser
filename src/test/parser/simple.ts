@@ -603,7 +603,7 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    describe(`${Ast.NodeKind.FunctionType} abc123`, () => {
+    describe(`${Ast.NodeKind.FunctionType}`, () => {
         it(`type function () as number`, () => {
             const text: string = `type function () as number`;
             const expected: ReadonlyArray<AbridgedNode> = [
