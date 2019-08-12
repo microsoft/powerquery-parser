@@ -877,7 +877,7 @@ export class Parser {
                 } else {
                     throw this.fieldSpecificationListReadError(allowOpenMarker);
                 }
-            } else if (this.isOnTokenKind(TokenKind.Identifier)) {
+            } else if (this.isOnGeneralizedIdentifierToken()) {
                 const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
                 this.startContext(csvNodeKind);
 
@@ -1364,45 +1364,18 @@ export class Parser {
         this.startContext(nodeKind);
 
         let literal: string;
-
-        const currentTokenKind: Option<TokenKind> = this.maybeCurrentTokenKind;
-        const isKeywordGeneralizedIdentifier: boolean =
-            currentTokenKind === TokenKind.KeywordAnd ||
-            currentTokenKind === TokenKind.KeywordAs ||
-            currentTokenKind === TokenKind.KeywordEach ||
-            currentTokenKind === TokenKind.KeywordElse ||
-            currentTokenKind === TokenKind.KeywordError ||
-            currentTokenKind === TokenKind.KeywordFalse ||
-            currentTokenKind === TokenKind.KeywordIf ||
-            currentTokenKind === TokenKind.KeywordIn ||
-            currentTokenKind === TokenKind.KeywordIs ||
-            currentTokenKind === TokenKind.KeywordLet ||
-            currentTokenKind === TokenKind.KeywordMeta ||
-            currentTokenKind === TokenKind.KeywordNot ||
-            currentTokenKind === TokenKind.KeywordOtherwise ||
-            currentTokenKind === TokenKind.KeywordOr ||
-            currentTokenKind === TokenKind.KeywordSection ||
-            currentTokenKind === TokenKind.KeywordShared ||
-            currentTokenKind === TokenKind.KeywordThen ||
-            currentTokenKind === TokenKind.KeywordTrue ||
-            currentTokenKind === TokenKind.KeywordTry ||
-            currentTokenKind === TokenKind.KeywordType;
-        if (isKeywordGeneralizedIdentifier) {
-            literal = this.readToken();
-        } else {
-            const firstIdentifierTokenIndex: number = this.tokenIndex;
-            let lastIdentifierTokenIndex: number = firstIdentifierTokenIndex;
-            while (this.isOnTokenKind(TokenKind.Identifier)) {
-                lastIdentifierTokenIndex = this.tokenIndex;
-                this.readToken();
-            }
-
-            const lexerSnapshot: LexerSnapshot = this.lexerSnapshot;
-            const tokens: ReadonlyArray<Token> = lexerSnapshot.tokens;
-            const contiguousIdentifierStartIndex: number = tokens[firstIdentifierTokenIndex].positionStart.codeUnit;
-            const contiguousIdentifierEndIndex: number = tokens[lastIdentifierTokenIndex].positionEnd.codeUnit;
-            literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+        const firstIdentifierTokenIndex: number = this.tokenIndex;
+        let lastIdentifierTokenIndex: number = firstIdentifierTokenIndex;
+        while (this.isOnGeneralizedIdentifierToken()) {
+            lastIdentifierTokenIndex = this.tokenIndex;
+            this.readToken();
         }
+
+        const lexerSnapshot: LexerSnapshot = this.lexerSnapshot;
+        const tokens: ReadonlyArray<Token> = lexerSnapshot.tokens;
+        const contiguousIdentifierStartIndex: number = tokens[firstIdentifierTokenIndex].positionStart.codeUnit;
+        const contiguousIdentifierEndIndex: number = tokens[lastIdentifierTokenIndex].positionEnd.codeUnit;
+        literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
         const astNode: Ast.GeneralizedIdentifier = {
             ...this.expectContextNodeMetadata(),
@@ -1446,6 +1419,7 @@ export class Parser {
         if (this.isOnTokenKind(TokenKind.Identifier)) {
             const currentTokenData: string = this.lexerSnapshot.tokens[this.tokenIndex].data;
             switch (currentTokenData) {
+                case Ast.IdentifierConstant.Action:
                 case Ast.IdentifierConstant.Any:
                 case Ast.IdentifierConstant.AnyNonNull:
                 case Ast.IdentifierConstant.Binary:
@@ -2113,6 +2087,53 @@ export class Parser {
 
     private isOnTokenKind(tokenKind: TokenKind, tokenIndex: number = this.tokenIndex): boolean {
         return this.isTokenKind(tokenKind, tokenIndex);
+    }
+
+    private isOnGeneralizedIdentifierToken(): boolean {
+        const maybeTokenKind: Option<TokenKind> = this.maybeCurrentTokenKind;
+        if (maybeTokenKind === undefined) {
+            return false;
+        }
+        const tokenKind: TokenKind = maybeTokenKind;
+
+        switch (tokenKind) {
+            case TokenKind.Identifier:
+            case TokenKind.KeywordAnd:
+            case TokenKind.KeywordAs:
+            case TokenKind.KeywordEach:
+            case TokenKind.KeywordElse:
+            case TokenKind.KeywordError:
+            case TokenKind.KeywordFalse:
+            case TokenKind.KeywordHashBinary:
+            case TokenKind.KeywordHashDate:
+            case TokenKind.KeywordHashDateTime:
+            case TokenKind.KeywordHashDateTimeZone:
+            case TokenKind.KeywordHashDuration:
+            case TokenKind.KeywordHashInfinity:
+            case TokenKind.KeywordHashNan:
+            case TokenKind.KeywordHashSections:
+            case TokenKind.KeywordHashShared:
+            case TokenKind.KeywordHashTable:
+            case TokenKind.KeywordHashTime:
+            case TokenKind.KeywordIf:
+            case TokenKind.KeywordIn:
+            case TokenKind.KeywordIs:
+            case TokenKind.KeywordLet:
+            case TokenKind.KeywordMeta:
+            case TokenKind.KeywordNot:
+            case TokenKind.KeywordOr:
+            case TokenKind.KeywordOtherwise:
+            case TokenKind.KeywordSection:
+            case TokenKind.KeywordShared:
+            case TokenKind.KeywordThen:
+            case TokenKind.KeywordTrue:
+            case TokenKind.KeywordTry:
+            case TokenKind.KeywordType:
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     private isTokenKind(tokenKind: TokenKind, tokenIndex: number): boolean {

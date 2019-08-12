@@ -883,6 +883,7 @@ export const enum ConstantKind {
     Type = "type",
 
     // IdentifierConstant
+    Action = "action",
     Any = "any",
     AnyNonNull = "anynonnull",
     Binary = "binary",
@@ -920,6 +921,7 @@ export const enum ConstantKind {
 }
 
 export const enum IdentifierConstant {
+    Action = "action",
     Any = "any",
     AnyNonNull = "anynonnull",
     Binary = "binary",
@@ -967,6 +969,8 @@ export function literalKindFrom(maybeTokenKind: Option<TokenKind>): Option<Liter
 
 export function constantKindFromIdentifieConstant(identifierConstant: IdentifierConstant): Option<ConstantKind> {
     switch (identifierConstant) {
+        case IdentifierConstant.Action:
+            return ConstantKind.Action;
         case IdentifierConstant.Any:
             return ConstantKind.Any;
         case IdentifierConstant.AnyNonNull:
