@@ -495,7 +495,7 @@ function tokenize(line: TLine, lineNumber: number): TLine {
     }
 
     const newTokens: LineToken[] = [];
-    let continueLexing: boolean = true;
+    let continueLexing: boolean = currentPosition !== text.length;
     let maybeError: Option<LexerError.TLexerError>;
 
     // While neither eof nor having encountered an error:

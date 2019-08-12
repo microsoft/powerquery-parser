@@ -603,6 +603,53 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
+    describe(`${Ast.NodeKind.FunctionType}`, () => {
+        it(`type function () as number`, () => {
+            const text: string = `type function () as number`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FunctionType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParameterList, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+
+        it(`type function (x as number) as number`, () => {
+            const text: string = `type function (x as number) as number`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.TypePrimaryType, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.FunctionType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParameterList, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+    });
+
     // Ast.NodeKind.FieldTypeSpecification covered by AsType
 
     it(Ast.NodeKind.GeneralizedIdentifier, () => {
@@ -774,6 +821,26 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 3],
         ];
         expectAbridgeNodes(text, expected);
+    });
+
+    describe(`keywords`, () => {
+        it(`#sections`, () => {
+            const text: string = `#sections`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+
+        it(`#shared`, () => {
+            const text: string = `#shared`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.IdentifierExpression, undefined],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
     });
 
     it(Ast.NodeKind.LetExpression, () => {
@@ -1055,7 +1122,19 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    // Ast.NodeKind.PrimitiveType covered by many
+    describe(`${Ast.NodeKind.PrimitiveType}`, () => {
+        it(`1 as time`, () => {
+            const text: string = `1 as time`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.AsExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+    });
 
     describe(`${Ast.NodeKind.RecordExpression}`, () => {
         it(`[x=1]`, () => {
