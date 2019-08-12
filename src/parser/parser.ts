@@ -376,10 +376,6 @@ export class Parser {
 
     // 12.2.3.10 Primary expression
     private readPrimaryExpression(): Ast.TPrimaryExpression {
-        // I'd prefer to use a switch statement here but there's an issue with Typescript.
-        // Doing a switch on this.currentTokenKind makes all child expressions think it's constant,
-        // but it gets updated with readX calls.
-
         let primaryExpression: Option<Ast.TPrimaryExpression>;
         const maybeCurrentTokenKind: Option<TokenKind> = this.maybeCurrentTokenKind;
         const isIdentifierExpressionNext: boolean =
@@ -1439,7 +1435,11 @@ export class Parser {
         ];
         const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = this.expectAnyTokenKind(expectedTokenKinds);
         if (maybeErr) {
-            throw maybeErr;
+            const error: ParserError.ExpectedAnyTokenKindError = maybeErr;
+            return {
+                kind: ResultKind.Err,
+                error,
+            };
         }
 
         let primitiveType: Ast.Constant;
@@ -2242,12 +2242,12 @@ export function tryParse(lexerSnapshot: LexerSnapshot): TriedParse {
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
-    ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
 type TriedReadPrimitiveType = Result<
     Ast.PrimitiveType,
-    ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
 const enum ParenthesisDisambiguation {
