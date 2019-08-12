@@ -193,6 +193,12 @@ type
 });
 
 describe(`Lexer.Simple.Whitespace`, () => {
+    it(`only whitespace`, () => {
+        const text: string = `  `;
+        const expected: ReadonlyArray<[TokenKind, string]> = [];
+        expectSnapshotAbridgedTokens(text, expected, true);
+    });
+
     it(`spaces`, () => {
         const text: string = ` a b `;
         const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`], [TokenKind.Identifier, `b`]];

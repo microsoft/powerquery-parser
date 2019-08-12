@@ -376,10 +376,6 @@ export class Parser {
 
     // 12.2.3.10 Primary expression
     private readPrimaryExpression(): Ast.TPrimaryExpression {
-        // I'd prefer to use a switch statement here but there's an issue with Typescript.
-        // Doing a switch on this.currentTokenKind makes all child expressions think it's constant,
-        // but it gets updated with readX calls.
-
         let primaryExpression: Option<Ast.TPrimaryExpression>;
         const maybeCurrentTokenKind: Option<TokenKind> = this.maybeCurrentTokenKind;
         const isIdentifierExpressionNext: boolean =
@@ -421,8 +417,13 @@ export class Parser {
                     primaryExpression = this.readNotImplementedExpression();
                     break;
 
+                case TokenKind.KeywordHashSections:
+                    primaryExpression = this.readKeyword();
+                    break;
+
                 case TokenKind.KeywordHashShared:
-                    throw new CommonError.NotYetImplementedError("todo");
+                    primaryExpression = this.readKeyword();
+                    break;
 
                 case TokenKind.KeywordHashBinary:
                     primaryExpression = this.readKeyword();
@@ -1434,7 +1435,11 @@ export class Parser {
         ];
         const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = this.expectAnyTokenKind(expectedTokenKinds);
         if (maybeErr) {
-            throw maybeErr;
+            const error: ParserError.ExpectedAnyTokenKindError = maybeErr;
+            return {
+                kind: ResultKind.Err,
+                error,
+            };
         }
 
         let primitiveType: Ast.Constant;
@@ -1456,6 +1461,7 @@ export class Parser {
                 case Ast.IdentifierConstant.Record:
                 case Ast.IdentifierConstant.Table:
                 case Ast.IdentifierConstant.Text:
+                case Ast.IdentifierConstant.Time:
                     primitiveType = this.readIdentifierConstantAsConstant(currentTokenData);
                     break;
 
@@ -1648,6 +1654,9 @@ export class Parser {
     private readKeyword(): Ast.IdentifierExpression {
         const identifierExpressionNodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
         this.startContext(identifierExpressionNodeKind);
+
+        // Keywords can't have a "@" prefix constant
+        this.incrementAttributeCounter();
 
         const identifierNodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
         this.startContext(identifierNodeKind);
@@ -2233,12 +2242,12 @@ export function tryParse(lexerSnapshot: LexerSnapshot): TriedParse {
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
-    ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
 type TriedReadPrimitiveType = Result<
     Ast.PrimitiveType,
-    ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
 const enum ParenthesisDisambiguation {
