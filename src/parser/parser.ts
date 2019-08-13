@@ -1364,20 +1364,48 @@ export class Parser {
         this.startContext(nodeKind);
 
         let literal: string;
-        const firstIdentifierTokenIndex: number = this.tokenIndex;
-        let lastIdentifierTokenIndex: number = firstIdentifierTokenIndex;
+        let astNode: Ast.GeneralizedIdentifier;
+
+        // Edge case where GeneralizedIdentifier is only decmal numbers.
+        // The logic should be more robust as it should technically support the following:
+        // `1.a`
+        // `෬` - non ASCII character from Unicode class Nd (U+0DEC SINHALA LITH DIGIT SIX)
+        if (
+            this.maybeCurrentToken !== undefined &&
+            this.maybeCurrentToken.kind === TokenKind.NumericLiteral &&
+            this.maybeCurrentToken.data.match("^\\d+$")
+        ) {
+            literal = this.readToken();
+            astNode = {
+                ...this.expectContextNodeMetadata(),
+                kind: nodeKind,
+                isLeaf: true,
+                literal,
+            };
+            this.endContext(astNode);
+            return astNode;
+        }
+
+        const tokenRangeStartIndex: number = this.tokenIndex;
+        let tokenRangeEndIndex: number = tokenRangeStartIndex;
         while (this.isOnGeneralizedIdentifierToken()) {
-            lastIdentifierTokenIndex = this.tokenIndex;
             this.readToken();
+            tokenRangeEndIndex = this.tokenIndex;
+        }
+
+        if (tokenRangeStartIndex === tokenRangeEndIndex) {
+            throw new CommonError.InvariantError(
+                `readGeneralizedIdentifier has tokenRangeStartIndex === tokenRangeEndIndex`,
+            );
         }
 
         const lexerSnapshot: LexerSnapshot = this.lexerSnapshot;
         const tokens: ReadonlyArray<Token> = lexerSnapshot.tokens;
-        const contiguousIdentifierStartIndex: number = tokens[firstIdentifierTokenIndex].positionStart.codeUnit;
-        const contiguousIdentifierEndIndex: number = tokens[lastIdentifierTokenIndex].positionEnd.codeUnit;
+        const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
+        const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
         literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
-        const astNode: Ast.GeneralizedIdentifier = {
+        astNode = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: true,
@@ -2089,12 +2117,12 @@ export class Parser {
         return this.isTokenKind(tokenKind, tokenIndex);
     }
 
-    private isOnGeneralizedIdentifierToken(): boolean {
-        const maybeTokenKind: Option<TokenKind> = this.maybeCurrentTokenKind;
-        if (maybeTokenKind === undefined) {
+    private isOnGeneralizedIdentifierToken(tokenIndex: number = this.tokenIndex): boolean {
+        const maybeToken: Option<Token> = this.lexerSnapshot.tokens[tokenIndex];
+        if (maybeToken === undefined) {
             return false;
         }
-        const tokenKind: TokenKind = maybeTokenKind;
+        const tokenKind: TokenKind = maybeToken.kind;
 
         switch (tokenKind) {
             case TokenKind.Identifier:
