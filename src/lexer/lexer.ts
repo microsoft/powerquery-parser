@@ -765,7 +765,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
             if (chr3 === ".") {
                 token = readConstant(LineTokenKind.Ellipsis, text, positionStart, 3);
             } else {
-                throw unexpectedReadError(text, lineNumber, positionStart);
+                token = readConstant(LineTokenKind.DotDot, text, positionStart, 2);
             }
         } else {
             throw unexpectedReadError(text, lineNumber, positionStart);

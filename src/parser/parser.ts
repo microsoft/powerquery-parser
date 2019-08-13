@@ -574,13 +574,40 @@ export class Parser {
     // 12.2.3.17 List expression
     private readListExpression(): Ast.ListExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ListExpression["content"]>(
+        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ICsvArray<Ast.TListItem>>(
             Ast.NodeKind.ListExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
-            () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
+            () => this.readCsvArray(() => this.readListItem(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
             false,
         );
+    }
+
+    // An extension of this.readExpression which also can read RangeExpression.
+    // Eg. `1..10`
+    private readListItem(): Ast.TListItem {
+        const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
+        this.startContext(nodeKind);
+
+        const left: Ast.TExpression = this.readExpression();
+        if (this.isOnTokenKind(TokenKind.DotDot)) {
+            const rangeConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.DotDot);
+            const right: Ast.TExpression = this.readExpression();
+            const astNode: Ast.RangeExpression = {
+                ...this.expectContextNodeMetadata(),
+                kind: nodeKind,
+                isLeaf: false,
+                left,
+                rangeConstant,
+                right,
+            };
+
+            this.endContext(astNode);
+            return astNode;
+        } else {
+            this.deleteContext(undefined);
+            return left;
+        }
     }
 
     // 12.2.3.18 Record expression
