@@ -891,7 +891,7 @@ function readLineComment(text: string, positionStart: number): LineToken {
 }
 
 function readMultilineCommentOrStartStart(text: string, positionStart: number): LineModeAlteringRead {
-    const indexOfCloseComment: number = text.indexOf("*/", positionStart);
+    const indexOfCloseComment: number = text.indexOf("*/", positionStart + 2);
     if (indexOfCloseComment === -1) {
         return {
             token: readRestOfLine(LineTokenKind.MultilineCommentStart, text, positionStart),

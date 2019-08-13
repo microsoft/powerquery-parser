@@ -25,6 +25,12 @@ describe(`Lexer`, () => {
                 expectLineTokenMatch(text, expected, true);
             });
 
+            it(`/*/*/`, () => {
+                const text: string = `/*/*/`;
+                const expected: AbridgedLineTokens = [[LineTokenKind.MultilineComment, `/*/*/`]];
+                expectLineTokenMatch(text, expected, true);
+            });
+
             it(`/*\\n*/`, () => {
                 const text: string = `/*${LINE_TERMINATOR}*/`;
                 const expected: AbridgedLineTokens = [
