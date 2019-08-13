@@ -475,14 +475,14 @@ function tokenize(line: TLine, lineNumber: number): TLine {
     const text: string = untouchedLine.text;
     const textLength: number = text.length;
 
-    // Sanity check that there's something to tokenize
+    // If there's nothing to tokenize set lineModeEnd to lineModeStart.
     if (textLength === 0) {
         return {
             kind: LineKind.Touched,
             text: line.text,
             lineTerminator: line.lineTerminator,
             lineModeStart: line.lineModeStart,
-            lineModeEnd: LineMode.Default,
+            lineModeEnd: line.lineModeStart,
             tokens: [],
         };
     }

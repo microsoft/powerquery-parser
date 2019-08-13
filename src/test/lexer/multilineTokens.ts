@@ -43,6 +43,16 @@ describe(`Lexer`, () => {
                 ];
                 expectLineTokenMatch(text, expected, true);
             });
+
+            it(`/*\\n\nfoobar\\n\\n*/`, () => {
+                const text: string = `/*${LINE_TERMINATOR}${LINE_TERMINATOR}foobar${LINE_TERMINATOR}${LINE_TERMINATOR}*/`;
+                const expected: AbridgedLineTokens = [
+                    [LineTokenKind.MultilineCommentStart, `/*`],
+                    [LineTokenKind.MultilineCommentContent, `foobar`],
+                    [LineTokenKind.MultilineCommentEnd, `*/`],
+                ];
+                expectLineTokenMatch(text, expected, true);
+            });
         });
 
         describe(`StringLiteral`, () => {
