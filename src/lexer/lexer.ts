@@ -475,14 +475,14 @@ function tokenize(line: TLine, lineNumber: number): TLine {
     const text: string = untouchedLine.text;
     const textLength: number = text.length;
 
-    // Sanity check that there's something to tokenize
+    // If there's nothing to tokenize set lineModeEnd to lineModeStart.
     if (textLength === 0) {
         return {
             kind: LineKind.Touched,
             text: line.text,
             lineTerminator: line.lineTerminator,
             lineModeStart: line.lineModeStart,
-            lineModeEnd: LineMode.Default,
+            lineModeEnd: line.lineModeStart,
             tokens: [],
         };
     }
@@ -765,7 +765,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
             if (chr3 === ".") {
                 token = readConstant(LineTokenKind.Ellipsis, text, positionStart, 3);
             } else {
-                throw unexpectedReadError(text, lineNumber, positionStart);
+                token = readConstant(LineTokenKind.DotDot, text, positionStart, 2);
             }
         } else {
             throw unexpectedReadError(text, lineNumber, positionStart);
@@ -891,7 +891,7 @@ function readLineComment(text: string, positionStart: number): LineToken {
 }
 
 function readMultilineCommentOrStartStart(text: string, positionStart: number): LineModeAlteringRead {
-    const indexOfCloseComment: number = text.indexOf("*/", positionStart);
+    const indexOfCloseComment: number = text.indexOf("*/", positionStart + 2);
     if (indexOfCloseComment === -1) {
         return {
             token: readRestOfLine(LineTokenKind.MultilineCommentStart, text, positionStart),
