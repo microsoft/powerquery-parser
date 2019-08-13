@@ -50,6 +50,7 @@ export const enum NodeKind {
     ParameterList = "ParameterList",
     ParenthesizedExpression = "ParenthesizedExpression",
     PrimitiveType = "PrimitiveType",
+    RangeExpression = "RangeExpression",
     RecordExpression = "RecordExpression",
     RecordLiteral = "RecordLiteral",
     RecordType = "RecordType",
@@ -104,6 +105,7 @@ export type TAuxiliaryNodes =
     | TBinOpExpression
     | TCsv
     | TKeyValuePair
+    | TListItem
     | TNullablePrimitiveType
     | TPairedConstant
     | TParameter
@@ -129,7 +131,8 @@ export type TCsvType =
     | IdentifierPairedExpression
     | TParameter
     | TAnyLiteral
-    | TExpression;
+    | TExpression
+    | TListItem;
 
 export type TParameter = IParameter<TParameterType>;
 export type TParameterList = IParameterList<TParameterType>;
@@ -442,7 +445,17 @@ export interface InvokeExpression extends IWrapped<NodeKind.InvokeExpression, IC
 // ---------- 12.2.3.17 List expression ----------
 // -----------------------------------------------
 
-export interface ListExpression extends IWrapped<NodeKind.ListExpression, ICsvArray<TExpression>> {}
+export type TListItem = TExpression | RangeExpression;
+
+export interface ListExpression extends IWrapped<NodeKind.ListExpression, ICsvArray<TListItem>> {}
+
+export interface RangeExpression extends INode {
+    readonly kind: NodeKind.RangeExpression;
+    readonly isLeaf: false;
+    readonly left: TExpression;
+    readonly rangeConstant: Constant;
+    readonly right: TExpression;
+}
 
 // -------------------------------------------------
 // ---------- 12.2.3.18 Record expression ----------
@@ -883,6 +896,7 @@ export const enum ConstantKind {
     Type = "type",
 
     // IdentifierConstant
+    Action = "action",
     Any = "any",
     AnyNonNull = "anynonnull",
     Binary = "binary",
@@ -920,6 +934,7 @@ export const enum ConstantKind {
 }
 
 export const enum IdentifierConstant {
+    Action = "action",
     Any = "any",
     AnyNonNull = "anynonnull",
     Binary = "binary",
@@ -967,6 +982,8 @@ export function literalKindFrom(maybeTokenKind: Option<TokenKind>): Option<Liter
 
 export function constantKindFromIdentifieConstant(identifierConstant: IdentifierConstant): Option<ConstantKind> {
     switch (identifierConstant) {
+        case IdentifierConstant.Action:
+            return ConstantKind.Action;
         case IdentifierConstant.Any:
             return ConstantKind.Any;
         case IdentifierConstant.AnyNonNull:

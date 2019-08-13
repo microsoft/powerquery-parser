@@ -574,13 +574,40 @@ export class Parser {
     // 12.2.3.17 List expression
     private readListExpression(): Ast.ListExpression {
         const continueReadingValues: boolean = !this.isNextTokenKind(TokenKind.RightBrace);
-        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ListExpression["content"]>(
+        return this.readWrapped<Ast.NodeKind.ListExpression, Ast.ICsvArray<Ast.TListItem>>(
             Ast.NodeKind.ListExpression,
             () => this.readTokenKindAsConstant(TokenKind.LeftBrace),
-            () => this.readCsvArray(() => this.readExpression(), continueReadingValues),
+            () => this.readCsvArray(() => this.readListItem(), continueReadingValues),
             () => this.readTokenKindAsConstant(TokenKind.RightBrace),
             false,
         );
+    }
+
+    // An extension of this.readExpression which also can read RangeExpression.
+    // Eg. `1..10`
+    private readListItem(): Ast.TListItem {
+        const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
+        this.startContext(nodeKind);
+
+        const left: Ast.TExpression = this.readExpression();
+        if (this.isOnTokenKind(TokenKind.DotDot)) {
+            const rangeConstant: Ast.Constant = this.readTokenKindAsConstant(TokenKind.DotDot);
+            const right: Ast.TExpression = this.readExpression();
+            const astNode: Ast.RangeExpression = {
+                ...this.expectContextNodeMetadata(),
+                kind: nodeKind,
+                isLeaf: false,
+                left,
+                rangeConstant,
+                right,
+            };
+
+            this.endContext(astNode);
+            return astNode;
+        } else {
+            this.deleteContext(undefined);
+            return left;
+        }
     }
 
     // 12.2.3.18 Record expression
@@ -877,7 +904,7 @@ export class Parser {
                 } else {
                     throw this.fieldSpecificationListReadError(allowOpenMarker);
                 }
-            } else if (this.isOnTokenKind(TokenKind.Identifier)) {
+            } else if (this.isOnGeneralizedIdentifierToken()) {
                 const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
                 this.startContext(csvNodeKind);
 
@@ -1364,47 +1391,48 @@ export class Parser {
         this.startContext(nodeKind);
 
         let literal: string;
+        let astNode: Ast.GeneralizedIdentifier;
 
-        const currentTokenKind: Option<TokenKind> = this.maybeCurrentTokenKind;
-        const isKeywordGeneralizedIdentifier: boolean =
-            currentTokenKind === TokenKind.KeywordAnd ||
-            currentTokenKind === TokenKind.KeywordAs ||
-            currentTokenKind === TokenKind.KeywordEach ||
-            currentTokenKind === TokenKind.KeywordElse ||
-            currentTokenKind === TokenKind.KeywordError ||
-            currentTokenKind === TokenKind.KeywordFalse ||
-            currentTokenKind === TokenKind.KeywordIf ||
-            currentTokenKind === TokenKind.KeywordIn ||
-            currentTokenKind === TokenKind.KeywordIs ||
-            currentTokenKind === TokenKind.KeywordLet ||
-            currentTokenKind === TokenKind.KeywordMeta ||
-            currentTokenKind === TokenKind.KeywordNot ||
-            currentTokenKind === TokenKind.KeywordOtherwise ||
-            currentTokenKind === TokenKind.KeywordOr ||
-            currentTokenKind === TokenKind.KeywordSection ||
-            currentTokenKind === TokenKind.KeywordShared ||
-            currentTokenKind === TokenKind.KeywordThen ||
-            currentTokenKind === TokenKind.KeywordTrue ||
-            currentTokenKind === TokenKind.KeywordTry ||
-            currentTokenKind === TokenKind.KeywordType;
-        if (isKeywordGeneralizedIdentifier) {
+        // Edge case where GeneralizedIdentifier is only decmal numbers.
+        // The logic should be more robust as it should technically support the following:
+        // `1.a`
+        // `෬` - non ASCII character from Unicode class Nd (U+0DEC SINHALA LITH DIGIT SIX)
+        if (
+            this.maybeCurrentToken !== undefined &&
+            this.maybeCurrentToken.kind === TokenKind.NumericLiteral &&
+            this.maybeCurrentToken.data.match("^\\d+$")
+        ) {
             literal = this.readToken();
-        } else {
-            const firstIdentifierTokenIndex: number = this.tokenIndex;
-            let lastIdentifierTokenIndex: number = firstIdentifierTokenIndex;
-            while (this.isOnTokenKind(TokenKind.Identifier)) {
-                lastIdentifierTokenIndex = this.tokenIndex;
-                this.readToken();
-            }
-
-            const lexerSnapshot: LexerSnapshot = this.lexerSnapshot;
-            const tokens: ReadonlyArray<Token> = lexerSnapshot.tokens;
-            const contiguousIdentifierStartIndex: number = tokens[firstIdentifierTokenIndex].positionStart.codeUnit;
-            const contiguousIdentifierEndIndex: number = tokens[lastIdentifierTokenIndex].positionEnd.codeUnit;
-            literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+            astNode = {
+                ...this.expectContextNodeMetadata(),
+                kind: nodeKind,
+                isLeaf: true,
+                literal,
+            };
+            this.endContext(astNode);
+            return astNode;
         }
 
-        const astNode: Ast.GeneralizedIdentifier = {
+        const tokenRangeStartIndex: number = this.tokenIndex;
+        let tokenRangeEndIndex: number = tokenRangeStartIndex;
+        while (this.isOnGeneralizedIdentifierToken()) {
+            this.readToken();
+            tokenRangeEndIndex = this.tokenIndex;
+        }
+
+        if (tokenRangeStartIndex === tokenRangeEndIndex) {
+            throw new CommonError.InvariantError(
+                `readGeneralizedIdentifier has tokenRangeStartIndex === tokenRangeEndIndex`,
+            );
+        }
+
+        const lexerSnapshot: LexerSnapshot = this.lexerSnapshot;
+        const tokens: ReadonlyArray<Token> = lexerSnapshot.tokens;
+        const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
+        const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
+        literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+
+        astNode = {
             ...this.expectContextNodeMetadata(),
             kind: nodeKind,
             isLeaf: true,
@@ -1446,6 +1474,7 @@ export class Parser {
         if (this.isOnTokenKind(TokenKind.Identifier)) {
             const currentTokenData: string = this.lexerSnapshot.tokens[this.tokenIndex].data;
             switch (currentTokenData) {
+                case Ast.IdentifierConstant.Action:
                 case Ast.IdentifierConstant.Any:
                 case Ast.IdentifierConstant.AnyNonNull:
                 case Ast.IdentifierConstant.Binary:
@@ -2113,6 +2142,53 @@ export class Parser {
 
     private isOnTokenKind(tokenKind: TokenKind, tokenIndex: number = this.tokenIndex): boolean {
         return this.isTokenKind(tokenKind, tokenIndex);
+    }
+
+    private isOnGeneralizedIdentifierToken(tokenIndex: number = this.tokenIndex): boolean {
+        const maybeToken: Option<Token> = this.lexerSnapshot.tokens[tokenIndex];
+        if (maybeToken === undefined) {
+            return false;
+        }
+        const tokenKind: TokenKind = maybeToken.kind;
+
+        switch (tokenKind) {
+            case TokenKind.Identifier:
+            case TokenKind.KeywordAnd:
+            case TokenKind.KeywordAs:
+            case TokenKind.KeywordEach:
+            case TokenKind.KeywordElse:
+            case TokenKind.KeywordError:
+            case TokenKind.KeywordFalse:
+            case TokenKind.KeywordHashBinary:
+            case TokenKind.KeywordHashDate:
+            case TokenKind.KeywordHashDateTime:
+            case TokenKind.KeywordHashDateTimeZone:
+            case TokenKind.KeywordHashDuration:
+            case TokenKind.KeywordHashInfinity:
+            case TokenKind.KeywordHashNan:
+            case TokenKind.KeywordHashSections:
+            case TokenKind.KeywordHashShared:
+            case TokenKind.KeywordHashTable:
+            case TokenKind.KeywordHashTime:
+            case TokenKind.KeywordIf:
+            case TokenKind.KeywordIn:
+            case TokenKind.KeywordIs:
+            case TokenKind.KeywordLet:
+            case TokenKind.KeywordMeta:
+            case TokenKind.KeywordNot:
+            case TokenKind.KeywordOr:
+            case TokenKind.KeywordOtherwise:
+            case TokenKind.KeywordSection:
+            case TokenKind.KeywordShared:
+            case TokenKind.KeywordThen:
+            case TokenKind.KeywordTrue:
+            case TokenKind.KeywordTry:
+            case TokenKind.KeywordType:
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     private isTokenKind(tokenKind: TokenKind, tokenIndex: number): boolean {
