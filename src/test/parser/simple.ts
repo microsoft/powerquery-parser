@@ -28,15 +28,15 @@ function expectLexAndParseOk(text: string): LexAndParseOk {
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
+    const state: CollectAbridgeNodeState = { result: [] };
+
     const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = Traverse.tryTraverseAst<
         CollectAbridgeNodeState,
         AbridgedNode[]
     >(
-        lexAndParseOk.ast,
+        state,
         lexAndParseOk.nodeIdMapCollection,
-        {
-            result: [],
-        },
+        lexAndParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
         Traverse.expectExpandAllAstChildren,
@@ -52,18 +52,20 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 
 function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
     const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
+    const state: NthNodeOfKindState = {
+        result: undefined,
+        nodeKind,
+        nthCounter: 0,
+        nthRequired,
+    };
+
     const triedTraverse: Traverse.TriedTraverse<Option<Ast.TNode>> = Traverse.tryTraverseAst<
         NthNodeOfKindState,
         Option<Ast.TNode>
     >(
-        lexAndParseOk.ast,
+        state,
         lexAndParseOk.nodeIdMapCollection,
-        {
-            result: undefined,
-            nodeKind,
-            nthCounter: 0,
-            nthRequired,
-        },
+        lexAndParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
         Traverse.expectExpandAllAstChildren,
@@ -82,11 +84,11 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
     return astNode as T & Ast.TNode;
 }
 
-function collectAbridgeNodeVisit(node: Ast.TNode, state: CollectAbridgeNodeState): void {
+function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Ast.TNode): void {
     state.result.push([node.kind, node.maybeAttributeIndex]);
 }
 
-function nthNodeVisit(node: Ast.TNode, state: NthNodeOfKindState): void {
+function nthNodeVisit(state: NthNodeOfKindState, node: Ast.TNode): void {
     if (node.kind === state.nodeKind) {
         state.nthCounter += 1;
         if (state.nthCounter === state.nthRequired) {
@@ -95,7 +97,7 @@ function nthNodeVisit(node: Ast.TNode, state: NthNodeOfKindState): void {
     }
 }
 
-function nthNodeEarlyExit(_: Ast.TNode, state: NthNodeOfKindState): boolean {
+function nthNodeEarlyExit(state: NthNodeOfKindState, _: Ast.TNode): boolean {
     return state.nthCounter === state.nthRequired;
 }
 

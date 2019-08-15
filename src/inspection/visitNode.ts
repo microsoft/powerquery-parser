@@ -8,7 +8,7 @@ import { Position, State } from "./inspection";
 import { NodeKind, TNode } from "./node";
 import { PositionIdentifierKind } from "./positionIdentifier";
 
-export function visitNode(xorNode: NodeIdMap.TXorNode, state: State): void {
+export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
     // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
