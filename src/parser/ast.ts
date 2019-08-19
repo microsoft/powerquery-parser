@@ -103,7 +103,6 @@ export type TAuxiliaryNodes =
     | TAnyLiteral
     | TArrayWrapper
     | TBinOpExpression
-    | TBinOpExpressionSubtype
     | TCsv
     | TKeyValuePair
     | TListItem
@@ -665,7 +664,13 @@ export interface IWrapped<Kind, Content> extends INode {
 // 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
 export type TBinOpExpression =
     // Named expression constructs
-    ArithmeticExpression | AsExpression | EqualityExpression | IsExpression | LogicalExpression | RelationalExpression;
+    | ArithmeticExpression
+    | AsExpression
+    | EqualityExpression
+    | IsExpression
+    | LogicalExpression
+    | RelationalExpression
+    | TBinOpExpressionSubtype;
 
 // Types based off of TBinOpExpression needed for recursiveReadBinOpExpressionHelper.
 // Created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>
