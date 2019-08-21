@@ -8,7 +8,7 @@ export type TriedTraverse<StateType> = Result<StateType, CommonError.CommonError
 
 export type TVisitNodeFn<State, StateType, Node, Return> = (state: State & IState<StateType>, node: Node) => Return;
 
-export type TVisitChildNodeFn<Node, State, StateType, Return> = (
+export type TVisitChildNodeFn<State, StateType, Node, Return> = (
     state: State & IState<StateType>,
     parent: Node,
     node: Node,
