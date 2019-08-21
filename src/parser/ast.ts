@@ -669,8 +669,8 @@ export type TBinOpExpression =
     | RelationalExpression
     | TBinOpExpressionSubtype;
 
-// Types based off of TBinOpExpression needed for recursiveReadBinOpExpressionHelper.
-// Created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>
+// The following types are needed for recursiveReadBinOpExpressionHelper,
+// and are created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>.
 export type TBinOpExpressionSubtype =
     | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, ConstantKind.As, TNullablePrimitiveType>
     | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, ConstantKind.Is, TNullablePrimitiveType>;
