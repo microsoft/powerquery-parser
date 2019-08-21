@@ -541,9 +541,8 @@ export interface IfExpression extends INode {
 
 export type TTypeExpression = TPrimaryExpression | TypePrimaryType;
 
-export type TType = // Technically TExpression should be ParenthesizedExpression,
-    // but I'm matching the Microsoft's official parser.
-    TExpression | TPrimaryType;
+// Technically TExpression should be ParenthesizedExpression, but I'm matching Microsoft's C# parser.
+export type TType = TExpression | TPrimaryType;
 
 export type TPrimaryType = PrimitiveType | FunctionType | ListType | NullableType | RecordType | TableType;
 
@@ -661,15 +660,20 @@ export interface IWrapped<Kind, Content> extends INode {
 // ---------- IBinOpExpression ----------
 // --------------------------------------
 
-// IBinOpExpressions are expressed in terms of Operand followed by N <Operand, Operator> unary expressions.
-// 1 + 2 + 3 + 4 -> (1) (+ 2) (+ 3) (+ 4)
 export type TBinOpExpression =
     | ArithmeticExpression
     | AsExpression
     | EqualityExpression
     | IsExpression
     | LogicalExpression
-    | RelationalExpression;
+    | RelationalExpression
+    | TBinOpExpressionSubtype;
+
+// The following types are needed for recursiveReadBinOpExpressionHelper,
+// and are created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>.
+export type TBinOpExpressionSubtype =
+    | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, ConstantKind.As, TNullablePrimitiveType>
+    | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, ConstantKind.Is, TNullablePrimitiveType>;
 
 export interface IBinOpExpression<Kind, Left, Operator, Right> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
