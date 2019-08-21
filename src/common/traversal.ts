@@ -6,7 +6,7 @@ import { Ast, NodeIdMap, ParserContext } from "../parser";
 
 export type TriedTraverse<StateType> = Result<StateType, CommonError.CommonError>;
 
-export type TVisitNodeFn<Node, State, StateType, Return> = (state: State & IState<StateType>, node: Node) => Return;
+export type TVisitNodeFn<State, StateType, Node, Return> = (state: State & IState<StateType>, node: Node) => Return;
 
 export type TVisitChildNodeFn<Node, State, StateType, Return> = (
     state: State & IState<StateType>,
@@ -14,9 +14,9 @@ export type TVisitChildNodeFn<Node, State, StateType, Return> = (
     node: Node,
 ) => Return;
 
-export type TEarlyExitFn<Node, State, StateType> = TVisitNodeFn<Node, State, StateType, boolean>;
+export type TEarlyExitFn<State, StateType, Node> = TVisitNodeFn<State, StateType, Node, boolean>;
 
-export type TExpandNodesFn<Node, NodesById, State, StateType> = (
+export type TExpandNodesFn<State, StateType, Node, NodesById> = (
     state: State & IState<StateType>,
     node: Node,
     collection: NodesById,
@@ -37,11 +37,11 @@ export function tryTraverseAst<State, StateType>(
     nodeIdMapCollection: NodeIdMap.Collection,
     root: Ast.TNode,
     strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<Ast.TNode, State, StateType, void>,
-    expandNodesFn: TExpandNodesFn<Ast.TNode, NodeIdMap.Collection, State, StateType>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<Ast.TNode, State, StateType>>,
+    visitNodeFn: TVisitNodeFn<State, StateType, Ast.TNode, void>,
+    expandNodesFn: TExpandNodesFn<State, StateType, Ast.TNode, NodeIdMap.Collection>,
+    maybeEarlyExitFn: Option<TEarlyExitFn<State, StateType, Ast.TNode>>,
 ): TriedTraverse<StateType> {
-    return tryTraverse<Ast.TNode, NodeIdMap.Collection, State, StateType>(
+    return tryTraverse<State, StateType, Ast.TNode, NodeIdMap.Collection>(
         state,
         nodeIdMapCollection,
         root,
@@ -58,11 +58,11 @@ export function tryTraverseXor<State, StateType>(
     nodeIdMapCollection: NodeIdMap.Collection,
     root: NodeIdMap.TXorNode,
     strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<NodeIdMap.TXorNode, State, StateType, void>,
-    expandNodesFn: TExpandNodesFn<NodeIdMap.TXorNode, NodeIdMap.Collection, State, StateType>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<NodeIdMap.TXorNode, State, StateType>>,
+    visitNodeFn: TVisitNodeFn<State, StateType, NodeIdMap.TXorNode, void>,
+    expandNodesFn: TExpandNodesFn<State, StateType, NodeIdMap.TXorNode, NodeIdMap.Collection>,
+    maybeEarlyExitFn: Option<TEarlyExitFn<State, StateType, NodeIdMap.TXorNode>>,
 ): TriedTraverse<StateType> {
-    return tryTraverse<NodeIdMap.TXorNode, NodeIdMap.Collection, State, StateType>(
+    return tryTraverse<State, StateType, NodeIdMap.TXorNode, NodeIdMap.Collection>(
         state,
         nodeIdMapCollection,
         root,
@@ -73,17 +73,17 @@ export function tryTraverseXor<State, StateType>(
     );
 }
 
-export function tryTraverse<Node, NodesById, State, StateType>(
+export function tryTraverse<State, StateType, Node, NodesById>(
     state: State & IState<StateType>,
     nodesById: NodesById,
     root: Node,
     strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<Node, State, StateType, void>,
-    expandNodesFn: TExpandNodesFn<Node, NodesById, State, StateType>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<Node, State, StateType>>,
+    visitNodeFn: TVisitNodeFn<State, StateType, Node, void>,
+    expandNodesFn: TExpandNodesFn<State, StateType, Node, NodesById>,
+    maybeEarlyExitFn: Option<TEarlyExitFn<State, StateType, Node>>,
 ): TriedTraverse<StateType> {
     try {
-        traverseRecursion<Node, NodesById, State, StateType>(
+        traverseRecursion<State, StateType, Node, NodesById>(
             state,
             nodesById,
             root,
@@ -181,14 +181,14 @@ export function expectExpandAllXorChildren<State, StateType>(
     }
 }
 
-function traverseRecursion<Node, NodesById, State, StateType>(
+function traverseRecursion<State, StateType, Node, NodesById>(
     state: State & IState<StateType>,
     nodesById: NodesById,
     node: Node,
     strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<Node, State, StateType, void>,
-    expandNodesFn: TExpandNodesFn<Node, NodesById, State, StateType>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<Node, State, StateType>>,
+    visitNodeFn: TVisitNodeFn<State, StateType, Node, void>,
+    expandNodesFn: TExpandNodesFn<State, StateType, Node, NodesById>,
+    maybeEarlyExitFn: Option<TEarlyExitFn<State, StateType, Node>>,
 ): void {
     if (maybeEarlyExitFn && maybeEarlyExitFn(state, node)) {
         return;
