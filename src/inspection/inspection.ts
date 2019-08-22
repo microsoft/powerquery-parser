@@ -67,9 +67,9 @@ export function tryFrom(
     };
 
     const triedTraverse: TriedTraverse<UnfrozenInspected> = Traverse.tryTraverseXor<State, UnfrozenInspected>(
-        root,
-        nodeIdMapCollection,
         state,
+        nodeIdMapCollection,
+        root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         addParentXorNode,
