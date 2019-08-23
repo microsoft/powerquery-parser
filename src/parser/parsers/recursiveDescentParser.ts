@@ -14,6 +14,7 @@ import {
     expectTokenAt,
     incrementAttributeCounter,
     IParserState,
+    isNextTokenKind,
     isOnTokenKind,
     startContext,
     testIsOnAnyTokenKind,
@@ -103,6 +104,7 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     // 12.2.3.21 Function expression
     readFunctionExpression: notYetImplemented,
     readParameterList: notYetImplemented,
+    readAsType: notYetImplemented,
 
     // 12.2.3.22 Each expression
     readEachExpression: notYetImplemented,
@@ -120,6 +122,7 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readRecordType: notYetImplemented,
     readTableType: notYetImplemented,
     readFieldSpecificationList: notYetImplemented,
+    readListType: notYetImplemented,
     readFunctionType: notYetImplemented,
     readParameterSpecificationList: notYetImplemented,
     readNullableType: notYetImplemented,
@@ -131,12 +134,10 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readErrorHandlingExpression,
 
     // 12.2.4 Literal Attributes
-    readRecordLiteral: notYetImplemented,
-    readFieldNamePairedAnyLiterals: notYetImplemented,
-    readListLiteral: notYetImplemented,
-    readAnyLiteral: notYetImplemented,
-    readAsType: notYetImplemented,
-    readListType: notYetImplemented,
+    readRecordLiteral,
+    readFieldNamePairedAnyLiterals,
+    readListLiteral,
+    readAnyLiteral,
     readPrimitiveType,
 
     // key-value pairs
@@ -165,17 +166,6 @@ const enum BracketDisambiguation {
     FieldProjection = "FieldProjection",
     FieldSelection = "FieldSelection",
     Record = "Record",
-}
-
-interface StateBackup {
-    readonly tokenIndex: number;
-    readonly contextState: ParserContext.State;
-    readonly maybeContextNodeId: Option<number>;
-}
-interface ContextNodeMetadata {
-    readonly id: number;
-    readonly maybeAttributeIndex: Option<number>;
-    readonly tokenRange: Ast.TokenRange;
 }
 
 interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
@@ -410,6 +400,75 @@ function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpr
 // -----------------------------------------------
 // ---------- 12.2.4 Literal Attributes ----------
 // -----------------------------------------------
+
+function readRecordLiteral(state: IParserState): Ast.RecordLiteral {
+    const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBracket);
+    const wrappedRead: Ast.IWrapped<
+        Ast.NodeKind.RecordLiteral,
+        Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>
+    > = readWrapped<Ast.NodeKind.RecordLiteral, Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>>(
+        state,
+        Ast.NodeKind.RecordLiteral,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => RecursiveDescentParser.readFieldNamePairedAnyLiterals(state, continueReadingValues),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        false,
+    );
+    return {
+        literalKind: Ast.LiteralKind.Record,
+        ...wrappedRead,
+    };
+}
+
+function readFieldNamePairedAnyLiterals(
+    state: IParserState,
+    continueReadingValues: boolean,
+): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
+    return readCsvArray(
+        state,
+        () =>
+            readKeyValuePair<
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                Ast.GeneralizedIdentifier,
+                Ast.TAnyLiteral
+            >(
+                state,
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                () => RecursiveDescentParser.readGeneralizedIdentifier(state),
+                () => RecursiveDescentParser.readAnyLiteral(state),
+            ),
+        continueReadingValues,
+    );
+}
+
+function readListLiteral(state: IParserState): Ast.ListLiteral {
+    const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBrace);
+    const wrappedRead: Ast.IWrapped<Ast.NodeKind.ListLiteral, Ast.ICsvArray<Ast.TAnyLiteral>> = readWrapped<
+        Ast.NodeKind.ListLiteral,
+        Ast.ICsvArray<Ast.TAnyLiteral>
+    >(
+        state,
+        Ast.NodeKind.ListLiteral,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => readCsvArray(state, () => RecursiveDescentParser.readAnyLiteral(state), continueReadingValues),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        false,
+    );
+    return {
+        literalKind: Ast.LiteralKind.List,
+        ...wrappedRead,
+    };
+}
+
+function readAnyLiteral(state: IParserState): Ast.TAnyLiteral {
+    if (isOnTokenKind(state, TokenKind.LeftBracket)) {
+        return RecursiveDescentParser.readRecordLiteral(state);
+    } else if (isOnTokenKind(state, TokenKind.LeftBrace)) {
+        return RecursiveDescentParser.readListLiteral(state);
+    } else {
+        return RecursiveDescentParser.readLiteralExpression(state);
+    }
+}
 
 function readPrimitiveType(state: IParserState): Ast.PrimitiveType {
     const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state);
@@ -655,6 +714,38 @@ function maybeReadPairedConstant<Kind, Paired>(
         incrementAttributeCounter(state);
         return undefined;
     }
+}
+
+function readWrapped<Kind, Content>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TWrappedNodeKind,
+    openConstantReader: () => Ast.Constant,
+    contentReader: () => Content,
+    closeConstantReader: () => Ast.Constant,
+    allowOptionalConstant: boolean,
+): WrappedRead<Kind, Content> {
+    startContext(state, nodeKind);
+
+    const openWrapperConstant: Ast.Constant = openConstantReader();
+    const content: Content = contentReader();
+    const closeWrapperConstant: Ast.Constant = closeConstantReader();
+
+    let maybeOptionalConstant: Option<Ast.Constant>;
+    if (allowOptionalConstant) {
+        maybeOptionalConstant = maybeReadTokenKindAsConstant(state, TokenKind.QuestionMark);
+    }
+
+    const wrapped: WrappedRead<Kind, Content> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        openWrapperConstant,
+        content,
+        closeWrapperConstant,
+        maybeOptionalConstant,
+    };
+    endContext(state, (wrapped as unknown) as Ast.TWrapped);
+    return wrapped;
 }
 
 // -------------------------------------------------------

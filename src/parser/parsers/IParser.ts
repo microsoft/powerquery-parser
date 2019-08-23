@@ -86,6 +86,7 @@ export interface IParser<State> {
     // 12.2.3.21 Function expression
     readonly readFunctionExpression: (state: State) => Ast.FunctionExpression;
     readonly readParameterList: (state: State) => Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>>;
+    readonly readAsType: (state: State) => Ast.AsType;
 
     // 12.2.3.22 Each expression
     readonly readEachExpression: (state: State) => Ast.EachExpression;
@@ -103,6 +104,7 @@ export interface IParser<State> {
     readonly readRecordType: (state: State) => Ast.RecordType;
     readonly readTableType: (state: State) => Ast.TableType;
     readonly readFieldSpecificationList: (state: State, allowOpenMarker: boolean) => Ast.FieldSpecificationList;
+    readonly readListType: (state: State) => Ast.ListType;
     readonly readFunctionType: (state: State) => Ast.IParameterList<Ast.AsType>;
     readonly readParameterSpecificationList: (state: State) => Ast.FunctionType;
     readonly readNullableType: (state: State) => Ast.NullableType;
@@ -115,11 +117,12 @@ export interface IParser<State> {
 
     // 12.2.4 Literal Attributes
     readonly readRecordLiteral: (state: State) => Ast.RecordLiteral;
-    readonly readFieldNamePairedAnyLiterals: (state: State) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>;
+    readonly readFieldNamePairedAnyLiterals: (
+        state: State,
+        onePairRequired: boolean,
+    ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>;
     readonly readListLiteral: (state: State) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: State) => Ast.TAnyLiteral;
-    readonly readAsType: (state: State) => Ast.AsType;
-    readonly readListType: (state: State) => Ast.ListType;
     readonly readPrimitiveType: (state: State) => Ast.PrimitiveType;
 
     readonly readIdentifierPairedExpressions: (
