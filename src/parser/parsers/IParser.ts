@@ -15,6 +15,7 @@ export interface IParser<State> {
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: State) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (state: State) => Ast.GeneralizedIdentifier;
+    readonly readKeyword: (state: State) => Ast.IdentifierExpression;
 
     // 12.2.1 Documents
     readonly readDocument: (state: State) => Ast.TDocument;

@@ -1,7 +1,7 @@
 import { Ast, ParserContext, ParserError } from "..";
 import { CommonError, Option } from "../../common";
 import { Token, TokenKind } from "../../lexer";
-import { IParserState } from "./IParser";
+import { IParserState, IParser } from "./IParser";
 
 export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void {
     const newContextNode: ParserContext.Node = ParserContext.startContext(
@@ -27,6 +27,14 @@ export function endContext(state: IParserState, astNode: Ast.TNode): void {
         astNode,
     );
     state.maybeCurrentContextNode = maybeParentOfContextNode;
+}
+
+export function incrementAttributeCounter(state: IParserState): void {
+    if (state.maybeCurrentContextNode === undefined) {
+        throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
+    }
+    const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+    currentContextNode.attributeCounter += 1;
 }
 
 export function expectContextNodeMetadata(state: IParserState): ContextNodeMetadata {

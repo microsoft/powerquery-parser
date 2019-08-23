@@ -11,6 +11,7 @@ import {
     readToken,
     readTokenKind,
     startContext,
+    incrementAttributeCounter,
 } from "./common";
 import { IParser, IParserState } from "./IParser";
 
@@ -22,6 +23,7 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     // 12.1.6 Identifiers
     readIdentifier,
     readGeneralizedIdentifier,
+    readKeyword,
 
     // 12.2.1 Documents
     readDocument: notYetImplemented,
@@ -208,6 +210,36 @@ function readGeneralizedIdentifier(state: IParserState): Ast.GeneralizedIdentifi
     };
     endContext(state, astNode);
     return astNode;
+}
+
+function readKeyword(state: IParserState): Ast.IdentifierExpression {
+    const identifierExpressionNodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
+    startContext(state, identifierExpressionNodeKind);
+
+    // Keywords can't have a "@" prefix constant
+    incrementAttributeCounter(state);
+
+    const identifierNodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
+    startContext(state, identifierNodeKind);
+
+    const literal: string = readToken(state);
+    const identifier: Ast.Identifier = {
+        ...expectContextNodeMetadata(state),
+        kind: identifierNodeKind,
+        isLeaf: true,
+        literal,
+    };
+    endContext(state, identifier);
+
+    const identifierExpression: Ast.IdentifierExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: identifierExpressionNodeKind,
+        isLeaf: false,
+        maybeInclusiveConstant: undefined,
+        identifier,
+    };
+    endContext(state, identifierExpression);
+    return identifierExpression;
 }
 
 function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
