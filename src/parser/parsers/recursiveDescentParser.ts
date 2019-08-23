@@ -109,9 +109,9 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readFieldSelector: notYetImplemented,
 
     // 12.2.3.21 Function expression
-    readFunctionExpression: notYetImplemented,
-    readParameterList: notYetImplemented,
-    readAsType: notYetImplemented,
+    readFunctionExpression,
+    readParameterList,
+    readAsType,
 
     // 12.2.3.22 Each expression
     readEachExpression,
@@ -364,9 +364,60 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
     }
 }
 
-// ----------------------------------------------
-// ---------- 12.2.3.23 Let expression ----------
-// ----------------------------------------------
+// ---------------------------------------------------
+// ---------- 12.2.3.21 Function expression ----------
+// ---------------------------------------------------
+
+function readFunctionExpression(state: IParserState): Ast.FunctionExpression {
+    const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
+    startContext(state, nodeKind);
+
+    const parameters: Ast.IParameterList<
+        Option<Ast.AsNullablePrimitiveType>
+    > = RecursiveDescentParser.readParameterList(state);
+    const maybeFunctionReturnType: Option<Ast.AsNullablePrimitiveType> = maybeReadAsNullablePrimitiveType(state);
+    const fatArrowConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.FatArrow);
+    const expression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+
+    const astNode: Ast.FunctionExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        parameters,
+        maybeFunctionReturnType,
+        fatArrowConstant,
+        expression,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function readParameterList(state: IParserState): Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>> {
+    return genericReadParameterList(state, () => maybeReadAsNullablePrimitiveType(state));
+}
+
+function maybeReadAsNullablePrimitiveType(state: IParserState): Option<Ast.AsNullablePrimitiveType> {
+    return maybeReadPairedConstant<Ast.NodeKind.AsNullablePrimitiveType, Ast.TNullablePrimitiveType>(
+        state,
+        Ast.NodeKind.AsNullablePrimitiveType,
+        () => isOnTokenKind(state, TokenKind.KeywordAs),
+        () => readTokenKindAsConstant(state, TokenKind.KeywordAs),
+        () => RecursiveDescentParser.readNullablePrimitiveType(state),
+    );
+}
+
+function readAsType(state: IParserState): Ast.AsType {
+    return readPairedConstant<Ast.NodeKind.AsType, Ast.TType>(
+        state,
+        Ast.NodeKind.AsType,
+        () => readTokenKindAsConstant(state, TokenKind.KeywordAs),
+        () => RecursiveDescentParser.readType(state),
+    );
+}
+
+// -----------------------------------------------
+// ---------- 12.2.3.22 Each expression ----------
+// -----------------------------------------------
 
 function readEachExpression(state: IParserState): Ast.EachExpression {
     return readPairedConstant<Ast.NodeKind.EachExpression, Ast.TExpression>(
@@ -724,7 +775,7 @@ function tryReadPrimaryType(state: IParserState): TriedReadPrimaryType {
 }
 
 function readParameterSpecificationList(state: IParserState): Ast.IParameterList<Ast.AsType> {
-    return readGenericParameterList<Ast.AsType>(state, () => RecursiveDescentParser.readAsType(state));
+    return genericReadParameterList(state, () => RecursiveDescentParser.readAsType(state));
 }
 
 function readNullableType(state: IParserState): Ast.NullableType {
@@ -1103,7 +1154,7 @@ function maybeReadPairedConstant<Kind, Paired>(
     }
 }
 
-function readGenericParameterList<T>(
+function genericReadParameterList<T>(
     state: IParserState,
     typeReader: () => T & Ast.TParameterType,
 ): Ast.IParameterList<T> {
