@@ -114,7 +114,7 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readAsType: notYetImplemented,
 
     // 12.2.3.22 Each expression
-    readEachExpression: notYetImplemented,
+    readEachExpression,
 
     // 12.2.3.23 Let expression
     readLetExpression,
@@ -362,6 +362,19 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
         default:
             return false;
     }
+}
+
+// ----------------------------------------------
+// ---------- 12.2.3.23 Let expression ----------
+// ----------------------------------------------
+
+function readEachExpression(state: IParserState): Ast.EachExpression {
+    return readPairedConstant<Ast.NodeKind.EachExpression, Ast.TExpression>(
+        state,
+        Ast.NodeKind.EachExpression,
+        () => readTokenKindAsConstant(state, TokenKind.KeywordEach),
+        () => RecursiveDescentParser.readExpression(state),
+    );
 }
 
 // ----------------------------------------------
