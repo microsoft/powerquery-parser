@@ -91,17 +91,17 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readNotImplementedExpression: notYetImplemented,
 
     // 12.2.3.16 Invoke expression
-    readInvokeExpression: notYetImplemented,
+    readInvokeExpression,
 
     // 12.2.3.17 List expression
-    readListExpression: notYetImplemented,
-    readListItem: notYetImplemented,
+    readListExpression,
+    readListItem,
 
     // 12.2.3.18 Record expression
-    readRecordExpression: notYetImplemented,
+    readRecordExpression,
 
     // 12.2.3.19 Item access expression
-    readItemAccessExpression: notYetImplemented,
+    readItemAccessExpression,
 
     // 12.2.3.20 Field access expression
     readFieldSelection,
@@ -362,6 +362,94 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
         default:
             return false;
     }
+}
+
+// -------------------------------------------------
+// ---------- 12.2.3.16 Invoke expression ----------
+// -------------------------------------------------
+
+function readInvokeExpression(state: IParserState): Ast.InvokeExpression {
+    const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightParenthesis);
+    return readWrapped<Ast.NodeKind.InvokeExpression, Ast.ICsvArray<Ast.TExpression>>(
+        state,
+        Ast.NodeKind.InvokeExpression,
+        () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis),
+        () => readCsvArray(state, () => RecursiveDescentParser.readExpression(state), continueReadingValues),
+        () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
+        false,
+    );
+}
+
+// -----------------------------------------------
+// ---------- 12.2.3.17 List expression ----------
+// -----------------------------------------------
+
+function readListExpression(state: IParserState): Ast.ListExpression {
+    const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBrace);
+    return readWrapped<Ast.NodeKind.ListExpression, Ast.ICsvArray<Ast.TListItem>>(
+        state,
+        Ast.NodeKind.ListExpression,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => readCsvArray(state, () => RecursiveDescentParser.readListItem(state), continueReadingValues),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        false,
+    );
+}
+
+function readListItem(state: IParserState): Ast.TListItem {
+    const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
+    startContext(state, nodeKind);
+
+    const left: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    if (isOnTokenKind(state, TokenKind.DotDot)) {
+        const rangeConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.DotDot);
+        const right: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+        const astNode: Ast.RangeExpression = {
+            ...expectContextNodeMetadata(state),
+            kind: nodeKind,
+            isLeaf: false,
+            left,
+            rangeConstant,
+            right,
+        };
+
+        endContext(state, astNode);
+        return astNode;
+    } else {
+        deleteContext(state, undefined);
+        return left;
+    }
+}
+
+// -----------------------------------------------------------
+// ---------- 12.2.3.18 12.2.3.18 Record expression ----------
+// -----------------------------------------------------------
+
+function readRecordExpression(state: IParserState): Ast.RecordExpression {
+    const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBracket);
+    return readWrapped<Ast.NodeKind.RecordExpression, Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>>(
+        state,
+        Ast.NodeKind.RecordExpression,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => RecursiveDescentParser.readGeneralizedIdentifierPairedExpressions(state, continueReadingValues),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        false,
+    );
+}
+
+// ------------------------------------------------------
+// ---------- 12.2.3.19 Item access expression ----------
+// ------------------------------------------------------
+
+function readItemAccessExpression(state: IParserState): Ast.ItemAccessExpression {
+    return readWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
+        state,
+        Ast.NodeKind.ItemAccessExpression,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => RecursiveDescentParser.readExpression(state),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        true,
+    );
 }
 
 // -------------------------------------------------------
