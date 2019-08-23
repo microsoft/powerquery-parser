@@ -104,9 +104,9 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readItemAccessExpression: notYetImplemented,
 
     // 12.2.3.20 Field access expression
-    readFieldSelection: notYetImplemented,
-    readFieldProjection: notYetImplemented,
-    readFieldSelector: notYetImplemented,
+    readFieldSelection,
+    readFieldProjection,
+    readFieldSelector,
 
     // 12.2.3.21 Function expression
     readFunctionExpression,
@@ -362,6 +362,36 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
         default:
             return false;
     }
+}
+
+// -------------------------------------------------------
+// ---------- 12.2.3.20 Field access expression ----------
+// -------------------------------------------------------
+
+function readFieldSelection(state: IParserState): Ast.FieldSelector {
+    return readFieldSelector(state, true);
+}
+
+function readFieldProjection(state: IParserState): Ast.FieldProjection {
+    return readWrapped<Ast.NodeKind.FieldProjection, Ast.ICsvArray<Ast.FieldSelector>>(
+        state,
+        Ast.NodeKind.FieldProjection,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => readCsvArray(state, () => RecursiveDescentParser.readFieldSelector(state, false), true),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        true,
+    );
+}
+
+function readFieldSelector(state: IParserState, allowOptional: boolean): Ast.FieldSelector {
+    return readWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
+        state,
+        Ast.NodeKind.FieldSelector,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => RecursiveDescentParser.readGeneralizedIdentifier(state),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        allowOptional,
+    );
 }
 
 // ---------------------------------------------------
