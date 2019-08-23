@@ -61,6 +61,24 @@ export function endContext(state: IParserState, astNode: Ast.TNode): void {
     state.maybeCurrentContextNode = maybeParentOfContextNode;
 }
 
+export function deleteContext(state: IParserState, maybeNodeId: Option<number>): void {
+    let nodeId: number;
+    if (maybeNodeId === undefined) {
+        if (state.maybeCurrentContextNode === undefined) {
+            throw new CommonError.InvariantError(
+                "maybeContextNode should be truthy, can't delete a context if it doesn't exist.",
+            );
+        } else {
+            const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+            nodeId = currentContextNode.id;
+        }
+    } else {
+        nodeId = maybeNodeId;
+    }
+
+    state.maybeCurrentContextNode = ParserContext.deleteContext(state.contextState, nodeId);
+}
+
 export function incrementAttributeCounter(state: IParserState): void {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);

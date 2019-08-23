@@ -105,8 +105,8 @@ export interface IParser<State> {
     readonly readTableType: (state: State) => Ast.TableType;
     readonly readFieldSpecificationList: (state: State, allowOpenMarker: boolean) => Ast.FieldSpecificationList;
     readonly readListType: (state: State) => Ast.ListType;
-    readonly readFunctionType: (state: State) => Ast.IParameterList<Ast.AsType>;
-    readonly readParameterSpecificationList: (state: State) => Ast.FunctionType;
+    readonly readFunctionType: (state: State) => Ast.FunctionType;
+    readonly readParameterSpecificationList: (state: State) => Ast.IParameterList<Ast.AsType>;
     readonly readNullableType: (state: State) => Ast.NullableType;
 
     // 12.2.3.26 Error raising expression

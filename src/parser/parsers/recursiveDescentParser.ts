@@ -4,17 +4,24 @@
 import { Ast, ParserError } from "..";
 import { CommonError, Option, Result, ResultKind } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
-import { readIdentifierConstantAsConstant, readToken, readTokenKind } from "./common";
+import {
+    maybeReadIdentifierConstantAsConstant,
+    readIdentifierConstantAsConstant,
+    readToken,
+    readTokenKind,
+} from "./common";
 import { IParser } from "./IParser";
 import {
     applyState,
     deepCopy,
+    deleteContext,
     endContext,
     expectContextNodeMetadata,
     expectTokenAt,
     incrementAttributeCounter,
     IParserState,
     isNextTokenKind,
+    isOnIdentifierConstant,
     isOnTokenKind,
     startContext,
     testIsOnAnyTokenKind,
@@ -116,16 +123,16 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readIfExpression: notYetImplemented,
 
     // 12.2.3.25 Type expression
-    readTypeExpression: notYetImplemented,
-    readType: notYetImplemented,
-    readPrimaryType: notYetImplemented,
-    readRecordType: notYetImplemented,
-    readTableType: notYetImplemented,
-    readFieldSpecificationList: notYetImplemented,
-    readListType: notYetImplemented,
-    readFunctionType: notYetImplemented,
-    readParameterSpecificationList: notYetImplemented,
-    readNullableType: notYetImplemented,
+    readTypeExpression,
+    readType,
+    readPrimaryType,
+    readRecordType,
+    readTableType,
+    readFieldSpecificationList,
+    readListType,
+    readFunctionType,
+    readParameterSpecificationList,
+    readNullableType,
 
     // 12.2.3.26 Error raising expression
     readErrorRaisingExpression,
@@ -355,6 +362,305 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
         default:
             return false;
     }
+}
+
+// -----------------------------------------------
+// ---------- 12.2.3.25 Type expression ----------
+// -----------------------------------------------
+
+function readTypeExpression(state: IParserState): Ast.TTypeExpression {
+    if (isOnTokenKind(state, TokenKind.KeywordType)) {
+        return readPairedConstant<Ast.NodeKind.TypePrimaryType, Ast.TPrimaryType>(
+            state,
+            Ast.NodeKind.TypePrimaryType,
+            () => readTokenKindAsConstant(state, TokenKind.KeywordType),
+            () => RecursiveDescentParser.readPrimaryType(state),
+        );
+    } else {
+        return RecursiveDescentParser.readPrimaryExpression(state);
+    }
+}
+
+function readType(state: IParserState): Ast.TType {
+    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state);
+
+    if (triedReadPrimaryType.kind === ResultKind.Ok) {
+        return triedReadPrimaryType.value;
+    } else {
+        return RecursiveDescentParser.readPrimaryExpression(state);
+    }
+}
+
+function readPrimaryType(state: IParserState): Ast.TPrimaryType {
+    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state);
+
+    if (triedReadPrimaryType.kind === ResultKind.Ok) {
+        return triedReadPrimaryType.value;
+    } else {
+        throw triedReadPrimaryType.error;
+    }
+}
+
+function readRecordType(state: IParserState): Ast.RecordType {
+    const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
+    startContext(state, nodeKind);
+
+    const fields: Ast.FieldSpecificationList = RecursiveDescentParser.readFieldSpecificationList(state, true);
+
+    const astNode: Ast.RecordType = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        fields,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function readTableType(state: IParserState): Ast.TableType {
+    const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
+    startContext(state, nodeKind);
+
+    const tableConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Table);
+    const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+    const isPrimaryExpressionExpected: boolean =
+        maybeCurrentTokenKind === TokenKind.AtSign ||
+        maybeCurrentTokenKind === TokenKind.Identifier ||
+        maybeCurrentTokenKind === TokenKind.LeftParenthesis;
+
+    let rowType: Ast.FieldSpecificationList | Ast.TPrimaryExpression;
+    if (isPrimaryExpressionExpected) {
+        rowType = RecursiveDescentParser.readPrimaryExpression(state);
+    } else {
+        rowType = RecursiveDescentParser.readFieldSpecificationList(state, false);
+    }
+
+    const astNode: Ast.TableType = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        tableConstant,
+        rowType,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function readFieldSpecificationList(state: IParserState, allowOpenMarker: boolean): Ast.FieldSpecificationList {
+    const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
+    startContext(state, nodeKind);
+
+    const leftBracketConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.LeftBracket);
+    const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
+    let continueReadingValues: boolean = true;
+    let maybeOpenRecordMarkerConstant: Option<Ast.Constant> = undefined;
+
+    const fieldArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    startContext(state, fieldArrayNodeKind);
+
+    while (continueReadingValues) {
+        if (isOnTokenKind(state, TokenKind.Ellipsis)) {
+            if (allowOpenMarker) {
+                if (maybeOpenRecordMarkerConstant) {
+                    throw fieldSpecificationListReadError(state, false);
+                } else {
+                    maybeOpenRecordMarkerConstant = readTokenKindAsConstant(state, TokenKind.Ellipsis);
+                    continueReadingValues = false;
+                }
+            } else {
+                throw fieldSpecificationListReadError(state, allowOpenMarker);
+            }
+        } else if (isOnGeneralizedIdentifierToken(state)) {
+            const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
+            startContext(state, csvNodeKind);
+
+            const fieldSpecificationNodeKind: Ast.NodeKind.FieldSpecification = Ast.NodeKind.FieldSpecification;
+            startContext(state, fieldSpecificationNodeKind);
+
+            const maybeOptionalConstant: Option<Ast.Constant> = maybeReadIdentifierConstantAsConstant(
+                state,
+                Ast.IdentifierConstant.Optional,
+            );
+
+            const name: Ast.GeneralizedIdentifier = RecursiveDescentParser.readGeneralizedIdentifier(state);
+
+            const maybeFieldTypeSpeification: Option<Ast.FieldTypeSpecification> = maybeReadFieldTypeSpecification(
+                state,
+            );
+
+            const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
+            continueReadingValues = maybeCommaConstant !== undefined;
+
+            const field: Ast.FieldSpecification = {
+                ...expectContextNodeMetadata(state),
+                kind: fieldSpecificationNodeKind,
+                isLeaf: false,
+                maybeOptionalConstant,
+                name,
+                maybeFieldTypeSpeification,
+            };
+            endContext(state, field);
+
+            const csv: Ast.ICsv<Ast.FieldSpecification> = {
+                ...expectContextNodeMetadata(state),
+                kind: csvNodeKind,
+                isLeaf: false,
+                node: field,
+                maybeCommaConstant,
+            };
+            endContext(state, csv);
+            fields.push(csv);
+        } else {
+            throw fieldSpecificationListReadError(state, allowOpenMarker);
+        }
+    }
+
+    const fieldArray: Ast.ICsvArray<Ast.FieldSpecification> = {
+        ...expectContextNodeMetadata(state),
+        kind: fieldArrayNodeKind,
+        elements: fields,
+        isLeaf: false,
+    };
+    endContext(state, fieldArray);
+
+    const rightBracketConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.RightBracket);
+
+    const astNode: Ast.FieldSpecificationList = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        openWrapperConstant: leftBracketConstant,
+        content: fieldArray,
+        maybeOpenRecordMarkerConstant,
+        closeWrapperConstant: rightBracketConstant,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function maybeReadFieldTypeSpecification(state: IParserState): Option<Ast.FieldTypeSpecification> {
+    const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
+    startContext(state, nodeKind);
+
+    const maybeEqualConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Equal);
+    if (maybeEqualConstant) {
+        const fieldType: Ast.TType = RecursiveDescentParser.readType(state);
+
+        const astNode: Ast.FieldTypeSpecification = {
+            ...expectContextNodeMetadata(state),
+            kind: Ast.NodeKind.FieldTypeSpecification,
+            isLeaf: false,
+            equalConstant: maybeEqualConstant,
+            fieldType,
+        };
+        endContext(state, astNode);
+        return astNode;
+    } else {
+        incrementAttributeCounter(state);
+        deleteContext(state, undefined);
+        return undefined;
+    }
+}
+
+function fieldSpecificationListReadError(state: IParserState, allowOpenMarker: boolean): Option<Error> {
+    if (allowOpenMarker) {
+        const expectedTokenKinds: ReadonlyArray<TokenKind> = [TokenKind.Identifier, TokenKind.Ellipsis];
+        return testIsOnAnyTokenKind(state, expectedTokenKinds);
+    } else {
+        return testIsOnTokenKind(state, TokenKind.Identifier);
+    }
+}
+
+function readListType(state: IParserState): Ast.ListType {
+    return readWrapped<Ast.NodeKind.ListType, Ast.TType>(
+        state,
+        Ast.NodeKind.ListType,
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => RecursiveDescentParser.readType(state),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        false,
+    );
+}
+
+function readFunctionType(state: IParserState): Ast.FunctionType {
+    const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
+    startContext(state, nodeKind);
+
+    const functionConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Function);
+    const parameters: Ast.IParameterList<Ast.AsType> = RecursiveDescentParser.readParameterSpecificationList(state);
+    const functionReturnType: Ast.AsType = RecursiveDescentParser.readAsType(state);
+
+    const astNode: Ast.FunctionType = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        functionConstant,
+        parameters,
+        functionReturnType,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function tryReadPrimaryType(state: IParserState): TriedReadPrimaryType {
+    const backup: IParserState = deepCopy(state);
+
+    const isTableTypeNext: boolean =
+        isOnIdentifierConstant(state, Ast.IdentifierConstant.Table) &&
+        (isNextTokenKind(state, TokenKind.LeftBracket) ||
+            isNextTokenKind(state, TokenKind.LeftParenthesis) ||
+            isNextTokenKind(state, TokenKind.AtSign) ||
+            isNextTokenKind(state, TokenKind.Identifier));
+    const isFunctionTypeNext: boolean =
+        isOnIdentifierConstant(state, Ast.IdentifierConstant.Function) &&
+        isNextTokenKind(state, TokenKind.LeftParenthesis);
+
+    if (isOnTokenKind(state, TokenKind.LeftBracket)) {
+        return {
+            kind: ResultKind.Ok,
+            value: RecursiveDescentParser.readRecordType(state),
+        };
+    } else if (isOnTokenKind(state, TokenKind.LeftBrace)) {
+        return {
+            kind: ResultKind.Ok,
+            value: RecursiveDescentParser.readListType(state),
+        };
+    } else if (isTableTypeNext) {
+        return {
+            kind: ResultKind.Ok,
+            value: RecursiveDescentParser.readTableType(state),
+        };
+    } else if (isFunctionTypeNext) {
+        return {
+            kind: ResultKind.Ok,
+            value: RecursiveDescentParser.readFunctionType(state),
+        };
+    } else if (isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
+        return {
+            kind: ResultKind.Ok,
+            value: RecursiveDescentParser.readNullableType(state),
+        };
+    } else {
+        const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state);
+
+        if (triedReadPrimitiveType.kind === ResultKind.Err) {
+            applyState(state, backup);
+        }
+        return triedReadPrimitiveType;
+    }
+}
+
+function readParameterSpecificationList(state: IParserState): Ast.IParameterList<Ast.AsType> {
+    return readGenericParameterList<Ast.AsType>(state, () => RecursiveDescentParser.readAsType(state));
+}
+
+function readNullableType(state: IParserState): Ast.NullableType {
+    return readPairedConstant<Ast.NodeKind.NullableType, Ast.TType>(
+        state,
+        Ast.NodeKind.NullableType,
+        () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
+        () => RecursiveDescentParser.readType(state),
+    );
 }
 
 // --------------------------------------------------------
@@ -722,6 +1028,90 @@ function maybeReadPairedConstant<Kind, Paired>(
         incrementAttributeCounter(state);
         return undefined;
     }
+}
+
+function readGenericParameterList<T>(
+    state: IParserState,
+    typeReader: () => T & Ast.TParameterType,
+): Ast.IParameterList<T> {
+    const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
+    startContext(state, nodeKind);
+
+    const leftParenthesisConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.LeftParenthesis);
+    let continueReadingValues: boolean = !isOnTokenKind(state, TokenKind.RightParenthesis);
+    let reachedOptionalParameter: boolean = false;
+
+    const paramaterArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    startContext(state, paramaterArrayNodeKind);
+
+    const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
+    while (continueReadingValues) {
+        startContext(state, Ast.NodeKind.Csv);
+        startContext(state, Ast.NodeKind.Parameter);
+
+        const maybeOptionalConstant: Option<Ast.Constant> = maybeReadIdentifierConstantAsConstant(
+            state,
+            Ast.IdentifierConstant.Optional,
+        );
+
+        if (reachedOptionalParameter && !maybeOptionalConstant) {
+            const token: Token = expectTokenAt(state, state.tokenIndex);
+            throw new ParserError.RequiredParameterAfterOptionalParameterError(
+                token,
+                state.lexerSnapshot.graphemePositionStartFrom(token),
+            );
+        } else if (maybeOptionalConstant) {
+            reachedOptionalParameter = true;
+        }
+
+        const name: Ast.Identifier = RecursiveDescentParser.readIdentifier(state);
+        const maybeParameterType: T & Ast.TParameterType = typeReader();
+
+        const parameter: Ast.IParameter<T & Ast.TParameterType> = {
+            ...expectContextNodeMetadata(state),
+            kind: Ast.NodeKind.Parameter,
+            isLeaf: false,
+            maybeOptionalConstant,
+            name,
+            maybeParameterType,
+        };
+        endContext(state, parameter);
+
+        const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
+        continueReadingValues = maybeCommaConstant !== undefined;
+
+        const csv: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>> = {
+            ...expectContextNodeMetadata(state),
+            kind: Ast.NodeKind.Csv,
+            isLeaf: false,
+            node: parameter,
+            maybeCommaConstant,
+        };
+        endContext(state, csv);
+
+        parameters.push(csv);
+    }
+
+    const parameterArray: Ast.ICsvArray<Ast.IParameter<T & Ast.TParameterType>> = {
+        ...expectContextNodeMetadata(state),
+        kind: paramaterArrayNodeKind,
+        elements: parameters,
+        isLeaf: false,
+    };
+    endContext(state, parameterArray);
+
+    const rightParenthesisConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.RightParenthesis);
+
+    const astNode: Ast.IParameterList<T & Ast.TParameterType> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        openWrapperConstant: leftParenthesisConstant,
+        content: parameterArray,
+        closeWrapperConstant: rightParenthesisConstant,
+    };
+    endContext(state, astNode);
+    return astNode;
 }
 
 function readWrapped<Kind, Content>(
