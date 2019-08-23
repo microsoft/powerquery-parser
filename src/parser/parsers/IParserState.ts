@@ -152,7 +152,7 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
     }
 }
 
-export function expectTokenKind(
+export function testIsOnTokenKind(
     state: IParserState,
     expectedTokenKind: TokenKind,
 ): Option<ParserError.ExpectedTokenKindError> {
@@ -170,7 +170,7 @@ export function expectTokenKind(
     }
 }
 
-export function expectAnyTokenKind(
+export function testIsOnAnyTokenKind(
     state: IParserState,
     expectedAnyTokenKind: ReadonlyArray<TokenKind>,
 ): Option<ParserError.ExpectedAnyTokenKindError> {

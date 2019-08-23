@@ -4,11 +4,11 @@ import { Token, TokenKind } from "../../lexer";
 import {
     endContext,
     expectContextNodeMetadata,
-    expectTokenKind,
     incrementAttributeCounter,
     IParserState,
     isOnIdentifierConstant,
     startContext,
+    testIsOnTokenKind,
 } from "./IParserState";
 
 export function readToken(state: IParserState): string {
@@ -36,7 +36,7 @@ export function readToken(state: IParserState): string {
 }
 
 export function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
-    const maybeErr: Option<ParserError.ExpectedTokenKindError> = expectTokenKind(state, tokenKind);
+    const maybeErr: Option<ParserError.ExpectedTokenKindError> = testIsOnTokenKind(state, tokenKind);
     if (maybeErr) {
         throw maybeErr;
     }

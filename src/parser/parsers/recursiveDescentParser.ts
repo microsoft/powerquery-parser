@@ -10,14 +10,14 @@ import {
     applyState,
     deepCopy,
     endContext,
-    expectAnyTokenKind,
     expectContextNodeMetadata,
     expectTokenAt,
-    expectTokenKind,
     incrementAttributeCounter,
     IParserState,
     isOnTokenKind,
     startContext,
+    testIsOnAnyTokenKind,
+    testIsOnTokenKind,
 } from "./IParserState";
 
 function notYetImplemented(_state: IParserState): any {
@@ -296,7 +296,7 @@ function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
         TokenKind.NullLiteral,
         TokenKind.StringLiteral,
     ];
-    const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = expectAnyTokenKind(state, expectedTokenKinds);
+    const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = testIsOnAnyTokenKind(state, expectedTokenKinds);
     if (maybeErr) {
         throw maybeErr;
     }
@@ -430,7 +430,7 @@ function tryReadPrimitiveType(state: IParserState): TriedReadPrimitiveType {
         TokenKind.KeywordType,
         TokenKind.NullLiteral,
     ];
-    const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = expectAnyTokenKind(state, expectedTokenKinds);
+    const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = testIsOnAnyTokenKind(state, expectedTokenKinds);
     if (maybeErr) {
         const error: ParserError.ExpectedAnyTokenKindError = maybeErr;
         return {
@@ -664,7 +664,7 @@ function maybeReadPairedConstant<Kind, Paired>(
 function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
     const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
     if (maybeConstant === undefined) {
-        const maybeErr: Option<ParserError.ExpectedTokenKindError> = expectTokenKind(state, tokenKind);
+        const maybeErr: Option<ParserError.ExpectedTokenKindError> = testIsOnTokenKind(state, tokenKind);
         if (maybeErr) {
             throw maybeErr;
         } else {
@@ -674,7 +674,7 @@ function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast
             };
 
             throw new CommonError.InvariantError(
-                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${expectTokenKind.name}`,
+                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${testIsOnTokenKind.name}`,
                 details,
             );
         }
