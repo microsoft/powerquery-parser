@@ -132,9 +132,13 @@ export interface IParser<State> {
     readonly readListType: (state: State) => Ast.ListType;
     readonly readPrimitiveType: (state: State) => Ast.PrimitiveType;
 
-    readonly readIdentifierPairedExpressions: (state: State) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
+    readonly readIdentifierPairedExpressions: (
+        state: State,
+        onePairRequired: boolean,
+    ) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpressions: (
         state: State,
+        onePairRequired: boolean,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpression: (state: State) => Ast.GeneralizedIdentifierPairedExpression;
     readonly readIdentifierPairedExpression: (state: State) => Ast.IdentifierPairedExpression;

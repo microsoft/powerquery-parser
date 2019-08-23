@@ -367,6 +367,159 @@ function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpr
     return astNode;
 }
 
+function readIdentifierPairedExpressions(
+    state: IParserState,
+    continueReadingValues: boolean,
+): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
+    return readCsvArray(
+        state,
+        () => RecursiveDescentParser.readIdentifierPairedExpression(state),
+        continueReadingValues,
+    );
+}
+
+function readGeneralizedIdentifierPairedExpressions(
+    state: IParserState,
+    continueReadingValues: boolean,
+): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
+    return readCsvArray(
+        state,
+        () => RecursiveDescentParser.readGeneralizedIdentifierPairedExpression(state),
+        continueReadingValues,
+    );
+}
+
+function readGeneralizedIdentifierPairedExpression(state: IParserState): Ast.GeneralizedIdentifierPairedExpression {
+    return readKeyValuePair<
+        state,
+        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+        Ast.GeneralizedIdentifier,
+        Ast.TExpression
+    >(
+        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+        () => RecursiveDescentParser.readGeneralizedIdentifier(state),
+        () => RecursiveDescentParser.readExpression(state),
+    );
+}
+
+function readIdentifierPairedExpression(state: IParserState): Ast.IdentifierPairedExpression {
+    return readKeyValuePair<Ast.NodeKind.IdentifierPairedExpression, Ast.Identifier, Ast.TExpression>(
+        Ast.NodeKind.IdentifierPairedExpression,
+        () => RecursiveDescentParser.readIdentifier(state),
+        () => RecursiveDescentParser.readExpression(state),
+    );
+}
+
+// ---------------------------------------------------------------
+// ---------- Helper functions (generic read functions) ----------
+// ---------------------------------------------------------------
+
+function readCsvArray<T>(
+    state: IParserState,
+    valueReader: () => T & Ast.TCsvType,
+    continueReadingValues: boolean,
+): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
+    const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    startContext(state, nodeKind);
+
+    const elements: Ast.ICsv<T & Ast.TCsvType>[] = [];
+
+    while (continueReadingValues) {
+        const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
+        startContext(state, csvNodeKind);
+
+        const node: T & Ast.TCsvType = valueReader();
+        const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
+        continueReadingValues = maybeCommaConstant !== undefined;
+
+        const element: Ast.TCsv & Ast.ICsv<T & Ast.TCsvType> = {
+            ...expectContextNodeMetadata(state),
+            kind: csvNodeKind,
+            isLeaf: false,
+            node,
+            maybeCommaConstant,
+        };
+        elements.push(element);
+        endContext(state, element);
+    }
+
+    const astNode: Ast.ICsvArray<T & Ast.TCsvType> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        elements,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function readKeyValuePair<Kind, Key, Value>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TKeyValuePairNodeKind,
+    keyReader: () => Key,
+    valueReader: () => Value,
+): Ast.IKeyValuePair<Kind, Key, Value> {
+    startContext(state, nodeKind);
+
+    const key: Key = keyReader();
+    const equalConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Equal);
+    const value: Value = valueReader();
+
+    const keyValuePair: Ast.IKeyValuePair<Kind, Key, Value> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        key,
+        equalConstant,
+        value,
+    };
+    endContext(state, (keyValuePair as unknown) as Ast.TKeyValuePair);
+    return keyValuePair;
+}
+
+function readPairedConstant<Kind, Paired>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TPairedConstantNodeKind,
+    constantReader: () => Ast.Constant,
+    pairedReader: () => Paired,
+): Ast.IPairedConstant<Kind, Paired> {
+    startContext(state, nodeKind);
+
+    const constant: Ast.Constant = constantReader();
+    const paired: Paired = pairedReader();
+
+    const pairedConstant: Ast.IPairedConstant<Kind, Paired> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        constant,
+        paired,
+    };
+
+    endContext(state, (pairedConstant as unknown) as Ast.TPairedConstant);
+
+    return pairedConstant;
+}
+
+function maybeReadPairedConstant<Kind, Paired>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TPairedConstantNodeKind,
+    condition: () => boolean,
+    constantReader: () => Ast.Constant,
+    pairedReader: () => Paired,
+): Option<Ast.IPairedConstant<Kind, Paired>> {
+    if (condition()) {
+        return readPairedConstant<Kind, Paired>(state, nodeKind, constantReader, pairedReader);
+    } else {
+        incrementAttributeCounter(state);
+        return undefined;
+    }
+}
+
+// -------------------------------------------------------
+// ---------- Helper functions (read functions) ----------
+// -------------------------------------------------------
+
 function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
     const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
     if (maybeConstant === undefined) {
@@ -404,45 +557,6 @@ function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind)
         endContext(state, astNode);
 
         return astNode;
-    } else {
-        incrementAttributeCounter(state);
-        return undefined;
-    }
-}
-
-function readPairedConstant<Kind, Paired>(
-    state: IParserState,
-    nodeKind: Kind & Ast.TPairedConstantNodeKind,
-    constantReader: () => Ast.Constant,
-    pairedReader: () => Paired,
-): Ast.IPairedConstant<Kind, Paired> {
-    startContext(state, nodeKind);
-
-    const constant: Ast.Constant = constantReader();
-    const paired: Paired = pairedReader();
-
-    const pairedConstant: Ast.IPairedConstant<Kind, Paired> = {
-        ...expectContextNodeMetadata(state),
-        kind: nodeKind,
-        isLeaf: false,
-        constant,
-        paired,
-    };
-
-    endContext(state, (pairedConstant as unknown) as Ast.TPairedConstant);
-
-    return pairedConstant;
-}
-
-function maybeReadPairedConstant<Kind, Paired>(
-    state: IParserState,
-    nodeKind: Kind & Ast.TPairedConstantNodeKind,
-    condition: () => boolean,
-    constantReader: () => Ast.Constant,
-    pairedReader: () => Paired,
-): Option<Ast.IPairedConstant<Kind, Paired>> {
-    if (condition()) {
-        return readPairedConstant<Kind, Paired>(state, nodeKind, constantReader, pairedReader);
     } else {
         incrementAttributeCounter(state);
         return undefined;
