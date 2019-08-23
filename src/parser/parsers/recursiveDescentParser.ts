@@ -357,6 +357,10 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
     }
 }
 
+// --------------------------------------------------------
+// ---------- 12.2.3.26 Error raising expression ----------
+// --------------------------------------------------------
+
 function readErrorRaisingExpression(state: IParserState): Ast.ErrorRaisingExpression {
     return readPairedConstant<Ast.NodeKind.ErrorRaisingExpression, Ast.TExpression>(
         state,
@@ -365,6 +369,10 @@ function readErrorRaisingExpression(state: IParserState): Ast.ErrorRaisingExpres
         () => RecursiveDescentParser.readExpression(state),
     );
 }
+
+// ---------------------------------------------------------
+// ---------- 12.2.3.27 Error handling expression ----------
+// ---------------------------------------------------------
 
 function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpression {
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
