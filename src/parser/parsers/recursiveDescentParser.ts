@@ -3,7 +3,7 @@
 
 import { Ast, ParserError } from "..";
 import { CommonError, Option } from "../../common";
-import { TokenKind } from "../../lexer";
+import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import {
     endContext,
     expectAnyTokenKind,
@@ -21,7 +21,7 @@ function notYetImplemented(_state: IParserState): any {
 export const RecursiveDescentParser: IParser<IParserState> = {
     // 12.1.6 Identifiers
     readIdentifier,
-    readGeneralizedIdentifier: notYetImplemented,
+    readGeneralizedIdentifier,
 
     // 12.2.1 Documents
     readDocument: notYetImplemented,
@@ -154,7 +154,62 @@ function readIdentifier(state: IParserState): Ast.Identifier {
     return astNode;
 }
 
-// 12.2.3.11 Literal expression
+function readGeneralizedIdentifier(state: IParserState): Ast.GeneralizedIdentifier {
+    const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
+    startContext(state, nodeKind);
+
+    let literal: string;
+    let astNode: Ast.GeneralizedIdentifier;
+
+    // Edge case where GeneralizedIdentifier is only decmal numbers.
+    // The logic should be more robust as it should technically support the following:
+    // `1.a`
+    // `෬` - non ASCII character from Unicode class Nd (U+0DEC SINHALA LITH DIGIT SIX)
+    if (
+        state.maybeCurrentToken !== undefined &&
+        state.maybeCurrentToken.kind === TokenKind.NumericLiteral &&
+        state.maybeCurrentToken.data.match("^\\d+$")
+    ) {
+        literal = readToken(state);
+        astNode = {
+            ...expectContextNodeMetadata(state),
+            kind: nodeKind,
+            isLeaf: true,
+            literal,
+        };
+        endContext(state, astNode);
+        return astNode;
+    }
+
+    const tokenRangeStartIndex: number = state.tokenIndex;
+    let tokenRangeEndIndex: number = tokenRangeStartIndex;
+    while (isOnGeneralizedIdentifierToken(state)) {
+        readToken(state);
+        tokenRangeEndIndex = state.tokenIndex;
+    }
+
+    if (tokenRangeStartIndex === tokenRangeEndIndex) {
+        throw new CommonError.InvariantError(
+            `readGeneralizedIdentifier has tokenRangeStartIndex === tokenRangeEndIndex`,
+        );
+    }
+
+    const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
+    const tokens: ReadonlyArray<Token> = lexerSnapshot.tokens;
+    const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
+    const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
+    literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+
+    astNode = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: true,
+        literal,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
 function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
     const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
     startContext(state, nodeKind);
@@ -189,4 +244,51 @@ function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
     };
     endContext(state, astNode);
     return astNode;
+}
+
+function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
+    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+    if (maybeToken === undefined) {
+        return false;
+    }
+    const tokenKind: TokenKind = maybeToken.kind;
+
+    switch (tokenKind) {
+        case TokenKind.Identifier:
+        case TokenKind.KeywordAnd:
+        case TokenKind.KeywordAs:
+        case TokenKind.KeywordEach:
+        case TokenKind.KeywordElse:
+        case TokenKind.KeywordError:
+        case TokenKind.KeywordFalse:
+        case TokenKind.KeywordHashBinary:
+        case TokenKind.KeywordHashDate:
+        case TokenKind.KeywordHashDateTime:
+        case TokenKind.KeywordHashDateTimeZone:
+        case TokenKind.KeywordHashDuration:
+        case TokenKind.KeywordHashInfinity:
+        case TokenKind.KeywordHashNan:
+        case TokenKind.KeywordHashSections:
+        case TokenKind.KeywordHashShared:
+        case TokenKind.KeywordHashTable:
+        case TokenKind.KeywordHashTime:
+        case TokenKind.KeywordIf:
+        case TokenKind.KeywordIn:
+        case TokenKind.KeywordIs:
+        case TokenKind.KeywordLet:
+        case TokenKind.KeywordMeta:
+        case TokenKind.KeywordNot:
+        case TokenKind.KeywordOr:
+        case TokenKind.KeywordOtherwise:
+        case TokenKind.KeywordSection:
+        case TokenKind.KeywordShared:
+        case TokenKind.KeywordThen:
+        case TokenKind.KeywordTrue:
+        case TokenKind.KeywordTry:
+        case TokenKind.KeywordType:
+            return true;
+
+        default:
+            return false;
+    }
 }
