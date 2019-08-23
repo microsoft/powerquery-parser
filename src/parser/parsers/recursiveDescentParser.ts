@@ -2,20 +2,23 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserError } from "..";
-import { CommonError, Option } from "../../common";
+import { CommonError, Option, Result, ResultKind } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
+import { readIdentifierConstantAsConstant, readToken, readTokenKind } from "./common";
+import { IParser } from "./IParser";
 import {
+    applyState,
+    deepCopy,
     endContext,
     expectAnyTokenKind,
     expectContextNodeMetadata,
+    expectTokenAt,
     expectTokenKind,
     incrementAttributeCounter,
+    IParserState,
     isOnTokenKind,
-    readToken,
-    readTokenKind,
     startContext,
-} from "./common";
-import { IParser, IParserState } from "./IParser";
+} from "./IParserState";
 
 function notYetImplemented(_state: IParserState): any {
     throw new Error("NYI");
@@ -134,13 +137,50 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readAnyLiteral: notYetImplemented,
     readAsType: notYetImplemented,
     readListType: notYetImplemented,
-    readPrimitiveType: notYetImplemented,
+    readPrimitiveType,
 
+    // key-value pairs
     readIdentifierPairedExpressions,
     readGeneralizedIdentifierPairedExpressions,
     readGeneralizedIdentifierPairedExpression,
     readIdentifierPairedExpression,
 };
+
+type TriedReadPrimaryType = Result<
+    Ast.TPrimaryType,
+    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+>;
+
+type TriedReadPrimitiveType = Result<
+    Ast.PrimitiveType,
+    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+>;
+
+const enum ParenthesisDisambiguation {
+    FunctionExpression = "FunctionExpression",
+    ParenthesizedExpression = "ParenthesizedExpression",
+}
+
+const enum BracketDisambiguation {
+    FieldProjection = "FieldProjection",
+    FieldSelection = "FieldSelection",
+    Record = "Record",
+}
+
+interface StateBackup {
+    readonly tokenIndex: number;
+    readonly contextState: ParserContext.State;
+    readonly maybeContextNodeId: Option<number>;
+}
+interface ContextNodeMetadata {
+    readonly id: number;
+    readonly maybeAttributeIndex: Option<number>;
+    readonly tokenRange: Ast.TokenRange;
+}
+
+interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
+    readonly maybeOptionalConstant: Option<Ast.Constant>;
+}
 
 function readIdentifier(state: IParserState): Ast.Identifier {
     const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
@@ -366,6 +406,106 @@ function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpr
     endContext(state, astNode);
     return astNode;
 }
+
+// -----------------------------------------------
+// ---------- 12.2.4 Literal Attributes ----------
+// -----------------------------------------------
+
+function readPrimitiveType(state: IParserState): Ast.PrimitiveType {
+    const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state);
+    if (triedReadPrimitiveType.kind === ResultKind.Ok) {
+        return triedReadPrimitiveType.value;
+    } else {
+        throw triedReadPrimitiveType.error;
+    }
+}
+
+function tryReadPrimitiveType(state: IParserState): TriedReadPrimitiveType {
+    const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
+    startContext(state, nodeKind);
+
+    const backup: IParserState = deepCopy(state);
+    const expectedTokenKinds: ReadonlyArray<TokenKind> = [
+        TokenKind.Identifier,
+        TokenKind.KeywordType,
+        TokenKind.NullLiteral,
+    ];
+    const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = expectAnyTokenKind(state, expectedTokenKinds);
+    if (maybeErr) {
+        const error: ParserError.ExpectedAnyTokenKindError = maybeErr;
+        return {
+            kind: ResultKind.Err,
+            error,
+        };
+    }
+
+    let primitiveType: Ast.Constant;
+    if (isOnTokenKind(state, TokenKind.Identifier)) {
+        const currentTokenData: string = state.lexerSnapshot.tokens[state.tokenIndex].data;
+        switch (currentTokenData) {
+            case Ast.IdentifierConstant.Action:
+            case Ast.IdentifierConstant.Any:
+            case Ast.IdentifierConstant.AnyNonNull:
+            case Ast.IdentifierConstant.Binary:
+            case Ast.IdentifierConstant.Date:
+            case Ast.IdentifierConstant.DateTime:
+            case Ast.IdentifierConstant.DateTimeZone:
+            case Ast.IdentifierConstant.Duration:
+            case Ast.IdentifierConstant.Function:
+            case Ast.IdentifierConstant.List:
+            case Ast.IdentifierConstant.Logical:
+            case Ast.IdentifierConstant.None:
+            case Ast.IdentifierConstant.Number:
+            case Ast.IdentifierConstant.Record:
+            case Ast.IdentifierConstant.Table:
+            case Ast.IdentifierConstant.Text:
+            case Ast.IdentifierConstant.Time:
+                primitiveType = readIdentifierConstantAsConstant(state, currentTokenData);
+                break;
+
+            default:
+                const token: Token = expectTokenAt(state, state.tokenIndex);
+                applyState(state, backup);
+                return {
+                    kind: ResultKind.Err,
+                    error: new ParserError.InvalidPrimitiveTypeError(
+                        token,
+                        state.lexerSnapshot.graphemePositionStartFrom(token),
+                    ),
+                };
+        }
+    } else if (isOnTokenKind(state, TokenKind.KeywordType)) {
+        primitiveType = readTokenKindAsConstant(state, TokenKind.KeywordType);
+    } else if (isOnTokenKind(state, TokenKind.NullLiteral)) {
+        primitiveType = readTokenKindAsConstant(state, TokenKind.NullLiteral);
+    } else {
+        const details: {} = { tokenKind: state.maybeCurrentTokenKind };
+        applyState(state, backup);
+        return {
+            kind: ResultKind.Err,
+            error: new CommonError.InvariantError(
+                `unknown currentTokenKind, not found in [${expectedTokenKinds}]`,
+                details,
+            ),
+        };
+    }
+
+    const astNode: Ast.PrimitiveType = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        primitiveType,
+    };
+    endContext(state, astNode);
+    return {
+        kind: ResultKind.Ok,
+        value: astNode,
+    };
+}
+
+// -------------------------------------
+// ---------- key-value pairs ----------
+// -------------------------------------
 
 function readIdentifierPairedExpressions(
     state: IParserState,

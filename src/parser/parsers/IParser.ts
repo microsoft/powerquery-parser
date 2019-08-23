@@ -1,18 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext } from "..";
+import { Ast } from "..";
 import { Option } from "../../common";
-import { LexerSnapshot, Token, TokenKind } from "../../lexer";
-
-export interface IParserState {
-    readonly lexerSnapshot: LexerSnapshot;
-    tokenIndex: number;
-    maybeCurrentToken: Option<Token>;
-    maybeCurrentTokenKind: Option<TokenKind>;
-    contextState: ParserContext.State;
-    maybeCurrentContextNode: Option<ParserContext.Node>;
-}
 
 export interface IParser<State> {
     // 12.1.6 Identifiers
