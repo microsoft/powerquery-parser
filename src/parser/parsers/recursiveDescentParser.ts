@@ -26,6 +26,7 @@ import {
     startContext,
     testIsOnAnyTokenKind,
     testIsOnTokenKind,
+    isOnGeneralizedIdentifierToken,
 } from "./IParserState";
 
 function notYetImplemented(_state: IParserState): any {
@@ -82,13 +83,13 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readLiteralExpression,
 
     // 12.2.3.12 Identifier expression
-    readIdentifierExpression: notYetImplemented,
+    readIdentifierExpression,
 
     // 12.2.3.14 Parenthesized expression
-    readParenthesizedExpression: notYetImplemented,
+    readParenthesizedExpression,
 
     // 12.2.3.15 Not-implemented expression
-    readNotImplementedExpression: notYetImplemented,
+    readNotImplementedExpression,
 
     // 12.2.3.16 Invoke expression
     readInvokeExpression,
@@ -281,6 +282,10 @@ function readKeyword(state: IParserState): Ast.IdentifierExpression {
     return identifierExpression;
 }
 
+// --------------------------------------------------
+// ---------- 12.2.3.11 Literal expression ----------
+// --------------------------------------------------
+
 function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
     const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
     startContext(state, nodeKind);
@@ -317,51 +322,61 @@ function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
     return astNode;
 }
 
-function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
-    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
-    if (maybeToken === undefined) {
-        return false;
-    }
-    const tokenKind: TokenKind = maybeToken.kind;
+// ---------------------------------------------------------------
+// ---------- 12.2.3.16 12.2.3.12 Identifier expression ----------
+// ---------------------------------------------------------------
 
-    switch (tokenKind) {
-        case TokenKind.Identifier:
-        case TokenKind.KeywordAnd:
-        case TokenKind.KeywordAs:
-        case TokenKind.KeywordEach:
-        case TokenKind.KeywordElse:
-        case TokenKind.KeywordError:
-        case TokenKind.KeywordFalse:
-        case TokenKind.KeywordHashBinary:
-        case TokenKind.KeywordHashDate:
-        case TokenKind.KeywordHashDateTime:
-        case TokenKind.KeywordHashDateTimeZone:
-        case TokenKind.KeywordHashDuration:
-        case TokenKind.KeywordHashInfinity:
-        case TokenKind.KeywordHashNan:
-        case TokenKind.KeywordHashSections:
-        case TokenKind.KeywordHashShared:
-        case TokenKind.KeywordHashTable:
-        case TokenKind.KeywordHashTime:
-        case TokenKind.KeywordIf:
-        case TokenKind.KeywordIn:
-        case TokenKind.KeywordIs:
-        case TokenKind.KeywordLet:
-        case TokenKind.KeywordMeta:
-        case TokenKind.KeywordNot:
-        case TokenKind.KeywordOr:
-        case TokenKind.KeywordOtherwise:
-        case TokenKind.KeywordSection:
-        case TokenKind.KeywordShared:
-        case TokenKind.KeywordThen:
-        case TokenKind.KeywordTrue:
-        case TokenKind.KeywordTry:
-        case TokenKind.KeywordType:
-            return true;
+function readIdentifierExpression(state: IParserState): Ast.IdentifierExpression {
+    const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
+    startContext(state, nodeKind);
 
-        default:
-            return false;
-    }
+    const maybeInclusiveConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.AtSign);
+    const identifier: Ast.Identifier = RecursiveDescentParser.readIdentifier(state);
+
+    const astNode: Ast.IdentifierExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        maybeInclusiveConstant,
+        identifier,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+// --------------------------------------------------------
+// ---------- 12.2.3.14 Parenthesized expression ----------
+// --------------------------------------------------------
+
+function readParenthesizedExpression(state: IParserState): Ast.ParenthesizedExpression {
+    return readWrapped<Ast.NodeKind.ParenthesizedExpression, Ast.TExpression>(
+        state,
+        Ast.NodeKind.ParenthesizedExpression,
+        () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis),
+        () => RecursiveDescentParser.readExpression(state),
+        () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
+        false,
+    );
+}
+
+// ----------------------------------------------------------
+// ---------- 12.2.3.15 Not-implemented expression ----------
+// ----------------------------------------------------------
+
+function readNotImplementedExpression(state: IParserState): Ast.NotImplementedExpression {
+    const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
+    startContext(state, nodeKind);
+
+    const ellipsisConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Ellipsis);
+
+    const astNode: Ast.NotImplementedExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        ellipsisConstant,
+    };
+    endContext(state, astNode);
+    return astNode;
 }
 
 // -------------------------------------------------

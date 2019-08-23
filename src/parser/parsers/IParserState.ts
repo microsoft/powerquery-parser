@@ -124,6 +124,53 @@ export function isOnIdentifierConstant(state: IParserState, identifierConstant: 
     }
 }
 
+export function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
+    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+    if (maybeToken === undefined) {
+        return false;
+    }
+    const tokenKind: TokenKind = maybeToken.kind;
+
+    switch (tokenKind) {
+        case TokenKind.Identifier:
+        case TokenKind.KeywordAnd:
+        case TokenKind.KeywordAs:
+        case TokenKind.KeywordEach:
+        case TokenKind.KeywordElse:
+        case TokenKind.KeywordError:
+        case TokenKind.KeywordFalse:
+        case TokenKind.KeywordHashBinary:
+        case TokenKind.KeywordHashDate:
+        case TokenKind.KeywordHashDateTime:
+        case TokenKind.KeywordHashDateTimeZone:
+        case TokenKind.KeywordHashDuration:
+        case TokenKind.KeywordHashInfinity:
+        case TokenKind.KeywordHashNan:
+        case TokenKind.KeywordHashSections:
+        case TokenKind.KeywordHashShared:
+        case TokenKind.KeywordHashTable:
+        case TokenKind.KeywordHashTime:
+        case TokenKind.KeywordIf:
+        case TokenKind.KeywordIn:
+        case TokenKind.KeywordIs:
+        case TokenKind.KeywordLet:
+        case TokenKind.KeywordMeta:
+        case TokenKind.KeywordNot:
+        case TokenKind.KeywordOr:
+        case TokenKind.KeywordOtherwise:
+        case TokenKind.KeywordSection:
+        case TokenKind.KeywordShared:
+        case TokenKind.KeywordThen:
+        case TokenKind.KeywordTrue:
+        case TokenKind.KeywordTry:
+        case TokenKind.KeywordType:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 export function expectContextNodeMetadata(state: IParserState): ContextNodeMetadata {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
