@@ -117,10 +117,10 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readEachExpression: notYetImplemented,
 
     // 12.2.3.23 Let expression
-    readLetExpression: notYetImplemented,
+    readLetExpression,
 
     // 12.2.3.24 If expression
-    readIfExpression: notYetImplemented,
+    readIfExpression,
 
     // 12.2.3.25 Type expression
     readTypeExpression,
@@ -362,6 +362,66 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
         default:
             return false;
     }
+}
+
+// ----------------------------------------------
+// ---------- 12.2.3.23 Let expression ----------
+// ----------------------------------------------
+
+function readLetExpression(state: IParserState): Ast.LetExpression {
+    const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
+    startContext(state, nodeKind);
+
+    const letConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordLet);
+    const identifierExpressionPairedExpressions: Ast.ICsvArray<
+        Ast.IdentifierPairedExpression
+    > = RecursiveDescentParser.readIdentifierPairedExpressions(state, true);
+    const inConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIn);
+    const expression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+
+    const astNode: Ast.LetExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: Ast.NodeKind.LetExpression,
+        isLeaf: false,
+        letConstant,
+        variableList: identifierExpressionPairedExpressions,
+        inConstant,
+        expression,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+// ---------------------------------------------
+// ---------- 12.2.3.24 If expression ----------
+// ---------------------------------------------
+
+function readIfExpression(state: IParserState): Ast.IfExpression {
+    const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
+    startContext(state, nodeKind);
+
+    const ifConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIf);
+    const condition: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+
+    const thenConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordThen);
+    const trueExpression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+
+    const elseConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordElse);
+    const falseExpression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+
+    const astNode: Ast.IfExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        ifConstant,
+        condition,
+        thenConstant,
+        trueExpression,
+        elseConstant,
+        falseExpression,
+    };
+    endContext(state, astNode);
+    return astNode;
 }
 
 // -----------------------------------------------
