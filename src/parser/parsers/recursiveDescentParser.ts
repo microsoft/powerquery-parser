@@ -122,10 +122,10 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readNullableType: notYetImplemented,
 
     // 12.2.3.26 Error raising expression
-    readErrorRaisingExpression: notYetImplemented,
+    readErrorRaisingExpression,
 
     // 12.2.3.27 Error handling expression
-    readErrorHandlingExpression: notYetImplemented,
+    readErrorHandlingExpression,
 
     // 12.2.4 Literal Attributes
     readRecordLiteral: notYetImplemented,
@@ -332,8 +332,39 @@ function readErrorRaisingExpression(state: IParserState): Ast.ErrorRaisingExpres
         state,
         Ast.NodeKind.ErrorRaisingExpression,
         () => readTokenKindAsConstant(state, TokenKind.KeywordError),
-        () => readExpression(state),
+        () => RecursiveDescentParser.readExpression(state),
     );
+}
+
+function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpression {
+    const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
+    startContext(state, nodeKind);
+
+    const tryConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordTry);
+    const protectedExpression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+
+    const otherwiseExpressionNodeKind: Ast.NodeKind.OtherwiseExpression = Ast.NodeKind.OtherwiseExpression;
+    const maybeOtherwiseExpression: Option<Ast.OtherwiseExpression> = maybeReadPairedConstant<
+        Ast.NodeKind.OtherwiseExpression,
+        Ast.TExpression
+    >(
+        state,
+        otherwiseExpressionNodeKind,
+        () => isOnTokenKind(state, TokenKind.KeywordOtherwise),
+        () => readTokenKindAsConstant(state, TokenKind.KeywordOtherwise),
+        () => RecursiveDescentParser.readExpression(state),
+    );
+
+    const astNode: Ast.ErrorHandlingExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        tryConstant,
+        protectedExpression,
+        maybeOtherwiseExpression,
+    };
+    endContext(state, astNode);
+    return astNode;
 }
 
 function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
@@ -401,4 +432,19 @@ function readPairedConstant<Kind, Paired>(
     endContext(state, (pairedConstant as unknown) as Ast.TPairedConstant);
 
     return pairedConstant;
+}
+
+function maybeReadPairedConstant<Kind, Paired>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TPairedConstantNodeKind,
+    condition: () => boolean,
+    constantReader: () => Ast.Constant,
+    pairedReader: () => Paired,
+): Option<Ast.IPairedConstant<Kind, Paired>> {
+    if (condition()) {
+        return readPairedConstant<Kind, Paired>(state, nodeKind, constantReader, pairedReader);
+    } else {
+        incrementAttributeCounter(state);
+        return undefined;
+    }
 }
