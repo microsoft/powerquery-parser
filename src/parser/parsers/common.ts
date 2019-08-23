@@ -1,7 +1,7 @@
 import { Ast, ParserContext, ParserError } from "..";
 import { CommonError, Option } from "../../common";
 import { Token, TokenKind } from "../../lexer";
-import { IParserState, IParser } from "./IParser";
+import { IParserState } from "./IParser";
 
 export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void {
     const newContextNode: ParserContext.Node = ParserContext.startContext(
@@ -37,6 +37,28 @@ export function incrementAttributeCounter(state: IParserState): void {
     currentContextNode.attributeCounter += 1;
 }
 
+export function isTokenKind(state: IParserState, tokenKind: TokenKind, tokenIndex: number): boolean {
+    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+
+    if (maybeToken) {
+        return maybeToken.kind === tokenKind;
+    } else {
+        return false;
+    }
+}
+
+export function isNextTokenKind(state: IParserState, tokenKind: TokenKind): boolean {
+    return isTokenKind(state, tokenKind, state.tokenIndex + 1);
+}
+
+export function isOnTokenKind(
+    state: IParserState,
+    tokenKind: TokenKind,
+    tokenIndex: number = state.tokenIndex,
+): boolean {
+    return isTokenKind(state, tokenKind, tokenIndex);
+}
+
 export function expectContextNodeMetadata(state: IParserState): ContextNodeMetadata {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
@@ -70,6 +92,24 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
         maybeAttributeIndex: currentContextNode.maybeAttributeIndex,
         tokenRange,
     };
+}
+
+export function expectTokenKind(
+    state: IParserState,
+    expectedTokenKind: TokenKind,
+): Option<ParserError.ExpectedTokenKindError> {
+    if (expectedTokenKind !== state.maybeCurrentTokenKind) {
+        const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
+            state.maybeCurrentToken !== undefined
+                ? {
+                      token: state.maybeCurrentToken,
+                      columnNumber: state.lexerSnapshot.columnNumberStartFrom(state.maybeCurrentToken),
+                  }
+                : undefined;
+        return new ParserError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
+    } else {
+        return undefined;
+    }
 }
 
 export function expectAnyTokenKind(
@@ -130,22 +170,4 @@ interface ContextNodeMetadata {
     readonly id: number;
     readonly maybeAttributeIndex: Option<number>;
     readonly tokenRange: Ast.TokenRange;
-}
-
-function expectTokenKind(
-    state: IParserState,
-    expectedTokenKind: TokenKind,
-): Option<ParserError.ExpectedTokenKindError> {
-    if (expectedTokenKind !== state.maybeCurrentTokenKind) {
-        const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
-            state.maybeCurrentToken !== undefined
-                ? {
-                      token: state.maybeCurrentToken,
-                      columnNumber: state.lexerSnapshot.columnNumberStartFrom(state.maybeCurrentToken),
-                  }
-                : undefined;
-        return new ParserError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
-    } else {
-        return undefined;
-    }
 }

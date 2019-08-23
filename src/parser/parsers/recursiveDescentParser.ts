@@ -8,10 +8,12 @@ import {
     endContext,
     expectAnyTokenKind,
     expectContextNodeMetadata,
+    expectTokenKind,
+    incrementAttributeCounter,
+    isOnTokenKind,
     readToken,
     readTokenKind,
     startContext,
-    incrementAttributeCounter,
 } from "./common";
 import { IParser, IParserState } from "./IParser";
 
@@ -323,4 +325,80 @@ function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number 
         default:
             return false;
     }
+}
+
+function readErrorRaisingExpression(state: IParserState): Ast.ErrorRaisingExpression {
+    return readPairedConstant<Ast.NodeKind.ErrorRaisingExpression, Ast.TExpression>(
+        state,
+        Ast.NodeKind.ErrorRaisingExpression,
+        () => readTokenKindAsConstant(state, TokenKind.KeywordError),
+        () => readExpression(state),
+    );
+}
+
+function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
+    const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
+    if (maybeConstant === undefined) {
+        const maybeErr: Option<ParserError.ExpectedTokenKindError> = expectTokenKind(state, tokenKind);
+        if (maybeErr) {
+            throw maybeErr;
+        } else {
+            const details: {} = {
+                expectedTokenKind: tokenKind,
+                actualTokenKind: state.maybeCurrentTokenKind,
+            };
+
+            throw new CommonError.InvariantError(
+                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${expectTokenKind.name}`,
+                details,
+            );
+        }
+    }
+
+    return maybeConstant;
+}
+
+function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Option<Ast.Constant> {
+    if (isOnTokenKind(state, tokenKind)) {
+        const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
+        startContext(state, nodeKind);
+
+        const literal: string = readToken(state);
+        const astNode: Ast.Constant = {
+            ...expectContextNodeMetadata(state),
+            kind: nodeKind,
+            isLeaf: true,
+            literal,
+        };
+        endContext(state, astNode);
+
+        return astNode;
+    } else {
+        incrementAttributeCounter(state);
+        return undefined;
+    }
+}
+
+function readPairedConstant<Kind, Paired>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TPairedConstantNodeKind,
+    constantReader: () => Ast.Constant,
+    pairedReader: () => Paired,
+): Ast.IPairedConstant<Kind, Paired> {
+    startContext(state, nodeKind);
+
+    const constant: Ast.Constant = constantReader();
+    const paired: Paired = pairedReader();
+
+    const pairedConstant: Ast.IPairedConstant<Kind, Paired> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        constant,
+        paired,
+    };
+
+    endContext(state, (pairedConstant as unknown) as Ast.TPairedConstant);
+
+    return pairedConstant;
 }
