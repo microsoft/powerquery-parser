@@ -136,10 +136,10 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readListType: notYetImplemented,
     readPrimitiveType: notYetImplemented,
 
-    readIdentifierPairedExpressions: notYetImplemented,
-    readGeneralizedIdentifierPairedExpressions: notYetImplemented,
-    readGeneralizedIdentifierPairedExpression: notYetImplemented,
-    readIdentifierPairedExpression: notYetImplemented,
+    readIdentifierPairedExpressions,
+    readGeneralizedIdentifierPairedExpressions,
+    readGeneralizedIdentifierPairedExpression,
+    readIdentifierPairedExpression,
 };
 
 function readIdentifier(state: IParserState): Ast.Identifier {
@@ -391,11 +391,11 @@ function readGeneralizedIdentifierPairedExpressions(
 
 function readGeneralizedIdentifierPairedExpression(state: IParserState): Ast.GeneralizedIdentifierPairedExpression {
     return readKeyValuePair<
-        state,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         Ast.GeneralizedIdentifier,
         Ast.TExpression
     >(
+        state,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         () => RecursiveDescentParser.readGeneralizedIdentifier(state),
         () => RecursiveDescentParser.readExpression(state),
@@ -404,6 +404,7 @@ function readGeneralizedIdentifierPairedExpression(state: IParserState): Ast.Gen
 
 function readIdentifierPairedExpression(state: IParserState): Ast.IdentifierPairedExpression {
     return readKeyValuePair<Ast.NodeKind.IdentifierPairedExpression, Ast.Identifier, Ast.TExpression>(
+        state,
         Ast.NodeKind.IdentifierPairedExpression,
         () => RecursiveDescentParser.readIdentifier(state),
         () => RecursiveDescentParser.readExpression(state),
