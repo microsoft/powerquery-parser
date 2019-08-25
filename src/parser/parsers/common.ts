@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { Ast, ParserError } from "..";
 import { CommonError, Option } from "../../common";
 import { Token, TokenKind } from "../../lexer";
