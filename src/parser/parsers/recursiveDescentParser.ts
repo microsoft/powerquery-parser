@@ -70,13 +70,13 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readRelationalExpression: notYetImplemented,
 
     // 12.2.3.7 Arithmetic expressions
-    readArithmeticExpression: notYetImplemented,
+    readArithmeticExpression,
 
     // 12.2.3.8 Metadata expression
-    readMetadataExpression: notYetImplemented,
+    readMetadataExpression,
 
     // 12.2.3.9 Unary expression
-    readUnaryExpression: notYetImplemented,
+    readUnaryExpression,
 
     // 12.2.3.10 Primary expression
     readPrimaryExpression,
@@ -304,19 +304,99 @@ function readKeyword(state: IParserState): Ast.IdentifierExpression {
 
 // ----------------------------------------------------
 // ---------- 12.2.3.6 Relational expression ----------
-// ---------------------------------------------=------
+// ----------------------------------------------------
 
 // -----------------------------------------------------
 // ---------- 12.2.3.7 Arithmetic expressions ----------
 // -----------------------------------------------------
 
+function readArithmeticExpression(state: IParserState): Ast.TArithmeticExpression {
+    return recursiveReadBinOpExpression<
+        Ast.NodeKind.ArithmeticExpression,
+        Ast.TMetadataExpression,
+        Ast.ArithmeticOperator,
+        Ast.TMetadataExpression
+    >(
+        state,
+        Ast.NodeKind.ArithmeticExpression,
+        () => RecursiveDescentParser.readMetadataExpression(state),
+        maybeCurrentTokenKind => Ast.arithmeticOperatorFrom(maybeCurrentTokenKind),
+        () => RecursiveDescentParser.readMetadataExpression(state),
+    );
+}
+
 // --------------------------------------------------
 // ---------- 12.2.3.8 Metadata expression ----------
 // --------------------------------------------------
 
+function readMetadataExpression(state: IParserState): Ast.TMetadataExpression {
+    const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
+    startContext(state, nodeKind);
+
+    const left: Ast.TUnaryExpression = RecursiveDescentParser.readUnaryExpression(state);
+    const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordMeta);
+
+    if (maybeConstant) {
+        const right: Ast.TUnaryExpression = RecursiveDescentParser.readUnaryExpression(state);
+
+        const astNode: Ast.MetadataExpression = {
+            ...expectContextNodeMetadata(state),
+            kind: nodeKind,
+            isLeaf: false,
+            left,
+            constant: maybeConstant,
+            right,
+        };
+
+        endContext(state, astNode);
+        return astNode;
+    } else {
+        deleteContext(state, undefined);
+        return left;
+    }
+}
+
 // -----------------------------------------------
 // ---------- 12.2.3.9 Unary expression ----------
 // -----------------------------------------------
+
+function readUnaryExpression(state: IParserState): Ast.TUnaryExpression {
+    let maybeOperator: Option<Ast.UnaryOperator> = Ast.unaryOperatorFrom(state.maybeCurrentTokenKind);
+    if (maybeOperator === undefined) {
+        return RecursiveDescentParser.readTypeExpression(state);
+    }
+
+    const unaryNodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
+    startContext(state, unaryNodeKind);
+
+    const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    startContext(state, arrayNodeKind);
+
+    const operatorConstants: Ast.Constant[] = [];
+    while (maybeOperator) {
+        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind));
+        maybeOperator = Ast.unaryOperatorFrom(state.maybeCurrentTokenKind);
+    }
+    const operators: Ast.IArrayWrapper<Ast.Constant> = {
+        ...expectContextNodeMetadata(state),
+        kind: arrayNodeKind,
+        isLeaf: false,
+        elements: operatorConstants,
+    };
+    endContext(state, operators);
+
+    const typeExpression: Ast.TTypeExpression = RecursiveDescentParser.readTypeExpression(state);
+
+    const astNode: Ast.UnaryExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: unaryNodeKind,
+        isLeaf: false,
+        operators,
+        typeExpression,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
 
 // --------------------------------------------------
 // ---------- 12.2.3.10 Primary expression ----------
@@ -1609,6 +1689,88 @@ function readIdentifierPairedExpression(state: IParserState): Ast.IdentifierPair
 // ---------------------------------------------------------------
 // ---------- Helper functions (generic read functions) ----------
 // ---------------------------------------------------------------
+
+// Given the string `1 + 2 + 3` the function will parse the `1 +`,
+// then pass the remainder of the string `2 + 3` into recursiveReadBinOpExpressionHelper.
+// The helper function is nearly a copy except it replaces Left and leftReader with Right and rightReader.
+//
+// The reason the code is duplicated across two functions is because I can't think of a cleaner way to do it.
+function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
+    leftReader: () => Left,
+    maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
+    rightReader: () => Right,
+): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
+    startContext(state, nodeKind);
+    const left: Left = leftReader();
+
+    // If no operator, return Left
+    const maybeOperator: Option<Operator> = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    if (maybeOperator === undefined) {
+        deleteContext(state, undefined);
+        return left;
+    }
+    const operator: Operator = maybeOperator;
+    const operatorConstant: Ast.Constant = readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind);
+    const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
+        Kind,
+        Operator,
+        Right
+    >(state, nodeKind, maybeOperatorFrom, rightReader);
+
+    const astNode: Ast.IBinOpExpression<Kind, Left, Operator, Right> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        left,
+        operator,
+        operatorConstant,
+        right,
+    };
+    endContext(state, (astNode as unknown) as Ast.TNode);
+
+    return astNode;
+}
+
+// Given the string `1 + 2 + 3` the function will recursively parse 2 Ast nodes,
+// where their TokenRange's are represented by brackets:
+// 1 + [2 + [3]]
+function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
+    state: IParserState,
+    nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
+    maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
+    rightReader: () => Right,
+): Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> {
+    startContext(state, nodeKind);
+    const rightAsLeft: Right = rightReader();
+
+    const maybeOperator: Option<Operator> = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    if (maybeOperator === undefined) {
+        deleteContext(state, undefined);
+        return rightAsLeft;
+    }
+    const operator: Operator = maybeOperator;
+    const operatorConstant: Ast.Constant = readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind);
+    const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
+        Kind,
+        Operator,
+        Right
+    >(state, nodeKind, maybeOperatorFrom, rightReader);
+
+    const astNode: Ast.IBinOpExpression<Kind, Right, Operator, Right> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        left: rightAsLeft,
+        operator,
+        operatorConstant,
+        right,
+    };
+    endContext(state, (astNode as unknown) as Ast.TNode);
+
+    return astNode;
+}
 
 function readCsvArray<T>(
     state: IParserState,
