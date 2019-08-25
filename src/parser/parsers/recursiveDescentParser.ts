@@ -46,15 +46,15 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readDocument: notYetImplemented,
 
     // 12.2.2 Section Documents
-    readSectionDocument: notYetImplemented,
-    readSectionMembers: notYetImplemented,
-    readSectionMember: notYetImplemented,
+    readSectionDocument,
+    readSectionMembers,
+    readSectionMember,
 
     // 12.2.3.1 Expressions
-    readExpression: notYetImplemented,
+    readExpression,
 
     // 12.2.3.2 Logical expressions
-    readLogicalExpression: notYetImplemented,
+    readLogicalExpression,
 
     // 12.2.3.3 Is expression
     readIsExpression,
@@ -278,17 +278,153 @@ function readKeyword(state: IParserState): Ast.IdentifierExpression {
     return identifierExpression;
 }
 
-// ------------------------------------------
-// ----------  // 12.2.1 Documents ----------
-// ------------------------------------------
+// --------------------------------------
+// ---------- 12.2.1 Documents ----------
+// --------------------------------------
 
 // ----------------------------------------------
 // ---------- 12.2.2 Section Documents ----------
 // ----------------------------------------------
 
+function readSectionDocument(state: IParserState): Ast.Section {
+    const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
+    startContext(state, nodeKind);
+
+    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state);
+    const sectionConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordSection);
+
+    let maybeName: Option<Ast.Identifier>;
+    if (isOnTokenKind(state, TokenKind.Identifier)) {
+        maybeName = RecursiveDescentParser.readIdentifier(state);
+    } else {
+        incrementAttributeCounter(state);
+    }
+
+    const semicolonConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Semicolon);
+    const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = RecursiveDescentParser.readSectionMembers(state);
+
+    const astNode: Ast.Section = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        maybeLiteralAttributes,
+        sectionConstant,
+        maybeName,
+        semicolonConstant,
+        sectionMembers,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function readSectionMembers(state: IParserState): Ast.IArrayWrapper<Ast.SectionMember> {
+    const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    startContext(state, nodeKind);
+
+    const totalTokens: number = state.lexerSnapshot.tokens.length;
+    const sectionMembers: Ast.SectionMember[] = [];
+    while (state.tokenIndex < totalTokens) {
+        sectionMembers.push(RecursiveDescentParser.readSectionMember(state));
+    }
+
+    const astNode: Ast.IArrayWrapper<Ast.SectionMember> = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        elements: sectionMembers,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
+function readSectionMember(state: IParserState): Ast.SectionMember {
+    const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
+    startContext(state, nodeKind);
+
+    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state);
+    const maybeSharedConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordShared);
+    const namePairedExpression: Ast.IdentifierPairedExpression = RecursiveDescentParser.readIdentifierPairedExpression(
+        state,
+    );
+    const semicolonConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Semicolon);
+
+    const astNode: Ast.SectionMember = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        maybeLiteralAttributes,
+        maybeSharedConstant,
+        namePairedExpression,
+        semicolonConstant,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
+
 // ------------------------------------------
 // ---------- 12.2.3.1 Expressions ----------
 // ------------------------------------------
+
+function readExpression(state: IParserState): Ast.TExpression {
+    switch (state.maybeCurrentTokenKind) {
+        case TokenKind.KeywordEach:
+            return RecursiveDescentParser.readEachExpression(state);
+
+        case TokenKind.KeywordLet:
+            return RecursiveDescentParser.readLetExpression(state);
+
+        case TokenKind.KeywordIf:
+            return RecursiveDescentParser.readIfExpression(state);
+
+        case TokenKind.KeywordError:
+            return RecursiveDescentParser.readErrorRaisingExpression(state);
+
+        case TokenKind.KeywordTry:
+            return RecursiveDescentParser.readErrorHandlingExpression(state);
+
+        case TokenKind.LeftParenthesis:
+            const triedDisambiguation: Result<
+                ParenthesisDisambiguation,
+                ParserError.UnterminatedParenthesesError
+            > = RecursiveDescentParser.disambiguateParenthesis(state);
+            if (triedDisambiguation.kind === ResultKind.Err) {
+                throw triedDisambiguation.error;
+            }
+            const disambiguation: ParenthesisDisambiguation = triedDisambiguation.value;
+
+            switch (disambiguation) {
+                case ParenthesisDisambiguation.FunctionExpression:
+                    return RecursiveDescentParser.readFunctionExpression(state);
+
+                case ParenthesisDisambiguation.ParenthesizedExpression:
+                    return RecursiveDescentParser.readLogicalExpression(state);
+
+                default:
+                    throw isNever(disambiguation);
+            }
+        default:
+            return RecursiveDescentParser.readLogicalExpression(state);
+    }
+}
+
+// --------------------------------------------------
+// ---------- 12.2.3.2 Logical expressions ----------
+// --------------------------------------------------
+
+function readLogicalExpression(state: IParserState): Ast.TLogicalExpression {
+    return recursiveReadBinOpExpression<
+        Ast.NodeKind.LogicalExpression,
+        Ast.TLogicalExpression,
+        Ast.LogicalOperator,
+        Ast.TLogicalExpression
+    >(
+        state,
+        Ast.NodeKind.LogicalExpression,
+        () => RecursiveDescentParser.readIsExpression(state),
+        maybeCurrentTokenKind => Ast.logicalOperatorFrom(maybeCurrentTokenKind),
+        () => RecursiveDescentParser.readIsExpression(state),
+    );
+}
 
 // --------------------------------------------
 // ---------- 12.2.3.3 Is expression ----------
@@ -2067,6 +2203,15 @@ function readWrapped<Kind, Content>(
 // -------------------------------------------------------
 // ---------- Helper functions (read functions) ----------
 // -------------------------------------------------------
+
+function maybeReadLiteralAttributes(state: IParserState): Option<Ast.RecordLiteral> {
+    if (isOnTokenKind(state, TokenKind.LeftBracket)) {
+        return RecursiveDescentParser.readRecordLiteral(state);
+    } else {
+        incrementAttributeCounter(state);
+        return undefined;
+    }
+}
 
 function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
     const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
