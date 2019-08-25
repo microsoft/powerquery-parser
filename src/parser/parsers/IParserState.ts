@@ -256,6 +256,15 @@ export function testIsOnAnyTokenKind(
     }
 }
 
+export function testNoMoreTokens(state: IParserState): Option<ParserError.UnusedTokensRemainError> {
+    if (state.tokenIndex !== state.lexerSnapshot.tokens.length) {
+        const token: Token = expectTokenAt(state, state.tokenIndex);
+        return new ParserError.UnusedTokensRemainError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+    } else {
+        return undefined;
+    }
+}
+
 export function unterminatedParenthesesError(state: IParserState): ParserError.UnterminatedParenthesesError {
     const token: Token = expectTokenAt(state, state.tokenIndex);
     return new ParserError.UnterminatedParenthesesError(token, state.lexerSnapshot.graphemePositionStartFrom(token));

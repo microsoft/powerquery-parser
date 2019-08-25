@@ -10,7 +10,7 @@ import {
     readToken,
     readTokenKind,
 } from "./common";
-import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "./IParser";
+import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "./IParser";
 import {
     applyState,
     deepCopy,
@@ -28,13 +28,10 @@ import {
     startContext,
     testIsOnAnyTokenKind,
     testIsOnTokenKind,
+    testNoMoreTokens,
     unterminatedBracketError,
     unterminatedParenthesesError,
 } from "./IParserState";
-
-function notYetImplemented(_state: IParserState): any {
-    throw new Error("NYI");
-}
 
 export const RecursiveDescentParser: IParser<IParserState> = {
     // 12.1.6 Identifiers
@@ -43,7 +40,7 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readKeyword,
 
     // 12.2.1 Documents
-    readDocument: notYetImplemented,
+    readDocument,
 
     // 12.2.2 Section Documents
     readSectionDocument,
@@ -160,6 +157,9 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readGeneralizedIdentifierPairedExpressions,
     readGeneralizedIdentifierPairedExpression,
     readIdentifierPairedExpression,
+
+    // Helper functions
+    deepCopyState,
 };
 
 type TriedReadPrimaryType = Result<
@@ -281,6 +281,78 @@ function readKeyword(state: IParserState): Ast.IdentifierExpression {
 // --------------------------------------
 // ---------- 12.2.1 Documents ----------
 // --------------------------------------
+
+function readDocument(state: IParserState): TriedParse {
+    let triedReadDocument: Result<Ast.TDocument, Error>;
+
+    // Try parsing as an Expression document first.
+    // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
+    // If both fail then return the first error encountered.
+    const originalState: IParserState = RecursiveDescentParser.deepCopyState(state);
+    try {
+        triedReadDocument = {
+            kind: ResultKind.Ok,
+            value: RecursiveDescentParser.readExpression(state),
+        };
+        const maybeErr: Option<ParserError.UnusedTokensRemainError> = testNoMoreTokens(state);
+        if (maybeErr) {
+            throw maybeErr;
+        }
+    } catch (expressionError) {
+        const expressionErrorState: IParserState = RecursiveDescentParser.deepCopyState(state);
+        applyState(state, originalState);
+        try {
+            triedReadDocument = {
+                kind: ResultKind.Ok,
+                value: RecursiveDescentParser.readSectionDocument(state),
+            };
+            const maybeErr: Option<ParserError.UnusedTokensRemainError> = testNoMoreTokens(state);
+            if (maybeErr) {
+                throw maybeErr;
+            }
+        } catch {
+            applyState(state, expressionErrorState);
+            triedReadDocument = {
+                kind: ResultKind.Err,
+                error: expressionError,
+            };
+        }
+    }
+
+    if (triedReadDocument.kind === ResultKind.Err) {
+        const currentError: Error = triedReadDocument.error;
+        let convertedError: ParserError.TParserError;
+        if (ParserError.isTInnerParserError(currentError)) {
+            convertedError = new ParserError.ParserError(currentError, state.contextState);
+        } else {
+            convertedError = CommonError.ensureCommonError(currentError);
+        }
+
+        return {
+            kind: ResultKind.Err,
+            error: convertedError,
+        };
+    }
+    const document: Ast.TDocument = triedReadDocument.value;
+
+    if (state.maybeCurrentContextNode !== undefined) {
+        const details: {} = { maybeContextNode: state.maybeCurrentContextNode };
+        throw new CommonError.InvariantError(
+            "maybeContextNode should be falsey, there shouldn't be an open context",
+            details,
+        );
+    }
+
+    const contextState: ParserContext.State = state.contextState;
+    return {
+        kind: ResultKind.Ok,
+        value: {
+            document,
+            nodeIdMapCollection: contextState.nodeIdMapCollection,
+            leafNodeIds: contextState.leafNodeIds,
+        },
+    };
+}
 
 // ----------------------------------------------
 // ---------- 12.2.2 Section Documents ----------
@@ -1424,7 +1496,7 @@ function readFunctionType(state: IParserState): Ast.FunctionType {
 }
 
 function tryReadPrimaryType(state: IParserState): TriedReadPrimaryType {
-    const backup: IParserState = deepCopy(state);
+    const stateBackup: IParserState = RecursiveDescentParser.deepCopyState(state);
 
     const isTableTypeNext: boolean =
         isOnIdentifierConstant(state, Ast.IdentifierConstant.Table) &&
@@ -1465,7 +1537,7 @@ function tryReadPrimaryType(state: IParserState): TriedReadPrimaryType {
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state);
 
         if (triedReadPrimitiveType.kind === ResultKind.Err) {
-            applyState(state, backup);
+            applyState(state, stateBackup);
         }
         return triedReadPrimitiveType;
     }
@@ -1618,7 +1690,7 @@ function tryReadPrimitiveType(state: IParserState): TriedReadPrimitiveType {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
     startContext(state, nodeKind);
 
-    const backup: IParserState = deepCopy(state);
+    const backup: IParserState = RecursiveDescentParser.deepCopyState(state);
     const expectedTokenKinds: ReadonlyArray<TokenKind> = [
         TokenKind.Identifier,
         TokenKind.KeywordType,
@@ -1725,7 +1797,7 @@ function disambiguateParenthesis(
             //
             // It's important we backup and eventually restore the original Parser state.
             if (isTokenKind(state, TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const stateBackup: IParserState = deepCopy(state);
+                const stateBackup: IParserState = RecursiveDescentParser.deepCopyState(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
@@ -1894,6 +1966,14 @@ function readIdentifierPairedExpression(state: IParserState): Ast.IdentifierPair
         () => RecursiveDescentParser.readIdentifier(state),
         () => RecursiveDescentParser.readExpression(state),
     );
+}
+
+// ------------------------------------------------
+// ---------- Helper functions (IParser) ----------
+// ------------------------------------------------
+
+function deepCopyState(state: IParserState): IParserState {
+    return deepCopy(state);
 }
 
 // ---------------------------------------------------------------

@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserError } from "..";
+import { Ast, NodeIdMap, ParserError } from "..";
 import { Option, Result } from "../../common";
+
+export type TriedParse = Result<ParseOk, ParserError.TParserError>;
 
 export const enum ParenthesisDisambiguation {
     FunctionExpression = "FunctionExpression",
@@ -15,6 +17,12 @@ export const enum BracketDisambiguation {
     Record = "Record",
 }
 
+export interface ParseOk {
+    readonly document: Ast.TDocument;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+}
+
 export interface IParser<State> {
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: State) => Ast.Identifier;
@@ -22,7 +30,7 @@ export interface IParser<State> {
     readonly readKeyword: (state: State) => Ast.IdentifierExpression;
 
     // 12.2.1 Documents
-    readonly readDocument: (state: State) => Ast.TDocument;
+    readonly readDocument: (state: State) => TriedParse;
 
     // 12.2.2 Section Documents
     readonly readSectionDocument: (state: State) => Ast.Section;
@@ -135,6 +143,9 @@ export interface IParser<State> {
     readonly readListLiteral: (state: State) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: State) => Ast.TAnyLiteral;
     readonly readPrimitiveType: (state: State) => Ast.PrimitiveType;
+
+    // Helper functions
+    readonly deepCopyState: (state: State) => State;
 
     // Disambiguation
     readonly disambiguateBracket: (state: State) => Result<BracketDisambiguation, ParserError.UnterminatedBracketError>;
