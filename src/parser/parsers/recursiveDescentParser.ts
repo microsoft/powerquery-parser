@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserError } from "..";
-import { CommonError, Option, Result, ResultKind } from "../../common";
+import { Ast, NodeIdMap, ParserContext, ParserError } from "..";
+import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import {
     maybeReadIdentifierConstantAsConstant,
@@ -10,7 +10,7 @@ import {
     readToken,
     readTokenKind,
 } from "./common";
-import { IParser } from "./IParser";
+import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "./IParser";
 import {
     applyState,
     deepCopy,
@@ -24,9 +24,12 @@ import {
     isOnGeneralizedIdentifierToken,
     isOnIdentifierConstant,
     isOnTokenKind,
+    isTokenKind,
     startContext,
     testIsOnAnyTokenKind,
     testIsOnTokenKind,
+    unterminatedBracketError,
+    unterminatedParenthesesError,
 } from "./IParserState";
 
 function notYetImplemented(_state: IParserState): any {
@@ -76,8 +79,8 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readUnaryExpression: notYetImplemented,
 
     // 12.2.3.10 Primary expression
-    readPrimaryExpression: notYetImplemented,
-    readRecursivePrimaryExpression: notYetImplemented,
+    readPrimaryExpression,
+    readRecursivePrimaryExpression,
 
     // 12.2.3.11 Literal expression
     readLiteralExpression,
@@ -148,6 +151,10 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readAnyLiteral,
     readPrimitiveType,
 
+    // Disambiguation
+    disambiguateBracket,
+    disambiguateParenthesis,
+
     // key-value pairs
     readIdentifierPairedExpressions,
     readGeneralizedIdentifierPairedExpressions,
@@ -164,17 +171,6 @@ type TriedReadPrimitiveType = Result<
     Ast.PrimitiveType,
     ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
-
-const enum ParenthesisDisambiguation {
-    FunctionExpression = "FunctionExpression",
-    ParenthesizedExpression = "ParenthesizedExpression",
-}
-
-const enum BracketDisambiguation {
-    FieldProjection = "FieldProjection",
-    FieldSelection = "FieldSelection",
-    Record = "Record",
-}
 
 interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
@@ -325,6 +321,240 @@ function readKeyword(state: IParserState): Ast.IdentifierExpression {
 // --------------------------------------------------
 // ---------- 12.2.3.10 Primary expression ----------
 // --------------------------------------------------
+
+function readPrimaryExpression(state: IParserState): Ast.TPrimaryExpression {
+    let primaryExpression: Option<Ast.TPrimaryExpression>;
+    const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+    const isIdentifierExpressionNext: boolean =
+        maybeCurrentTokenKind === TokenKind.AtSign || maybeCurrentTokenKind === TokenKind.Identifier;
+
+    if (isIdentifierExpressionNext) {
+        primaryExpression = RecursiveDescentParser.readIdentifierExpression(state);
+    } else {
+        switch (maybeCurrentTokenKind) {
+            case TokenKind.LeftParenthesis:
+                primaryExpression = RecursiveDescentParser.readParenthesizedExpression(state);
+                break;
+
+            case TokenKind.LeftBracket:
+                const triedDisambiguation: Result<
+                    BracketDisambiguation,
+                    ParserError.UnterminatedBracketError
+                > = RecursiveDescentParser.disambiguateBracket(state);
+                if (triedDisambiguation.kind === ResultKind.Err) {
+                    throw triedDisambiguation.error;
+                }
+                const disambiguation: BracketDisambiguation = triedDisambiguation.value;
+
+                switch (disambiguation) {
+                    case BracketDisambiguation.FieldProjection:
+                        primaryExpression = RecursiveDescentParser.readFieldProjection(state);
+                        break;
+
+                    case BracketDisambiguation.FieldSelection:
+                        primaryExpression = RecursiveDescentParser.readFieldSelection(state);
+                        break;
+
+                    case BracketDisambiguation.Record:
+                        primaryExpression = RecursiveDescentParser.readRecordExpression(state);
+                        break;
+
+                    default:
+                        throw isNever(disambiguation);
+                }
+                break;
+
+            case TokenKind.LeftBrace:
+                primaryExpression = RecursiveDescentParser.readListExpression(state);
+                break;
+
+            case TokenKind.Ellipsis:
+                primaryExpression = RecursiveDescentParser.readNotImplementedExpression(state);
+                break;
+
+            case TokenKind.KeywordHashSections:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashShared:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashBinary:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashDate:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashDateTime:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashDateTimeZone:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashDuration:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashTable:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            case TokenKind.KeywordHashTime:
+                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                break;
+
+            default:
+                primaryExpression = RecursiveDescentParser.readLiteralExpression(state);
+        }
+    }
+
+    const isRecursivePrimaryExpression: boolean =
+        // section-access-expression
+        // this.isOnTokenKind(TokenKind.Bang)
+        // field-access-expression
+        isOnTokenKind(state, TokenKind.LeftBrace) ||
+        // item-access-expression
+        isOnTokenKind(state, TokenKind.LeftBracket) ||
+        // invoke-expression
+        isOnTokenKind(state, TokenKind.LeftParenthesis);
+    if (isRecursivePrimaryExpression) {
+        return RecursiveDescentParser.readRecursivePrimaryExpression(state, primaryExpression);
+    } else {
+        return primaryExpression;
+    }
+}
+
+function readRecursivePrimaryExpression(
+    state: IParserState,
+    head: Ast.TPrimaryExpression,
+): Ast.RecursivePrimaryExpression {
+    const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
+    startContext(state, nodeKind);
+
+    // The head of the recursive primary expression is created before the recursive primrary expression,
+    // meaning the parent/child mapping for contexts are in reverse order.
+    // The clean up for that happens here.
+    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+    if (state.maybeCurrentContextNode === undefined) {
+        throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
+    }
+    const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+
+    const maybeHeadParentId: Option<number> = nodeIdMapCollection.parentIdById.get(head.id);
+    if (maybeHeadParentId === undefined) {
+        const details: {} = { nodeId: head.id };
+        throw new CommonError.InvariantError(`head's nodeId isn't in parentIdById`, details);
+    }
+    const headParentId: number = maybeHeadParentId;
+
+    // Remove head as a child of its current parent.
+    const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(
+        nodeIdMapCollection.childIdsById,
+        headParentId,
+    );
+    const replacementIndex: number = parentChildIds.indexOf(head.id);
+    if (replacementIndex === -1) {
+        const details: {} = {
+            parentNodeId: headParentId,
+            childNodeId: head.id,
+        };
+        throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
+    }
+
+    nodeIdMapCollection.childIdsById.set(headParentId, [
+        ...parentChildIds.slice(0, replacementIndex),
+        ...parentChildIds.slice(replacementIndex + 1),
+    ]);
+
+    // Update mappings for head.
+    nodeIdMapCollection.astNodeById.set(head.id, head);
+    nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
+
+    // Mark head as a child of the recursive primary expression context (currentContextNode).
+    nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
+
+    // Update start positions for recursive primary expression context
+    const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
+    const mutableContext: TypeUtils.StripReadonly<ParserContext.Node> = currentContextNode;
+    // UNSAFE MARKER
+    //
+    // Purpose of code block:
+    //      Shift the start of ParserContext from the default location (which doesn't include head),
+    //      to the left so that head is also included.
+    //
+    // Why are you trying to avoid a safer approach?
+    //      There isn't one? At least not without refactoring in ways which will make things messier.
+    //
+    // Why is it safe?
+    //      I'm only mutating start location in the recursive expression to one already parsed , the head.
+    mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[recursiveTokenIndexStart];
+    mutableContext.tokenIndexStart = recursiveTokenIndexStart;
+
+    // Begin normal parsing behavior.
+    const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
+    const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    startContext(state, recursiveArrayNodeKind);
+    let continueReadingValues: boolean = true;
+
+    while (continueReadingValues) {
+        const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+
+        if (maybeCurrentTokenKind === TokenKind.LeftParenthesis) {
+            recursiveExpressions.push(RecursiveDescentParser.readInvokeExpression(state));
+        } else if (maybeCurrentTokenKind === TokenKind.LeftBrace) {
+            recursiveExpressions.push(RecursiveDescentParser.readItemAccessExpression(state));
+        } else if (maybeCurrentTokenKind === TokenKind.LeftBracket) {
+            const triedDisambiguation: Result<
+                BracketDisambiguation,
+                ParserError.UnterminatedBracketError
+            > = RecursiveDescentParser.disambiguateBracket(state);
+            if (triedDisambiguation.kind === ResultKind.Err) {
+                throw triedDisambiguation.error;
+            }
+            const disambiguation: BracketDisambiguation = triedDisambiguation.value;
+
+            switch (disambiguation) {
+                case BracketDisambiguation.FieldProjection:
+                    recursiveExpressions.push(RecursiveDescentParser.readFieldProjection(state));
+                    break;
+
+                case BracketDisambiguation.FieldSelection:
+                    recursiveExpressions.push(RecursiveDescentParser.readFieldSelection(state));
+                    break;
+
+                default:
+                    throw new CommonError.InvariantError(
+                        `grammer doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
+                    );
+            }
+        } else {
+            continueReadingValues = false;
+        }
+    }
+
+    const recursiveArray: Ast.IArrayWrapper<Ast.TRecursivePrimaryExpression> = {
+        ...expectContextNodeMetadata(state),
+        kind: recursiveArrayNodeKind,
+        isLeaf: false,
+        elements: recursiveExpressions,
+    };
+    endContext(state, recursiveArray);
+
+    const astNode: Ast.RecursivePrimaryExpression = {
+        ...expectContextNodeMetadata(state),
+        kind: nodeKind,
+        isLeaf: false,
+        head,
+        recursiveExpressions: recursiveArray,
+    };
+    endContext(state, astNode);
+    return astNode;
+}
 
 // --------------------------------------------------
 // ---------- 12.2.3.11 Literal expression ----------
@@ -1175,6 +1405,157 @@ function tryReadPrimitiveType(state: IParserState): TriedReadPrimitiveType {
         kind: ResultKind.Ok,
         value: astNode,
     };
+}
+
+// ------------------------------------
+// ---------- Disambiguation ----------
+// ------------------------------------
+
+function disambiguateParenthesis(
+    state: IParserState,
+): Result<ParenthesisDisambiguation, ParserError.UnterminatedParenthesesError> {
+    const initialTokenIndex: number = state.tokenIndex;
+    const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
+    const totalTokens: number = tokens.length;
+    let nestedDepth: number = 1;
+    let offsetTokenIndex: number = initialTokenIndex + 1;
+
+    while (offsetTokenIndex < totalTokens) {
+        const offsetTokenKind: TokenKind = tokens[offsetTokenIndex].kind;
+
+        if (offsetTokenKind === TokenKind.LeftParenthesis) {
+            nestedDepth += 1;
+        } else if (offsetTokenKind === TokenKind.RightParenthesis) {
+            nestedDepth -= 1;
+        }
+
+        if (nestedDepth === 0) {
+            // (as X) could either be either case,
+            // so we need to consume type X and see if it's followed by a FatArrow.
+            //
+            // It's important we backup and eventually restore the original Parser state.
+            if (isTokenKind(state, TokenKind.KeywordAs, offsetTokenIndex + 1)) {
+                const stateBackup: IParserState = deepCopy(state);
+                unsafeMoveTo(state, offsetTokenIndex + 2);
+
+                try {
+                    RecursiveDescentParser.readNullablePrimitiveType(state);
+                } catch {
+                    applyState(state, stateBackup);
+                    if (isOnTokenKind(state, TokenKind.FatArrow)) {
+                        return {
+                            kind: ResultKind.Ok,
+                            value: ParenthesisDisambiguation.FunctionExpression,
+                        };
+                    } else {
+                        return {
+                            kind: ResultKind.Ok,
+                            value: ParenthesisDisambiguation.ParenthesizedExpression,
+                        };
+                    }
+                }
+
+                let disambiguation: ParenthesisDisambiguation;
+                if (isOnTokenKind(state, TokenKind.FatArrow)) {
+                    disambiguation = ParenthesisDisambiguation.FunctionExpression;
+                } else {
+                    disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
+                }
+
+                applyState(state, stateBackup);
+                return {
+                    kind: ResultKind.Ok,
+                    value: disambiguation,
+                };
+            } else {
+                if (isTokenKind(state, TokenKind.FatArrow, offsetTokenIndex + 1)) {
+                    return {
+                        kind: ResultKind.Ok,
+                        value: ParenthesisDisambiguation.FunctionExpression,
+                    };
+                } else {
+                    return {
+                        kind: ResultKind.Ok,
+                        value: ParenthesisDisambiguation.ParenthesizedExpression,
+                    };
+                }
+            }
+        }
+
+        offsetTokenIndex += 1;
+    }
+
+    return {
+        kind: ResultKind.Err,
+        error: unterminatedParenthesesError(state),
+    };
+}
+
+// WARNING: Only updates tokenIndex and currentTokenKind,
+//          Manual management of TokenRangeStack is assumed.
+//          Best used in conjunction with backup/restore using ParserState.
+function unsafeMoveTo(state: IParserState, tokenIndex: number): void {
+    const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
+    state.tokenIndex = tokenIndex;
+
+    if (tokenIndex < tokens.length) {
+        state.maybeCurrentToken = tokens[tokenIndex];
+        state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+    } else {
+        state.maybeCurrentToken = undefined;
+        state.maybeCurrentTokenKind = undefined;
+    }
+}
+
+function disambiguateBracket(state: IParserState): Result<BracketDisambiguation, ParserError.UnterminatedBracketError> {
+    const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
+    let offsetTokenIndex: number = state.tokenIndex + 1;
+    const offsetToken: Token = tokens[offsetTokenIndex];
+
+    if (!offsetToken) {
+        return {
+            kind: ResultKind.Err,
+            error: unterminatedBracketError(state),
+        };
+    }
+
+    let offsetTokenKind: TokenKind = offsetToken.kind;
+    if (offsetTokenKind === TokenKind.LeftBracket) {
+        return {
+            kind: ResultKind.Ok,
+            value: BracketDisambiguation.FieldProjection,
+        };
+    } else if (offsetTokenKind === TokenKind.RightBracket) {
+        return {
+            kind: ResultKind.Ok,
+            value: BracketDisambiguation.Record,
+        };
+    } else {
+        const totalTokens: number = tokens.length;
+        offsetTokenIndex += 1;
+        while (offsetTokenIndex < totalTokens) {
+            offsetTokenKind = tokens[offsetTokenIndex].kind;
+
+            if (offsetTokenKind === TokenKind.Equal) {
+                return {
+                    kind: ResultKind.Ok,
+                    value: BracketDisambiguation.Record,
+                };
+            } else if (offsetTokenKind === TokenKind.RightBracket) {
+                return {
+                    kind: ResultKind.Ok,
+                    value: BracketDisambiguation.FieldProjection,
+                };
+            }
+
+            offsetTokenIndex += 1;
+        }
+
+        return {
+            kind: ResultKind.Err,
+            error: unterminatedBracketError(state),
+        };
+    }
 }
 
 // -------------------------------------

@@ -1,8 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "..";
-import { Option } from "../../common";
+import { Ast, ParserError } from "..";
+import { Option, Result } from "../../common";
+
+export const enum ParenthesisDisambiguation {
+    FunctionExpression = "FunctionExpression",
+    ParenthesizedExpression = "ParenthesizedExpression",
+}
+
+export const enum BracketDisambiguation {
+    FieldProjection = "FieldProjection",
+    FieldSelection = "FieldSelection",
+    Record = "Record",
+}
 
 export interface IParser<State> {
     // 12.1.6 Identifiers
@@ -124,6 +135,12 @@ export interface IParser<State> {
     readonly readListLiteral: (state: State) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: State) => Ast.TAnyLiteral;
     readonly readPrimitiveType: (state: State) => Ast.PrimitiveType;
+
+    // Disambiguation
+    readonly disambiguateBracket: (state: State) => Result<BracketDisambiguation, ParserError.UnterminatedBracketError>;
+    readonly disambiguateParenthesis: (
+        state: State,
+    ) => Result<ParenthesisDisambiguation, ParserError.UnterminatedParenthesesError>;
 
     readonly readIdentifierPairedExpressions: (
         state: State,

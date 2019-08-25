@@ -256,6 +256,16 @@ export function testIsOnAnyTokenKind(
     }
 }
 
+export function unterminatedParenthesesError(state: IParserState): ParserError.UnterminatedParenthesesError {
+    const token: Token = expectTokenAt(state, state.tokenIndex);
+    return new ParserError.UnterminatedParenthesesError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+}
+
+export function unterminatedBracketError(state: IParserState): ParserError.UnterminatedBracketError {
+    const token: Token = expectTokenAt(state, state.tokenIndex);
+    return new ParserError.UnterminatedBracketError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+}
+
 interface ContextNodeMetadata {
     readonly id: number;
     readonly maybeAttributeIndex: Option<number>;
