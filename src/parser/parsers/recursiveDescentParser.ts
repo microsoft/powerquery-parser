@@ -57,17 +57,17 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readLogicalExpression: notYetImplemented,
 
     // 12.2.3.3 Is expression
-    readIsExpression: notYetImplemented,
-    readNullablePrimitiveType: notYetImplemented,
+    readIsExpression,
+    readNullablePrimitiveType,
 
     // 12.2.3.4 As expression
-    readAsExpression: notYetImplemented,
+    readAsExpression,
 
     // 12.2.3.5 Equality expression
-    readEqualityExpression: notYetImplemented,
+    readEqualityExpression,
 
     // 12.2.3.6 Relational expression
-    readRelationalExpression: notYetImplemented,
+    readRelationalExpression,
 
     // 12.2.3.7 Arithmetic expressions
     readArithmeticExpression,
@@ -294,17 +294,91 @@ function readKeyword(state: IParserState): Ast.IdentifierExpression {
 // ---------- 12.2.3.3 Is expression ----------
 // --------------------------------------------
 
+function readIsExpression(state: IParserState): Ast.TIsExpression {
+    return recursiveReadBinOpExpression<
+        Ast.NodeKind.IsExpression,
+        Ast.TAsExpression,
+        Ast.ConstantKind.Is,
+        Ast.TNullablePrimitiveType
+    >(
+        state,
+        Ast.NodeKind.IsExpression,
+        () => RecursiveDescentParser.readAsExpression(state),
+        maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordIs ? Ast.ConstantKind.Is : undefined),
+        () => RecursiveDescentParser.readNullablePrimitiveType(state),
+    );
+}
+
+// sub-item of 12.2.3.3 Is expression
+function readNullablePrimitiveType(state: IParserState): Ast.TNullablePrimitiveType {
+    if (isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
+        return readPairedConstant<Ast.NodeKind.NullablePrimitiveType, Ast.PrimitiveType>(
+            state,
+            Ast.NodeKind.NullablePrimitiveType,
+            () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
+            () => RecursiveDescentParser.readPrimitiveType(state),
+        );
+    } else {
+        return RecursiveDescentParser.readPrimitiveType(state);
+    }
+}
+
 // --------------------------------------------
 // ---------- 12.2.3.4 As expression ----------
 // --------------------------------------------
+
+function readAsExpression(state: IParserState): Ast.TAsExpression {
+    return recursiveReadBinOpExpression<
+        Ast.NodeKind.AsExpression,
+        Ast.TEqualityExpression,
+        Ast.ConstantKind.As,
+        Ast.TNullablePrimitiveType
+    >(
+        state,
+        Ast.NodeKind.AsExpression,
+        () => RecursiveDescentParser.readEqualityExpression(state),
+        maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordAs ? Ast.ConstantKind.As : undefined),
+        () => RecursiveDescentParser.readNullablePrimitiveType(state),
+    );
+}
 
 // --------------------------------------------------
 // ---------- 12.2.3.5 Equality expression ----------
 // --------------------------------------------------
 
+function readEqualityExpression(state: IParserState): Ast.TEqualityExpression {
+    return recursiveReadBinOpExpression<
+        Ast.NodeKind.EqualityExpression,
+        Ast.TEqualityExpression,
+        Ast.EqualityOperator,
+        Ast.TEqualityExpression
+    >(
+        state,
+        Ast.NodeKind.EqualityExpression,
+        () => RecursiveDescentParser.readRelationalExpression(state),
+        maybeCurrentTokenKind => Ast.equalityOperatorFrom(maybeCurrentTokenKind),
+        () => RecursiveDescentParser.readRelationalExpression(state),
+    );
+}
+
 // ----------------------------------------------------
 // ---------- 12.2.3.6 Relational expression ----------
 // ----------------------------------------------------
+
+function readRelationalExpression(state: IParserState): Ast.TRelationalExpression {
+    return recursiveReadBinOpExpression<
+        Ast.NodeKind.RelationalExpression,
+        Ast.TArithmeticExpression,
+        Ast.RelationalOperator,
+        Ast.TArithmeticExpression
+    >(
+        state,
+        Ast.NodeKind.RelationalExpression,
+        () => RecursiveDescentParser.readArithmeticExpression(state),
+        maybeCurrentTokenKind => Ast.relationalOperatorFrom(maybeCurrentTokenKind),
+        () => RecursiveDescentParser.readArithmeticExpression(state),
+    );
+}
 
 // -----------------------------------------------------
 // ---------- 12.2.3.7 Arithmetic expressions ----------
