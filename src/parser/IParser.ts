@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserError } from "..";
-import { Option, Result } from "../../common";
+import { Ast, NodeIdMap, ParserError } from ".";
+import { Option, Result } from "../common";
 
 export type TriedParse = Result<ParseOk, ParserError.TParserError>;
 

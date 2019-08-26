@@ -49,7 +49,7 @@ export interface Node {
     isClosed: boolean;
 }
 
-export function empty(): State {
+export function newState(): State {
     return {
         root: {
             maybeNode: undefined,

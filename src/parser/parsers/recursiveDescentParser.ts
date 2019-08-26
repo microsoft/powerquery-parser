@@ -4,13 +4,8 @@
 import { Ast, NodeIdMap, ParserContext, ParserError } from "..";
 import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
-import {
-    maybeReadIdentifierConstantAsConstant,
-    readIdentifierConstantAsConstant,
-    readToken,
-    readTokenKind,
-} from "./common";
-import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "./IParser";
+import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
+import { IParserState } from "../IParserState";
 import {
     applyState,
     deepCopy,
@@ -19,7 +14,6 @@ import {
     expectContextNodeMetadata,
     expectTokenAt,
     incrementAttributeCounter,
-    IParserState,
     isNextTokenKind,
     isOnGeneralizedIdentifierToken,
     isOnIdentifierConstant,
@@ -31,7 +25,13 @@ import {
     testNoMoreTokens,
     unterminatedBracketError,
     unterminatedParenthesesError,
-} from "./IParserState";
+} from "../IParserState/IParserStateUtils";
+import {
+    maybeReadIdentifierConstantAsConstant,
+    readIdentifierConstantAsConstant,
+    readToken,
+    readTokenKind,
+} from "./common";
 
 export const RecursiveDescentParser: IParser<IParserState> = {
     // 12.1.6 Identifiers

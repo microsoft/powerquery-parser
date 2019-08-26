@@ -14,7 +14,7 @@ export class Parser {
     public constructor(
         private readonly lexerSnapshot: LexerSnapshot,
         private tokenIndex: number = 0,
-        private contextState: ParserContext.State = ParserContext.empty(),
+        private contextState: ParserContext.State = ParserContext.newState(),
         private maybeCurrentContextNode: Option<ParserContext.Node> = undefined,
     ) {
         if (this.lexerSnapshot.tokens.length) {

@@ -4,15 +4,15 @@
 import { Ast, ParserError } from "..";
 import { CommonError, Option } from "../../common";
 import { Token, TokenKind } from "../../lexer";
+import { IParserState } from "../IParserState";
 import {
     endContext,
     expectContextNodeMetadata,
     incrementAttributeCounter,
-    IParserState,
     isOnIdentifierConstant,
     startContext,
     testIsOnTokenKind,
-} from "./IParserState";
+} from "../IParserState/IParserStateUtils";
 
 export function readToken(state: IParserState): string {
     const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;

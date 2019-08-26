@@ -4,14 +4,19 @@
 import { Ast, ParserContext, ParserError } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
+import { IParserState } from "./IParserState";
 
-export interface IParserState {
-    readonly lexerSnapshot: LexerSnapshot;
-    tokenIndex: number;
-    maybeCurrentToken: Option<Token>;
-    maybeCurrentTokenKind: Option<TokenKind>;
-    contextState: ParserContext.State;
-    maybeCurrentContextNode: Option<ParserContext.Node>;
+export function newState(lexerSnapshot: LexerSnapshot): IParserState {
+    const maybeCurrentToken: Option<Token> = lexerSnapshot.tokens[0];
+
+    return {
+        lexerSnapshot,
+        tokenIndex: 0,
+        maybeCurrentToken,
+        maybeCurrentTokenKind: maybeCurrentToken !== undefined ? maybeCurrentToken.kind : undefined,
+        contextState: ParserContext.newState(),
+        maybeCurrentContextNode: undefined,
+    };
 }
 
 export function deepCopy(state: IParserState): IParserState {
@@ -26,13 +31,13 @@ export function deepCopy(state: IParserState): IParserState {
     };
 }
 
-export function applyState(originalState: IParserState, newState: IParserState): void {
-    originalState.tokenIndex = newState.tokenIndex;
-    originalState.maybeCurrentToken = newState.maybeCurrentToken;
-    originalState.maybeCurrentTokenKind = newState.maybeCurrentTokenKind;
+export function applyState(originalState: IParserState, otherState: IParserState): void {
+    originalState.tokenIndex = otherState.tokenIndex;
+    originalState.maybeCurrentToken = otherState.maybeCurrentToken;
+    originalState.maybeCurrentTokenKind = otherState.maybeCurrentTokenKind;
 
-    originalState.contextState = newState.contextState;
-    originalState.maybeCurrentContextNode = newState.maybeCurrentContextNode;
+    originalState.contextState = otherState.contextState;
+    originalState.maybeCurrentContextNode = otherState.maybeCurrentContextNode;
 }
 
 export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void {

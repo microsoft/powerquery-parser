@@ -4,10 +4,10 @@
 import "mocha";
 import { Option, ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { Parser, ParserError } from "../../parser";
+import { IParserState, IParserStateUtils, ParseOk, Parser, ParserError, TriedParse } from "../../parser";
 
 export function expectParseErr(text: string): ParserError.ParserError {
-    const triedParse: Parser.TriedParse = expectTriedParse(text);
+    const triedParse: TriedParse = expectTriedParse(text);
     if (!(triedParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
     }
@@ -19,26 +19,27 @@ export function expectParseErr(text: string): ParserError.ParserError {
     return triedParse.error;
 }
 
-export function expectParseOk(text: string): Parser.ParseOk {
-    const triedParse: Parser.TriedParse = expectTriedParse(text);
+export function expectParseOk(text: string): ParseOk {
+    const triedParse: TriedParse = expectTriedParse(text);
     if (!(triedParse.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Ok: ${triedParse.error.message}`);
     }
     return triedParse.value;
 }
 
-function expectTriedParse(text: string): Parser.TriedParse {
-    const state: Lexer.State = Lexer.stateFrom(text);
-    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
+function expectTriedParse(text: string): TriedParse {
+    const lexerState: Lexer.State = Lexer.stateFrom(text);
+    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {
         throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
     }
 
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
     if (!(triedSnapshot.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedSnapshot.kind === ResultKind.Ok: ${triedSnapshot.error.message}`);
     }
-    const snapshot: LexerSnapshot = triedSnapshot.value;
+    const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    return Parser.tryParse(snapshot);
+    const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
+    return Parser.RecursiveDescentParser.readDocument(parserState);
 }
