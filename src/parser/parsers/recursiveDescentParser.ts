@@ -1906,7 +1906,7 @@ function disambiguateBracket(state: IParserState): Result<BracketDisambiguation,
             } else if (offsetTokenKind === TokenKind.RightBracket) {
                 return {
                     kind: ResultKind.Ok,
-                    value: BracketDisambiguation.FieldProjection,
+                    value: BracketDisambiguation.FieldSelection,
                 };
             }
 

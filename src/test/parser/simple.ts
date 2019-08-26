@@ -5,7 +5,6 @@ import { expect } from "chai";
 import "mocha";
 import { Option, ResultKind, Traverse } from "../../common";
 import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
-import { TokenKind } from "../../lexer";
 import { Ast } from "../../parser";
 
 type AbridgedNode = [Ast.NodeKind, Option<number>];
@@ -669,49 +668,6 @@ describe("Parser.AbridgedNode", () => {
 
         it(`[1]`, () => {
             const text: string = `[1]`;
-            const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FieldSelector, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
-            ];
-            expectAbridgeNodes(text, expected);
-        });
-
-        it(`keywords`, () => {
-            const text: string = `[
-                ${TokenKind.KeywordAnd}
-                ${TokenKind.KeywordAs}
-                ${TokenKind.KeywordEach}
-                ${TokenKind.KeywordElse}
-                ${TokenKind.KeywordError}
-                ${TokenKind.KeywordFalse}
-                ${TokenKind.KeywordHashBinary}
-                ${TokenKind.KeywordHashDate}
-                ${TokenKind.KeywordHashDateTime}
-                ${TokenKind.KeywordHashDateTimeZone}
-                ${TokenKind.KeywordHashDuration}
-                ${TokenKind.KeywordHashInfinity}
-                ${TokenKind.KeywordHashNan}
-                ${TokenKind.KeywordHashSections}
-                ${TokenKind.KeywordHashShared}
-                ${TokenKind.KeywordHashTable}
-                ${TokenKind.KeywordHashTime}
-                ${TokenKind.KeywordIf}
-                ${TokenKind.KeywordIn}
-                ${TokenKind.KeywordIs}
-                ${TokenKind.KeywordLet}
-                ${TokenKind.KeywordMeta}
-                ${TokenKind.KeywordNot}
-                ${TokenKind.KeywordOr}
-                ${TokenKind.KeywordOtherwise}
-                ${TokenKind.KeywordSection}
-                ${TokenKind.KeywordShared}
-                ${TokenKind.KeywordThen}
-                ${TokenKind.KeywordTrue}
-                ${TokenKind.KeywordTry}
-                ${TokenKind.KeywordType}
-            ]`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.FieldSelector, undefined],
                 [Ast.NodeKind.Constant, 0],
