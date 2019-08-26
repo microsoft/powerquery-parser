@@ -310,11 +310,18 @@ function readDocument(state: IParserState): TriedParse {
             if (maybeErr) {
                 throw maybeErr;
             }
-        } catch {
-            applyState(state, expressionErrorState);
+        } catch (sectionError) {
+            let triedError: Error;
+            if (expressionErrorState.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
+                triedError = expressionError;
+                applyState(state, expressionErrorState);
+            } else {
+                triedError = sectionError;
+            }
+
             triedReadDocument = {
                 kind: ResultKind.Err,
-                error: expressionError,
+                error: triedError,
             };
         }
     }
