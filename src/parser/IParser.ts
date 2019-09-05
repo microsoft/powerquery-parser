@@ -144,7 +144,7 @@ export interface IParser<State> {
     readonly readAnyLiteral: (state: State) => Ast.TAnyLiteral;
     readonly readPrimitiveType: (state: State) => Ast.PrimitiveType;
 
-    // Helper functions
+    // State functions
     readonly deepCopyState: (state: State) => State;
 
     // Disambiguation
