@@ -5,9 +5,8 @@ import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, Parser, ParserError } from "../../parser";
+import { IParserState, IParserStateUtils, Parser, ParserError, TriedParse } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
-import { TriedParse } from "../../parser/parser";
 
 function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKindError {
     const lexerState: Lexer.State = Lexer.stateFrom(text);
