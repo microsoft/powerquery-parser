@@ -6,8 +6,7 @@ import "mocha";
 import { Inspection } from "../..";
 import { ResultKind } from "../../common";
 import { NodeKind, TNode } from "../../inspection";
-import { Ast, ParserError } from "../../parser";
-import { ParseOk } from "../../parser/parser";
+import { Ast, ParseOk, ParserError } from "../../parser";
 import { expectParseErr, expectParseOk } from "./common";
 
 type AbridgedScope = ReadonlyArray<string>;
