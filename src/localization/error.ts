@@ -30,10 +30,10 @@ export function unknownError(innerError: any): string {
 export function lexerBadLineNumber(kind: LexerError.BadLineNumberKind, lineNumber: number, numLines: number): string {
     switch (kind) {
         case LexerError.BadLineNumberKind.GreaterThanNumLines:
-            return `lineNumber (${lineNumber}) is greater than or equal to number of lines (${numLines}).`;
+            return `lineNumber (${lineNumber + 1}) is greater than or equal to the number of lines (${numLines}).`;
 
         case LexerError.BadLineNumberKind.LessThanZero:
-            return `lineNumber (${lineNumber}) is less than zero.`;
+            return `lineNumber (${lineNumber + 1}) is less than zero.`;
 
         default:
             throw isNever(kind);
@@ -79,19 +79,16 @@ export function lexerEndOfStream(): string {
 export function lexerExpected(graphemePosition: StringUtils.GraphemePosition, kind: LexerError.ExpectedKind): string {
     switch (kind) {
         case LexerError.ExpectedKind.HexLiteral:
-            return `Expected hex literal on line ${graphemePosition.lineNumber}, column ${
-                graphemePosition.columnNumber
-            }.`;
+            return `Expected hex literal on line ${graphemePosition.lineNumber +
+                1}, column ${graphemePosition.columnNumber + 1}.`;
 
         case LexerError.ExpectedKind.KeywordOrIdentifier:
-            return `Expected keyword or identifier on line ${graphemePosition.lineNumber}, column ${
-                graphemePosition.columnNumber
-            }.`;
+            return `Expected keyword or identifier on line ${graphemePosition.lineNumber +
+                1}, column ${graphemePosition.columnNumber + 1}.`;
 
         case LexerError.ExpectedKind.Numeric:
-            return `Expected numeric literal on line ${graphemePosition.lineNumber}, column ${
-                graphemePosition.columnNumber
-            }.`;
+            return `Expected numeric literal on line ${graphemePosition.lineNumber +
+                1}, column ${graphemePosition.columnNumber + 1}.`;
 
         default:
             throw isNever(kind);
@@ -103,15 +100,13 @@ export function lexerErrorLineMap(errorLineMap: Lexer.ErrorLineMap): string {
 }
 
 export function lexerUnexpectedEof(graphemePosition: StringUtils.GraphemePosition): string {
-    return `Reached EOF while attempting to lex on line ${graphemePosition.lineNumber}, column ${
-        graphemePosition.columnNumber
-    }.`;
+    return `Reached EOF while attempting to lex on line ${graphemePosition.lineNumber +
+        1}, column ${graphemePosition.columnNumber + 1}.`;
 }
 
 export function lexerUnexpectedRead(graphemePosition: StringUtils.GraphemePosition): string {
-    return `Unexpected read while attempting to lex on line ${graphemePosition.lineNumber}, column ${
-        graphemePosition.columnNumber
-    }.`;
+    return `Unexpected read while attempting to lex on line ${graphemePosition.lineNumber +
+        1}, column ${graphemePosition.columnNumber + 1}.`;
 }
 
 export function lexerUnterminatedMultilineToken(
@@ -120,19 +115,16 @@ export function lexerUnterminatedMultilineToken(
 ): string {
     switch (kind) {
         case LexerError.UnterminatedMultilineTokenKind.MultilineComment:
-            return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${
-                graphemePosition.columnNumber
-            }.`;
+            return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber +
+                1}, column ${graphemePosition.columnNumber + 1}.`;
 
         case LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier:
-            return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber}, column ${
-                graphemePosition.columnNumber
-            }.`;
+            return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber +
+                1}, column ${graphemePosition.columnNumber + 1}.`;
 
         case LexerError.UnterminatedMultilineTokenKind.String:
-            return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber}, column ${
-                graphemePosition.columnNumber
-            }.`;
+            return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber +
+                1}, column ${graphemePosition.columnNumber + 1}.`;
 
         default:
             throw isNever(kind);
@@ -147,9 +139,8 @@ export function parserExpectedTokenKind(
         const tokenWithColumnNumber: TokenWithColumnNumber = maybeTokenWithColumnNumber;
         const token: Token = tokenWithColumnNumber.token;
         const columnNumber: number = tokenWithColumnNumber.columnNumber;
-        return `Expected to find a ${expectedTokenKind} on line ${
-            token.positionStart.lineNumber
-        }, column ${columnNumber}, but a ${token.kind} was found instead.`;
+        return `Expected to find a ${expectedTokenKind} on line ${token.positionStart.lineNumber +
+            1}, column ${columnNumber + 1}, but a ${token.kind} was found instead.`;
     } else {
         return `Expected to find a ${expectedTokenKind} but the end-of-file was reached instead.`;
     }
@@ -159,15 +150,13 @@ export function parserInvalidLiteralValue(
     currentTokenData: string,
     positionStart: StringUtils.GraphemePosition,
 ): string {
-    return `Expected to find a literal on line ${positionStart.lineNumber}, column ${
-        positionStart.columnNumber
-    }, but ${currentTokenData} was found instead.`;
+    return `Expected to find a literal on line ${positionStart.lineNumber + 1}, column ${positionStart.columnNumber +
+        1}, but ${currentTokenData} was found instead.`;
 }
 
 export function parserInvalidPrimitiveType(token: Token, positionStart: StringUtils.GraphemePosition): string {
-    return `Expected to find a primitive literal on line ${positionStart.lineNumber}, column ${
-        positionStart.columnNumber
-    }, but ${token.data} was found instead.`;
+    return `Expected to find a primitive literal on line ${positionStart.lineNumber +
+        1}, column ${positionStart.columnNumber + 1}, but ${token.data} was found instead.`;
 }
 
 export function parserExpectedAnyTokenKind(
@@ -178,18 +167,16 @@ export function parserExpectedAnyTokenKind(
         const tokenWithColumnNumber: TokenWithColumnNumber = maybeTokenWithColumnNumber;
         const token: Token = tokenWithColumnNumber.token;
         const columnNumber: number = tokenWithColumnNumber.columnNumber;
-        return `Expected to find one of the following on line ${
-            token.positionStart.lineNumber
-        }, column ${columnNumber}, but a ${token.kind} was found instead: [${expectedAnyTokenKind}].`;
+        return `Expected to find one of the following on line ${token.positionStart.lineNumber +
+            1}, column ${columnNumber + 1}, but a ${token.kind} was found instead: [${expectedAnyTokenKind}].`;
     } else {
         return `Expected to find one of the following, but the end-of-file was reached instead: [${expectedAnyTokenKind}].`;
     }
 }
 
 export function parserRequiredParameterAfterOptionalParameter(positionStart: StringUtils.GraphemePosition): string {
-    return `Cannot have a non-optional parameter after an optional parameter. Line ${
-        positionStart.lineNumber
-    }, column ${positionStart.columnNumber}.`;
+    return `Cannot have a non-optional parameter after an optional parameter. Line ${positionStart.lineNumber +
+        1}, column ${positionStart.columnNumber + 1}.`;
 }
 
 export function parserUnexpectedEndOfTokens(nodeKindOnStack: Ast.NodeKind): string {
@@ -197,17 +184,16 @@ export function parserUnexpectedEndOfTokens(nodeKindOnStack: Ast.NodeKind): stri
 }
 
 export function parserUnterminatedBracket(positionStart: StringUtils.GraphemePosition): string {
-    return `Unterminated bracket starting on line ${positionStart.lineNumber}, column ${positionStart.columnNumber}.`;
+    return `Unterminated bracket starting on line ${positionStart.lineNumber + 1}, column ${positionStart.columnNumber +
+        1}.`;
 }
 
 export function parserUnterminatedParentheses(positionStart: StringUtils.GraphemePosition): string {
-    return `Unterminated parentheses starting on line ${positionStart.lineNumber}, column ${
-        positionStart.columnNumber
-    }.`;
+    return `Unterminated parentheses starting on line ${positionStart.lineNumber +
+        1}, column ${positionStart.columnNumber + 1}.`;
 }
 
 export function parserUnusedTokensRemain(positionStart: StringUtils.GraphemePosition): string {
-    return `Finished parsing, but more tokens remain starting on line ${positionStart.lineNumber}, column ${
-        positionStart.columnNumber
-    }.`;
+    return `Finished parsing, but more tokens remain starting on line ${positionStart.lineNumber +
+        1}, column ${positionStart.columnNumber + 1}.`;
 }
