@@ -3,6 +3,7 @@ import "mocha";
 import * as path from "path";
 import { ResultKind } from "../../common";
 import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
+import { CombinatorialParser, RecursiveDescentParser } from "../../parser/parsers";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -51,7 +52,8 @@ function testNameFromFilePath(filepath: string): string {
     return filepath.replace(path.dirname(__filename), ".");
 }
 
-describe("files", () => {
+describe("abc123 files1", () => {
+    const start: number = new Date().getTime();
     const fileDirectory: string = path.join(path.dirname(__filename), "files");
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
@@ -61,10 +63,43 @@ describe("files", () => {
             let contents: string = readFileSync(filepath, "utf8");
             contents = contents.replace(/^\uFEFF/, "");
 
-            const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents);
-            if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-                throw triedLexAndParse.error;
+            for (let _: number = 0; _ < 12; _ += 1) {
+                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, RecursiveDescentParser);
+                if (!(triedLexAndParse.kind === ResultKind.Ok)) {
+                    throw triedLexAndParse.error;
+                }
             }
         });
     }
+
+    const finish: number = new Date().getTime();
+    const delta: number = finish - start;
+    // tslint:disable-next-line: no-console
+    console.log(`RecursiveDescentParser timing: ${delta}`);
+});
+
+describe("abc123 files2", () => {
+    const start: number = new Date().getTime();
+    const fileDirectory: string = path.join(path.dirname(__filename), "files");
+
+    for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
+        const testName: string = testNameFromFilePath(filepath);
+
+        it(testName, () => {
+            let contents: string = readFileSync(filepath, "utf8");
+            contents = contents.replace(/^\uFEFF/, "");
+
+            for (let _: number = 0; _ < 12; _ += 1) {
+                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, CombinatorialParser);
+                if (!(triedLexAndParse.kind === ResultKind.Ok)) {
+                    throw triedLexAndParse.error;
+                }
+            }
+        });
+    }
+
+    const finish: number = new Date().getTime();
+    const delta: number = finish - start;
+    // tslint:disable-next-line: no-console
+    console.log(`CombinatorialParser timing: ${delta}`);
 });

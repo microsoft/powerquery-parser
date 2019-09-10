@@ -4,7 +4,8 @@
 import "mocha";
 import { Option, ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, ParseOk, Parser, ParserError, TriedParse } from "../../parser";
+import { IParserState, IParserStateUtils, ParseOk, ParserError, TriedParse } from "../../parser";
+import { CombinatorialParser } from "../../parser/parsers";
 
 export function expectParseErr(text: string): ParserError.ParserError {
     const triedParse: TriedParse = expectTriedParse(text);
@@ -41,5 +42,5 @@ function expectTriedParse(text: string): TriedParse {
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    return Parser.RecursiveDescentParser.readDocument(parserState, Parser.RecursiveDescentParser);
+    return CombinatorialParser.readDocument(parserState, CombinatorialParser);
 }

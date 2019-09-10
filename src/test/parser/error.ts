@@ -6,9 +6,10 @@ import "mocha";
 import { ResultKind } from "../../common";
 import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
 import { ParserError } from "../../parser";
+import { CombinatorialParser } from "../../parser/parsers";
 
 function expectParserInnerError(text: string): ParserError.TInnerParserError {
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, CombinatorialParser);
 
     if (!(triedLexAndParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Err ${JSON.stringify(triedLexAndParse)}`);

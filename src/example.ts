@@ -7,6 +7,7 @@ import { Option, ResultKind } from "./common";
 import { TriedLexAndParse, tryLexAndParse } from "./jobs";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParserError } from "./parser";
+import { CombinatorialParser } from "./parser/parsers";
 
 parseText(`if true then 1 else 2`);
 
@@ -14,7 +15,7 @@ parseText(`if true then 1 else 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result is a union of (Ok<T> | Err<E>).
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, CombinatorialParser);
 
     // If the Result is an Ok, then log the jsonified abstract syntax tree (AST) which was parsed.
     if (triedLexAndParse.kind === ResultKind.Ok) {
