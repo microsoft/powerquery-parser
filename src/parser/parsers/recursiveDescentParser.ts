@@ -34,6 +34,9 @@ import {
 } from "./common";
 
 export const RecursiveDescentParser: IParser<IParserState> = {
+    // State functions
+    deepCopyState,
+
     // 12.1.6 Identifiers
     readIdentifier,
     readGeneralizedIdentifier,
@@ -157,9 +160,6 @@ export const RecursiveDescentParser: IParser<IParserState> = {
     readGeneralizedIdentifierPairedExpressions,
     readGeneralizedIdentifierPairedExpression,
     readIdentifierPairedExpression,
-
-    // Helper functions
-    deepCopyState,
 };
 
 type TriedReadPrimaryType = Result<
@@ -176,7 +176,19 @@ interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
 }
 
-function readIdentifier(state: IParserState): Ast.Identifier {
+// -----------------------------------------------
+// ---------- State functions (IParser) ----------
+// -----------------------------------------------
+
+function deepCopyState(state: IParserState): IParserState {
+    return deepCopy(state);
+}
+
+// -------------------------------------------
+// ---------- // 12.1.6 Identifiers ----------
+// -------------------------------------------
+
+function readIdentifier(state: IParserState, _parser: IParser<IParserState>): Ast.Identifier {
     const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
     startContext(state, nodeKind);
 
@@ -192,7 +204,7 @@ function readIdentifier(state: IParserState): Ast.Identifier {
     return astNode;
 }
 
-function readGeneralizedIdentifier(state: IParserState): Ast.GeneralizedIdentifier {
+function readGeneralizedIdentifier(state: IParserState, _parser: IParser<IParserState>): Ast.GeneralizedIdentifier {
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
     startContext(state, nodeKind);
 
@@ -248,7 +260,7 @@ function readGeneralizedIdentifier(state: IParserState): Ast.GeneralizedIdentifi
     return astNode;
 }
 
-function readKeyword(state: IParserState): Ast.IdentifierExpression {
+function readKeyword(state: IParserState, _parser: IParser<IParserState>): Ast.IdentifierExpression {
     const identifierExpressionNodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
     startContext(state, identifierExpressionNodeKind);
 
@@ -282,29 +294,29 @@ function readKeyword(state: IParserState): Ast.IdentifierExpression {
 // ---------- 12.2.1 Documents ----------
 // --------------------------------------
 
-function readDocument(state: IParserState): TriedParse {
+function readDocument(state: IParserState, parser: IParser<IParserState>): TriedParse {
     let triedReadDocument: Result<Ast.TDocument, Error>;
 
     // Try parsing as an Expression document first.
     // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
     // If both fail then return the first error encountered.
-    const originalState: IParserState = RecursiveDescentParser.deepCopyState(state);
+    const originalState: IParserState = parser.deepCopyState(state);
     try {
         triedReadDocument = {
             kind: ResultKind.Ok,
-            value: RecursiveDescentParser.readExpression(state),
+            value: parser.readExpression(state, parser),
         };
         const maybeErr: Option<ParserError.UnusedTokensRemainError> = testNoMoreTokens(state);
         if (maybeErr) {
             throw maybeErr;
         }
     } catch (expressionError) {
-        const expressionErrorState: IParserState = RecursiveDescentParser.deepCopyState(state);
+        const expressionErrorState: IParserState = parser.deepCopyState(state);
         applyState(state, originalState);
         try {
             triedReadDocument = {
                 kind: ResultKind.Ok,
-                value: RecursiveDescentParser.readSectionDocument(state),
+                value: parser.readSectionDocument(state, parser),
             };
             const maybeErr: Option<ParserError.UnusedTokensRemainError> = testNoMoreTokens(state);
             if (maybeErr) {
@@ -365,22 +377,22 @@ function readDocument(state: IParserState): TriedParse {
 // ---------- 12.2.2 Section Documents ----------
 // ----------------------------------------------
 
-function readSectionDocument(state: IParserState): Ast.Section {
+function readSectionDocument(state: IParserState, parser: IParser<IParserState>): Ast.Section {
     const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
     startContext(state, nodeKind);
 
-    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state);
+    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state, parser);
     const sectionConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordSection);
 
     let maybeName: Option<Ast.Identifier>;
     if (isOnTokenKind(state, TokenKind.Identifier)) {
-        maybeName = RecursiveDescentParser.readIdentifier(state);
+        maybeName = parser.readIdentifier(state, parser);
     } else {
         incrementAttributeCounter(state);
     }
 
     const semicolonConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Semicolon);
-    const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = RecursiveDescentParser.readSectionMembers(state);
+    const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = parser.readSectionMembers(state, parser);
 
     const astNode: Ast.Section = {
         ...expectContextNodeMetadata(state),
@@ -396,14 +408,14 @@ function readSectionDocument(state: IParserState): Ast.Section {
     return astNode;
 }
 
-function readSectionMembers(state: IParserState): Ast.IArrayWrapper<Ast.SectionMember> {
+function readSectionMembers(state: IParserState, parser: IParser<IParserState>): Ast.IArrayWrapper<Ast.SectionMember> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     startContext(state, nodeKind);
 
     const totalTokens: number = state.lexerSnapshot.tokens.length;
     const sectionMembers: Ast.SectionMember[] = [];
     while (state.tokenIndex < totalTokens) {
-        sectionMembers.push(RecursiveDescentParser.readSectionMember(state));
+        sectionMembers.push(parser.readSectionMember(state, parser));
     }
 
     const astNode: Ast.IArrayWrapper<Ast.SectionMember> = {
@@ -416,15 +428,13 @@ function readSectionMembers(state: IParserState): Ast.IArrayWrapper<Ast.SectionM
     return astNode;
 }
 
-function readSectionMember(state: IParserState): Ast.SectionMember {
+function readSectionMember(state: IParserState, parser: IParser<IParserState>): Ast.SectionMember {
     const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
     startContext(state, nodeKind);
 
-    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state);
+    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state, parser);
     const maybeSharedConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordShared);
-    const namePairedExpression: Ast.IdentifierPairedExpression = RecursiveDescentParser.readIdentifierPairedExpression(
-        state,
-    );
+    const namePairedExpression: Ast.IdentifierPairedExpression = parser.readIdentifierPairedExpression(state, parser);
     const semicolonConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Semicolon);
 
     const astNode: Ast.SectionMember = {
@@ -444,28 +454,28 @@ function readSectionMember(state: IParserState): Ast.SectionMember {
 // ---------- 12.2.3.1 Expressions ----------
 // ------------------------------------------
 
-function readExpression(state: IParserState): Ast.TExpression {
+function readExpression(state: IParserState, parser: IParser<IParserState>): Ast.TExpression {
     switch (state.maybeCurrentTokenKind) {
         case TokenKind.KeywordEach:
-            return RecursiveDescentParser.readEachExpression(state);
+            return parser.readEachExpression(state, parser);
 
         case TokenKind.KeywordLet:
-            return RecursiveDescentParser.readLetExpression(state);
+            return parser.readLetExpression(state, parser);
 
         case TokenKind.KeywordIf:
-            return RecursiveDescentParser.readIfExpression(state);
+            return parser.readIfExpression(state, parser);
 
         case TokenKind.KeywordError:
-            return RecursiveDescentParser.readErrorRaisingExpression(state);
+            return parser.readErrorRaisingExpression(state, parser);
 
         case TokenKind.KeywordTry:
-            return RecursiveDescentParser.readErrorHandlingExpression(state);
+            return parser.readErrorHandlingExpression(state, parser);
 
         case TokenKind.LeftParenthesis:
             const triedDisambiguation: Result<
                 ParenthesisDisambiguation,
                 ParserError.UnterminatedParenthesesError
-            > = RecursiveDescentParser.disambiguateParenthesis(state);
+            > = parser.disambiguateParenthesis(state, parser);
             if (triedDisambiguation.kind === ResultKind.Err) {
                 throw triedDisambiguation.error;
             }
@@ -473,16 +483,16 @@ function readExpression(state: IParserState): Ast.TExpression {
 
             switch (disambiguation) {
                 case ParenthesisDisambiguation.FunctionExpression:
-                    return RecursiveDescentParser.readFunctionExpression(state);
+                    return parser.readFunctionExpression(state, parser);
 
                 case ParenthesisDisambiguation.ParenthesizedExpression:
-                    return RecursiveDescentParser.readLogicalExpression(state);
+                    return parser.readLogicalExpression(state, parser);
 
                 default:
                     throw isNever(disambiguation);
             }
         default:
-            return RecursiveDescentParser.readLogicalExpression(state);
+            return parser.readLogicalExpression(state, parser);
     }
 }
 
@@ -490,7 +500,7 @@ function readExpression(state: IParserState): Ast.TExpression {
 // ---------- 12.2.3.2 Logical expressions ----------
 // --------------------------------------------------
 
-function readLogicalExpression(state: IParserState): Ast.TLogicalExpression {
+function readLogicalExpression(state: IParserState, parser: IParser<IParserState>): Ast.TLogicalExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.LogicalExpression,
         Ast.TLogicalExpression,
@@ -499,9 +509,9 @@ function readLogicalExpression(state: IParserState): Ast.TLogicalExpression {
     >(
         state,
         Ast.NodeKind.LogicalExpression,
-        () => RecursiveDescentParser.readIsExpression(state),
+        () => parser.readIsExpression(state, parser),
         maybeCurrentTokenKind => Ast.logicalOperatorFrom(maybeCurrentTokenKind),
-        () => RecursiveDescentParser.readIsExpression(state),
+        () => parser.readIsExpression(state, parser),
     );
 }
 
@@ -509,7 +519,7 @@ function readLogicalExpression(state: IParserState): Ast.TLogicalExpression {
 // ---------- 12.2.3.3 Is expression ----------
 // --------------------------------------------
 
-function readIsExpression(state: IParserState): Ast.TIsExpression {
+function readIsExpression(state: IParserState, parser: IParser<IParserState>): Ast.TIsExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.IsExpression,
         Ast.TAsExpression,
@@ -518,23 +528,23 @@ function readIsExpression(state: IParserState): Ast.TIsExpression {
     >(
         state,
         Ast.NodeKind.IsExpression,
-        () => RecursiveDescentParser.readAsExpression(state),
+        () => parser.readAsExpression(state, parser),
         maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordIs ? Ast.ConstantKind.Is : undefined),
-        () => RecursiveDescentParser.readNullablePrimitiveType(state),
+        () => parser.readNullablePrimitiveType(state, parser),
     );
 }
 
 // sub-item of 12.2.3.3 Is expression
-function readNullablePrimitiveType(state: IParserState): Ast.TNullablePrimitiveType {
+function readNullablePrimitiveType(state: IParserState, parser: IParser<IParserState>): Ast.TNullablePrimitiveType {
     if (isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
         return readPairedConstant<Ast.NodeKind.NullablePrimitiveType, Ast.PrimitiveType>(
             state,
             Ast.NodeKind.NullablePrimitiveType,
             () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
-            () => RecursiveDescentParser.readPrimitiveType(state),
+            () => parser.readPrimitiveType(state, parser),
         );
     } else {
-        return RecursiveDescentParser.readPrimitiveType(state);
+        return parser.readPrimitiveType(state, parser);
     }
 }
 
@@ -542,7 +552,7 @@ function readNullablePrimitiveType(state: IParserState): Ast.TNullablePrimitiveT
 // ---------- 12.2.3.4 As expression ----------
 // --------------------------------------------
 
-function readAsExpression(state: IParserState): Ast.TAsExpression {
+function readAsExpression(state: IParserState, parser: IParser<IParserState>): Ast.TAsExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.AsExpression,
         Ast.TEqualityExpression,
@@ -551,9 +561,9 @@ function readAsExpression(state: IParserState): Ast.TAsExpression {
     >(
         state,
         Ast.NodeKind.AsExpression,
-        () => RecursiveDescentParser.readEqualityExpression(state),
+        () => parser.readEqualityExpression(state, parser),
         maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordAs ? Ast.ConstantKind.As : undefined),
-        () => RecursiveDescentParser.readNullablePrimitiveType(state),
+        () => parser.readNullablePrimitiveType(state, parser),
     );
 }
 
@@ -561,7 +571,7 @@ function readAsExpression(state: IParserState): Ast.TAsExpression {
 // ---------- 12.2.3.5 Equality expression ----------
 // --------------------------------------------------
 
-function readEqualityExpression(state: IParserState): Ast.TEqualityExpression {
+function readEqualityExpression(state: IParserState, parser: IParser<IParserState>): Ast.TEqualityExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.EqualityExpression,
         Ast.TEqualityExpression,
@@ -570,9 +580,9 @@ function readEqualityExpression(state: IParserState): Ast.TEqualityExpression {
     >(
         state,
         Ast.NodeKind.EqualityExpression,
-        () => RecursiveDescentParser.readRelationalExpression(state),
+        () => parser.readRelationalExpression(state, parser),
         maybeCurrentTokenKind => Ast.equalityOperatorFrom(maybeCurrentTokenKind),
-        () => RecursiveDescentParser.readRelationalExpression(state),
+        () => parser.readRelationalExpression(state, parser),
     );
 }
 
@@ -580,7 +590,7 @@ function readEqualityExpression(state: IParserState): Ast.TEqualityExpression {
 // ---------- 12.2.3.6 Relational expression ----------
 // ----------------------------------------------------
 
-function readRelationalExpression(state: IParserState): Ast.TRelationalExpression {
+function readRelationalExpression(state: IParserState, parser: IParser<IParserState>): Ast.TRelationalExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.RelationalExpression,
         Ast.TArithmeticExpression,
@@ -589,9 +599,9 @@ function readRelationalExpression(state: IParserState): Ast.TRelationalExpressio
     >(
         state,
         Ast.NodeKind.RelationalExpression,
-        () => RecursiveDescentParser.readArithmeticExpression(state),
+        () => parser.readArithmeticExpression(state, parser),
         maybeCurrentTokenKind => Ast.relationalOperatorFrom(maybeCurrentTokenKind),
-        () => RecursiveDescentParser.readArithmeticExpression(state),
+        () => parser.readArithmeticExpression(state, parser),
     );
 }
 
@@ -599,7 +609,7 @@ function readRelationalExpression(state: IParserState): Ast.TRelationalExpressio
 // ---------- 12.2.3.7 Arithmetic expressions ----------
 // -----------------------------------------------------
 
-function readArithmeticExpression(state: IParserState): Ast.TArithmeticExpression {
+function readArithmeticExpression(state: IParserState, parser: IParser<IParserState>): Ast.TArithmeticExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.ArithmeticExpression,
         Ast.TMetadataExpression,
@@ -608,9 +618,9 @@ function readArithmeticExpression(state: IParserState): Ast.TArithmeticExpressio
     >(
         state,
         Ast.NodeKind.ArithmeticExpression,
-        () => RecursiveDescentParser.readMetadataExpression(state),
+        () => parser.readMetadataExpression(state, parser),
         maybeCurrentTokenKind => Ast.arithmeticOperatorFrom(maybeCurrentTokenKind),
-        () => RecursiveDescentParser.readMetadataExpression(state),
+        () => parser.readMetadataExpression(state, parser),
     );
 }
 
@@ -618,15 +628,15 @@ function readArithmeticExpression(state: IParserState): Ast.TArithmeticExpressio
 // ---------- 12.2.3.8 Metadata expression ----------
 // --------------------------------------------------
 
-function readMetadataExpression(state: IParserState): Ast.TMetadataExpression {
+function readMetadataExpression(state: IParserState, parser: IParser<IParserState>): Ast.TMetadataExpression {
     const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
     startContext(state, nodeKind);
 
-    const left: Ast.TUnaryExpression = RecursiveDescentParser.readUnaryExpression(state);
+    const left: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
     const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordMeta);
 
     if (maybeConstant) {
-        const right: Ast.TUnaryExpression = RecursiveDescentParser.readUnaryExpression(state);
+        const right: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
 
         const astNode: Ast.MetadataExpression = {
             ...expectContextNodeMetadata(state),
@@ -649,10 +659,10 @@ function readMetadataExpression(state: IParserState): Ast.TMetadataExpression {
 // ---------- 12.2.3.9 Unary expression ----------
 // -----------------------------------------------
 
-function readUnaryExpression(state: IParserState): Ast.TUnaryExpression {
+function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
     let maybeOperator: Option<Ast.UnaryOperator> = Ast.unaryOperatorFrom(state.maybeCurrentTokenKind);
     if (maybeOperator === undefined) {
-        return RecursiveDescentParser.readTypeExpression(state);
+        return parser.readTypeExpression(state, parser);
     }
 
     const unaryNodeKind: Ast.NodeKind.UnaryExpression = Ast.NodeKind.UnaryExpression;
@@ -674,7 +684,7 @@ function readUnaryExpression(state: IParserState): Ast.TUnaryExpression {
     };
     endContext(state, operators);
 
-    const typeExpression: Ast.TTypeExpression = RecursiveDescentParser.readTypeExpression(state);
+    const typeExpression: Ast.TTypeExpression = parser.readTypeExpression(state, parser);
 
     const astNode: Ast.UnaryExpression = {
         ...expectContextNodeMetadata(state),
@@ -691,25 +701,25 @@ function readUnaryExpression(state: IParserState): Ast.TUnaryExpression {
 // ---------- 12.2.3.10 Primary expression ----------
 // --------------------------------------------------
 
-function readPrimaryExpression(state: IParserState): Ast.TPrimaryExpression {
+function readPrimaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TPrimaryExpression {
     let primaryExpression: Option<Ast.TPrimaryExpression>;
     const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
     const isIdentifierExpressionNext: boolean =
         maybeCurrentTokenKind === TokenKind.AtSign || maybeCurrentTokenKind === TokenKind.Identifier;
 
     if (isIdentifierExpressionNext) {
-        primaryExpression = RecursiveDescentParser.readIdentifierExpression(state);
+        primaryExpression = parser.readIdentifierExpression(state, parser);
     } else {
         switch (maybeCurrentTokenKind) {
             case TokenKind.LeftParenthesis:
-                primaryExpression = RecursiveDescentParser.readParenthesizedExpression(state);
+                primaryExpression = parser.readParenthesizedExpression(state, parser);
                 break;
 
             case TokenKind.LeftBracket:
                 const triedDisambiguation: Result<
                     BracketDisambiguation,
                     ParserError.UnterminatedBracketError
-                > = RecursiveDescentParser.disambiguateBracket(state);
+                > = parser.disambiguateBracket(state, parser);
                 if (triedDisambiguation.kind === ResultKind.Err) {
                     throw triedDisambiguation.error;
                 }
@@ -717,15 +727,15 @@ function readPrimaryExpression(state: IParserState): Ast.TPrimaryExpression {
 
                 switch (disambiguation) {
                     case BracketDisambiguation.FieldProjection:
-                        primaryExpression = RecursiveDescentParser.readFieldProjection(state);
+                        primaryExpression = parser.readFieldProjection(state, parser);
                         break;
 
                     case BracketDisambiguation.FieldSelection:
-                        primaryExpression = RecursiveDescentParser.readFieldSelection(state);
+                        primaryExpression = parser.readFieldSelection(state, parser);
                         break;
 
                     case BracketDisambiguation.Record:
-                        primaryExpression = RecursiveDescentParser.readRecordExpression(state);
+                        primaryExpression = parser.readRecordExpression(state, parser);
                         break;
 
                     default:
@@ -734,51 +744,51 @@ function readPrimaryExpression(state: IParserState): Ast.TPrimaryExpression {
                 break;
 
             case TokenKind.LeftBrace:
-                primaryExpression = RecursiveDescentParser.readListExpression(state);
+                primaryExpression = parser.readListExpression(state, parser);
                 break;
 
             case TokenKind.Ellipsis:
-                primaryExpression = RecursiveDescentParser.readNotImplementedExpression(state);
+                primaryExpression = parser.readNotImplementedExpression(state, parser);
                 break;
 
             case TokenKind.KeywordHashSections:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashShared:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashBinary:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashDate:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashDateTime:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashDateTimeZone:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashDuration:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashTable:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             case TokenKind.KeywordHashTime:
-                primaryExpression = RecursiveDescentParser.readKeyword(state);
+                primaryExpression = parser.readKeyword(state, parser);
                 break;
 
             default:
-                primaryExpression = RecursiveDescentParser.readLiteralExpression(state);
+                primaryExpression = parser.readLiteralExpression(state, parser);
         }
     }
 
@@ -792,7 +802,7 @@ function readPrimaryExpression(state: IParserState): Ast.TPrimaryExpression {
         // invoke-expression
         isOnTokenKind(state, TokenKind.LeftParenthesis);
     if (isRecursivePrimaryExpression) {
-        return RecursiveDescentParser.readRecursivePrimaryExpression(state, primaryExpression);
+        return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {
         return primaryExpression;
     }
@@ -800,6 +810,7 @@ function readPrimaryExpression(state: IParserState): Ast.TPrimaryExpression {
 
 function readRecursivePrimaryExpression(
     state: IParserState,
+    parser: IParser<IParserState>,
     head: Ast.TPrimaryExpression,
 ): Ast.RecursivePrimaryExpression {
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
@@ -874,14 +885,14 @@ function readRecursivePrimaryExpression(
         const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
 
         if (maybeCurrentTokenKind === TokenKind.LeftParenthesis) {
-            recursiveExpressions.push(RecursiveDescentParser.readInvokeExpression(state));
+            recursiveExpressions.push(parser.readInvokeExpression(state, parser));
         } else if (maybeCurrentTokenKind === TokenKind.LeftBrace) {
-            recursiveExpressions.push(RecursiveDescentParser.readItemAccessExpression(state));
+            recursiveExpressions.push(parser.readItemAccessExpression(state, parser));
         } else if (maybeCurrentTokenKind === TokenKind.LeftBracket) {
             const triedDisambiguation: Result<
                 BracketDisambiguation,
                 ParserError.UnterminatedBracketError
-            > = RecursiveDescentParser.disambiguateBracket(state);
+            > = parser.disambiguateBracket(state, parser);
             if (triedDisambiguation.kind === ResultKind.Err) {
                 throw triedDisambiguation.error;
             }
@@ -889,11 +900,11 @@ function readRecursivePrimaryExpression(
 
             switch (disambiguation) {
                 case BracketDisambiguation.FieldProjection:
-                    recursiveExpressions.push(RecursiveDescentParser.readFieldProjection(state));
+                    recursiveExpressions.push(parser.readFieldProjection(state, parser));
                     break;
 
                 case BracketDisambiguation.FieldSelection:
-                    recursiveExpressions.push(RecursiveDescentParser.readFieldSelection(state));
+                    recursiveExpressions.push(parser.readFieldSelection(state, parser));
                     break;
 
                 default:
@@ -929,7 +940,7 @@ function readRecursivePrimaryExpression(
 // ---------- 12.2.3.11 Literal expression ----------
 // --------------------------------------------------
 
-function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
+function readLiteralExpression(state: IParserState, _parser: IParser<IParserState>): Ast.LiteralExpression {
     const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
     startContext(state, nodeKind);
 
@@ -969,12 +980,12 @@ function readLiteralExpression(state: IParserState): Ast.LiteralExpression {
 // ---------- 12.2.3.16 12.2.3.12 Identifier expression ----------
 // ---------------------------------------------------------------
 
-function readIdentifierExpression(state: IParserState): Ast.IdentifierExpression {
+function readIdentifierExpression(state: IParserState, parser: IParser<IParserState>): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
     startContext(state, nodeKind);
 
     const maybeInclusiveConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.AtSign);
-    const identifier: Ast.Identifier = RecursiveDescentParser.readIdentifier(state);
+    const identifier: Ast.Identifier = parser.readIdentifier(state, parser);
 
     const astNode: Ast.IdentifierExpression = {
         ...expectContextNodeMetadata(state),
@@ -991,12 +1002,12 @@ function readIdentifierExpression(state: IParserState): Ast.IdentifierExpression
 // ---------- 12.2.3.14 Parenthesized expression ----------
 // --------------------------------------------------------
 
-function readParenthesizedExpression(state: IParserState): Ast.ParenthesizedExpression {
+function readParenthesizedExpression(state: IParserState, parser: IParser<IParserState>): Ast.ParenthesizedExpression {
     return readWrapped<Ast.NodeKind.ParenthesizedExpression, Ast.TExpression>(
         state,
         Ast.NodeKind.ParenthesizedExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis),
-        () => RecursiveDescentParser.readExpression(state),
+        () => parser.readExpression(state, parser),
         () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
         false,
     );
@@ -1006,7 +1017,10 @@ function readParenthesizedExpression(state: IParserState): Ast.ParenthesizedExpr
 // ---------- 12.2.3.15 Not-implemented expression ----------
 // ----------------------------------------------------------
 
-function readNotImplementedExpression(state: IParserState): Ast.NotImplementedExpression {
+function readNotImplementedExpression(
+    state: IParserState,
+    _parser: IParser<IParserState>,
+): Ast.NotImplementedExpression {
     const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
     startContext(state, nodeKind);
 
@@ -1026,13 +1040,13 @@ function readNotImplementedExpression(state: IParserState): Ast.NotImplementedEx
 // ---------- 12.2.3.16 Invoke expression ----------
 // -------------------------------------------------
 
-function readInvokeExpression(state: IParserState): Ast.InvokeExpression {
+function readInvokeExpression(state: IParserState, parser: IParser<IParserState>): Ast.InvokeExpression {
     const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightParenthesis);
     return readWrapped<Ast.NodeKind.InvokeExpression, Ast.ICsvArray<Ast.TExpression>>(
         state,
         Ast.NodeKind.InvokeExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis),
-        () => readCsvArray(state, () => RecursiveDescentParser.readExpression(state), continueReadingValues),
+        () => readCsvArray(state, () => parser.readExpression(state, parser), continueReadingValues),
         () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
         false,
     );
@@ -1042,26 +1056,26 @@ function readInvokeExpression(state: IParserState): Ast.InvokeExpression {
 // ---------- 12.2.3.17 List expression ----------
 // -----------------------------------------------
 
-function readListExpression(state: IParserState): Ast.ListExpression {
+function readListExpression(state: IParserState, parser: IParser<IParserState>): Ast.ListExpression {
     const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBrace);
     return readWrapped<Ast.NodeKind.ListExpression, Ast.ICsvArray<Ast.TListItem>>(
         state,
         Ast.NodeKind.ListExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
-        () => readCsvArray(state, () => RecursiveDescentParser.readListItem(state), continueReadingValues),
+        () => readCsvArray(state, () => parser.readListItem(state, parser), continueReadingValues),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         false,
     );
 }
 
-function readListItem(state: IParserState): Ast.TListItem {
+function readListItem(state: IParserState, parser: IParser<IParserState>): Ast.TListItem {
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
     startContext(state, nodeKind);
 
-    const left: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    const left: Ast.TExpression = parser.readExpression(state, parser);
     if (isOnTokenKind(state, TokenKind.DotDot)) {
         const rangeConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.DotDot);
-        const right: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+        const right: Ast.TExpression = parser.readExpression(state, parser);
         const astNode: Ast.RangeExpression = {
             ...expectContextNodeMetadata(state),
             kind: nodeKind,
@@ -1083,13 +1097,13 @@ function readListItem(state: IParserState): Ast.TListItem {
 // ---------- 12.2.3.18 12.2.3.18 Record expression ----------
 // -----------------------------------------------------------
 
-function readRecordExpression(state: IParserState): Ast.RecordExpression {
+function readRecordExpression(state: IParserState, parser: IParser<IParserState>): Ast.RecordExpression {
     const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBracket);
     return readWrapped<Ast.NodeKind.RecordExpression, Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>>(
         state,
         Ast.NodeKind.RecordExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
-        () => RecursiveDescentParser.readGeneralizedIdentifierPairedExpressions(state, continueReadingValues),
+        () => parser.readGeneralizedIdentifierPairedExpressions(state, parser, continueReadingValues),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         false,
     );
@@ -1099,12 +1113,12 @@ function readRecordExpression(state: IParserState): Ast.RecordExpression {
 // ---------- 12.2.3.19 Item access expression ----------
 // ------------------------------------------------------
 
-function readItemAccessExpression(state: IParserState): Ast.ItemAccessExpression {
+function readItemAccessExpression(state: IParserState, parser: IParser<IParserState>): Ast.ItemAccessExpression {
     return readWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
         state,
         Ast.NodeKind.ItemAccessExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
-        () => RecursiveDescentParser.readExpression(state),
+        () => parser.readExpression(state, parser),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         true,
     );
@@ -1114,27 +1128,31 @@ function readItemAccessExpression(state: IParserState): Ast.ItemAccessExpression
 // ---------- 12.2.3.20 Field access expression ----------
 // -------------------------------------------------------
 
-function readFieldSelection(state: IParserState): Ast.FieldSelector {
-    return readFieldSelector(state, true);
+function readFieldSelection(state: IParserState, parser: IParser<IParserState>): Ast.FieldSelector {
+    return readFieldSelector(state, parser, true);
 }
 
-function readFieldProjection(state: IParserState): Ast.FieldProjection {
+function readFieldProjection(state: IParserState, parser: IParser<IParserState>): Ast.FieldProjection {
     return readWrapped<Ast.NodeKind.FieldProjection, Ast.ICsvArray<Ast.FieldSelector>>(
         state,
         Ast.NodeKind.FieldProjection,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
-        () => readCsvArray(state, () => RecursiveDescentParser.readFieldSelector(state, false), true),
+        () => readCsvArray(state, () => parser.readFieldSelector(state, parser, false), true),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         true,
     );
 }
 
-function readFieldSelector(state: IParserState, allowOptional: boolean): Ast.FieldSelector {
+function readFieldSelector(
+    state: IParserState,
+    parser: IParser<IParserState>,
+    allowOptional: boolean,
+): Ast.FieldSelector {
     return readWrapped<Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
         state,
         Ast.NodeKind.FieldSelector,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
-        () => RecursiveDescentParser.readGeneralizedIdentifier(state),
+        () => parser.readGeneralizedIdentifier(state, parser),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         allowOptional,
     );
@@ -1144,16 +1162,17 @@ function readFieldSelector(state: IParserState, allowOptional: boolean): Ast.Fie
 // ---------- 12.2.3.21 Function expression ----------
 // ---------------------------------------------------
 
-function readFunctionExpression(state: IParserState): Ast.FunctionExpression {
+function readFunctionExpression(state: IParserState, parser: IParser<IParserState>): Ast.FunctionExpression {
     const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
     startContext(state, nodeKind);
 
-    const parameters: Ast.IParameterList<
-        Option<Ast.AsNullablePrimitiveType>
-    > = RecursiveDescentParser.readParameterList(state);
-    const maybeFunctionReturnType: Option<Ast.AsNullablePrimitiveType> = maybeReadAsNullablePrimitiveType(state);
+    const parameters: Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>> = parser.readParameterList(state, parser);
+    const maybeFunctionReturnType: Option<Ast.AsNullablePrimitiveType> = maybeReadAsNullablePrimitiveType(
+        state,
+        parser,
+    );
     const fatArrowConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.FatArrow);
-    const expression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    const expression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.FunctionExpression = {
         ...expectContextNodeMetadata(state),
@@ -1168,26 +1187,32 @@ function readFunctionExpression(state: IParserState): Ast.FunctionExpression {
     return astNode;
 }
 
-function readParameterList(state: IParserState): Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>> {
-    return genericReadParameterList(state, () => maybeReadAsNullablePrimitiveType(state));
+function readParameterList(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>> {
+    return genericReadParameterList(state, parser, () => maybeReadAsNullablePrimitiveType(state, parser));
 }
 
-function maybeReadAsNullablePrimitiveType(state: IParserState): Option<Ast.AsNullablePrimitiveType> {
+function maybeReadAsNullablePrimitiveType(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Option<Ast.AsNullablePrimitiveType> {
     return maybeReadPairedConstant<Ast.NodeKind.AsNullablePrimitiveType, Ast.TNullablePrimitiveType>(
         state,
         Ast.NodeKind.AsNullablePrimitiveType,
         () => isOnTokenKind(state, TokenKind.KeywordAs),
         () => readTokenKindAsConstant(state, TokenKind.KeywordAs),
-        () => RecursiveDescentParser.readNullablePrimitiveType(state),
+        () => parser.readNullablePrimitiveType(state, parser),
     );
 }
 
-function readAsType(state: IParserState): Ast.AsType {
+function readAsType(state: IParserState, parser: IParser<IParserState>): Ast.AsType {
     return readPairedConstant<Ast.NodeKind.AsType, Ast.TType>(
         state,
         Ast.NodeKind.AsType,
         () => readTokenKindAsConstant(state, TokenKind.KeywordAs),
-        () => RecursiveDescentParser.readType(state),
+        () => parser.readType(state, parser),
     );
 }
 
@@ -1195,12 +1220,12 @@ function readAsType(state: IParserState): Ast.AsType {
 // ---------- 12.2.3.22 Each expression ----------
 // -----------------------------------------------
 
-function readEachExpression(state: IParserState): Ast.EachExpression {
+function readEachExpression(state: IParserState, parser: IParser<IParserState>): Ast.EachExpression {
     return readPairedConstant<Ast.NodeKind.EachExpression, Ast.TExpression>(
         state,
         Ast.NodeKind.EachExpression,
         () => readTokenKindAsConstant(state, TokenKind.KeywordEach),
-        () => RecursiveDescentParser.readExpression(state),
+        () => parser.readExpression(state, parser),
     );
 }
 
@@ -1208,16 +1233,16 @@ function readEachExpression(state: IParserState): Ast.EachExpression {
 // ---------- 12.2.3.23 Let expression ----------
 // ----------------------------------------------
 
-function readLetExpression(state: IParserState): Ast.LetExpression {
+function readLetExpression(state: IParserState, parser: IParser<IParserState>): Ast.LetExpression {
     const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
     startContext(state, nodeKind);
 
     const letConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordLet);
     const identifierExpressionPairedExpressions: Ast.ICsvArray<
         Ast.IdentifierPairedExpression
-    > = RecursiveDescentParser.readIdentifierPairedExpressions(state, true);
+    > = parser.readIdentifierPairedExpressions(state, parser, true);
     const inConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIn);
-    const expression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    const expression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.LetExpression = {
         ...expectContextNodeMetadata(state),
@@ -1236,18 +1261,18 @@ function readLetExpression(state: IParserState): Ast.LetExpression {
 // ---------- 12.2.3.24 If expression ----------
 // ---------------------------------------------
 
-function readIfExpression(state: IParserState): Ast.IfExpression {
+function readIfExpression(state: IParserState, parser: IParser<IParserState>): Ast.IfExpression {
     const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
     startContext(state, nodeKind);
 
     const ifConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIf);
-    const condition: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    const condition: Ast.TExpression = parser.readExpression(state, parser);
 
     const thenConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordThen);
-    const trueExpression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    const trueExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const elseConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordElse);
-    const falseExpression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    const falseExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.IfExpression = {
         ...expectContextNodeMetadata(state),
@@ -1268,31 +1293,31 @@ function readIfExpression(state: IParserState): Ast.IfExpression {
 // ---------- 12.2.3.25 Type expression ----------
 // -----------------------------------------------
 
-function readTypeExpression(state: IParserState): Ast.TTypeExpression {
+function readTypeExpression(state: IParserState, parser: IParser<IParserState>): Ast.TTypeExpression {
     if (isOnTokenKind(state, TokenKind.KeywordType)) {
         return readPairedConstant<Ast.NodeKind.TypePrimaryType, Ast.TPrimaryType>(
             state,
             Ast.NodeKind.TypePrimaryType,
             () => readTokenKindAsConstant(state, TokenKind.KeywordType),
-            () => RecursiveDescentParser.readPrimaryType(state),
+            () => parser.readPrimaryType(state, parser),
         );
     } else {
-        return RecursiveDescentParser.readPrimaryExpression(state);
+        return parser.readPrimaryExpression(state, parser);
     }
 }
 
-function readType(state: IParserState): Ast.TType {
-    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state);
+function readType(state: IParserState, parser: IParser<IParserState>): Ast.TType {
+    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
 
     if (triedReadPrimaryType.kind === ResultKind.Ok) {
         return triedReadPrimaryType.value;
     } else {
-        return RecursiveDescentParser.readPrimaryExpression(state);
+        return parser.readPrimaryExpression(state, parser);
     }
 }
 
-function readPrimaryType(state: IParserState): Ast.TPrimaryType {
-    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state);
+function readPrimaryType(state: IParserState, parser: IParser<IParserState>): Ast.TPrimaryType {
+    const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
 
     if (triedReadPrimaryType.kind === ResultKind.Ok) {
         return triedReadPrimaryType.value;
@@ -1301,11 +1326,11 @@ function readPrimaryType(state: IParserState): Ast.TPrimaryType {
     }
 }
 
-function readRecordType(state: IParserState): Ast.RecordType {
+function readRecordType(state: IParserState, parser: IParser<IParserState>): Ast.RecordType {
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
     startContext(state, nodeKind);
 
-    const fields: Ast.FieldSpecificationList = RecursiveDescentParser.readFieldSpecificationList(state, true);
+    const fields: Ast.FieldSpecificationList = parser.readFieldSpecificationList(state, parser, true);
 
     const astNode: Ast.RecordType = {
         ...expectContextNodeMetadata(state),
@@ -1317,7 +1342,7 @@ function readRecordType(state: IParserState): Ast.RecordType {
     return astNode;
 }
 
-function readTableType(state: IParserState): Ast.TableType {
+function readTableType(state: IParserState, parser: IParser<IParserState>): Ast.TableType {
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
     startContext(state, nodeKind);
 
@@ -1330,9 +1355,9 @@ function readTableType(state: IParserState): Ast.TableType {
 
     let rowType: Ast.FieldSpecificationList | Ast.TPrimaryExpression;
     if (isPrimaryExpressionExpected) {
-        rowType = RecursiveDescentParser.readPrimaryExpression(state);
+        rowType = parser.readPrimaryExpression(state, parser);
     } else {
-        rowType = RecursiveDescentParser.readFieldSpecificationList(state, false);
+        rowType = parser.readFieldSpecificationList(state, parser, false);
     }
 
     const astNode: Ast.TableType = {
@@ -1346,7 +1371,11 @@ function readTableType(state: IParserState): Ast.TableType {
     return astNode;
 }
 
-function readFieldSpecificationList(state: IParserState, allowOpenMarker: boolean): Ast.FieldSpecificationList {
+function readFieldSpecificationList(
+    state: IParserState,
+    parser: IParser<IParserState>,
+    allowOpenMarker: boolean,
+): Ast.FieldSpecificationList {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     startContext(state, nodeKind);
 
@@ -1382,10 +1411,11 @@ function readFieldSpecificationList(state: IParserState, allowOpenMarker: boolea
                 Ast.IdentifierConstant.Optional,
             );
 
-            const name: Ast.GeneralizedIdentifier = RecursiveDescentParser.readGeneralizedIdentifier(state);
+            const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
 
             const maybeFieldTypeSpeification: Option<Ast.FieldTypeSpecification> = maybeReadFieldTypeSpecification(
                 state,
+                parser,
             );
 
             const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
@@ -1438,13 +1468,16 @@ function readFieldSpecificationList(state: IParserState, allowOpenMarker: boolea
     return astNode;
 }
 
-function maybeReadFieldTypeSpecification(state: IParserState): Option<Ast.FieldTypeSpecification> {
+function maybeReadFieldTypeSpecification(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Option<Ast.FieldTypeSpecification> {
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
     startContext(state, nodeKind);
 
     const maybeEqualConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Equal);
     if (maybeEqualConstant) {
-        const fieldType: Ast.TType = RecursiveDescentParser.readType(state);
+        const fieldType: Ast.TType = parser.readType(state, parser);
 
         const astNode: Ast.FieldTypeSpecification = {
             ...expectContextNodeMetadata(state),
@@ -1471,24 +1504,24 @@ function fieldSpecificationListReadError(state: IParserState, allowOpenMarker: b
     }
 }
 
-function readListType(state: IParserState): Ast.ListType {
+function readListType(state: IParserState, parser: IParser<IParserState>): Ast.ListType {
     return readWrapped<Ast.NodeKind.ListType, Ast.TType>(
         state,
         Ast.NodeKind.ListType,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
-        () => RecursiveDescentParser.readType(state),
+        () => parser.readType(state, parser),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         false,
     );
 }
 
-function readFunctionType(state: IParserState): Ast.FunctionType {
+function readFunctionType(state: IParserState, parser: IParser<IParserState>): Ast.FunctionType {
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
     startContext(state, nodeKind);
 
     const functionConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Function);
-    const parameters: Ast.IParameterList<Ast.AsType> = RecursiveDescentParser.readParameterSpecificationList(state);
-    const functionReturnType: Ast.AsType = RecursiveDescentParser.readAsType(state);
+    const parameters: Ast.IParameterList<Ast.AsType> = parser.readParameterSpecificationList(state, parser);
+    const functionReturnType: Ast.AsType = parser.readAsType(state, parser);
 
     const astNode: Ast.FunctionType = {
         ...expectContextNodeMetadata(state),
@@ -1502,8 +1535,8 @@ function readFunctionType(state: IParserState): Ast.FunctionType {
     return astNode;
 }
 
-function tryReadPrimaryType(state: IParserState): TriedReadPrimaryType {
-    const stateBackup: IParserState = RecursiveDescentParser.deepCopyState(state);
+function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>): TriedReadPrimaryType {
+    const stateBackup: IParserState = parser.deepCopyState(state);
 
     const isTableTypeNext: boolean =
         isOnIdentifierConstant(state, Ast.IdentifierConstant.Table) &&
@@ -1518,30 +1551,30 @@ function tryReadPrimaryType(state: IParserState): TriedReadPrimaryType {
     if (isOnTokenKind(state, TokenKind.LeftBracket)) {
         return {
             kind: ResultKind.Ok,
-            value: RecursiveDescentParser.readRecordType(state),
+            value: parser.readRecordType(state, parser),
         };
     } else if (isOnTokenKind(state, TokenKind.LeftBrace)) {
         return {
             kind: ResultKind.Ok,
-            value: RecursiveDescentParser.readListType(state),
+            value: parser.readListType(state, parser),
         };
     } else if (isTableTypeNext) {
         return {
             kind: ResultKind.Ok,
-            value: RecursiveDescentParser.readTableType(state),
+            value: parser.readTableType(state, parser),
         };
     } else if (isFunctionTypeNext) {
         return {
             kind: ResultKind.Ok,
-            value: RecursiveDescentParser.readFunctionType(state),
+            value: parser.readFunctionType(state, parser),
         };
     } else if (isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
         return {
             kind: ResultKind.Ok,
-            value: RecursiveDescentParser.readNullableType(state),
+            value: parser.readNullableType(state, parser),
         };
     } else {
-        const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state);
+        const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
         if (triedReadPrimitiveType.kind === ResultKind.Err) {
             applyState(state, stateBackup);
@@ -1550,16 +1583,19 @@ function tryReadPrimaryType(state: IParserState): TriedReadPrimaryType {
     }
 }
 
-function readParameterSpecificationList(state: IParserState): Ast.IParameterList<Ast.AsType> {
-    return genericReadParameterList(state, () => RecursiveDescentParser.readAsType(state));
+function readParameterSpecificationList(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Ast.IParameterList<Ast.AsType> {
+    return genericReadParameterList(state, parser, () => parser.readAsType(state, parser));
 }
 
-function readNullableType(state: IParserState): Ast.NullableType {
+function readNullableType(state: IParserState, parser: IParser<IParserState>): Ast.NullableType {
     return readPairedConstant<Ast.NodeKind.NullableType, Ast.TType>(
         state,
         Ast.NodeKind.NullableType,
         () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
-        () => RecursiveDescentParser.readType(state),
+        () => parser.readType(state, parser),
     );
 }
 
@@ -1567,12 +1603,12 @@ function readNullableType(state: IParserState): Ast.NullableType {
 // ---------- 12.2.3.26 Error raising expression ----------
 // --------------------------------------------------------
 
-function readErrorRaisingExpression(state: IParserState): Ast.ErrorRaisingExpression {
+function readErrorRaisingExpression(state: IParserState, parser: IParser<IParserState>): Ast.ErrorRaisingExpression {
     return readPairedConstant<Ast.NodeKind.ErrorRaisingExpression, Ast.TExpression>(
         state,
         Ast.NodeKind.ErrorRaisingExpression,
         () => readTokenKindAsConstant(state, TokenKind.KeywordError),
-        () => RecursiveDescentParser.readExpression(state),
+        () => parser.readExpression(state, parser),
     );
 }
 
@@ -1580,12 +1616,12 @@ function readErrorRaisingExpression(state: IParserState): Ast.ErrorRaisingExpres
 // ---------- 12.2.3.27 Error handling expression ----------
 // ---------------------------------------------------------
 
-function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpression {
+function readErrorHandlingExpression(state: IParserState, parser: IParser<IParserState>): Ast.ErrorHandlingExpression {
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
     startContext(state, nodeKind);
 
     const tryConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordTry);
-    const protectedExpression: Ast.TExpression = RecursiveDescentParser.readExpression(state);
+    const protectedExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const otherwiseExpressionNodeKind: Ast.NodeKind.OtherwiseExpression = Ast.NodeKind.OtherwiseExpression;
     const maybeOtherwiseExpression: Option<Ast.OtherwiseExpression> = maybeReadPairedConstant<
@@ -1596,7 +1632,7 @@ function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpr
         otherwiseExpressionNodeKind,
         () => isOnTokenKind(state, TokenKind.KeywordOtherwise),
         () => readTokenKindAsConstant(state, TokenKind.KeywordOtherwise),
-        () => RecursiveDescentParser.readExpression(state),
+        () => parser.readExpression(state, parser),
     );
 
     const astNode: Ast.ErrorHandlingExpression = {
@@ -1615,7 +1651,7 @@ function readErrorHandlingExpression(state: IParserState): Ast.ErrorHandlingExpr
 // ---------- 12.2.4 Literal Attributes ----------
 // -----------------------------------------------
 
-function readRecordLiteral(state: IParserState): Ast.RecordLiteral {
+function readRecordLiteral(state: IParserState, parser: IParser<IParserState>): Ast.RecordLiteral {
     const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBracket);
     const wrappedRead: Ast.IWrapped<
         Ast.NodeKind.RecordLiteral,
@@ -1624,7 +1660,7 @@ function readRecordLiteral(state: IParserState): Ast.RecordLiteral {
         state,
         Ast.NodeKind.RecordLiteral,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
-        () => RecursiveDescentParser.readFieldNamePairedAnyLiterals(state, continueReadingValues),
+        () => parser.readFieldNamePairedAnyLiterals(state, parser, continueReadingValues),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         false,
     );
@@ -1636,6 +1672,7 @@ function readRecordLiteral(state: IParserState): Ast.RecordLiteral {
 
 function readFieldNamePairedAnyLiterals(
     state: IParserState,
+    parser: IParser<IParserState>,
     continueReadingValues: boolean,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
     return readCsvArray(
@@ -1648,14 +1685,14 @@ function readFieldNamePairedAnyLiterals(
             >(
                 state,
                 Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-                () => RecursiveDescentParser.readGeneralizedIdentifier(state),
-                () => RecursiveDescentParser.readAnyLiteral(state),
+                () => parser.readGeneralizedIdentifier(state, parser),
+                () => parser.readAnyLiteral(state, parser),
             ),
         continueReadingValues,
     );
 }
 
-function readListLiteral(state: IParserState): Ast.ListLiteral {
+function readListLiteral(state: IParserState, parser: IParser<IParserState>): Ast.ListLiteral {
     const continueReadingValues: boolean = !isNextTokenKind(state, TokenKind.RightBrace);
     const wrappedRead: Ast.IWrapped<Ast.NodeKind.ListLiteral, Ast.ICsvArray<Ast.TAnyLiteral>> = readWrapped<
         Ast.NodeKind.ListLiteral,
@@ -1664,7 +1701,7 @@ function readListLiteral(state: IParserState): Ast.ListLiteral {
         state,
         Ast.NodeKind.ListLiteral,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
-        () => readCsvArray(state, () => RecursiveDescentParser.readAnyLiteral(state), continueReadingValues),
+        () => readCsvArray(state, () => parser.readAnyLiteral(state, parser), continueReadingValues),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         false,
     );
@@ -1674,18 +1711,18 @@ function readListLiteral(state: IParserState): Ast.ListLiteral {
     };
 }
 
-function readAnyLiteral(state: IParserState): Ast.TAnyLiteral {
+function readAnyLiteral(state: IParserState, parser: IParser<IParserState>): Ast.TAnyLiteral {
     if (isOnTokenKind(state, TokenKind.LeftBracket)) {
-        return RecursiveDescentParser.readRecordLiteral(state);
+        return parser.readRecordLiteral(state, parser);
     } else if (isOnTokenKind(state, TokenKind.LeftBrace)) {
-        return RecursiveDescentParser.readListLiteral(state);
+        return parser.readListLiteral(state, parser);
     } else {
-        return RecursiveDescentParser.readLiteralExpression(state);
+        return parser.readLiteralExpression(state, parser);
     }
 }
 
-function readPrimitiveType(state: IParserState): Ast.PrimitiveType {
-    const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state);
+function readPrimitiveType(state: IParserState, parser: IParser<IParserState>): Ast.PrimitiveType {
+    const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state, parser);
     if (triedReadPrimitiveType.kind === ResultKind.Ok) {
         return triedReadPrimitiveType.value;
     } else {
@@ -1693,11 +1730,11 @@ function readPrimitiveType(state: IParserState): Ast.PrimitiveType {
     }
 }
 
-function tryReadPrimitiveType(state: IParserState): TriedReadPrimitiveType {
+function tryReadPrimitiveType(state: IParserState, parser: IParser<IParserState>): TriedReadPrimitiveType {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
     startContext(state, nodeKind);
 
-    const backup: IParserState = RecursiveDescentParser.deepCopyState(state);
+    const backup: IParserState = parser.deepCopyState(state);
     const expectedTokenKinds: ReadonlyArray<TokenKind> = [
         TokenKind.Identifier,
         TokenKind.KeywordType,
@@ -1782,6 +1819,7 @@ function tryReadPrimitiveType(state: IParserState): TriedReadPrimitiveType {
 
 function disambiguateParenthesis(
     state: IParserState,
+    parser: IParser<IParserState>,
 ): Result<ParenthesisDisambiguation, ParserError.UnterminatedParenthesesError> {
     const initialTokenIndex: number = state.tokenIndex;
     const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
@@ -1804,11 +1842,11 @@ function disambiguateParenthesis(
             //
             // It's important we backup and eventually restore the original Parser state.
             if (isTokenKind(state, TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const stateBackup: IParserState = RecursiveDescentParser.deepCopyState(state);
+                const stateBackup: IParserState = parser.deepCopyState(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
-                    RecursiveDescentParser.readNullablePrimitiveType(state);
+                    parser.readNullablePrimitiveType(state, parser);
                 } catch {
                     applyState(state, stateBackup);
                     if (isOnTokenKind(state, TokenKind.FatArrow)) {
@@ -1876,7 +1914,10 @@ function unsafeMoveTo(state: IParserState, tokenIndex: number): void {
     }
 }
 
-function disambiguateBracket(state: IParserState): Result<BracketDisambiguation, ParserError.UnterminatedBracketError> {
+function disambiguateBracket(
+    state: IParserState,
+    _parser: IParser<IParserState>,
+): Result<BracketDisambiguation, ParserError.UnterminatedBracketError> {
     const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
     let offsetTokenIndex: number = state.tokenIndex + 1;
     const offsetToken: Token = tokens[offsetTokenIndex];
@@ -1933,27 +1974,28 @@ function disambiguateBracket(state: IParserState): Result<BracketDisambiguation,
 
 function readIdentifierPairedExpressions(
     state: IParserState,
+    parser: IParser<IParserState>,
     continueReadingValues: boolean,
 ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
-    return readCsvArray(
-        state,
-        () => RecursiveDescentParser.readIdentifierPairedExpression(state),
-        continueReadingValues,
-    );
+    return readCsvArray(state, () => parser.readIdentifierPairedExpression(state, parser), continueReadingValues);
 }
 
 function readGeneralizedIdentifierPairedExpressions(
     state: IParserState,
+    parser: IParser<IParserState>,
     continueReadingValues: boolean,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
     return readCsvArray(
         state,
-        () => RecursiveDescentParser.readGeneralizedIdentifierPairedExpression(state),
+        () => parser.readGeneralizedIdentifierPairedExpression(state, parser),
         continueReadingValues,
     );
 }
 
-function readGeneralizedIdentifierPairedExpression(state: IParserState): Ast.GeneralizedIdentifierPairedExpression {
+function readGeneralizedIdentifierPairedExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Ast.GeneralizedIdentifierPairedExpression {
     return readKeyValuePair<
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         Ast.GeneralizedIdentifier,
@@ -1961,26 +2003,21 @@ function readGeneralizedIdentifierPairedExpression(state: IParserState): Ast.Gen
     >(
         state,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-        () => RecursiveDescentParser.readGeneralizedIdentifier(state),
-        () => RecursiveDescentParser.readExpression(state),
+        () => parser.readGeneralizedIdentifier(state, parser),
+        () => parser.readExpression(state, parser),
     );
 }
 
-function readIdentifierPairedExpression(state: IParserState): Ast.IdentifierPairedExpression {
+function readIdentifierPairedExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Ast.IdentifierPairedExpression {
     return readKeyValuePair<Ast.NodeKind.IdentifierPairedExpression, Ast.Identifier, Ast.TExpression>(
         state,
         Ast.NodeKind.IdentifierPairedExpression,
-        () => RecursiveDescentParser.readIdentifier(state),
-        () => RecursiveDescentParser.readExpression(state),
+        () => parser.readIdentifier(state, parser),
+        () => parser.readExpression(state, parser),
     );
-}
-
-// ------------------------------------------------
-// ---------- Helper functions (IParser) ----------
-// ------------------------------------------------
-
-function deepCopyState(state: IParserState): IParserState {
-    return deepCopy(state);
 }
 
 // ---------------------------------------------------------------
@@ -2173,6 +2210,7 @@ function maybeReadPairedConstant<Kind, Paired>(
 
 function genericReadParameterList<T>(
     state: IParserState,
+    parser: IParser<IParserState>,
     typeReader: () => T & Ast.TParameterType,
 ): Ast.IParameterList<T> {
     const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
@@ -2205,7 +2243,7 @@ function genericReadParameterList<T>(
             reachedOptionalParameter = true;
         }
 
-        const name: Ast.Identifier = RecursiveDescentParser.readIdentifier(state);
+        const name: Ast.Identifier = parser.readIdentifier(state, parser);
         const maybeParameterType: T & Ast.TParameterType = typeReader();
 
         const parameter: Ast.IParameter<T & Ast.TParameterType> = {
@@ -2291,9 +2329,9 @@ function readWrapped<Kind, Content>(
 // ---------- Helper functions (read functions) ----------
 // -------------------------------------------------------
 
-function maybeReadLiteralAttributes(state: IParserState): Option<Ast.RecordLiteral> {
+function maybeReadLiteralAttributes(state: IParserState, parser: IParser<IParserState>): Option<Ast.RecordLiteral> {
     if (isOnTokenKind(state, TokenKind.LeftBracket)) {
-        return RecursiveDescentParser.readRecordLiteral(state);
+        return parser.readRecordLiteral(state, parser);
     } else {
         incrementAttributeCounter(state);
         return undefined;
