@@ -623,37 +623,13 @@ export function readPrimaryExpression(state: IParserState, parser: IParser<IPars
                 break;
 
             case TokenKind.KeywordHashSections:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashShared:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashBinary:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashDate:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashDateTime:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashDateTimeZone:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashDuration:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashTable:
-                primaryExpression = parser.readKeyword(state, parser);
-                break;
-
             case TokenKind.KeywordHashTime:
                 primaryExpression = parser.readKeyword(state, parser);
                 break;
