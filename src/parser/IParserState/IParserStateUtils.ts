@@ -176,6 +176,20 @@ export function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: 
     }
 }
 
+// Assumes a call to readPrimaryExpression has already happened.
+export function isRecursivePrimaryExpressionNext(state: IParserState): boolean {
+    return (
+        // section-access-expression
+        // this.isOnTokenKind(TokenKind.Bang)
+        // field-access-expression
+        isOnTokenKind(state, TokenKind.LeftBrace) ||
+        // item-access-expression
+        isOnTokenKind(state, TokenKind.LeftBracket) ||
+        // invoke-expression
+        isOnTokenKind(state, TokenKind.LeftParenthesis)
+    );
+}
+
 export function expectContextNodeMetadata(state: IParserState): ContextNodeMetadata {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
