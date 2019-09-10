@@ -143,17 +143,26 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
     let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
 
     switch (state.maybeCurrentTokenKind) {
-        // unary-expression
+        // LiteralExpression
+        case TokenKind.HexLiteral:
+        case TokenKind.KeywordFalse:
+        case TokenKind.KeywordTrue:
+        case TokenKind.NumericLiteral:
+        case TokenKind.NullLiteral:
+        case TokenKind.StringLiteral:
+            return Naive.readLiteralExpression(state, parser);
+
+        // UnaryExpression
         case TokenKind.Plus:
         case TokenKind.Minus:
         case TokenKind.KeywordNot:
             return Naive.readUnaryExpression(state, parser);
 
-        // type-expression
+        // TypeExpression
         case TokenKind.KeywordType:
             return Naive.readTypeExpression(state, parser);
 
-        // primary-expression
+        // PrimaryExpression
         case TokenKind.AtSign:
         case TokenKind.Identifier:
             maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
