@@ -41,5 +41,5 @@ function expectTriedParse(text: string): TriedParse {
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    return Parser.RecursiveDescentParser.readDocument(parserState);
+    return Parser.RecursiveDescentParser.readDocument(parserState, Parser.RecursiveDescentParser);
 }

@@ -18,7 +18,10 @@ function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKi
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    const triedParse: TriedParse = Parser.RecursiveDescentParser.readDocument(parserState);
+    const triedParse: TriedParse = Parser.RecursiveDescentParser.readDocument(
+        parserState,
+        Parser.RecursiveDescentParser,
+    );
 
     if (!(triedParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
