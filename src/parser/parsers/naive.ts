@@ -627,30 +627,28 @@ export function readRecursivePrimaryExpression(
     const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
 
     const maybeHeadParentId: Option<number> = nodeIdMapCollection.parentIdById.get(head.id);
-    if (maybeHeadParentId === undefined) {
-        const details: {} = { nodeId: head.id };
-        throw new CommonError.InvariantError(`head's nodeId isn't in parentIdById`, details);
-    }
-    const headParentId: number = maybeHeadParentId;
+    if (maybeHeadParentId !== undefined) {
+        const headParentId: number = maybeHeadParentId;
 
-    // Remove head as a child of its current parent.
-    const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(
-        nodeIdMapCollection.childIdsById,
-        headParentId,
-    );
-    const replacementIndex: number = parentChildIds.indexOf(head.id);
-    if (replacementIndex === -1) {
-        const details: {} = {
-            parentNodeId: headParentId,
-            childNodeId: head.id,
-        };
-        throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
-    }
+        // Remove head as a child of its current parent.
+        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(
+            nodeIdMapCollection.childIdsById,
+            headParentId,
+        );
+        const replacementIndex: number = parentChildIds.indexOf(head.id);
+        if (replacementIndex === -1) {
+            const details: {} = {
+                parentNodeId: headParentId,
+                childNodeId: head.id,
+            };
+            throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
+        }
 
-    nodeIdMapCollection.childIdsById.set(headParentId, [
-        ...parentChildIds.slice(0, replacementIndex),
-        ...parentChildIds.slice(replacementIndex + 1),
-    ]);
+        nodeIdMapCollection.childIdsById.set(headParentId, [
+            ...parentChildIds.slice(0, replacementIndex),
+            ...parentChildIds.slice(replacementIndex + 1),
+        ]);
+    }
 
     // Update mappings for head.
     nodeIdMapCollection.astNodeById.set(head.id, head);
@@ -672,9 +670,23 @@ export function readRecursivePrimaryExpression(
     //      There isn't one? At least not without refactoring in ways which will make things messier.
     //
     // Why is it safe?
-    //      I'm only mutating start location in the recursive expression to one already parsed , the head.
+    //      I'm only mutating start location in the recursive expression to one already parsed, the head.
     mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[recursiveTokenIndexStart];
     mutableContext.tokenIndexStart = recursiveTokenIndexStart;
+
+    // Update attribute index for the head Ast.TNode
+    const mutableHead: TypeUtils.StripReadonly<Ast.TPrimaryExpression> = head;
+    // UNSAFE MARKER
+    //
+    // Purpose of code block:
+    //      The head might not have `maybeAttributeIndex === 0` set.
+    //
+    // Why are you trying to avoid a safer approach?
+    //      Prevent the cost of a shallow copy.
+    //
+    // Why is it safe?
+    //      It's a shallow copy, plus one attribute change.
+    mutableHead.maybeAttributeIndex = 0;
 
     // Begin normal parsing behavior.
     const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
