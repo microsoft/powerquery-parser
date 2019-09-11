@@ -94,12 +94,7 @@ export function incrementAttributeCounter(state: IParserState): void {
 
 export function isTokenKind(state: IParserState, tokenKind: TokenKind, tokenIndex: number): boolean {
     const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
-
-    if (maybeToken) {
-        return maybeToken.kind === tokenKind;
-    } else {
-        return false;
-    }
+    return maybeToken ? maybeToken.kind === tokenKind : false;
 }
 
 export function isNextTokenKind(state: IParserState, tokenKind: TokenKind): boolean {
