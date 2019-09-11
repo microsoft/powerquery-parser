@@ -202,7 +202,7 @@ function readExpression(state: IParserState, parser: IParser<IParserState>): Ast
 
     if (maybePrimaryExpression) {
         const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
-        if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + 1)) {
+        if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
             return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
         } else {
             return primaryExpression;
