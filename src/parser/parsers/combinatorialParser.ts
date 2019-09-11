@@ -143,12 +143,18 @@ function readExpression(state: IParserState, parser: IParser<IParserState>): Ast
     let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
 
     // LL(1)
-    switch (state.maybeCurrentTokenKind) {
+    const maybeTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+    switch (maybeTokenKind) {
         // PrimaryExpression
         case TokenKind.AtSign:
         case TokenKind.Identifier:
-            maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
-            break;
+            const offset: number = maybeTokenKind === TokenKind.AtSign ? 2 : 1;
+            if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + offset)) {
+                const primaryExpression: Ast.TPrimaryExpression = Naive.readIdentifierExpression(state, parser);
+                return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+            } else {
+                return readExpressionLl2ForBinOpExpression(state, parser, parser.readIdentifierExpression);
+            }
 
         case TokenKind.LeftBracket:
             maybePrimaryExpression = readBracketDisambiguation(state, parser, [
@@ -184,49 +190,7 @@ function readExpression(state: IParserState, parser: IParser<IParserState>): Ast
         case TokenKind.NumericLiteral:
         case TokenKind.NullLiteral:
         case TokenKind.StringLiteral: {
-            const maybeToken: Option<Token> = state.lexerSnapshot.tokens[state.tokenIndex + 1];
-            const maybeTokenKind: Option<TokenKind> = maybeToken !== undefined ? maybeToken.kind : undefined;
-
-            // LL(2)
-            switch (maybeTokenKind) {
-                // IsExpression
-                case TokenKind.KeywordIs:
-                    return parser.readIsExpression(state, parser);
-
-                // AsExpression
-                case TokenKind.KeywordAs:
-                    return parser.readAsExpression(state, parser);
-
-                case TokenKind.Equal:
-                case TokenKind.NotEqual:
-                    return parser.readEqualityExpression(state, parser);
-
-                // LogicalExpression
-                case TokenKind.KeywordAnd:
-                case TokenKind.KeywordOr:
-                    return parser.readLogicalExpression(state, parser);
-
-                // RelationalExpression
-                case TokenKind.LessThan:
-                case TokenKind.LessThanEqualTo:
-                case TokenKind.GreaterThan:
-                case TokenKind.GreaterThanEqualTo:
-                    return parser.readRelationalExpression(state, parser);
-
-                case TokenKind.KeywordMeta:
-                    return parser.readMetadataExpression(state, parser);
-
-                // Arithmetic Expression
-                case TokenKind.Asterisk:
-                case TokenKind.Division:
-                case TokenKind.Plus:
-                case TokenKind.Minus:
-                case TokenKind.Ampersand:
-                    return parser.readArithmeticExpression(state, parser);
-
-                default:
-                    return parser.readLiteralExpression(state, parser);
-            }
+            return readExpressionLl2ForBinOpExpression(state, parser, parser.readLiteralExpression);
         }
 
         case TokenKind.KeywordType:
@@ -238,13 +202,63 @@ function readExpression(state: IParserState, parser: IParser<IParserState>): Ast
 
     if (maybePrimaryExpression) {
         const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
-        if (IParserStateUtils.isRecursivePrimaryExpressionNext(state)) {
+        if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + 1)) {
             return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
         } else {
             return primaryExpression;
         }
     } else {
         return Naive.readExpression(state, parser);
+    }
+}
+
+function readExpressionLl2ForBinOpExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
+    fallback: (state: IParserState, parser: IParser<IParserState>) => Ast.TUnaryExpression,
+): Ast.TLogicalExpression {
+    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[state.tokenIndex + 1];
+    const maybeTokenKind: Option<TokenKind> = maybeToken !== undefined ? maybeToken.kind : undefined;
+
+    // LL(2)
+    switch (maybeTokenKind) {
+        // IsExpression
+        case TokenKind.KeywordIs:
+            return parser.readIsExpression(state, parser);
+
+        // AsExpression
+        case TokenKind.KeywordAs:
+            return parser.readAsExpression(state, parser);
+
+        case TokenKind.Equal:
+        case TokenKind.NotEqual:
+            return parser.readEqualityExpression(state, parser);
+
+        // LogicalExpression
+        case TokenKind.KeywordAnd:
+        case TokenKind.KeywordOr:
+            return parser.readLogicalExpression(state, parser);
+
+        // RelationalExpression
+        case TokenKind.LessThan:
+        case TokenKind.LessThanEqualTo:
+        case TokenKind.GreaterThan:
+        case TokenKind.GreaterThanEqualTo:
+            return parser.readRelationalExpression(state, parser);
+
+        case TokenKind.KeywordMeta:
+            return parser.readMetadataExpression(state, parser);
+
+        // Arithmetic Expression
+        case TokenKind.Asterisk:
+        case TokenKind.Division:
+        case TokenKind.Plus:
+        case TokenKind.Minus:
+        case TokenKind.Ampersand:
+            return parser.readArithmeticExpression(state, parser);
+
+        default:
+            return fallback(state, parser);
     }
 }
 
@@ -318,7 +332,7 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
     // We should only reach this code path if we're parsing a PrimaryExpression.
     const primaryExpression: Ast.TPrimaryExpression =
         maybePrimaryExpression !== undefined ? maybePrimaryExpression : parser.readLiteralExpression(state, parser);
-    if (IParserStateUtils.isRecursivePrimaryExpressionNext(state)) {
+    if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + 1)) {
         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {
         return primaryExpression;
