@@ -9,7 +9,7 @@ import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParserError } from "./parser";
 import { CombinatorialParser } from "./parser/parsers";
 
-parseText(`if true then 1 else 2`);
+parseText(`if credential[AuthenticationKind] = "Key" then true else false`);
 
 // @ts-ignore
 function parseText(text: string): void {

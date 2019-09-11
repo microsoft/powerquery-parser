@@ -140,49 +140,49 @@ export let CombinatorialParser: IParser<IParserState> = {
 };
 
 function readExpression(state: IParserState, parser: IParser<IParserState>): Ast.TExpression {
-    let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
+    // let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
 
     // LL(1)
     const maybeTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
     switch (maybeTokenKind) {
-        // PrimaryExpression
-        case TokenKind.AtSign:
-        case TokenKind.Identifier:
-            const offset: number = maybeTokenKind === TokenKind.AtSign ? 2 : 1;
-            if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + offset)) {
-                const primaryExpression: Ast.TPrimaryExpression = Naive.readIdentifierExpression(state, parser);
-                return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
-            } else {
-                return readExpressionLl2ForBinOpExpression(state, parser, parser.readIdentifierExpression);
-            }
+        // // PrimaryExpression
+        // case TokenKind.AtSign:
+        // case TokenKind.Identifier:
+        //     const offset: number = maybeTokenKind === TokenKind.AtSign ? 2 : 1;
+        //     if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + offset)) {
+        //         const primaryExpression: Ast.TPrimaryExpression = Naive.readIdentifierExpression(state, parser);
+        //         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+        //     } else {
+        //         return readExpressionLl2ForBinOpExpression(state, parser, parser.readIdentifierExpression);
+        //     }
 
-        case TokenKind.LeftBracket:
-            maybePrimaryExpression = readBracketDisambiguation(state, parser, [
-                BracketDisambiguation.FieldProjection,
-                BracketDisambiguation.FieldSelection,
-                BracketDisambiguation.Record,
-            ]);
-            break;
+        // case TokenKind.LeftBracket:
+        //     maybePrimaryExpression = readBracketDisambiguation(state, parser, [
+        //         BracketDisambiguation.FieldProjection,
+        //         BracketDisambiguation.FieldSelection,
+        //         BracketDisambiguation.Record,
+        //     ]);
+        //     break;
 
-        case TokenKind.LeftBrace:
-            maybePrimaryExpression = Naive.readListExpression(state, parser);
-            break;
+        // case TokenKind.LeftBrace:
+        //     maybePrimaryExpression = Naive.readListExpression(state, parser);
+        //     break;
 
-        case TokenKind.Ellipsis:
-            maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
-            break;
+        // case TokenKind.Ellipsis:
+        //     maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
+        //     break;
 
-        case TokenKind.KeywordHashSections:
-        case TokenKind.KeywordHashShared:
-        case TokenKind.KeywordHashBinary:
-        case TokenKind.KeywordHashDate:
-        case TokenKind.KeywordHashDateTime:
-        case TokenKind.KeywordHashDateTimeZone:
-        case TokenKind.KeywordHashDuration:
-        case TokenKind.KeywordHashTable:
-        case TokenKind.KeywordHashTime:
-            maybePrimaryExpression = parser.readKeyword(state, parser);
-            break;
+        // case TokenKind.KeywordHashSections:
+        // case TokenKind.KeywordHashShared:
+        // case TokenKind.KeywordHashBinary:
+        // case TokenKind.KeywordHashDate:
+        // case TokenKind.KeywordHashDateTime:
+        // case TokenKind.KeywordHashDateTimeZone:
+        // case TokenKind.KeywordHashDuration:
+        // case TokenKind.KeywordHashTable:
+        // case TokenKind.KeywordHashTime:
+        //     maybePrimaryExpression = parser.readKeyword(state, parser);
+        //     break;
 
         case TokenKind.HexLiteral:
         case TokenKind.KeywordFalse:
@@ -200,16 +200,16 @@ function readExpression(state: IParserState, parser: IParser<IParserState>): Ast
             return Naive.readExpression(state, parser);
     }
 
-    if (maybePrimaryExpression) {
-        const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
-        if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
-            return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
-        } else {
-            return primaryExpression;
-        }
-    } else {
-        return Naive.readExpression(state, parser);
-    }
+    // if (maybePrimaryExpression) {
+    //     const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
+    //     if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
+    //         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+    //     } else {
+    //         return primaryExpression;
+    //     }
+    // } else {
+    //     return Naive.readExpression(state, parser);
+    // }
 }
 
 function readExpressionLl2ForBinOpExpression(
@@ -263,35 +263,35 @@ function readExpressionLl2ForBinOpExpression(
 }
 
 function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
-    let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
+    // let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
 
     // LL(1)
     switch (state.maybeCurrentTokenKind) {
-        // PrimaryExpression
-        case TokenKind.AtSign:
-        case TokenKind.Identifier:
-            maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
-            break;
+        // // PrimaryExpression
+        // case TokenKind.AtSign:
+        // case TokenKind.Identifier:
+        //     maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
+        //     break;
 
-        case TokenKind.LeftParenthesis:
-            maybePrimaryExpression = Naive.readParenthesizedExpression(state, parser);
-            break;
+        // case TokenKind.LeftParenthesis:
+        //     maybePrimaryExpression = Naive.readParenthesizedExpression(state, parser);
+        //     break;
 
-        case TokenKind.LeftBracket:
-            maybePrimaryExpression = readBracketDisambiguation(state, parser, [
-                BracketDisambiguation.FieldProjection,
-                BracketDisambiguation.FieldSelection,
-                BracketDisambiguation.Record,
-            ]);
-            break;
+        // case TokenKind.LeftBracket:
+        //     maybePrimaryExpression = readBracketDisambiguation(state, parser, [
+        //         BracketDisambiguation.FieldProjection,
+        //         BracketDisambiguation.FieldSelection,
+        //         BracketDisambiguation.Record,
+        //     ]);
+        //     break;
 
-        case TokenKind.LeftBrace:
-            maybePrimaryExpression = Naive.readListExpression(state, parser);
-            break;
+        // case TokenKind.LeftBrace:
+        //     maybePrimaryExpression = Naive.readListExpression(state, parser);
+        //     break;
 
-        case TokenKind.Ellipsis:
-            maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
-            break;
+        // case TokenKind.Ellipsis:
+        //     maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
+        //     break;
 
         // LiteralExpression
         case TokenKind.HexLiteral:
@@ -312,29 +312,29 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
         case TokenKind.KeywordType:
             return Naive.readTypeExpression(state, parser);
 
-        case TokenKind.KeywordHashSections:
-        case TokenKind.KeywordHashShared:
-        case TokenKind.KeywordHashBinary:
-        case TokenKind.KeywordHashDate:
-        case TokenKind.KeywordHashDateTime:
-        case TokenKind.KeywordHashDateTimeZone:
-        case TokenKind.KeywordHashDuration:
-        case TokenKind.KeywordHashTable:
-        case TokenKind.KeywordHashTime:
-            maybePrimaryExpression = parser.readKeyword(state, parser);
-            break;
+        // case TokenKind.KeywordHashSections:
+        // case TokenKind.KeywordHashShared:
+        // case TokenKind.KeywordHashBinary:
+        // case TokenKind.KeywordHashDate:
+        // case TokenKind.KeywordHashDateTime:
+        // case TokenKind.KeywordHashDateTimeZone:
+        // case TokenKind.KeywordHashDuration:
+        // case TokenKind.KeywordHashTable:
+        // case TokenKind.KeywordHashTime:
+        //     maybePrimaryExpression = parser.readKeyword(state, parser);
+        //     break;
 
         // Let Naive throw an error.
         default:
             return Naive.readUnaryExpression(state, parser);
     }
 
-    // We should only reach this code path if we're parsing a PrimaryExpression.
-    const primaryExpression: Ast.TPrimaryExpression =
-        maybePrimaryExpression !== undefined ? maybePrimaryExpression : parser.readLiteralExpression(state, parser);
-    if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + 1)) {
-        return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
-    } else {
-        return primaryExpression;
-    }
+    // // We should only reach this code path if we're parsing a PrimaryExpression.
+    // const primaryExpression: Ast.TPrimaryExpression =
+    //     maybePrimaryExpression !== undefined ? maybePrimaryExpression : parser.readLiteralExpression(state, parser);
+    // if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + 1)) {
+    //     return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+    // } else {
+    //     return primaryExpression;
+    // }
 }
