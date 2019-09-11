@@ -3,7 +3,7 @@
 
 import { Ast } from "..";
 import { Option } from "../../common";
-import { TokenKind } from "../../lexer";
+import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState } from "../IParserState";
 import * as IParserStateUtils from "../IParserState/IParserStateUtils";
@@ -28,7 +28,7 @@ export let CombinatorialParser: IParser<IParserState> = {
     readSectionMember: Naive.readSectionMember,
 
     // 12.2.3.1 Expressions
-    readExpression: Naive.readExpression,
+    readExpression,
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: Naive.readLogicalExpression,
@@ -139,29 +139,120 @@ export let CombinatorialParser: IParser<IParserState> = {
     readIdentifierPairedExpression: Naive.readIdentifierPairedExpression,
 };
 
-function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
+function readExpression(state: IParserState, parser: IParser<IParserState>): Ast.TExpression {
     let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
 
+    // LL(1)
     switch (state.maybeCurrentTokenKind) {
-        // LiteralExpression
+        // PrimaryExpression
+        case TokenKind.AtSign:
+        case TokenKind.Identifier:
+            maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
+            break;
+
+        case TokenKind.LeftBracket:
+            maybePrimaryExpression = readBracketDisambiguation(state, parser, [
+                BracketDisambiguation.FieldProjection,
+                BracketDisambiguation.FieldSelection,
+                BracketDisambiguation.Record,
+            ]);
+            break;
+
+        case TokenKind.LeftBrace:
+            maybePrimaryExpression = Naive.readListExpression(state, parser);
+            break;
+
+        case TokenKind.Ellipsis:
+            maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
+            break;
+
+        case TokenKind.KeywordHashSections:
+        case TokenKind.KeywordHashShared:
+        case TokenKind.KeywordHashBinary:
+        case TokenKind.KeywordHashDate:
+        case TokenKind.KeywordHashDateTime:
+        case TokenKind.KeywordHashDateTimeZone:
+        case TokenKind.KeywordHashDuration:
+        case TokenKind.KeywordHashTable:
+        case TokenKind.KeywordHashTime:
+            maybePrimaryExpression = parser.readKeyword(state, parser);
+            break;
+
         case TokenKind.HexLiteral:
         case TokenKind.KeywordFalse:
         case TokenKind.KeywordTrue:
         case TokenKind.NumericLiteral:
         case TokenKind.NullLiteral:
-        case TokenKind.StringLiteral:
-            return Naive.readLiteralExpression(state, parser);
+        case TokenKind.StringLiteral: {
+            const maybeToken: Option<Token> = state.lexerSnapshot.tokens[state.tokenIndex + 1];
+            const maybeTokenKind: Option<TokenKind> = maybeToken !== undefined ? maybeToken.kind : undefined;
 
-        // UnaryExpression
-        case TokenKind.Plus:
-        case TokenKind.Minus:
-        case TokenKind.KeywordNot:
-            return Naive.readUnaryExpression(state, parser);
+            // LL(2)
+            switch (maybeTokenKind) {
+                // IsExpression
+                case TokenKind.KeywordIs:
+                    return parser.readIsExpression(state, parser);
 
-        // TypeExpression
+                // AsExpression
+                case TokenKind.KeywordAs:
+                    return parser.readAsExpression(state, parser);
+
+                case TokenKind.Equal:
+                case TokenKind.NotEqual:
+                    return parser.readEqualityExpression(state, parser);
+
+                // LogicalExpression
+                case TokenKind.KeywordAnd:
+                case TokenKind.KeywordOr:
+                    return parser.readLogicalExpression(state, parser);
+
+                // RelationalExpression
+                case TokenKind.LessThan:
+                case TokenKind.LessThanEqualTo:
+                case TokenKind.GreaterThan:
+                case TokenKind.GreaterThanEqualTo:
+                    return parser.readRelationalExpression(state, parser);
+
+                case TokenKind.KeywordMeta:
+                    return parser.readMetadataExpression(state, parser);
+
+                // Arithmetic Expression
+                case TokenKind.Asterisk:
+                case TokenKind.Division:
+                case TokenKind.Plus:
+                case TokenKind.Minus:
+                case TokenKind.Ampersand:
+                    return parser.readArithmeticExpression(state, parser);
+
+                default:
+                    return parser.readLiteralExpression(state, parser);
+            }
+        }
+
         case TokenKind.KeywordType:
-            return Naive.readTypeExpression(state, parser);
+            return parser.readTypeExpression(state, parser);
 
+        default:
+            return Naive.readExpression(state, parser);
+    }
+
+    if (maybePrimaryExpression) {
+        const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
+        if (IParserStateUtils.isRecursivePrimaryExpressionNext(state)) {
+            return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+        } else {
+            return primaryExpression;
+        }
+    } else {
+        return Naive.readExpression(state, parser);
+    }
+}
+
+function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
+    let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
+
+    // LL(1)
+    switch (state.maybeCurrentTokenKind) {
         // PrimaryExpression
         case TokenKind.AtSign:
         case TokenKind.Identifier:
@@ -187,6 +278,25 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
         case TokenKind.Ellipsis:
             maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
             break;
+
+        // LiteralExpression
+        case TokenKind.HexLiteral:
+        case TokenKind.KeywordFalse:
+        case TokenKind.KeywordTrue:
+        case TokenKind.NumericLiteral:
+        case TokenKind.NullLiteral:
+        case TokenKind.StringLiteral:
+            return Naive.readLiteralExpression(state, parser);
+
+        // UnaryExpression
+        case TokenKind.Plus:
+        case TokenKind.Minus:
+        case TokenKind.KeywordNot:
+            return Naive.readUnaryExpression(state, parser);
+
+        // TypeExpression
+        case TokenKind.KeywordType:
+            return Naive.readTypeExpression(state, parser);
 
         case TokenKind.KeywordHashSections:
         case TokenKind.KeywordHashShared:

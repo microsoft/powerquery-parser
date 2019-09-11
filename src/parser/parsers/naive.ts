@@ -7,6 +7,7 @@ import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState } from "../IParserState";
 import * as IParserStateUtils from "../IParserState/IParserStateUtils";
+import { readBracketDisambiguation } from "./common";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -569,31 +570,11 @@ export function readPrimaryExpression(state: IParserState, parser: IParser<IPars
                 break;
 
             case TokenKind.LeftBracket:
-                const triedDisambiguation: Result<
-                    BracketDisambiguation,
-                    ParserError.UnterminatedBracketError
-                > = parser.disambiguateBracket(state, parser);
-                if (triedDisambiguation.kind === ResultKind.Err) {
-                    throw triedDisambiguation.error;
-                }
-                const disambiguation: BracketDisambiguation = triedDisambiguation.value;
-
-                switch (disambiguation) {
-                    case BracketDisambiguation.FieldProjection:
-                        primaryExpression = parser.readFieldProjection(state, parser);
-                        break;
-
-                    case BracketDisambiguation.FieldSelection:
-                        primaryExpression = parser.readFieldSelection(state, parser);
-                        break;
-
-                    case BracketDisambiguation.Record:
-                        primaryExpression = parser.readRecordExpression(state, parser);
-                        break;
-
-                    default:
-                        throw isNever(disambiguation);
-                }
+                primaryExpression = readBracketDisambiguation(state, parser, [
+                    BracketDisambiguation.FieldProjection,
+                    BracketDisambiguation.FieldSelection,
+                    BracketDisambiguation.Record,
+                ]);
                 break;
 
             case TokenKind.LeftBrace:
@@ -709,29 +690,11 @@ export function readRecursivePrimaryExpression(
         } else if (maybeCurrentTokenKind === TokenKind.LeftBrace) {
             recursiveExpressions.push(parser.readItemAccessExpression(state, parser));
         } else if (maybeCurrentTokenKind === TokenKind.LeftBracket) {
-            const triedDisambiguation: Result<
-                BracketDisambiguation,
-                ParserError.UnterminatedBracketError
-            > = parser.disambiguateBracket(state, parser);
-            if (triedDisambiguation.kind === ResultKind.Err) {
-                throw triedDisambiguation.error;
-            }
-            const disambiguation: BracketDisambiguation = triedDisambiguation.value;
-
-            switch (disambiguation) {
-                case BracketDisambiguation.FieldProjection:
-                    recursiveExpressions.push(parser.readFieldProjection(state, parser));
-                    break;
-
-                case BracketDisambiguation.FieldSelection:
-                    recursiveExpressions.push(parser.readFieldSelection(state, parser));
-                    break;
-
-                default:
-                    throw new CommonError.InvariantError(
-                        `grammer doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
-                    );
-            }
+            const bracketExpression: Ast.TRecursivePrimaryExpression = readBracketDisambiguation(state, parser, [
+                BracketDisambiguation.FieldProjection,
+                BracketDisambiguation.FieldSelection,
+            ]) as Ast.TRecursivePrimaryExpression;
+            recursiveExpressions.push(bracketExpression);
         } else {
             continueReadingValues = false;
         }
