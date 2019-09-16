@@ -2261,21 +2261,49 @@ export class Parser {
         }
     }
 
+    // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
+    // When optimizing the function the following requirements were added:
+    //  * The backup will only be used on the parser that created it.
+    //  * The backup will only be used with a parser in a state no earlier than when the backup was made.
+    //
+    // This restricts backup/restore to rewind functionality. It does not allow arbitrary fastforwarding, only rewind.
     private backupState(): StateBackup {
         return {
             tokenIndex: this.tokenIndex,
-            contextState: ParserContext.deepCopy(this.contextState),
+            contextStateIdCounter: this.contextState.idCounter,
             maybeContextNodeId:
                 this.maybeCurrentContextNode !== undefined ? this.maybeCurrentContextNode.id : undefined,
         };
     }
 
+    // See this.backupState for more information.
     private restoreBackup(backup: StateBackup): void {
         this.tokenIndex = backup.tokenIndex;
         this.maybeCurrentToken = this.lexerSnapshot.tokens[this.tokenIndex];
         this.maybeCurrentTokenKind = this.maybeCurrentToken !== undefined ? this.maybeCurrentToken.kind : undefined;
 
-        this.contextState = backup.contextState;
+        const contextState: ParserContext.State = this.contextState;
+        const backupIdCounter: number = backup.contextStateIdCounter;
+        contextState.idCounter = backupIdCounter;
+
+        let leafNodeIds: number[] = contextState.leafNodeIds;
+        let index: number = 0;
+        while (index < leafNodeIds.length) {
+            leafNodeIds = [...leafNodeIds.slice(0, index), ...leafNodeIds.slice(index + 1)];
+            index += 1;
+        }
+        contextState.leafNodeIds = leafNodeIds;
+
+        const nodeIdMapCollection: NodeIdMap.Collection = contextState.nodeIdMapCollection;
+        const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
+        const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
+        for (const [key, astNode] of nodeIdMapCollection.astNodeById.entries()) {
+            if (key >= backupIdCounter) {
+                const parentId: number = parentIdById.get(key)!;
+                parentIdById.delete(key);
+                astNodeById.delete(key);
+            }
+        }
 
         if (backup.maybeContextNodeId) {
             this.maybeCurrentContextNode = NodeIdMap.expectContextNode(
@@ -2322,7 +2350,7 @@ const enum BracketDisambiguation {
 
 interface StateBackup {
     readonly tokenIndex: number;
-    readonly contextState: ParserContext.State;
+    readonly contextStateIdCounter: number;
     readonly maybeContextNodeId: Option<number>;
 }
 interface ContextNodeMetadata {
