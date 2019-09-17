@@ -64,7 +64,6 @@ export class Parser {
         if (this.isOnTokenKind(TokenKind.KeywordSection)) {
             document = this.readSection();
         } else {
-            const backup: StateBackup = this.backupState();
             try {
                 document = this.readExpression();
                 const maybeErr: Option<ParserError.UnusedTokensRemainError> = this.expectNoMoreTokens();
@@ -73,7 +72,17 @@ export class Parser {
                 }
             } catch (expressionError) {
                 const expressionContextState: ParserContext.State = ParserContext.deepCopy(this.contextState);
-                this.restoreBackup(backup);
+
+                // Reset the parser's state.
+                this.tokenIndex = 0;
+                this.contextState = ParserContext.empty();
+                this.maybeCurrentContextNode = undefined;
+
+                if (this.lexerSnapshot.tokens.length) {
+                    this.maybeCurrentToken = this.lexerSnapshot.tokens[0];
+                    this.maybeCurrentTokenKind = this.maybeCurrentToken.kind;
+                }
+
                 try {
                     document = this.readSection();
                     const maybeErr: Option<ParserError.UnusedTokensRemainError> = this.expectNoMoreTokens();
@@ -779,8 +788,6 @@ export class Parser {
     }
 
     private tryReadPrimaryType(): TriedReadPrimaryType {
-        const backup: StateBackup = this.backupState();
-
         const isTableTypeNext: boolean =
             this.isOnIdentifierConstant(Ast.IdentifierConstant.Table) &&
             (this.isNextTokenKind(TokenKind.LeftBracket) ||
@@ -817,6 +824,7 @@ export class Parser {
                 value: this.readNullableType(),
             };
         } else {
+            const backup: StateBackup = this.backupState();
             const triedReadPrimitiveType: TriedReadPrimaryType = this.tryReadPrimitiveType();
 
             if (triedReadPrimitiveType.kind === ResultKind.Err) {
@@ -2261,21 +2269,41 @@ export class Parser {
         }
     }
 
+    // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
+    // Instead it's assumed that a backup is made immediately before a try/catch read block.
+    // This means the state begins in a parsing context and the backup will either be immediately consumed or dropped.
+    // Therefore we only care about the delta between before and after the try/catch block.
+    // Thanks to the invariants above and the fact the ids for nodes are an autoincremneting integer
+    // we can easily just drop all delete all context nodes past the id of when the backup was created.
     private backupState(): StateBackup {
         return {
             tokenIndex: this.tokenIndex,
-            contextState: ParserContext.deepCopy(this.contextState),
+            contextStateIdCounter: this.contextState.idCounter,
             maybeContextNodeId:
                 this.maybeCurrentContextNode !== undefined ? this.maybeCurrentContextNode.id : undefined,
         };
     }
 
+    // See this.backupState for more information.
     private restoreBackup(backup: StateBackup): void {
         this.tokenIndex = backup.tokenIndex;
         this.maybeCurrentToken = this.lexerSnapshot.tokens[this.tokenIndex];
         this.maybeCurrentTokenKind = this.maybeCurrentToken !== undefined ? this.maybeCurrentToken.kind : undefined;
 
-        this.contextState = backup.contextState;
+        const contextState: ParserContext.State = this.contextState;
+        const backupIdCounter: number = backup.contextStateIdCounter;
+        contextState.idCounter = backupIdCounter;
+
+        const newNodeIds: number[] = [];
+        for (const nodeId of contextState.nodeIdMapCollection.contextNodeById.keys()) {
+            if (nodeId > backupIdCounter) {
+                newNodeIds.push(nodeId);
+            }
+        }
+
+        for (const nodeId of newNodeIds.sort().reverse()) {
+            ParserContext.deleteContext(this.contextState, nodeId);
+        }
 
         if (backup.maybeContextNodeId) {
             this.maybeCurrentContextNode = NodeIdMap.expectContextNode(
@@ -2322,7 +2350,7 @@ const enum BracketDisambiguation {
 
 interface StateBackup {
     readonly tokenIndex: number;
-    readonly contextState: ParserContext.State;
+    readonly contextStateIdCounter: number;
     readonly maybeContextNodeId: Option<number>;
 }
 interface ContextNodeMetadata {
