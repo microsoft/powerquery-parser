@@ -64,7 +64,6 @@ export class Parser {
         if (this.isOnTokenKind(TokenKind.KeywordSection)) {
             document = this.readSection();
         } else {
-            const backup: StateBackup = this.backupState();
             try {
                 document = this.readExpression();
                 const maybeErr: Option<ParserError.UnusedTokensRemainError> = this.expectNoMoreTokens();
@@ -73,7 +72,17 @@ export class Parser {
                 }
             } catch (expressionError) {
                 const expressionContextState: ParserContext.State = ParserContext.deepCopy(this.contextState);
-                this.restoreBackup(backup);
+
+                // Reset the parser's state.
+                this.tokenIndex = 0;
+                this.contextState = ParserContext.empty();
+                this.maybeCurrentContextNode = undefined;
+
+                if (this.lexerSnapshot.tokens.length) {
+                    this.maybeCurrentToken = this.lexerSnapshot.tokens[0];
+                    this.maybeCurrentTokenKind = this.maybeCurrentToken.kind;
+                }
+
                 try {
                     document = this.readSection();
                     const maybeErr: Option<ParserError.UnusedTokensRemainError> = this.expectNoMoreTokens();
@@ -2261,11 +2270,11 @@ export class Parser {
     }
 
     // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
-    // When optimizing the function the following requirements were added:
-    //  * The backup will only be used on the parser that created it.
-    //  * The backup will only be used with a parser in a state no earlier than when the backup was made.
-    //
-    // This restricts backup/restore to rewind functionality. It does not allow arbitrary fastforwarding, only rewind.
+    // Instead it's assumed that a backup is made immediately before a try/catch read block.
+    // This means the state begins in a parsing context and the backup will either be immediately consumed or dropped.
+    // Therefore we only care about the delta between before and after the try/catch block.
+    // Thanks to the invariants above and the fact the ids for nodes are an autoincremneting integer
+    // we can easily just drop all delete all context nodes past the id of when the backup was created.
     private backupState(): StateBackup {
         return {
             tokenIndex: this.tokenIndex,
@@ -2295,39 +2304,6 @@ export class Parser {
         for (const nodeId of newNodeIds.sort().reverse()) {
             ParserContext.deleteContext(this.contextState, nodeId);
         }
-
-        // const reverseSortedNewNodes: ReadonlyArray<number> = newNodeIds.sort().reverse();
-
-        // let leafNodeIds: number[] = contextState.leafNodeIds;
-        // let index: number = 0;
-        // while (index < leafNodeIds.length) {
-        //     if (leafNodeIds[index] >= backupIdCounter) {
-        //         leafNodeIds = [...leafNodeIds.slice(0, index), ...leafNodeIds.slice(index + 1)];
-        //     } else {
-        //         index += 1;
-        //     }
-        // }
-        // contextState.leafNodeIds = leafNodeIds;
-
-        // // Only context nodes need culling.
-        // const nodeIdMapCollection: NodeIdMap.Collection = contextState.nodeIdMapCollection;
-        // const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
-        // const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
-        // for (const [key, contextNode] of nodeIdMapCollection.contextNodeById.entries()) {
-        //     if (key >= backupIdCounter) {
-        //         const maybeParentId: Option<number> = parentIdById.get(key);
-        //         if (maybeParentId !== undefined) {
-        //             const parentId: number = maybeParentId;
-        //             parentIdById.delete(key);
-
-        //             const parent: ParserContext.Node = NodeIdMap.expectContextNode(contextNodeById, parentId);
-        //             if (parent.attributeCounter >= key) {
-        //                 parent.attributeCounter = key;
-        //             }
-        //         }
-        //         contextNodeById.delete(key);
-        //     }
-        // }
 
         if (backup.maybeContextNodeId) {
             this.maybeCurrentContextNode = NodeIdMap.expectContextNode(
