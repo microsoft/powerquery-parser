@@ -779,8 +779,6 @@ export class Parser {
     }
 
     private tryReadPrimaryType(): TriedReadPrimaryType {
-        const backup: StateBackup = this.backupState();
-
         const isTableTypeNext: boolean =
             this.isOnIdentifierConstant(Ast.IdentifierConstant.Table) &&
             (this.isNextTokenKind(TokenKind.LeftBracket) ||
@@ -817,6 +815,7 @@ export class Parser {
                 value: this.readNullableType(),
             };
         } else {
+            const backup: StateBackup = this.backupState();
             const triedReadPrimitiveType: TriedReadPrimaryType = this.tryReadPrimitiveType();
 
             if (triedReadPrimitiveType.kind === ResultKind.Err) {
@@ -2286,24 +2285,49 @@ export class Parser {
         const backupIdCounter: number = backup.contextStateIdCounter;
         contextState.idCounter = backupIdCounter;
 
-        let leafNodeIds: number[] = contextState.leafNodeIds;
-        let index: number = 0;
-        while (index < leafNodeIds.length) {
-            leafNodeIds = [...leafNodeIds.slice(0, index), ...leafNodeIds.slice(index + 1)];
-            index += 1;
-        }
-        contextState.leafNodeIds = leafNodeIds;
-
-        const nodeIdMapCollection: NodeIdMap.Collection = contextState.nodeIdMapCollection;
-        const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-        const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
-        for (const [key, astNode] of nodeIdMapCollection.astNodeById.entries()) {
-            if (key >= backupIdCounter) {
-                const parentId: number = parentIdById.get(key)!;
-                parentIdById.delete(key);
-                astNodeById.delete(key);
+        const newNodeIds: number[] = [];
+        for (const nodeId of contextState.nodeIdMapCollection.contextNodeById.keys()) {
+            if (nodeId > backupIdCounter) {
+                newNodeIds.push(nodeId);
             }
         }
+
+        for (const nodeId of newNodeIds.sort().reverse()) {
+            ParserContext.deleteContext(this.contextState, nodeId);
+        }
+
+        // const reverseSortedNewNodes: ReadonlyArray<number> = newNodeIds.sort().reverse();
+
+        // let leafNodeIds: number[] = contextState.leafNodeIds;
+        // let index: number = 0;
+        // while (index < leafNodeIds.length) {
+        //     if (leafNodeIds[index] >= backupIdCounter) {
+        //         leafNodeIds = [...leafNodeIds.slice(0, index), ...leafNodeIds.slice(index + 1)];
+        //     } else {
+        //         index += 1;
+        //     }
+        // }
+        // contextState.leafNodeIds = leafNodeIds;
+
+        // // Only context nodes need culling.
+        // const nodeIdMapCollection: NodeIdMap.Collection = contextState.nodeIdMapCollection;
+        // const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
+        // const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
+        // for (const [key, contextNode] of nodeIdMapCollection.contextNodeById.entries()) {
+        //     if (key >= backupIdCounter) {
+        //         const maybeParentId: Option<number> = parentIdById.get(key);
+        //         if (maybeParentId !== undefined) {
+        //             const parentId: number = maybeParentId;
+        //             parentIdById.delete(key);
+
+        //             const parent: ParserContext.Node = NodeIdMap.expectContextNode(contextNodeById, parentId);
+        //             if (parent.attributeCounter >= key) {
+        //                 parent.attributeCounter = key;
+        //             }
+        //         }
+        //         contextNodeById.delete(key);
+        //     }
+        // }
 
         if (backup.maybeContextNodeId) {
             this.maybeCurrentContextNode = NodeIdMap.expectContextNode(
