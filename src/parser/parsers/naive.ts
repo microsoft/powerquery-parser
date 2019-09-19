@@ -5,9 +5,8 @@ import { Ast, NodeIdMap, ParserContext, ParserError } from "..";
 import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
-import { IParserState } from "../IParserState";
+import { IParserState, IParserStateUtils } from "../IParserState";
 import {
-    applyState,
     deleteContext,
     endContext,
     expectContextNodeMetadata,
@@ -158,8 +157,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
 
     // Try parsing as an Expression document first.
     // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
-    // If both fail then return the first error encountered.
-    const originalState: IParserState = parser.deepCopyState(state);
+    // If both fail then return the error which parsed more tokens.
     try {
         triedReadDocument = {
             kind: ResultKind.Ok,
@@ -170,8 +168,21 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
             throw maybeErr;
         }
     } catch (expressionError) {
-        const expressionErrorState: IParserState = parser.deepCopyState(state);
-        applyState(state, originalState);
+        // Fast backup deletes context state, but we want to preserve it for the case
+        // where both parsing an expression and section document error out.
+        const expressionErrorStateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
+        const expressionErrorContextState: ParserContext.State = state.contextState;
+
+        // Reset the parser's state.
+        state.tokenIndex = 0;
+        state.contextState = ParserContext.newState();
+        state.maybeCurrentContextNode = undefined;
+
+        if (state.lexerSnapshot.tokens.length) {
+            state.maybeCurrentToken = state.lexerSnapshot.tokens[0];
+            state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+        }
+
         try {
             triedReadDocument = {
                 kind: ResultKind.Ok,
@@ -183,9 +194,10 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
             }
         } catch (sectionError) {
             let triedError: Error;
-            if (expressionErrorState.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
+            if (expressionErrorStateBackup.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                applyState(state, expressionErrorState);
+                IParserStateUtils.applyFastStateBackup(state, expressionError);
+                state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;
             }
@@ -1410,8 +1422,6 @@ export function readFunctionType(state: IParserState, parser: IParser<IParserSta
 }
 
 function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>): TriedReadPrimaryType {
-    const stateBackup: IParserState = parser.deepCopyState(state);
-
     const isTableTypeNext: boolean =
         isOnIdentifierConstant(state, Ast.IdentifierConstant.Table) &&
         (isNextTokenKind(state, TokenKind.LeftBracket) ||
@@ -1448,10 +1458,11 @@ function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>):
             value: parser.readNullableType(state, parser),
         };
     } else {
+        const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
         if (triedReadPrimitiveType.kind === ResultKind.Err) {
-            applyState(state, stateBackup);
+            IParserStateUtils.applyFastStateBackup(state, stateBackup);
         }
         return triedReadPrimitiveType;
     }
@@ -1610,11 +1621,11 @@ export function readPrimitiveType(state: IParserState, parser: IParser<IParserSt
     }
 }
 
-function tryReadPrimitiveType(state: IParserState, parser: IParser<IParserState>): TriedReadPrimitiveType {
+function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState>): TriedReadPrimitiveType {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
     startContext(state, nodeKind);
 
-    const backup: IParserState = parser.deepCopyState(state);
+    const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
     const expectedTokenKinds: ReadonlyArray<TokenKind> = [
         TokenKind.Identifier,
         TokenKind.KeywordType,
@@ -1655,7 +1666,7 @@ function tryReadPrimitiveType(state: IParserState, parser: IParser<IParserState>
 
             default:
                 const token: Token = expectTokenAt(state, state.tokenIndex);
-                applyState(state, backup);
+                IParserStateUtils.applyFastStateBackup(state, stateBackup);
                 return {
                     kind: ResultKind.Err,
                     error: new ParserError.InvalidPrimitiveTypeError(
@@ -1670,7 +1681,7 @@ function tryReadPrimitiveType(state: IParserState, parser: IParser<IParserState>
         primitiveType = readTokenKindAsConstant(state, TokenKind.NullLiteral);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
-        applyState(state, backup);
+        IParserStateUtils.applyFastStateBackup(state, stateBackup);
         return {
             kind: ResultKind.Err,
             error: new CommonError.InvariantError(
@@ -1722,13 +1733,13 @@ export function disambiguateParenthesis(
             //
             // It's important we backup and eventually restore the original Parser state.
             if (isTokenKind(state, TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const stateBackup: IParserState = parser.deepCopyState(state);
+                const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
                     parser.readNullablePrimitiveType(state, parser);
                 } catch {
-                    applyState(state, stateBackup);
+                    IParserStateUtils.applyFastStateBackup(state, stateBackup);
                     if (isOnTokenKind(state, TokenKind.FatArrow)) {
                         return {
                             kind: ResultKind.Ok,
@@ -1749,7 +1760,7 @@ export function disambiguateParenthesis(
                     disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
                 }
 
-                applyState(state, stateBackup);
+                IParserStateUtils.applyFastStateBackup(state, stateBackup);
                 return {
                     kind: ResultKind.Ok,
                     value: disambiguation,

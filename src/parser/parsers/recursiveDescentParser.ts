@@ -3,13 +3,9 @@
 
 import { IParser } from "../IParser";
 import { IParserState } from "../IParserState";
-import { deepCopy } from "../IParserState/IParserStateUtils";
 import * as Naive from "./naive";
 
 export let RecursiveDescentParser: IParser<IParserState> = {
-    // State functions
-    deepCopyState: deepCopy,
-
     // 12.1.6 Identifiers
     readIdentifier: Naive.readIdentifier,
     readGeneralizedIdentifier: Naive.readGeneralizedIdentifier,

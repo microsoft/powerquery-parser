@@ -1,10 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext, ParserError } from "..";
+import { Ast, NodeIdMap, ParserContext, ParserError } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { IParserState } from "./IParserState";
+
+export interface FastStateBackup {
+    readonly tokenIndex: number;
+    readonly contextStateIdCounter: number;
+    readonly maybeContextNodeId: Option<number>;
+}
 
 export function newState(lexerSnapshot: LexerSnapshot): IParserState {
     const maybeCurrentToken: Option<Token> = lexerSnapshot.tokens[0];
@@ -38,6 +44,51 @@ export function applyState(originalState: IParserState, otherState: IParserState
 
     originalState.contextState = otherState.contextState;
     originalState.maybeCurrentContextNode = otherState.maybeCurrentContextNode;
+}
+
+// Due to performance reasons the backup no longer can include a naive deep copy of the context state.
+// Instead it's assumed that a backup is made immediately before a try/catch read block.
+// This means the state begins in a parsing context and the backup will either be immediately consumed or dropped.
+// Therefore we only care about the delta between before and after the try/catch block.
+// Thanks to the invariants above and the fact the ids for nodes are an autoincremneting integer
+// we can easily just drop all delete all context nodes past the id of when the backup was created.
+export function fastStateBackup(state: IParserState): FastStateBackup {
+    return {
+        tokenIndex: state.tokenIndex,
+        contextStateIdCounter: state.contextState.idCounter,
+        maybeContextNodeId: state.maybeCurrentContextNode !== undefined ? state.maybeCurrentContextNode.id : undefined,
+    };
+}
+
+// See state.fastSnapshot for more information.
+export function applyFastStateBackup(state: IParserState, backup: FastStateBackup): void {
+    state.tokenIndex = backup.tokenIndex;
+    state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
+    state.maybeCurrentTokenKind = state.maybeCurrentToken !== undefined ? state.maybeCurrentToken.kind : undefined;
+
+    const contextState: ParserContext.State = state.contextState;
+    const backupIdCounter: number = backup.contextStateIdCounter;
+    contextState.idCounter = backupIdCounter;
+
+    const newNodeIds: number[] = [];
+    for (const nodeId of contextState.nodeIdMapCollection.contextNodeById.keys()) {
+        if (nodeId > backupIdCounter) {
+            newNodeIds.push(nodeId);
+        }
+    }
+
+    for (const nodeId of newNodeIds.sort().reverse()) {
+        ParserContext.deleteContext(state.contextState, nodeId);
+    }
+
+    if (backup.maybeContextNodeId) {
+        state.maybeCurrentContextNode = NodeIdMap.expectContextNode(
+            state.contextState.nodeIdMapCollection.contextNodeById,
+            backup.maybeContextNodeId,
+        );
+    } else {
+        state.maybeCurrentContextNode = undefined;
+    }
 }
 
 export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void {
