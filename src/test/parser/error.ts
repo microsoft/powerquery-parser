@@ -5,6 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
 import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
+import * as Localization from "../../localization/error";
 import { ParserError } from "../../parser";
 
 function expectParserInnerError(text: string): ParserError.TInnerParserError {
@@ -18,6 +19,15 @@ function expectParserInnerError(text: string): ParserError.TInnerParserError {
     } else {
         return triedLexAndParse.error.innerError;
     }
+}
+
+function expectCsvContinuationError(text: string): ParserError.ExpectedCsvContinuationError {
+    const innerError: ParserError.TInnerParserError = expectParserInnerError(text);
+    if (!(innerError instanceof ParserError.ExpectedCsvContinuationError)) {
+        throw new Error(`AssertFailed: innerError instanceof ParserError.ExpectedCsvContinuationError`);
+    }
+
+    return innerError;
 }
 
 describe("Parser.Error", () => {
@@ -48,15 +58,9 @@ describe("Parser.Error", () => {
         expect(innerError instanceof ParserError.UnusedTokensRemainError).to.equal(true, innerError.message);
     });
 
-    it("LetExpression requires at least one parameter: let in 1", () => {
-        const text: string = "let in 1";
-        const innerError: ParserError.TInnerParserError = expectParserInnerError(text);
-        expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
-    });
-
-    it("ListType requires at least one parameter: type list {}", () => {
-        const text: string = "let in 1";
-        const innerError: ParserError.TInnerParserError = expectParserInnerError(text);
-        expect(innerError instanceof ParserError.ExpectedTokenKindError).to.equal(true, innerError.message);
+    it(`Dangling Comma for Let`, () => {
+        const text: string = "let in 1, in 1";
+        const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
+        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationLetExpression());
     });
 });

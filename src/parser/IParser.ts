@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserError } from ".";
+import { Ast, IParserState, NodeIdMap, ParserError } from ".";
 import { Option, Result } from "../common";
 
 export type TriedParse = Result<ParseOk, ParserError.TParserError>;
@@ -148,6 +148,7 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
+        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>;
     readonly readListLiteral: (state: State, parser: IParser<State>) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: State, parser: IParser<State>) => Ast.TAnyLiteral;
@@ -167,11 +168,13 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
+        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
     ) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpressions: (
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
+        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpression: (
         state: State,
