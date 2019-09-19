@@ -5,7 +5,7 @@ import { ResultKind } from "../../common";
 import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
 import { CombinatorialParser, RecursiveDescentParser } from "../../parser/parsers";
 
-const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
+const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".pq", "pqm"];
 
 function isDirectory(maybePath: string): boolean {
     return statSync(maybePath).isDirectory();
@@ -52,9 +52,8 @@ function testNameFromFilePath(filepath: string): string {
     return filepath.replace(path.dirname(__filename), ".");
 }
 
-describe("abc123 files1", () => {
-    const start: number = new Date().getTime();
-    const fileDirectory: string = path.join(path.dirname(__filename), "files");
+describe("abc123 recursive", () => {
+    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
         const testName: string = testNameFromFilePath(filepath);
@@ -63,7 +62,7 @@ describe("abc123 files1", () => {
             let contents: string = readFileSync(filepath, "utf8");
             contents = contents.replace(/^\uFEFF/, "");
 
-            for (let _: number = 0; _ < 12; _ += 1) {
+            for (let _: number = 0; _ < 100; _ += 1) {
                 const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, RecursiveDescentParser);
                 if (!(triedLexAndParse.kind === ResultKind.Ok)) {
                     throw triedLexAndParse.error;
@@ -71,16 +70,10 @@ describe("abc123 files1", () => {
             }
         });
     }
-
-    const finish: number = new Date().getTime();
-    const delta: number = finish - start;
-    // tslint:disable-next-line: no-console
-    console.log(`RecursiveDescentParser timing: ${delta}`);
 });
 
-describe("abc123 files2", () => {
-    const start: number = new Date().getTime();
-    const fileDirectory: string = path.join(path.dirname(__filename), "files");
+describe("abc123 combinator", () => {
+    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
         const testName: string = testNameFromFilePath(filepath);
@@ -89,7 +82,7 @@ describe("abc123 files2", () => {
             let contents: string = readFileSync(filepath, "utf8");
             contents = contents.replace(/^\uFEFF/, "");
 
-            for (let _: number = 0; _ < 12; _ += 1) {
+            for (let _: number = 0; _ < 100; _ += 1) {
                 const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, CombinatorialParser);
                 if (!(triedLexAndParse.kind === ResultKind.Ok)) {
                     throw triedLexAndParse.error;
@@ -97,9 +90,4 @@ describe("abc123 files2", () => {
             }
         });
     }
-
-    const finish: number = new Date().getTime();
-    const delta: number = finish - start;
-    // tslint:disable-next-line: no-console
-    console.log(`CombinatorialParser timing: ${delta}`);
 });
