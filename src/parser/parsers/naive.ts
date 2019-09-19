@@ -1245,7 +1245,12 @@ export function readRecordType(state: IParserState, parser: IParser<IParserState
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
     startContext(state, nodeKind);
 
-    const fields: Ast.FieldSpecificationList = parser.readFieldSpecificationList(state, parser, true);
+    const fields: Ast.FieldSpecificationList = parser.readFieldSpecificationList(
+        state,
+        parser,
+        true,
+        (_state: IParserState) => IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket),
+    );
 
     const astNode: Ast.RecordType = {
         ...expectContextNodeMetadata(state),
@@ -1272,7 +1277,9 @@ export function readTableType(state: IParserState, parser: IParser<IParserState>
     if (isPrimaryExpressionExpected) {
         rowType = parser.readPrimaryExpression(state, parser);
     } else {
-        rowType = parser.readFieldSpecificationList(state, parser, false);
+        rowType = parser.readFieldSpecificationList(state, parser, false, (_state: IParserState) =>
+            IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket),
+        );
     }
 
     const astNode: Ast.TableType = {
@@ -1290,6 +1297,7 @@ export function readFieldSpecificationList(
     state: IParserState,
     parser: IParser<IParserState>,
     allowOpenMarker: boolean,
+    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.FieldSpecificationList {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     startContext(state, nodeKind);
@@ -1303,6 +1311,11 @@ export function readFieldSpecificationList(
     startContext(state, fieldArrayNodeKind);
 
     while (continueReadingValues) {
+        const maybePostCommaError: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        if (maybePostCommaError) {
+            throw maybePostCommaError;
+        }
+
         if (isOnTokenKind(state, TokenKind.Ellipsis)) {
             if (allowOpenMarker) {
                 if (maybeOpenRecordMarkerConstant) {

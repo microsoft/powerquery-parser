@@ -130,6 +130,7 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         allowOpenMarker: boolean,
+        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
     ) => Ast.FieldSpecificationList;
     readonly readListType: (state: State, parser: IParser<State>) => Ast.ListType;
     readonly readFunctionType: (state: State, parser: IParser<State>) => Ast.FunctionType;

@@ -63,4 +63,28 @@ describe("Parser.Error", () => {
         const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationLetExpression());
     });
+
+    it(`Dangling Comma for ListExpression`, () => {
+        const text: string = "{1, }";
+        const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
+        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+    });
+
+    it(`Dangling Comma for RecordExpression`, () => {
+        const text: string = "[a = 1,]";
+        const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
+        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+    });
+
+    it(`Dangling Comma for RecordType`, () => {
+        const text: string = "type [a = 1,]";
+        const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
+        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+    });
+
+    it(`Dangling Comma for TableType`, () => {
+        const text: string = "type table [a = 1,]";
+        const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
+        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+    });
 });
