@@ -24,9 +24,6 @@ export interface ParseOk {
 }
 
 export interface IParser<State> {
-    // State functions
-    readonly deepCopyState: (state: State) => State;
-
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: State, parser: IParser<State>) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (state: State, parser: IParser<State>) => Ast.GeneralizedIdentifier;

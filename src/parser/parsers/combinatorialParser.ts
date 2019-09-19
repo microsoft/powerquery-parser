@@ -4,16 +4,11 @@
 import { Ast } from "..";
 import { Option } from "../../common";
 import { Token, TokenKind } from "../../lexer";
-import { BracketDisambiguation, IParser } from "../IParser";
+import { IParser } from "../IParser";
 import { IParserState } from "../IParserState";
-import * as IParserStateUtils from "../IParserState/IParserStateUtils";
-import { readBracketDisambiguation } from "./common";
 import * as Naive from "./naive";
 
 export let CombinatorialParser: IParser<IParserState> = {
-    // State functions
-    deepCopyState: IParserStateUtils.deepCopy,
-
     // 12.1.6 Identifiers
     readIdentifier: Naive.readIdentifier,
     readGeneralizedIdentifier: Naive.readGeneralizedIdentifier,
@@ -28,7 +23,7 @@ export let CombinatorialParser: IParser<IParserState> = {
     readSectionMember: Naive.readSectionMember,
 
     // 12.2.3.1 Expressions
-    readExpression,
+    readExpression: Naive.readExpression,
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: Naive.readLogicalExpression,
@@ -53,7 +48,7 @@ export let CombinatorialParser: IParser<IParserState> = {
     readMetadataExpression: Naive.readMetadataExpression,
 
     // 12.2.3.9 Unary expression
-    readUnaryExpression: readUnaryExpression,
+    readUnaryExpression,
 
     // 12.2.3.10 Primary expression
     readPrimaryExpression: Naive.readPrimaryExpression,
@@ -139,128 +134,134 @@ export let CombinatorialParser: IParser<IParserState> = {
     readIdentifierPairedExpression: Naive.readIdentifierPairedExpression,
 };
 
-function readExpression(state: IParserState, parser: IParser<IParserState>): Ast.TExpression {
-    // let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
+// function readExpression(state: IParserState, parser: IParser<IParserState>): Ast.TExpression {
+//     // let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
 
-    // LL(1)
-    const maybeTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
-    switch (maybeTokenKind) {
-        // // PrimaryExpression
-        // case TokenKind.AtSign:
-        // case TokenKind.Identifier:
-        //     const offset: number = maybeTokenKind === TokenKind.AtSign ? 2 : 1;
-        //     if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + offset)) {
-        //         const primaryExpression: Ast.TPrimaryExpression = Naive.readIdentifierExpression(state, parser);
-        //         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
-        //     } else {
-        //         return readExpressionLl2ForBinOpExpression(state, parser, parser.readIdentifierExpression);
-        //     }
+//     // LL(1)
+//     const maybeTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+//     switch (maybeTokenKind) {
+//         // // PrimaryExpression
+//         // case TokenKind.AtSign:
+//         // case TokenKind.Identifier:
+//         //     const offset: number = maybeTokenKind === TokenKind.AtSign ? 2 : 1;
+//         //     if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + offset)) {
+//         //         const primaryExpression: Ast.TPrimaryExpression = Naive.readIdentifierExpression(state, parser);
+//         //         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+//         //     } else {
+//         //         return readExpressionLl2ForBinOpExpression(state, parser, parser.readIdentifierExpression);
+//         //     }
 
-        // case TokenKind.LeftBracket:
-        //     maybePrimaryExpression = readBracketDisambiguation(state, parser, [
-        //         BracketDisambiguation.FieldProjection,
-        //         BracketDisambiguation.FieldSelection,
-        //         BracketDisambiguation.Record,
-        //     ]);
-        //     break;
+//         // case TokenKind.LeftBracket:
+//         //     maybePrimaryExpression = readBracketDisambiguation(state, parser, [
+//         //         BracketDisambiguation.FieldProjection,
+//         //         BracketDisambiguation.FieldSelection,
+//         //         BracketDisambiguation.Record,
+//         //     ]);
+//         //     break;
 
-        // case TokenKind.LeftBrace:
-        //     maybePrimaryExpression = Naive.readListExpression(state, parser);
-        //     break;
+//         // case TokenKind.LeftBrace:
+//         //     maybePrimaryExpression = Naive.readListExpression(state, parser);
+//         //     break;
 
-        // case TokenKind.Ellipsis:
-        //     maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
-        //     break;
+//         // case TokenKind.Ellipsis:
+//         //     maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
+//         //     break;
 
-        // case TokenKind.KeywordHashSections:
-        // case TokenKind.KeywordHashShared:
-        // case TokenKind.KeywordHashBinary:
-        // case TokenKind.KeywordHashDate:
-        // case TokenKind.KeywordHashDateTime:
-        // case TokenKind.KeywordHashDateTimeZone:
-        // case TokenKind.KeywordHashDuration:
-        // case TokenKind.KeywordHashTable:
-        // case TokenKind.KeywordHashTime:
-        //     maybePrimaryExpression = parser.readKeyword(state, parser);
-        //     break;
+//         // case TokenKind.KeywordHashSections:
+//         // case TokenKind.KeywordHashShared:
+//         // case TokenKind.KeywordHashBinary:
+//         // case TokenKind.KeywordHashDate:
+//         // case TokenKind.KeywordHashDateTime:
+//         // case TokenKind.KeywordHashDateTimeZone:
+//         // case TokenKind.KeywordHashDuration:
+//         // case TokenKind.KeywordHashTable:
+//         // case TokenKind.KeywordHashTime:
+//         //     maybePrimaryExpression = parser.readKeyword(state, parser);
+//         //     break;
 
-        case TokenKind.HexLiteral:
-        case TokenKind.KeywordFalse:
-        case TokenKind.KeywordTrue:
-        case TokenKind.NumericLiteral:
-        case TokenKind.NullLiteral:
-        case TokenKind.StringLiteral: {
-            return readExpressionLl2ForBinOpExpression(state, parser, parser.readLiteralExpression);
-        }
+//         case TokenKind.HexLiteral:
+//         case TokenKind.KeywordFalse:
+//         case TokenKind.KeywordTrue:
+//         case TokenKind.NumericLiteral:
+//         case TokenKind.NullLiteral:
+//         case TokenKind.StringLiteral: {
+//             const maybeNextToken: Option<Token> = state.lexerSnapshot.tokens[state.tokenIndex + 1];
+//             const maybeNextTokenKind: Option<TokenKind> =
+//                 maybeNextToken !== undefined ? maybeNextToken.kind : undefined;
 
-        case TokenKind.KeywordType:
-            return parser.readTypeExpression(state, parser);
+//             return Naive.readExpression(state, parser);
 
-        default:
-            return Naive.readExpression(state, parser);
-    }
+//             // return readExpressionLl2ForBinOpExpression(state, parser, parser.readLiteralExpression);
+//         }
 
-    // if (maybePrimaryExpression) {
-    //     const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
-    //     if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
-    //         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
-    //     } else {
-    //         return primaryExpression;
-    //     }
-    // } else {
-    //     return Naive.readExpression(state, parser);
-    // }
-}
+//         case TokenKind.KeywordType:
+//             return parser.readTypeExpression(state, parser);
 
-function readExpressionLl2ForBinOpExpression(
-    state: IParserState,
-    parser: IParser<IParserState>,
-    fallback: (state: IParserState, parser: IParser<IParserState>) => Ast.TUnaryExpression,
-): Ast.TLogicalExpression {
-    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[state.tokenIndex + 1];
-    const maybeTokenKind: Option<TokenKind> = maybeToken !== undefined ? maybeToken.kind : undefined;
+//         default:
+//             return Naive.readExpression(state, parser);
+//     }
 
-    // LL(2)
-    switch (maybeTokenKind) {
-        // IsExpression
-        case TokenKind.KeywordIs:
-            return parser.readIsExpression(state, parser);
+//     // if (maybePrimaryExpression) {
+//     //     const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
+//     //     if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
+//     //         return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+//     //     } else {
+//     //         return primaryExpression;
+//     //     }
+//     // } else {
+//     //     return Naive.readExpression(state, parser);
+//     // }
+// }
 
-        // AsExpression
-        case TokenKind.KeywordAs:
-            return parser.readAsExpression(state, parser);
+// function readExpressionLl2ForBinOpExpression(
+//     state: IParserState,
+//     parser: IParser<IParserState>,
+//     fallback: (state: IParserState, parser: IParser<IParserState>) => Ast.TUnaryExpression,
+// ): Ast.TLogicalExpression {
+//     const maybeToken: Option<Token> = state.lexerSnapshot.tokens[state.tokenIndex + 1];
+//     const maybeTokenKind: Option<TokenKind> = maybeToken !== undefined ? maybeToken.kind : undefined;
 
-        case TokenKind.Equal:
-        case TokenKind.NotEqual:
-            return parser.readEqualityExpression(state, parser);
+//     // LL(2)
+//     switch (maybeTokenKind) {
+//         // IsExpression
+//         case TokenKind.KeywordIs:
+//             return parser.readIsExpression(state, parser);
 
-        // LogicalExpression
-        case TokenKind.KeywordAnd:
-        case TokenKind.KeywordOr:
-            return parser.readLogicalExpression(state, parser);
+//         // AsExpression
+//         case TokenKind.KeywordAs:
+//             return parser.readAsExpression(state, parser);
 
-        // RelationalExpression
-        case TokenKind.LessThan:
-        case TokenKind.LessThanEqualTo:
-        case TokenKind.GreaterThan:
-        case TokenKind.GreaterThanEqualTo:
-            return parser.readRelationalExpression(state, parser);
+//         case TokenKind.Equal:
+//         case TokenKind.NotEqual:
+//             return parser.readEqualityExpression(state, parser);
 
-        case TokenKind.KeywordMeta:
-            return parser.readMetadataExpression(state, parser);
+//         // LogicalExpression
+//         case TokenKind.KeywordAnd:
+//         case TokenKind.KeywordOr:
+//             return parser.readLogicalExpression(state, parser);
 
-        // Arithmetic Expression
-        case TokenKind.Asterisk:
-        case TokenKind.Division:
-        case TokenKind.Plus:
-        case TokenKind.Minus:
-        case TokenKind.Ampersand:
-            return parser.readArithmeticExpression(state, parser);
+//         // RelationalExpression
+//         case TokenKind.LessThan:
+//         case TokenKind.LessThanEqualTo:
+//         case TokenKind.GreaterThan:
+//         case TokenKind.GreaterThanEqualTo:
+//             return parser.readRelationalExpression(state, parser);
 
-        default:
-            return fallback(state, parser);
-    }
-}
+//         case TokenKind.KeywordMeta:
+//             return parser.readMetadataExpression(state, parser);
+
+//         // Arithmetic Expression
+//         case TokenKind.Asterisk:
+//         case TokenKind.Division:
+//         case TokenKind.Plus:
+//         case TokenKind.Minus:
+//         case TokenKind.Ampersand:
+//             return parser.readArithmeticExpression(state, parser);
+
+//         default:
+//             return fallback(state, parser);
+//     }
+// }
 
 function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
     // let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
