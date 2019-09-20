@@ -30,14 +30,14 @@ describe("Parser.Error", () => {
         );
     });
 
-    it("UnterminatedBracketError: [", () => {
-        const text: string = "[";
+    it("UnterminatedBracketError: let x = [", () => {
+        const text: string = "let x = [";
         const innerError: ParserError.TInnerParserError = expectParserInnerError(text);
         expect(innerError instanceof ParserError.UnterminatedBracketError).to.equal(true, innerError.message);
     });
 
-    it("UnterminatedParenthesesError: (", () => {
-        const text: string = "(";
+    it("UnterminatedParenthesesError: let x = (", () => {
+        const text: string = "let x = (";
         const innerError: ParserError.TInnerParserError = expectParserInnerError(text);
         expect(innerError instanceof ParserError.UnterminatedParenthesesError).to.equal(true, innerError.message);
     });

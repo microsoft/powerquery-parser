@@ -5,20 +5,23 @@ import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { Parser, ParserError } from "../../parser";
+import { IParserState, IParserStateUtils, Parser, ParserError, TriedParse } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
-import { TriedParse } from "../../parser/parser";
 
 function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKindError {
-    const state: Lexer.State = Lexer.stateFrom(text);
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    const lexerState: Lexer.State = Lexer.stateFrom(text);
+    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
 
     if (!(triedSnapshot.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedSnapshot.kind === ResultKind.Ok`);
     }
-    const snapshot: LexerSnapshot = triedSnapshot.value;
+    const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    const triedParse: TriedParse = Parser.tryParse(snapshot);
+    const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
+    const triedParse: TriedParse = Parser.RecursiveDescentParser.readDocument(
+        parserState,
+        Parser.RecursiveDescentParser,
+    );
 
     if (!(triedParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
