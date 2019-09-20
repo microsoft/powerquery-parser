@@ -937,8 +937,7 @@ export function readInvokeExpression(state: IParserState, parser: IParser<IParse
                 state,
                 () => parser.readExpression(state, parser),
                 continueReadingValues,
-                (_state: IParserState) =>
-                    IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightParenthesis),
+                testCsvContinuationDanglingCommaForParenthesis,
             ),
         () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
         false,
@@ -960,8 +959,7 @@ export function readListExpression(state: IParserState, parser: IParser<IParserS
                 state,
                 () => parser.readListItem(state, parser),
                 continueReadingValues,
-                (_state: IParserState) =>
-                    IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBrace),
+                testCsvContinuationDanglingCommaForBrace,
             ),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         false,
@@ -1008,8 +1006,7 @@ export function readRecordExpression(state: IParserState, parser: IParser<IParse
                 state,
                 parser,
                 continueReadingValues,
-                (_state: IParserState) =>
-                    IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket),
+                testCsvContinuationDanglingCommaForBracket,
             ),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         false,
@@ -1045,8 +1042,11 @@ export function readFieldProjection(state: IParserState, parser: IParser<IParser
         Ast.NodeKind.FieldProjection,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
         () =>
-            readCsvArray(state, () => parser.readFieldSelector(state, parser, false), true, (_state: IParserState) =>
-                IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket),
+            readCsvArray(
+                state,
+                () => parser.readFieldSelector(state, parser, false),
+                true,
+                testCsvContinuationDanglingCommaForBracket,
             ),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         true,
@@ -1249,7 +1249,7 @@ export function readRecordType(state: IParserState, parser: IParser<IParserState
         state,
         parser,
         true,
-        (_state: IParserState) => IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket),
+        testCsvContinuationDanglingCommaForBracket,
     );
 
     const astNode: Ast.RecordType = {
@@ -1277,9 +1277,7 @@ export function readTableType(state: IParserState, parser: IParser<IParserState>
     if (isPrimaryExpressionExpected) {
         rowType = parser.readPrimaryExpression(state, parser);
     } else {
-        rowType = parser.readFieldSpecificationList(state, parser, false, (_state: IParserState) =>
-            IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket),
-        );
+        rowType = parser.readFieldSpecificationList(state, parser, false, testCsvContinuationDanglingCommaForBracket);
     }
 
     const astNode: Ast.TableType = {
@@ -1594,8 +1592,11 @@ export function readRecordLiteral(state: IParserState, parser: IParser<IParserSt
         Ast.NodeKind.RecordLiteral,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
         () =>
-            parser.readFieldNamePairedAnyLiterals(state, parser, continueReadingValues, (_state: IParserState) =>
-                IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket),
+            parser.readFieldNamePairedAnyLiterals(
+                state,
+                parser,
+                continueReadingValues,
+                testCsvContinuationDanglingCommaForBracket,
             ),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         false,
@@ -1644,8 +1645,7 @@ export function readListLiteral(state: IParserState, parser: IParser<IParserStat
                 state,
                 () => parser.readAnyLiteral(state, parser),
                 continueReadingValues,
-                (_state: IParserState) =>
-                    IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBrace),
+                testCsvContinuationDanglingCommaForBrace,
             ),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         false,
@@ -2413,4 +2413,26 @@ function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind)
         incrementAttributeCounter(state);
         return undefined;
     }
+}
+
+// -------------------------------------------------------
+// ---------- Helper functions (test functions) ----------
+// -------------------------------------------------------
+
+function testCsvContinuationDanglingCommaForBrace(
+    state: IParserState,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBrace);
+}
+
+function testCsvContinuationDanglingCommaForBracket(
+    state: IParserState,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket);
+}
+
+function testCsvContinuationDanglingCommaForParenthesis(
+    state: IParserState,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightParenthesis);
 }
