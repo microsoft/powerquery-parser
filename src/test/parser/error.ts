@@ -58,7 +58,7 @@ describe("Parser.Error", () => {
         expect(innerError instanceof ParserError.UnusedTokensRemainError).to.equal(true, innerError.message);
     });
 
-    it(`Dangling Comma for Let`, () => {
+    it(`Dangling Comma for LetExpression`, () => {
         const text: string = "let in 1, in 1";
         const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationLetExpression());
