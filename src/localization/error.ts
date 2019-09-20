@@ -131,6 +131,14 @@ export function lexerUnterminatedMultilineToken(
     }
 }
 
+export function parserExpectedCsvContinuationLetExpression(): string {
+    return `A comma cannot precede an In`;
+}
+
+export function parserExpectedCsvContinuationDanglingComma(): string {
+    return `Did you leave a dangling Comma?`;
+}
+
 export function parserExpectedTokenKind(
     expectedTokenKind: TokenKind,
     maybeTokenWithColumnNumber: Option<TokenWithColumnNumber>,
