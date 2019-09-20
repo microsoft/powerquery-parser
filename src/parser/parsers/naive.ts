@@ -2187,6 +2187,11 @@ function genericReadParameterList<T>(
         startContext(state, Ast.NodeKind.Csv);
         startContext(state, Ast.NodeKind.Parameter);
 
+        const maybeErr: Option<ParserError.TInnerParserError> = testCsvContinuationDanglingCommaForParenthesis(state);
+        if (maybeErr) {
+            throw maybeErr;
+        }
+
         const maybeOptionalConstant: Option<Ast.Constant> = maybeReadIdentifierConstantAsConstant(
             state,
             Ast.IdentifierConstant.Optional,

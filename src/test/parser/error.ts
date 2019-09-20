@@ -15,7 +15,7 @@ function expectParserInnerError(text: string): ParserError.TInnerParserError {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Err ${JSON.stringify(triedLexAndParse)}`);
     } else if (!(triedLexAndParse.error instanceof ParserError.ParserError)) {
         const errorMessage: string = triedLexAndParse.error.message;
-        throw new Error(`AssertFailed: triedLexAndParse.error instanceof ParserError: ${errorMessage}`);
+        throw new Error(`AssertFailed: triedLexAndParse.error instanceof ParserError - ${errorMessage}`);
     } else {
         return triedLexAndParse.error.innerError;
     }
@@ -24,7 +24,9 @@ function expectParserInnerError(text: string): ParserError.TInnerParserError {
 function expectCsvContinuationError(text: string): ParserError.ExpectedCsvContinuationError {
     const innerError: ParserError.TInnerParserError = expectParserInnerError(text);
     if (!(innerError instanceof ParserError.ExpectedCsvContinuationError)) {
-        throw new Error(`AssertFailed: innerError instanceof ParserError.ExpectedCsvContinuationError`);
+        throw new Error(
+            `AssertFailed: innerError instanceof ParserError.ExpectedCsvContinuationError - ${innerError.message}`,
+        );
     }
 
     return innerError;
@@ -66,6 +68,18 @@ describe("Parser.Error", () => {
 
     it(`Dangling Comma for ListExpression`, () => {
         const text: string = "{1, }";
+        const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
+        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+    });
+
+    it(`Dangling Comma for FunctionExpression`, () => {
+        const text: string = "(a, ) => a";
+        const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
+        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+    });
+
+    it(`Dangling Comma for FunctionType`, () => {
+        const text: string = "type function (a as number, ) as number";
         const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
     });
