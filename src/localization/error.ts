@@ -136,7 +136,7 @@ export function parserExpectedCsvContinuationLetExpression(): string {
 }
 
 export function parserExpectedCsvContinuationDanglingComma(): string {
-    return `Did you leave a dangling ${TokenKind.Comma}?`;
+    return `Did you leave a dangling Comma?`;
 }
 
 export function parserExpectedTokenKind(
