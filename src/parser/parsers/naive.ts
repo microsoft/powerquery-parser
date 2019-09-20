@@ -1309,9 +1309,9 @@ export function readFieldSpecificationList(
     startContext(state, fieldArrayNodeKind);
 
     while (continueReadingValues) {
-        const maybePostCommaError: Option<ParserError.TInnerParserError> = testPostCommaError(state);
-        if (maybePostCommaError) {
-            throw maybePostCommaError;
+        const maybeErr: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        if (maybeErr) {
+            throw maybeErr;
         }
 
         if (isOnTokenKind(state, TokenKind.Ellipsis)) {
@@ -2071,9 +2071,9 @@ function readCsvArray<T>(
     const elements: Ast.ICsv<T & Ast.TCsvType>[] = [];
 
     while (continueReadingValues) {
-        const maybePostCommaError: Option<ParserError.TInnerParserError> = testPostCommaError(state);
-        if (maybePostCommaError) {
-            throw maybePostCommaError;
+        const maybeErr: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        if (maybeErr) {
+            throw maybeErr;
         }
 
         const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
