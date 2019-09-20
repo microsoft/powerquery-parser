@@ -1153,7 +1153,7 @@ export function readLetExpression(state: IParserState, parser: IParser<IParserSt
     > = parser.readIdentifierPairedExpressions(
         state,
         parser,
-        !isNextTokenKind(state, TokenKind.KeywordIn),
+        !isOnTokenKind(state, TokenKind.KeywordIn),
         IParserStateUtils.testCsvContinuationLetExpression,
     );
     const inConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIn);
