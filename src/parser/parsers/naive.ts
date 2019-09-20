@@ -1297,7 +1297,7 @@ export function readFieldSpecificationList(
     state: IParserState,
     parser: IParser<IParserState>,
     allowOpenMarker: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    postCommaErrorTest: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.FieldSpecificationList {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     startContext(state, nodeKind);
@@ -1311,7 +1311,7 @@ export function readFieldSpecificationList(
     startContext(state, fieldArrayNodeKind);
 
     while (continueReadingValues) {
-        const maybePostCommaError: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        const maybePostCommaError: Option<ParserError.TInnerParserError> = postCommaErrorTest(state);
         if (maybePostCommaError) {
             throw maybePostCommaError;
         }
@@ -1610,7 +1610,7 @@ export function readFieldNamePairedAnyLiterals(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    postCommaErrorTest: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
     return readCsvArray(
         state,
@@ -1626,7 +1626,7 @@ export function readFieldNamePairedAnyLiterals(
                 () => parser.readAnyLiteral(state, parser),
             ),
         continueReadingValues,
-        testPostCommaError,
+        postCommaErrorTest,
     );
 }
 
@@ -1921,13 +1921,13 @@ export function readIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    postCommaErrorTest: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
     return readCsvArray(
         state,
         () => parser.readIdentifierPairedExpression(state, parser),
         continueReadingValues,
-        testPostCommaError,
+        postCommaErrorTest,
     );
 }
 
@@ -1935,13 +1935,13 @@ export function readGeneralizedIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    postCommaErrorTest: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
     return readCsvArray(
         state,
         () => parser.readGeneralizedIdentifierPairedExpression(state, parser),
         continueReadingValues,
-        testPostCommaError,
+        postCommaErrorTest,
     );
 }
 
@@ -2063,7 +2063,7 @@ function readCsvArray<T>(
     state: IParserState,
     valueReader: () => T & Ast.TCsvType,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    postCommaErrorTest: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     startContext(state, nodeKind);
@@ -2071,7 +2071,7 @@ function readCsvArray<T>(
     const elements: Ast.ICsv<T & Ast.TCsvType>[] = [];
 
     while (continueReadingValues) {
-        const maybePostCommaError: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        const maybePostCommaError: Option<ParserError.TInnerParserError> = postCommaErrorTest(state);
         if (maybePostCommaError) {
             throw maybePostCommaError;
         }
