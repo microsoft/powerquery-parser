@@ -3,7 +3,17 @@
 
 import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment, TriedLexerSnapshot } from "./lexer";
-import { Ast, IParser, IParserState, IParserStateUtils, NodeIdMap, ParseOk, ParserError, TriedParse } from "./parser";
+import {
+    Ast,
+    IParser,
+    IParserState,
+    IParserStateUtils,
+    NodeIdMap,
+    ParseOk,
+    Parser,
+    ParserError,
+    TriedParse,
+} from "./parser";
 
 export type TriedLexAndParse = Result<LexAndParseOk, LexAndParseErr>;
 
@@ -33,7 +43,10 @@ export function tryLexAndParse(text: string, parser: IParser<IParserState>): Tri
     const lexerSnapshot: LexerSnapshot = snapshotResult.value;
 
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    const parseResult: TriedParse = parser.readDocument(parserState, parser);
+    const parseResult: TriedParse = Parser.RecursiveDescentParser.readDocument(
+        parserState,
+        Parser.RecursiveDescentParser,
+    );
     if (parseResult.kind === ResultKind.Err) {
         return parseResult;
     }

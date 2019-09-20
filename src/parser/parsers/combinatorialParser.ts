@@ -303,12 +303,6 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
         case TokenKind.StringLiteral:
             return Naive.readLiteralExpression(state, parser);
 
-        // UnaryExpression
-        case TokenKind.Plus:
-        case TokenKind.Minus:
-        case TokenKind.KeywordNot:
-            return Naive.readUnaryExpression(state, parser);
-
         // TypeExpression
         case TokenKind.KeywordType:
             return Naive.readTypeExpression(state, parser);

@@ -53,7 +53,7 @@ function testNameFromFilePath(filepath: string): string {
 }
 
 describe("abc123 recursive", () => {
-    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
+    const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
         const testName: string = testNameFromFilePath(filepath);
@@ -62,7 +62,7 @@ describe("abc123 recursive", () => {
             let contents: string = readFileSync(filepath, "utf8");
             contents = contents.replace(/^\uFEFF/, "");
 
-            for (let _: number = 0; _ < 100; _ += 1) {
+            for (let _: number = 0; _ < 1; _ += 1) {
                 const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, RecursiveDescentParser);
                 if (!(triedLexAndParse.kind === ResultKind.Ok)) {
                     throw triedLexAndParse.error;
@@ -72,22 +72,22 @@ describe("abc123 recursive", () => {
     }
 });
 
-describe("abc123 combinator", () => {
-    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
+// describe("abc123 combinator", () => {
+//     const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
 
-    for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
-        const testName: string = testNameFromFilePath(filepath);
+//     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
+//         const testName: string = testNameFromFilePath(filepath);
 
-        it(testName, () => {
-            let contents: string = readFileSync(filepath, "utf8");
-            contents = contents.replace(/^\uFEFF/, "");
+//         it(testName, () => {
+//             let contents: string = readFileSync(filepath, "utf8");
+//             contents = contents.replace(/^\uFEFF/, "");
 
-            for (let _: number = 0; _ < 100; _ += 1) {
-                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, CombinatorialParser);
-                if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-                    throw triedLexAndParse.error;
-                }
-            }
-        });
-    }
-});
+//             for (let _: number = 0; _ < 1; _ += 1) {
+//                 const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, CombinatorialParser);
+//                 if (!(triedLexAndParse.kind === ResultKind.Ok)) {
+//                     throw triedLexAndParse.error;
+//                 }
+//             }
+//         });
+//     }
+// });

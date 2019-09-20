@@ -6,11 +6,17 @@ import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { IParserState } from "./IParserState";
 
+import * as Localization from "../../localization/error";
+
 export interface FastStateBackup {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;
     readonly maybeContextNodeId: Option<number>;
 }
+
+// ---------------------------
+// ---------- State ----------
+// ---------------------------
 
 export function newState(lexerSnapshot: LexerSnapshot): IParserState {
     const maybeCurrentToken: Option<Token> = lexerSnapshot.tokens[0];
@@ -143,9 +149,18 @@ export function incrementAttributeCounter(state: IParserState): void {
     currentContextNode.attributeCounter += 1;
 }
 
+// -------------------------
+// ---------- IsX ----------
+// -------------------------
+
 export function isTokenKind(state: IParserState, tokenKind: TokenKind, tokenIndex: number): boolean {
     const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
-    return maybeToken ? maybeToken.kind === tokenKind : false;
+
+    if (maybeToken) {
+        return maybeToken.kind === tokenKind;
+    } else {
+        return false;
+    }
 }
 
 export function isNextTokenKind(state: IParserState, tokenKind: TokenKind): boolean {
@@ -239,6 +254,10 @@ export function isRecursivePrimaryExpressionNext(
     );
 }
 
+// -----------------------------
+// ---------- Expects ----------
+// -----------------------------
+
 export function expectContextNodeMetadata(state: IParserState): ContextNodeMetadata {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
@@ -285,6 +304,44 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
     }
 }
 
+// -------------------------------
+// ---------- Csv Tests ----------
+// -------------------------------
+
+// All of these tests assume you're in a given context and have just read a `,`.
+// Eg. testCsvEndLetExpression assumes you're in a LetExpression context and have just read a `,`.
+
+export function testCsvContinuationLetExpression(
+    state: IParserState,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
+        return new ParserError.ExpectedCsvContinuationError(
+            Localization.parserExpectedCsvContinuationLetExpression(),
+            maybeCurrentTokenWithColumnNumber(state),
+        );
+    }
+
+    return undefined;
+}
+
+export function testCsvContinuationDanglingComma(
+    state: IParserState,
+    tokenKind: TokenKind,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    if (state.maybeCurrentTokenKind === tokenKind) {
+        return new ParserError.ExpectedCsvContinuationError(
+            Localization.parserExpectedCsvContinuationDanglingComma(),
+            maybeCurrentTokenWithColumnNumber(state),
+        );
+    } else {
+        return undefined;
+    }
+}
+
+// ---------------------------
+// ---------- Tests ----------
+// ---------------------------
+
 export function testIsOnTokenKind(
     state: IParserState,
     expectedTokenKind: TokenKind,
@@ -311,13 +368,9 @@ export function testIsOnAnyTokenKind(
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(state.maybeCurrentTokenKind) === -1;
 
     if (isError) {
-        const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
-            state.maybeCurrentToken !== undefined
-                ? {
-                      token: state.maybeCurrentToken,
-                      columnNumber: state.lexerSnapshot.columnNumberStartFrom(state.maybeCurrentToken),
-                  }
-                : undefined;
+        const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(
+            state,
+        );
         return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
     } else {
         return undefined;
@@ -341,6 +394,19 @@ export function unterminatedParenthesesError(state: IParserState): ParserError.U
 export function unterminatedBracketError(state: IParserState): ParserError.UnterminatedBracketError {
     const token: Token = expectTokenAt(state, state.tokenIndex);
     return new ParserError.UnterminatedBracketError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+}
+
+export function maybeCurrentTokenWithColumnNumber(state: IParserState): Option<ParserError.TokenWithColumnNumber> {
+    const maybeCurrentToken: Option<Token> = state.maybeCurrentToken;
+    if (maybeCurrentToken === undefined) {
+        return undefined;
+    }
+    const currentToken: Token = maybeCurrentToken;
+
+    return {
+        token: currentToken,
+        columnNumber: state.lexerSnapshot.columnNumberStartFrom(currentToken),
+    };
 }
 
 interface ContextNodeMetadata {

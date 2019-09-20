@@ -702,11 +702,11 @@ export function readRecursivePrimaryExpression(
     mutableHead.maybeAttributeIndex = 0;
 
     // Begin normal parsing behavior.
-    const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, recursiveArrayNodeKind);
-    let continueReadingValues: boolean = true;
 
+    const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
+    let continueReadingValues: boolean = true;
     while (continueReadingValues) {
         const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
 
@@ -860,7 +860,13 @@ export function readInvokeExpression(state: IParserState, parser: IParser<IParse
         state,
         Ast.NodeKind.InvokeExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis),
-        () => readCsvArray(state, () => parser.readExpression(state, parser), continueReadingValues),
+        () =>
+            readCsvArray(
+                state,
+                () => parser.readExpression(state, parser),
+                continueReadingValues,
+                testCsvContinuationDanglingCommaForParenthesis,
+            ),
         () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
         false,
     );
@@ -876,7 +882,13 @@ export function readListExpression(state: IParserState, parser: IParser<IParserS
         state,
         Ast.NodeKind.ListExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
-        () => readCsvArray(state, () => parser.readListItem(state, parser), continueReadingValues),
+        () =>
+            readCsvArray(
+                state,
+                () => parser.readListItem(state, parser),
+                continueReadingValues,
+                testCsvContinuationDanglingCommaForBrace,
+            ),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         false,
     );
@@ -917,7 +929,13 @@ export function readRecordExpression(state: IParserState, parser: IParser<IParse
         state,
         Ast.NodeKind.RecordExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
-        () => parser.readGeneralizedIdentifierPairedExpressions(state, parser, continueReadingValues),
+        () =>
+            parser.readGeneralizedIdentifierPairedExpressions(
+                state,
+                parser,
+                continueReadingValues,
+                testCsvContinuationDanglingCommaForBracket,
+            ),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         false,
     );
@@ -951,7 +969,13 @@ export function readFieldProjection(state: IParserState, parser: IParser<IParser
         state,
         Ast.NodeKind.FieldProjection,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
-        () => readCsvArray(state, () => parser.readFieldSelector(state, parser, false), true),
+        () =>
+            readCsvArray(
+                state,
+                () => parser.readFieldSelector(state, parser, false),
+                true,
+                testCsvContinuationDanglingCommaForBracket,
+            ),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         true,
     );
@@ -1054,7 +1078,12 @@ export function readLetExpression(state: IParserState, parser: IParser<IParserSt
     const letConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordLet);
     const identifierExpressionPairedExpressions: Ast.ICsvArray<
         Ast.IdentifierPairedExpression
-    > = parser.readIdentifierPairedExpressions(state, parser, true);
+    > = parser.readIdentifierPairedExpressions(
+        state,
+        parser,
+        !IParserStateUtils.isNextTokenKind(state, TokenKind.KeywordIn),
+        IParserStateUtils.testCsvContinuationLetExpression,
+    );
     const inConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIn);
     const expression: Ast.TExpression = parser.readExpression(state, parser);
 
@@ -1144,7 +1173,12 @@ export function readRecordType(state: IParserState, parser: IParser<IParserState
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const fields: Ast.FieldSpecificationList = parser.readFieldSpecificationList(state, parser, true);
+    const fields: Ast.FieldSpecificationList = parser.readFieldSpecificationList(
+        state,
+        parser,
+        true,
+        testCsvContinuationDanglingCommaForBracket,
+    );
 
     const astNode: Ast.RecordType = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1171,7 +1205,7 @@ export function readTableType(state: IParserState, parser: IParser<IParserState>
     if (isPrimaryExpressionExpected) {
         rowType = parser.readPrimaryExpression(state, parser);
     } else {
-        rowType = parser.readFieldSpecificationList(state, parser, false);
+        rowType = parser.readFieldSpecificationList(state, parser, false, testCsvContinuationDanglingCommaForBracket);
     }
 
     const astNode: Ast.TableType = {
@@ -1189,6 +1223,7 @@ export function readFieldSpecificationList(
     state: IParserState,
     parser: IParser<IParserState>,
     allowOpenMarker: boolean,
+    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.FieldSpecificationList {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     IParserStateUtils.startContext(state, nodeKind);
@@ -1202,6 +1237,11 @@ export function readFieldSpecificationList(
     IParserStateUtils.startContext(state, fieldArrayNodeKind);
 
     while (continueReadingValues) {
+        const maybeErr: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        if (maybeErr) {
+            throw maybeErr;
+        }
+
         if (IParserStateUtils.isOnTokenKind(state, TokenKind.Ellipsis)) {
             if (allowOpenMarker) {
                 if (maybeOpenRecordMarkerConstant) {
@@ -1479,7 +1519,13 @@ export function readRecordLiteral(state: IParserState, parser: IParser<IParserSt
         state,
         Ast.NodeKind.RecordLiteral,
         () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
-        () => parser.readFieldNamePairedAnyLiterals(state, parser, continueReadingValues),
+        () =>
+            parser.readFieldNamePairedAnyLiterals(
+                state,
+                parser,
+                continueReadingValues,
+                testCsvContinuationDanglingCommaForBracket,
+            ),
         () => readTokenKindAsConstant(state, TokenKind.RightBracket),
         false,
     );
@@ -1493,6 +1539,7 @@ export function readFieldNamePairedAnyLiterals(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
+    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
     return readCsvArray(
         state,
@@ -1508,6 +1555,7 @@ export function readFieldNamePairedAnyLiterals(
                 () => parser.readAnyLiteral(state, parser),
             ),
         continueReadingValues,
+        testPostCommaError,
     );
 }
 
@@ -1520,7 +1568,13 @@ export function readListLiteral(state: IParserState, parser: IParser<IParserStat
         state,
         Ast.NodeKind.ListLiteral,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
-        () => readCsvArray(state, () => parser.readAnyLiteral(state, parser), continueReadingValues),
+        () =>
+            readCsvArray(
+                state,
+                () => parser.readAnyLiteral(state, parser),
+                continueReadingValues,
+                testCsvContinuationDanglingCommaForBrace,
+            ),
         () => readTokenKindAsConstant(state, TokenKind.RightBrace),
         false,
     );
@@ -1798,19 +1852,27 @@ export function readIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
+    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
-    return readCsvArray(state, () => parser.readIdentifierPairedExpression(state, parser), continueReadingValues);
+    return readCsvArray(
+        state,
+        () => parser.readIdentifierPairedExpression(state, parser),
+        continueReadingValues,
+        testPostCommaError,
+    );
 }
 
 export function readGeneralizedIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
+    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
     return readCsvArray(
         state,
         () => parser.readGeneralizedIdentifierPairedExpression(state, parser),
         continueReadingValues,
+        testPostCommaError,
     );
 }
 
@@ -1932,6 +1994,7 @@ function readCsvArray<T>(
     state: IParserState,
     valueReader: () => T & Ast.TCsvType,
     continueReadingValues: boolean,
+    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
 ): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, nodeKind);
@@ -1941,6 +2004,11 @@ function readCsvArray<T>(
     while (continueReadingValues) {
         const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
         IParserStateUtils.startContext(state, csvNodeKind);
+
+        const maybeErr: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        if (maybeErr) {
+            throw maybeErr;
+        }
 
         const node: T & Ast.TCsvType = valueReader();
         const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
@@ -2049,6 +2117,11 @@ function genericReadParameterList<T>(
     while (continueReadingValues) {
         IParserStateUtils.startContext(state, Ast.NodeKind.Csv);
         IParserStateUtils.startContext(state, Ast.NodeKind.Parameter);
+
+        const maybeErr: Option<ParserError.TInnerParserError> = testCsvContinuationDanglingCommaForParenthesis(state);
+        if (maybeErr) {
+            throw maybeErr;
+        }
 
         const maybeOptionalConstant: Option<Ast.Constant> = maybeReadIdentifierConstantAsConstant(
             state,
@@ -2281,4 +2354,26 @@ function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind)
         IParserStateUtils.incrementAttributeCounter(state);
         return undefined;
     }
+}
+
+// -------------------------------------------------------
+// ---------- Helper functions (test functions) ----------
+// -------------------------------------------------------
+
+function testCsvContinuationDanglingCommaForBrace(
+    state: IParserState,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBrace);
+}
+
+function testCsvContinuationDanglingCommaForBracket(
+    state: IParserState,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket);
+}
+
+function testCsvContinuationDanglingCommaForParenthesis(
+    state: IParserState,
+): Option<ParserError.ExpectedCsvContinuationError> {
+    return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightParenthesis);
 }

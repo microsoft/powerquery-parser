@@ -5,9 +5,8 @@ import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, ParserError, TriedParse } from "../../parser";
+import { IParserState, IParserStateUtils, Parser, ParserError, TriedParse } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
-import { CombinatorialParser } from "../../parser/parsers";
 
 function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKindError {
     const lexerState: Lexer.State = Lexer.stateFrom(text);
@@ -19,7 +18,10 @@ function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKi
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    const triedParse: TriedParse = CombinatorialParser.readDocument(parserState, CombinatorialParser);
+    const triedParse: TriedParse = Parser.RecursiveDescentParser.readDocument(
+        parserState,
+        Parser.RecursiveDescentParser,
+    );
 
     if (!(triedParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
