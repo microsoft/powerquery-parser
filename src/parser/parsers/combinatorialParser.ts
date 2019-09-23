@@ -4,9 +4,10 @@
 import { Ast } from "..";
 import { Option } from "../../common";
 import { Token, TokenKind } from "../../lexer";
-import { IParser } from "../IParser";
-import { IParserState } from "../IParserState";
+import { IParser, BracketDisambiguation } from "../IParser";
+import { IParserState, IParserStateUtils } from "../IParserState";
 import * as Naive from "./naive";
+import { readBracketDisambiguation } from "./common";
 
 export let CombinatorialParser: IParser<IParserState> = {
     // 12.1.6 Identifiers
@@ -264,44 +265,44 @@ export let CombinatorialParser: IParser<IParserState> = {
 // }
 
 function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
-    // let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
+    let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
 
     // LL(1)
     switch (state.maybeCurrentTokenKind) {
-        // // PrimaryExpression
-        // case TokenKind.AtSign:
-        // case TokenKind.Identifier:
-        //     maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
-        //     break;
+        // PrimaryExpression
+        case TokenKind.AtSign:
+        case TokenKind.Identifier:
+            maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
+            break;
 
-        // case TokenKind.LeftParenthesis:
-        //     maybePrimaryExpression = Naive.readParenthesizedExpression(state, parser);
-        //     break;
+        case TokenKind.LeftParenthesis:
+            maybePrimaryExpression = Naive.readParenthesizedExpression(state, parser);
+            break;
 
-        // case TokenKind.LeftBracket:
-        //     maybePrimaryExpression = readBracketDisambiguation(state, parser, [
-        //         BracketDisambiguation.FieldProjection,
-        //         BracketDisambiguation.FieldSelection,
-        //         BracketDisambiguation.Record,
-        //     ]);
-        //     break;
+        case TokenKind.LeftBracket:
+            maybePrimaryExpression = readBracketDisambiguation(state, parser, [
+                BracketDisambiguation.FieldProjection,
+                BracketDisambiguation.FieldSelection,
+                BracketDisambiguation.Record,
+            ]);
+            break;
 
-        // case TokenKind.LeftBrace:
-        //     maybePrimaryExpression = Naive.readListExpression(state, parser);
-        //     break;
+        case TokenKind.LeftBrace:
+            maybePrimaryExpression = Naive.readListExpression(state, parser);
+            break;
 
-        // case TokenKind.Ellipsis:
-        //     maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
-        //     break;
+        case TokenKind.Ellipsis:
+            maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
+            break;
 
-        // LiteralExpression
-        case TokenKind.HexLiteral:
-        case TokenKind.KeywordFalse:
-        case TokenKind.KeywordTrue:
-        case TokenKind.NumericLiteral:
-        case TokenKind.NullLiteral:
-        case TokenKind.StringLiteral:
-            return Naive.readLiteralExpression(state, parser);
+        // // LiteralExpression
+        // case TokenKind.HexLiteral:
+        // case TokenKind.KeywordFalse:
+        // case TokenKind.KeywordTrue:
+        // case TokenKind.NumericLiteral:
+        // case TokenKind.NullLiteral:
+        // case TokenKind.StringLiteral:
+        //     return Naive.readLiteralExpression(state, parser);
 
         // TypeExpression
         case TokenKind.KeywordType:
@@ -324,12 +325,15 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
             return Naive.readUnaryExpression(state, parser);
     }
 
-    // // We should only reach this code path if we're parsing a PrimaryExpression.
-    // const primaryExpression: Ast.TPrimaryExpression =
-    //     maybePrimaryExpression !== undefined ? maybePrimaryExpression : parser.readLiteralExpression(state, parser);
-    // if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex + 1)) {
-    //     return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
-    // } else {
-    //     return primaryExpression;
-    // }
+    // We should only reach this code path if we're parsing a PrimaryExpression.
+    if (maybePrimaryExpression) {
+        const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
+        if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
+            return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+        } else {
+            return primaryExpression;
+        }
+    } else {
+        return Naive.readUnaryExpression(state, parser);
+    }
 }

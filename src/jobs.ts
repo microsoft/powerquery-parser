@@ -43,10 +43,7 @@ export function tryLexAndParse(text: string, parser: IParser<IParserState>): Tri
     const lexerSnapshot: LexerSnapshot = snapshotResult.value;
 
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    const parseResult: TriedParse = Parser.RecursiveDescentParser.readDocument(
-        parserState,
-        Parser.RecursiveDescentParser,
-    );
+    const parseResult: TriedParse = parser.readDocument(parserState, parser);
     if (parseResult.kind === ResultKind.Err) {
         return parseResult;
     }
