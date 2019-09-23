@@ -52,13 +52,18 @@ function testNameFromFilePath(filepath: string): string {
     return filepath.replace(path.dirname(__filename), ".");
 }
 
+const ignoredFileNames: ReadonlyArray<string> = [];
+
 describe("abc123 recursive", () => {
-    // const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
-    const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
+    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
+    // const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
-        const testName: string = testNameFromFilePath(filepath);
+        if (ignoredFileNames.indexOf(path.basename(filepath)) !== -1) {
+            continue;
+        }
 
+        const testName: string = testNameFromFilePath(filepath);
         it(testName, () => {
             let contents: string = readFileSync(filepath, "utf8");
             contents = contents.replace(/^\uFEFF/, "");
@@ -74,12 +79,15 @@ describe("abc123 recursive", () => {
 });
 
 describe("abc123 combinator", () => {
-    // const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
-    const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
+    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
+    // const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
-        const testName: string = testNameFromFilePath(filepath);
+        if (ignoredFileNames.indexOf(path.basename(filepath)) !== -1) {
+            continue;
+        }
 
+        const testName: string = testNameFromFilePath(filepath);
         it(testName, () => {
             let contents: string = readFileSync(filepath, "utf8");
             contents = contents.replace(/^\uFEFF/, "");
