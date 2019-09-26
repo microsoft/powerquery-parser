@@ -82,12 +82,12 @@ function expectParseOkPositionIdentifierEqual(
     expected: Option<TAbridgedPositionIdentifier>,
 ): void {
     const parseOk: ParseOk = expectParseOk(text);
-    const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
+    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
         position,
         parseOk.nodeIdMapCollection,
         parseOk.leafNodeIds,
     );
-    expectPositionIdentifierEqual(triedInspect, expected);
+    expectPositionIdentifierEqual(triedInspection, expected);
 }
 
 function expectParseErrPositionIdentifierEqual(
@@ -96,22 +96,22 @@ function expectParseErrPositionIdentifierEqual(
     expected: Option<TAbridgedPositionIdentifier>,
 ): void {
     const parserError: ParserError.ParserError = expectParseErr(text);
-    const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
+    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
         position,
         parserError.context.nodeIdMapCollection,
         parserError.context.leafNodeIds,
     );
-    expectPositionIdentifierEqual(triedInspect, expected);
+    expectPositionIdentifierEqual(triedInspection, expected);
 }
 
 function expectPositionIdentifierEqual(
-    triedInspect: Inspection.TriedInspect,
+    triedInspection: Inspection.TriedInspection,
     expected: Option<TAbridgedPositionIdentifier>,
 ): void {
-    if (!(triedInspect.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok: ${triedInspect.error.message}`);
+    if (!(triedInspection.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
     }
-    const inspection: Inspection.Inspected = triedInspect.value;
+    const inspection: Inspection.Inspected = triedInspection.value;
     const actual: Option<TAbridgedPositionIdentifier> = abridgedMaybePositionIdentifierFrom(
         inspection.maybePositionIdentifier,
     );
