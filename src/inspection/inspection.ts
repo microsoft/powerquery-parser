@@ -17,7 +17,7 @@ import { visitNode } from "./visitNode";
 //  * all nodes are ParserContext.Node
 //  * nodes are initially Ast.TNode, then they become ParserContext.Node
 
-export type TriedInspect = Traverse.TriedTraverse<Inspected>;
+export type TriedInspection = Traverse.TriedTraverse<Inspected>;
 
 export interface State extends Traverse.IState<UnfrozenInspected> {
     readonly maybePositionIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
@@ -41,7 +41,7 @@ export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): TriedInspect {
+): TriedInspection {
     const maybeClosestLeaf: Option<Ast.TNode> = maybeClosestAstNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeClosestLeaf === undefined) {
         return {
