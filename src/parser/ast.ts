@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option } from "../common";
+import { CommonError, Option, isNever } from "../common";
 import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
@@ -299,28 +299,6 @@ export type TEqualityExpression = EqualityExpression | TRelationalExpression;
 // ----------------------------------------------------
 
 export type TRelationalExpression = RelationalExpression | TArithmeticExpression;
-
-export const enum RelationalOperator {
-    LessThan = "<",
-    LessThanEqualTo = "<=",
-    GreaterThan = ">",
-    GreaterThanEqualTo = ">=",
-}
-
-export function relationalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<RelationalOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.LessThan:
-            return RelationalOperator.LessThan;
-        case TokenKind.LessThanEqualTo:
-            return RelationalOperator.LessThanEqualTo;
-        case TokenKind.GreaterThan:
-            return RelationalOperator.GreaterThan;
-        case TokenKind.GreaterThanEqualTo:
-            return RelationalOperator.GreaterThanEqualTo;
-        default:
-            return undefined;
-    }
-}
 
 // -----------------------------------------------------
 // ---------- 12.2.3.7 Arithmetic expressions ----------
@@ -781,6 +759,113 @@ export function logicalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<L
             return LogicalOperator.Or;
         default:
             return undefined;
+    }
+}
+
+export const enum RelationalOperator {
+    LessThan = "<",
+    LessThanEqualTo = "<=",
+    GreaterThan = ">",
+    GreaterThanEqualTo = ">=",
+}
+
+export function relationalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<RelationalOperator> {
+    switch (maybeTokenKind) {
+        case TokenKind.LessThan:
+            return RelationalOperator.LessThan;
+        case TokenKind.LessThanEqualTo:
+            return RelationalOperator.LessThanEqualTo;
+        case TokenKind.GreaterThan:
+            return RelationalOperator.GreaterThan;
+        case TokenKind.GreaterThanEqualTo:
+            return RelationalOperator.GreaterThanEqualTo;
+        default:
+            return undefined;
+    }
+}
+
+export function binOpExpressionOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.TBinOpExpressionOperator> {
+    switch (maybeTokenKind) {
+        // ArithmeticOperator
+        case TokenKind.Asterisk:
+            return ArithmeticOperator.Multiplication;
+        case TokenKind.Division:
+            return ArithmeticOperator.Division;
+        case TokenKind.Plus:
+            return ArithmeticOperator.Addition;
+        case TokenKind.Minus:
+            return ArithmeticOperator.Subtraction;
+        case TokenKind.Ampersand:
+            return ArithmeticOperator.And;
+
+        // EqualityOperator
+        case TokenKind.Equal:
+            return EqualityOperator.EqualTo;
+        case TokenKind.NotEqual:
+            return EqualityOperator.NotEqualTo;
+
+        // LogicalOperator
+        case TokenKind.KeywordAnd:
+            return LogicalOperator.And;
+        case TokenKind.KeywordOr:
+            return LogicalOperator.Or;
+
+        // RelationalOperator
+        case TokenKind.LessThan:
+            return RelationalOperator.LessThan;
+        case TokenKind.LessThanEqualTo:
+            return RelationalOperator.LessThanEqualTo;
+        case TokenKind.GreaterThan:
+            return RelationalOperator.GreaterThan;
+        case TokenKind.GreaterThanEqualTo:
+            return RelationalOperator.GreaterThanEqualTo;
+
+        // Keyword operator
+        case TokenKind.KeywordAs:
+            return ConstantKind.As;
+        case TokenKind.KeywordIs:
+            return ConstantKind.Is;
+
+        default:
+            return undefined;
+    }
+}
+
+export function binOpExpressionOperatorPrecedence(operator: TBinOpExpressionOperator): number {
+    switch (operator) {
+        case ArithmeticOperator.Multiplication:
+        case ArithmeticOperator.Division:
+            return 100;
+
+        case ArithmeticOperator.Addition:
+        case ArithmeticOperator.Subtraction:
+        case ArithmeticOperator.And:
+            return 90;
+
+        case RelationalOperator.GreaterThan:
+        case RelationalOperator.GreaterThanEqualTo:
+        case RelationalOperator.LessThan:
+        case RelationalOperator.LessThanEqualTo:
+            return 80;
+
+        case EqualityOperator.EqualTo:
+        case EqualityOperator.NotEqualTo:
+            return 70;
+
+        case ConstantKind.As:
+            return 60;
+
+        case ConstantKind.Is:
+            return 50;
+
+        case LogicalOperator.And:
+            return 40;
+
+        case LogicalOperator.Or:
+            return 30;
+
+        default:
+            throw isNever(operator);
     }
 }
 
