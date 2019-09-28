@@ -1,7 +1,80 @@
 import { Ast, ParserError } from "..";
-import { CommonError, isNever, Result, ResultKind } from "../../common";
+import { CommonError, isNever, Option, Result, ResultKind } from "../../common";
+import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
-import { IParserState } from "../IParserState";
+import { IParserState, IParserStateUtils } from "../IParserState";
+
+export function readToken(state: IParserState): string {
+    const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
+
+    if (state.tokenIndex >= tokens.length) {
+        const details: {} = {
+            tokenIndex: state.tokenIndex,
+            "tokens.length": tokens.length,
+        };
+        throw new CommonError.InvariantError("index beyond tokens.length", details);
+    }
+
+    const data: string = tokens[state.tokenIndex].data;
+    state.tokenIndex += 1;
+
+    if (state.tokenIndex === tokens.length) {
+        state.maybeCurrentTokenKind = undefined;
+    } else {
+        state.maybeCurrentToken = tokens[state.tokenIndex];
+        state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+    }
+
+    return data;
+}
+
+export function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
+    const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
+    if (maybeConstant === undefined) {
+        const maybeErr: Option<ParserError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(
+            state,
+            tokenKind,
+        );
+        if (maybeErr) {
+            throw maybeErr;
+        } else {
+            const details: {} = {
+                expectedTokenKind: tokenKind,
+                actualTokenKind: state.maybeCurrentTokenKind,
+            };
+
+            throw new CommonError.InvariantError(
+                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${
+                    IParserStateUtils.testIsOnTokenKind.name
+                }`,
+                details,
+            );
+        }
+    }
+
+    return maybeConstant;
+}
+
+export function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Option<Ast.Constant> {
+    if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
+        const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
+        IParserStateUtils.startContext(state, nodeKind);
+
+        const literal: string = readToken(state);
+        const astNode: Ast.Constant = {
+            ...IParserStateUtils.expectContextNodeMetadata(state),
+            kind: nodeKind,
+            isLeaf: true,
+            literal,
+        };
+        IParserStateUtils.endContext(state, astNode);
+
+        return astNode;
+    } else {
+        IParserStateUtils.incrementAttributeCounter(state);
+        return undefined;
+    }
+}
 
 export function readBracketDisambiguation(
     state: IParserState,

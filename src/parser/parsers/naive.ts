@@ -7,7 +7,7 @@ import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState } from "../IParserState";
 import * as IParserStateUtils from "../IParserState/IParserStateUtils";
-import { readBracketDisambiguation } from "./common";
+import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -2224,30 +2224,6 @@ function readWrapped<Kind, Content>(
 // ---------- Helper functions (read functions) ----------
 // -------------------------------------------------------
 
-function readToken(state: IParserState): string {
-    const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
-
-    if (state.tokenIndex >= tokens.length) {
-        const details: {} = {
-            tokenIndex: state.tokenIndex,
-            "tokens.length": tokens.length,
-        };
-        throw new CommonError.InvariantError("index beyond tokens.length", details);
-    }
-
-    const data: string = tokens[state.tokenIndex].data;
-    state.tokenIndex += 1;
-
-    if (state.tokenIndex === tokens.length) {
-        state.maybeCurrentTokenKind = undefined;
-    } else {
-        state.maybeCurrentToken = tokens[state.tokenIndex];
-        state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
-    }
-
-    return data;
-}
-
 function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
     const maybeErr: Option<ParserError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(state, tokenKind);
     if (maybeErr) {
@@ -2302,54 +2278,6 @@ function maybeReadIdentifierConstantAsConstant(
 function maybeReadLiteralAttributes(state: IParserState, parser: IParser<IParserState>): Option<Ast.RecordLiteral> {
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
         return parser.readRecordLiteral(state, parser);
-    } else {
-        IParserStateUtils.incrementAttributeCounter(state);
-        return undefined;
-    }
-}
-
-function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
-    const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
-    if (maybeConstant === undefined) {
-        const maybeErr: Option<ParserError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(
-            state,
-            tokenKind,
-        );
-        if (maybeErr) {
-            throw maybeErr;
-        } else {
-            const details: {} = {
-                expectedTokenKind: tokenKind,
-                actualTokenKind: state.maybeCurrentTokenKind,
-            };
-
-            throw new CommonError.InvariantError(
-                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${
-                    IParserStateUtils.testIsOnTokenKind.name
-                }`,
-                details,
-            );
-        }
-    }
-
-    return maybeConstant;
-}
-
-function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Option<Ast.Constant> {
-    if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
-        const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
-        IParserStateUtils.startContext(state, nodeKind);
-
-        const literal: string = readToken(state);
-        const astNode: Ast.Constant = {
-            ...IParserStateUtils.expectContextNodeMetadata(state),
-            kind: nodeKind,
-            isLeaf: true,
-            literal,
-        };
-        IParserStateUtils.endContext(state, astNode);
-
-        return astNode;
     } else {
         IParserStateUtils.incrementAttributeCounter(state);
         return undefined;

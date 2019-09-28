@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Ast } from "..";
-import { Option } from "../../common";
-import { Token, TokenKind } from "../../lexer";
-import { IParser, BracketDisambiguation, ParserFn } from "../IParser";
+import { Option, CommonError, isNever } from "../../common";
+import { TokenKind } from "../../lexer";
+import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
+import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
 import * as Naive from "./naive";
-import { readBracketDisambiguation } from "./common";
 
 export let CombinatorialParser: IParser<IParserState> = {
     // 12.1.6 Identifiers
@@ -205,17 +205,89 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
     }
 }
 
-function readBinOpExpression(state: IParserState, parser: IParser<IParserState>): Ast.TNode {
+function readBinOpExpression(state: IParserState, parser: IParser<IParserState>): Ast.TBinOpExpression {
     const head: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
     const operators: Ast.TBinOpExpressionOperator[] = [];
-    const expressions: Ast.TUnaryExpression[] = [head];
+    const operatorConstants: Ast.Constant[] = [];
+    const expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression)[] = [head];
 
-    let maybeOperator: Option<Ast.TBinOpExpressionOperator> = Ast.binOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
+    let maybeOperator: Option<Ast.TBinOpExpressionOperator> = Ast.binOpExpressionOperatorFrom(
+        state.maybeCurrentTokenKind,
+    );
     while (maybeOperator !== undefined) {
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
+        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind!));
         expressions.push(parser.readUnaryExpression(state, parser));
 
         maybeOperator = Ast.binOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
+    }
+
+    while (operators.length) {
+        let maxPrecedenceIndex: number = -1;
+        let maxPrecedence: number = -1;
+
+        for (let index: number = 0; index < operators.length; index += 1) {
+            const currentPrecedence: number = Ast.binOpExpressionOperatorPrecedence(operators[index]);
+            if (maxPrecedence < currentPrecedence) {
+                maxPrecedence = currentPrecedence;
+                maxPrecedenceIndex = index;
+            }
+        }
+
+        const left = expressions[maxPrecedenceIndex];
+        const operator: Ast.TBinOpExpressionOperator = operators[maxPrecedenceIndex];
+        const operatorConstant: Ast.Constant = operatorConstants[maxPrecedenceIndex];
+        const right = expressions[maxPrecedenceIndex + 1];
+
+        const newBinOpExpression: Ast.TBinOpExpression = {
+            isLeaf: false,
+            kind: binOpExpressionNodeKindFrom(operator),
+        }
+    }
+
+    const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[0];
+    if (!Ast.isTBinOpExpression(lastExpression)) {
+        const details: {} = {
+            lastExpressionId: lastExpression.id,
+            lastExpressionKind: lastExpression.kind,
+        };
+        throw new CommonError.InvariantError(`lastExpression should be a TBinOpExpression`, details);
+    }
+
+    return lastExpression;
+}
+
+function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
+    switch (operator) {
+        case Ast.ArithmeticOperator.Multiplication:
+        case Ast.ArithmeticOperator.Division:
+        case Ast.ArithmeticOperator.Addition:
+        case Ast.ArithmeticOperator.Subtraction:
+        case Ast.ArithmeticOperator.And:
+            return Ast.NodeKind.ArithmeticExpression;
+
+        case Ast.RelationalOperator.GreaterThan:
+        case Ast.RelationalOperator.GreaterThanEqualTo:
+        case Ast.RelationalOperator.LessThan:
+        case Ast.RelationalOperator.LessThanEqualTo:
+            return Ast.NodeKind.RelationalExpression;
+
+        case Ast.EqualityOperator.EqualTo:
+        case Ast.EqualityOperator.NotEqualTo:
+            return Ast.NodeKind.EqualityExpression;
+
+        case Ast.ConstantKind.As:
+            return Ast.NodeKind.AsExpression;
+
+        case Ast.ConstantKind.Is:
+            return Ast.NodeKind.IsExpression;
+
+        case Ast.LogicalOperator.And:
+        case Ast.LogicalOperator.Or:
+            return Ast.NodeKind.LogicalExpression;
+
+        default:
+            throw isNever(operator);
     }
 }
