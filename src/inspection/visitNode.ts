@@ -27,6 +27,10 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
             inspectIdentifierExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.IdentifierPairedExpression:
+            inspectIdentifierPairedExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.InvokeExpression:
             inspectInvokeExpression(state, xorNode);
             break;
@@ -209,6 +213,19 @@ function inspectIdentifierExpression(state: State, identifierExprXorNode: NodeId
     }
 }
 
+function inspectIdentifierPairedExpression(state: State, identifierPairedExpressionNode: NodeIdMap.TXorNode): void {
+    if (identifierPairedExpressionNode.node.kind !== Ast.NodeKind.IdentifierPairedExpression) {
+        throw expectedNodeKindError(identifierPairedExpressionNode, Ast.NodeKind.IdentifierPairedExpression);
+    }
+
+    // We want to exclude keys for assignment expressions from result.scope.
+    // TODO: special handling for recursion (@).
+    if (identifierPairedExpressionNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        const identifierPairedExpr: Ast.IdentifierPairedExpression = identifierPairedExpressionNode.node as Ast.IdentifierPairedExpression;
+        state.assignmentKeyNodeIdMap.set(identifierPairedExpr.key.id, identifierPairedExpr.key);
+    }
+}
+
 function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXorNode): void {
     if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
         throw expectedNodeKindError(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
@@ -330,6 +347,13 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
             continue;
         }
         const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
+
+        if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast && keyXorNode.node.kind === Ast.NodeKind.Identifier) {
+            // Add identifiers to current scope, excluding the current paired expression
+            if (!state.assignmentKeyNodeIdMap.has(keyXorNode.node.id)) {
+                addToScopeIfNew(state, keyXorNode.node.literal, keyXorNode);
+            }
+        }
 
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
             nodeIdMapCollection,
