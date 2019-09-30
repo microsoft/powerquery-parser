@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, isNever } from "../common";
+import { CommonError, isNever, Option } from "../common";
 import { TokenKind, TokenPosition } from "../lexer/token";
 
 export const enum NodeKind {
@@ -784,7 +784,7 @@ export function relationalOperatorFrom(maybeTokenKind: Option<TokenKind>): Optio
     }
 }
 
-export function binOpExpressionOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.TBinOpExpressionOperator> {
+export function binOpExpressionOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<TBinOpExpressionOperator> {
     switch (maybeTokenKind) {
         // ArithmeticOperator
         case TokenKind.Asterisk:
