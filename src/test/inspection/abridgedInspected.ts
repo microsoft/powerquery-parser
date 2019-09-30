@@ -65,7 +65,7 @@ function expectAbridgedInspectionEqual(
 }
 
 // Only works with single line expressions
-function textWithMarker(text: string): [string, Inspection.Position] {
+function textWithPosition(text: string): [string, Inspection.Position] {
     expect(text.indexOf("|")).to.be.greaterThan(-1, "text must have | marker");
     expect(text.indexOf("|")).to.equal(text.lastIndexOf("|"), "text must only have one |");
 
@@ -1102,7 +1102,7 @@ describe(`Inspection`, () => {
 
         describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
             it(`let a = 1, b = 2, c = 3 in |`, () => {
-                const [text, position] = textWithMarker(`let a = 1, b = 2, c = 3 in |`);
+                const [text, position] = textWithPosition(`let a = 1, b = 2, c = 3 in |`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`a`, `b`, `c`],
@@ -1111,7 +1111,7 @@ describe(`Inspection`, () => {
             });
 
             it(`let a = 1, b = 2, c = |3 in c`, () => {
-                const [text, position] = textWithMarker(`let a = 1, b = 2, c = |3 in c`);
+                const [text, position] = textWithPosition(`let a = 1, b = 2, c = |3 in c`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`a`, `b`],
@@ -1120,7 +1120,7 @@ describe(`Inspection`, () => {
             });
 
             it(`(p1, p2) => let a = 1, b = 2, c = |3 in c`, () => {
-                const [text, position] = textWithMarker(`(p1, p2) => let a = 1, b = 2, c = |3 in c`);
+                const [text, position] = textWithPosition(`(p1, p2) => let a = 1, b = 2, c = |3 in c`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`a`, `b`, `p1`, `p2`],
@@ -1129,7 +1129,7 @@ describe(`Inspection`, () => {
             });
 
             it(`let a = let a1 = 1 in a1, b = 2, c = |3 in c`, () => {
-                const [text, position] = textWithMarker(`let a = let a1 = 1 in a1, b = 2, c = |3 in c`);
+                const [text, position] = textWithPosition(`let a = let a1 = 1 in a1, b = 2, c = |3 in c`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`a`, `b`],
@@ -1138,7 +1138,7 @@ describe(`Inspection`, () => {
             });
 
             it(`let a = let a = 1 in | in a`, () => {
-                const [text, position] = textWithMarker(`let a = let a = 1 in | in a`);
+                const [text, position] = textWithPosition(`let a = let a = 1 in | in a`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`a`],
@@ -1147,7 +1147,7 @@ describe(`Inspection`, () => {
             });
 
             it(`let a = let a1 = 1 in |a1, b = 2, c = 3 in c`, () => {
-                const [text, position] = textWithMarker(`let a = let a1 = 1 in |a1, b = 2, c = 3 in c`);
+                const [text, position] = textWithPosition(`let a = let a1 = 1 in |a1, b = 2, c = 3 in c`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`a1`, `b`, `c`],
