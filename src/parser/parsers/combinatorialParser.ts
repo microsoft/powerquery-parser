@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast } from "..";
-import { Option, CommonError, isNever } from "../../common";
+import { CommonError, isNever, Option } from "../../common";
 import { TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -206,10 +206,9 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
 }
 
 function readBinOpExpression(state: IParserState, parser: IParser<IParserState>): Ast.TBinOpExpression {
-    const head: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
-    const operators: Ast.TBinOpExpressionOperator[] = [];
-    const operatorConstants: Ast.Constant[] = [];
-    const expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression)[] = [head];
+    let operators: Ast.TBinOpExpressionOperator[] = [];
+    let operatorConstants: Ast.Constant[] = [];
+    let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression)[] = [parser.readUnaryExpression(state, parser)];
 
     let maybeOperator: Option<Ast.TBinOpExpressionOperator> = Ast.binOpExpressionOperatorFrom(
         state.maybeCurrentTokenKind,
@@ -235,15 +234,49 @@ function readBinOpExpression(state: IParserState, parser: IParser<IParserState>)
             }
         }
 
-        const left = expressions[maxPrecedenceIndex];
+        const id: number = state.contextState.idCounter;
+        state.contextState.idCounter += 1;
+
+        const left: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[maxPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[maxPrecedenceIndex];
         const operatorConstant: Ast.Constant = operatorConstants[maxPrecedenceIndex];
-        const right = expressions[maxPrecedenceIndex + 1];
+        const right: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[maxPrecedenceIndex + 1];
 
         const newBinOpExpression: Ast.TBinOpExpression = {
-            isLeaf: false,
             kind: binOpExpressionNodeKindFrom(operator),
-        }
+            id,
+            maybeAttributeIndex: 0,
+            tokenRange: {
+                tokenIndexStart: 0,
+                tokenIndexEnd: 0,
+                positionStart: {
+                    lineCodeUnit: 0,
+                    lineNumber: 0,
+                    codeUnit: 0,
+                },
+                positionEnd: {
+                    lineCodeUnit: 0,
+                    lineNumber: 0,
+                    codeUnit: 0,
+                },
+            },
+            isLeaf: false,
+            left: left as any,
+            operator,
+            operatorConstant,
+            right,
+        } as any;
+
+        operators = [...operators.slice(0, maxPrecedenceIndex), ...operators.slice(maxPrecedenceIndex + 1)];
+        operatorConstants = [
+            ...operatorConstants.slice(0, maxPrecedenceIndex),
+            ...operatorConstants.slice(maxPrecedenceIndex + 1),
+        ];
+        expressions = expressions = [
+            ...expressions.slice(0, maxPrecedenceIndex),
+            newBinOpExpression,
+            ...expressions.slice(maxPrecedenceIndex + 2),
+        ];
     }
 
     const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[0];
