@@ -51,7 +51,10 @@ function expectParseErrAbridgedInspectionEqual(
     expectAbridgedInspectionEqual(triedInspection, expected);
 }
 
-function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspection, expected: AbridgedInspection): void {
+function expectAbridgedInspectionEqual(
+    triedInspection: Inspection.TriedInspection,
+    expected: AbridgedInspection,
+): void {
     if (!(triedInspection.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
     }
@@ -59,6 +62,24 @@ function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspecti
     const actual: AbridgedInspection = abridgedInspectionFrom(inspection);
 
     expect(actual).deep.equal(expected);
+}
+
+// Only works with single line expressions
+function textWithPosition(text: string): [string, Inspection.Position] {
+    expect(text.indexOf("|")).to.be.greaterThan(-1, "text must have | marker");
+    expect(text.indexOf("|")).to.equal(text.lastIndexOf("|"), "text must only have one |");
+
+    const index: number = text.indexOf("|");
+    if (index > -1) {
+        const position: Inspection.Position = {
+            lineNumber: 0,
+            lineCodeUnit: index,
+        };
+
+        return [text.replace("|", ""), position];
+    }
+
+    throw new Error("bad marker text");
 }
 
 describe(`Inspection`, () => {
@@ -1076,6 +1097,62 @@ describe(`Inspection`, () => {
                     scope: [`x`, `y`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
+            it(`let a = 1, b = 2, c = 3 in |`, () => {
+                const [text, position] = textWithPosition(`let a = 1, b = 2, c = 3 in |`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `b`, `c`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`let a = 1, b = 2, c = |3 in c`, () => {
+                const [text, position] = textWithPosition(`let a = 1, b = 2, c = |3 in c`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `b`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(p1, p2) => let a = 1, b = 2, c = |3 in c`, () => {
+                const [text, position] = textWithPosition(`(p1, p2) => let a = 1, b = 2, c = |3 in c`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `b`, `p1`, `p2`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`let a = let a1 = 1 in a1, b = 2, c = |3 in c`, () => {
+                const [text, position] = textWithPosition(`let a = let a1 = 1 in a1, b = 2, c = |3 in c`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `b`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`let a = let a = 1 in | in a`, () => {
+                const [text, position] = textWithPosition(`let a = let a = 1 in | in a`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`let a = let a1 = 1 in |a1, b = 2, c = 3 in c`, () => {
+                const [text, position] = textWithPosition(`let a = let a1 = 1 in |a1, b = 2, c = 3 in c`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a1`, `b`, `c`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
         });
     });
