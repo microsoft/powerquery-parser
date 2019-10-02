@@ -134,9 +134,7 @@ function inspectGeneralizedIdentifier(state: State, genIdentifierXorNode: NodeId
 
         const generalizedIdentifier: Ast.GeneralizedIdentifier = genIdentifierXorNode.node;
         if (isTokenPositionOnOrBeforeBeforePostion(generalizedIdentifier.tokenRange.positionEnd, state.position)) {
-            if (!state.assignmentKeyNodeIdMap.has(generalizedIdentifier.id)) {
-                addAstToScopeIfNew(state, generalizedIdentifier.literal, generalizedIdentifier);
-            }
+            addAstToScopeIfNew(state, generalizedIdentifier.literal, generalizedIdentifier);
         }
     }
 }
@@ -152,14 +150,12 @@ function inspectIdentifier(state: State, identifierXorNode: NodeIdMap.TXorNode):
         const identifier: Ast.Identifier = identifierXorNode.node;
         // TODO (issue #57): is this isParentOfNodeKind logic correct?
         // In section document case, the parent is of type IdentifierPairedExpression not IdentifierExpression.
-        // The state.assignmentKeyNodeIdMap check will filter out parent assignment node correctly, but
-        // I'm unclear whether this check should be used instead (or should be removed).
+        // inspectSection was modified to not call inspectIdentifier for section members, so this might is no
+        // longer an immediate issue.
         if (isParentOfNodeKind(state.nodeIdMapCollection, identifier.id, Ast.NodeKind.IdentifierExpression)) {
             return;
         } else if (isTokenPositionOnOrBeforeBeforePostion(identifier.tokenRange.positionEnd, state.position)) {
-            if (!state.assignmentKeyNodeIdMap.has(identifier.id)) {
-                addAstToScopeIfNew(state, identifier.literal, identifier);
-            }
+            addAstToScopeIfNew(state, identifier.literal, identifier);
         }
     }
 }
@@ -568,7 +564,12 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
             continue;
         }
         const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
-        inspectIdentifier(state, nameXorNode);
+        if (nameXorNode.kind === NodeIdMap.XorNodeKind.Ast && nameXorNode.node.kind === Ast.NodeKind.Identifier) {
+            // Add identifiers to current scope, excluding the current paired expression
+            if (!state.assignmentKeyNodeIdMap.has(nameXorNode.node.id)) {
+                addToScopeIfNew(state, nameXorNode.node.literal, identifierPairedExprXorNode);
+            }
+        }
 
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
             nodeIdMapCollection,

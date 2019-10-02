@@ -1018,39 +1018,28 @@ describe(`Inspection`, () => {
         });
 
         describe(`${Ast.NodeKind.SectionMember} (Ast)`, () => {
+            // TODO (issue #61): should we be providing scope members if cursor is on section declaration?
             it(`s|ection foo; x = 1; y = 2;`, () => {
-                const text: string = `section foo; x = 1; y = 2;`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
+                const [text, position] = textWithPosition(`s|ection foo; x = 1; y = 2;`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [],
+                    scope: [`x`, `y`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
 
             it(`section foo; x = 1|; y = 2;`, () => {
-                const text: string = `section foo; x = 1; y = 2;`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 18,
-                };
+                const [text, position] = textWithPosition(`section foo; x = 1|; y = 2;`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [],
+                    scope: [`y`],
                 };
 
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
 
             it(`section foo; x = 1; y = 2;|`, () => {
-                const text: string = `section foo; x = 1; y = 2;|`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 26,
-                };
+                const [text, position] = textWithPosition(`section foo; x = 1; y = 2;|`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`x`, `y`],
@@ -1069,28 +1058,21 @@ describe(`Inspection`, () => {
         });
 
         describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
+            // TODO (issue #61): should we be providing scope members if cursor is on section declaration?
             it(`s|ection foo; x = 1; y = 2`, () => {
-                const text: string = `section foo; x = 1; y = 2`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
+                const [text, position] = textWithPosition(`s|ection foo; x = 1; y = 2`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [],
+                    scope: [`x`, `y`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
 
             it(`section foo; x = 1|; y = 2`, () => {
-                const text: string = `section foo; x = 1; y = 2`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 18,
-                };
+                const [text, position] = textWithPosition(`section foo; x = 1|; y = 2`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [],
+                    scope: [`y`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
