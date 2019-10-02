@@ -148,6 +148,10 @@ function inspectIdentifier(state: State, identifierXorNode: NodeIdMap.TXorNode):
         }
 
         const identifier: Ast.Identifier = identifierXorNode.node;
+        // TODO (issue #57): is this isParentOfNodeKind logic correct?
+        // In section document case, the parent is of type IdentifierPairedExpression not IdentifierExpression.
+        // inspectSection was modified to not call inspectIdentifier for section members, so this might is no
+        // longer an immediate issue.
         if (isParentOfNodeKind(state.nodeIdMapCollection, identifier.id, Ast.NodeKind.IdentifierExpression)) {
             return;
         } else if (isTokenPositionOnOrBeforeBeforePostion(identifier.tokenRange.positionEnd, state.position)) {
@@ -351,7 +355,7 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
         if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast && keyXorNode.node.kind === Ast.NodeKind.Identifier) {
             // Add identifiers to current scope, excluding the current paired expression
             if (!state.assignmentKeyNodeIdMap.has(keyXorNode.node.id)) {
-                addToScopeIfNew(state, keyXorNode.node.literal, keyXorNode);
+                addToScopeIfNew(state, keyXorNode.node.literal, keyValuePairXorNode);
             }
         }
 
@@ -560,7 +564,12 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
             continue;
         }
         const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
-        inspectIdentifier(state, nameXorNode);
+        if (nameXorNode.kind === NodeIdMap.XorNodeKind.Ast && nameXorNode.node.kind === Ast.NodeKind.Identifier) {
+            // Add identifiers to current scope, excluding the current paired expression
+            if (!state.assignmentKeyNodeIdMap.has(nameXorNode.node.id)) {
+                addToScopeIfNew(state, nameXorNode.node.literal, identifierPairedExprXorNode);
+            }
+        }
 
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeChildByAttributeIndex(
             nodeIdMapCollection,
@@ -659,9 +668,11 @@ function isTokenPositionOnOrBeforeBeforePostion(tokenPosition: TokenPosition, po
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
-    const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
-    if (!scopeMap.has(key)) {
-        scopeMap.set(key, xorNode);
+    if (!state.assignmentKeyNodeIdMap.has(xorNode.node.id)) {
+        const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
+        if (!scopeMap.has(key)) {
+            scopeMap.set(key, xorNode);
+        }
     }
 }
 
