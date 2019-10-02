@@ -134,7 +134,9 @@ function inspectGeneralizedIdentifier(state: State, genIdentifierXorNode: NodeId
 
         const generalizedIdentifier: Ast.GeneralizedIdentifier = genIdentifierXorNode.node;
         if (isTokenPositionOnOrBeforeBeforePostion(generalizedIdentifier.tokenRange.positionEnd, state.position)) {
-            addAstToScopeIfNew(state, generalizedIdentifier.literal, generalizedIdentifier);
+            if (!state.assignmentKeyNodeIdMap.has(generalizedIdentifier.id)) {
+                addAstToScopeIfNew(state, generalizedIdentifier.literal, generalizedIdentifier);
+            }
         }
     }
 }
@@ -148,10 +150,16 @@ function inspectIdentifier(state: State, identifierXorNode: NodeIdMap.TXorNode):
         }
 
         const identifier: Ast.Identifier = identifierXorNode.node;
+        // TODO (issue #57): is this isParentOfNodeKind logic correct?
+        // In section document case, the parent is of type IdentifierPairedExpression not IdentifierExpression.
+        // The state.assignmentKeyNodeIdMap check will filter out parent assignment node correctly, but
+        // I'm unclear whether this check should be used instead (or should be removed).
         if (isParentOfNodeKind(state.nodeIdMapCollection, identifier.id, Ast.NodeKind.IdentifierExpression)) {
             return;
         } else if (isTokenPositionOnOrBeforeBeforePostion(identifier.tokenRange.positionEnd, state.position)) {
-            addAstToScopeIfNew(state, identifier.literal, identifier);
+            if (!state.assignmentKeyNodeIdMap.has(identifier.id)) {
+                addAstToScopeIfNew(state, identifier.literal, identifier);
+            }
         }
     }
 }
@@ -659,9 +667,11 @@ function isTokenPositionOnOrBeforeBeforePostion(tokenPosition: TokenPosition, po
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
-    const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
-    if (!scopeMap.has(key)) {
-        scopeMap.set(key, xorNode);
+    if (!state.assignmentKeyNodeIdMap.has(xorNode.node.id)) {
+        const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
+        if (!scopeMap.has(key)) {
+            scopeMap.set(key, xorNode);
+        }
     }
 }
 

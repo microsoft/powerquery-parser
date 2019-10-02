@@ -1039,7 +1039,7 @@ describe(`Inspection`, () => {
                 };
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [`x`],
+                    scope: [],
                 };
 
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -1090,20 +1090,16 @@ describe(`Inspection`, () => {
                 };
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [`x`],
+                    scope: [],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
 
             it(`section foo; x = 1; y = 2|`, () => {
-                const text: string = `section foo; x = 1; y = 2|`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 25,
-                };
+                const [text, position] = textWithPosition(`section foo; x = 1; y = 2|`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [`x`, `y`],
+                    scope: [`x`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
