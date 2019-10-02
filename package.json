@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.1.22",
+    "version": "0.1.23",
     "description": "A parser for the Power Query/M formula language.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -12,21 +12,21 @@
         "grapheme-splitter": "^1.0.4"
     },
     "devDependencies": {
-        "@types/chai": "^4.1.7",
-        "@types/mocha": "^5.2.5",
-        "@types/node": "^12.7.1",
+        "@types/chai": "^4.2.3",
+        "@types/mocha": "^5.2.7",
+        "@types/node": "^12.7.9",
         "chai": "^4.2.0",
-        "mocha": "^5.2.0",
-        "mocha-junit-reporter": "^1.22.0",
+        "mocha": "^6.2.1",
+        "mocha-junit-reporter": "^1.23.1",
         "mocha-multi-reporters": "^1.1.7",
-        "prettier": "1.17.1",
-        "ts-loader": "^5.3.3",
-        "ts-node": "^7.0.1",
-        "tslint": "^5.16.0",
+        "prettier": "1.18.2",
+        "ts-loader": "^6.2.0",
+        "ts-node": "^8.4.1",
+        "tslint": "^5.20.0",
         "tslint-config-prettier": "^1.18.0",
         "tslint-microsoft-contrib": "^6.2.0",
         "tslint-plugin-prettier": "^2.0.1",
-        "typescript": "^3.5.1"
+        "typescript": "3.5.1"
     },
     "files": [
         "lib/common/*",
