@@ -351,7 +351,7 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
         if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast && keyXorNode.node.kind === Ast.NodeKind.Identifier) {
             // Add identifiers to current scope, excluding the current paired expression
             if (!state.assignmentKeyNodeIdMap.has(keyXorNode.node.id)) {
-                addToScopeIfNew(state, keyXorNode.node.literal, keyXorNode);
+                addToScopeIfNew(state, keyXorNode.node.literal, keyValuePairXorNode);
             }
         }
 
