@@ -46,7 +46,7 @@ export let CombinatorialParser: IParser<IParserState> = {
     readArithmeticExpression: Naive.readArithmeticExpression,
 
     // 12.2.3.8 Metadata expression
-    readMetadataExpression: Naive.readMetadataExpression,
+    readMetadataExpression,
 
     // 12.2.3.9 Unary expression
     readUnaryExpression,
@@ -203,6 +203,10 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
     } else {
         return primaryExpression;
     }
+}
+
+function readMetadataExpression(state: IParserState, parser: IParser<IParserState>): Ast.TMetadataExpression {
+    return (readBinOpExpression(state, parser) as unknown) as Ast.TMetadataExpression;
 }
 
 function readBinOpExpression(state: IParserState, parser: IParser<IParserState>): Ast.TBinOpExpression {
