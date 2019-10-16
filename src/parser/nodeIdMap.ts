@@ -31,7 +31,7 @@ export interface Collection {
     readonly childIdsById: ChildIdsById;
 }
 
-export interface RepeatedAttributeIndexRequest {
+export interface RepeatedChildByAttributeIndexRequest {
     readonly nodeIdMapCollection: Collection;
     readonly firstDrilldown: FirstDrilldown;
     readonly drilldowns: ReadonlyArray<Drilldown>;
@@ -102,7 +102,7 @@ export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: numb
 }
 
 // Helper function for repeatedly calling maybeXorChildByAttributeIndex.
-export function maybeXorChildByRepeatedAttributeIndex(request: RepeatedAttributeIndexRequest): Option<TXorNode> {
+export function maybeRepeatedChildByAttributeRequest(request: RepeatedChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
     const firstDrilldown: FirstDrilldown = request.firstDrilldown;
 
@@ -170,26 +170,6 @@ export function maybeXorChildByAttributeIndex(
     }
 
     return undefined;
-}
-
-export function maybeAstChildByAttributeIndex(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-    maybeChildNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>,
-): Option<Ast.TNode> {
-    const maybeNode: Option<TXorNode> = maybeXorChildByAttributeIndex(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-        maybeChildNodeKinds,
-    );
-
-    if (maybeNode === undefined || maybeNode.kind === XorNodeKind.Context) {
-        return undefined;
-    } else {
-        return maybeNode.node;
-    }
 }
 
 export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeId: number): Option<string> {
@@ -291,27 +271,7 @@ export function expectXorChildByAttributeIndex(
     );
     if (maybeNode === undefined) {
         const details: {} = { parentId, attributeIndex };
-        throw new CommonError.InvariantError(`parentId doesn't have a child at the given index`, details);
-    }
-
-    return maybeNode;
-}
-
-export function expectAstChildByAttributeIndex(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-    attributeIndex: number,
-    maybeChildNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>,
-): Ast.TNode {
-    const maybeNode: Option<Ast.TNode> = maybeAstChildByAttributeIndex(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-        maybeChildNodeKinds,
-    );
-    if (maybeNode === undefined) {
-        const details: {} = { parentId, attributeIndex };
-        throw new CommonError.InvariantError(`parentId doesn't have an Ast child at the given index`, details);
+        throw new CommonError.InvariantError(`parentId doesn't have a child at given index`, details);
     }
 
     return maybeNode;
