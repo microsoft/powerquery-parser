@@ -90,7 +90,7 @@ function lexText(text: string): void {
 }
 
 // @ts-ignore
-function inspectText(text: string): void {
+function inspectText(text: string, position: Inspection.Position): void {
     let nodeIdMapCollection: NodeIdMap.Collection;
     let leafNodeIds: ReadonlyArray<number>;
 
@@ -111,12 +111,6 @@ function inspectText(text: string): void {
         nodeIdMapCollection = lexAndParseOk.nodeIdMapCollection;
         leafNodeIds = lexAndParseOk.leafNodeIds;
     }
-
-    // Create the cursor position for the inspection.
-    const position: Inspection.Position = {
-        lineNumber: 0,
-        lineCodeUnit: 6,
-    };
 
     // An inspection can fail if given invalid arguments.
     const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds);
