@@ -633,30 +633,6 @@ describe(`Inspection`, () => {
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
 
-            it(`foo(x,|`, () => {
-                const [text, position] = textWithPosition(`foo(x,|`);
-                const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybeName: "foo",
-                            maybePositionEnd: undefined,
-                            maybeArguments: {
-                                numArguments: 2,
-                                positionArgumentIndex: 1,
-                            },
-                        },
-                    ],
-                    scope: [`x`, `foo`],
-                };
-                expectParseErrAbridgedInspectionEqual(text, position, expected);
-            });
-
             it(`[x](y|`, () => {
                 const text: string = `[x](y`;
                 const position: Inspection.Position = {
