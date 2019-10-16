@@ -31,7 +31,7 @@ export interface Collection {
     readonly childIdsById: ChildIdsById;
 }
 
-export interface RepeatedChildByAttributeIndexRequest {
+export interface MultipleChildByAttributeIndexRequest {
     readonly nodeIdMapCollection: Collection;
     readonly firstDrilldown: FirstDrilldown;
     readonly drilldowns: ReadonlyArray<Drilldown>;
@@ -101,12 +101,12 @@ export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: numb
     return childIds.map(childId => expectAstNode(astNodeById, childId));
 }
 
-// Helper function for repeatedly calling maybeXorChildByAttributeIndex.
-export function maybeRepeatedChildByAttributeRequest(request: RepeatedChildByAttributeIndexRequest): Option<TXorNode> {
+// Helper function for repeatedly calling maybeChildByAttributeIndex.
+export function maybeMultipleChildByAttributeRequest(request: MultipleChildByAttributeIndexRequest): Option<TXorNode> {
     const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
     const firstDrilldown: FirstDrilldown = request.firstDrilldown;
 
-    let maybeChildXorNode: Option<TXorNode> = maybeXorChildByAttributeIndex(
+    let maybeChildXorNode: Option<TXorNode> = maybeChildByAttributeIndex(
         nodeIdMapCollection,
         firstDrilldown.rootNodeId,
         firstDrilldown.attributeIndex,
@@ -118,7 +118,7 @@ export function maybeRepeatedChildByAttributeRequest(request: RepeatedChildByAtt
             return maybeChildXorNode;
         }
 
-        maybeChildXorNode = maybeXorChildByAttributeIndex(
+        maybeChildXorNode = maybeChildByAttributeIndex(
             nodeIdMapCollection,
             maybeChildXorNode.node.id,
             drilldown.attributeIndex,
@@ -138,7 +138,7 @@ export function maybeRepeatedChildByAttributeRequest(request: RepeatedChildByAtt
 //
 // An optional array of Ast.NodeKind can be given for validation purposes.
 // If the child's node kind isn't in the given array, then an exception is thrown.
-export function maybeXorChildByAttributeIndex(
+export function maybeChildByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
@@ -190,7 +190,7 @@ export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeI
         // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
         const recursiveArrayXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, invokeExprXorNode.node.id);
         const recursiveExprXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-        const headXorNode: TXorNode = expectXorChildByAttributeIndex(
+        const headXorNode: TXorNode = expectChildByAttributeIndex(
             nodeIdMapCollection,
             recursiveExprXorNode.node.id,
             0,
@@ -257,13 +257,13 @@ export function expectParentAstNode(nodeIdMapCollection: Collection, nodeId: num
     return maybeNode;
 }
 
-export function expectXorChildByAttributeIndex(
+export function expectChildByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
     maybeChildNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>,
 ): TXorNode {
-    const maybeNode: Option<TXorNode> = maybeXorChildByAttributeIndex(
+    const maybeNode: Option<TXorNode> = maybeChildByAttributeIndex(
         nodeIdMapCollection,
         parentId,
         attributeIndex,
