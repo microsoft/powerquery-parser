@@ -5,7 +5,7 @@ import { CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
-import { NodeKind, TNode } from "./node";
+import { InvokeExpressionArguments, NodeKind, TNode } from "./node";
 import { PositionIdentifierKind } from "./positionIdentifier";
 
 export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
@@ -96,7 +96,7 @@ function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.
         throw expectedNodeKindError(fnExpressionXorNode, Ast.NodeKind.FunctionExpression);
     }
 
-    const drilldownToCsvArrayRequest: NodeIdMap.RepeatedChildByAttributeIndexRequest = {
+    const drilldownToCsvArrayRequest: NodeIdMap.RepeatedAttributeIndexRequest = {
         nodeIdMapCollection: state.nodeIdMapCollection,
         firstDrilldown: {
             rootNodeId: fnExpressionXorNode.node.id,
@@ -110,7 +110,7 @@ function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.
             },
         ],
     };
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeRepeatedChildByAttributeRequest(
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByRepeatedAttributeIndex(
         drilldownToCsvArrayRequest,
     );
 
@@ -271,8 +271,20 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
             throw isNever(invokeExprXorNode);
     }
 
+    state.result.nodes.push({
+        kind: NodeKind.InvokeExpression,
+        maybePositionEnd,
+        maybePositionStart,
+        maybeName,
+        maybeArguments: inspectInvokeExpressionArguments(state, invokeExprXorNode),
+    });
+}
+
+function inspectInvokeExpressionArguments(
+    state: State,
+    invokeExprXorNode: NodeIdMap.TXorNode,
+): Option<InvokeExpressionArguments> {
     // Grab arguments if they exist.
-    // If they do not, return a Node where maybeArguments is undefined.
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
@@ -280,48 +292,64 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
         [Ast.NodeKind.ArrayWrapper],
     );
     if (maybeCsvArrayXorNode === undefined) {
-        state.result.nodes.push({
-            kind: NodeKind.InvokeExpression,
-            maybePositionEnd,
-            maybePositionStart,
-            maybeName,
-            maybeArguments: undefined,
-        });
-        return;
+        return undefined;
     }
     const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
 
-    const argXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = nodesOnCsvFromCsvArray(
-        state.nodeIdMapCollection,
-        csvArrayXorNode,
-    );
-
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const position: Position = state.position;
-    let maybePositionArgumentIndex: Option<number>;
+    const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMap.expectXorChildren(
+        state.nodeIdMapCollection,
+        csvArrayXorNode.node.id,
+    );
+    const numArguments: number = csvXorNodes.length;
 
-    const numArguments: number = argXorNodes.length;
+    let maybePositionArgumentIndex: Option<number>;
     for (let index: number = 0; index < numArguments; index += 1) {
-        const argXorNode: NodeIdMap.TXorNode = argXorNodes[index];
-        if (argXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-            inspectIdentifierExpression(state, argXorNode);
+        const csvXorNode: NodeIdMap.TXorNode = csvXorNodes[index];
+
+        // Conditionally add argument name to scope.
+        // Has to be this awkward as `foo(@|` is possible.
+        const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+            nodeIdMapCollection,
+            csvXorNode.node.id,
+            0,
+            undefined,
+        );
+        if (maybeNameXorNode !== undefined && maybeNameXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+            const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
+            inspectIdentifierExpression(state, nameXorNode);
         }
 
-        if (isPositionOnXorNode(position, argXorNode)) {
-            maybePositionArgumentIndex = index;
+        // Conditionally set maybePositionArgumentIndex.
+        // If position is on a comma then count it as belonging to the next index.
+        // Eg. `foo(a,|)` is in the second index.
+        if (isPositionOnXorNode(position, csvXorNode)) {
+            if (csvXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+                const maybeCommaConstant: Option<Ast.Constant> = NodeIdMap.maybeAstChildByAttributeIndex(
+                    nodeIdMapCollection,
+                    csvXorNode.node.id,
+                    1,
+                    [Ast.NodeKind.Constant],
+                ) as Option<Ast.Constant>;
+                if (
+                    maybeCommaConstant &&
+                    isTokenPositionOnPosition(maybeCommaConstant.tokenRange.positionEnd, position)
+                ) {
+                    maybePositionArgumentIndex = index + 1;
+                } else {
+                    maybePositionArgumentIndex = index;
+                }
+            } else {
+                maybePositionArgumentIndex = index;
+            }
         }
     }
-    const positionArgumentIndex: number = maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0;
 
-    state.result.nodes.push({
-        kind: NodeKind.InvokeExpression,
-        maybePositionEnd,
-        maybePositionStart,
-        maybeName,
-        maybeArguments: {
-            numArguments,
-            positionArgumentIndex,
-        },
-    });
+    return {
+        numArguments,
+        positionArgumentIndex: maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0,
+    };
 }
 
 function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode): void {
@@ -384,7 +412,7 @@ function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXo
             if (isTokenPositionOnPosition(list.closeWrapperConstant.tokenRange.positionEnd, position)) {
                 return;
             }
-            if (isPositionOnTokenRange(position, tokenRange)) {
+            if (isPositionInTokenRange(position, tokenRange)) {
                 const node: TNode = {
                     kind: NodeKind.List,
                     maybePositionStart: tokenRange.positionStart,
@@ -441,7 +469,7 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
             if (isTokenPositionOnPosition(record.closeWrapperConstant.tokenRange.positionEnd, position)) {
                 return;
             }
-            if (isPositionOnTokenRange(position, tokenRange)) {
+            if (isPositionInTokenRange(position, tokenRange)) {
                 const node: TNode = {
                     kind: NodeKind.Record,
                     maybePositionStart: tokenRange.positionStart,
@@ -586,7 +614,11 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
 }
 
 function expectedNodeKindError(xorNode: NodeIdMap.TXorNode, expected: Ast.NodeKind): CommonError.InvariantError {
-    const details: {} = { xorNodeId: xorNode.node.id };
+    const details: {} = {
+        xorNodeId: xorNode.node.id,
+        expectedNodeKind: expected,
+        actualNodeKind: xorNode.node.kind,
+    };
     return new CommonError.InvariantError(`expected xorNode to be of kind ${expected}`, details);
 }
 
@@ -623,7 +655,7 @@ function isTokenPositionOnPosition(tokenPosition: TokenPosition, position: Posit
     return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
 }
 
-function isTokenPositionBeforePostion(tokenPosition: TokenPosition, position: Position): boolean {
+function isTokenPositionBeforePosition(tokenPosition: TokenPosition, position: Position): boolean {
     return (
         tokenPosition.lineNumber < position.lineNumber ||
         (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
@@ -633,7 +665,7 @@ function isTokenPositionBeforePostion(tokenPosition: TokenPosition, position: Po
 function isPositionOnXorNode(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            return isPositionOnTokenRange(position, xorNode.node.tokenRange);
+            return isPositionInTokenRange(position, xorNode.node.tokenRange);
 
         case NodeIdMap.XorNodeKind.Context:
             return true;
@@ -643,7 +675,7 @@ function isPositionOnXorNode(position: Position, xorNode: NodeIdMap.TXorNode): b
     }
 }
 
-function isPositionOnTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
+function isPositionInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
     const tokenRangeStart: TokenPosition = tokenRange.positionStart;
     if (
         tokenRangeStart.lineNumber < position.lineNumber ||
@@ -664,7 +696,7 @@ function isPositionOnTokenRange(position: Position, tokenRange: Ast.TokenRange):
 }
 
 function isTokenPositionOnOrBeforeBeforePostion(tokenPosition: TokenPosition, position: Position): boolean {
-    return isTokenPositionOnPosition(tokenPosition, position) || isTokenPositionBeforePostion(tokenPosition, position);
+    return isTokenPositionOnPosition(tokenPosition, position) || isTokenPositionBeforePosition(tokenPosition, position);
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
