@@ -13,7 +13,6 @@ export interface LexAndParseOk {
     readonly ast: Ast.TDocument;
     readonly comments: ReadonlyArray<TComment>;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
 }
 
 export function tryLexAndParse(text: string): TriedLexAndParse {
@@ -49,7 +48,6 @@ export function tryLexAndParse(text: string): TriedLexAndParse {
             ast: parseOk.document,
             comments: lexerSnapshot.comments,
             nodeIdMapCollection: parseOk.nodeIdMapCollection,
-            leafNodeIds: parseOk.leafNodeIds,
         },
     };
 }
