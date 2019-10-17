@@ -251,7 +251,7 @@ export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): 
     const maybeNode: Option<TXorNode> = maybeXorNode(nodeIdMapCollection, nodeId);
     if (maybeNode === undefined) {
         const details: {} = { nodeId };
-        throw new CommonError.InvariantError(`nodeId wasn't a astNode nor contextNode`, details);
+        throw new CommonError.InvariantError(`nodeId wasn't an astNode nor contextNode`, details);
     }
 
     return maybeNode;
