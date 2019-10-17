@@ -73,9 +73,10 @@ export function startContext(
     maybeParentNode: Option<Node>,
 ): Node {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const nodeId: number = state.idCounter + 1;
     let maybeAttributeIndex: Option<number>;
+
     state.idCounter += 1;
+    const nodeId: number = state.idCounter;
 
     // If a parent context Node exists, update the parent/child mapping attributes and attrbiuteCounter.
     if (maybeParentNode) {
