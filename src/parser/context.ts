@@ -79,7 +79,7 @@ export function startContext(
 
     // If a parent context Node exists, update the parent/child mapping attributes and attrbiuteCounter.
     if (maybeParentNode) {
-        const childIdsById: Map<number, ReadonlyArray<number>> = nodeIdMapCollection.childIdsById;
+        const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
         const parentNode: Node = maybeParentNode;
         const parentId: number = parentNode.id;
 
@@ -135,26 +135,70 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
     return maybeParentNode;
 }
 
+export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boolean): void {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
+    const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
+    const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
+
+    if (!astNodeById.has(nodeId)) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(`Ast nodeId not in state.`, details);
+    }
+
+    // If Node was a leaf node, remove it from the list of leaf nodes.
+    removeLeafOrNoop(state, nodeId);
+
+    const maybeParentId: Option<number> = parentIdById.get(nodeId);
+    const maybeChildIds: Option<ReadonlyArray<number>> = childIdsById.get(nodeId);
+
+    // Not a leaf node.
+    if (maybeChildIds !== undefined) {
+        const childIds: ReadonlyArray<number> = maybeChildIds;
+        const details: {} = {
+            childIds,
+            nodeId,
+        };
+        throw new CommonError.InvariantError(`Ast maybeChildIds !== undefined`, details);
+    }
+    // Is a leaf node, not root node.
+    // Delete the node from the list of children under the node's parent.
+    else if (maybeParentId) {
+        const parentId: number = maybeParentId;
+        if (astNodeById.has(parentId) && !parentWillBeDeleted) {
+            const details: {} = {
+                parentId,
+                nodeId,
+            };
+            throw new CommonError.InvariantError(`parent is a Ast node not marked for deletion`, details);
+        }
+
+        removeOrReplaceChildId(nodeIdMapCollection, parentId, nodeId, undefined);
+    }
+    // Else is root node, is leaf node.
+    // No children updates need to be taken.
+
+    // Remove the node from existence.
+    astNodeById.delete(nodeId);
+    childIdsById.delete(nodeId);
+    parentIdById.delete(nodeId);
+}
+
 export function deleteContext(state: State, nodeId: number): Option<Node> {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const contextNodeById: Map<number, Node> = nodeIdMapCollection.contextNodeById;
-    const parentIdById: Map<number, number> = nodeIdMapCollection.parentIdById;
-    const childIdsById: Map<number, ReadonlyArray<number>> = nodeIdMapCollection.childIdsById;
+    const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
+    const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
+    const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
 
     const maybeNode: Option<Node> = contextNodeById.get(nodeId);
     if (maybeNode === undefined) {
         const details: {} = { nodeId };
-        throw new CommonError.InvariantError(`nodeId not in state.`, details);
+        throw new CommonError.InvariantError(`Context nodeId not in state.`, details);
     }
     const node: Node = maybeNode;
 
     // If Node was a leaf node, remove it from the list of leaf nodes.
-    const leafNodeIds: number[] = state.leafNodeIds;
-    const maybeLeafIndex: Option<number> = leafNodeIds.indexOf(nodeId);
-    if (maybeLeafIndex !== -1) {
-        const leafIndex: number = maybeLeafIndex;
-        state.leafNodeIds = [...leafNodeIds.slice(0, leafIndex), ...leafNodeIds.slice(leafIndex + 1)];
-    }
+    removeLeafOrNoop(state, nodeId);
 
     const maybeParentId: Option<number> = parentIdById.get(nodeId);
     const maybeChildIds: Option<ReadonlyArray<number>> = childIdsById.get(nodeId);
@@ -167,7 +211,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
                 childIds,
                 nodeId,
             };
-            throw new CommonError.InvariantError(`childIds.length !== 0`, details);
+            throw new CommonError.InvariantError(`Context childIds.length !== 0`, details);
         }
         const childId: number = childIds[0];
 
@@ -228,6 +272,15 @@ export function deepCopy(state: State): State {
     };
 }
 
+function removeLeafOrNoop(state: State, nodeId: number): void {
+    const leafNodeIds: number[] = state.leafNodeIds;
+    const maybeLeafIndex: Option<number> = leafNodeIds.indexOf(nodeId);
+    if (maybeLeafIndex !== -1) {
+        const leafIndex: number = maybeLeafIndex;
+        state.leafNodeIds = [...leafNodeIds.slice(0, leafIndex), ...leafNodeIds.slice(leafIndex + 1)];
+    }
+}
+
 function removeOrReplaceChildId(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
@@ -248,11 +301,27 @@ function removeOrReplaceChildId(
     const beforeChildId: ReadonlyArray<number> = childIds.slice(0, replacementIndex);
     const afterChildId: ReadonlyArray<number> = childIds.slice(replacementIndex + 1);
 
+    let maybeNewChildIds: Option<ReadonlyArray<number>>;
     if (maybeReplacementId) {
         const replacementId: number = maybeReplacementId;
-        childIdsById.set(parentId, [...beforeChildId, replacementId, ...afterChildId]);
         nodeIdMapCollection.parentIdById.set(replacementId, parentId);
+        if (childIds.length === 1) {
+            maybeNewChildIds = [replacementId];
+        } else {
+            maybeNewChildIds = [...beforeChildId, replacementId, ...afterChildId];
+        }
     } else {
-        childIdsById.set(parentId, [...beforeChildId, ...afterChildId]);
+        if (childIds.length === 1) {
+            maybeNewChildIds = undefined;
+        } else {
+            maybeNewChildIds = [...beforeChildId, ...afterChildId];
+        }
+    }
+
+    if (maybeNewChildIds) {
+        const newChildIds: ReadonlyArray<number> = maybeNewChildIds;
+        childIdsById.set(parentId, newChildIds);
+    } else {
+        childIdsById.delete(parentId);
     }
 }

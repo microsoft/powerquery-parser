@@ -62,7 +62,7 @@ describe("Parser.Error", () => {
     });
 
     it(`Dangling Comma for LetExpression`, () => {
-        const text: string = "let in 1, in 1";
+        const text: string = "let a = 1, in 1";
         const continuationError: ParserError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationLetExpression());
     });

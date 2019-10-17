@@ -73,17 +73,29 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     state.maybeCurrentTokenKind = state.maybeCurrentToken !== undefined ? state.maybeCurrentToken.kind : undefined;
 
     const contextState: ParserContext.State = state.contextState;
+    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const backupIdCounter: number = backup.contextStateIdCounter;
     contextState.idCounter = backupIdCounter;
 
-    const newNodeIds: number[] = [];
-    for (const nodeId of contextState.nodeIdMapCollection.contextNodeById.keys()) {
+    const newContextNodeIds: number[] = [];
+    const newAstNodeIds: number[] = [];
+    for (const nodeId of nodeIdMapCollection.astNodeById.keys()) {
         if (nodeId > backupIdCounter) {
-            newNodeIds.push(nodeId);
+            newAstNodeIds.push(nodeId);
+        }
+    }
+    for (const nodeId of nodeIdMapCollection.contextNodeById.keys()) {
+        if (nodeId > backupIdCounter) {
+            newContextNodeIds.push(nodeId);
         }
     }
 
-    for (const nodeId of newNodeIds.sort().reverse()) {
+    for (const nodeId of newAstNodeIds.sort().reverse()) {
+        const maybeParent: Option<number> = nodeIdMapCollection.parentIdById.get(nodeId);
+        const parentWillBeDeleted: boolean = maybeParent !== undefined && maybeParent >= backupIdCounter;
+        ParserContext.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
+    }
+    for (const nodeId of newContextNodeIds.sort().reverse()) {
         ParserContext.deleteContext(state.contextState, nodeId);
     }
 

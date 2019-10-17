@@ -3,10 +3,11 @@
 
 /* tslint:disable:no-console */
 
+import { Inspection } from ".";
 import { Option, ResultKind } from "./common";
-import { TriedLexAndParse, tryLexAndParse } from "./jobs";
+import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "./jobs";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { ParserError } from "./parser";
+import { NodeIdMap, ParserContext, ParserError } from "./parser";
 import { CombinatorialParser } from "./parser/parsers";
 
 parseText(`1 + 2 + 3`);
@@ -87,4 +88,39 @@ function lexText(text: string): void {
         console.log(error.innerError.message);
         console.log(JSON.stringify(error.innerError, undefined, 4));
     }
+}
+
+// @ts-ignore
+function inspectText(text: string, position: Inspection.Position): void {
+    let nodeIdMapCollection: NodeIdMap.Collection;
+    let leafNodeIds: ReadonlyArray<number>;
+
+    // An inspection can be done if the text is successfully parsed,
+    // or a ParserError instance was thrown during the parsing.
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, CombinatorialParser);
+    if (triedLexAndParse.kind === ResultKind.Err) {
+        if (!(triedLexAndParse.error instanceof ParserError.ParserError)) {
+            console.log(`Lex and parse failed due to: ${triedLexAndParse.error.message}`);
+            return;
+        }
+
+        const contextState: ParserContext.State = triedLexAndParse.error.context;
+        nodeIdMapCollection = contextState.nodeIdMapCollection;
+        leafNodeIds = contextState.leafNodeIds;
+    } else {
+        const lexAndParseOk: LexAndParseOk = triedLexAndParse.value;
+        nodeIdMapCollection = lexAndParseOk.nodeIdMapCollection;
+        leafNodeIds = lexAndParseOk.leafNodeIds;
+    }
+
+    // An inspection can fail if given invalid arguments.
+    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds);
+    if (triedInspection.kind === ResultKind.Err) {
+        console.log(`Inspection failed due to: ${triedInspection.error.message}`);
+        return;
+    }
+    const inspected: Inspection.Inspected = triedInspection.value;
+
+    console.log(`Inspection scope: ${[...inspected.scope.entries()]}`);
+    console.log(`Inspection nodes: ${JSON.stringify(inspected.nodes, undefined, 4)}`);
 }

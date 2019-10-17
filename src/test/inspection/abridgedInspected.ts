@@ -29,12 +29,12 @@ function expectParseOkAbridgedInspectionEqual(
     expected: AbridgedInspection,
 ): void {
     const parseOk: ParseOk = expectParseOk(text);
-    const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
+    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
         position,
         parseOk.nodeIdMapCollection,
         parseOk.leafNodeIds,
     );
-    expectAbridgedInspectionEqual(triedInspect, expected);
+    expectAbridgedInspectionEqual(triedInspection, expected);
 }
 
 function expectParseErrAbridgedInspectionEqual(
@@ -43,22 +43,43 @@ function expectParseErrAbridgedInspectionEqual(
     expected: AbridgedInspection,
 ): void {
     const parserError: ParserError.ParserError = expectParseErr(text);
-    const triedInspect: Inspection.TriedInspect = Inspection.tryFrom(
+    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
         position,
         parserError.context.nodeIdMapCollection,
         parserError.context.leafNodeIds,
     );
-    expectAbridgedInspectionEqual(triedInspect, expected);
+    expectAbridgedInspectionEqual(triedInspection, expected);
 }
 
-function expectAbridgedInspectionEqual(triedInspect: Inspection.TriedInspect, expected: AbridgedInspection): void {
-    if (!(triedInspect.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspect.kind === ResultKind.Ok: ${triedInspect.error.message}`);
+function expectAbridgedInspectionEqual(
+    triedInspection: Inspection.TriedInspection,
+    expected: AbridgedInspection,
+): void {
+    if (!(triedInspection.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
     }
-    const inspection: Inspection.Inspected = triedInspect.value;
+    const inspection: Inspection.Inspected = triedInspection.value;
     const actual: AbridgedInspection = abridgedInspectionFrom(inspection);
 
     expect(actual).deep.equal(expected);
+}
+
+// Only works with single line expressions
+function textWithPosition(text: string): [string, Inspection.Position] {
+    expect(text.indexOf("|")).to.be.greaterThan(-1, "text must have | marker");
+    expect(text.indexOf("|")).to.equal(text.lastIndexOf("|"), "text must only have one |");
+
+    const index: number = text.indexOf("|");
+    if (index > -1) {
+        const position: Inspection.Position = {
+            lineNumber: 0,
+            lineCodeUnit: index,
+        };
+
+        return [text.replace("|", ""), position];
+    }
+
+    throw new Error("bad marker text");
 }
 
 describe(`Inspection`, () => {
@@ -612,6 +633,54 @@ describe(`Inspection`, () => {
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
 
+            it(`foo(x,|`, () => {
+                const [text, position] = textWithPosition(`foo(x,|`);
+                const expected: AbridgedInspection = {
+                    nodes: [
+                        {
+                            kind: NodeKind.InvokeExpression,
+                            maybePositionStart: {
+                                codeUnit: 3,
+                                lineCodeUnit: 3,
+                                lineNumber: 0,
+                            },
+                            maybeName: "foo",
+                            maybePositionEnd: undefined,
+                            maybeArguments: {
+                                numArguments: 2,
+                                positionArgumentIndex: 1,
+                            },
+                        },
+                    ],
+                    scope: [`x`, `foo`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`foo(x, |`, () => {
+                const [text, position] = textWithPosition(`foo(x, |`);
+                const expected: AbridgedInspection = {
+                    nodes: [
+                        {
+                            kind: NodeKind.InvokeExpression,
+                            maybePositionStart: {
+                                codeUnit: 3,
+                                lineCodeUnit: 3,
+                                lineNumber: 0,
+                            },
+                            maybeName: "foo",
+                            maybePositionEnd: undefined,
+                            maybeArguments: {
+                                numArguments: 2,
+                                positionArgumentIndex: 1,
+                            },
+                        },
+                    ],
+                    scope: [`x`, `foo`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
             it(`[x](y|`, () => {
                 const text: string = `[x](y`;
                 const position: Inspection.Position = {
@@ -997,83 +1066,128 @@ describe(`Inspection`, () => {
         });
 
         describe(`${Ast.NodeKind.SectionMember} (Ast)`, () => {
+            // TODO (issue #61): should we be providing scope members if cursor is on section declaration?
             it(`s|ection foo; x = 1; y = 2;`, () => {
-                const text: string = `section foo; x = 1; y = 2;`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
+                const [text, position] = textWithPosition(`s|ection foo; x = 1; y = 2;`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [],
+                    scope: [`x`, `y`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
 
             it(`section foo; x = 1|; y = 2;`, () => {
-                const text: string = `section foo; x = 1; y = 2;`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 18,
-                };
+                const [text, position] = textWithPosition(`section foo; x = 1|; y = 2;`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [`x`],
+                    scope: [`y`],
                 };
 
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
 
             it(`section foo; x = 1; y = 2;|`, () => {
-                const text: string = `section foo; x = 1; y = 2;|`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 26,
-                };
+                const [text, position] = textWithPosition(`section foo; x = 1; y = 2;|`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`x`, `y`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
             });
+
+            it(`section foo; x = 1; y = 2; z = let a = 1 in |a;`, () => {
+                const [text, position] = textWithPosition(`section foo; x = 1; y = 2; z = let a = 1 in |a;`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `x`, `y`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
         });
 
         describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
+            // TODO (issue #61): should we be providing scope members if cursor is on section declaration?
             it(`s|ection foo; x = 1; y = 2`, () => {
-                const text: string = `section foo; x = 1; y = 2`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 1,
-                };
+                const [text, position] = textWithPosition(`s|ection foo; x = 1; y = 2`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [],
+                    scope: [`x`, `y`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
 
             it(`section foo; x = 1|; y = 2`, () => {
-                const text: string = `section foo; x = 1; y = 2`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 18,
+                const [text, position] = textWithPosition(`section foo; x = 1|; y = 2`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`y`],
                 };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`section foo; x = 1; y = 2|`, () => {
+                const [text, position] = textWithPosition(`section foo; x = 1; y = 2|`);
                 const expected: AbridgedInspection = {
                     nodes: [],
                     scope: [`x`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });
+        });
 
-            it(`section foo; x = 1; y = 2|`, () => {
-                const text: string = `section foo; x = 1; y = 2|`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 25,
-                };
+        describe(`${Ast.NodeKind.LetExpression} (Ast)`, () => {
+            it(`let a = 1, b = 2, c = |3 in c`, () => {
+                const [text, position] = textWithPosition(`let a = 1, b = 2, c = |3 in c`);
                 const expected: AbridgedInspection = {
                     nodes: [],
-                    scope: [`x`, `y`],
+                    scope: [`a`, `b`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`(p1, p2) => let a = 1, b = 2, c = |3 in c`, () => {
+                const [text, position] = textWithPosition(`(p1, p2) => let a = 1, b = 2, c = |3 in c`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `b`, `p1`, `p2`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`let a = let a1 = 1 in a1, b = 2, c = |3 in c`, () => {
+                const [text, position] = textWithPosition(`let a = let a1 = 1 in a1, b = 2, c = |3 in c`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `b`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`let a = let a1 = 1 in |a1, b = 2, c = 3 in c`, () => {
+                const [text, position] = textWithPosition(`let a = let a1 = 1 in |a1, b = 2, c = 3 in c`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a1`, `b`, `c`],
+                };
+                expectParseOkAbridgedInspectionEqual(text, position, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
+            it(`let a = 1, b = 2, c = 3 in |`, () => {
+                const [text, position] = textWithPosition(`let a = 1, b = 2, c = 3 in |`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`, `b`, `c`],
+                };
+                expectParseErrAbridgedInspectionEqual(text, position, expected);
+            });
+
+            it(`let a = let a = 1 in | in a`, () => {
+                const [text, position] = textWithPosition(`let a = let a = 1 in | in a`);
+                const expected: AbridgedInspection = {
+                    nodes: [],
+                    scope: [`a`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
             });

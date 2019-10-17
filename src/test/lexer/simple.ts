@@ -125,7 +125,6 @@ type
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
-    // TODO: look into adding `..`
     it(`operator-or-punctuator`, () => {
         const text: string = `
 ,
@@ -150,6 +149,7 @@ type
 @
 ?
 =>
+..
 ...`;
         const expected: ReadonlyArray<[TokenKind, string]> = [
             [TokenKind.Comma, `,`],
@@ -174,6 +174,7 @@ type
             [TokenKind.AtSign, `@`],
             [TokenKind.QuestionMark, `?`],
             [TokenKind.FatArrow, `=>`],
+            [TokenKind.DotDot, `..`],
             [TokenKind.Ellipsis, `...`],
         ];
         expectSnapshotAbridgedTokens(text, expected, true);
