@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as ArrayUtils from "./arrayUtils";
 import * as CommonError from "./error";
 import * as Pattern from "./patterns";
 import * as StringUtils from "./stringUtils";
@@ -14,4 +15,4 @@ export * from "./partialResult";
 export * from "./patterns";
 export * from "./result";
 export * from "./stringUtils";
-export { CommonError, StringUtils, Pattern, TypeUtils, Traverse };
+export { ArrayUtils, CommonError, StringUtils, Pattern, TypeUtils, Traverse };
