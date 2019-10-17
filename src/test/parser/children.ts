@@ -6,6 +6,7 @@ import "mocha";
 import { ResultKind } from "../../common";
 import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
 import { Ast, NodeIdMap } from "../../parser";
+import { CombinatorialParser } from "../../parser/parsers";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;
@@ -14,7 +15,7 @@ interface ChildIdsByIdEntry {
 }
 
 function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, CombinatorialParser);
     if (!(triedLexAndParse.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }
