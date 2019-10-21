@@ -213,7 +213,7 @@ function readBinOpExpression(
     state: IParserState,
     parser: IParser<IParserState>,
     nodeKind: Ast.NodeKind,
-): Ast.TBinOpExpression {
+): Ast.TBinOpExpression | Ast.TUnaryExpression {
     IParserStateUtils.startContext(state, nodeKind);
     const placeholderContextId: number = state.maybeCurrentContextNode!.id;
 
@@ -231,6 +231,12 @@ function readBinOpExpression(
         expressions.push(parser.readUnaryExpression(state, parser));
 
         maybeOperator = Ast.binOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
+    }
+
+    // Early exit as only a unary expression was read.
+    if (expressions.length === 1) {
+        IParserStateUtils.deleteContext(state, placeholderContextId);
+        return expressions[0];
     }
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
@@ -302,7 +308,7 @@ function readBinOpExpression(
         nodeIdMapCollection.astNodeById.set(newBinOpExpressionId, newBinOpExpression);
 
         // All children are currently under the placeholder context node.
-        // They need to be removed for deleteContext(placeholderContext) to succeed.
+        // They need to be removed for deleteContext(placeholderContextId) to succeed.
         // We can't assume left / right is always removable because it might be a newBinOpExpression
         // which was generated manually outside of starting a context, therefore it's not auto-assigned as
         // a child of the placeholderContext.
