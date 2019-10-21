@@ -500,9 +500,10 @@ export function readMetadataExpression(state: IParserState, parser: IParser<IPar
     IParserStateUtils.startContext(state, nodeKind);
 
     const left: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
-    const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordMeta);
+    const maybeMetaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordMeta);
 
-    if (maybeConstant) {
+    if (maybeMetaConstant !== undefined) {
+        const operatorConstant: Ast.Constant = maybeMetaConstant;
         const right: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
 
         const astNode: Ast.MetadataExpression = {
@@ -510,7 +511,8 @@ export function readMetadataExpression(state: IParserState, parser: IParser<IPar
             kind: nodeKind,
             isLeaf: false,
             left,
-            constant: maybeConstant,
+            operator: Ast.ConstantKind.Meta,
+            operatorConstant,
             right,
         };
 

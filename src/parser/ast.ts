@@ -153,6 +153,7 @@ export type TBinOpExpressionNodeKind =
     | NodeKind.EqualityExpression
     | NodeKind.IsExpression
     | NodeKind.LogicalExpression
+    | NodeKind.MetadataExpression
     | NodeKind.RelationalExpression;
 
 export type TKeyValuePair =
@@ -312,12 +313,8 @@ export type TArithmeticExpression = ArithmeticExpression | TMetadataExpression;
 
 export type TMetadataExpression = MetadataExpression | TUnaryExpression;
 
-export interface MetadataExpression extends INode {
-    readonly kind: NodeKind.MetadataExpression;
-    readonly left: TUnaryExpression;
-    readonly constant: Constant;
-    readonly right: TUnaryExpression;
-}
+export interface MetadataExpression
+    extends IBinOpExpression<NodeKind.MetadataExpression, TUnaryExpression, ConstantKind.Meta, TUnaryExpression> {}
 
 // -----------------------------------------------
 // ---------- 12.2.3.9 Unary expression ----------
@@ -644,6 +641,7 @@ export type TBinOpExpression =
     | EqualityExpression
     | IsExpression
     | LogicalExpression
+    | MetadataExpression
     | RelationalExpression
     | TBinOpExpressionSubtype;
 
@@ -703,7 +701,8 @@ export type TBinOpExpressionOperator =
     | LogicalOperator
     | RelationalOperator
     | ConstantKind.As
-    | ConstantKind.Is;
+    | ConstantKind.Is
+    | ConstantKind.Meta;
 
 export const enum ArithmeticOperator {
     Multiplication = "*",
@@ -825,6 +824,8 @@ export function binOpExpressionOperatorFrom(maybeTokenKind: Option<TokenKind>): 
             return ConstantKind.As;
         case TokenKind.KeywordIs:
             return ConstantKind.Is;
+        case TokenKind.KeywordMeta:
+            return ConstantKind.Meta;
 
         default:
             return undefined;
@@ -833,6 +834,9 @@ export function binOpExpressionOperatorFrom(maybeTokenKind: Option<TokenKind>): 
 
 export function binOpExpressionOperatorPrecedence(operator: TBinOpExpressionOperator): number {
     switch (operator) {
+        case ConstantKind.Meta:
+            return 110;
+
         case ArithmeticOperator.Multiplication:
         case ArithmeticOperator.Division:
             return 100;
@@ -1176,6 +1180,7 @@ export function isTBinOpExpression(node: TNode): node is TBinOpExpression {
         case NodeKind.EqualityExpression:
         case NodeKind.IsExpression:
         case NodeKind.LogicalExpression:
+        case NodeKind.MetadataExpression:
         case NodeKind.RelationalExpression:
             return true;
 

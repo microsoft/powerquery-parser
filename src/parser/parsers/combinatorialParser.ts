@@ -351,6 +351,9 @@ function readBinOpExpression(
 
 function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
     switch (operator) {
+        case Ast.ConstantKind.Meta:
+            return Ast.NodeKind.MetadataExpression;
+
         case Ast.ArithmeticOperator.Multiplication:
         case Ast.ArithmeticOperator.Division:
         case Ast.ArithmeticOperator.Addition:
