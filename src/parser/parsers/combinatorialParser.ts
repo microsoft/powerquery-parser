@@ -27,23 +27,23 @@ export let CombinatorialParser: IParser<IParserState> = {
     readExpression: Naive.readExpression,
 
     // 12.2.3.2 Logical expressions
-    readLogicalExpression: Naive.readLogicalExpression,
+    readLogicalExpression,
 
     // 12.2.3.3 Is expression
-    readIsExpression: Naive.readIsExpression,
+    readIsExpression,
     readNullablePrimitiveType: Naive.readNullablePrimitiveType,
 
     // 12.2.3.4 As expression
-    readAsExpression: Naive.readAsExpression,
+    readAsExpression,
 
     // 12.2.3.5 Equality expression
-    readEqualityExpression: Naive.readEqualityExpression,
+    readEqualityExpression,
 
     // 12.2.3.6 Relational expression
-    readRelationalExpression: Naive.readRelationalExpression,
+    readRelationalExpression,
 
     // 12.2.3.7 Arithmetic expressions
-    readArithmeticExpression: Naive.readArithmeticExpression,
+    readArithmeticExpression,
 
     // 12.2.3.8 Metadata expression
     readMetadataExpression,
@@ -203,6 +203,38 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
     } else {
         return primaryExpression;
     }
+}
+
+function readLogicalExpression(state: IParserState, parser: IParser<IParserState>): Ast.LogicalExpression {
+    return (readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as unknown) as Ast.LogicalExpression;
+}
+
+function readIsExpression(state: IParserState, parser: IParser<IParserState>): Ast.IsExpression {
+    return (readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as unknown) as Ast.IsExpression;
+}
+
+function readAsExpression(state: IParserState, parser: IParser<IParserState>): Ast.AsExpression {
+    return (readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as unknown) as Ast.AsExpression;
+}
+
+function readEqualityExpression(state: IParserState, parser: IParser<IParserState>): Ast.EqualityExpression {
+    return (readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as unknown) as Ast.EqualityExpression;
+}
+
+function readRelationalExpression(state: IParserState, parser: IParser<IParserState>): Ast.RelationalExpression {
+    return (readBinOpExpression(
+        state,
+        parser,
+        Ast.NodeKind.RelationalExpression,
+    ) as unknown) as Ast.RelationalExpression;
+}
+
+function readArithmeticExpression(state: IParserState, parser: IParser<IParserState>): Ast.TArithmeticExpression {
+    return (readBinOpExpression(
+        state,
+        parser,
+        Ast.NodeKind.ArithmeticExpression,
+    ) as unknown) as Ast.TArithmeticExpression;
 }
 
 function readMetadataExpression(state: IParserState, parser: IParser<IParserState>): Ast.TMetadataExpression {
