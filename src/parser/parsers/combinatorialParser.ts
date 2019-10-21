@@ -49,7 +49,7 @@ export let CombinatorialParser: IParser<IParserState> = {
     readMetadataExpression,
 
     // 12.2.3.9 Unary expression
-    readUnaryExpression,
+    readUnaryExpression: Naive.readUnaryExpression,
 
     // 12.2.3.10 Primary expression
     readPrimaryExpression: Naive.readPrimaryExpression,
@@ -213,13 +213,15 @@ function readBinOpExpression(
     state: IParserState,
     parser: IParser<IParserState>,
     nodeKind: Ast.NodeKind,
-): Ast.TBinOpExpression | Ast.TUnaryExpression {
+): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     IParserStateUtils.startContext(state, nodeKind);
     const placeholderContextId: number = state.maybeCurrentContextNode!.id;
 
     let operators: Ast.TBinOpExpressionOperator[] = [];
     let operatorConstants: Ast.Constant[] = [];
-    let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression)[] = [parser.readUnaryExpression(state, parser)];
+    let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
+        parser.readUnaryExpression(state, parser),
+    ];
 
     let maybeOperator: Option<Ast.TBinOpExpressionOperator> = Ast.binOpExpressionOperatorFrom(
         state.maybeCurrentTokenKind,
@@ -228,7 +230,17 @@ function readBinOpExpression(
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind!));
-        expressions.push(parser.readUnaryExpression(state, parser));
+
+        switch (operator) {
+            case Ast.ConstantKind.As:
+            case Ast.ConstantKind.Is:
+                expressions.push(parser.readNullablePrimitiveType(state, parser));
+                break;
+
+            default:
+                expressions.push(parser.readUnaryExpression(state, parser));
+                break;
+        }
 
         maybeOperator = Ast.binOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
     }
@@ -255,10 +267,12 @@ function readBinOpExpression(
         }
 
         const newBinOpExpressionId: number = ParserContext.nextId(state.contextState);
-        const left: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[minPrecedenceIndex];
+        const left: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType =
+            expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
         const operatorConstant: Ast.Constant = operatorConstants[minPrecedenceIndex];
-        const right: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[minPrecedenceIndex + 1];
+        const right: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType =
+            expressions[minPrecedenceIndex + 1];
 
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
@@ -320,7 +334,7 @@ function readBinOpExpression(
         nodeIdMapCollection.childIdsById.set(placeholderContextId, placeholderContextChildren);
     }
 
-    const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[0];
+    const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType = expressions[0];
     if (!Ast.isTBinOpExpression(lastExpression)) {
         const details: {} = {
             lastExpressionId: lastExpression.id,
