@@ -41,7 +41,7 @@ describe("Parser.Children", () => {
         const text: string = `() as number => 1`;
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
-                childNodeIds: [2, 6, 10, 18],
+                childNodeIds: [2, 6, 10, 17],
                 id: 1,
                 kind: Ast.NodeKind.FunctionExpression,
             },
