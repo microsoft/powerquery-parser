@@ -182,15 +182,15 @@ describe("Parser.AbridgedNode", () => {
             const text: string = `1 + 2 + 3 + 4`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ArithmeticExpression, 2],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ArithmeticExpression, 2],
+                [Ast.NodeKind.ArithmeticExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 0],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.LiteralExpression, 4],
+                [Ast.NodeKind.Constant, 5],
+                [Ast.NodeKind.LiteralExpression, 6],
             ];
             expectAbridgeNodes(text, expected);
         });
@@ -795,13 +795,13 @@ describe("Parser.AbridgedNode", () => {
             const text: string = `1 is number is number`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.IsExpression, undefined],
+                [Ast.NodeKind.IsExpression, 0],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.IsExpression, 2],
-                [Ast.NodeKind.PrimitiveType, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.PrimitiveType, 4],
                 [Ast.NodeKind.Constant, 0],
             ];
             expectAbridgeNodes(text, expected);

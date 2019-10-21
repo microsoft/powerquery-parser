@@ -54,9 +54,9 @@ function testNameFromFilePath(filepath: string): string {
 
 const ignoredFileNames: ReadonlyArray<string> = [];
 
-describe("abc123 recursive", () => {
-    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
-    // const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
+describe("recursive", () => {
+    // const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
+    const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
         if (ignoredFileNames.indexOf(path.basename(filepath)) !== -1) {
@@ -78,9 +78,9 @@ describe("abc123 recursive", () => {
     }
 });
 
-describe("abc123 combinator", () => {
-    const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
-    // const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
+describe("combinator", () => {
+    // const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
+    const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
 
     for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
         if (ignoredFileNames.indexOf(path.basename(filepath)) !== -1) {

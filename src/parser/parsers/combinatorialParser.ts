@@ -49,7 +49,7 @@ export let CombinatorialParser: IParser<IParserState> = {
     readMetadataExpression,
 
     // 12.2.3.9 Unary expression
-    readUnaryExpression: Naive.readUnaryExpression,
+    readUnaryExpression,
 
     // 12.2.3.10 Primary expression
     readPrimaryExpression: Naive.readPrimaryExpression,
