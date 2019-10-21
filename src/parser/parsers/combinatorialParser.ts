@@ -254,9 +254,7 @@ function readBinOpExpression(
             }
         }
 
-        state.contextState.idCounter += 1;
-        const newBinOpExpressionId: number = state.contextState.idCounter;
-
+        const newBinOpExpressionId: number = ParserContext.nextId(state.contextState);
         const left: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
         const operatorConstant: Ast.Constant = operatorConstants[minPrecedenceIndex];

@@ -65,6 +65,11 @@ export function newState(): State {
     };
 }
 
+export function nextId(state: State): number {
+    state.idCounter += 1;
+    return state.idCounter;
+}
+
 export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
@@ -75,8 +80,7 @@ export function startContext(
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     let maybeAttributeIndex: Option<number>;
 
-    state.idCounter += 1;
-    const nodeId: number = state.idCounter;
+    const nodeId: number = nextId(state);
 
     // If a parent context Node exists, update the parent/child mapping attributes and attrbiuteCounter.
     if (maybeParentNode) {
