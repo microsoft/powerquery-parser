@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "..";
-import { CommonError, isNever, Option } from "../../common";
+import { Ast, NodeIdMap, ParserContext } from "..";
+import { CommonError, isNever, Option, ArrayUtils } from "../../common";
 import { TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -206,10 +206,17 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
 }
 
 function readMetadataExpression(state: IParserState, parser: IParser<IParserState>): Ast.TMetadataExpression {
-    return (readBinOpExpression(state, parser) as unknown) as Ast.TMetadataExpression;
+    return (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.TMetadataExpression;
 }
 
-function readBinOpExpression(state: IParserState, parser: IParser<IParserState>): Ast.TBinOpExpression {
+function readBinOpExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
+    nodeKind: Ast.NodeKind,
+): Ast.TBinOpExpression {
+    IParserStateUtils.startContext(state, nodeKind);
+    const placeholderContextId: number = state.maybeCurrentContextNode!.id;
+
     let operators: Ast.TBinOpExpressionOperator[] = [];
     let operatorConstants: Ast.Constant[] = [];
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression)[] = [parser.readUnaryExpression(state, parser)];
@@ -226,29 +233,32 @@ function readBinOpExpression(state: IParserState, parser: IParser<IParserState>)
         maybeOperator = Ast.binOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
     }
 
+    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+    const newNodeThreshold: number = state.contextState.idCounter;
+    let placeholderContextChildren: ReadonlyArray<number> = nodeIdMapCollection.childIdsById.get(placeholderContextId)!;
     while (operators.length) {
-        let maxPrecedenceIndex: number = -1;
-        let maxPrecedence: number = -1;
+        let minPrecedenceIndex: number = -1;
+        let minPrecedence: number = Number.MAX_SAFE_INTEGER;
 
         for (let index: number = 0; index < operators.length; index += 1) {
             const currentPrecedence: number = Ast.binOpExpressionOperatorPrecedence(operators[index]);
-            if (maxPrecedence < currentPrecedence) {
-                maxPrecedence = currentPrecedence;
-                maxPrecedenceIndex = index;
+            if (minPrecedence > currentPrecedence) {
+                minPrecedence = currentPrecedence;
+                minPrecedenceIndex = index;
             }
         }
 
-        const id: number = state.contextState.idCounter;
         state.contextState.idCounter += 1;
+        const newBinOpExpressionId: number = state.contextState.idCounter;
 
-        const left: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[maxPrecedenceIndex];
-        const operator: Ast.TBinOpExpressionOperator = operators[maxPrecedenceIndex];
-        const operatorConstant: Ast.Constant = operatorConstants[maxPrecedenceIndex];
-        const right: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[maxPrecedenceIndex + 1];
+        const left: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[minPrecedenceIndex];
+        const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
+        const operatorConstant: Ast.Constant = operatorConstants[minPrecedenceIndex];
+        const right: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[minPrecedenceIndex + 1];
 
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
-            id,
+            id: newBinOpExpressionId,
             maybeAttributeIndex: 0,
             tokenRange: {
                 tokenIndexStart: 0,
@@ -271,16 +281,39 @@ function readBinOpExpression(state: IParserState, parser: IParser<IParserState>)
             right,
         } as any;
 
-        operators = [...operators.slice(0, maxPrecedenceIndex), ...operators.slice(maxPrecedenceIndex + 1)];
+        operators = [...operators.slice(0, minPrecedenceIndex), ...operators.slice(minPrecedenceIndex + 1)];
         operatorConstants = [
-            ...operatorConstants.slice(0, maxPrecedenceIndex),
-            ...operatorConstants.slice(maxPrecedenceIndex + 1),
+            ...operatorConstants.slice(0, minPrecedenceIndex),
+            ...operatorConstants.slice(minPrecedenceIndex + 1),
         ];
         expressions = expressions = [
-            ...expressions.slice(0, maxPrecedenceIndex),
+            ...expressions.slice(0, minPrecedenceIndex),
             newBinOpExpression,
-            ...expressions.slice(maxPrecedenceIndex + 2),
+            ...expressions.slice(minPrecedenceIndex + 2),
         ];
+
+        // Correct the parentIds for the nodes combined into newBinOpExpression.
+        nodeIdMapCollection.parentIdById.set(left.id, newBinOpExpressionId);
+        nodeIdMapCollection.parentIdById.set(operatorConstant.id, newBinOpExpressionId);
+        nodeIdMapCollection.parentIdById.set(right.id, newBinOpExpressionId);
+
+        // Assign the nodeIdMap values for newBinOpExpression.
+        nodeIdMapCollection.childIdsById.set(newBinOpExpressionId, [left.id, operatorConstant.id, right.id]);
+        nodeIdMapCollection.astNodeById.set(newBinOpExpressionId, newBinOpExpression);
+
+        // All children are currently under the placeholder context node.
+        // They need to be removed for deleteContext(placeholderContext) to succeed.
+        // We can't assume left / right is always removable because it might be a newBinOpExpression
+        // which was generated manually outside of starting a context, therefore it's not auto-assigned as
+        // a child of the placeholderContext.
+        placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, operatorConstant.id);
+        if (left.id <= newNodeThreshold) {
+            placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, left.id);
+        }
+        if (right.id <= newNodeThreshold) {
+            placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, right.id);
+        }
+        nodeIdMapCollection.childIdsById.set(placeholderContextId, placeholderContextChildren);
     }
 
     const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression = expressions[0];
@@ -291,7 +324,10 @@ function readBinOpExpression(state: IParserState, parser: IParser<IParserState>)
         };
         throw new CommonError.InvariantError(`lastExpression should be a TBinOpExpression`, details);
     }
+    nodeIdMapCollection.childIdsById.set(placeholderContextId, [lastExpression.id]);
+    nodeIdMapCollection.parentIdById.set(lastExpression.id, placeholderContextId);
 
+    IParserStateUtils.deleteContext(state, placeholderContextId);
     return lastExpression;
 }
 
