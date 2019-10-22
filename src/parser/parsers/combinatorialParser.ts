@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, NodeIdMap, ParserContext } from "..";
-import { CommonError, isNever, Option, ArrayUtils } from "../../common";
+import { ArrayUtils, CommonError, isNever, Option } from "../../common";
 import { TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
