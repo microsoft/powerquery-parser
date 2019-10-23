@@ -9,7 +9,7 @@ import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "./jobs";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { NodeIdMap, Parser, ParserContext, ParserError } from "./parser";
 
-parseText(`1 + 2 + 3`);
+parseText(`if true then 1 else 2`);
 
 // @ts-ignore
 function parseText(text: string): void {
