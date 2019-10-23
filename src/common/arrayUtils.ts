@@ -1,10 +1,10 @@
 import { CommonError } from ".";
 
-export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): ReadonlyArray<T> {
+export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
     return removeAtIndex(collection, collection.indexOf(element));
 }
 
-export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): ReadonlyArray<T> {
+export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
     if (index < 0 || index >= collection.length) {
         const details: {} = {
             index,
@@ -16,6 +16,6 @@ export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): R
     return [...collection.slice(0, index), ...collection.slice(index + 1)];
 }
 
-export function addElement<T>(collection: ReadonlyArray<T>, element: T): ReadonlyArray<T> {
+export function addElement<T>(collection: ReadonlyArray<T>, element: T): T[] {
     return [...collection, element];
 }
