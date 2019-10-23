@@ -4,11 +4,25 @@
 import { Ast, NodeIdMap, ParserContext } from "..";
 import { ArrayUtils, CommonError, isNever, Option } from "../../common";
 import { TokenKind } from "../../lexer";
+import { TokenRange } from "../ast";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
 import * as Naive from "./naive";
 
+// If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
+// which at each step would create a new context node, parse LiteralExpression, then traverse back up while
+// cleaning the no-op context nodes along the way. Two key optimizations are used to prevent that.
+//
+// 1)
+// The reading of binary expressions (expressions linked by TBinOpExpressionOperator) has been flattened.
+// A TUnaryExpression read first, then while a TBinOpExpressionOperator is next it will read the operator
+// constant and then the right hand of the TBinOpExpression. All expressions erad will be placed in a flat list.
+// Once no more expressions can be read the flat list will be shaped into a proper Ast.
+// This eliminates several no-op functions calls on the call stack when reading a bare TUnaryExpression (eg. `1`).
+//
+// 2)
+// readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export let CombinatorialParser: IParser<IParserState> = {
     // 12.1.6 Identifiers
     readIdentifier: Naive.readIdentifier,
@@ -249,6 +263,8 @@ function readBinOpExpression(
     IParserStateUtils.startContext(state, nodeKind);
     const placeholderContextId: number = state.maybeCurrentContextNode!.id;
 
+    // operators/operatorConstants are of length N
+    // expressions are of length N + 1
     let operators: Ast.TBinOpExpressionOperator[] = [];
     let operatorConstants: Ast.Constant[] = [];
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
@@ -277,12 +293,14 @@ function readBinOpExpression(
         maybeOperator = Ast.binOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
     }
 
-    // Early exit as only a unary expression was read.
+    // There was a single TUnaryExpression, not a TBinOpExpression.
     if (expressions.length === 1) {
         IParserStateUtils.deleteContext(state, placeholderContextId);
         return expressions[0];
     }
 
+    // Build up the Ast by using the lowest precedence operator and the two adjacent expressions,
+    // which might be previously built TBinOpExpression nodes.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const newNodeThreshold: number = state.contextState.idCounter;
     let placeholderContextChildren: ReadonlyArray<number> = nodeIdMapCollection.childIdsById.get(placeholderContextId)!;
@@ -306,36 +324,27 @@ function readBinOpExpression(
         const right: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType =
             expressions[minPrecedenceIndex + 1];
 
+        const leftTokenRange: TokenRange = left.tokenRange;
+        const rightTokenRange: TokenRange = right.tokenRange;
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
             id: newBinOpExpressionId,
             maybeAttributeIndex: 0,
             tokenRange: {
-                tokenIndexStart: 0,
-                tokenIndexEnd: 0,
-                positionStart: {
-                    lineCodeUnit: 0,
-                    lineNumber: 0,
-                    codeUnit: 0,
-                },
-                positionEnd: {
-                    lineCodeUnit: 0,
-                    lineNumber: 0,
-                    codeUnit: 0,
-                },
+                tokenIndexStart: leftTokenRange.tokenIndexStart,
+                tokenIndexEnd: rightTokenRange.tokenIndexEnd,
+                positionStart: leftTokenRange.positionStart,
+                positionEnd: rightTokenRange.positionEnd,
             },
             isLeaf: false,
-            left: left as any,
+            left: left as Ast.TBinOpExpression,
             operator,
             operatorConstant,
             right,
-        } as any;
+        } as Ast.TBinOpExpression;
 
-        operators = [...operators.slice(0, minPrecedenceIndex), ...operators.slice(minPrecedenceIndex + 1)];
-        operatorConstants = [
-            ...operatorConstants.slice(0, minPrecedenceIndex),
-            ...operatorConstants.slice(minPrecedenceIndex + 1),
-        ];
+        operators = ArrayUtils.removeAtIndex(operators, minPrecedenceIndex);
+        operatorConstants = ArrayUtils.removeAtIndex(operatorConstants, minPrecedenceIndex);
         expressions = expressions = [
             ...expressions.slice(0, minPrecedenceIndex),
             newBinOpExpression,
@@ -351,11 +360,8 @@ function readBinOpExpression(
         nodeIdMapCollection.childIdsById.set(newBinOpExpressionId, [left.id, operatorConstant.id, right.id]);
         nodeIdMapCollection.astNodeById.set(newBinOpExpressionId, newBinOpExpression);
 
-        // All children are currently under the placeholder context node.
+        // All TUnaryExpression and operatorConstants start by being placed under the context node.
         // They need to be removed for deleteContext(placeholderContextId) to succeed.
-        // We can't assume left / right is always removable because it might be a newBinOpExpression
-        // which was generated manually outside of starting a context, therefore it's not auto-assigned as
-        // a child of the placeholderContext.
         placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, operatorConstant.id);
         if (left.id <= newNodeThreshold) {
             placeholderContextChildren = ArrayUtils.removeFirstInstance(placeholderContextChildren, left.id);
