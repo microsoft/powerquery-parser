@@ -70,6 +70,12 @@ export function nextId(state: State): number {
     return state.idCounter;
 }
 
+export function nextAttributeIndex(parentNode: Node): number {
+    const result: number = parentNode.attributeCounter;
+    parentNode.attributeCounter += 1;
+    return result;
+}
+
 export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
@@ -88,9 +94,7 @@ export function startContext(
         const parentNode: Node = maybeParentNode;
         const parentId: number = parentNode.id;
 
-        maybeAttributeIndex = parentNode.attributeCounter;
-        parentNode.attributeCounter += 1;
-
+        maybeAttributeIndex = nextAttributeIndex(parentNode);
         nodeIdMapCollection.parentIdById.set(nodeId, parentId);
 
         const maybeExistingChildren: Option<ReadonlyArray<number>> = childIdsById.get(parentId);
