@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, NodeIdMap, ParserContext } from "..";
-import { ArrayUtils, CommonError, isNever, Option } from "../../common";
+import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../../common";
 import { TokenKind } from "../../lexer";
 import { TokenRange } from "../ast";
 import { BracketDisambiguation, IParser } from "../IParser";
@@ -247,18 +247,23 @@ function readBinOpExpression(
         }
 
         const newBinOpExpressionId: number = ParserContext.nextId(state.contextState);
-        const left: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType =
+        const left: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
-        const operatorConstant: Ast.Constant = operatorConstants[minPrecedenceIndex];
-        const right: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType =
+        const operatorConstant: TypeUtils.StripReadonly<Ast.Constant> = operatorConstants[minPrecedenceIndex];
+        const right: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex + 1];
+
+        left.maybeAttributeIndex = 0;
+        operatorConstant.maybeAttributeIndex = 1;
+        right.maybeAttributeIndex = 2;
 
         const leftTokenRange: TokenRange = left.tokenRange;
         const rightTokenRange: TokenRange = right.tokenRange;
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
             id: newBinOpExpressionId,
+            // maybeAttributeIndex is fixed after all TBinOpExpressions have been created.
             maybeAttributeIndex: 0,
             tokenRange: {
                 tokenIndexStart: leftTokenRange.tokenIndexStart,
