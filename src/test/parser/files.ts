@@ -3,9 +3,9 @@ import "mocha";
 import * as path from "path";
 import { ResultKind } from "../../common";
 import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
-import { CombinatorialParser, RecursiveDescentParser } from "../../parser/parsers";
+import { IParser, Parser, IParserState } from "../../parser";
 
-const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".pq", "pqm"];
+const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
 function isDirectory(maybePath: string): boolean {
     return statSync(maybePath).isDirectory();
@@ -52,52 +52,31 @@ function testNameFromFilePath(filepath: string): string {
     return filepath.replace(path.dirname(__filename), ".");
 }
 
-const ignoredFileNames: ReadonlyArray<string> = [];
+function parseAllFiles(parserName: string, parser: IParser<IParserState>): void {
+    describe(`use ${parserName} on files directory`, () => {
+        const fileDirectory: string = path.join(path.dirname(__filename), "files");
 
-describe("recursive", () => {
-    // const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
-    const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
+        for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
+            const testName: string = testNameFromFilePath(filepath);
 
-    for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
-        if (ignoredFileNames.indexOf(path.basename(filepath)) !== -1) {
-            continue;
-        }
+            it(testName, () => {
+                let contents: string = readFileSync(filepath, "utf8");
+                contents = contents.replace(/^\uFEFF/, "");
 
-        const testName: string = testNameFromFilePath(filepath);
-        it(testName, () => {
-            let contents: string = readFileSync(filepath, "utf8");
-            contents = contents.replace(/^\uFEFF/, "");
-
-            for (let _: number = 0; _ < 1; _ += 1) {
-                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, RecursiveDescentParser);
+                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, parser);
                 if (!(triedLexAndParse.kind === ResultKind.Ok)) {
                     throw triedLexAndParse.error;
                 }
-            }
-        });
-    }
-});
-
-describe("combinator", () => {
-    // const fileDirectory: string = `C:\\Users\\jobolton\\Downloads\\files`;
-    const fileDirectory: string = `C:\\Users\\jobolton\\Documents\\GitHub\\powerquery-parser\\src\\test\\parser\\files`;
-
-    for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
-        if (ignoredFileNames.indexOf(path.basename(filepath)) !== -1) {
-            continue;
+            });
         }
+    });
+}
 
-        const testName: string = testNameFromFilePath(filepath);
-        it(testName, () => {
-            let contents: string = readFileSync(filepath, "utf8");
-            contents = contents.replace(/^\uFEFF/, "");
+const parsers: ReadonlyArray<[string, IParser<IParserState>]> = [
+    ["CombinatorialParser", Parser.CombinatorialParser],
+    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
+];
 
-            for (let _: number = 0; _ < 1; _ += 1) {
-                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, CombinatorialParser);
-                if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-                    throw triedLexAndParse.error;
-                }
-            }
-        });
-    }
-});
+for (const [parserName, parser] of parsers) {
+    parseAllFiles(parserName, parser);
+}
