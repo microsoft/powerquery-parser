@@ -349,6 +349,7 @@ export function readExpression(state: IParserState, parser: IParser<IParserState
                 default:
                     throw isNever(disambiguation);
             }
+
         default:
             return parser.readLogicalExpression(state, parser);
     }
