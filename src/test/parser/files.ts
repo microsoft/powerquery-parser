@@ -3,6 +3,7 @@ import "mocha";
 import * as path from "path";
 import { ResultKind } from "../../common";
 import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
+import { IParser, IParserState, Parser } from "../../parser";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -51,20 +52,31 @@ function testNameFromFilePath(filepath: string): string {
     return filepath.replace(path.dirname(__filename), ".");
 }
 
-describe("files", () => {
-    const fileDirectory: string = path.join(path.dirname(__filename), "files");
+function parseAllFiles(parserName: string, parser: IParser<IParserState>): void {
+    describe(`use ${parserName} on files directory`, () => {
+        const fileDirectory: string = path.join(path.dirname(__filename), "files");
 
-    for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
-        const testName: string = testNameFromFilePath(filepath);
+        for (const filepath of getPowerQueryFilesRecursively(fileDirectory)) {
+            const testName: string = testNameFromFilePath(filepath);
 
-        it(testName, () => {
-            let contents: string = readFileSync(filepath, "utf8");
-            contents = contents.replace(/^\uFEFF/, "");
+            it(testName, () => {
+                let contents: string = readFileSync(filepath, "utf8");
+                contents = contents.replace(/^\uFEFF/, "");
 
-            const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents);
-            if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-                throw triedLexAndParse.error;
-            }
-        });
-    }
-});
+                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, parser);
+                if (!(triedLexAndParse.kind === ResultKind.Ok)) {
+                    throw triedLexAndParse.error;
+                }
+            });
+        }
+    });
+}
+
+const parsers: ReadonlyArray<[string, IParser<IParserState>]> = [
+    ["CombinatorialParser", Parser.CombinatorialParser],
+    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
+];
+
+for (const [parserName, parser] of parsers) {
+    parseAllFiles(parserName, parser);
+}

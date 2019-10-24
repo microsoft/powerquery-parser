@@ -249,6 +249,23 @@ export function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: 
     }
 }
 
+// Assumes a call to readPrimaryExpression has already happened.
+export function isRecursivePrimaryExpressionNext(
+    state: IParserState,
+    tokenIndexStart: number = state.tokenIndex,
+): boolean {
+    return (
+        // section-access-expression
+        // this.isOnTokenKind(TokenKind.Bang)
+        // field-access-expression
+        isTokenKind(state, TokenKind.LeftBrace, tokenIndexStart) ||
+        // item-access-expression
+        isTokenKind(state, TokenKind.LeftBracket, tokenIndexStart) ||
+        // invoke-expression
+        isTokenKind(state, TokenKind.LeftParenthesis, tokenIndexStart)
+    );
+}
+
 // -----------------------------
 // ---------- Expects ----------
 // -----------------------------

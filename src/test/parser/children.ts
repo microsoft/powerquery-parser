@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
 import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
-import { Ast, NodeIdMap } from "../../parser";
+import { Ast, NodeIdMap, Parser } from "../../parser";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;
@@ -14,7 +14,7 @@ interface ChildIdsByIdEntry {
 }
 
 function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, Parser.CombinatorialParser);
     if (!(triedLexAndParse.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }
@@ -40,7 +40,7 @@ describe("Parser.Children", () => {
         const text: string = `() as number => 1`;
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
-                childNodeIds: [2, 6, 10, 18],
+                childNodeIds: [2, 6, 10, 12],
                 id: 1,
                 kind: Ast.NodeKind.FunctionExpression,
             },

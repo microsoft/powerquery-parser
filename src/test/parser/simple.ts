@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Option, ResultKind, Traverse } from "../../common";
 import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
-import { Ast } from "../../parser";
+import { Ast, Parser } from "../../parser";
 
 type AbridgedNode = [Ast.NodeKind, Option<number>];
 
@@ -18,7 +18,7 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
 }
 
 function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text);
+    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, Parser.CombinatorialParser);
     if (!(triedLexAndParse.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }
@@ -181,13 +181,13 @@ describe("Parser.AbridgedNode", () => {
             const text: string = `1 + 2 + 3 + 4`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.ArithmeticExpression, 0],
+                [Ast.NodeKind.ArithmeticExpression, 0],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ArithmeticExpression, 2],
-                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ArithmeticExpression, 2],
-                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
@@ -794,10 +794,10 @@ describe("Parser.AbridgedNode", () => {
             const text: string = `1 is number is number`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.IsExpression, undefined],
+                [Ast.NodeKind.IsExpression, 0],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.IsExpression, 2],
-                [Ast.NodeKind.PrimitiveType, 0],
+                [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],

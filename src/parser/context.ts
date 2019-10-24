@@ -65,6 +65,17 @@ export function newState(): State {
     };
 }
 
+export function nextId(state: State): number {
+    state.idCounter += 1;
+    return state.idCounter;
+}
+
+export function nextAttributeIndex(parentNode: Node): number {
+    const result: number = parentNode.attributeCounter;
+    parentNode.attributeCounter += 1;
+    return result;
+}
+
 export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
@@ -73,9 +84,9 @@ export function startContext(
     maybeParentNode: Option<Node>,
 ): Node {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const nodeId: number = state.idCounter + 1;
     let maybeAttributeIndex: Option<number>;
-    state.idCounter += 1;
+
+    const nodeId: number = nextId(state);
 
     // If a parent context Node exists, update the parent/child mapping attributes and attrbiuteCounter.
     if (maybeParentNode) {
@@ -83,9 +94,7 @@ export function startContext(
         const parentNode: Node = maybeParentNode;
         const parentId: number = parentNode.id;
 
-        maybeAttributeIndex = parentNode.attributeCounter;
-        parentNode.attributeCounter += 1;
-
+        maybeAttributeIndex = nextAttributeIndex(parentNode);
         nodeIdMapCollection.parentIdById.set(nodeId, parentId);
 
         const maybeExistingChildren: Option<ReadonlyArray<number>> = childIdsById.get(parentId);
