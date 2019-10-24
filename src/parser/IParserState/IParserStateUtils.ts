@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext, ParserError } from "..";
+import { Ast, NodeIdMap, ParserContext, ParseError } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { IParserState } from "./IParserState";
@@ -325,9 +325,9 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
 
 export function testCsvContinuationLetExpression(
     state: IParserState,
-): Option<ParserError.ExpectedCsvContinuationError> {
+): Option<ParseError.ExpectedCsvContinuationError> {
     if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
-        return new ParserError.ExpectedCsvContinuationError(
+        return new ParseError.ExpectedCsvContinuationError(
             Localization.parserExpectedCsvContinuationLetExpression(),
             maybeCurrentTokenWithColumnNumber(state),
         );
@@ -339,9 +339,9 @@ export function testCsvContinuationLetExpression(
 export function testCsvContinuationDanglingComma(
     state: IParserState,
     tokenKind: TokenKind,
-): Option<ParserError.ExpectedCsvContinuationError> {
+): Option<ParseError.ExpectedCsvContinuationError> {
     if (state.maybeCurrentTokenKind === tokenKind) {
-        return new ParserError.ExpectedCsvContinuationError(
+        return new ParseError.ExpectedCsvContinuationError(
             Localization.parserExpectedCsvContinuationDanglingComma(),
             maybeCurrentTokenWithColumnNumber(state),
         );
@@ -357,16 +357,16 @@ export function testCsvContinuationDanglingComma(
 export function testIsOnTokenKind(
     state: IParserState,
     expectedTokenKind: TokenKind,
-): Option<ParserError.ExpectedTokenKindError> {
+): Option<ParseError.ExpectedTokenKindError> {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
-        const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> =
+        const maybeTokenWithColumnNumber: Option<ParseError.TokenWithColumnNumber> =
             state.maybeCurrentToken !== undefined
                 ? {
                       token: state.maybeCurrentToken,
                       columnNumber: state.lexerSnapshot.columnNumberStartFrom(state.maybeCurrentToken),
                   }
                 : undefined;
-        return new ParserError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
+        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
     } else {
         return undefined;
     }
@@ -375,40 +375,40 @@ export function testIsOnTokenKind(
 export function testIsOnAnyTokenKind(
     state: IParserState,
     expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-): Option<ParserError.ExpectedAnyTokenKindError> {
+): Option<ParseError.ExpectedAnyTokenKindError> {
     const isError: boolean =
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(state.maybeCurrentTokenKind) === -1;
 
     if (isError) {
-        const maybeTokenWithColumnNumber: Option<ParserError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(
+        const maybeTokenWithColumnNumber: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(
             state,
         );
-        return new ParserError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
+        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
     } else {
         return undefined;
     }
 }
 
-export function testNoMoreTokens(state: IParserState): Option<ParserError.UnusedTokensRemainError> {
+export function testNoMoreTokens(state: IParserState): Option<ParseError.UnusedTokensRemainError> {
     if (state.tokenIndex !== state.lexerSnapshot.tokens.length) {
         const token: Token = expectTokenAt(state, state.tokenIndex);
-        return new ParserError.UnusedTokensRemainError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+        return new ParseError.UnusedTokensRemainError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
     } else {
         return undefined;
     }
 }
 
-export function unterminatedParenthesesError(state: IParserState): ParserError.UnterminatedParenthesesError {
+export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedParenthesesError {
     const token: Token = expectTokenAt(state, state.tokenIndex);
-    return new ParserError.UnterminatedParenthesesError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+    return new ParseError.UnterminatedParenthesesError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
 }
 
-export function unterminatedBracketError(state: IParserState): ParserError.UnterminatedBracketError {
+export function unterminatedBracketError(state: IParserState): ParseError.UnterminatedBracketError {
     const token: Token = expectTokenAt(state, state.tokenIndex);
-    return new ParserError.UnterminatedBracketError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+    return new ParseError.UnterminatedBracketError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
 }
 
-export function maybeCurrentTokenWithColumnNumber(state: IParserState): Option<ParserError.TokenWithColumnNumber> {
+export function maybeCurrentTokenWithColumnNumber(state: IParserState): Option<ParseError.TokenWithColumnNumber> {
     const maybeCurrentToken: Option<Token> = state.maybeCurrentToken;
     if (maybeCurrentToken === undefined) {
         return undefined;

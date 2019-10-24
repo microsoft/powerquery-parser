@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext, ParserError } from "..";
+import { Ast, NodeIdMap, ParserContext, ParseError } from "..";
 import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
@@ -11,12 +11,12 @@ import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, rea
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
-    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+    ParseError.ExpectedAnyTokenKindError | ParseError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
 type TriedReadPrimitiveType = Result<
     Ast.PrimitiveType,
-    ParserError.ExpectedAnyTokenKindError | ParserError.InvalidPrimitiveTypeError | CommonError.InvariantError
+    ParseError.ExpectedAnyTokenKindError | ParseError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
 interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
@@ -147,7 +147,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
             kind: ResultKind.Ok,
             value: parser.readExpression(state, parser),
         };
-        const maybeErr: Option<ParserError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
+        const maybeErr: Option<ParseError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
         if (maybeErr) {
             throw maybeErr;
         }
@@ -172,7 +172,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
                 kind: ResultKind.Ok,
                 value: parser.readSectionDocument(state, parser),
             };
-            const maybeErr: Option<ParserError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
+            const maybeErr: Option<ParseError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
             if (maybeErr) {
                 throw maybeErr;
             }
@@ -195,9 +195,9 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
 
     if (triedReadDocument.kind === ResultKind.Err) {
         const currentError: Error = triedReadDocument.error;
-        let convertedError: ParserError.TParserError;
-        if (ParserError.isTInnerParserError(currentError)) {
-            convertedError = new ParserError.ParserError(currentError, state.contextState);
+        let convertedError: ParseError.TParseError;
+        if (ParseError.isTInnerParseError(currentError)) {
+            convertedError = new ParseError.ParseError(currentError, state.contextState);
         } else {
             convertedError = CommonError.ensureCommonError(currentError);
         }
@@ -332,7 +332,7 @@ export function readExpression(state: IParserState, parser: IParser<IParserState
         case TokenKind.LeftParenthesis:
             const triedDisambiguation: Result<
                 ParenthesisDisambiguation,
-                ParserError.UnterminatedParenthesesError
+                ParseError.UnterminatedParenthesesError
             > = parser.disambiguateParenthesis(state, parser);
             if (triedDisambiguation.kind === ResultKind.Err) {
                 throw triedDisambiguation.error;
@@ -763,7 +763,7 @@ export function readLiteralExpression(state: IParserState, _parser: IParser<IPar
         TokenKind.NullLiteral,
         TokenKind.StringLiteral,
     ];
-    const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = IParserStateUtils.testIsOnAnyTokenKind(
+    const maybeErr: Option<ParseError.ExpectedAnyTokenKindError> = IParserStateUtils.testIsOnAnyTokenKind(
         state,
         expectedTokenKinds,
     );
@@ -1226,7 +1226,7 @@ export function readFieldSpecificationList(
     state: IParserState,
     parser: IParser<IParserState>,
     allowOpenMarker: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
 ): Ast.FieldSpecificationList {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     IParserStateUtils.startContext(state, nodeKind);
@@ -1240,7 +1240,7 @@ export function readFieldSpecificationList(
     IParserStateUtils.startContext(state, fieldArrayNodeKind);
 
     while (continueReadingValues) {
-        const maybeErr: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        const maybeErr: Option<ParseError.TInnerParseError> = testPostCommaError(state);
         if (maybeErr) {
             throw maybeErr;
         }
@@ -1542,7 +1542,7 @@ export function readFieldNamePairedAnyLiterals(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
     return readCsvArray(
         state,
@@ -1616,12 +1616,12 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
         TokenKind.KeywordType,
         TokenKind.NullLiteral,
     ];
-    const maybeErr: Option<ParserError.ExpectedAnyTokenKindError> = IParserStateUtils.testIsOnAnyTokenKind(
+    const maybeErr: Option<ParseError.ExpectedAnyTokenKindError> = IParserStateUtils.testIsOnAnyTokenKind(
         state,
         expectedTokenKinds,
     );
     if (maybeErr) {
-        const error: ParserError.ExpectedAnyTokenKindError = maybeErr;
+        const error: ParseError.ExpectedAnyTokenKindError = maybeErr;
         return {
             kind: ResultKind.Err,
             error,
@@ -1657,7 +1657,7 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
                 IParserStateUtils.applyFastStateBackup(state, stateBackup);
                 return {
                     kind: ResultKind.Err,
-                    error: new ParserError.InvalidPrimitiveTypeError(
+                    error: new ParseError.InvalidPrimitiveTypeError(
                         token,
                         state.lexerSnapshot.graphemePositionStartFrom(token),
                     ),
@@ -1699,7 +1699,7 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
 export function disambiguateParenthesis(
     state: IParserState,
     parser: IParser<IParserState>,
-): Result<ParenthesisDisambiguation, ParserError.UnterminatedParenthesesError> {
+): Result<ParenthesisDisambiguation, ParseError.UnterminatedParenthesesError> {
     const initialTokenIndex: number = state.tokenIndex;
     const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
     const totalTokens: number = tokens.length;
@@ -1796,7 +1796,7 @@ function unsafeMoveTo(state: IParserState, tokenIndex: number): void {
 export function disambiguateBracket(
     state: IParserState,
     _parser: IParser<IParserState>,
-): Result<BracketDisambiguation, ParserError.UnterminatedBracketError> {
+): Result<BracketDisambiguation, ParseError.UnterminatedBracketError> {
     const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
     let offsetTokenIndex: number = state.tokenIndex + 1;
     const offsetToken: Token = tokens[offsetTokenIndex];
@@ -1855,7 +1855,7 @@ export function readIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
 ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
     return readCsvArray(
         state,
@@ -1869,7 +1869,7 @@ export function readGeneralizedIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
     return readCsvArray(
         state,
@@ -1997,7 +1997,7 @@ function readCsvArray<T>(
     state: IParserState,
     valueReader: () => T & Ast.TCsvType,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
 ): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, nodeKind);
@@ -2008,7 +2008,7 @@ function readCsvArray<T>(
         const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
         IParserStateUtils.startContext(state, csvNodeKind);
 
-        const maybeErr: Option<ParserError.TInnerParserError> = testPostCommaError(state);
+        const maybeErr: Option<ParseError.TInnerParseError> = testPostCommaError(state);
         if (maybeErr) {
             throw maybeErr;
         }
@@ -2121,7 +2121,7 @@ function genericReadParameterList<T>(
         IParserStateUtils.startContext(state, Ast.NodeKind.Csv);
         IParserStateUtils.startContext(state, Ast.NodeKind.Parameter);
 
-        const maybeErr: Option<ParserError.TInnerParserError> = testCsvContinuationDanglingCommaForParenthesis(state);
+        const maybeErr: Option<ParseError.TInnerParseError> = testCsvContinuationDanglingCommaForParenthesis(state);
         if (maybeErr) {
             throw maybeErr;
         }
@@ -2133,7 +2133,7 @@ function genericReadParameterList<T>(
 
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token = IParserStateUtils.expectTokenAt(state, state.tokenIndex);
-            throw new ParserError.RequiredParameterAfterOptionalParameterError(
+            throw new ParseError.RequiredParameterAfterOptionalParameterError(
                 token,
                 state.lexerSnapshot.graphemePositionStartFrom(token),
             );
@@ -2228,7 +2228,7 @@ function readWrapped<Kind, Content>(
 // -------------------------------------------------------
 
 function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
-    const maybeErr: Option<ParserError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(state, tokenKind);
+    const maybeErr: Option<ParseError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(state, tokenKind);
     if (maybeErr) {
         throw maybeErr;
     }
@@ -2293,18 +2293,18 @@ function maybeReadLiteralAttributes(state: IParserState, parser: IParser<IParser
 
 function testCsvContinuationDanglingCommaForBrace(
     state: IParserState,
-): Option<ParserError.ExpectedCsvContinuationError> {
+): Option<ParseError.ExpectedCsvContinuationError> {
     return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBrace);
 }
 
 function testCsvContinuationDanglingCommaForBracket(
     state: IParserState,
-): Option<ParserError.ExpectedCsvContinuationError> {
+): Option<ParseError.ExpectedCsvContinuationError> {
     return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket);
 }
 
 function testCsvContinuationDanglingCommaForParenthesis(
     state: IParserState,
-): Option<ParserError.ExpectedCsvContinuationError> {
+): Option<ParseError.ExpectedCsvContinuationError> {
     return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightParenthesis);
 }

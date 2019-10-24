@@ -7,7 +7,7 @@ import { Inspection } from "../..";
 import { isNever, Option, ResultKind } from "../../common";
 import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection";
 import { Token, TokenPosition } from "../../lexer";
-import { NodeIdMap, ParseOk, ParserError } from "../../parser";
+import { NodeIdMap, ParseOk, ParseError } from "../../parser";
 import { expectParseErr, expectParseOk } from "./common";
 
 type TAbridgedPositionIdentifier = AbridgedLocalIdentifier | AbridgedUndefinedIdentifier;
@@ -95,7 +95,7 @@ function expectParseErrPositionIdentifierEqual(
     position: Inspection.Position,
     expected: Option<TAbridgedPositionIdentifier>,
 ): void {
-    const parserError: ParserError.ParserError = expectParseErr(text);
+    const parserError: ParseError.ParseError = expectParseErr(text);
     const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
         position,
         parserError.context.nodeIdMapCollection,

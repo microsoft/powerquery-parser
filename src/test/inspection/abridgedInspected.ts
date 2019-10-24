@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../..";
 import { ResultKind } from "../../common";
 import { NodeKind, TNode } from "../../inspection";
-import { Ast, ParseOk, ParserError } from "../../parser";
+import { Ast, ParseOk, ParseError } from "../../parser";
 import { expectParseErr, expectParseOk } from "./common";
 
 type AbridgedScope = ReadonlyArray<string>;
@@ -42,7 +42,7 @@ function expectParseErrAbridgedInspectionEqual(
     position: Inspection.Position,
     expected: AbridgedInspection,
 ): void {
-    const parserError: ParserError.ParserError = expectParseErr(text);
+    const parserError: ParseError.ParseError = expectParseErr(text);
     const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
         position,
         parserError.context.nodeIdMapCollection,
