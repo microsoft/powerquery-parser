@@ -221,7 +221,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
     return {
         kind: ResultKind.Ok,
         value: {
-            document,
+            ast: document,
             nodeIdMapCollection: contextState.nodeIdMapCollection,
             leafNodeIds: contextState.leafNodeIds,
         },

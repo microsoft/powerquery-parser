@@ -18,7 +18,7 @@ export const enum BracketDisambiguation {
 }
 
 export interface ParseOk {
-    readonly document: Ast.TDocument;
+    readonly ast: Ast.TDocument;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
 }
