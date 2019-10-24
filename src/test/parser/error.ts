@@ -4,12 +4,12 @@
 import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
-import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
+import { TriedLexParse, tryLexParse } from "../../jobs";
 import * as Localization from "../../localization/error";
-import { Parser, ParseError } from "../../parser";
+import { ParseError, Parser } from "../../parser";
 
 function expectParserInnerError(text: string): ParseError.TInnerParseError {
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, Parser.CombinatorialParser);
+    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
 
     if (!(triedLexAndParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Err ${JSON.stringify(triedLexAndParse)}`);

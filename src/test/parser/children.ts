@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
-import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
+import { LexAndParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, NodeIdMap, Parser } from "../../parser";
 
 interface ChildIdsByIdEntry {
@@ -14,7 +14,7 @@ interface ChildIdsByIdEntry {
 }
 
 function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, Parser.CombinatorialParser);
+    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
     if (!(triedLexAndParse.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }

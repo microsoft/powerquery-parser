@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "fs";
 import "mocha";
 import * as path from "path";
 import { ResultKind } from "../../common";
-import { TriedLexAndParse, tryLexAndParse } from "../../jobs";
+import { TriedLexParse, tryLexParse } from "../../jobs";
 import { IParser, IParserState, Parser } from "../../parser";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
@@ -63,7 +63,7 @@ function parseAllFiles(parserName: string, parser: IParser<IParserState>): void 
                 let contents: string = readFileSync(filepath, "utf8");
                 contents = contents.replace(/^\uFEFF/, "");
 
-                const triedLexAndParse: TriedLexAndParse = tryLexAndParse(contents, parser);
+                const triedLexAndParse: TriedLexParse = tryLexParse(contents, parser);
                 if (!(triedLexAndParse.kind === ResultKind.Ok)) {
                     throw triedLexAndParse.error;
                 }

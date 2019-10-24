@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Option, ResultKind, Traverse } from "../../common";
-import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "../../jobs";
+import { LexAndParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, Parser } from "../../parser";
 
 type AbridgedNode = [Ast.NodeKind, Option<number>];
@@ -18,7 +18,7 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
 }
 
 function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, Parser.CombinatorialParser);
+    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
     if (!(triedLexAndParse.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
     }

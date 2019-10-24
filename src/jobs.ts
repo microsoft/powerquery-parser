@@ -16,7 +16,7 @@ import {
     TriedParse,
 } from "./parser";
 
-export type TriedLexAndParse = Result<LexAndParseOk, LexerError.TLexerError | ParseError.TParseError>;
+export type TriedLexParse = Result<LexAndParseOk, LexerError.TLexerError | ParseError.TParseError>;
 
 export interface LexAndParseOk extends ParseOk {
     readonly lexerSnapshot: LexerSnapshot;
@@ -69,7 +69,7 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
     return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds);
 }
 
-export function tryLexAndParse(text: string, parser: IParser<IParserState>): TriedLexAndParse {
+export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {
     const triedLexerSnapshot: TriedLexerSnapshot = tryLex(text);
     if (triedLexerSnapshot.kind === ResultKind.Err) {
         return triedLexerSnapshot;
