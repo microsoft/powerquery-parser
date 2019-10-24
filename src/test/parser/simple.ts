@@ -186,10 +186,10 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.LiteralExpression, 4],
-                [Ast.NodeKind.Constant, 5],
-                [Ast.NodeKind.LiteralExpression, 6],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
         });
@@ -799,8 +799,8 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.PrimitiveType, 4],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
             expectAbridgeNodes(text, expected);
