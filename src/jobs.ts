@@ -3,11 +3,11 @@
 
 import { Option, Result, ResultKind } from "./common";
 import { Lexer, LexerError, LexerSnapshot, TComment, TriedLexerSnapshot } from "./lexer";
-import { Ast, IParser, IParserState, IParserStateUtils, NodeIdMap, ParseOk, ParserError, TriedParse } from "./parser";
+import { Ast, IParser, IParserState, IParserStateUtils, NodeIdMap, ParseOk, ParseError, TriedParse } from "./parser";
 
 export type TriedLexAndParse = Result<LexAndParseOk, LexAndParseErr>;
 
-export type LexAndParseErr = LexerError.TLexerError | ParserError.TParserError;
+export type LexAndParseErr = LexerError.TLexerError | ParseError.TParseError;
 
 export interface LexAndParseOk {
     readonly ast: Ast.TDocument;

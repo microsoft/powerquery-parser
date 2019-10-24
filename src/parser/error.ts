@@ -6,9 +6,9 @@ import { CommonError, Option, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
 import * as Localization from "../localization/error";
 
-export type TParserError = CommonError.CommonError | ParserError;
+export type TParseError = CommonError.CommonError | ParseError;
 
-export type TInnerParserError =
+export type TInnerParseError =
     | ExpectedAnyTokenKindError
     | ExpectedCsvContinuationError
     | ExpectedTokenKindError
@@ -19,8 +19,8 @@ export type TInnerParserError =
     | UnterminatedParenthesesError
     | UnusedTokensRemainError;
 
-export class ParserError extends Error {
-    constructor(readonly innerError: TInnerParserError, readonly context: ParserContext.State) {
+export class ParseError extends Error {
+    constructor(readonly innerError: TInnerParseError, readonly context: ParserContext.State) {
         super(innerError.message);
     }
 }
@@ -87,11 +87,11 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-export function isTParserError(x: any): x is TParserError {
-    return x instanceof ParserError || x instanceof CommonError.CommonError;
+export function isTParseError(x: any): x is TParseError {
+    return x instanceof ParseError || x instanceof CommonError.CommonError;
 }
 
-export function isTInnerParserError(x: any): x is TInnerParserError {
+export function isTInnerParseError(x: any): x is TInnerParseError {
     return (
         x instanceof ExpectedAnyTokenKindError ||
         x instanceof ExpectedCsvContinuationError ||

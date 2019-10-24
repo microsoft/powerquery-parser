@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, IParserState, NodeIdMap, ParserError } from ".";
+import { Ast, IParserState, NodeIdMap, ParseError } from ".";
 import { Option, Result } from "../common";
 
-export type TriedParse = Result<ParseOk, ParserError.TParserError>;
+export type TriedParse = Result<ParseOk, ParseError.TParseError>;
 
 export const enum ParenthesisDisambiguation {
     FunctionExpression = "FunctionExpression",
@@ -130,7 +130,7 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         allowOpenMarker: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
     ) => Ast.FieldSpecificationList;
     readonly readListType: (state: State, parser: IParser<State>) => Ast.ListType;
     readonly readFunctionType: (state: State, parser: IParser<State>) => Ast.FunctionType;
@@ -149,7 +149,7 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>;
     readonly readListLiteral: (state: State, parser: IParser<State>) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: State, parser: IParser<State>) => Ast.TAnyLiteral;
@@ -159,23 +159,23 @@ export interface IParser<State> {
     readonly disambiguateBracket: (
         state: State,
         parser: IParser<State>,
-    ) => Result<BracketDisambiguation, ParserError.UnterminatedBracketError>;
+    ) => Result<BracketDisambiguation, ParseError.UnterminatedBracketError>;
     readonly disambiguateParenthesis: (
         state: State,
         parser: IParser<State>,
-    ) => Result<ParenthesisDisambiguation, ParserError.UnterminatedParenthesesError>;
+    ) => Result<ParenthesisDisambiguation, ParseError.UnterminatedParenthesesError>;
 
     readonly readIdentifierPairedExpressions: (
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
     ) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpressions: (
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParserError.TInnerParserError>,
+        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpression: (
         state: State,

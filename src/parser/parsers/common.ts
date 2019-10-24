@@ -1,4 +1,4 @@
-import { Ast, ParserError } from "..";
+import { Ast, ParseError } from "..";
 import { CommonError, isNever, Option, Result, ResultKind } from "../../common";
 import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
@@ -31,7 +31,7 @@ export function readToken(state: IParserState): string {
 export function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
     const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
     if (maybeConstant === undefined) {
-        const maybeErr: Option<ParserError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(
+        const maybeErr: Option<ParseError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(
             state,
             tokenKind,
         );
@@ -83,7 +83,7 @@ export function readBracketDisambiguation(
 ): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
     const triedDisambiguation: Result<
         BracketDisambiguation,
-        ParserError.UnterminatedBracketError
+        ParseError.UnterminatedBracketError
     > = parser.disambiguateBracket(state, parser);
     if (triedDisambiguation.kind === ResultKind.Err) {
         throw triedDisambiguation.error;

@@ -5,10 +5,10 @@ import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, Parser, ParserError, TriedParse } from "../../parser";
+import { IParserState, IParserStateUtils, Parser, ParseError, TriedParse } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
 
-function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKindError {
+function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
     const lexerState: Lexer.State = Lexer.stateFrom(text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
 
@@ -23,18 +23,18 @@ function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKi
     if (!(triedParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
     }
-    const error: ParserError.TParserError = triedParse.error;
+    const error: ParseError.TParseError = triedParse.error;
 
-    if (!(error instanceof ParserError.ParserError)) {
+    if (!(error instanceof ParseError.ParseError)) {
         const details: {} = {
             error2json: JSON.stringify(error, undefined, 4),
             message: error.message,
         };
         throw new Error(`AssertFailed: error instanceof ParserError.ParserError - ${details}`);
     }
-    const innerError: ParserError.TInnerParserError = error.innerError;
+    const innerError: ParseError.TInnerParseError = error.innerError;
 
-    if (!(innerError instanceof ParserError.ExpectedTokenKindError)) {
+    if (!(innerError instanceof ParseError.ExpectedTokenKindError)) {
         const details: {} = {
             innerError2json: JSON.stringify(innerError, undefined, 4),
             message: innerError.message,
@@ -46,7 +46,7 @@ function expectExpectedTokenKindError(text: string): ParserError.ExpectedTokenKi
 }
 
 function expectErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
-    const error: ParserError.ExpectedTokenKindError = expectExpectedTokenKindError(text);
+    const error: ParseError.ExpectedTokenKindError = expectExpectedTokenKindError(text);
 
     if (!(error.maybeFoundToken !== undefined)) {
         throw new Error(`AssertFailed: error.maybeFoundToken !== undefined`);

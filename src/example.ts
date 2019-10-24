@@ -7,7 +7,7 @@ import { Inspection } from ".";
 import { Option, ResultKind } from "./common";
 import { LexAndParseOk, TriedLexAndParse, tryLexAndParse } from "./jobs";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { NodeIdMap, Parser, ParserContext, ParserError } from "./parser";
+import { NodeIdMap, Parser, ParserContext, ParseError } from "./parser";
 
 parseText(`1 is number is number`);
 
@@ -28,7 +28,7 @@ function parseText(text: string): void {
 
         // If the error occured during parsing, then log the jsonified parsing context,
         // which is what was parsed up until the error was thrown.
-        if (triedLexAndParse.error instanceof ParserError.ParserError) {
+        if (triedLexAndParse.error instanceof ParseError.ParseError) {
             console.log(JSON.stringify(triedLexAndParse.error.context, undefined, 4));
         }
     }
@@ -98,7 +98,7 @@ function inspectText(text: string, position: Inspection.Position): void {
     // or a ParserError instance was thrown during the parsing.
     const triedLexAndParse: TriedLexAndParse = tryLexAndParse(text, Parser.CombinatorialParser);
     if (triedLexAndParse.kind === ResultKind.Err) {
-        if (!(triedLexAndParse.error instanceof ParserError.ParserError)) {
+        if (!(triedLexAndParse.error instanceof ParseError.ParseError)) {
             console.log(`Lex and parse failed due to: ${triedLexAndParse.error.message}`);
             return;
         }

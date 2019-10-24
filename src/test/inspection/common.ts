@@ -4,15 +4,15 @@
 import "mocha";
 import { Option, ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, ParseOk, Parser, ParserError, TriedParse } from "../../parser";
+import { IParserState, IParserStateUtils, ParseOk, Parser, ParseError, TriedParse } from "../../parser";
 
-export function expectParseErr(text: string): ParserError.ParserError {
+export function expectParseErr(text: string): ParseError.ParseError {
     const triedParse: TriedParse = expectTriedParse(text);
     if (!(triedParse.kind === ResultKind.Err)) {
         throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
     }
 
-    if (!(triedParse.error instanceof ParserError.ParserError)) {
+    if (!(triedParse.error instanceof ParseError.ParseError)) {
         throw new Error(`AssertFailed: triedParse.error instanceof ParserError: ${triedParse.error.message}`);
     }
 
