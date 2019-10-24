@@ -63,9 +63,9 @@ function parseAllFiles(parserName: string, parser: IParser<IParserState>): void 
                 let contents: string = readFileSync(filepath, "utf8");
                 contents = contents.replace(/^\uFEFF/, "");
 
-                const triedLexAndParse: TriedLexParse = tryLexParse(contents, parser);
-                if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-                    throw triedLexAndParse.error;
+                const triedLexParse: TriedLexParse = tryLexParse(contents, parser);
+                if (!(triedLexParse.kind === ResultKind.Ok)) {
+                    throw triedLexParse.error;
                 }
             });
         }

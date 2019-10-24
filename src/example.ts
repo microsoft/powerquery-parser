@@ -5,7 +5,7 @@
 
 import { Inspection } from ".";
 import { Option, ResultKind } from "./common";
-import { LexAndParseOk, TriedLexParse, tryLexParse } from "./jobs";
+import { LexParseOk, TriedLexParse, tryLexParse } from "./jobs";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { NodeIdMap, ParseError, Parser, ParserContext } from "./parser";
 
@@ -15,21 +15,21 @@ parseText(`1 is number is number`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result is a union of (Ok<T> | Err<E>).
-    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
 
     // If the Result is an Ok, then log the jsonified abstract syntax tree (AST) which was parsed.
-    if (triedLexAndParse.kind === ResultKind.Ok) {
-        console.log(JSON.stringify(triedLexAndParse.value, undefined, 4));
+    if (triedLexParse.kind === ResultKind.Ok) {
+        console.log(JSON.stringify(triedLexParse.value, undefined, 4));
     }
     // Else the Result is an Err, then log the jsonified error.
     else {
-        console.log(triedLexAndParse.error.message);
-        console.log(JSON.stringify(triedLexAndParse.error, undefined, 4));
+        console.log(triedLexParse.error.message);
+        console.log(JSON.stringify(triedLexParse.error, undefined, 4));
 
         // If the error occured during parsing, then log the jsonified parsing context,
         // which is what was parsed up until the error was thrown.
-        if (triedLexAndParse.error instanceof ParseError.ParseError) {
-            console.log(JSON.stringify(triedLexAndParse.error.context, undefined, 4));
+        if (triedLexParse.error instanceof ParseError.ParseError) {
+            console.log(JSON.stringify(triedLexParse.error.context, undefined, 4));
         }
     }
 }
@@ -96,20 +96,20 @@ function inspectText(text: string, position: Inspection.Position): void {
 
     // An inspection can be done if the text is successfully parsed,
     // or a ParserError instance was thrown during the parsing.
-    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
-    if (triedLexAndParse.kind === ResultKind.Err) {
-        if (!(triedLexAndParse.error instanceof ParseError.ParseError)) {
-            console.log(`Lex and parse failed due to: ${triedLexAndParse.error.message}`);
+    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    if (triedLexParse.kind === ResultKind.Err) {
+        if (!(triedLexParse.error instanceof ParseError.ParseError)) {
+            console.log(`Lex and parse failed due to: ${triedLexParse.error.message}`);
             return;
         }
 
-        const contextState: ParserContext.State = triedLexAndParse.error.context;
+        const contextState: ParserContext.State = triedLexParse.error.context;
         nodeIdMapCollection = contextState.nodeIdMapCollection;
         leafNodeIds = contextState.leafNodeIds;
     } else {
-        const lexAndParseOk: LexAndParseOk = triedLexAndParse.value;
-        nodeIdMapCollection = lexAndParseOk.nodeIdMapCollection;
-        leafNodeIds = lexAndParseOk.leafNodeIds;
+        const lexParseOk: LexParseOk = triedLexParse.value;
+        nodeIdMapCollection = lexParseOk.nodeIdMapCollection;
+        leafNodeIds = lexParseOk.leafNodeIds;
     }
 
     // An inspection can fail if given invalid arguments.

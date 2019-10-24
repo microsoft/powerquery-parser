@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Option, ResultKind, Traverse } from "../../common";
-import { LexAndParseOk, TriedLexParse, tryLexParse } from "../../jobs";
+import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, Parser } from "../../parser";
 
 type AbridgedNode = [Ast.NodeKind, Option<number>];
@@ -17,16 +17,16 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
     nthCounter: number;
 }
 
-function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
-    if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
+function expectLexParseOk(text: string): LexParseOk {
+    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    if (!(triedLexParse.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedLexParse.kind === ResultKind.Ok: ${triedLexParse.error.message}`);
     }
-    return triedLexAndParse.value;
+    return triedLexParse.value;
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
+    const lexParseOk: LexParseOk = expectLexParseOk(text);
     const state: CollectAbridgeNodeState = { result: [] };
 
     const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = Traverse.tryTraverseAst<
@@ -34,8 +34,8 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         AbridgedNode[]
     >(
         state,
-        lexAndParseOk.nodeIdMapCollection,
-        lexAndParseOk.ast,
+        lexParseOk.nodeIdMapCollection,
+        lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
         Traverse.expectExpandAllAstChildren,
@@ -50,7 +50,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 }
 
 function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
-    const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
+    const lexParseOk: LexParseOk = expectLexParseOk(text);
     const state: NthNodeOfKindState = {
         result: undefined,
         nodeKind,
@@ -63,8 +63,8 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
         Option<Ast.TNode>
     >(
         state,
-        lexAndParseOk.nodeIdMapCollection,
-        lexAndParseOk.ast,
+        lexParseOk.nodeIdMapCollection,
+        lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
         Traverse.expectExpandAllAstChildren,

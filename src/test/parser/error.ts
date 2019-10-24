@@ -9,15 +9,15 @@ import * as Localization from "../../localization/error";
 import { ParseError, Parser } from "../../parser";
 
 function expectParserInnerError(text: string): ParseError.TInnerParseError {
-    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
 
-    if (!(triedLexAndParse.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Err ${JSON.stringify(triedLexAndParse)}`);
-    } else if (!(triedLexAndParse.error instanceof ParseError.ParseError)) {
-        const errorMessage: string = triedLexAndParse.error.message;
-        throw new Error(`AssertFailed: triedLexAndParse.error instanceof ParserError - ${errorMessage}`);
+    if (!(triedLexParse.kind === ResultKind.Err)) {
+        throw new Error(`AssertFailed: triedLexParse.kind === ResultKind.Err ${JSON.stringify(triedLexParse)}`);
+    } else if (!(triedLexParse.error instanceof ParseError.ParseError)) {
+        const errorMessage: string = triedLexParse.error.message;
+        throw new Error(`AssertFailed: triedLexParse.error instanceof ParserError - ${errorMessage}`);
     } else {
-        return triedLexAndParse.error.innerError;
+        return triedLexParse.error.innerError;
     }
 }
 

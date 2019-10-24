@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
-import { LexAndParseOk, TriedLexParse, tryLexParse } from "../../jobs";
+import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, NodeIdMap, Parser } from "../../parser";
 
 interface ChildIdsByIdEntry {
@@ -13,19 +13,19 @@ interface ChildIdsByIdEntry {
     readonly kind: Ast.NodeKind;
 }
 
-function expectLexAndParseOk(text: string): LexAndParseOk {
-    const triedLexAndParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
-    if (!(triedLexAndParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedLexAndParse.kind === ResultKind.Ok: ${triedLexAndParse.error.message}`);
+function expectLexParseOk(text: string): LexParseOk {
+    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    if (!(triedLexParse.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedLexParse.kind === ResultKind.Ok: ${triedLexParse.error.message}`);
     }
-    return triedLexAndParse.value;
+    return triedLexParse.value;
 }
 
 function expectChildrenEqual(text: string, expected: ReadonlyArray<ChildIdsByIdEntry>): void {
     const actual: ChildIdsByIdEntry[] = [];
-    const lexAndParseOk: LexAndParseOk = expectLexAndParseOk(text);
-    const astNodeById: NodeIdMap.AstNodeById = lexAndParseOk.nodeIdMapCollection.astNodeById;
-    for (const [key, value] of lexAndParseOk.nodeIdMapCollection.childIdsById.entries()) {
+    const lexParseOk: LexParseOk = expectLexParseOk(text);
+    const astNodeById: NodeIdMap.AstNodeById = lexParseOk.nodeIdMapCollection.astNodeById;
+    for (const [key, value] of lexParseOk.nodeIdMapCollection.childIdsById.entries()) {
         actual.push({
             childNodeIds: value,
             id: key,

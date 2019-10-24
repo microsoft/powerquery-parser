@@ -16,9 +16,9 @@ import {
     TriedParse,
 } from "./parser";
 
-export type TriedLexParse = Result<LexAndParseOk, LexerError.TLexerError | ParseError.TParseError>;
+export type TriedLexParse = Result<LexParseOk, LexerError.TLexerError | ParseError.TParseError>;
 
-export interface LexAndParseOk extends ParseOk {
+export interface LexParseOk extends ParseOk {
     readonly lexerSnapshot: LexerSnapshot;
 }
 
