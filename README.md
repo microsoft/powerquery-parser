@@ -8,9 +8,9 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 A few minimal code samples can be found in [example.ts](src/example.ts).
 
-If you're planning on parsing static documents then you should use the `tryLexAndParse` function located in [src/jobs.ts](src/jobs.ts). This function attempts to lex a document, pass the results to the parser, and then return the outcome.
+If you're planning on parsing static documents then you should use the `tryLexParse` function located in [src/jobs.ts](src/jobs.ts). This function attempts to lex a document, pass the results to the parser, and then return the outcome.
 
-If you're planning to perform repeated lexing and parses, such as being a part of a Visual Studi Code extension, then for performance reasons you should avoid the `tryLexAndParse` helper function. Instead you should create a Lexer instance and as your text changes update the lexer using the public APIs located in [src/lexer/lexer.ts](src/lexer/lexer.ts). Once you need to parse the document follow the same steps in `src/jobs.ts`; create a LexerSnapshot and pass the result to the parser.
+If you're planning to perform repeated lexing and parses, such as being a part of a Visual Studi Code extension, then for performance reasons you should avoid the `tryLexParse` helper function. Instead you should create a Lexer instance and as your text changes update the lexer using the public APIs located in [src/lexer/lexer.ts](src/lexer/lexer.ts). Once you need to parse the document follow the same steps in `src/jobs.ts`; create a LexerSnapshot and pass the result to the parser.
 
 ## Things to note
 

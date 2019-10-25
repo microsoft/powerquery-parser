@@ -3,7 +3,7 @@
 
 import { Inspection } from ".";
 import { CommonError, Option, Result, ResultKind } from "./common";
-import { TriedInspection } from "./inspection";
+import { Inspected, TriedInspection } from "./inspection";
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import {
     IParser,
@@ -18,8 +18,14 @@ import {
 
 export type TriedLexParse = Result<LexParseOk, LexerError.TLexerError | ParseError.TParseError>;
 
+export type TriedLexParseInspection = Result<LexParseInspectionOk, LexerError.TLexerError | ParseError.TParseError>;
+
 export interface LexParseOk extends ParseOk {
     readonly lexerSnapshot: LexerSnapshot;
+}
+
+export interface LexParseInspectionOk extends Inspected {
+    readonly triedParse: TriedParse;
 }
 
 export function tryLex(text: string): TriedLexerSnapshot {
@@ -88,4 +94,37 @@ export function tryLexParse(text: string, parser: IParser<IParserState>): TriedL
     } else {
         return triedParse;
     }
+}
+
+export function tryLexParseInspection(
+    text: string,
+    parser: IParser<IParserState>,
+    position: Inspection.Position,
+): TriedLexParseInspection {
+    const triedLexParse: TriedLexParse = tryLexParse(text, parser);
+    if (triedLexParse.kind === ResultKind.Err && triedLexParse.error instanceof LexerError.LexerError) {
+        return triedLexParse;
+    }
+
+    // The if statement above should remove LexerError from the error type in Result<T, E>
+    const casted: Result<
+        LexParseOk,
+        ParseError.TParseError | Exclude<LexerError.TLexerError, LexerError.LexerError>
+    > = triedLexParse as Result<
+        LexParseOk,
+        ParseError.TParseError | Exclude<LexerError.TLexerError, LexerError.LexerError>
+    >;
+    const triedInspection: TriedInspection = tryInspection(casted, position);
+
+    if (triedInspection.kind === ResultKind.Err) {
+        return triedInspection;
+    }
+
+    return {
+        kind: ResultKind.Ok,
+        value: {
+            ...triedInspection.value,
+            triedParse: casted,
+        },
+    };
 }
