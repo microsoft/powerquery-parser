@@ -1,22 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option, Result, ResultKind } from "./common";
-import { Lexer, LexerError, LexerSnapshot, TComment, TriedLexerSnapshot } from "./lexer";
-import { Ast, IParser, IParserState, IParserStateUtils, NodeIdMap, ParseOk, ParseError, TriedParse } from "./parser";
+import { Inspection } from ".";
+import { CommonError, Option, Result, ResultKind } from "./common";
+import { Inspected, TriedInspection } from "./inspection";
+import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import {
+    IParser,
+    IParserState,
+    IParserStateUtils,
+    NodeIdMap,
+    ParseError,
+    ParseOk,
+    ParserContext,
+    TriedParse,
+} from "./parser";
 
-export type TriedLexAndParse = Result<LexAndParseOk, LexAndParseErr>;
+export type TriedLexParse = Result<LexParseOk, LexerError.TLexerError | ParseError.TParseError>;
 
-export type LexAndParseErr = LexerError.TLexerError | ParseError.TParseError;
+export type TriedLexParseInspection = Result<LexParseInspectionOk, LexerError.TLexerError | ParseError.TParseError>;
 
-export interface LexAndParseOk {
-    readonly ast: Ast.TDocument;
-    readonly comments: ReadonlyArray<TComment>;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
+export interface LexParseOk extends ParseOk {
+    readonly lexerSnapshot: LexerSnapshot;
 }
 
-export function tryLexAndParse(text: string, parser: IParser<IParserState>): TriedLexAndParse {
+export interface LexParseInspectionOk extends Inspected {
+    readonly triedParse: TriedParse;
+}
+
+export function tryLex(text: string): TriedLexerSnapshot {
     const state: Lexer.State = Lexer.stateFrom(text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
@@ -27,26 +39,92 @@ export function tryLexAndParse(text: string, parser: IParser<IParserState>): Tri
         };
     }
 
-    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (snapshotResult.kind === ResultKind.Err) {
-        return snapshotResult;
-    }
-    const lexerSnapshot: LexerSnapshot = snapshotResult.value;
+    return LexerSnapshot.tryFrom(state);
+}
 
+export function tryParse(lexerSnapshot: LexerSnapshot, parser: IParser<IParserState>): TriedParse {
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    const parseResult: TriedParse = parser.readDocument(parserState, parser);
-    if (parseResult.kind === ResultKind.Err) {
-        return parseResult;
+    return parser.readDocument(parserState, parser);
+}
+
+export function tryInspection(triedParse: TriedParse, position: Inspection.Position): TriedInspection {
+    let leafNodeIds: ReadonlyArray<number>;
+    let nodeIdMapCollection: NodeIdMap.Collection;
+
+    if (triedParse.kind === ResultKind.Err) {
+        if (triedParse.error instanceof CommonError.CommonError) {
+            // Returning triedParse /should/ be safe, but Typescript has a problem with it.
+            // However, if I repackage the same error it satisfies the type check.
+            // There's no harm in having to repackage the error, and by not casting it we can prevent
+            // future regressions if TriedParse changes.
+            return {
+                kind: ResultKind.Err,
+                error: triedParse.error,
+            };
+        }
+
+        const context: ParserContext.State = triedParse.error.context;
+        leafNodeIds = context.leafNodeIds;
+        nodeIdMapCollection = context.nodeIdMapCollection;
+    } else {
+        const parseOk: ParseOk = triedParse.value;
+        leafNodeIds = parseOk.leafNodeIds;
+        nodeIdMapCollection = parseOk.nodeIdMapCollection;
     }
-    const parseOk: ParseOk = parseResult.value;
+
+    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds);
+}
+
+export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {
+    const triedLexerSnapshot: TriedLexerSnapshot = tryLex(text);
+    if (triedLexerSnapshot.kind === ResultKind.Err) {
+        return triedLexerSnapshot;
+    }
+    const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
+
+    const triedParse: TriedParse = tryParse(lexerSnapshot, parser);
+    if (triedParse.kind === ResultKind.Ok) {
+        return {
+            kind: ResultKind.Ok,
+            value: {
+                ...triedParse.value,
+                lexerSnapshot,
+            },
+        };
+    } else {
+        return triedParse;
+    }
+}
+
+export function tryLexParseInspection(
+    text: string,
+    parser: IParser<IParserState>,
+    position: Inspection.Position,
+): TriedLexParseInspection {
+    const triedLexParse: TriedLexParse = tryLexParse(text, parser);
+    if (triedLexParse.kind === ResultKind.Err && triedLexParse.error instanceof LexerError.LexerError) {
+        return triedLexParse;
+    }
+
+    // The if statement above should remove LexerError from the error type in Result<T, E>
+    const casted: Result<
+        LexParseOk,
+        ParseError.TParseError | Exclude<LexerError.TLexerError, LexerError.LexerError>
+    > = triedLexParse as Result<
+        LexParseOk,
+        ParseError.TParseError | Exclude<LexerError.TLexerError, LexerError.LexerError>
+    >;
+    const triedInspection: TriedInspection = tryInspection(casted, position);
+
+    if (triedInspection.kind === ResultKind.Err) {
+        return triedInspection;
+    }
 
     return {
         kind: ResultKind.Ok,
         value: {
-            ast: parseOk.document,
-            comments: lexerSnapshot.comments,
-            nodeIdMapCollection: parseOk.nodeIdMapCollection,
-            leafNodeIds: parseOk.leafNodeIds,
+            ...triedInspection.value,
+            triedParse: casted,
         },
     };
 }
