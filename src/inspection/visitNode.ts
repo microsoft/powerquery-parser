@@ -9,7 +9,8 @@ import { Position, State } from "./inspection";
 import { PositionIdentifierKind } from "./positionIdentifier";
 
 export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
-    state.result.nodes.push(xorNode);
+    state.visitedNodes.push(xorNode);
+    state.result.nodes.push(Node.basicInspectedNodeFrom(xorNode));
 
     // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
@@ -116,10 +117,6 @@ function inspectIdentifier(state: State, identifierXorNode: NodeIdMap.TXorNode):
         }
 
         const identifier: Ast.Identifier = identifierXorNode.node;
-        // TODO (issue #57): is this isParentOfNodeKind logic correct?
-        // In section document case, the parent is of type IdentifierPairedExpression not IdentifierExpression.
-        // inspectSection was modified to not call inspectIdentifier for section members, so this might is no
-        // longer an immediate issue.
         if (isParentOfNodeKind(state.nodeIdMapCollection, identifier.id, Ast.NodeKind.IdentifierExpression)) {
             return;
         } else if (isTokenPositionOnOrBeforeBeforePostion(identifier.tokenRange.positionEnd, state.position)) {
@@ -697,9 +694,9 @@ function maybeSetPositionIdentifier(
 }
 
 function isRootXorNode(state: State, xorNode: NodeIdMap.TXorNode): boolean {
-    return xorNode.node.id === state.result.nodes[0].node.id;
+    return xorNode.node.id === state.visitedNodes[0].node.id;
 }
 
 function isRootNode(state: State, node: Ast.TNode): boolean {
-    return node.id === state.result.nodes[0].node.id;
+    return node.id === state.visitedNodes[0].node.id;
 }

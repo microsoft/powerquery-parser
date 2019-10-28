@@ -25,10 +25,11 @@ export interface State extends Traverse.IState<UnfrozenInspected> {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     readonly assignmentKeyNodeIdMap: Map<number, Ast.Identifier>;
+    readonly visitedNodes: NodeIdMap.TXorNode[];
 }
 
 export interface Inspected {
-    readonly nodes: NodeIdMap.TXorNode[];
+    readonly nodes: Node.IInspectedNode[];
     readonly scope: Map<string, NodeIdMap.TXorNode>;
     readonly maybeInvokeExpression: Option<Node.InspectedInvokeExpression>;
     readonly maybePositionIdentifier: Option<TPositionIdentifier>;
@@ -63,6 +64,7 @@ export function tryFrom(
             maybeInvokeExpression: undefined,
             maybePositionIdentifier: undefined,
         },
+        visitedNodes: [],
         maybePositionIdentifier: maybePositionIdentifier(nodeIdMapCollection, closestLeaf),
         position,
         nodeIdMapCollection,
