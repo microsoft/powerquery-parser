@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export * from "./node";
+import * as Node from "./node";
+
 export * from "./inspection";
 export * from "./positionIdentifier";
+export { Node };

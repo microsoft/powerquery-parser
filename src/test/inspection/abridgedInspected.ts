@@ -5,20 +5,20 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
 import { ResultKind } from "../../common";
-import { NodeKind, TNode } from "../../inspection";
-import { Ast, ParseOk, ParseError } from "../../parser";
+import { Node } from "../../inspection";
+import { Ast, NodeIdMap, ParseError, ParseOk } from "../../parser";
 import { expectParseErr, expectParseOk } from "./common";
 
 type AbridgedScope = ReadonlyArray<string>;
 
 interface AbridgedInspection {
-    readonly nodes: ReadonlyArray<TNode>;
+    readonly nodes: ReadonlyArray<Node.IInspectedNode>;
     readonly scope: AbridgedScope;
 }
 
 function abridgedInspectionFrom(inspection: Inspection.Inspected): AbridgedInspection {
     return {
-        nodes: inspection.nodes,
+        nodes: inspection.nodes.map((xorNode: NodeIdMap.TXorNode) => Node.basicInspectedNodeFrom(xorNode)),
         scope: [...inspection.scope.keys()],
     };
 }
@@ -105,21 +105,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 6,
-                                lineCodeUnit: 6,
-                                lineNumber: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`_`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -132,26 +118,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 9,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 5,
-                                lineCodeUnit: 5,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [`_`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -179,17 +146,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [`_`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -202,34 +159,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 11,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 5,
-                                lineCodeUnit: 5,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 11,
-                                lineCodeUnit: 11,
-                                lineNumber: 0,
-                            },
-                        },
-                        {
-                            kind: NodeKind.EachExpression,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 11,
-                                lineCodeUnit: 11,
-                                lineNumber: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`_`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -458,26 +388,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 8,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybeName: "foo",
-                            maybePositionEnd: {
-                                codeUnit: 9,
-                                lineCodeUnit: 9,
-                                lineNumber: 0,
-                            },
-                            maybeArguments: {
-                                numArguments: 2,
-                                positionArgumentIndex: 1,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`y`, `x`, `foo`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -503,27 +414,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 5,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 6,
-                                lineCodeUnit: 6,
-                                lineNumber: 0,
-                            },
-                            maybeName: undefined,
-                            maybeArguments: {
-                                numArguments: 1,
-                                positionArgumentIndex: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`y`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -536,27 +427,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 5,
-                                lineCodeUnit: 5,
-                                lineNumber: 0,
-                            },
-                            maybeName: `foo`,
-                            maybeArguments: {
-                                numArguments: 0,
-                                positionArgumentIndex: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`foo`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -584,22 +455,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 8,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybeName: "foo",
-                            maybePositionEnd: undefined,
-                            maybeArguments: {
-                                numArguments: 2,
-                                positionArgumentIndex: 1,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`y`, `x`, `foo`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -612,22 +468,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybeName: "foo",
-                            maybePositionEnd: undefined,
-                            maybeArguments: {
-                                numArguments: 1,
-                                positionArgumentIndex: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`foo`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -636,22 +477,7 @@ describe(`Inspection`, () => {
             it(`foo(x,|`, () => {
                 const [text, position] = textWithPosition(`foo(x,|`);
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybeName: "foo",
-                            maybePositionEnd: undefined,
-                            maybeArguments: {
-                                numArguments: 2,
-                                positionArgumentIndex: 1,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`x`, `foo`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -660,22 +486,7 @@ describe(`Inspection`, () => {
             it(`foo(x, |`, () => {
                 const [text, position] = textWithPosition(`foo(x, |`);
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybeName: "foo",
-                            maybePositionEnd: undefined,
-                            maybeArguments: {
-                                numArguments: 2,
-                                positionArgumentIndex: 1,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`x`, `foo`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -688,23 +499,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 5,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.InvokeExpression,
-
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                            maybeName: undefined,
-                            maybeArguments: {
-                                numArguments: 1,
-                                positionArgumentIndex: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`y`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -732,17 +527,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 1,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.List,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -755,17 +540,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 1,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.List,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -778,17 +553,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 2,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.List,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -801,26 +566,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 2,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.List,
-                            maybePositionStart: {
-                                codeUnit: 1,
-                                lineCodeUnit: 1,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                        {
-                            kind: NodeKind.List,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -848,21 +594,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 1,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 5,
-                                lineCodeUnit: 5,
-                                lineNumber: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -875,21 +607,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 5,
-                                lineCodeUnit: 5,
-                                lineNumber: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`a`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -915,34 +633,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 9,
-                                lineCodeUnit: 9,
-                                lineNumber: 0,
-                            },
-                        },
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: {
-                                codeUnit: 10,
-                                lineCodeUnit: 10,
-                                lineNumber: 0,
-                            },
-                        },
-                    ],
+                    nodes: [],
                     scope: [`a`],
                 };
                 expectParseOkAbridgedInspectionEqual(text, position, expected);
@@ -970,17 +661,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 1,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -993,17 +674,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 3,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [`a`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -1016,17 +687,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [`a`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);
@@ -1039,26 +700,7 @@ describe(`Inspection`, () => {
                     lineCodeUnit: 4,
                 };
                 const expected: AbridgedInspection = {
-                    nodes: [
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 3,
-                                lineCodeUnit: 3,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                        {
-                            kind: NodeKind.Record,
-                            maybePositionStart: {
-                                codeUnit: 0,
-                                lineCodeUnit: 0,
-                                lineNumber: 0,
-                            },
-                            maybePositionEnd: undefined,
-                        },
-                    ],
+                    nodes: [],
                     scope: [`a`],
                 };
                 expectParseErrAbridgedInspectionEqual(text, position, expected);

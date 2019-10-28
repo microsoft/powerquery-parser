@@ -1,30 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option } from "../common";
+import { isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
+import { Ast, NodeIdMap, ParserContext } from "../parser";
 
-export const enum NodeKind {
-    EachExpression = "EachExpression",
-    InvokeExpression = "InvokeExpression",
-    List = "List",
-    Record = "Record",
-}
+export type TInspectedNode = InspectedInvokeExpression;
 
-export type TNode = EachExpression | InvokeExpression | List | Record;
-
-export interface INode {
-    readonly kind: NodeKind;
+export interface IInspectedNode {
+    readonly kind: Ast.NodeKind;
+    readonly id: number,
     readonly maybePositionStart: Option<TokenPosition>;
     readonly maybePositionEnd: Option<TokenPosition>;
 }
 
-export interface EachExpression extends INode {
-    readonly kind: NodeKind.EachExpression;
-}
-
-export interface InvokeExpression extends INode {
-    readonly kind: NodeKind.InvokeExpression;
+export interface InspectedInvokeExpression extends IInspectedNode {
+    readonly kind: Ast.NodeKind.InvokeExpression;
     readonly maybeName: Option<string>;
     readonly maybeArguments: Option<InvokeExpressionArguments>;
 }
@@ -34,10 +25,34 @@ export interface InvokeExpressionArguments {
     readonly positionArgumentIndex: number;
 }
 
-export interface List extends INode {
-    readonly kind: NodeKind.List;
-}
+export function basicInspectedNodeFrom(xorNode: NodeIdMap.TXorNode): IInspectedNode {
+    let maybePositionStart: Option<TokenPosition>;
+    let maybePositionEnd: Option<TokenPosition>;
 
-export interface Record extends INode {
-    readonly kind: NodeKind.Record;
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const tokenRange: Ast.TokenRange = xorNode.node.tokenRange;
+            maybePositionStart = tokenRange.positionStart;
+            maybePositionEnd = tokenRange.positionEnd;
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const contextNode: ParserContext.Node = xorNode.node;
+            maybePositionStart =
+                contextNode.maybeTokenStart !== undefined ? contextNode.maybeTokenStart.positionStart : undefined;
+            maybePositionEnd = undefined;
+            break;
+        }
+
+        default:
+            throw isNever(xorNode);
+    }
+
+    return {
+        kind: xorNode.node.kind,
+        id: xorNode.node.id,
+        maybePositionStart,
+        maybePositionEnd,
+    };
 }

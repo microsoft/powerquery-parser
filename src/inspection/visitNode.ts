@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Node } from ".";
 import { CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
-import { InvokeExpressionArguments, NodeKind, TNode } from "./node";
 import { PositionIdentifierKind } from "./positionIdentifier";
 
 export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
+    state.result.nodes.push(xorNode);
+
     // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
@@ -39,11 +41,6 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
             inspectLetExpression(state, xorNode);
             break;
 
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.ListType:
-            inspectListExpressionOrLiteral(state, xorNode);
-            break;
-
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecordLiteral:
             inspectRecordExpressionOrLiteral(state, xorNode);
@@ -60,35 +57,6 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
 }
 function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
     addToScopeIfNew(state, "_", eachExprXorNode);
-
-    let maybePositionStart: Option<TokenPosition>;
-    let maybePositionEnd: Option<TokenPosition>;
-    switch (eachExprXorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
-            const tokenRange: Ast.TokenRange = eachExprXorNode.node.tokenRange;
-            maybePositionStart = tokenRange.positionStart;
-            maybePositionEnd = tokenRange.positionEnd;
-            break;
-        }
-
-        case NodeIdMap.XorNodeKind.Context: {
-            const eachExpr: ParserContext.Node = eachExprXorNode.node;
-            maybePositionStart =
-                eachExpr.maybeTokenStart !== undefined ? eachExpr.maybeTokenStart.positionStart : undefined;
-            maybePositionEnd = undefined;
-            break;
-        }
-
-        default:
-            throw isNever(eachExprXorNode);
-    }
-
-    const node: TNode = {
-        kind: NodeKind.EachExpression,
-        maybePositionStart,
-        maybePositionEnd,
-    };
-    state.result.nodes.push(node);
 }
 
 function inspectFunctionExpression(state: State, fnExpressionXorNode: NodeIdMap.TXorNode): void {
@@ -234,6 +202,10 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
     if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
         throw expectedNodeKindError(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
     }
+    // No need to further an invoke inspection if one was already created lower down in the AST.
+    else if (state.result.maybeInvokeExpression !== undefined) {
+        return;
+    }
 
     // Check if position is on closeWrapperConstant (')').
     // The check isn't needed for a context node as the final attribute is the closeWrapperConstant,
@@ -271,19 +243,20 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
             throw isNever(invokeExprXorNode);
     }
 
-    state.result.nodes.push({
-        kind: NodeKind.InvokeExpression,
+    state.result.maybeInvokeExpression = {
+        kind: Ast.NodeKind.InvokeExpression,
+        id: invokeExprXorNode.node.id,
         maybePositionEnd,
         maybePositionStart,
         maybeName,
         maybeArguments: inspectInvokeExpressionArguments(state, invokeExprXorNode),
-    });
+    };
 }
 
 function inspectInvokeExpressionArguments(
     state: State,
     invokeExprXorNode: NodeIdMap.TXorNode,
-): Option<InvokeExpressionArguments> {
+): Option<Node.InvokeExpressionArguments> {
     // Grab arguments if they exist.
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -400,45 +373,6 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
     }
 }
 
-function inspectListExpressionOrLiteral(state: State, listXorNode: NodeIdMap.TXorNode): void {
-    switch (listXorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
-            const list: Ast.ListExpression | Ast.ListLiteral = listXorNode.node as Ast.ListExpression | Ast.ListLiteral;
-            const position: Position = state.position;
-            const tokenRange: Ast.TokenRange = list.tokenRange;
-            // Check if position is on closeWrapperConstant ('}').
-            // The check isn't needed for a context node as the final attribute is the closeWrapperConstant,
-            // and as it's a context node it hasn't parsed all attributes.
-            if (isTokenPositionOnPosition(list.closeWrapperConstant.tokenRange.positionEnd, position)) {
-                return;
-            }
-            if (isPositionInTokenRange(position, tokenRange)) {
-                const node: TNode = {
-                    kind: NodeKind.List,
-                    maybePositionStart: tokenRange.positionStart,
-                    maybePositionEnd: tokenRange.positionEnd,
-                };
-                state.result.nodes.push(node);
-            }
-            break;
-        }
-
-        case NodeIdMap.XorNodeKind.Context: {
-            const list: ParserContext.Node = listXorNode.node;
-            const node: TNode = {
-                kind: NodeKind.List,
-                maybePositionStart: list.maybeTokenStart !== undefined ? list.maybeTokenStart.positionStart : undefined,
-                maybePositionEnd: undefined,
-            };
-            state.result.nodes.push(node);
-            break;
-        }
-
-        default:
-            throw isNever(listXorNode);
-    }
-}
-
 function inspectParameter(state: State, parameterXorNode: NodeIdMap.TXorNode): void {
     const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -456,45 +390,18 @@ function inspectParameter(state: State, parameterXorNode: NodeIdMap.TXorNode): v
 function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    switch (recordXorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
-            const record: Ast.RecordExpression | Ast.RecordLiteral = recordXorNode.node as
-                | Ast.RecordExpression
-                | Ast.RecordLiteral;
-            const position: Position = state.position;
-            const tokenRange: Ast.TokenRange = record.tokenRange;
-            // Check if position is on closeWrapperConstant (']').
-            // The check isn't needed for a context node as the final attribute is the closeWrapperConstant,
-            // and as it's a context node it hasn't parsed all attributes.
-            if (isTokenPositionOnPosition(record.closeWrapperConstant.tokenRange.positionEnd, position)) {
-                return;
-            }
-            if (isPositionInTokenRange(position, tokenRange)) {
-                const node: TNode = {
-                    kind: NodeKind.Record,
-                    maybePositionStart: tokenRange.positionStart,
-                    maybePositionEnd: tokenRange.positionEnd,
-                };
-                state.result.nodes.push(node);
-            }
-            break;
+    if (recordXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        const record: Ast.RecordExpression | Ast.RecordLiteral = recordXorNode.node as
+            | Ast.RecordExpression
+            | Ast.RecordLiteral;
+        const position: Position = state.position;
+        // Don't inspect the contents for scope if the cursor is on the right hand side of the close record constant.
+        if (
+            isTokenPositionOnPosition(record.closeWrapperConstant.tokenRange.positionEnd, position) ||
+            isRootNode(state, record.closeWrapperConstant)
+        ) {
+            return;
         }
-
-        case NodeIdMap.XorNodeKind.Context:
-            {
-                const record: ParserContext.Node = recordXorNode.node;
-                const node: TNode = {
-                    kind: NodeKind.Record,
-                    maybePositionStart:
-                        record.maybeTokenStart !== undefined ? record.maybeTokenStart.positionStart : undefined,
-                    maybePositionEnd: undefined,
-                };
-                state.result.nodes.push(node);
-            }
-            break;
-
-        default:
-            throw isNever(recordXorNode);
     }
 
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
@@ -787,4 +694,12 @@ function maybeSetPositionIdentifier(
             definition: valueXorNode,
         };
     }
+}
+
+function isRootXorNode(state: State, xorNode: NodeIdMap.TXorNode): boolean {
+    return xorNode.node.id === state.result.nodes[0].node.id;
+}
+
+function isRootNode(state: State, node: Ast.TNode): boolean {
+    return node.id === state.result.nodes[0].node.id;
 }
