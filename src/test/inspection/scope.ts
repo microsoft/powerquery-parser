@@ -22,20 +22,17 @@ function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspecti
 
 // Only works with single line expressions
 function textWithPosition(text: string): [string, Inspection.Position] {
-    expect(text.indexOf("|")).to.be.greaterThan(-1, "text must have | marker");
-    expect(text.indexOf("|")).to.equal(text.lastIndexOf("|"), "text must only have one |");
+    const indexOfBar: number = text.indexOf("|");
 
-    const index: number = text.indexOf("|");
-    if (index > -1) {
-        const position: Inspection.Position = {
-            lineNumber: 0,
-            lineCodeUnit: index,
-        };
+    expect(indexOfBar).to.be.greaterThan(-1, "text must have | marker");
+    expect(indexOfBar).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
 
-        return [text.replace("|", ""), position];
-    }
+    const position: Inspection.Position = {
+        lineNumber: 0,
+        lineCodeUnit: indexOfBar,
+    };
 
-    throw new Error("bad marker text");
+    return [text.replace("|", ""), position];
 }
 
 describe(`Inspection`, () => {
