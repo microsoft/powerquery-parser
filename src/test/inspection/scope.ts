@@ -266,7 +266,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
+        describe(`abc123 ${Ast.NodeKind.RecordExpression} (Ast)`, () => {
             it(`|[a=1]`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`|[a=1]`);
                 const expected: AbridgedScope = [];
@@ -285,6 +285,12 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
+            it(`[a=1, b=2|]`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`[a=1, b=2|]`);
+                const expected: AbridgedScope = ["a"];
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
+            });
+
             it(`[a=1]|`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`[a=1]|`);
                 const expected: AbridgedScope = [];
@@ -298,7 +304,7 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
+        describe(`abc123 ${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
             it(`|[a=1`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`|[a=1`);
                 const expected: AbridgedScope = [];
@@ -320,6 +326,12 @@ describe(`Inspection`, () => {
             it(`[a=1|`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`[a=1|`);
                 const expected: AbridgedScope = [];
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`[a=1, b=|`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`[a=1, b=|`);
+                const expected: AbridgedScope = ["a"];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
 
