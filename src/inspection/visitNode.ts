@@ -47,10 +47,6 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
             inspectRecordExpressionOrLiteral(state, xorNode);
             break;
 
-        case Ast.NodeKind.RecursivePrimaryExpression:
-            inspectRecursivePrimaryExpression(state, xorNode);
-            break;
-
         case Ast.NodeKind.Section:
             inspectSection(state, xorNode);
             break;
@@ -280,19 +276,6 @@ function inspectInvokeExpressionArguments(
     for (let index: number = 0; index < numArguments; index += 1) {
         const csvXorNode: NodeIdMap.TXorNode = csvXorNodes[index];
 
-        // Conditionally add argument name to scope.
-        // Has to be this awkward as `foo(@|` is possible.
-        const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            csvXorNode.node.id,
-            0,
-            undefined,
-        );
-        if (maybeNameXorNode !== undefined && maybeNameXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-            const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
-            inspectIdentifierExpression(state, nameXorNode);
-        }
-
         // Conditionally set maybePositionArgumentIndex.
         // If position is on a comma then count it as belonging to the next index.
         // Eg. `foo(a,|)` is in the second index.
@@ -462,20 +445,6 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
             maybeSetPositionIdentifier(state, keyXorNode, valueXorNode);
         }
     }
-}
-
-function inspectRecursivePrimaryExpression(state: State, recursivePrimaryExprXorNode: NodeIdMap.TXorNode): void {
-    const maybeHeadXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
-        state.nodeIdMapCollection,
-        recursivePrimaryExprXorNode.node.id,
-        0,
-        undefined,
-    );
-    if (maybeHeadXorNode === undefined || maybeHeadXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
-        return;
-    }
-    const headXorNode: NodeIdMap.TXorNode = maybeHeadXorNode;
-    inspectIdentifierExpression(state, headXorNode);
 }
 
 function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void {
