@@ -65,7 +65,7 @@ function inspectFunctionExpression(state: State, fnExprXorNode: NodeIdMap.TXorNo
         throw expectedNodeKindError(fnExprXorNode, Ast.NodeKind.FunctionExpression);
     }
 
-    // Only add to the scope if you're in the expression body.
+    // We only care about adding to the scope if position is in the expression body.
     const maybeExprXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         fnExprXorNode.node.id,
@@ -85,36 +85,17 @@ function inspectFunctionExpression(state: State, fnExprXorNode: NodeIdMap.TXorNo
         Ast.NodeKind.ParameterList,
     ]) as Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>>;
 
-    // for (const parameterXorNode of nodesOnCsvFromCsvArray(state.nodeIdMapCollection, csvArrayXorNode)) {
-    //     inspectParameter(state, parameterXorNode);
-    // }
+    // We only care about adding to the scope if position is in the expression body.
+    // Don't add parameters if position started on a parameter,
+    // Eg. `(x|, y) => x + y`
+    if (isPositionInTokenRange(state.position, parameters.tokenRange)) {
+        return;
+    }
 
-    // const drilldownToCsvArrayRequest: NodeIdMap.RepeatedAttributeIndexRequest = {
-    //     nodeIdMapCollection: state.nodeIdMapCollection,
-    //     firstDrilldown: {
-    //         rootNodeId: fnExprXorNode.node.id,
-    //         attributeIndex: 0,
-    //         maybeAllowedNodeKinds: [Ast.NodeKind.ParameterList],
-    //     },
-    //     drilldowns: [
-    //         {
-    //             attributeIndex: 1,
-    //             maybeAllowedNodeKinds: [Ast.NodeKind.ArrayWrapper],
-    //         },
-    //     ],
-    // };
-    // const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByRepeatedAttributeIndex(
-    //     drilldownToCsvArrayRequest,
-    // );
-
-    // if (maybeCsvArrayXorNode === undefined) {
-    //     return undefined;
-    // }
-    // const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
-
-    // for (const parameterXorNode of nodesOnCsvFromCsvArray(state.nodeIdMapCollection, csvArrayXorNode)) {
-    //     inspectParameter(state, parameterXorNode);
-    // }
+    for (const parameterCsv of parameters.content.elements) {
+        const parameterName: Ast.Identifier = parameterCsv.node.name;
+        addAstToScopeIfNew(state, parameterName.literal, parameterName);
+    }
 }
 
 // Assumes the parent has already determined if the identifier should be added to the scope or not.
@@ -391,31 +372,31 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
     }
 }
 
-function inspectParameter(state: State, parameterXorNode: NodeIdMap.TXorNode): void {
-    if (
-        parameterXorNode.node.kind !== Ast.NodeKind.NullablePrimitiveType &&
-        parameterXorNode.node.kind !== Ast.NodeKind.PrimitiveType
-    ) {
-        const details: {} = {
-            nodeId: parameterXorNode.node.id,
-            expectedAny: [Ast.NodeKind.NullablePrimitiveType, Ast.NodeKind.PrimitiveType],
-            actual: parameterXorNode.node.kind,
-        };
-        throw new CommonError.InvariantError(`incorrect node kind`, details);
-    }
+// function inspectParameter(state: State, parameterXorNode: NodeIdMap.TXorNode): void {
+//     if (
+//         parameterXorNode.node.kind !== Ast.NodeKind.NullablePrimitiveType &&
+//         parameterXorNode.node.kind !== Ast.NodeKind.PrimitiveType
+//     ) {
+//         const details: {} = {
+//             nodeId: parameterXorNode.node.id,
+//             expectedAny: [Ast.NodeKind.NullablePrimitiveType, Ast.NodeKind.PrimitiveType],
+//             actual: parameterXorNode.node.kind,
+//         };
+//         throw new CommonError.InvariantError(`incorrect node kind`, details);
+//     }
 
-    const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
-        state.nodeIdMapCollection,
-        parameterXorNode.node.id,
-        1,
-        [Ast.NodeKind.Identifier],
-    );
-    if (maybeNameXorNode === undefined) {
-        return;
-    }
-    const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
-    inspectIdentifier(state, nameXorNode);
-}
+//     const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+//         state.nodeIdMapCollection,
+//         parameterXorNode.node.id,
+//         1,
+//         [Ast.NodeKind.Identifier],
+//     );
+//     if (maybeNameXorNode === undefined) {
+//         return;
+//     }
+//     const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
+//     inspectIdentifier(state, nameXorNode);
+// }
 
 function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
