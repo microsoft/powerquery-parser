@@ -7,7 +7,6 @@ import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
 import { PositionIdentifierKind } from "./positionIdentifier";
-import { NodeKind } from "../parser/ast";
 
 export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
     state.visitedNodes.push(xorNode);
@@ -751,7 +750,7 @@ function expectPreviousXorNode(
     return expectNthLastVisitedXorNode(state, 1, maybeAllowedNodeKinds);
 }
 
-function isInKeyValuePairAssignment(state: State, xorNode: NodeIdMap.TXorNode) {
+function isInKeyValuePairAssignment(state: State, xorNode: NodeIdMap.TXorNode): boolean {
     if (
         xorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral &&
         xorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifierPairedExpression
