@@ -24,7 +24,6 @@ export interface State extends Traverse.IState<UnfrozenInspected> {
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
-    readonly assignmentKeyNodeIdMap: Map<number, Ast.Identifier>;
     readonly visitedNodes: NodeIdMap.TXorNode[];
 }
 
@@ -69,7 +68,6 @@ export function tryFrom(
         position,
         nodeIdMapCollection,
         leafNodeIds,
-        assignmentKeyNodeIdMap: new Map(),
     };
 
     const triedTraverse: TriedTraverse<UnfrozenInspected> = Traverse.tryTraverseXor<State, UnfrozenInspected>(

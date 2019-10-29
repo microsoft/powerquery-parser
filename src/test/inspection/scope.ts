@@ -174,7 +174,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`qwe foo(x, y|)`, () => {
+            it(`foo(x, y|)`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`foo(x, y|)`);
                 const expected: AbridgedScope = ["y"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
@@ -406,12 +406,22 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.LetExpression} (Ast)`, () => {
-            it(`let a = 1, b = 2, c = |3 in c`, () => {
-                const [text, position]: [string, Inspection.Position] = textWithPosition(
-                    `let a = 1, b = 2, c = |3 in c`,
-                );
-                const expected: AbridgedScope = [];
+        describe(`abc123 ${Ast.NodeKind.LetExpression} (Ast)`, () => {
+            it(`let a = 1 in x|`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`let a = 1 in x|`);
+                const expected: AbridgedScope = ["x", "a"];
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
+            });
+
+            it(`let a = 1, b = 2 in x|`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`let a = 1, b = 2 in x|`);
+                const expected: AbridgedScope = ["x", "a", "b"];
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
+            });
+
+            it(`let a = 1|, b = 2 in x`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`let a = 1|, b = 2 in x`);
+                const expected: AbridgedScope = ["b"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
@@ -419,7 +429,7 @@ describe(`Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(
                     `(p1, p2) => let a = 1, b = 2, c = |3 in c`,
                 );
-                const expected: AbridgedScope = [];
+                const expected: AbridgedScope = ["a", "b", "p1", "p2"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
@@ -440,7 +450,25 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
+        describe(`abc123 ${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
+            it(`let a = 1 in |`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`let a = 1 in |`);
+                const expected: AbridgedScope = ["a"];
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`let a = 1, b = 2 in |`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`let a = 1, b = 2 in |`);
+                const expected: AbridgedScope = ["a", "b"];
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`let a = 1|, b = 2 in`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`let a = 1|, b = 2 in `);
+                const expected: AbridgedScope = ["b"];
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
+            });
+
             it(`let a = 1, b = 2, c = 3 in |`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(
                     `let a = 1, b = 2, c = 3 in |`,
@@ -449,8 +477,10 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`let a = let a = 1 in | in a`, () => {
-                const [text, position]: [string, Inspection.Position] = textWithPosition(`let a = let a = 1 in | in a`);
+            it(`qwe let a1 = let a2 = 1 in in| a`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(
+                    `let a1 = let a2 = 1 in in| a`,
+                );
                 const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });

@@ -31,7 +31,6 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
             break;
 
         case Ast.NodeKind.IdentifierPairedExpression:
-            inspectIdentifierPairedExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.InvokeExpression:
@@ -180,19 +179,6 @@ function inspectIdentifierExpression(state: State, identifierExprXorNode: NodeId
     }
 }
 
-function inspectIdentifierPairedExpression(state: State, identifierPairedExpressionNode: NodeIdMap.TXorNode): void {
-    if (identifierPairedExpressionNode.node.kind !== Ast.NodeKind.IdentifierPairedExpression) {
-        throw expectedNodeKindError(identifierPairedExpressionNode, Ast.NodeKind.IdentifierPairedExpression);
-    }
-
-    // We want to exclude keys for assignment expressions from result.scope.
-    // TODO: special handling for recursion (@).
-    if (identifierPairedExpressionNode.kind === NodeIdMap.XorNodeKind.Ast) {
-        const identifierPairedExpr: Ast.IdentifierPairedExpression = identifierPairedExpressionNode.node as Ast.IdentifierPairedExpression;
-        state.assignmentKeyNodeIdMap.set(identifierPairedExpr.key.id, identifierPairedExpr.key);
-    }
-}
-
 function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXorNode): void {
     if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
         throw expectedNodeKindError(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
@@ -322,8 +308,11 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
     const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
 
     for (const keyValuePairXorNode of nodesOnCsvFromCsvArray(nodeIdMapCollection, csvArrayXorNode)) {
-        const keyValuePairId: number = keyValuePairXorNode.node.id;
+        if (isInKeyValuePairAssignment(state, keyValuePairXorNode)) {
+            continue;
+        }
 
+        const keyValuePairId: number = keyValuePairXorNode.node.id;
         const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePairId,
@@ -334,13 +323,7 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
             continue;
         }
         const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
-
-        if (keyXorNode.kind === NodeIdMap.XorNodeKind.Ast && keyXorNode.node.kind === Ast.NodeKind.Identifier) {
-            // Add identifiers to current scope, excluding the current paired expression
-            if (!state.assignmentKeyNodeIdMap.has(keyXorNode.node.id)) {
-                addToScopeIfNew(state, keyXorNode.node.literal, keyValuePairXorNode);
-            }
-        }
+        inspectIdentifier(state, keyXorNode);
 
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
@@ -491,9 +474,7 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
         const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
         if (nameXorNode.kind === NodeIdMap.XorNodeKind.Ast && nameXorNode.node.kind === Ast.NodeKind.Identifier) {
             // Add identifiers to current scope, excluding the current paired expression
-            if (!state.assignmentKeyNodeIdMap.has(nameXorNode.node.id)) {
-                addToScopeIfNew(state, nameXorNode.node.literal, identifierPairedExprXorNode);
-            }
+            addToScopeIfNew(state, nameXorNode.node.literal, identifierPairedExprXorNode);
         }
 
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
@@ -599,11 +580,9 @@ function isTokenPositionOnOrBeforeBeforePostion(tokenPosition: TokenPosition, po
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
-    if (!state.assignmentKeyNodeIdMap.has(xorNode.node.id)) {
-        const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
-        if (!scopeMap.has(key)) {
-            scopeMap.set(key, xorNode);
-        }
+    const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
+    if (!scopeMap.has(key)) {
+        scopeMap.set(key, xorNode);
     }
 }
 
@@ -736,16 +715,19 @@ function expectPreviousXorNode(
 }
 
 function isInKeyValuePairAssignment(state: State, xorNode: NodeIdMap.TXorNode): boolean {
+    const astNodeKind: Ast.NodeKind = xorNode.node.kind;
     if (
-        xorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral &&
-        xorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifierPairedExpression
+        astNodeKind !== Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral &&
+        astNodeKind !== Ast.NodeKind.GeneralizedIdentifierPairedExpression &&
+        astNodeKind !== Ast.NodeKind.IdentifierPairedExpression
     ) {
         const details: {} = {
             expectedAny: [
                 Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
                 Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                Ast.NodeKind.IdentifierPairedExpression,
             ],
-            actual: xorNode.node.kind,
+            actual: astNodeKind,
         };
         throw new CommonError.InvariantError("unknown Ast.NodeKind", details);
     }
