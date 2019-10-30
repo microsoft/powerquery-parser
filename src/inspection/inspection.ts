@@ -6,6 +6,7 @@ import { Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
+import { Position } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 import { visitNode } from "./visitNode";
 
@@ -32,11 +33,6 @@ export interface Inspected {
     readonly scope: Map<string, NodeIdMap.TXorNode>;
     readonly maybeInvokeExpression: Option<Node.InspectedInvokeExpression>;
     readonly maybePositionIdentifier: Option<TPositionIdentifier>;
-}
-
-export interface Position {
-    readonly lineNumber: number;
-    readonly lineCodeUnit: number;
 }
 
 export function tryFrom(
