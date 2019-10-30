@@ -52,16 +52,22 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
             break;
     }
 }
+
 function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
     addToScopeIfNew(state, "_", eachExprXorNode);
 }
 
+// If position is to the right of a fat arrow,
+// then add all parameter names to the scope.
 function inspectFunctionExpression(state: State, fnExprXorNode: NodeIdMap.TXorNode): void {
     if (fnExprXorNode.node.kind !== Ast.NodeKind.FunctionExpression) {
         throw expectedNodeKindError(fnExprXorNode, Ast.NodeKind.FunctionExpression);
     }
 
-    // We only care about adding to the scope if position is in the expression body.
+    // Parameter names are added to scope only if position is in the expression body.
+    // Eg. of positions that would NOT add to the scope.
+    // `(x|, y) => x + y`
+    // `(x, y)| => x + y`
     const maybeExprXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         fnExprXorNode.node.id,
@@ -81,9 +87,6 @@ function inspectFunctionExpression(state: State, fnExprXorNode: NodeIdMap.TXorNo
         Ast.NodeKind.ParameterList,
     ]) as Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>>;
 
-    // We only care about adding to the scope if position is in the expression body.
-    // Don't add parameters if position started on a parameter,
-    // Eg. `(x|, y) => x + y`
     if (isPositionOnAstNode(state.position, parameters)) {
         return;
     }
@@ -96,7 +99,8 @@ function inspectFunctionExpression(state: State, fnExprXorNode: NodeIdMap.TXorNo
 
 // Assumes the parent has already determined if the identifier should be added to the scope or not.
 function inspectGeneralizedIdentifier(state: State, genIdentifierXorNode: NodeIdMap.TXorNode): void {
-    // We can safetly ignore the context case as it can only be an empty context (no children).
+    // Ignore the context case as the node has two possible states:
+    // An empty context (no children), or an Ast.TNode instance.
     if (genIdentifierXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         if (genIdentifierXorNode.node.kind !== Ast.NodeKind.GeneralizedIdentifier) {
             throw expectedNodeKindError(genIdentifierXorNode, Ast.NodeKind.GeneralizedIdentifier);
@@ -108,8 +112,8 @@ function inspectGeneralizedIdentifier(state: State, genIdentifierXorNode: NodeId
 }
 
 function inspectIdentifier(state: State, identifierXorNode: NodeIdMap.TXorNode): void {
-    // A context for Ast.Identifier is a context with no values,
-    // meaning we can only operate when the arg's XorNodeKind is Ast.
+    // Ignore the context case as the node has two possible states:
+    // An empty context (no children), or an Ast.TNode instance.
     if (identifierXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         if (identifierXorNode.node.kind !== Ast.NodeKind.Identifier) {
             throw expectedNodeKindError(identifierXorNode, Ast.NodeKind.Identifier);
@@ -184,7 +188,12 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
     if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
         throw expectedNodeKindError(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
     }
-    // No need to further an invoke inspection if one was already created lower down in the AST.
+    // Only one assignment should be done for maybeInvokeExpression.
+    // If it's a non-null value then it was created from a descendent of this node.
+    // Since InvokeExpression doesn't add anything else, such as scope, to an inspection we can return early.
+    // Eg.
+    // `foo(a, bar(b, c|))` -> first inspectInvokeExpression, sets maybeInvokeExpression
+    // `foo(a|, bar(b, c))` -> second inspectInvokeExpression, early exit
     else if (state.result.maybeInvokeExpression !== undefined) {
         return;
     }
@@ -239,7 +248,7 @@ function inspectInvokeExpressionArguments(
     state: State,
     invokeExprXorNode: NodeIdMap.TXorNode,
 ): Option<Node.InvokeExpressionArguments> {
-    // Grab arguments if they exist.
+    // Grab arguments if they exist, else return early.
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
@@ -291,6 +300,8 @@ function inspectInvokeExpressionArguments(
     };
 }
 
+// If position is to the right of an equals sign,
+// then add all keys to the scope EXCEPT for the key that the position is under.
 function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
@@ -336,6 +347,8 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
     }
 }
 
+// If position is to the right of an equals sign,
+// then add all keys to scope EXCEPT for the one the that position is under.
 function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
@@ -402,6 +415,8 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
     }
 }
 
+// If position is to the right of a SectionMember equals sign,
+// then add all SectionMember names to scope EXCEPT for the SectionMember the that position is under.
 function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void {
     const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> = ArrayUtils.findReverse(
         state.visitedNodes,
@@ -512,16 +527,7 @@ function isParentOfNodeKind(
     }
     const parent: NodeIdMap.TXorNode = maybeParentNode;
 
-    switch (parent.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
-            return parent.node.kind === parentNodeKind;
-
-        case NodeIdMap.XorNodeKind.Context:
-            return parent.node.kind === parentNodeKind;
-
-        default:
-            throw isNever(parent);
-    }
+    return parent.node.kind === parentNodeKind;
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
@@ -546,7 +552,7 @@ function addContextToScopeIfNew(state: State, key: string, contextNode: ParserCo
 }
 
 // Takes an XorNode TCsvArray and returns collection.elements.map(csv => csv.node),
-// plus extra for TXorNode handling.
+// plus extra boilerplate to handle TXorNode.
 function nodesOnCsvFromCsvArray(
     nodeIdMapCollection: NodeIdMap.Collection,
     csvArrayXorNode: NodeIdMap.TXorNode,
