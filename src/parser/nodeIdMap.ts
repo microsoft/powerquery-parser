@@ -388,7 +388,7 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
         // Ast.TNode is readonly so a shallow copy should be safe
         astNodeById: new Map(nodeIdMapCollection.astNodeById.entries()),
         contextNodeById,
-        // Shallow copies of Map<number, number. is safe
+        // Shallow copies of Map<number, number> is safe
         childIdsById: new Map(nodeIdMapCollection.childIdsById.entries()),
         parentIdById: new Map(nodeIdMapCollection.parentIdById.entries()),
     };
