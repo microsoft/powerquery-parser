@@ -553,13 +553,13 @@ function isParentOfNodeKind(
 }
 
 function isPositionOnTokenPosition(tokenPosition: TokenPosition, position: Position): boolean {
-    return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit === position.lineCodeUnit;
+    return tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit - 1 === position.lineCodeUnit;
 }
 
 function isPositionOnOrAfterTokenPosition(tokenPosition: TokenPosition, position: Position): boolean {
     return (
         tokenPosition.lineNumber < position.lineNumber ||
-        (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit < position.lineCodeUnit)
+        (tokenPosition.lineNumber === position.lineNumber && tokenPosition.lineCodeUnit - 1 < position.lineCodeUnit)
     );
 }
 
@@ -578,9 +578,12 @@ function isPositionInXorNode(position: Position, xorNode: NodeIdMap.TXorNode): b
 
 function isPositionInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
     const tokenRangeStart: TokenPosition = tokenRange.positionStart;
+    const offsetPositionLineCodeUnit: number = position.lineCodeUnit - 1;
+
     if (
         position.lineNumber > tokenRangeStart.lineNumber ||
-        (position.lineNumber === tokenRangeStart.lineNumber && position.lineCodeUnit < tokenRangeStart.lineCodeUnit)
+        (position.lineNumber === tokenRangeStart.lineNumber &&
+            offsetPositionLineCodeUnit < tokenRangeStart.lineCodeUnit)
     ) {
         return false;
     }
@@ -588,7 +591,7 @@ function isPositionInTokenRange(position: Position, tokenRange: Ast.TokenRange):
     const tokenRangeEnd: TokenPosition = tokenRange.positionEnd;
     if (
         position.lineNumber < tokenRangeEnd.lineNumber ||
-        (position.lineNumber === tokenRangeEnd.lineNumber && position.lineCodeUnit > tokenRangeEnd.lineCodeUnit)
+        (position.lineNumber === tokenRangeEnd.lineNumber && offsetPositionLineCodeUnit > tokenRangeEnd.lineCodeUnit)
     ) {
         return false;
     }
