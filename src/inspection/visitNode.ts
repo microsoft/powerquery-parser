@@ -338,32 +338,6 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
     }
 }
 
-// function inspectParameter(state: State, parameterXorNode: NodeIdMap.TXorNode): void {
-//     if (
-//         parameterXorNode.node.kind !== Ast.NodeKind.NullablePrimitiveType &&
-//         parameterXorNode.node.kind !== Ast.NodeKind.PrimitiveType
-//     ) {
-//         const details: {} = {
-//             nodeId: parameterXorNode.node.id,
-//             expectedAny: [Ast.NodeKind.NullablePrimitiveType, Ast.NodeKind.PrimitiveType],
-//             actual: parameterXorNode.node.kind,
-//         };
-//         throw new CommonError.InvariantError(`incorrect node kind`, details);
-//     }
-
-//     const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
-//         state.nodeIdMapCollection,
-//         parameterXorNode.node.id,
-//         1,
-//         [Ast.NodeKind.Identifier],
-//     );
-//     if (maybeNameXorNode === undefined) {
-//         return;
-//     }
-//     const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
-//     inspectIdentifier(state, nameXorNode);
-// }
-
 function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
@@ -692,19 +666,6 @@ function maybeSetPositionIdentifier(
         };
     }
 }
-
-// function isRootXorNode(state: State, xorNode: NodeIdMap.TXorNode): boolean {
-//     return xorNode.node.id === state.visitedNodes[0].node.id;
-// }
-
-// function isRootNode(state: State, node: Ast.TNode): boolean {
-//     return node.id === state.visitedNodes[0].node.id;
-// }
-
-// function isPreviousNodeId(state: State, nodeId: number): boolean {
-//     const maybeXorNode: Option<NodeIdMap.TXorNode> = state.visitedNodes[state.visitedNodes.length - 2];
-//     return maybeXorNode !== undefined ? maybeXorNode.node.id === nodeId : false;
-// }
 
 function maybeNthLastVisitedXorNode(state: State, n: number): Option<NodeIdMap.TXorNode> {
     return state.visitedNodes[state.visitedNodes.length - 1 - n];
