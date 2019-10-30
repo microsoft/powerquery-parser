@@ -9,7 +9,7 @@ export type TInspectedNode = InspectedInvokeExpression;
 
 export interface IInspectedNode {
     readonly kind: Ast.NodeKind;
-    readonly id: number,
+    readonly id: number;
     readonly maybePositionStart: Option<TokenPosition>;
     readonly maybePositionEnd: Option<TokenPosition>;
 }
