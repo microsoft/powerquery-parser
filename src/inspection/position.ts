@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { isNever, Option } from "../common";
 import { Token, TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
