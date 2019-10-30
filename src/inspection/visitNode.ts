@@ -3,7 +3,7 @@
 
 import { Node } from ".";
 import { ArrayUtils, CommonError, isNever, Option } from "../common";
-import { TokenPosition, Token } from "../lexer";
+import { Token, TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
 import { PositionIdentifierKind } from "./positionIdentifier";
@@ -83,7 +83,7 @@ function inspectFunctionExpression(state: State, fnExprXorNode: NodeIdMap.TXorNo
     // We only care about adding to the scope if position is in the expression body.
     // Don't add parameters if position started on a parameter,
     // Eg. `(x|, y) => x + y`
-    if (isPositionInTokenRange(state.position, parameters.tokenRange)) {
+    if (isPositionOnAstNode(state.position, parameters)) {
         return;
     }
 
@@ -193,7 +193,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
     // and as it's a context node it hasn't parsed all attributes.
     if (invokeExprXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         const invokeExpr: Ast.InvokeExpression = invokeExprXorNode.node as Ast.InvokeExpression;
-        if (isPositionOnTokenPosition(invokeExpr.closeWrapperConstant.tokenRange.positionEnd, state.position)) {
+        if (isPositionOnAstNode(state.position, invokeExpr.closeWrapperConstant)) {
             return;
         }
     }
@@ -273,10 +273,7 @@ function inspectInvokeExpressionArguments(
                     1,
                     [Ast.NodeKind.Constant],
                 ) as Option<Ast.Constant>;
-                if (
-                    maybeCommaConstant &&
-                    isPositionOnTokenPosition(maybeCommaConstant.tokenRange.positionEnd, position)
-                ) {
+                if (maybeCommaConstant && isPositionOnAstNode(position, maybeCommaConstant)) {
                     maybePositionArgumentIndex = index + 1;
                 } else {
                     maybePositionArgumentIndex = index;
@@ -426,7 +423,7 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
         const semicolonConstantXorNode: NodeIdMap.TXorNode = maybeSemicolonConstantXorNode;
         if (semicolonConstantXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
             const semicolonConstant: Ast.Constant = semicolonConstantXorNode.node as Ast.Constant;
-            if (isPositionInTokenRange(state.position, semicolonConstant.tokenRange)) {
+            if (isPositionOnAstNode(state.position, semicolonConstant)) {
                 return;
             }
         }
@@ -623,7 +620,7 @@ function isPositionBeforeTokenPosition(position: Position, tokenPositionStart: T
     } else if (positionLineNumber > tokenPositionStart.lineNumber) {
         return false;
     } else {
-        return position.lineCodeUnit < tokenPositionStart.codeUnit;
+        return position.lineCodeUnit <= tokenPositionStart.codeUnit;
     }
 }
 
@@ -847,8 +844,7 @@ function isInKeyValuePairAssignment(state: State, xorNode: NodeIdMap.TXorNode): 
                 | Ast.GeneralizedIdentifierPairedAnyLiteral
                 | Ast.GeneralizedIdentifierPairedExpression
                 | Ast.IdentifierPairedExpression;
-
-            return isPositionInTokenRange(state.position, astNode.value.tokenRange);
+            return isPositionOnAstNode(state.position, astNode.value);
         }
 
         case NodeIdMap.XorNodeKind.Context:
