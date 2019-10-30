@@ -7,8 +7,8 @@ import { Inspection } from "../..";
 import { isNever, Option, ResultKind } from "../../common";
 import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection";
 import { Token, TokenPosition } from "../../lexer";
-import { NodeIdMap, ParseOk, ParseError } from "../../parser";
-import { expectParseErr, expectParseOk } from "./common";
+import { NodeIdMap } from "../../parser";
+import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
 type TAbridgedPositionIdentifier = AbridgedLocalIdentifier | AbridgedUndefinedIdentifier;
 
@@ -24,6 +24,21 @@ interface AbridgedLocalIdentifier extends IAbridgedPositionIdentifier {
 
 interface AbridgedUndefinedIdentifier extends IAbridgedPositionIdentifier {
     readonly kind: PositionIdentifierKind.Undefined;
+}
+
+function expectAbridgedInspectionEqual(
+    triedInspection: Inspection.TriedInspection,
+    expected: Option<TAbridgedPositionIdentifier>,
+): void {
+    if (!(triedInspection.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
+    }
+    const inspection: Inspection.Inspected = triedInspection.value;
+    const actual: Option<TAbridgedPositionIdentifier> = abridgedMaybePositionIdentifierFrom(
+        inspection.maybePositionIdentifier,
+    );
+
+    expect(actual).deep.equal(expected);
 }
 
 function abridgedMaybePositionIdentifierFrom(
@@ -76,71 +91,22 @@ function abridgedMaybePositionIdentifierFrom(
     }
 }
 
-function expectParseOkPositionIdentifierEqual(
-    text: string,
-    position: Inspection.Position,
-    expected: Option<TAbridgedPositionIdentifier>,
-): void {
-    const parseOk: ParseOk = expectParseOk(text);
-    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
-        position,
-        parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
-    );
-    expectPositionIdentifierEqual(triedInspection, expected);
-}
-
-function expectParseErrPositionIdentifierEqual(
-    text: string,
-    position: Inspection.Position,
-    expected: Option<TAbridgedPositionIdentifier>,
-): void {
-    const parserError: ParseError.ParseError = expectParseErr(text);
-    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
-        position,
-        parserError.context.nodeIdMapCollection,
-        parserError.context.leafNodeIds,
-    );
-    expectPositionIdentifierEqual(triedInspection, expected);
-}
-
-function expectPositionIdentifierEqual(
-    triedInspection: Inspection.TriedInspection,
-    expected: Option<TAbridgedPositionIdentifier>,
-): void {
-    if (!(triedInspection.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
-    }
-    const inspection: Inspection.Inspected = triedInspection.value;
-    const actual: Option<TAbridgedPositionIdentifier> = abridgedMaybePositionIdentifierFrom(
-        inspection.maybePositionIdentifier,
-    );
-
-    expect(actual).deep.equal(expected);
-}
-
 describe(`Inspection`, () => {
     describe(`AbridgedPositionIdentifier`, () => {
         describe("Ast", () => {
             it(`let x = 1 in y|`, () => {
-                const text: string = `let x = 1 in y`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 24,
-                };
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = 1 in y|`);
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Undefined,
                     identifierLiteral: `y`,
                 };
-                expectParseOkPositionIdentifierEqual(text, position, expected);
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`let x = 1, y = 2 in x| * y`, () => {
-                const text: string = `let x = 1, y = 2 in x * y`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 21,
-                };
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `let x = 1, y = 2 in x| * y`,
+                );
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
@@ -150,15 +116,13 @@ describe(`Inspection`, () => {
                         codeUnit: 8,
                     },
                 };
-                expectParseOkPositionIdentifierEqual(text, position, expected);
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`let x = 1, y = 2 in x * y|`, () => {
-                const text: string = `let x = 1, y = 2 in x * y`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 25,
-                };
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `let x = 1, y = 2 in x * y|`,
+                );
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `y`,
@@ -168,15 +132,11 @@ describe(`Inspection`, () => {
                         codeUnit: 15,
                     },
                 };
-                expectParseOkPositionIdentifierEqual(text, position, expected);
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`let x = 1 in [y = x|]`, () => {
-                const text: string = `let x = 1 in [y = x|]`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 19,
-                };
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = 1 in [y = x|]`);
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
@@ -186,15 +146,13 @@ describe(`Inspection`, () => {
                         codeUnit: 8,
                     },
                 };
-                expectParseOkPositionIdentifierEqual(text, position, expected);
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`section; foo = 1; bar = foo|;`, () => {
-                const text: string = `section; foo = 1; bar = foo;`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 27,
-                };
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `section; foo = 1; bar = foo|;`,
+                );
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `foo`,
@@ -204,17 +162,15 @@ describe(`Inspection`, () => {
                         codeUnit: 15,
                     },
                 };
-                expectParseOkPositionIdentifierEqual(text, position, expected);
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
         });
 
         describe("ParserContext", () => {
             it(`let x = 1, y = 2 in x| *`, () => {
-                const text: string = `let x = 1, y = 2 in x *`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 21,
-                };
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `let x = 1, y = 2 in x| *`,
+                );
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
@@ -224,15 +180,11 @@ describe(`Inspection`, () => {
                         codeUnit: 8,
                     },
                 };
-                expectParseErrPositionIdentifierEqual(text, position, expected);
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
 
             it(`let x = 1 in [y = x|`, () => {
-                const text: string = `let x = 1 in [y = x|`;
-                const position: Inspection.Position = {
-                    lineNumber: 0,
-                    lineCodeUnit: 19,
-                };
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = 1 in [y = x|`);
                 const expected: TAbridgedPositionIdentifier = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
@@ -242,7 +194,7 @@ describe(`Inspection`, () => {
                         codeUnit: 8,
                     },
                 };
-                expectParseErrPositionIdentifierEqual(text, position, expected);
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
         });
     });
