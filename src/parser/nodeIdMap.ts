@@ -70,6 +70,40 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
+// There are a few assumed invariants about children, such as:
+//  * Children are read left to right, and are placed in childIdsById in the order they were read
+//  * The right-most (youngest) child is the one which appears last in the document
+//
+// If we recurse down the last child we'll end up at the right-most (youngest) child.
+// If on the way down we store the right-most (youngest) Ast node at each level,
+// then we will get the right-most node of any level.
+// The last Ast node stored should then be the last leaf node under the given root node.
+export function maybeRightMostAstDescendant(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
+    let maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(rootId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+
+    let maybeRightMostAstNode: Option<Ast.TNode>;
+    let childIds: ReadonlyArray<number> = maybeChildIds;
+    while (maybeChildIds !== undefined) {
+        childIds = maybeChildIds;
+
+        const astChildNodes: ReadonlyArray<Ast.TNode> = childIds
+            .map((childId: number) => nodeIdMapCollection.astNodeById.get(childId))
+            .filter((maybeAstNode: Option<Ast.TNode>) => maybeAstNode !== undefined) as ReadonlyArray<Ast.TNode>;
+
+        if (astChildNodes.length) {
+            maybeRightMostAstNode = astChildNodes[astChildNodes.length - 1];
+        }
+
+        const lastChildId: number = childIds[childIds.length - 1];
+        maybeChildIds = nodeIdMapCollection.childIdsById.get(lastChildId);
+    }
+
+    return maybeRightMostAstNode;
+}
+
 export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: number): Option<TXorNode> {
     const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
     if (maybeParentNodeId === undefined) {
