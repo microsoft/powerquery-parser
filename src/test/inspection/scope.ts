@@ -357,36 +357,41 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.SectionMember} (Ast)`, () => {
+        describe(`abc123 ${Ast.NodeKind.SectionMember} (Ast)`, () => {
             it(`s|ection foo; x = 1; y = 2;`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`s|ection foo; x = 1; y = 2;`);
                 const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`section foo; x = 1|; y = 2;`, () => {
+            it(`qwe section foo; x = 1|; y = 2;`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`section foo; x = 1|; y = 2;`);
-                const expected: AbridgedScope = [];
+                const expected: AbridgedScope = ["y"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`section foo; x = 1; y = 2;|`, () => {
+            it(`section foo; x = 1; y = 2|;`, () => {
+                const [text, position]: [string, Inspection.Position] = textWithPosition(`section foo; x = 1; y = 2|;`);
+                const expected: AbridgedScope = ["x"];
+                expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
+            });
+
+            it(`qwe section foo; x = 1; y = 2;|`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`section foo; x = 1; y = 2;|`);
                 const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`section foo; x = 1; y = 2; z = let a = 1 in |a;`, () => {
+            it(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(
-                    `section foo; x = 1; y = 2; z = let a = 1 in |a;`,
+                    `section foo; x = 1; y = 2; z = let a = 1 in |b;`,
                 );
-                const expected: AbridgedScope = [];
+                const expected: AbridgedScope = ["a", "x", "y"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
         });
 
-        describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
-            // TODO (issue #61): should we be providing scope members if cursor is on section declaration?
+        describe(`abc123 ${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
             it(`s|ection foo; x = 1; y = 2`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`s|ection foo; x = 1; y = 2`);
                 const expected: AbridgedScope = [];
@@ -395,13 +400,13 @@ describe(`Inspection`, () => {
 
             it(`section foo; x = 1|; y = 2`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`section foo; x = 1|; y = 2`);
-                const expected: AbridgedScope = [];
+                const expected: AbridgedScope = ["y"];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
 
             it(`section foo; x = 1; y = 2|`, () => {
                 const [text, position]: [string, Inspection.Position] = textWithPosition(`section foo; x = 1; y = 2|`);
-                const expected: AbridgedScope = [];
+                const expected: AbridgedScope = ["x"];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
         });

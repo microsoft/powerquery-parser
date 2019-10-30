@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Node } from ".";
-import { CommonError, isNever, Option } from "../common";
+import { ArrayUtils, CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { Position, State } from "./inspection";
@@ -431,22 +431,42 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
 }
 
 function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> = ArrayUtils.findReverse(
+        state.visitedNodes,
+        (xorNode: NodeIdMap.TXorNode) => xorNode.node.kind === Ast.NodeKind.SectionMember,
+    );
+    if (maybeSectionMemberXorNode === undefined) {
+        return;
+    }
+    const sectionMemberXorNode: NodeIdMap.TXorNode = maybeSectionMemberXorNode;
 
-    const maybeSectionMemberArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+    // Handles the case `section foo; x = 1|` where we don't want to add section members to the scope.
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const maybeSemicolonConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        sectionMemberXorNode.node.id,
+        3,
+        [Ast.NodeKind.Constant],
+    );
+    if (maybeSemicolonConstantXorNode !== undefined) {
+        const semicolonConstantXorNode: NodeIdMap.TXorNode = maybeSemicolonConstantXorNode;
+        if (semicolonConstantXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+            const semicolonConstant: Ast.Constant = semicolonConstantXorNode.node as Ast.Constant;
+            if (isPositionInTokenRange(state.position, semicolonConstant.tokenRange)) {
+                return;
+            }
+        }
+    }
+
+    const sectionMembersArrayXorNode: NodeIdMap.TXorNode = NodeIdMap.expectXorChildByAttributeIndex(
         nodeIdMapCollection,
         sectionXorNode.node.id,
         4,
         [Ast.NodeKind.ArrayWrapper],
     );
-    if (maybeSectionMemberArrayXorNode === undefined) {
-        return;
-    }
-    const sectionMemberArrayXorNode: NodeIdMap.TXorNode = maybeSectionMemberArrayXorNode;
-
     const sectionMemberXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMap.expectXorChildren(
         nodeIdMapCollection,
-        sectionMemberArrayXorNode.node.id,
+        sectionMembersArrayXorNode.node.id,
     );
 
     for (const sectionMember of sectionMemberXorNodes) {
@@ -460,8 +480,12 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
             continue;
         }
         const identifierPairedExprXorNode: NodeIdMap.TXorNode = maybeIdentifierPairedExprXorNode;
-        const identifierPairedExprId: number = identifierPairedExprXorNode.node.id;
+        if (isInKeyValuePairAssignment(state, identifierPairedExprXorNode)) {
+            continue;
+        }
 
+        // Add name to scope.
+        const identifierPairedExprId: number = identifierPairedExprXorNode.node.id;
         const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             identifierPairedExprId,
@@ -473,18 +497,17 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
         }
         const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
         if (nameXorNode.kind === NodeIdMap.XorNodeKind.Ast && nameXorNode.node.kind === Ast.NodeKind.Identifier) {
-            // Add identifiers to current scope, excluding the current paired expression
             addToScopeIfNew(state, nameXorNode.node.literal, identifierPairedExprXorNode);
         }
 
+        // Add PositionIdentifier
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             identifierPairedExprId,
             2,
             undefined,
         );
-
-        if (maybeValueXorNode) {
+        if (maybeValueXorNode !== undefined) {
             const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
             maybeSetPositionIdentifier(state, nameXorNode, valueXorNode);
         }
@@ -556,16 +579,16 @@ function isPositionInXorNode(position: Position, xorNode: NodeIdMap.TXorNode): b
 function isPositionInTokenRange(position: Position, tokenRange: Ast.TokenRange): boolean {
     const tokenRangeStart: TokenPosition = tokenRange.positionStart;
     if (
-        tokenRangeStart.lineNumber < position.lineNumber ||
-        (tokenRangeStart.lineNumber === position.lineNumber && tokenRangeStart.lineCodeUnit > position.lineCodeUnit)
+        position.lineNumber > tokenRangeStart.lineNumber ||
+        (position.lineNumber === tokenRangeStart.lineNumber && position.lineCodeUnit < tokenRangeStart.lineCodeUnit)
     ) {
         return false;
     }
 
     const tokenRangeEnd: TokenPosition = tokenRange.positionEnd;
     if (
-        tokenRangeEnd.lineNumber > position.lineNumber ||
-        (tokenRangeEnd.lineNumber === position.lineNumber && tokenRangeEnd.lineCodeUnit < position.lineCodeUnit)
+        position.lineNumber < tokenRangeEnd.lineNumber ||
+        (position.lineNumber === tokenRangeEnd.lineNumber && position.lineCodeUnit > tokenRangeEnd.lineCodeUnit)
     ) {
         return false;
     }
@@ -736,9 +759,11 @@ function isInKeyValuePairAssignment(state: State, xorNode: NodeIdMap.TXorNode): 
         case NodeIdMap.XorNodeKind.Ast: {
             const astNode:
                 | Ast.GeneralizedIdentifierPairedAnyLiteral
-                | Ast.GeneralizedIdentifierPairedExpression = xorNode.node as
+                | Ast.GeneralizedIdentifierPairedExpression
+                | Ast.IdentifierPairedExpression = xorNode.node as
                 | Ast.GeneralizedIdentifierPairedAnyLiteral
-                | Ast.GeneralizedIdentifierPairedExpression;
+                | Ast.GeneralizedIdentifierPairedExpression
+                | Ast.IdentifierPairedExpression;
             return isPositionInTokenRange(state.position, astNode.value.tokenRange);
         }
 
