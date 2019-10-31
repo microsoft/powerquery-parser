@@ -3,41 +3,24 @@
 
 import { Option } from "../common";
 import { TokenPosition } from "../lexer";
+import { Ast } from "../parser";
 
-export const enum NodeKind {
-    EachExpression = "EachExpression",
-    InvokeExpression = "InvokeExpression",
-    List = "List",
-    Record = "Record",
-}
+export type TInspectedNode = InspectedInvokeExpression;
 
-export type TNode = EachExpression | InvokeExpression | List | Record;
-
-export interface INode {
-    readonly kind: NodeKind;
+export interface IInspectedNode {
+    readonly kind: Ast.NodeKind;
+    readonly id: number;
     readonly maybePositionStart: Option<TokenPosition>;
     readonly maybePositionEnd: Option<TokenPosition>;
 }
 
-export interface EachExpression extends INode {
-    readonly kind: NodeKind.EachExpression;
-}
-
-export interface InvokeExpression extends INode {
-    readonly kind: NodeKind.InvokeExpression;
+export interface InspectedInvokeExpression extends IInspectedNode {
+    readonly kind: Ast.NodeKind.InvokeExpression;
     readonly maybeName: Option<string>;
-    readonly maybeArguments: Option<InvokeExpressionArguments>;
+    readonly maybeArguments: Option<InvokeExpressionArgs>;
 }
 
-export interface InvokeExpressionArguments {
+export interface InvokeExpressionArgs {
     readonly numArguments: number;
     readonly positionArgumentIndex: number;
-}
-
-export interface List extends INode {
-    readonly kind: NodeKind.List;
-}
-
-export interface Record extends INode {
-    readonly kind: NodeKind.Record;
 }

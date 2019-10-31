@@ -5,7 +5,8 @@ import { Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
-import { TNode } from "./node";
+import { IInspectedNode, InspectedInvokeExpression } from "./node";
+import { Position } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 import { visitNode } from "./visitNode";
 
@@ -24,18 +25,14 @@ export interface State extends Traverse.IState<UnfrozenInspected> {
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
-    readonly assignmentKeyNodeIdMap: Map<number, Ast.Identifier>;
+    readonly visitedNodes: NodeIdMap.TXorNode[];
 }
 
 export interface Inspected {
-    readonly nodes: TNode[];
+    readonly nodes: IInspectedNode[];
     readonly scope: Map<string, NodeIdMap.TXorNode>;
+    readonly maybeInvokeExpression: Option<InspectedInvokeExpression>;
     readonly maybePositionIdentifier: Option<TPositionIdentifier>;
-}
-
-export interface Position {
-    readonly lineNumber: number;
-    readonly lineCodeUnit: number;
 }
 
 export function tryFrom(
@@ -59,13 +56,14 @@ export function tryFrom(
         result: {
             nodes: [],
             scope: new Map(),
+            maybeInvokeExpression: undefined,
             maybePositionIdentifier: undefined,
         },
+        visitedNodes: [],
         maybePositionIdentifier: maybePositionIdentifier(nodeIdMapCollection, closestLeaf),
         position,
         nodeIdMapCollection,
         leafNodeIds,
-        assignmentKeyNodeIdMap: new Map(),
     };
 
     const triedTraverse: TriedTraverse<UnfrozenInspected> = Traverse.tryTraverseXor<State, UnfrozenInspected>(
@@ -104,6 +102,7 @@ type UnfrozenInspected = TypeUtils.StripReadonly<Inspected>;
 const DefaultInspection: Inspected = {
     nodes: [],
     scope: new Map(),
+    maybeInvokeExpression: undefined,
     maybePositionIdentifier: undefined,
 };
 

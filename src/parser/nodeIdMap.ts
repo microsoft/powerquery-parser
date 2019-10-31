@@ -70,6 +70,43 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
+// There are a few assumed invariants about children:
+//  * Children are read left to right.
+//  * Children are placed in childIdsById in the order they were read.
+//  * Therefore the right-most child is the most recently read and it appears last in the document.
+
+// We can get the most recently read leaf node if we:
+//  * get a list of children on the current node
+//  * get the right-most (youngest) TXorNode child on the current node
+//  * store the right-most Ast.TNode on the current node
+//  * update the current node to the child, and repeat until the the first step returns no children
+//  * return the stored Ast.TNode
+export function maybeRightMostAstDescendant(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
+    let maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(rootId);
+    if (maybeChildIds === undefined) {
+        return undefined;
+    }
+
+    let maybeRightMostAstNode: Option<Ast.TNode>;
+    let childIds: ReadonlyArray<number> = maybeChildIds;
+    while (maybeChildIds !== undefined) {
+        childIds = maybeChildIds;
+
+        const astChildNodes: ReadonlyArray<Ast.TNode> = childIds
+            .map((childId: number) => nodeIdMapCollection.astNodeById.get(childId))
+            .filter((maybeAstNode: Option<Ast.TNode>) => maybeAstNode !== undefined) as ReadonlyArray<Ast.TNode>;
+
+        if (astChildNodes.length) {
+            maybeRightMostAstNode = astChildNodes[astChildNodes.length - 1];
+        }
+
+        const lastChildId: number = childIds[childIds.length - 1];
+        maybeChildIds = nodeIdMapCollection.childIdsById.get(lastChildId);
+    }
+
+    return maybeRightMostAstNode;
+}
+
 export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: number): Option<TXorNode> {
     const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
     if (maybeParentNodeId === undefined) {
@@ -354,7 +391,7 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
         // Ast.TNode is readonly so a shallow copy should be safe
         astNodeById: new Map(nodeIdMapCollection.astNodeById.entries()),
         contextNodeById,
-        // Shallow copies of Map<number, number. is safe
+        // Shallow copies of Map<number, number> is safe
         childIdsById: new Map(nodeIdMapCollection.childIdsById.entries()),
         parentIdById: new Map(nodeIdMapCollection.parentIdById.entries()),
     };

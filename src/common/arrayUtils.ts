@@ -1,4 +1,4 @@
-import { CommonError } from ".";
+import { CommonError, Option } from ".";
 
 export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
     return removeAtIndex(collection, collection.indexOf(element));
@@ -18,4 +18,18 @@ export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T
 
 export function addElement<T>(collection: ReadonlyArray<T>, element: T): T[] {
     return [...collection, element];
+}
+
+export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) => boolean): Option<T> {
+    const numElements: number = collection.length;
+
+    for (let index: number = numElements - 1; index >= 0; index -= 1) {
+        const element: T = collection[index];
+
+        if (predicate(element)) {
+            return element;
+        }
+    }
+
+    return undefined;
 }

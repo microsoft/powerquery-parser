@@ -1,10 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { expect } from "chai";
 import "mocha";
+import { Inspection } from "../..";
 import { Option, ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, ParseOk, Parser, ParseError, TriedParse } from "../../parser";
+import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../../parser";
+
+// Only works with single line expressions
+export function expectTextWithPosition(text: string): [string, Inspection.Position] {
+    const indexOfBar: number = text.indexOf("|");
+
+    expect(indexOfBar).to.be.greaterThan(-1, "text must have | marker");
+    expect(indexOfBar).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
+
+    const position: Inspection.Position = {
+        lineNumber: 0,
+        lineCodeUnit: indexOfBar,
+    };
+
+    return [text.replace("|", ""), position];
+}
+
+export function expectParseOkInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
+    const parseOk: ParseOk = expectParseOk(text);
+    return Inspection.tryFrom(position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds);
+}
+
+export function expectParseErrInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
+    const parserError: ParseError.ParseError = expectParseErr(text);
+    return Inspection.tryFrom(position, parserError.context.nodeIdMapCollection, parserError.context.leafNodeIds);
+}
 
 export function expectParseErr(text: string): ParseError.ParseError {
     const triedParse: TriedParse = expectTriedParse(text);
