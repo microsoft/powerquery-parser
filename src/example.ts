@@ -9,7 +9,7 @@ import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspect
 import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError, Parser } from "./parser";
 
-parseText(`(x as nullable) => 1`);
+parseText(`if true then 1 else 2`);
 
 // @ts-ignore
 function parseText(text: string): void {
