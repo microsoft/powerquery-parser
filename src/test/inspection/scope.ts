@@ -57,7 +57,7 @@ describe(`Inspection`, () => {
 
             it(`each|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
-                const expected: AbridgedScope = ["_"];
+                const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
         });

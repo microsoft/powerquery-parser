@@ -6,7 +6,7 @@ import { ArrayUtils, CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { State } from "./inspection";
-import { isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
+import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 
 export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
@@ -54,7 +54,20 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
 }
 
 function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
-    addToScopeIfNew(state, "_", eachExprXorNode);
+    const maybeEachConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        eachExprXorNode.node.id,
+        0,
+        undefined,
+    );
+    if (maybeEachConstantXorNode === undefined) {
+        return;
+    }
+    const eachConstantXorNode: NodeIdMap.TXorNode = maybeEachConstantXorNode;
+
+    if (isPositionAfterXorNode(state.position, eachConstantXorNode)) {
+        addToScopeIfNew(state, "_", eachExprXorNode);
+    }
 }
 
 // If position is to the right of a fat arrow,
