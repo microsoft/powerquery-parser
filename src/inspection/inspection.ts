@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Node } from ".";
 import { Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
+import { IInspectedNode, InspectedInvokeExpression } from "./node";
 import { Position } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 import { visitNode } from "./visitNode";
@@ -29,9 +29,9 @@ export interface State extends Traverse.IState<UnfrozenInspected> {
 }
 
 export interface Inspected {
-    readonly nodes: Node.IInspectedNode[];
+    readonly nodes: IInspectedNode[];
     readonly scope: Map<string, NodeIdMap.TXorNode>;
-    readonly maybeInvokeExpression: Option<Node.InspectedInvokeExpression>;
+    readonly maybeInvokeExpression: Option<InspectedInvokeExpression>;
     readonly maybePositionIdentifier: Option<TPositionIdentifier>;
 }
 

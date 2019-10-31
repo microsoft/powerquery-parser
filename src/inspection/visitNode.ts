@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Node } from ".";
 import { ArrayUtils, CommonError, isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { State } from "./inspection";
+import { IInspectedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 
 export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
     state.visitedNodes.push(xorNode);
-    state.result.nodes.push(Node.basicInspectedNodeFrom(xorNode));
+    state.result.nodes.push(inspectedNodeFrom(xorNode));
 
     // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
@@ -51,6 +51,38 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
             inspectSection(state, xorNode);
             break;
     }
+}
+
+function inspectedNodeFrom(xorNode: NodeIdMap.TXorNode): IInspectedNode {
+    let maybePositionStart: Option<TokenPosition>;
+    let maybePositionEnd: Option<TokenPosition>;
+
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const tokenRange: Ast.TokenRange = xorNode.node.tokenRange;
+            maybePositionStart = tokenRange.positionStart;
+            maybePositionEnd = tokenRange.positionEnd;
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const contextNode: ParserContext.Node = xorNode.node;
+            maybePositionStart =
+                contextNode.maybeTokenStart !== undefined ? contextNode.maybeTokenStart.positionStart : undefined;
+            maybePositionEnd = undefined;
+            break;
+        }
+
+        default:
+            throw isNever(xorNode);
+    }
+
+    return {
+        kind: xorNode.node.kind,
+        id: xorNode.node.id,
+        maybePositionStart,
+        maybePositionEnd,
+    };
 }
 
 function inspectEachExpression(state: State, eachExprXorNode: NodeIdMap.TXorNode): void {
@@ -260,7 +292,7 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
 function inspectInvokeExpressionArguments(
     state: State,
     invokeExprXorNode: NodeIdMap.TXorNode,
-): Option<Node.InvokeExpressionArguments> {
+): Option<InvokeExpressionArgs> {
     // Grab arguments if they exist, else return early.
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
