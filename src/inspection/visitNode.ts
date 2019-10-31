@@ -134,14 +134,15 @@ function inspectIdentifierExpression(state: State, identifierExprXorNode: NodeId
                 throw expectedNodeKindError(identifierExprXorNode, Ast.NodeKind.IdentifierExpression);
             }
 
-            const identifierExpression: Ast.IdentifierExpression = identifierExprXorNode.node;
-            let key: string = identifierExpression.identifier.literal;
-            if (identifierExpression.maybeInclusiveConstant) {
-                const inclusiveConstant: Ast.Constant = identifierExpression.maybeInclusiveConstant;
-                key = inclusiveConstant.literal + key;
-            }
+            const identifierExpr: Ast.IdentifierExpression = identifierExprXorNode.node;
+            const identifier: Ast.Identifier = identifierExpr.identifier;
+            const maybeInclusiveConstant: Option<Ast.Constant> = identifierExpr.maybeInclusiveConstant;
 
-            addAstToScopeIfNew(state, key, identifierExpression);
+            const key: string =
+                maybeInclusiveConstant !== undefined
+                    ? maybeInclusiveConstant.literal + identifier.literal
+                    : identifier.literal;
+            addAstToScopeIfNew(state, key, identifierExpr);
             break;
         }
 
@@ -188,9 +189,8 @@ function inspectInvokeExpression(state: State, invokeExprXorNode: NodeIdMap.TXor
     if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
         throw expectedNodeKindError(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
     }
-    // Only one assignment should be done for maybeInvokeExpression.
-    // If it's a non-null value then it was created from a descendent of this node.
-    // Since InvokeExpression doesn't add anything else, such as scope, to an inspection we can return early.
+    // maybeInvokeExpression should be assigned using the deepest (first) InvokeExpression.
+    // Since an InvokeExpression inspection doesn't add anything else, such as to scope, we can return early.
     // Eg.
     // `foo(a, bar(b, c|))` -> first inspectInvokeExpression, sets maybeInvokeExpression
     // `foo(a|, bar(b, c))` -> second inspectInvokeExpression, early exit
