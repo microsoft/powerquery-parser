@@ -14,7 +14,7 @@ function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected:
         throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
     }
     const inspection: Inspection.Inspected = triedInspection.value;
-    const actual: ReadonlyArray<IInspectedNode> = inspection.nodes;
+    const actual: ReadonlyArray<IInspectedNode> = inspection.visitedNodes;
 
     expect(actual).deep.equal(expected);
 }
