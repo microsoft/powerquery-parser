@@ -109,5 +109,5 @@ function inspectText(text: string, position: Inspection.Position): void {
     const inspected: Inspection.Inspected = triedInspection.value;
 
     console.log(`Inspection scope: ${[...inspected.scope.entries()]}`);
-    console.log(`Inspection nodes: ${JSON.stringify(inspected.nodes, undefined, 4)}`);
+    console.log(`Inspection nodes: ${JSON.stringify(inspected.visitedNodes, undefined, 4)}`);
 }

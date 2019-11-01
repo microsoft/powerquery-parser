@@ -10,8 +10,8 @@ import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Posit
 import { PositionIdentifierKind } from "./positionIdentifier";
 
 export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
-    state.visitedNodes.push(xorNode);
-    state.result.nodes.push(inspectedNodeFrom(xorNode));
+    const visitedNodes: IInspectedNode[] = state.result.visitedNodes as IInspectedNode[];
+    visitedNodes.push(inspectedNodeFrom(xorNode));
 
     // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
@@ -387,7 +387,7 @@ function inspectLetExpression(state: State, letExprXorNode: NodeIdMap.TXorNode):
         );
         if (maybeValueXorNode) {
             const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
-            maybeSetPositionIdentifier(state, keyXorNode, valueXorNode);
+            maybeSetStartingIdentifierValue(state, keyXorNode, valueXorNode);
         }
     }
 }
@@ -455,7 +455,7 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
         );
         if (maybeValueXorNode) {
             const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
-            maybeSetPositionIdentifier(state, keyXorNode, valueXorNode);
+            maybeSetStartingIdentifierValue(state, keyXorNode, valueXorNode);
         }
     }
 }
@@ -463,10 +463,14 @@ function inspectRecordExpressionOrLiteral(state: State, recordXorNode: NodeIdMap
 // If position is to the right of a SectionMember equals sign,
 // then add all SectionMember names to scope EXCEPT for the SectionMember the that position is under.
 function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void {
-    const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> = ArrayUtils.findReverse(
-        state.visitedNodes,
-        (xorNode: NodeIdMap.TXorNode) => xorNode.node.kind === Ast.NodeKind.SectionMember,
+    const maybeInspectedSectionMember: Option<IInspectedNode> = ArrayUtils.findReverse(
+        state.result.visitedNodes,
+        (x: IInspectedNode) => x.kind === Ast.NodeKind.SectionMember,
     );
+    const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> =
+        maybeInspectedSectionMember !== undefined
+            ? NodeIdMap.expectXorNode(state.nodeIdMapCollection, maybeInspectedSectionMember.id)
+            : undefined;
     if (maybeSectionMemberXorNode === undefined) {
         return;
     }
@@ -541,7 +545,7 @@ function inspectSection(state: State, sectionXorNode: NodeIdMap.TXorNode): void 
         );
         if (maybeValueXorNode !== undefined) {
             const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
-            maybeSetPositionIdentifier(state, nameXorNode, valueXorNode);
+            maybeSetStartingIdentifierValue(state, nameXorNode, valueXorNode);
         }
     }
 }
@@ -576,7 +580,7 @@ function isParentOfNodeKind(
 }
 
 function addToScopeIfNew(state: State, key: string, xorNode: NodeIdMap.TXorNode): void {
-    const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope;
+    const scopeMap: Map<string, NodeIdMap.TXorNode> = state.result.scope as Map<string, NodeIdMap.TXorNode>;
     if (!scopeMap.has(key)) {
         scopeMap.set(key, xorNode);
     }
@@ -626,14 +630,14 @@ function nodesOnCsvFromCsvArray(
     return result;
 }
 
-function maybeSetPositionIdentifier(
+function maybeSetStartingIdentifierValue(
     state: State,
     keyXorNode: NodeIdMap.TXorNode,
     valueXorNode: NodeIdMap.TXorNode,
 ): void {
     if (
         // Nothing to assign as position wasn't on an identifier
-        state.maybePositionIdentifier === undefined ||
+        state.maybeClosestLeafIdentifier === undefined ||
         // Already assigned the result
         state.result.maybePositionIdentifier !== undefined
     ) {
@@ -654,7 +658,7 @@ function maybeSetPositionIdentifier(
     }
     const key: Ast.GeneralizedIdentifier | Ast.Identifier = keyAstNode;
 
-    if (key.literal === state.maybePositionIdentifier.literal) {
+    if (key.literal === state.maybeClosestLeafIdentifier.literal) {
         state.result.maybePositionIdentifier = {
             kind: PositionIdentifierKind.Local,
             identifier: key,
@@ -664,7 +668,9 @@ function maybeSetPositionIdentifier(
 }
 
 function maybeNthLastVisitedXorNode(state: State, n: number): Option<NodeIdMap.TXorNode> {
-    return state.visitedNodes[state.visitedNodes.length - 1 - n];
+    const visitedNodes: ReadonlyArray<IInspectedNode> = state.result.visitedNodes;
+    const nthNodeId: number = visitedNodes[visitedNodes.length - 1 - n].id;
+    return NodeIdMap.maybeXorNode(state.nodeIdMapCollection, nthNodeId);
 }
 
 function expectNthLastVisitedXorNode(

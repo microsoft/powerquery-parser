@@ -21,17 +21,25 @@ import { visitNode } from "./visitNode";
 export type TriedInspection = Traverse.TriedTraverse<Inspected>;
 
 export interface State extends Traverse.IState<UnfrozenInspected> {
-    readonly maybePositionIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
     readonly position: Position;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
-    readonly visitedNodes: NodeIdMap.TXorNode[];
+    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
+    // then we store that leaf here.
+    // Later if we encounter the assignment for this identifier then it's stored in Inspected.maybePositionIdentifier
+    readonly maybeClosestLeafIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
 }
 
 export interface Inspected {
-    readonly nodes: IInspectedNode[];
-    readonly scope: Map<string, NodeIdMap.TXorNode>;
+    // A map of (identifier, what caused the identifier to be added).
+    readonly scope: ReadonlyMap<string, NodeIdMap.TXorNode>;
+    // The DFS traversal path is recorded, starting from the given position's leaf node to the last parents' parent.
+    // This is primarily used during the inspection itself, but it's made public on the chance that it's useful.
+    readonly visitedNodes: ReadonlyArray<IInspectedNode>;
+    // Metadata on the first InvokeExpression encountered.
     readonly maybeInvokeExpression: Option<InspectedInvokeExpression>;
+    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
+    // then if we encounter the identifier's assignment we will store metadata.
     readonly maybePositionIdentifier: Option<TPositionIdentifier>;
 }
 
@@ -47,6 +55,7 @@ export function tryFrom(
             value: DefaultInspection,
         };
     }
+
     const closestLeaf: Ast.TNode = maybeClosestLeaf;
     const root: NodeIdMap.TXorNode = {
         kind: NodeIdMap.XorNodeKind.Ast,
@@ -54,13 +63,14 @@ export function tryFrom(
     };
     const state: State = {
         result: {
-            nodes: [],
             scope: new Map(),
+            visitedNodes: [],
             maybeInvokeExpression: undefined,
             maybePositionIdentifier: undefined,
         },
-        visitedNodes: [],
-        maybePositionIdentifier: maybePositionIdentifier(nodeIdMapCollection, closestLeaf),
+        // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
+        // then store it on here so if we encounter
+        maybeClosestLeafIdentifier: maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
         position,
         nodeIdMapCollection,
         leafNodeIds,
@@ -79,7 +89,7 @@ export function tryFrom(
     // then create an UndefinedIdentifier for maybePositionIdentifier.
     if (
         triedTraverse.kind === ResultKind.Ok &&
-        state.maybePositionIdentifier &&
+        state.maybeClosestLeafIdentifier &&
         state.result.maybePositionIdentifier === undefined
     ) {
         return {
@@ -88,7 +98,7 @@ export function tryFrom(
                 ...triedTraverse.value,
                 maybePositionIdentifier: {
                     kind: PositionIdentifierKind.Undefined,
-                    identifier: state.maybePositionIdentifier,
+                    identifier: state.maybeClosestLeafIdentifier,
                 },
             },
         };
@@ -97,16 +107,17 @@ export function tryFrom(
     }
 }
 
+// Inspected should be mutable during traversal, but immutable when returned to the caller.
 type UnfrozenInspected = TypeUtils.StripReadonly<Inspected>;
 
 const DefaultInspection: Inspected = {
-    nodes: [],
+    visitedNodes: [],
     scope: new Map(),
     maybeInvokeExpression: undefined,
     maybePositionIdentifier: undefined,
 };
 
-function maybePositionIdentifier(
+function maybeClosestLeafIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     closestLeaf: Ast.TNode,
 ): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
