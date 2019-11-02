@@ -55,49 +55,49 @@ export class LexError extends Error {
 
 export class BadLineNumberError extends Error {
     constructor(readonly kind: BadLineNumberKind, readonly lineNumber: number, readonly numLines: number) {
-        super(Localization.lexerBadLineNumber(kind, lineNumber, numLines));
+        super(Localization.lexBadLineNumber(kind, lineNumber, numLines));
     }
 }
 
 export class BadRangeError extends Error {
     constructor(readonly range: Lexer.Range, readonly kind: BadRangeKind) {
-        super(Localization.lexerBadRange(kind));
+        super(Localization.lexBadRange(kind));
     }
 }
 
 export class BadStateError extends Error {
     constructor(readonly innerError: TLexError) {
-        super(Localization.lexerBadState());
+        super(Localization.lexBadState());
     }
 }
 
 export class ErrorLineMapError extends Error {
     constructor(readonly errorLineMap: Lexer.ErrorLineMap) {
-        super(Localization.lexerErrorLineMap(errorLineMap));
+        super(Localization.lexErrorLineMap(errorLineMap));
     }
 }
 
 export class EndOfStreamError extends Error {
     constructor() {
-        super(Localization.lexerEndOfStream());
+        super(Localization.lexEndOfStream());
     }
 }
 
 export class ExpectedError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition, readonly kind: ExpectedKind) {
-        super(Localization.lexerExpected(graphemePosition, kind));
+        super(Localization.lexExpected(graphemePosition, kind));
     }
 }
 
 export class UnexpectedEofError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.lexerUnexpectedEof(graphemePosition));
+        super(Localization.lexUnexpectedEof(graphemePosition));
     }
 }
 
 export class UnexpectedReadError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.lexerUnexpectedRead(graphemePosition));
+        super(Localization.lexUnexpectedRead(graphemePosition));
     }
 }
 
@@ -106,7 +106,7 @@ export class UnterminatedMultilineTokenError extends Error {
         readonly graphemePosition: StringUtils.GraphemePosition,
         readonly kind: UnterminatedMultilineTokenKind,
     ) {
-        super(Localization.lexerUnterminatedMultilineToken(graphemePosition, kind));
+        super(Localization.lexUnterminatedMultilineToken(graphemePosition, kind));
     }
 }
 
