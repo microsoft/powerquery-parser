@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {Lexer } from ".";
+import { Lexer } from ".";
 import { CommonError, StringUtils } from "../common";
 import * as Localization from "../localization/error";
 
-export type TLexerError = CommonError.CommonError | LexerError;
+export type TLexError = CommonError.CommonError | LexError;
 
-export type TInnerLexerError =
+export type TInnerLexError =
     | BadLineNumberError
     | BadRangeError
     | BadStateError
@@ -47,8 +47,8 @@ export const enum UnterminatedMultilineTokenKind {
     String = "String",
 }
 
-export class LexerError extends Error {
-    constructor(readonly innerError: TInnerLexerError) {
+export class LexError extends Error {
+    constructor(readonly innerError: TInnerLexError) {
         super(innerError.message);
     }
 }
@@ -66,7 +66,7 @@ export class BadRangeError extends Error {
 }
 
 export class BadStateError extends Error {
-    constructor(readonly innerError: TLexerError) {
+    constructor(readonly innerError: TLexError) {
         super(Localization.lexerBadState());
     }
 }
@@ -110,11 +110,11 @@ export class UnterminatedMultilineTokenError extends Error {
     }
 }
 
-export function isTLexerError(x: any): x is TLexerError {
-    return x instanceof LexerError || x instanceof CommonError.CommonError;
+export function isTLexError(x: any): x is TLexError {
+    return x instanceof LexError || x instanceof CommonError.CommonError;
 }
 
-export function isTInnerLexerError(x: any): x is TInnerLexerError {
+export function isTInnerLexError(x: any): x is TInnerLexError {
     return (
         x instanceof BadLineNumberError ||
         x instanceof BadRangeError ||

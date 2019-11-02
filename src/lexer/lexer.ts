@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { LexerError } from ".";
+import { LexError } from ".";
 import {
     CommonError,
     isNever,
@@ -24,7 +24,7 @@ import { LineToken, LineTokenKind } from "./token";
 // Lexer functions will return a new state object.
 // Call LexerSnapshot.tryFrom to perform a final validation pass before freezing the State.
 
-export type TriedLexerUpdate = Result<State, LexerError.LexerError>;
+export type TriedLexerUpdate = Result<State, LexError.LexError>;
 
 export type ErrorLineMap = Map<number, TErrorLine>;
 
@@ -68,7 +68,7 @@ export interface ILexerLine {
 // An error was thrown before anything could be tokenized.
 export interface ErrorLine extends ILexerLine {
     readonly kind: LineKind.Error;
-    readonly error: LexerError.TLexerError;
+    readonly error: LexError.TLexError;
 }
 
 // The line was tokenized without issue.
@@ -79,7 +79,7 @@ export interface TouchedLine extends ILexerLine {
 // Some tokens were read before an error was thrown.
 export interface TouchedWithErrorLine extends ILexerLine {
     readonly kind: LineKind.TouchedWithError;
-    readonly error: LexerError.TLexerError;
+    readonly error: LexError.TLexError;
 }
 
 // The line hasn't been lexed yet.
@@ -120,11 +120,11 @@ export function appendLine(state: State, text: string, lineTerminator: string): 
 export function tryUpdateLine(state: State, lineNumber: number, text: string): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
-    const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
+    const maybeError: Option<LexError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
     if (maybeError) {
         return {
             kind: ResultKind.Err,
-            error: new LexerError.LexerError(maybeError),
+            error: new LexError.LexError(maybeError),
         };
     }
 
@@ -134,11 +134,11 @@ export function tryUpdateLine(state: State, lineNumber: number, text: string): T
 }
 
 export function tryUpdateRange(state: State, range: Range, text: string): TriedLexerUpdate {
-    const maybeError: Option<LexerError.BadRangeError> = maybeBadRangeError(state, range);
+    const maybeError: Option<LexError.BadRangeError> = maybeBadRangeError(state, range);
     if (maybeError) {
         return {
             kind: ResultKind.Err,
-            error: new LexerError.LexerError(maybeError),
+            error: new LexError.LexError(maybeError),
         };
     }
 
@@ -180,11 +180,11 @@ export function tryUpdateRange(state: State, range: Range, text: string): TriedL
 export function tryDeleteLine(state: State, lineNumber: number): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
-    const maybeError: Option<LexerError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
+    const maybeError: Option<LexError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
     if (maybeError) {
         return {
             kind: ResultKind.Err,
-            error: new LexerError.LexerError(maybeError),
+            error: new LexError.LexError(maybeError),
         };
     }
 
@@ -448,7 +448,7 @@ function tokenize(line: TLine, lineNumber: number): TLine {
             return {
                 ...line,
                 kind: LineKind.Error,
-                error: new LexerError.LexerError(new LexerError.EndOfStreamError()),
+                error: new LexError.LexError(new LexError.EndOfStreamError()),
             };
 
         // Cannot tokenize something that previously ended with an error.
@@ -461,7 +461,7 @@ function tokenize(line: TLine, lineNumber: number): TLine {
                 lineModeStart: line.lineModeStart,
                 lineModeEnd: line.lineModeEnd,
                 tokens: line.tokens,
-                error: new LexerError.LexerError(new LexerError.BadStateError(line.error)),
+                error: new LexError.LexError(new LexError.BadStateError(line.error)),
             };
 
         case LineKind.Untouched:
@@ -496,7 +496,7 @@ function tokenize(line: TLine, lineNumber: number): TLine {
 
     const newTokens: LineToken[] = [];
     let continueLexing: boolean = currentPosition !== text.length;
-    let maybeError: Option<LexerError.TLexerError>;
+    let maybeError: Option<LexError.TLexError>;
 
     // While neither eof nor having encountered an error:
     //  * Lex according to lineModestart, starting from currentPosition.
@@ -540,9 +540,9 @@ function tokenize(line: TLine, lineNumber: number): TLine {
                 continueLexing = false;
             }
         } catch (e) {
-            let error: LexerError.TLexerError;
-            if (LexerError.isTInnerLexerError(e)) {
-                error = new LexerError.LexerError(e);
+            let error: LexError.TLexError;
+            if (LexError.isTInnerLexError(e)) {
+                error = new LexError.LexError(e);
             } else {
                 error = CommonError.ensureCommonError(e);
             }
@@ -551,7 +551,7 @@ function tokenize(line: TLine, lineNumber: number): TLine {
         }
     }
 
-    let partialTokenizeResult: PartialResult<TokenizeChanges, LexerError.TLexerError>;
+    let partialTokenizeResult: PartialResult<TokenizeChanges, LexError.TLexError>;
     if (maybeError) {
         if (newTokens.length) {
             partialTokenizeResult = {
@@ -584,7 +584,7 @@ function tokenize(line: TLine, lineNumber: number): TLine {
 // Takes the return from a tokenizeX function to updates the TLine's state.
 function updateLineState(
     line: TLine,
-    tokenizePartialResult: PartialResult<TokenizeChanges, LexerError.TLexerError>,
+    tokenizePartialResult: PartialResult<TokenizeChanges, LexError.TLexError>,
 ): TLine {
     switch (tokenizePartialResult.kind) {
         case PartialResultKind.Ok: {
@@ -756,7 +756,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
         const chr2: string = text[positionStart + 1];
 
         if (chr2 === undefined) {
-            throw new LexerError.UnexpectedEofError(graphemePositionFrom(text, lineNumber, positionStart));
+            throw new LexError.UnexpectedEofError(graphemePositionFrom(text, lineNumber, positionStart));
         } else if ("1" <= chr2 && chr2 <= "9") {
             token = readNumericLiteral(text, lineNumber, positionStart);
         } else if (chr2 === ".") {
@@ -863,9 +863,9 @@ function readStringLiteralOrStart(text: string, currentPosition: number): LineMo
 function readHexLiteral(text: string, lineNumber: number, positionStart: number): LineToken {
     const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
     if (maybePositionEnd === undefined) {
-        throw new LexerError.ExpectedError(
+        throw new LexError.ExpectedError(
             graphemePositionFrom(text, lineNumber, positionStart),
-            LexerError.ExpectedKind.HexLiteral,
+            LexError.ExpectedKind.HexLiteral,
         );
     }
     const positionEnd: number = maybePositionEnd;
@@ -876,9 +876,9 @@ function readHexLiteral(text: string, lineNumber: number, positionStart: number)
 function readNumericLiteral(text: string, lineNumber: number, positionStart: number): LineToken {
     const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, text, positionStart);
     if (maybePositionEnd === undefined) {
-        throw new LexerError.ExpectedError(
+        throw new LexError.ExpectedError(
             graphemePositionFrom(text, lineNumber, positionStart),
-            LexerError.ExpectedKind.Numeric,
+            LexError.ExpectedKind.Numeric,
         );
     }
     const positionEnd: number = maybePositionEnd;
@@ -970,9 +970,9 @@ function readKeywordOrIdentifier(text: string, lineNumber: number, positionStart
     else {
         const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, positionStart);
         if (maybePositionEnd === undefined) {
-            throw new LexerError.ExpectedError(
+            throw new LexError.ExpectedError(
                 graphemePositionFrom(text, lineNumber, positionStart),
-                LexerError.ExpectedKind.KeywordOrIdentifier,
+                LexError.ExpectedKind.KeywordOrIdentifier,
             );
         }
         const positionEnd: number = maybePositionEnd;
@@ -1111,50 +1111,50 @@ function maybeIndexOfStringEnd(text: string, positionStart: number): Option<numb
     return undefined;
 }
 
-function unexpectedReadError(text: string, lineNumber: number, lineCodeUnit: number): LexerError.UnexpectedReadError {
-    return new LexerError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, lineCodeUnit));
+function unexpectedReadError(text: string, lineNumber: number, lineCodeUnit: number): LexError.UnexpectedReadError {
+    return new LexError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, lineCodeUnit));
 }
 
 function maybeBadLineNumberError(
     lineNumber: number,
     lines: ReadonlyArray<TLine>,
-): Option<LexerError.BadLineNumberError> {
+): Option<LexError.BadLineNumberError> {
     const numLines: number = lines.length;
     if (lineNumber >= numLines) {
-        return new LexerError.BadLineNumberError(
-            LexerError.BadLineNumberKind.GreaterThanNumLines,
+        return new LexError.BadLineNumberError(
+            LexError.BadLineNumberKind.GreaterThanNumLines,
             lineNumber,
             numLines,
         );
     } else if (lineNumber < 0) {
-        return new LexerError.BadLineNumberError(LexerError.BadLineNumberKind.LessThanZero, lineNumber, numLines);
+        return new LexError.BadLineNumberError(LexError.BadLineNumberKind.LessThanZero, lineNumber, numLines);
     } else {
         return undefined;
     }
 }
 
 // Validator for Range.
-function maybeBadRangeError(state: State, range: Range): Option<LexerError.BadRangeError> {
+function maybeBadRangeError(state: State, range: Range): Option<LexError.BadRangeError> {
     const start: RangePosition = range.start;
     const end: RangePosition = range.end;
     const numLines: number = state.lines.length;
 
-    let maybeKind: Option<LexerError.BadRangeKind>;
+    let maybeKind: Option<LexError.BadRangeKind>;
     if (start.lineNumber === end.lineNumber && start.lineCodeUnit > end.lineCodeUnit) {
-        maybeKind = LexerError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
+        maybeKind = LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
     } else if (start.lineNumber > end.lineNumber) {
-        maybeKind = LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd;
+        maybeKind = LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd;
     } else if (start.lineNumber < 0) {
-        maybeKind = LexerError.BadRangeKind.LineNumberStart_LessThan_Zero;
+        maybeKind = LexError.BadRangeKind.LineNumberStart_LessThan_Zero;
     } else if (start.lineNumber >= numLines) {
-        maybeKind = LexerError.BadRangeKind.LineNumberStart_GreaterThan_NumLines;
+        maybeKind = LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines;
     } else if (end.lineNumber >= numLines) {
-        maybeKind = LexerError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines;
+        maybeKind = LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines;
     }
 
     if (maybeKind) {
-        const kind: LexerError.BadRangeKind = maybeKind;
-        return new LexerError.BadRangeError(range, kind);
+        const kind: LexError.BadRangeKind = maybeKind;
+        return new LexError.BadRangeError(range, kind);
     }
 
     const lines: ReadonlyArray<TLine> = state.lines;
@@ -1165,13 +1165,13 @@ function maybeBadRangeError(state: State, range: Range): Option<LexerError.BadRa
     const lineEnd: TLine = lines[rangeEnd.lineNumber];
 
     if (rangeStart.lineCodeUnit > lineStart.text.length) {
-        maybeKind = LexerError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
+        maybeKind = LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength;
     } else if (rangeEnd.lineCodeUnit > lineEnd.text.length) {
-        maybeKind = LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
+        maybeKind = LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength;
     }
 
     if (maybeKind) {
-        return new LexerError.BadRangeError(range, maybeKind);
+        return new LexError.BadRangeError(range, maybeKind);
     }
 
     return undefined;

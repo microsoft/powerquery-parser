@@ -4,7 +4,7 @@
 import { Inspection } from ".";
 import { CommonError, Option, Result, ResultKind } from "./common";
 import { Inspected, TriedInspection } from "./inspection";
-import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import {
     IParser,
     IParserState,
@@ -16,9 +16,9 @@ import {
     TriedParse,
 } from "./parser";
 
-export type TriedLexParse = Result<LexParseOk, LexerError.TLexerError | ParseError.TParseError>;
+export type TriedLexParse = Result<LexParseOk, LexError.TLexError | ParseError.TParseError>;
 
-export type TriedLexParseInspection = Result<LexParseInspectionOk, LexerError.TLexerError | ParseError.TParseError>;
+export type TriedLexParseInspection = Result<LexParseInspectionOk, LexError.TLexError | ParseError.TParseError>;
 
 export interface LexParseOk extends ParseOk {
     readonly lexerSnapshot: LexerSnapshot;
@@ -35,7 +35,7 @@ export function tryLex(text: string): TriedLexerSnapshot {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return {
             kind: ResultKind.Err,
-            error: new LexerError.LexerError(new LexerError.ErrorLineMapError(errorLineMap)),
+            error: new LexError.LexError(new LexError.ErrorLineMapError(errorLineMap)),
         };
     }
 
@@ -102,17 +102,17 @@ export function tryLexParseInspection(
     position: Inspection.Position,
 ): TriedLexParseInspection {
     const triedLexParse: TriedLexParse = tryLexParse(text, parser);
-    if (triedLexParse.kind === ResultKind.Err && triedLexParse.error instanceof LexerError.LexerError) {
+    if (triedLexParse.kind === ResultKind.Err && triedLexParse.error instanceof LexError.LexError) {
         return triedLexParse;
     }
 
     // The if statement above should remove LexerError from the error type in Result<T, E>
     const casted: Result<
         LexParseOk,
-        ParseError.TParseError | Exclude<LexerError.TLexerError, LexerError.LexerError>
+        ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>
     > = triedLexParse as Result<
         LexParseOk,
-        ParseError.TParseError | Exclude<LexerError.TLexerError, LexerError.LexerError>
+        ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>
     >;
     const triedInspection: TriedInspection = tryInspection(casted, position);
 

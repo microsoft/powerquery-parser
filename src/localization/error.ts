@@ -3,7 +3,7 @@
 
 import { isNever, StringUtils } from "../common";
 import { Option } from "../common/option";
-import { Lexer, LexerError, Token, TokenKind } from "../lexer";
+import { Lexer, LexError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
 import { TokenWithColumnNumber } from "../parser/error";
 
@@ -27,12 +27,12 @@ export function unknownError(innerError: any): string {
     return `An unknown error was encountered, innerError: ${innerError}`;
 }
 
-export function lexerBadLineNumber(kind: LexerError.BadLineNumberKind, lineNumber: number, numLines: number): string {
+export function lexBadLineNumber(kind: LexError.BadLineNumberKind, lineNumber: number, numLines: number): string {
     switch (kind) {
-        case LexerError.BadLineNumberKind.GreaterThanNumLines:
+        case LexError.BadLineNumberKind.GreaterThanNumLines:
             return `lineNumber (${lineNumber + 1}) is greater than or equal to the number of lines (${numLines}).`;
 
-        case LexerError.BadLineNumberKind.LessThanZero:
+        case LexError.BadLineNumberKind.LessThanZero:
             return `lineNumber (${lineNumber + 1}) is less than zero.`;
 
         default:
@@ -40,27 +40,27 @@ export function lexerBadLineNumber(kind: LexerError.BadLineNumberKind, lineNumbe
     }
 }
 
-export function lexerBadRange(kind: LexerError.BadRangeKind): string {
+export function lexBadRange(kind: LexError.BadRangeKind): string {
     switch (kind) {
-        case LexerError.BadRangeKind.SameLine_LineCodeUnitStart_Higher:
+        case LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher:
             return `Start and end shared the same line, but start.lineCodeUnit was higher than end.lineCodeUnit.`;
 
-        case LexerError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd:
+        case LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd:
             return `start.lineNumber is larger than end.lineNumber.`;
 
-        case LexerError.BadRangeKind.LineNumberStart_LessThan_Zero:
+        case LexError.BadRangeKind.LineNumberStart_LessThan_Zero:
             return `start.lineNumber is less than 0.`;
 
-        case LexerError.BadRangeKind.LineNumberStart_GreaterThan_NumLines:
+        case LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines:
             return `start.lineNumber is higher than State's number of lines.`;
 
-        case LexerError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines:
+        case LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines:
             return `end.lineNumber is higher than State's number of lines.`;
 
-        case LexerError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength:
+        case LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength:
             return `start.lineCodeUnit is higher than line's length.`;
 
-        case LexerError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength:
+        case LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength:
             return `end.lineCodeUnit is higher than line's length.`;
 
         default:
@@ -68,25 +68,25 @@ export function lexerBadRange(kind: LexerError.BadRangeKind): string {
     }
 }
 
-export function lexerBadState(): string {
+export function lexBadState(): string {
     return `The lexer encountered an error last run. Either feed the lexer more text or review lastError.`;
 }
 
-export function lexerEndOfStream(): string {
+export function lexEndOfStream(): string {
     return `The lexer reached end-of-stream.`;
 }
 
-export function lexerExpected(graphemePosition: StringUtils.GraphemePosition, kind: LexerError.ExpectedKind): string {
+export function lexExpected(graphemePosition: StringUtils.GraphemePosition, kind: LexError.ExpectedKind): string {
     switch (kind) {
-        case LexerError.ExpectedKind.HexLiteral:
+        case LexError.ExpectedKind.HexLiteral:
             return `Expected hex literal on line ${graphemePosition.lineNumber +
                 1}, column ${graphemePosition.columnNumber + 1}.`;
 
-        case LexerError.ExpectedKind.KeywordOrIdentifier:
+        case LexError.ExpectedKind.KeywordOrIdentifier:
             return `Expected keyword or identifier on line ${graphemePosition.lineNumber +
                 1}, column ${graphemePosition.columnNumber + 1}.`;
 
-        case LexerError.ExpectedKind.Numeric:
+        case LexError.ExpectedKind.Numeric:
             return `Expected numeric literal on line ${graphemePosition.lineNumber +
                 1}, column ${graphemePosition.columnNumber + 1}.`;
 
@@ -95,34 +95,34 @@ export function lexerExpected(graphemePosition: StringUtils.GraphemePosition, ki
     }
 }
 
-export function lexerErrorLineMap(errorLineMap: Lexer.ErrorLineMap): string {
+export function lexErrorLineMap(errorLineMap: Lexer.ErrorLineMap): string {
     return `Error on line(s): ${[...errorLineMap.keys()]}`;
 }
 
-export function lexerUnexpectedEof(graphemePosition: StringUtils.GraphemePosition): string {
+export function lexUnexpectedEof(graphemePosition: StringUtils.GraphemePosition): string {
     return `Reached EOF while attempting to lex on line ${graphemePosition.lineNumber +
         1}, column ${graphemePosition.columnNumber + 1}.`;
 }
 
-export function lexerUnexpectedRead(graphemePosition: StringUtils.GraphemePosition): string {
+export function lexUnexpectedRead(graphemePosition: StringUtils.GraphemePosition): string {
     return `Unexpected read while attempting to lex on line ${graphemePosition.lineNumber +
         1}, column ${graphemePosition.columnNumber + 1}.`;
 }
 
-export function lexerUnterminatedMultilineToken(
+export function lexUnterminatedMultilineToken(
     graphemePosition: StringUtils.GraphemePosition,
-    kind: LexerError.UnterminatedMultilineTokenKind,
+    kind: LexError.UnterminatedMultilineTokenKind,
 ): string {
     switch (kind) {
-        case LexerError.UnterminatedMultilineTokenKind.MultilineComment:
+        case LexError.UnterminatedMultilineTokenKind.MultilineComment:
             return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber +
                 1}, column ${graphemePosition.columnNumber + 1}.`;
 
-        case LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier:
+        case LexError.UnterminatedMultilineTokenKind.QuotedIdentifier:
             return `Unterminated quoted identifier starting on line ${graphemePosition.lineNumber +
                 1}, column ${graphemePosition.columnNumber + 1}.`;
 
-        case LexerError.UnterminatedMultilineTokenKind.String:
+        case LexError.UnterminatedMultilineTokenKind.String:
             return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber +
                 1}, column ${graphemePosition.columnNumber + 1}.`;
 
