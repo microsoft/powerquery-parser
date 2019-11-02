@@ -49,13 +49,6 @@
         "type": "git",
         "url": "git+https://github.com/microsoft/powerquery-parser.git"
     },
-    "prettier": {
-        "trailingComma": "all",
-        "tabWidth": 4,
-        "semi": true,
-        "singleQuote": false,
-        "printWidth": 120
-    },
     "author": "Microsoft",
     "license": "MIT",
     "bugs": {
