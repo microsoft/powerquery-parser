@@ -5,3 +5,4 @@ export * from "./inspection";
 export * from "./node";
 export * from "./position";
 export * from "./positionIdentifier";
+export * from "./state";

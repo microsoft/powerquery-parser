@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option, ResultKind, Traverse, TypeUtils } from "../common";
+import { isNever, Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
-import { Ast, NodeIdMap } from "../parser";
-import { IInspectedNode, InspectedInvokeExpression } from "./node";
+import { Ast, NodeIdMap, ParserContext } from "../parser";
+import * as keyword from "./keyword";
+import { IInspectedNode } from "./node";
 import { Position } from "./position";
-import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
-import { visitNode } from "./visitNode";
+import { PositionIdentifierKind } from "./positionIdentifier";
+import * as scope from "./scope";
+import { Inspected, State } from "./state";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
 // If a leaf node doesn't exist at the given postion, then the closest node to the left is used (if one exists).
@@ -19,29 +21,6 @@ import { visitNode } from "./visitNode";
 //  * nodes are initially Ast.TNode, then they become ParserContext.Node
 
 export type TriedInspection = Traverse.TriedTraverse<Inspected>;
-
-export interface State extends Traverse.IState<UnfrozenInspected> {
-    readonly position: Position;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
-    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-    // then we store that leaf here.
-    // Later if we encounter the assignment for this identifier then it's stored in Inspected.maybePositionIdentifier
-    readonly maybeClosestLeafIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
-}
-
-export interface Inspected {
-    // A map of (identifier, what caused the identifier to be added).
-    readonly scope: ReadonlyMap<string, NodeIdMap.TXorNode>;
-    // The DFS traversal path is recorded, starting from the given position's leaf node to the last parents' parent.
-    // This is primarily used during the inspection itself, but it's made public on the chance that it's useful.
-    readonly visitedNodes: ReadonlyArray<IInspectedNode>;
-    // Metadata on the first InvokeExpression encountered.
-    readonly maybeInvokeExpression: Option<InspectedInvokeExpression>;
-    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-    // then if we encounter the identifier's assignment we will store metadata.
-    readonly maybePositionIdentifier: Option<TPositionIdentifier>;
-}
 
 export function tryFrom(
     position: Position,
@@ -67,6 +46,7 @@ export function tryFrom(
             visitedNodes: [],
             maybeInvokeExpression: undefined,
             maybePositionIdentifier: undefined,
+            maybeKeywords: undefined,
         },
         // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
         // then store it on here so if we encounter
@@ -115,6 +95,7 @@ const DefaultInspection: Inspected = {
     scope: new Map(),
     maybeInvokeExpression: undefined,
     maybePositionIdentifier: undefined,
+    maybeKeywords: undefined,
 };
 
 function maybeClosestLeafIdentifier(
@@ -139,6 +120,46 @@ function maybeClosestLeafIdentifier(
     } else {
         return undefined;
     }
+}
+
+export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
+    const visitedNodes: IInspectedNode[] = state.result.visitedNodes as IInspectedNode[];
+    visitedNodes.push(inspectedNodeFrom(xorNode));
+
+    scope.visitNode(state, xorNode);
+    keyword.visitNode(state, xorNode);
+}
+
+function inspectedNodeFrom(xorNode: NodeIdMap.TXorNode): IInspectedNode {
+    let maybePositionStart: Option<TokenPosition>;
+    let maybePositionEnd: Option<TokenPosition>;
+
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast: {
+            const tokenRange: Ast.TokenRange = xorNode.node.tokenRange;
+            maybePositionStart = tokenRange.positionStart;
+            maybePositionEnd = tokenRange.positionEnd;
+            break;
+        }
+
+        case NodeIdMap.XorNodeKind.Context: {
+            const contextNode: ParserContext.Node = xorNode.node;
+            maybePositionStart =
+                contextNode.maybeTokenStart !== undefined ? contextNode.maybeTokenStart.positionStart : undefined;
+            maybePositionEnd = undefined;
+            break;
+        }
+
+        default:
+            throw isNever(xorNode);
+    }
+
+    return {
+        kind: xorNode.node.kind,
+        id: xorNode.node.id,
+        maybePositionStart,
+        maybePositionEnd,
+    };
 }
 
 // Used as expandNodesFn.
