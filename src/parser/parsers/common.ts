@@ -44,9 +44,7 @@ export function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKin
             };
 
             throw new CommonError.InvariantError(
-                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${
-                    IParserStateUtils.testIsOnTokenKind.name
-                }`,
+                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${IParserStateUtils.testIsOnTokenKind.name}`,
                 details,
             );
         }

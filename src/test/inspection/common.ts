@@ -29,8 +29,8 @@ export function expectParseOkInspection(text: string, position: Inspection.Posit
 }
 
 export function expectParseErrInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
-    const parserError: ParseError.ParseError = expectParseErr(text);
-    return Inspection.tryFrom(position, parserError.context.nodeIdMapCollection, parserError.context.leafNodeIds);
+    const parseError: ParseError.ParseError = expectParseErr(text);
+    return Inspection.tryFrom(position, parseError.context.nodeIdMapCollection, parseError.context.leafNodeIds);
 }
 
 export function expectParseErr(text: string): ParseError.ParseError {
@@ -40,7 +40,7 @@ export function expectParseErr(text: string): ParseError.ParseError {
     }
 
     if (!(triedParse.error instanceof ParseError.ParseError)) {
-        throw new Error(`AssertFailed: triedParse.error instanceof ParserError: ${triedParse.error.message}`);
+        throw new Error(`AssertFailed: triedParse.error instanceof ParseError: ${triedParse.error.message}`);
     }
 
     return triedParse.error;

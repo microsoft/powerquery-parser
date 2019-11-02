@@ -106,14 +106,11 @@ export function tryLexParseInspection(
         return triedLexParse;
     }
 
-    // The if statement above should remove LexerError from the error type in Result<T, E>
+    // The if statement above should remove LexError from the error type in Result<T, E>
     const casted: Result<
         LexParseOk,
         ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>
-    > = triedLexParse as Result<
-        LexParseOk,
-        ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>
-    >;
+    > = triedLexParse as Result<LexParseOk, ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>>;
     const triedInspection: TriedInspection = tryInspection(casted, position);
 
     if (triedInspection.kind === ResultKind.Err) {

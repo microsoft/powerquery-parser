@@ -15,7 +15,7 @@ function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadL
 
     const error: LexError.LexError = triedLexerUpdate.error;
     if (!(error.innerError instanceof LexError.BadLineNumberError)) {
-        throw new Error(`AssertFailed: error.innerError instanceof LexerError.BadLineNumber: ${JSON.stringify(error)}`);
+        throw new Error(`AssertFailed: error.innerError instanceof LexError.BadLineNumber: ${JSON.stringify(error)}`);
     }
 
     const innerError: LexError.BadLineNumberError = error.innerError;
@@ -35,7 +35,7 @@ function expectExpectedKind(text: string, expectedKind: LexError.ExpectedKind): 
 
     const error: LexError.TLexError = line.error;
     if (!(error.innerError instanceof LexError.ExpectedError)) {
-        throw new Error(`AssertFailed: error.innerError instanceof LexerError.ExpectedError: ${JSON.stringify(line)}`);
+        throw new Error(`AssertFailed: error.innerError instanceof LexError.ExpectedError: ${JSON.stringify(line)}`);
     }
 
     const innerError: LexError.ExpectedError = error.innerError;
@@ -53,7 +53,7 @@ function expectBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeK
 
     const error: LexError.LexError = triedLexerUpdate.error;
     if (!(error.innerError instanceof LexError.BadRangeError)) {
-        throw new Error(`AssertFailed: error.innerError instanceof LexerError.BadRangeError: ${JSON.stringify(error)}`);
+        throw new Error(`AssertFailed: error.innerError instanceof LexError.BadRangeError: ${JSON.stringify(error)}`);
     }
 
     const innerError: LexError.BadRangeError = error.innerError;
@@ -75,7 +75,7 @@ function expectUnterminatedMultilineTokenKind(
     const error: LexError.TLexError = snapshotResult.error;
     if (!(error.innerError instanceof LexError.UnterminatedMultilineTokenError)) {
         throw new Error(
-            `AssertFailed: error.innerError instanceof LexerError.UnterminatedMultilineTokenError: ${JSON.stringify(
+            `AssertFailed: error.innerError instanceof LexError.UnterminatedMultilineTokenError: ${JSON.stringify(
                 error,
             )}`,
         );
@@ -107,7 +107,7 @@ describe(`Lexer.Error`, () => {
             expectExpectedKind(`^`, LexError.ExpectedKind.KeywordOrIdentifier);
         });
 
-        // LexerError.ExpectedKind.Numeric only throws if the regex is incorrect,
+        // LexError.ExpectedKind.Numeric only throws if the regex is incorrect,
         // meaning there's no good way to test it.
     });
 

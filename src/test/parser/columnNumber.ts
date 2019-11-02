@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { ResultKind } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, Parser, ParseError, TriedParse } from "../../parser";
+import { IParserState, IParserStateUtils, ParseError, Parser, TriedParse } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
 
 function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
@@ -30,7 +30,7 @@ function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
             error2json: JSON.stringify(error, undefined, 4),
             message: error.message,
         };
-        throw new Error(`AssertFailed: error instanceof ParserError.ParserError - ${details}`);
+        throw new Error(`AssertFailed: error instanceof ParseError.ParseError - ${details}`);
     }
     const innerError: ParseError.TInnerParseError = error.innerError;
 
@@ -39,7 +39,7 @@ function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
             innerError2json: JSON.stringify(innerError, undefined, 4),
             message: innerError.message,
         };
-        throw new Error(`AssertFailed: innerError instanceof ParserError.ExpectedTokenKindError - ${details}`);
+        throw new Error(`AssertFailed: innerError instanceof ParseError.ExpectedTokenKindError - ${details}`);
     }
 
     return innerError;
