@@ -42,18 +42,29 @@ export function tryFrom(
     };
     const state: State = {
         result: {
-            scope: new Map(),
+            // COMMON
             visitedNodes: [],
+
+            // SCOPE INSPECTION
+            scope: new Map(),
             maybeInvokeExpression: undefined,
             maybePositionIdentifier: undefined,
+
+            // KEYWORD INSPECTION
             maybeKeywords: undefined,
         },
-        // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-        // then store it on here so if we encounter
-        maybeClosestLeafIdentifier: maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
+        // COMMON
         position,
         nodeIdMapCollection,
         leafNodeIds,
+
+        // SCOPE INSPECTION
+        // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
+        // then store it on here so if we encounter
+        maybeClosestLeafIdentifier: maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
+
+        // KEYWORD INSPECTION
+        isKeywordInspectionDone: false,
     };
 
     const triedTraverse: TriedTraverse<UnfrozenInspected> = Traverse.tryTraverseXor<State, UnfrozenInspected>(

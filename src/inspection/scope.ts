@@ -4,23 +4,10 @@
 import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { IInspectedNode, InspectedInvokeExpression, InvokeExpressionArgs } from "./node";
+import { IInspectedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
-import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
-import { ScopeState } from "./state";
-
-export interface InspectedScope {
-    // A map of (identifier, what caused the identifier to be added).
-    readonly scope: ReadonlyMap<string, NodeIdMap.TXorNode>;
-    // The DFS traversal path is recorded, starting from the given position's leaf node to the last parents' parent.
-    // This is primarily used during the inspection itself, but it's made public on the chance that it's useful.
-    readonly visitedNodes: ReadonlyArray<IInspectedNode>;
-    // Metadata on the first InvokeExpression encountered.
-    readonly maybeInvokeExpression: Option<InspectedInvokeExpression>;
-    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-    // then if we encounter the identifier's assignment we will store metadata.
-    readonly maybePositionIdentifier: Option<TPositionIdentifier>;
-}
+import { PositionIdentifierKind } from "./positionIdentifier";
+import { InspectedScope, ScopeState } from "./state";
 
 export function visitNode(state: ScopeState, xorNode: NodeIdMap.TXorNode): void {
     // tslint:disable-next-line: switch-default
