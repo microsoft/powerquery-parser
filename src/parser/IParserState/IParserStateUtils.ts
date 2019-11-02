@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext, ParseError } from "..";
+import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { IParserState } from "./IParserState";
@@ -323,9 +323,7 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
 // All of these tests assume you're in a given context and have just read a `,`.
 // Eg. testCsvEndLetExpression assumes you're in a LetExpression context and have just read a `,`.
 
-export function testCsvContinuationLetExpression(
-    state: IParserState,
-): Option<ParseError.ExpectedCsvContinuationError> {
+export function testCsvContinuationLetExpression(state: IParserState): Option<ParseError.ExpectedCsvContinuationError> {
     if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
             Localization.parserExpectedCsvContinuationLetExpression(),
