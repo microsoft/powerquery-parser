@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer, LexerError } from ".";
+import { Lexer, LexError } from ".";
 import { CommonError, Option, Result, ResultKind, StringUtils } from "../common";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import { IToken, LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
 
-export type TriedLexerSnapshot = Result<LexerSnapshot, LexerError.TLexerError>;
+export type TriedLexerSnapshot = Result<LexerSnapshot, LexError.TLexError>;
 
 export class LexerSnapshot {
     constructor(
@@ -23,9 +23,9 @@ export class LexerSnapshot {
                 value: LexerSnapshot.factory(state),
             };
         } catch (e) {
-            let error: LexerError.TLexerError;
-            if (LexerError.isTInnerLexerError(e)) {
-                error = new LexerError.LexerError(e);
+            let error: LexError.TLexError;
+            if (LexError.isTInnerLexError(e)) {
+                error = new LexError.LexError(e);
             } else {
                 error = CommonError.ensureCommonError(e);
             }
@@ -186,9 +186,9 @@ function readMultilineComment(flattenedLines: FlattenedLines, tokenStart: FlatLi
     );
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
-        throw new LexerError.UnterminatedMultilineTokenError(
+        throw new LexError.UnterminatedMultilineTokenError(
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
-            LexerError.UnterminatedMultilineTokenKind.MultilineComment,
+            LexError.UnterminatedMultilineTokenKind.MultilineComment,
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.MultilineCommentEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
@@ -220,9 +220,9 @@ function readQuotedIdentifier(flattenedLines: FlattenedLines, tokenStart: FlatLi
     );
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
-        throw new LexerError.UnterminatedMultilineTokenError(
+        throw new LexError.UnterminatedMultilineTokenError(
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
-            LexerError.UnterminatedMultilineTokenKind.QuotedIdentifier,
+            LexError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.QuotedIdentifierEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
@@ -253,9 +253,9 @@ function readStringLiteral(flattenedLines: FlattenedLines, tokenStart: FlatLineT
     );
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
-        throw new LexerError.UnterminatedMultilineTokenError(
+        throw new LexError.UnterminatedMultilineTokenError(
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
-            LexerError.UnterminatedMultilineTokenKind.String,
+            LexError.UnterminatedMultilineTokenKind.String,
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.StringLiteralEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };

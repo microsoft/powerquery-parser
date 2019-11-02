@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {Lexer } from ".";
+import { Lexer } from ".";
 import { CommonError, StringUtils } from "../common";
 import * as Localization from "../localization/error";
 
-export type TLexerError = CommonError.CommonError | LexerError;
+export type TLexError = CommonError.CommonError | LexError;
 
-export type TInnerLexerError =
+export type TInnerLexError =
     | BadLineNumberError
     | BadRangeError
     | BadStateError
@@ -47,57 +47,57 @@ export const enum UnterminatedMultilineTokenKind {
     String = "String",
 }
 
-export class LexerError extends Error {
-    constructor(readonly innerError: TInnerLexerError) {
+export class LexError extends Error {
+    constructor(readonly innerError: TInnerLexError) {
         super(innerError.message);
     }
 }
 
 export class BadLineNumberError extends Error {
     constructor(readonly kind: BadLineNumberKind, readonly lineNumber: number, readonly numLines: number) {
-        super(Localization.lexerBadLineNumber(kind, lineNumber, numLines));
+        super(Localization.lexBadLineNumber(kind, lineNumber, numLines));
     }
 }
 
 export class BadRangeError extends Error {
     constructor(readonly range: Lexer.Range, readonly kind: BadRangeKind) {
-        super(Localization.lexerBadRange(kind));
+        super(Localization.lexBadRange(kind));
     }
 }
 
 export class BadStateError extends Error {
-    constructor(readonly innerError: TLexerError) {
-        super(Localization.lexerBadState());
+    constructor(readonly innerError: TLexError) {
+        super(Localization.lexBadState());
     }
 }
 
 export class ErrorLineMapError extends Error {
     constructor(readonly errorLineMap: Lexer.ErrorLineMap) {
-        super(Localization.lexerErrorLineMap(errorLineMap));
+        super(Localization.lexErrorLineMap(errorLineMap));
     }
 }
 
 export class EndOfStreamError extends Error {
     constructor() {
-        super(Localization.lexerEndOfStream());
+        super(Localization.lexEndOfStream());
     }
 }
 
 export class ExpectedError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition, readonly kind: ExpectedKind) {
-        super(Localization.lexerExpected(graphemePosition, kind));
+        super(Localization.lexExpected(graphemePosition, kind));
     }
 }
 
 export class UnexpectedEofError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.lexerUnexpectedEof(graphemePosition));
+        super(Localization.lexUnexpectedEof(graphemePosition));
     }
 }
 
 export class UnexpectedReadError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.lexerUnexpectedRead(graphemePosition));
+        super(Localization.lexUnexpectedRead(graphemePosition));
     }
 }
 
@@ -106,15 +106,15 @@ export class UnterminatedMultilineTokenError extends Error {
         readonly graphemePosition: StringUtils.GraphemePosition,
         readonly kind: UnterminatedMultilineTokenKind,
     ) {
-        super(Localization.lexerUnterminatedMultilineToken(graphemePosition, kind));
+        super(Localization.lexUnterminatedMultilineToken(graphemePosition, kind));
     }
 }
 
-export function isTLexerError(x: any): x is TLexerError {
-    return x instanceof LexerError || x instanceof CommonError.CommonError;
+export function isTLexError(x: any): x is TLexError {
+    return x instanceof LexError || x instanceof CommonError.CommonError;
 }
 
-export function isTInnerLexerError(x: any): x is TInnerLexerError {
+export function isTInnerLexError(x: any): x is TInnerLexError {
     return (
         x instanceof BadLineNumberError ||
         x instanceof BadRangeError ||

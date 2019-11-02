@@ -6,7 +6,7 @@
 import { Inspection } from ".";
 import { Option, ResultKind } from "./common";
 import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./jobs";
-import { Lexer, LexerError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError, Parser } from "./parser";
 
 parseText(`if true then 1 else 2`);
@@ -91,7 +91,7 @@ function lexText(text: string): void {
     }
     // A multiline token error was thrown.
     else {
-        const error: LexerError.LexerError = triedLexerSnapshot.error;
+        const error: LexError.LexError = triedLexerSnapshot.error;
         console.log(error.innerError.message);
         console.log(JSON.stringify(error.innerError, undefined, 4));
     }
@@ -99,7 +99,7 @@ function lexText(text: string): void {
 
 // @ts-ignore
 function inspectText(text: string, position: Inspection.Position): void {
-    // Having a LexerError thrown will abort the inspection and return the offending LexerError.
+    // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
     const triedInspection: TriedLexParseInspection = tryLexParseInspection(text, Parser.CombinatorialParser, position);
     if (triedInspection.kind === ResultKind.Err) {

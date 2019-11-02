@@ -15,7 +15,7 @@ function expectParserInnerError(text: string): ParseError.TInnerParseError {
         throw new Error(`AssertFailed: triedLexParse.kind === ResultKind.Err ${JSON.stringify(triedLexParse)}`);
     } else if (!(triedLexParse.error instanceof ParseError.ParseError)) {
         const errorMessage: string = triedLexParse.error.message;
-        throw new Error(`AssertFailed: triedLexParse.error instanceof ParserError - ${errorMessage}`);
+        throw new Error(`AssertFailed: triedLexParse.error instanceof ParseError - ${errorMessage}`);
     } else {
         return triedLexParse.error.innerError;
     }
@@ -25,7 +25,7 @@ function expectCsvContinuationError(text: string): ParseError.ExpectedCsvContinu
     const innerError: ParseError.TInnerParseError = expectParserInnerError(text);
     if (!(innerError instanceof ParseError.ExpectedCsvContinuationError)) {
         throw new Error(
-            `AssertFailed: innerError instanceof ParserError.ExpectedCsvContinuationError - ${innerError.message}`,
+            `AssertFailed: innerError instanceof ParseError.ExpectedCsvContinuationError - ${innerError.message}`,
         );
     }
 
