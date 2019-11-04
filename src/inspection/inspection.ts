@@ -5,11 +5,11 @@ import { isNever, Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
+import * as identifier from "./identifier";
 import * as keyword from "./keyword";
 import { IInspectedNode } from "./node";
 import { Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
-import * as scope from "./scope";
 import { Inspected, State } from "./state";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
@@ -45,7 +45,7 @@ export function tryFrom(
             // COMMON
             visitedNodes: [],
 
-            // SCOPE INSPECTION
+            // IDENTIFIER INSPECTION
             scope: new Map(),
             maybeInvokeExpression: undefined,
             maybePositionIdentifier: undefined,
@@ -58,7 +58,7 @@ export function tryFrom(
         nodeIdMapCollection,
         leafNodeIds,
 
-        // SCOPE INSPECTION
+        // IDENTIFIER INSPECTION
         // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
         // then store it on here so if we encounter
         maybeClosestLeafIdentifier: maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
@@ -137,7 +137,7 @@ export function visitNode(state: State, xorNode: NodeIdMap.TXorNode): void {
     const visitedNodes: IInspectedNode[] = state.result.visitedNodes as IInspectedNode[];
     visitedNodes.push(inspectedNodeFrom(xorNode));
 
-    scope.visitNode(state, xorNode);
+    identifier.visitNode(state, xorNode);
     keyword.visitNode(state, xorNode);
 }
 
