@@ -75,16 +75,13 @@ export function isPositionAfterContextNode(
     position: Position,
     contextNode: ParserContext.Node,
 ): boolean {
-    const maybeRightMostAstNode: Option<Ast.TNode> = NodeIdMap.maybeRightMostAstDescendant(
-        nodeIdMapCollection,
-        contextNode.id,
-    );
-    if (maybeRightMostAstNode === undefined) {
+    const maybeRightMostLeaf: Option<Ast.TNode> = NodeIdMap.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+    if (maybeRightMostLeaf === undefined) {
         return false;
     }
-    const rightMostAstNode: Ast.TNode = maybeRightMostAstNode;
+    const rightMostLeaf: Ast.TNode = maybeRightMostLeaf;
 
-    return isPositionAfterAstNode(position, rightMostAstNode);
+    return isPositionAfterAstNode(position, rightMostLeaf);
 }
 
 export function isPositionBeforeAstNode(position: Position, astNode: Ast.TNode): boolean {

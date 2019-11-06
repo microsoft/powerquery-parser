@@ -74,37 +74,60 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
 //  * Children are read left to right.
 //  * Children are placed in childIdsById in the order they were read.
 //  * Therefore the right-most child is the most recently read and it appears last in the document.
+export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
+    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+    let nodeIdsToExplore: number[] = [rootId];
+    let maybeRightMost: Option<Ast.TNode>;
 
-// We can get the most recently read leaf node if we:
-//  * get a list of children on the current node
-//  * get the right-most (youngest) TXorNode child on the current node
-//  * store the right-most Ast.TNode on the current node
-//  * update the current node to the child, and repeat until the the first step returns no children
-//  * return the stored Ast.TNode
-export function maybeRightMostAstDescendant(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
-    let maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(rootId);
-    if (maybeChildIds === undefined) {
-        return undefined;
-    }
+    while (nodeIdsToExplore.length) {
+        const nodeId: number = nodeIdsToExplore.pop()!;
+        const maybeAstNode: Option<Ast.TNode> = astNodeById.get(nodeId);
 
-    let maybeRightMostAstNode: Option<Ast.TNode>;
-    let childIds: ReadonlyArray<number> = maybeChildIds;
-    while (maybeChildIds !== undefined) {
-        childIds = maybeChildIds;
-
-        const astChildNodes: ReadonlyArray<Ast.TNode> = childIds
-            .map((childId: number) => nodeIdMapCollection.astNodeById.get(childId))
-            .filter((maybeAstNode: Option<Ast.TNode>) => maybeAstNode !== undefined) as ReadonlyArray<Ast.TNode>;
-
-        if (astChildNodes.length) {
-            maybeRightMostAstNode = astChildNodes[astChildNodes.length - 1];
+        let addChildren: boolean = false;
+        if (maybeAstNode !== undefined) {
+            const astNode: Ast.TNode = maybeAstNode;
+            // Is leaf, check if it's more right than the previous record.
+            // As it's a leaf there are no children to add.
+            if (astNode.isLeaf) {
+                // Is the first leaf encountered.
+                if (maybeRightMost === undefined) {
+                    maybeRightMost = astNode;
+                }
+                // Compare current leaf node to the existing record.
+                else if (astNode.tokenRange.tokenIndexStart > maybeRightMost.tokenRange.tokenIndexStart) {
+                    maybeRightMost = astNode;
+                }
+            }
+            // Is not a leaf, no previous record exists.
+            // Add all children to the queue.
+            else if (maybeRightMost === undefined) {
+                addChildren = true;
+            }
+            // Is not a leaf, previous record exists.
+            // Check if we can cull the branch, otherwise add all children to the queue.
+            else if (astNode.tokenRange.tokenIndexEnd > maybeRightMost.tokenRange.tokenIndexStart) {
+                addChildren = true;
+            }
+        }
+        // Must be a context node.
+        // Add all children to the queue as context nodes can have Ast children which are leafs.
+        else {
+            addChildren = true;
         }
 
-        const lastChildId: number = childIds[childIds.length - 1];
-        maybeChildIds = nodeIdMapCollection.childIdsById.get(lastChildId);
+        if (addChildren) {
+            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(nodeId);
+            if (maybeChildIds !== undefined) {
+                // Add the child ids in reversed order to prioritize visiting the right most nodes first.
+                const childIds: ReadonlyArray<number> = maybeChildIds;
+                const reversedChildIds: number[] = [...childIds];
+                reversedChildIds.reverse();
+                nodeIdsToExplore = [...reversedChildIds, ...nodeIdsToExplore];
+            }
+        }
     }
 
-    return maybeRightMostAstNode;
+    return maybeRightMost;
 }
 
 export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: number): Option<TXorNode> {
