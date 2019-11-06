@@ -10,7 +10,6 @@ import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierState, InspectedIdentifier } from "./state";
 
 export function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
-    // tslint:disable-next-line: switch-default
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode);
@@ -46,6 +45,9 @@ export function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): 
 
         case Ast.NodeKind.Section:
             inspectSection(state, xorNode);
+            break;
+
+        default:
             break;
     }
 }
