@@ -3,7 +3,6 @@
 
 import { Option, Traverse } from "../common";
 import { Ast, NodeIdMap } from "../parser";
-import { Keyword } from "./keyword";
 import { IInspectedNode, InspectedInvokeExpression } from "./node";
 import { Position } from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
@@ -36,7 +35,8 @@ export interface IInspected {
 }
 
 export interface InspectedKeyword extends IInspected {
-    readonly maybeKeywords: Option<ReadonlyArray<Keyword>>;
+    readonly allowedKeywords: ReadonlyArray<string>;
+    readonly maybeRequiredKeyword: Option<string>;
 }
 
 export interface InspectedIdentifier extends IInspected {

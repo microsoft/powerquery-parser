@@ -51,7 +51,8 @@ export function tryFrom(
             maybePositionIdentifier: undefined,
 
             // KEYWORD INSPECTION
-            maybeKeywords: undefined,
+            allowedKeywords: [],
+            maybeRequiredKeyword: undefined,
         },
         // COMMON
         position,
@@ -106,7 +107,8 @@ const DefaultInspection: Inspected = {
     scope: new Map(),
     maybeInvokeExpression: undefined,
     maybePositionIdentifier: undefined,
-    maybeKeywords: undefined,
+    allowedKeywords: [],
+    maybeRequiredKeyword: undefined,
 };
 
 function maybeClosestLeafIdentifier(
