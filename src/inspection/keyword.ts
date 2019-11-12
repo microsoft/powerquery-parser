@@ -5,25 +5,101 @@ import { CommonError, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { inspectedVisitedNodeFrom } from "./inspectionUtils";
+import * as InspectionUtils from "./inspectionUtils";
 import { IInspectedVisitedNode } from "./node";
 import { Position } from "./position";
 import { KeywordInspected, KeywordState } from "./state";
+
+// if   no parent: exit
+// elif parent is ast: exit
+// else examing parent's child where child attribute is n+1
+
+interface ExaminableNodes {
+    readonly initial: Ast.TNode;
+    readonly parent: ParserContext.Node;
+    readonly sibling: ParserContext.Node;
+}
 
 export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<KeywordInspected> {
+    const maybeExaminableNodes: Option<ExaminableNodes> = maybeGetExaminableNodes(
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+    );
+    if (maybeExaminableNodes === undefined) {
+        return {
+            kind: ResultKind.Ok,
+            value: DefaultKeywordInspection,
+        };
+    }
+    const examinableNodes: ExaminableNodes = maybeExaminableNodes;
+
     return {
         kind: ResultKind.Ok,
         value: DefaultKeywordInspection,
     };
 }
 
+// Grab the closest leaf next position then try to find the leaf's sibling.
+// If the sibling is a ParserContext.Node instance then return { leaf, parent, sibling},
+// otherwise return undefined;
+function maybeGetExaminableNodes(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): Option<ExaminableNodes> {
+    const maybeLeafAstNode: Option<Ast.TNode> = InspectionUtils.maybeClosestAstNode(
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+    );
+    if (maybeLeafAstNode === undefined) {
+        return undefined;
+    }
+    const leafAstNode: Ast.TNode = maybeLeafAstNode;
+
+    if (leafAstNode.maybeAttributeIndex === undefined) {
+        return undefined;
+    }
+
+    const maybeParentContextNode: Option<ParserContext.Node> = NodeIdMap.maybeParentContextNode(
+        nodeIdMapCollection,
+        leafAstNode.id,
+    );
+    if (maybeParentContextNode === undefined) {
+        return undefined;
+    }
+    const parentContextNode: ParserContext.Node = maybeParentContextNode;
+
+    NodeIdMap.maybeContextChildByAttributeIndex(
+        nodeIdMapCollection,
+        parentContextNode.id,
+        leafAstNode.maybeAttributeIndex + 1,
+        undefined,
+    );
+
+    const maybeSibling: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNextSiblingXorNode(
+        nodeIdMapCollection,
+        leafAstNode.id,
+    );
+    if (maybeSibling === undefined || maybeSibling.kind === NodeIdMap.XorNodeKind.Ast) {
+        return undefined;
+    }
+
+    return {
+        initial: leafAstNode,
+        parent: parentContextNode,
+        sibling: maybeSibling.node,
+    };
+}
+
 function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     const visitedNodes: IInspectedVisitedNode[] = state.result.keywordVisitedNodes as IInspectedVisitedNode[];
-    visitedNodes.push(inspectedVisitedNodeFrom(xorNode));
+    visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
     if (state.isKeywordInspectionDone) {
         return;

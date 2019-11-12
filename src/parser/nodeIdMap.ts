@@ -70,6 +70,34 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
+export function maybeNthSiblingXorNode(
+    nodeIdMapCollection: Collection,
+    rootId: number,
+    offset: number,
+): Option<TXorNode> {
+    const childXorNode: TXorNode = expectXorNode(nodeIdMapCollection, rootId);
+    if (childXorNode.node.maybeAttributeIndex === undefined) {
+        return undefined;
+    }
+
+    const attributeIndex: number = childXorNode.node.maybeAttributeIndex + offset;
+    if (attributeIndex < 0) {
+        return undefined;
+    }
+
+    const parentXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, rootId);
+    const childIds: ReadonlyArray<number> = expectChildIds(nodeIdMapCollection.childIdsById, parentXorNode.node.id);
+    if (childIds.length >= attributeIndex) {
+        return undefined;
+    }
+
+    return maybeXorNode(nodeIdMapCollection, childIds[attributeIndex]);
+}
+
+export function maybeNextSiblingXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
+    return maybeNthSiblingXorNode(nodeIdMapCollection, nodeId, 1);
+}
+
 export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: number): Option<TXorNode> {
     const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
     if (maybeParentNodeId === undefined) {
@@ -88,6 +116,16 @@ export function maybeParentAstNode(nodeIdMapCollection: Collection, childId: num
     const parentNodeId: number = maybeParentNodeId;
 
     return nodeIdMapCollection.astNodeById.get(parentNodeId);
+}
+
+export function maybeParentContextNode(nodeIdMapCollection: Collection, childId: number): Option<ParserContext.Node> {
+    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
+    if (maybeParentNodeId === undefined) {
+        return undefined;
+    }
+    const parentNodeId: number = maybeParentNodeId;
+
+    return nodeIdMapCollection.contextNodeById.get(parentNodeId);
 }
 
 export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: number): Option<ReadonlyArray<Ast.TNode>> {
@@ -186,6 +224,26 @@ export function maybeAstChildByAttributeIndex(
     );
 
     if (maybeNode === undefined || maybeNode.kind === XorNodeKind.Context) {
+        return undefined;
+    } else {
+        return maybeNode.node;
+    }
+}
+
+export function maybeContextChildByAttributeIndex(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    maybeChildNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>,
+): Option<ParserContext.Node> {
+    const maybeNode: Option<TXorNode> = maybeXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        parentId,
+        attributeIndex,
+        maybeChildNodeKinds,
+    );
+
+    if (maybeNode === undefined || maybeNode.kind === XorNodeKind.Ast) {
         return undefined;
     } else {
         return maybeNode.node;
