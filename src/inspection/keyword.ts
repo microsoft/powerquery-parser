@@ -1,33 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, TypeUtils } from "../common";
+import { CommonError, Option, ResultKind, TypeUtils } from "../common";
+import { TriedTraverse } from "../common/traversal";
 import { KeywordKind } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
+import { Position } from "./position";
 import { InspectedKeyword, KeywordState } from "./state";
 
-const TExpressionKeywords: ReadonlyArray<KeywordKind> = [
-    KeywordKind.Each,
-    KeywordKind.Error,
-    KeywordKind.False,
-    KeywordKind.HashBinary,
-    KeywordKind.HashDate,
-    KeywordKind.HashDateTime,
-    KeywordKind.HashDateTimeZone,
-    KeywordKind.HashDuration,
-    KeywordKind.HashInfinity,
-    KeywordKind.HashNan,
-    KeywordKind.HashTable,
-    KeywordKind.HashTime,
-    KeywordKind.If,
-    KeywordKind.Let,
-    KeywordKind.True,
-    KeywordKind.Try,
-];
+export function tryFrom(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): TriedTraverse<InspectedKeyword> {
+    return {
+        kind: ResultKind.Ok,
+        value: DefaultKeywordInspection,
+    };
+}
 
-const TExpressionKeywordPair: [ReadonlyArray<KeywordKind>, Option<string>] = [TExpressionKeywords, undefined];
-
-export function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
+function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     if (state.isKeywordInspectionDone) {
         return;
     } else if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
@@ -57,6 +49,31 @@ export function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): voi
             break;
     }
 }
+
+const DefaultKeywordInspection: InspectedKeyword = {
+    keywordVisitedNodes: [],
+    allowedKeywords: [],
+    maybeRequiredKeyword: undefined,
+};
+
+const TExpressionKeywords: ReadonlyArray<KeywordKind> = [
+    KeywordKind.Each,
+    KeywordKind.Error,
+    KeywordKind.False,
+    KeywordKind.HashBinary,
+    KeywordKind.HashDate,
+    KeywordKind.HashDateTime,
+    KeywordKind.HashDateTimeZone,
+    KeywordKind.HashDuration,
+    KeywordKind.HashInfinity,
+    KeywordKind.HashNan,
+    KeywordKind.HashTable,
+    KeywordKind.HashTime,
+    KeywordKind.If,
+    KeywordKind.Let,
+    KeywordKind.True,
+    KeywordKind.Try,
+];
 
 function updateKeywordResult(
     state: KeywordState,

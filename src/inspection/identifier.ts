@@ -1,15 +1,92 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../common";
+import { ArrayUtils, CommonError, isNever, Option, ResultKind, Traverse, TypeUtils } from "../common";
+import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
+import * as InspectionUtils from "./inspectionUtils";
 import { IInspectedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierState, InspectedIdentifier } from "./state";
 
-export function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
+export function tryFrom(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): TriedTraverse<TypeUtils.StripReadonly<InspectedIdentifier>> {
+    const maybeClosestLeaf: Option<Ast.TNode> = InspectionUtils.maybeClosestAstNode(
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+    );
+    if (maybeClosestLeaf === undefined) {
+        return {
+            kind: ResultKind.Ok,
+            value: DefaultIdentifierInspection,
+        };
+    }
+
+    const closestLeaf: Ast.TNode = maybeClosestLeaf;
+    const root: NodeIdMap.TXorNode = {
+        kind: NodeIdMap.XorNodeKind.Ast,
+        node: closestLeaf,
+    };
+
+    const state: IdentifierState = {
+        result: {
+            identifierVisitedNodes: [],
+            scope: new Map(),
+            maybeInvokeExpression: undefined,
+            maybePositionIdentifier: undefined,
+        },
+        // COMMON
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+
+        // IDENTIFIER INSPECTION
+        // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
+        // then store it on here so if we encounter
+        maybeClosestLeafIdentifier: InspectionUtils.maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
+    };
+
+    const triedTraverse: TriedTraverse<TypeUtils.StripReadonly<InspectedIdentifier>> = Traverse.tryTraverseXor<
+        IdentifierState,
+        TypeUtils.StripReadonly<InspectedIdentifier>
+    >(
+        state,
+        nodeIdMapCollection,
+        root,
+        Traverse.VisitNodeStrategy.BreadthFirst,
+        visitNode,
+        InspectionUtils.addParentXorNode,
+        undefined,
+    );
+    // If an identifier is at the given Position but its definition wasn't found during the inspection,
+    // then create an UndefinedIdentifier for maybePositionIdentifier.
+    if (
+        triedTraverse.kind === ResultKind.Ok &&
+        state.maybeClosestLeafIdentifier &&
+        state.result.maybePositionIdentifier === undefined
+    ) {
+        return {
+            kind: ResultKind.Ok,
+            value: {
+                ...triedTraverse.value,
+                maybePositionIdentifier: {
+                    kind: PositionIdentifierKind.Undefined,
+                    identifier: state.maybeClosestLeafIdentifier,
+                },
+            },
+        };
+    } else {
+        return triedTraverse;
+    }
+}
+
+function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode);
@@ -51,6 +128,13 @@ export function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): 
             break;
     }
 }
+
+const DefaultIdentifierInspection: InspectedIdentifier = {
+    identifierVisitedNodes: [],
+    scope: new Map(),
+    maybeInvokeExpression: undefined,
+    maybePositionIdentifier: undefined,
+};
 
 function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMap.TXorNode): void {
     const maybeEachConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
@@ -432,7 +516,7 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
 // then add all SectionMember names to scope EXCEPT for the SectionMember the that position is under.
 function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNode): void {
     const maybeInspectedSectionMember: Option<IInspectedNode> = ArrayUtils.findReverse(
-        state.result.visitedNodes,
+        state.result.identifierVisitedNodes,
         (x: IInspectedNode) => x.kind === Ast.NodeKind.SectionMember,
     );
     const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> =
@@ -637,8 +721,8 @@ function maybeSetStartingIdentifierValue(
 }
 
 function maybeNthLastVisitedXorNode(state: IdentifierState, n: number): Option<NodeIdMap.TXorNode> {
-    const visitedNodes: ReadonlyArray<IInspectedNode> = state.result.visitedNodes;
-    const nthNodeId: number = visitedNodes[visitedNodes.length - 1 - n].id;
+    const identifierVisitedNodes: ReadonlyArray<IInspectedNode> = state.result.identifierVisitedNodes;
+    const nthNodeId: number = identifierVisitedNodes[identifierVisitedNodes.length - 1 - n].id;
     return NodeIdMap.maybeXorNode(state.nodeIdMapCollection, nthNodeId);
 }
 

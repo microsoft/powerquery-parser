@@ -28,18 +28,17 @@ export interface IdentifierState extends IState<InspectedIdentifier> {
     readonly maybeClosestLeafIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
 }
 
-export interface IInspected {
-    // The DFS traversal path is recorded, starting from the given position's leaf node to the last parents' parent.
-    // This is primarily used during the inspection itself, but it's made public on the chance that it's useful.
-    readonly visitedNodes: ReadonlyArray<IInspectedNode>;
-}
+// tslint:disable-next-line: no-empty-interface
+export interface IInspected {}
 
 export interface InspectedKeyword extends IInspected {
     readonly allowedKeywords: ReadonlyArray<string>;
     readonly maybeRequiredKeyword: Option<string>;
+    readonly keywordVisitedNodes: ReadonlyArray<IInspectedNode>;
 }
 
 export interface InspectedIdentifier extends IInspected {
+    readonly identifierVisitedNodes: ReadonlyArray<IInspectedNode>;
     // A map of (identifier, what caused the identifier to be added).
     readonly scope: ReadonlyMap<string, NodeIdMap.TXorNode>;
     // Metadata on the first InvokeExpression encountered.
