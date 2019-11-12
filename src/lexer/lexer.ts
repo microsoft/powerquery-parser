@@ -13,7 +13,7 @@ import {
     ResultKind,
     StringUtils,
 } from "../common";
-import { Keyword } from "./keywords";
+import { KeywordKind } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
 // The lexer
@@ -1028,67 +1028,67 @@ function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: numb
 
 function maybeKeywordLineTokenKindFrom(data: string): Option<LineTokenKind> {
     switch (data) {
-        case Keyword.And:
+        case KeywordKind.And:
             return LineTokenKind.KeywordAnd;
-        case Keyword.As:
+        case KeywordKind.As:
             return LineTokenKind.KeywordAs;
-        case Keyword.Each:
+        case KeywordKind.Each:
             return LineTokenKind.KeywordEach;
-        case Keyword.Else:
+        case KeywordKind.Else:
             return LineTokenKind.KeywordElse;
-        case Keyword.Error:
+        case KeywordKind.Error:
             return LineTokenKind.KeywordError;
-        case Keyword.False:
+        case KeywordKind.False:
             return LineTokenKind.KeywordFalse;
-        case Keyword.If:
+        case KeywordKind.If:
             return LineTokenKind.KeywordIf;
-        case Keyword.In:
+        case KeywordKind.In:
             return LineTokenKind.KeywordIn;
-        case Keyword.Is:
+        case KeywordKind.Is:
             return LineTokenKind.KeywordIs;
-        case Keyword.Let:
+        case KeywordKind.Let:
             return LineTokenKind.KeywordLet;
-        case Keyword.Meta:
+        case KeywordKind.Meta:
             return LineTokenKind.KeywordMeta;
-        case Keyword.Not:
+        case KeywordKind.Not:
             return LineTokenKind.KeywordNot;
-        case Keyword.Or:
+        case KeywordKind.Or:
             return LineTokenKind.KeywordOr;
-        case Keyword.Otherwise:
+        case KeywordKind.Otherwise:
             return LineTokenKind.KeywordOtherwise;
-        case Keyword.Section:
+        case KeywordKind.Section:
             return LineTokenKind.KeywordSection;
-        case Keyword.Shared:
+        case KeywordKind.Shared:
             return LineTokenKind.KeywordShared;
-        case Keyword.Then:
+        case KeywordKind.Then:
             return LineTokenKind.KeywordThen;
-        case Keyword.True:
+        case KeywordKind.True:
             return LineTokenKind.KeywordTrue;
-        case Keyword.Try:
+        case KeywordKind.Try:
             return LineTokenKind.KeywordTry;
-        case Keyword.Type:
+        case KeywordKind.Type:
             return LineTokenKind.KeywordType;
-        case Keyword.HashBinary:
+        case KeywordKind.HashBinary:
             return LineTokenKind.KeywordHashBinary;
-        case Keyword.HashDate:
+        case KeywordKind.HashDate:
             return LineTokenKind.KeywordHashDate;
-        case Keyword.HashDateTime:
+        case KeywordKind.HashDateTime:
             return LineTokenKind.KeywordHashDateTime;
-        case Keyword.HashDateTimeZone:
+        case KeywordKind.HashDateTimeZone:
             return LineTokenKind.KeywordHashDateTimeZone;
-        case Keyword.HashDuration:
+        case KeywordKind.HashDuration:
             return LineTokenKind.KeywordHashDuration;
-        case Keyword.HashInfinity:
+        case KeywordKind.HashInfinity:
             return LineTokenKind.KeywordHashInfinity;
-        case Keyword.HashNan:
+        case KeywordKind.HashNan:
             return LineTokenKind.KeywordHashNan;
-        case Keyword.HashSections:
+        case KeywordKind.HashSections:
             return LineTokenKind.KeywordHashSections;
-        case Keyword.HashShared:
+        case KeywordKind.HashShared:
             return LineTokenKind.KeywordHashShared;
-        case Keyword.HashTable:
+        case KeywordKind.HashTable:
             return LineTokenKind.KeywordHashTable;
-        case Keyword.HashTime:
+        case KeywordKind.HashTime:
             return LineTokenKind.KeywordHashTime;
         default:
             return undefined;
