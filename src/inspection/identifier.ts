@@ -9,7 +9,7 @@ import * as InspectionUtils from "./inspectionUtils";
 import { IInspectedVisitedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
-import { IdentifierState, IdentifierInspected } from "./state";
+import { IdentifierInspected, IdentifierState } from "./state";
 
 export function tryFrom(
     position: Position,

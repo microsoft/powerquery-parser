@@ -7,7 +7,7 @@ import { NodeIdMap } from "../parser";
 import { tryFrom as identifierInspectedTryFrom } from "./identifier";
 import { tryFrom as keywordInspectedTryFrom } from "./keyword";
 import { Position } from "./position";
-import { Inspected, IdentifierInspected, KeywordInspected } from "./state";
+import { IdentifierInspected, Inspected, KeywordInspected } from "./state";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
 // If a leaf node doesn't exist at the given postion, then the closest node to the left is used (if one exists).
