@@ -4,7 +4,7 @@
 import { isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
-import { IInspectedNode } from "./node";
+import { IInspectedVisitedNode } from "./node";
 import { Position } from "./position";
 
 // Used as the expandNodesFn argument in `Traverse.tryTraverseXor`.
@@ -97,7 +97,7 @@ function closerAstNode(position: Position, maybeCurrentNode: Option<Ast.TNode>, 
     return newNodePositionStart.codeUnit > currentNodePositionStart.codeUnit ? newNode : currentNode;
 }
 
-export function inspectedNodeFrom(xorNode: NodeIdMap.TXorNode): IInspectedNode {
+export function inspectedVisitedNodeFrom(xorNode: NodeIdMap.TXorNode): IInspectedVisitedNode {
     let maybePositionStart: Option<TokenPosition>;
     let maybePositionEnd: Option<TokenPosition>;
 

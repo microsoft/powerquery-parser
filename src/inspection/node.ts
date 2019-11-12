@@ -7,14 +7,14 @@ import { Ast } from "../parser";
 
 export type TInspectedNode = InspectedInvokeExpression;
 
-export interface IInspectedNode {
+export interface IInspectedVisitedNode {
     readonly kind: Ast.NodeKind;
     readonly id: number;
     readonly maybePositionStart: Option<TokenPosition>;
     readonly maybePositionEnd: Option<TokenPosition>;
 }
 
-export interface InspectedInvokeExpression extends IInspectedNode {
+export interface InspectedInvokeExpression extends IInspectedVisitedNode {
     readonly kind: Ast.NodeKind.InvokeExpression;
     readonly maybeName: Option<string>;
     readonly maybeArguments: Option<InvokeExpressionArgs>;

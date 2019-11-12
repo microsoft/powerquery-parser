@@ -6,7 +6,7 @@ import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import * as InspectionUtils from "./inspectionUtils";
-import { IInspectedNode, InvokeExpressionArgs } from "./node";
+import { IInspectedVisitedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierState, InspectedIdentifier } from "./state";
@@ -87,6 +87,9 @@ export function tryFrom(
 }
 
 function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
+    const visitedNodes: IInspectedVisitedNode[] = state.result.identifierVisitedNodes as IInspectedVisitedNode[];
+    visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
+
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode);
@@ -515,9 +518,9 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
 // If position is to the right of a SectionMember equals sign,
 // then add all SectionMember names to scope EXCEPT for the SectionMember the that position is under.
 function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNode): void {
-    const maybeInspectedSectionMember: Option<IInspectedNode> = ArrayUtils.findReverse(
+    const maybeInspectedSectionMember: Option<IInspectedVisitedNode> = ArrayUtils.findReverse(
         state.result.identifierVisitedNodes,
-        (x: IInspectedNode) => x.kind === Ast.NodeKind.SectionMember,
+        (visitedNode: IInspectedVisitedNode) => visitedNode.kind === Ast.NodeKind.SectionMember,
     );
     const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> =
         maybeInspectedSectionMember !== undefined
@@ -721,8 +724,8 @@ function maybeSetStartingIdentifierValue(
 }
 
 function maybeNthLastVisitedXorNode(state: IdentifierState, n: number): Option<NodeIdMap.TXorNode> {
-    const identifierVisitedNodes: ReadonlyArray<IInspectedNode> = state.result.identifierVisitedNodes;
-    const nthNodeId: number = identifierVisitedNodes[identifierVisitedNodes.length - 1 - n].id;
+    const identifierInspectedVisitedNodes: ReadonlyArray<IInspectedVisitedNode> = state.result.identifierVisitedNodes;
+    const nthNodeId: number = identifierInspectedVisitedNodes[identifierInspectedVisitedNodes.length - 1 - n].id;
     return NodeIdMap.maybeXorNode(state.nodeIdMapCollection, nthNodeId);
 }
 

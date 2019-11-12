@@ -5,6 +5,8 @@ import { CommonError, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
+import { inspectedVisitedNodeFrom } from "./inspectionUtils";
+import { IInspectedVisitedNode } from "./node";
 import { Position } from "./position";
 import { InspectedKeyword, KeywordState } from "./state";
 
@@ -20,6 +22,9 @@ export function tryFrom(
 }
 
 function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
+    const visitedNodes: IInspectedVisitedNode[] = state.result.keywordVisitedNodes as IInspectedVisitedNode[];
+    visitedNodes.push(inspectedVisitedNodeFrom(xorNode));
+
     if (state.isKeywordInspectionDone) {
         return;
     } else if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {

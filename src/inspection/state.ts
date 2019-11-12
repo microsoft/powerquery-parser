@@ -3,7 +3,7 @@
 
 import { Option, Traverse } from "../common";
 import { Ast, NodeIdMap } from "../parser";
-import { IInspectedNode, InspectedInvokeExpression } from "./node";
+import { IInspectedVisitedNode, InspectedInvokeExpression } from "./node";
 import { Position } from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
 
@@ -34,11 +34,11 @@ export interface IInspected {}
 export interface InspectedKeyword extends IInspected {
     readonly allowedKeywords: ReadonlyArray<string>;
     readonly maybeRequiredKeyword: Option<string>;
-    readonly keywordVisitedNodes: ReadonlyArray<IInspectedNode>;
+    readonly keywordVisitedNodes: ReadonlyArray<IInspectedVisitedNode>;
 }
 
 export interface InspectedIdentifier extends IInspected {
-    readonly identifierVisitedNodes: ReadonlyArray<IInspectedNode>;
+    readonly identifierVisitedNodes: ReadonlyArray<IInspectedVisitedNode>;
     // A map of (identifier, what caused the identifier to be added).
     readonly scope: ReadonlyMap<string, NodeIdMap.TXorNode>;
     // Metadata on the first InvokeExpression encountered.

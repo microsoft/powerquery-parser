@@ -5,16 +5,19 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
 import { ResultKind } from "../../common";
-import { IInspectedNode } from "../../inspection";
+import { IInspectedVisitedNode } from "../../inspection";
 import { Ast } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
-function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected: ReadonlyArray<IInspectedNode>): void {
+function expectNodesEqual(
+    triedInspection: Inspection.TriedInspection,
+    expected: ReadonlyArray<IInspectedVisitedNode>,
+): void {
     if (!(triedInspection.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
     }
     const inspection: Inspection.Inspected = triedInspection.value;
-    const actual: ReadonlyArray<IInspectedNode> = inspection.identifierVisitedNodes;
+    const actual: ReadonlyArray<IInspectedVisitedNode> = inspection.identifierVisitedNodes;
 
     expect(actual).deep.equal(expected);
 }
@@ -24,13 +27,13 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
             it(`|[foo = bar]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar]`);
-                const expected: ReadonlyArray<IInspectedNode> = [];
+                const expected: ReadonlyArray<IInspectedVisitedNode> = [];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`[foo| = bar]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo| = bar]`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<IInspectedVisitedNode> = [
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
@@ -107,7 +110,7 @@ describe(`Inspection`, () => {
 
             it(`[foo = bar|]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo = bar|]`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<IInspectedVisitedNode> = [
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
@@ -200,13 +203,13 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
             it(`|[foo = bar`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar`);
-                const expected: ReadonlyArray<IInspectedNode> = [];
+                const expected: ReadonlyArray<IInspectedVisitedNode> = [];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
             it(`[foo| = bar`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo| = bar`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<IInspectedVisitedNode> = [
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
@@ -289,7 +292,7 @@ describe(`Inspection`, () => {
 
             it(`[foo = bar|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo = bar|`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<IInspectedVisitedNode> = [
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
