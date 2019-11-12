@@ -73,7 +73,7 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
 // There are a few assumed invariants about children:
 //  * Children are read left to right.
 //  * Children are placed in childIdsById in the order they were read.
-//  * Therefore the right-most child is the most recently read and it appears last in the document.
+//  * Therefore the right-most child is the most recently read which also appears last in the document.
 export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
     let nodeIdsToExplore: number[] = [rootId];
@@ -84,8 +84,11 @@ export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: numb
         const maybeAstNode: Option<Ast.TNode> = astNodeById.get(nodeId);
 
         let addChildren: boolean = false;
+
+        // Check if Ast.TNode or ParserContext.Node
         if (maybeAstNode !== undefined) {
             const astNode: Ast.TNode = maybeAstNode;
+
             // Is leaf, check if it's more right than the previous record.
             // As it's a leaf there are no children to add.
             if (astNode.isLeaf) {
@@ -109,8 +112,8 @@ export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: numb
                 addChildren = true;
             }
         }
-        // Must be a context node.
-        // Add all children to the queue as context nodes can have Ast children which are leafs.
+        // Must be a ParserContext.Node.
+        // Add all children to the queue as ParserContext.Nodes can have Ast children which are leafs.
         else {
             addChildren = true;
         }
