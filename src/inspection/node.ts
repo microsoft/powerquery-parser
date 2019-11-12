@@ -5,7 +5,7 @@ import { Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast } from "../parser";
 
-export type TInspectedNode = InspectedInvokeExpression;
+export type TInspectedVisitedNode = InspectedVisitedInvokeExpression;
 
 export interface IInspectedVisitedNode {
     readonly kind: Ast.NodeKind;
@@ -14,7 +14,7 @@ export interface IInspectedVisitedNode {
     readonly maybePositionEnd: Option<TokenPosition>;
 }
 
-export interface InspectedInvokeExpression extends IInspectedVisitedNode {
+export interface InspectedVisitedInvokeExpression extends IInspectedVisitedNode {
     readonly kind: Ast.NodeKind.InvokeExpression;
     readonly maybeName: Option<string>;
     readonly maybeArguments: Option<InvokeExpressionArgs>;

@@ -9,13 +9,11 @@ import { tryFrom as keywordInspectedTryFrom } from "./keyword";
 import { Position } from "./position";
 import { IdentifierInspected, Inspected, KeywordInspected } from "./state";
 
-// An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
-// If a leaf node doesn't exist at the given postion, then the closest node to the left is used (if one exists).
-//
-// There are three forms that the parent path can take:
-//  * all nodes are Ast.TNode
-//  * all nodes are ParserContext.Node
-//  * nodes are initially Ast.TNode, then they become ParserContext.Node
+// Inspection is designed to run sub-inspections,
+// eg. one inspection for scope and one for keywords.
+// Look in `state.ts` to see the traversal and return types for each sub-inspection.
+// If any sub-inspection returns an Err, return the Err.
+// If all sub-inspections succeed, return the union of all successful traversals.
 
 export type TriedInspection = Traverse.TriedTraverse<Inspected>;
 

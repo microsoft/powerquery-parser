@@ -11,6 +11,11 @@ import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Posit
 import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierInspected, IdentifierState } from "./state";
 
+// This inspection selects the closest leaf node, then recursively traveling up the node's parents.
+// It tracks what identifiers are within scope, and what value was used in their assignment (if available).
+
+// TODO: maybeInvokeExpression should be split into its own inspection.
+
 export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,

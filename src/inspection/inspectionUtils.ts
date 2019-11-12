@@ -7,7 +7,7 @@ import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { IInspectedVisitedNode } from "./node";
 import { Position } from "./position";
 
-// Used as the expandNodesFn argument in `Traverse.tryTraverseXor`.
+// Used as the `expandNodesFn` argument in `Traverse.tryTraverseXor`.
 // Returns the TXorNode's parent if one exists.
 export function addParentXorNode<T>(
     _state: T,
@@ -18,6 +18,11 @@ export function addParentXorNode<T>(
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 
+// Checks if the closest leaf is an identifier.
+// Either returns:
+//  * the given node if it's an identifier
+//  * the given node's parent if it's an identifier
+//  * undefined
 export function maybeClosestLeafIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     closestLeaf: Ast.TNode,
@@ -42,7 +47,8 @@ export function maybeClosestLeafIdentifier(
     }
 }
 
-// Either returns a Ast.TNode used as the root for a traverse, or returns undefined. The options are:
+// Finds a leaf Ast.TNode which will be used for traversal.
+// Either returns:
 //  * the Ast.TNode at the given position
 //  * the closest Ast.TNode to the left of the given position
 //  * undefined
@@ -62,6 +68,7 @@ export function maybeClosestAstNode(
     return maybeClosestNode;
 }
 
+// Compares two Ast.TNode and returns the closer of the two, where a null node is considered further away.
 function closerAstNode(position: Position, maybeCurrentNode: Option<Ast.TNode>, newNode: Ast.TNode): Option<Ast.TNode> {
     const newNodePositionStart: TokenPosition = newNode.tokenRange.positionStart;
 
@@ -97,6 +104,8 @@ function closerAstNode(position: Position, maybeCurrentNode: Option<Ast.TNode>, 
     return newNodePositionStart.codeUnit > currentNodePositionStart.codeUnit ? newNode : currentNode;
 }
 
+// Inspections should keep track of which nodes they visited.
+// Since each inspection can take a different traversal path each should keep a list of IInspectedVisitedNode.
 export function inspectedVisitedNodeFrom(xorNode: NodeIdMap.TXorNode): IInspectedVisitedNode {
     let maybePositionStart: Option<TokenPosition>;
     let maybePositionEnd: Option<TokenPosition>;
