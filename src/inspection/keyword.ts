@@ -8,13 +8,13 @@ import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { inspectedVisitedNodeFrom } from "./inspectionUtils";
 import { IInspectedVisitedNode } from "./node";
 import { Position } from "./position";
-import { InspectedKeyword, KeywordState } from "./state";
+import { KeywordInspected, KeywordState } from "./state";
 
 export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): TriedTraverse<InspectedKeyword> {
+): TriedTraverse<KeywordInspected> {
     return {
         kind: ResultKind.Ok,
         value: DefaultKeywordInspection,
@@ -55,7 +55,7 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     }
 }
 
-const DefaultKeywordInspection: InspectedKeyword = {
+const DefaultKeywordInspection: KeywordInspected = {
     keywordVisitedNodes: [],
     allowedKeywords: [],
     maybeRequiredKeyword: undefined,
@@ -86,7 +86,7 @@ function updateKeywordResult(
     fn: (state: KeywordState, contextNode: ParserContext.Node) => [ReadonlyArray<string>, Option<string>],
 ): void {
     const [allowedKeywords, maybeRequiredKeyword] = fn(state, contextNode);
-    const result: TypeUtils.StripReadonly<InspectedKeyword> = state.result;
+    const result: TypeUtils.StripReadonly<KeywordInspected> = state.result;
     result.allowedKeywords = allowedKeywords;
     result.maybeRequiredKeyword = maybeRequiredKeyword;
 

@@ -9,7 +9,7 @@ import { TPositionIdentifier } from "./positionIdentifier";
 
 export type State = KeywordState & IdentifierState;
 
-export type Inspected = InspectedKeyword & InspectedIdentifier;
+export type Inspected = KeywordInspected & IdentifierInspected;
 
 export interface IState<T> extends Traverse.IState<T> {
     readonly position: Position;
@@ -17,11 +17,11 @@ export interface IState<T> extends Traverse.IState<T> {
     readonly leafNodeIds: ReadonlyArray<number>;
 }
 
-export interface KeywordState extends IState<InspectedKeyword> {
+export interface KeywordState extends IState<KeywordInspected> {
     isKeywordInspectionDone: boolean;
 }
 
-export interface IdentifierState extends IState<InspectedIdentifier> {
+export interface IdentifierState extends IState<IdentifierInspected> {
     // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
     // then we store that leaf here.
     // Later if we encounter the assignment for this identifier then it's stored in Inspected.maybePositionIdentifier
@@ -31,13 +31,13 @@ export interface IdentifierState extends IState<InspectedIdentifier> {
 // tslint:disable-next-line: no-empty-interface
 export interface IInspected {}
 
-export interface InspectedKeyword extends IInspected {
+export interface KeywordInspected extends IInspected {
     readonly allowedKeywords: ReadonlyArray<string>;
     readonly maybeRequiredKeyword: Option<string>;
     readonly keywordVisitedNodes: ReadonlyArray<IInspectedVisitedNode>;
 }
 
-export interface InspectedIdentifier extends IInspected {
+export interface IdentifierInspected extends IInspected {
     readonly identifierVisitedNodes: ReadonlyArray<IInspectedVisitedNode>;
     // A map of (identifier, what caused the identifier to be added).
     readonly scope: ReadonlyMap<string, NodeIdMap.TXorNode>;

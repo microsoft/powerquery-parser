@@ -9,13 +9,13 @@ import * as InspectionUtils from "./inspectionUtils";
 import { IInspectedVisitedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
-import { IdentifierState, InspectedIdentifier } from "./state";
+import { IdentifierState, IdentifierInspected } from "./state";
 
 export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): TriedTraverse<TypeUtils.StripReadonly<InspectedIdentifier>> {
+): TriedTraverse<TypeUtils.StripReadonly<IdentifierInspected>> {
     const maybeClosestLeaf: Option<Ast.TNode> = InspectionUtils.maybeClosestAstNode(
         position,
         nodeIdMapCollection,
@@ -52,9 +52,9 @@ export function tryFrom(
         maybeClosestLeafIdentifier: InspectionUtils.maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
     };
 
-    const triedTraverse: TriedTraverse<TypeUtils.StripReadonly<InspectedIdentifier>> = Traverse.tryTraverseXor<
+    const triedTraverse: TriedTraverse<TypeUtils.StripReadonly<IdentifierInspected>> = Traverse.tryTraverseXor<
         IdentifierState,
-        TypeUtils.StripReadonly<InspectedIdentifier>
+        TypeUtils.StripReadonly<IdentifierInspected>
     >(
         state,
         nodeIdMapCollection,
@@ -132,7 +132,7 @@ function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
     }
 }
 
-const DefaultIdentifierInspection: InspectedIdentifier = {
+const DefaultIdentifierInspection: IdentifierInspected = {
     identifierVisitedNodes: [],
     scope: new Map(),
     maybeInvokeExpression: undefined,
@@ -333,7 +333,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExprXorNode: Node
             throw isNever(invokeExprXorNode);
     }
 
-    const unsafeResult: TypeUtils.StripReadonly<InspectedIdentifier> = state.result;
+    const unsafeResult: TypeUtils.StripReadonly<IdentifierInspected> = state.result;
     unsafeResult.maybeInvokeExpression = {
         kind: Ast.NodeKind.InvokeExpression,
         id: invokeExprXorNode.node.id,
@@ -714,7 +714,7 @@ function maybeSetStartingIdentifierValue(
     const key: Ast.GeneralizedIdentifier | Ast.Identifier = keyAstNode;
 
     if (key.literal === state.maybeClosestLeafIdentifier.literal) {
-        const unsafeResult: TypeUtils.StripReadonly<InspectedIdentifier> = state.result;
+        const unsafeResult: TypeUtils.StripReadonly<IdentifierInspected> = state.result;
         unsafeResult.maybePositionIdentifier = {
             kind: PositionIdentifierKind.Local,
             identifier: key,

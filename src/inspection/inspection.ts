@@ -7,7 +7,7 @@ import { NodeIdMap } from "../parser";
 import { tryFrom as identifierInspectedTryFrom } from "./identifier";
 import { tryFrom as keywordInspectedTryFrom } from "./keyword";
 import { Position } from "./position";
-import { Inspected, InspectedIdentifier, InspectedKeyword } from "./state";
+import { Inspected, IdentifierInspected, KeywordInspected } from "./state";
 
 // An inspection is done by selecting a leaf node, then recursively traveling up the node's parents.
 // If a leaf node doesn't exist at the given postion, then the closest node to the left is used (if one exists).
@@ -24,7 +24,7 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedInspection {
-    const triedInspectedIdentifier: TriedTraverse<InspectedIdentifier> = identifierInspectedTryFrom(
+    const triedInspectedIdentifier: TriedTraverse<IdentifierInspected> = identifierInspectedTryFrom(
         position,
         nodeIdMapCollection,
         leafNodeIds,
@@ -33,7 +33,7 @@ export function tryFrom(
         return triedInspectedIdentifier;
     }
 
-    const triedInspectedKeyword: TriedTraverse<InspectedKeyword> = keywordInspectedTryFrom(
+    const triedInspectedKeyword: TriedTraverse<KeywordInspected> = keywordInspectedTryFrom(
         position,
         nodeIdMapCollection,
         leafNodeIds,
