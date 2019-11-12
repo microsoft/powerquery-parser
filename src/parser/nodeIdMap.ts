@@ -70,69 +70,6 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): O
     return undefined;
 }
 
-// There are a few assumed invariants about children:
-//  * Children are read left to right.
-//  * Children are placed in childIdsById in the order they were read.
-//  * Therefore the right-most child is the most recently read which also appears last in the document.
-export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
-    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
-    let nodeIdsToExplore: number[] = [rootId];
-    let maybeRightMost: Option<Ast.TNode>;
-
-    while (nodeIdsToExplore.length) {
-        const nodeId: number = nodeIdsToExplore.pop()!;
-        const maybeAstNode: Option<Ast.TNode> = astNodeById.get(nodeId);
-
-        let addChildren: boolean = false;
-
-        // Check if Ast.TNode or ParserContext.Node
-        if (maybeAstNode !== undefined) {
-            const astNode: Ast.TNode = maybeAstNode;
-
-            // Is leaf, check if it's more right than the previous record.
-            // As it's a leaf there are no children to add.
-            if (astNode.isLeaf) {
-                // Is the first leaf encountered.
-                if (maybeRightMost === undefined) {
-                    maybeRightMost = astNode;
-                }
-                // Compare current leaf node to the existing record.
-                else if (astNode.tokenRange.tokenIndexStart > maybeRightMost.tokenRange.tokenIndexStart) {
-                    maybeRightMost = astNode;
-                }
-            }
-            // Is not a leaf, no previous record exists.
-            // Add all children to the queue.
-            else if (maybeRightMost === undefined) {
-                addChildren = true;
-            }
-            // Is not a leaf, previous record exists.
-            // Check if we can cull the branch, otherwise add all children to the queue.
-            else if (astNode.tokenRange.tokenIndexEnd > maybeRightMost.tokenRange.tokenIndexStart) {
-                addChildren = true;
-            }
-        }
-        // Must be a ParserContext.Node.
-        // Add all children to the queue as ParserContext.Nodes can have Ast children which are leafs.
-        else {
-            addChildren = true;
-        }
-
-        if (addChildren) {
-            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(nodeId);
-            if (maybeChildIds !== undefined) {
-                // Add the child ids in reversed order to prioritize visiting the right most nodes first.
-                const childIds: ReadonlyArray<number> = maybeChildIds;
-                const reversedChildIds: number[] = [...childIds];
-                reversedChildIds.reverse();
-                nodeIdsToExplore = [...reversedChildIds, ...nodeIdsToExplore];
-            }
-        }
-    }
-
-    return maybeRightMost;
-}
-
 export function maybeParentXorNode(nodeIdMapCollection: Collection, childId: number): Option<TXorNode> {
     const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
     if (maybeParentNodeId === undefined) {
