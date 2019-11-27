@@ -14,6 +14,11 @@ import { KeywordInspected, KeywordState } from "./state";
 // elif parent is ast: exit
 // else examing parent's child where child attribute is n+1
 
+interface FindExaminableNode {
+    readonly falseNode: NodeIdMap.TXorNode;
+    readonly visitedNodes: ReadonlyArray<NodeIdMap.TXorNode>;
+}
+
 interface ExaminableNodes {
     readonly initial: Ast.TNode;
     readonly parent: ParserContext.Node;
@@ -66,35 +71,81 @@ function maybeGetExaminableNodes(
         return undefined;
     }
 
-    const maybeParentContextNode: Option<ParserContext.Node> = NodeIdMap.maybeParentContextNode(
-        nodeIdMapCollection,
-        leafAstNode.id,
-    );
-    if (maybeParentContextNode === undefined) {
+    const triedFalseParent: Option<FalseParentSearch> = maybeFalseParent(leafAstNode, nodeIdMapCollection);
+
+    // const maybeParentContextNode: Option<ParserContext.Node> = NodeIdMap.maybeParentContextNode(
+    //     nodeIdMapCollection,
+    //     leafAstNode.id,
+    // );
+    // if (maybeParentContextNode === undefined) {
+    //     return undefined;
+    // }
+    // const parentContextNode: ParserContext.Node = maybeParentContextNode;
+
+    // NodeIdMap.maybeContextChildByAttributeIndex(
+    //     nodeIdMapCollection,
+    //     parentContextNode.id,
+    //     leafAstNode.maybeAttributeIndex + 1,
+    //     undefined,
+    // );
+
+    // const maybeSibling: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNextSiblingXorNode(
+    //     nodeIdMapCollection,
+    //     leafAstNode.id,
+    // );
+    // if (maybeSibling === undefined || maybeSibling.kind === NodeIdMap.XorNodeKind.Ast) {
+    //     return undefined;
+    // }
+
+    // return {
+    //     initial: leafAstNode,
+    //     parent: parentContextNode,
+    //     sibling: maybeSibling.node,
+    // };
+}
+
+function maybeFalseParent(leafNode: Ast.TNode, nodeIdMapCollection: NodeIdMap.Collection): void {
+    
+}
+
+const IndirectionNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.ArrayWrapper, Ast.NodeKind.Csv];
+
+interface FalseParentSearch {
+    trueParentXorNode: NodeIdMap.TXorNode;
+    falseParentXorNode: NodeIdMap.TXorNode;
+}
+
+function maybeFalseParentNode(
+    leafNode: Ast.TNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+): Option<FalseParentSearch> {
+    let maybeParentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeParentXorNode(nodeIdMapCollection, leafNode.id);
+    if (maybeParentXorNode === undefined) {
         return undefined;
     }
-    const parentContextNode: ParserContext.Node = maybeParentContextNode;
+    const trueParentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
 
-    NodeIdMap.maybeContextChildByAttributeIndex(
-        nodeIdMapCollection,
-        parentContextNode.id,
-        leafAstNode.maybeAttributeIndex + 1,
-        undefined,
-    );
+    while (maybeParentXorNode !== undefined) {
+        const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
+        if (IndirectionNodeKinds.indexOf(parentXorNode.node.kind) !== -1) {
+            maybeParentXorNode = NodeIdMap.maybeParentXorNode(nodeIdMapCollection, parentXorNode.node.id);
+        }
+    }
 
-    const maybeSibling: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNextSiblingXorNode(
-        nodeIdMapCollection,
-        leafAstNode.id,
-    );
-    if (maybeSibling === undefined || maybeSibling.kind === NodeIdMap.XorNodeKind.Ast) {
+    if (maybeParentXorNode === undefined) {
         return undefined;
     }
+    const falseParentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
 
     return {
-        initial: leafAstNode,
-        parent: parentContextNode,
-        sibling: maybeSibling.node,
+        trueParentXorNode,
+        falseParentXorNode,
     };
+}
+
+interface TrueParentSearch {
+    readonly maybeTrueSiblingXorNode: Option<NodeIdMap.TXorNode>;
+    readonly falseSiblingXorNode: Option<NodeIdMap.TXorNode>;
 }
 
 function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
