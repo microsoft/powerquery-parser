@@ -5,7 +5,6 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
 import { ResultKind } from "../../common";
-import { IInspectedNode } from "../../inspection";
 import { Ast } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
@@ -16,9 +15,12 @@ function expectInspected(triedInspection: Inspection.TriedInspection): Inspectio
     return triedInspection.value;
 }
 
-function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected: ReadonlyArray<IInspectedNode>): void {
-    const inspected = expectInspected(triedInspection);
-    const actual: ReadonlyArray<IInspectedNode> = inspected.visitedNodes;
+function expectNodesEqual(
+    triedInspection: Inspection.TriedInspection,
+    expected: ReadonlyArray<Inspection.IInspectedNode>,
+): void {
+    const inspected: Inspection.Inspected = expectInspected(triedInspection);
+    const actual: ReadonlyArray<Inspection.IInspectedNode> = inspected.visitedNodes;
 
     expect(actual).deep.equal(expected);
 }
@@ -58,13 +60,13 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
             it(`|[foo = bar]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar]`);
-                const expected: ReadonlyArray<IInspectedNode> = [];
+                const expected: ReadonlyArray<Inspection.IInspectedNode> = [];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`[foo| = bar]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo| = bar]`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
@@ -141,7 +143,7 @@ describe(`Inspection`, () => {
 
             it(`[foo = bar|]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo = bar|]`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
@@ -234,13 +236,13 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
             it(`|[foo = bar`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar`);
-                const expected: ReadonlyArray<IInspectedNode> = [];
+                const expected: ReadonlyArray<Inspection.IInspectedNode> = [];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
             it(`[foo| = bar`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo| = bar`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
@@ -323,7 +325,7 @@ describe(`Inspection`, () => {
 
             it(`[foo = bar|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo = bar|`);
-                const expected: ReadonlyArray<IInspectedNode> = [
+                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
@@ -485,7 +487,7 @@ describe(`Inspection`, () => {
             expect(args.positionArgumentIndex).to.equal(0);
         });
 
-        it("abc123 single invoke expression - Foo(a|,)", () => {
+        it("single invoke expression - Foo(a|,)", () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|,)");
             const inspected: Inspection.Inspected = expectInspected(expectParseErrInspection(text, position));
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);

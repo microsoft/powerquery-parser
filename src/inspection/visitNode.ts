@@ -320,7 +320,7 @@ function inspectInvokeExpressionArguments(
         // Conditionally set maybePositionArgumentIndex.
         // If position is on a comma then count it as belonging to the next index.
         // Eg. `foo(a,|)` is in the second index.
-        if (isPositionOnXorNode(position, csvXorNode)) {
+        if (isPositionOnXorNode(nodeIdMapCollection, position, csvXorNode)) {
             if (csvXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
                 const maybeCommaConstant: Option<Ast.Constant> = NodeIdMap.maybeAstChildByAttributeIndex(
                     nodeIdMapCollection,
@@ -740,7 +740,9 @@ function isInKeyValuePairAssignment(state: State, xorNode: NodeIdMap.TXorNode): 
                 2,
                 undefined,
             );
-            return maybeValue !== undefined ? isPositionOnXorNode(state.position, maybeValue) : false;
+            return maybeValue !== undefined
+                ? isPositionOnXorNode(state.nodeIdMapCollection, state.position, maybeValue)
+                : false;
 
         default:
             throw isNever(xorNode);
