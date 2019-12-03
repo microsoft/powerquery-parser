@@ -9,18 +9,52 @@ import { IInspectedNode } from "../../inspection";
 import { Ast } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
-function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected: ReadonlyArray<IInspectedNode>): void {
+function expectInspected(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
     if (!(triedInspection.kind === ResultKind.Ok)) {
         throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
     }
-    const inspection: Inspection.Inspected = triedInspection.value;
-    const actual: ReadonlyArray<IInspectedNode> = inspection.visitedNodes;
+    return triedInspection.value;
+}
+
+function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected: ReadonlyArray<IInspectedNode>): void {
+    const inspected = expectInspected(triedInspection);
+    const actual: ReadonlyArray<IInspectedNode> = inspected.visitedNodes;
 
     expect(actual).deep.equal(expected);
 }
 
+function expectNumNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.NodeKind, expectedNum: number): void {
+    const actualNum: number = inspected.visitedNodes.filter(x => x.kind === expectedKind).length;
+    expect(actualNum).to.equal(
+        expectedNum,
+        `expected to find ${expectedNum} of ${expectedKind}, but found ${actualNum} instead.`,
+    );
+}
+
+function expectNthNodeOfKind<T>(
+    inspected: Inspection.Inspected,
+    nodeKind: Ast.NodeKind,
+    nth: number,
+): T & Inspection.IInspectedNode {
+    if (nth <= 0) {
+        throw new Error("nth must be > 0");
+    }
+
+    let nthFound: number = 0;
+    for (const node of inspected.visitedNodes) {
+        if (node.kind === nodeKind) {
+            nthFound += 1;
+            if (nth === nthFound) {
+                return (node as unknown) as T & Inspection.IInspectedNode;
+            }
+        }
+    }
+
+    throw new Error(`only found ${nthFound} out of ${nth} ${nodeKind} nodes.`);
+}
+
 describe(`Inspection`, () => {
-    describe(`AbridgedInspected`, () => {
+    describe(`InspectedNode`, () => {
         describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
             it(`|[foo = bar]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar]`);
@@ -383,6 +417,55 @@ describe(`Inspection`, () => {
                 ];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
+        });
+    });
+
+    describe(`abc123 InvokeExpression`, () => {
+        it("single invoke expression, no parameters", () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(|)");
+            const inspected: Inspection.Inspected = expectInspected(expectParseOkInspection(text, position));
+            expectNumNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
+        });
+
+        it("multiple invoke expression, no parameters", () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Bar(Foo(|))");
+            const inspected: Inspection.Inspected = expectInspected(expectParseOkInspection(text, position));
+            expectNumNodeKind(inspected, Ast.NodeKind.InvokeExpression, 2);
+
+            const invokeExpr: Inspection.InspectedInvokeExpression = expectNthNodeOfKind(
+                inspected,
+                Ast.NodeKind.InvokeExpression,
+                1,
+            );
+            expect(invokeExpr.maybeName).to.equal("Foo");
+            expect(invokeExpr.maybePositionStart).deep.equal({
+                codeUnit: 7,
+                lineCodeUnit: 7,
+                lineNumber: 0,
+            });
+            expect(invokeExpr.maybePositionEnd).deep.equal({
+                codeUnit: 9,
+                lineCodeUnit: 9,
+                lineNumber: 0,
+            });
+        });
+
+        it("single invoke expression - Foo(a|)", () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|)");
+            const inspected: Inspection.Inspected = expectInspected(expectParseOkInspection(text, position));
+            expectNumNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
+
+            const invokeExpr: Inspection.InspectedInvokeExpression = expectNthNodeOfKind(
+                inspected,
+                Ast.NodeKind.InvokeExpression,
+                1,
+            );
+            expect(invokeExpr.maybeName).to.equal("Foo");
+            expect(invokeExpr.maybeArguments).not.equal(undefined, "should be truthy");
+            const args: Inspection.InvokeExpressionArgs = invokeExpr.maybeArguments!;
+
+            expect(args.numArguments).to.equal(1);
+            expect(args.positionArgumentIndex).to.equal(0);
         });
     });
 });

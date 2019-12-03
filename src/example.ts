@@ -9,7 +9,8 @@ import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspect
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError, Parser } from "./parser";
 
-parseText(`if true then 1 else 2`);
+// parseText(`if true then 1 else 2`);
+inspectText("foo(|)", { lineCodeUnit: 4, lineNumber: 0 });
 
 // @ts-ignore
 function parseText(text: string): void {
