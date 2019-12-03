@@ -23,13 +23,17 @@ export function isPositionBeforeXorNode(position: Position, xorNode: NodeIdMap.T
     }
 }
 
-export function isPositionOnXorNode(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
+export function isPositionOnXorNode(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    position: Position,
+    xorNode: NodeIdMap.TXorNode,
+): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
             return isPositionOnAstNode(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return true;
+            return isPositionOnContextNode(nodeIdMapCollection, position, xorNode.node);
 
         default:
             throw isNever(xorNode);
