@@ -1115,17 +1115,10 @@ function unexpectedReadError(text: string, lineNumber: number, lineCodeUnit: num
     return new LexError.UnexpectedReadError(graphemePositionFrom(text, lineNumber, lineCodeUnit));
 }
 
-function maybeBadLineNumberError(
-    lineNumber: number,
-    lines: ReadonlyArray<TLine>,
-): Option<LexError.BadLineNumberError> {
+function maybeBadLineNumberError(lineNumber: number, lines: ReadonlyArray<TLine>): Option<LexError.BadLineNumberError> {
     const numLines: number = lines.length;
     if (lineNumber >= numLines) {
-        return new LexError.BadLineNumberError(
-            LexError.BadLineNumberKind.GreaterThanNumLines,
-            lineNumber,
-            numLines,
-        );
+        return new LexError.BadLineNumberError(LexError.BadLineNumberKind.GreaterThanNumLines, lineNumber, numLines);
     } else if (lineNumber < 0) {
         return new LexError.BadLineNumberError(LexError.BadLineNumberKind.LessThanZero, lineNumber, numLines);
     } else {
