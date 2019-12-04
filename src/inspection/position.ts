@@ -111,7 +111,7 @@ export function isPositionBeforeTokenPosition(position: Position, tokenPositionS
     } else if (positionLineNumber > tokenPositionStart.lineNumber) {
         return false;
     } else {
-        return position.lineCodeUnit <= tokenPositionStart.codeUnit;
+        return position.lineCodeUnit <= tokenPositionStart.lineCodeUnit;
     }
 }
 
@@ -123,6 +123,6 @@ export function isPositionAfterTokenPosition(position: Position, tokenPositionEn
     } else if (positionLineNumber > tokenPositionEnd.lineNumber) {
         return true;
     } else {
-        return position.lineCodeUnit > tokenPositionEnd.codeUnit;
+        return position.lineCodeUnit > tokenPositionEnd.lineCodeUnit;
     }
 }
