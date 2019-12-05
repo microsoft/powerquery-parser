@@ -8,6 +8,7 @@ import { TokenRange } from "../ast";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
+
 import * as Naive from "./naive";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,

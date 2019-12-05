@@ -4,12 +4,13 @@
 import { ArrayUtils, CommonError, isNever, Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
-import { Ast, NodeIdMap, ParserContext } from "../parser";
-import * as InspectionUtils from "./inspectionUtils";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierInspected, IdentifierState } from "./state";
+
+import * as InspectionUtils from "./inspectionUtils";
 
 // This inspection selects the closest leaf node, then recursively traveling up the node's parents.
 // It tracks what identifiers are within scope, and what value was used in their assignment (if available).
@@ -145,7 +146,7 @@ const DefaultIdentifierInspection: IdentifierInspected = {
 };
 
 function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMap.TXorNode): void {
-    const maybeEachConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+    const maybeEachConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         eachExprXorNode.node.id,
         0,
@@ -172,7 +173,7 @@ function inspectFunctionExpression(state: IdentifierState, fnExprXorNode: NodeId
     // Eg. of positions that would NOT add to the scope.
     // `(x|, y) => x + y`
     // `(x, y)| => x + y`
-    const maybeExprXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+    const maybeExprXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         fnExprXorNode.node.id,
         3,
@@ -187,7 +188,7 @@ function inspectFunctionExpression(state: IdentifierState, fnExprXorNode: NodeId
     // and the previous check ensures that a TXorNode (either context or Ast) exists for the expression body.
     const parameters: Ast.IParameterList<
         Option<Ast.AsNullablePrimitiveType>
-    > = NodeIdMap.expectAstChildByAttributeIndex(state.nodeIdMapCollection, fnExprXorNode.node.id, 0, [
+    > = NodeIdMapUtils.expectAstChildByAttributeIndex(state.nodeIdMapCollection, fnExprXorNode.node.id, 0, [
         Ast.NodeKind.ParameterList,
     ]) as Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>>;
 
@@ -255,7 +256,7 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExprXorNo
             const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
             // Add the optional inclusive constant `@` if it was parsed.
-            const maybeInclusiveConstant: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+            const maybeInclusiveConstant: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 identifierExprXorNode.node.id,
                 0,
@@ -266,7 +267,7 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExprXorNo
                 key += inclusiveConstant.literal;
             }
 
-            const maybeIdentifier: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+            const maybeIdentifier: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 identifierExprXorNode.node.id,
                 1,
@@ -312,7 +313,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExprXorNode: Node
         }
     }
 
-    const maybeName: Option<string> = NodeIdMap.maybeInvokeExpressionName(
+    const maybeName: Option<string> = NodeIdMapUtils.maybeInvokeExpressionName(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
     );
@@ -354,7 +355,7 @@ function inspectInvokeExpressionArguments(
     invokeExprXorNode: NodeIdMap.TXorNode,
 ): Option<InvokeExpressionArgs> {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         invokeExprXorNode.node.id,
         1,
@@ -367,7 +368,7 @@ function inspectInvokeExpressionArguments(
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const position: Position = state.position;
-    const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMap.expectXorChildren(
+    const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
         state.nodeIdMapCollection,
         csvArrayXorNode.node.id,
     );
@@ -382,7 +383,7 @@ function inspectInvokeExpressionArguments(
         // Eg. `foo(a,|)` is in the second index.
         if (isPositionOnXorNode(position, nodeIdMapCollection, csvXorNode)) {
             if (csvXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-                const maybeCommaConstant: Option<Ast.Constant> = NodeIdMap.maybeAstChildByAttributeIndex(
+                const maybeCommaConstant: Option<Ast.Constant> = NodeIdMapUtils.maybeAstChildByAttributeIndex(
                     nodeIdMapCollection,
                     csvXorNode.node.id,
                     1,
@@ -410,7 +411,7 @@ function inspectInvokeExpressionArguments(
 function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         letExprXorNode.node.id,
         1,
@@ -427,7 +428,7 @@ function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.
         }
 
         const keyValuePairId: number = keyValuePairXorNode.node.id;
-        const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePairId,
             0,
@@ -439,7 +440,7 @@ function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.
         const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
         inspectIdentifier(state, keyXorNode);
 
-        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePairId,
             2,
@@ -466,7 +467,7 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
         return;
     }
 
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         recordXorNode.node.id,
         1,
@@ -495,7 +496,7 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
             continue;
         }
 
-        const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePairId,
             0,
@@ -507,7 +508,7 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
         const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
         inspectGeneralizedIdentifier(state, keyXorNode);
 
-        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePairId,
             2,
@@ -529,7 +530,7 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
     );
     const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> =
         maybeInspectedSectionMember !== undefined
-            ? NodeIdMap.expectXorNode(state.nodeIdMapCollection, maybeInspectedSectionMember.id)
+            ? NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, maybeInspectedSectionMember.id)
             : undefined;
     if (maybeSectionMemberXorNode === undefined) {
         return;
@@ -538,7 +539,7 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
 
     // Handles the case `section foo; x = 1|` where we don't want to add section members to the scope.
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const maybeSemicolonConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+    const maybeSemicolonConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         sectionMemberXorNode.node.id,
         3,
@@ -554,24 +555,23 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
         }
     }
 
-    const sectionMembersArrayXorNode: NodeIdMap.TXorNode = NodeIdMap.expectXorChildByAttributeIndex(
+    const sectionMembersArrayXorNode: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
         nodeIdMapCollection,
         sectionXorNode.node.id,
         4,
         [Ast.NodeKind.ArrayWrapper],
     );
-    const sectionMemberXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMap.expectXorChildren(
+    const sectionMemberXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
         nodeIdMapCollection,
         sectionMembersArrayXorNode.node.id,
     );
 
     for (const sectionMember of sectionMemberXorNodes) {
-        const maybeIdentifierPairedExprXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            sectionMember.node.id,
-            2,
-            [Ast.NodeKind.IdentifierPairedExpression],
-        );
+        const maybeIdentifierPairedExprXorNode: Option<
+            NodeIdMap.TXorNode
+        > = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, sectionMember.node.id, 2, [
+            Ast.NodeKind.IdentifierPairedExpression,
+        ]);
         if (maybeIdentifierPairedExprXorNode === undefined) {
             continue;
         }
@@ -582,7 +582,7 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
 
         // Add name to scope.
         const identifierPairedExprId: number = identifierPairedExprXorNode.node.id;
-        const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             identifierPairedExprId,
             0,
@@ -597,7 +597,7 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
         }
 
         // Add PositionIdentifier
-        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             identifierPairedExprId,
             2,
@@ -630,7 +630,7 @@ function isParentOfNodeKind(
     }
     const parentNodeId: number = maybeParentNodeId;
 
-    const maybeParentNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorNode(nodeIdMapCollection, parentNodeId);
+    const maybeParentNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorNode(nodeIdMapCollection, parentNodeId);
     if (maybeParentNode === undefined) {
         return false;
     }
@@ -666,14 +666,14 @@ function nodesOnCsvFromCsvArray(
     nodeIdMapCollection: NodeIdMap.Collection,
     csvArrayXorNode: NodeIdMap.TXorNode,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMap.expectXorChildren(
+    const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
         nodeIdMapCollection,
         csvArrayXorNode.node.id,
     );
 
     const result: NodeIdMap.TXorNode[] = [];
     for (const csvXorNode of csvXorNodes) {
-        const maybeCsvNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+        const maybeCsvNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             csvXorNode.node.id,
             0,
@@ -731,7 +731,7 @@ function maybeSetStartingIdentifierValue(
 function maybeNthLastVisitedXorNode(state: IdentifierState, n: number): Option<NodeIdMap.TXorNode> {
     const identifierInspectedVisitedNodes: ReadonlyArray<IInspectedNode> = state.result.identifierVisitedNodes;
     const nthNodeId: number = identifierInspectedVisitedNodes[identifierInspectedVisitedNodes.length - 1 - n].id;
-    return NodeIdMap.maybeXorNode(state.nodeIdMapCollection, nthNodeId);
+    return NodeIdMapUtils.maybeXorNode(state.nodeIdMapCollection, nthNodeId);
 }
 
 function expectNthLastVisitedXorNode(
@@ -795,7 +795,7 @@ function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.T
         }
 
         case NodeIdMap.XorNodeKind.Context:
-            const maybeValue: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeXorChildByAttributeIndex(
+            const maybeValue: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 2,

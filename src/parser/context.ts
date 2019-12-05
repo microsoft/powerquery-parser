@@ -4,6 +4,7 @@
 import { Ast, NodeIdMap } from ".";
 import { CommonError, Option, TypeUtils } from "../common";
 import { Token } from "../lexer";
+import { NodeIdMapUtils } from "./nodeIdMap";
 
 // Parsing use to be one giant evaluation, leading to an all-or-nothing outcome which was unsuitable for a
 // document that was being live edited.
@@ -242,7 +243,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         }
 
         // The child Node inherits the attributeIndex.
-        const childXorNode: NodeIdMap.TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, childId);
+        const childXorNode: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
         const mutableChildXorNode: TypeUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
         mutableChildXorNode.maybeAttributeIndex = node.maybeAttributeIndex;
     }
@@ -261,11 +262,11 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     parentIdById.delete(nodeId);
 
     // Return the node's parent if it exits
-    return maybeParentId !== undefined ? NodeIdMap.expectContextNode(contextNodeById, maybeParentId) : undefined;
+    return maybeParentId !== undefined ? NodeIdMapUtils.expectContextNode(contextNodeById, maybeParentId) : undefined;
 }
 
 export function deepCopy(state: State): State {
-    const nodeIdMapCollection: NodeIdMap.Collection = NodeIdMap.deepCopyCollection(state.nodeIdMapCollection);
+    const nodeIdMapCollection: NodeIdMap.Collection = NodeIdMapUtils.deepCopyCollection(state.nodeIdMapCollection);
     const maybeRootNode: Option<Node> =
         state.root.maybeNode !== undefined
             ? nodeIdMapCollection.contextNodeById.get(state.root.maybeNode.id)
@@ -297,7 +298,7 @@ function removeOrReplaceChildId(
     maybeReplacementId: Option<number>,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(childIdsById, parentId);
+    const childIds: ReadonlyArray<number> = NodeIdMapUtils.expectChildIds(childIdsById, parentId);
     const replacementIndex: number = childIds.indexOf(childId);
     if (replacementIndex === -1) {
         const details: {} = {

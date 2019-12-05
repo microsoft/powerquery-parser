@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext, ParseError } from "..";
+import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
-import { IParserState } from "../IParserState";
-import * as IParserStateUtils from "../IParserState/IParserStateUtils";
+import { IParserState, IParserStateUtils } from "../IParserState";
+import { NodeIdMapUtils } from "../nodeIdMap";
 import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
 
 type TriedReadPrimaryType = Result<
@@ -647,7 +647,7 @@ export function readRecursivePrimaryExpression(
         const headParentId: number = maybeHeadParentId;
 
         // Remove head as a child of its current parent.
-        const parentChildIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(
+        const parentChildIds: ReadonlyArray<number> = NodeIdMapUtils.expectChildIds(
             nodeIdMapCollection.childIdsById,
             headParentId,
         );

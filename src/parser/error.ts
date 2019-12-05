@@ -4,6 +4,7 @@
 import { Ast, ParserContext } from ".";
 import { CommonError, Option, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
+
 import * as Localization from "../localization/error";
 
 export type TParseError = CommonError.CommonError | ParseError;

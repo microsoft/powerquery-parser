@@ -1,52 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext } from ".";
-import { CommonError, Option } from "../common";
-
-export const enum XorNodeKind {
-    Ast = "Ast",
-    Context = "Context",
-}
-
-export type AstNodeById = NumberMap<Ast.TNode>;
-
-export type ContextNodeById = NumberMap<ParserContext.Node>;
-
-export type ParentIdById = NumberMap<number>;
-
-export type ChildIdsById = NumberMap<ReadonlyArray<number>>;
-
-export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
-
-export interface IXorNode<Kind, T> {
-    readonly kind: Kind & XorNodeKind;
-    readonly node: T;
-}
-
-export interface Collection {
-    readonly astNodeById: AstNodeById;
-    readonly contextNodeById: ContextNodeById;
-    readonly parentIdById: ParentIdById;
-    readonly childIdsById: ChildIdsById;
-}
-
-export interface RepeatedAttributeIndexRequest {
-    readonly nodeIdMapCollection: Collection;
-    readonly firstDrilldown: FirstDrilldown;
-    readonly drilldowns: ReadonlyArray<Drilldown>;
-}
-
-export interface FirstDrilldown {
-    readonly rootNodeId: number;
-    readonly attributeIndex: number;
-    readonly maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>;
-}
-
-export interface Drilldown {
-    readonly attributeIndex: number;
-    readonly maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>;
-}
+import { Ast, ParserContext } from "..";
+import { CommonError, Option } from "../../common";
+import { AstNodeById, ChildIdsById, Collection, ContextNodeById, TXorNode, XorNodeKind } from "./nodeIdMap";
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
     const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
@@ -137,34 +94,6 @@ export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: numb
 
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
     return childIds.map(childId => expectAstNode(astNodeById, childId));
-}
-
-// Helper function for repeatedly calling maybeXorChildByAttributeIndex.
-export function maybeXorChildByRepeatedAttributeIndex(request: RepeatedAttributeIndexRequest): Option<TXorNode> {
-    const nodeIdMapCollection: Collection = request.nodeIdMapCollection;
-    const firstDrilldown: FirstDrilldown = request.firstDrilldown;
-
-    let maybeChildXorNode: Option<TXorNode> = maybeXorChildByAttributeIndex(
-        nodeIdMapCollection,
-        firstDrilldown.rootNodeId,
-        firstDrilldown.attributeIndex,
-        firstDrilldown.maybeAllowedNodeKinds,
-    );
-
-    for (const drilldown of request.drilldowns) {
-        if (maybeChildXorNode === undefined) {
-            return maybeChildXorNode;
-        }
-
-        maybeChildXorNode = maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            maybeChildXorNode.node.id,
-            drilldown.attributeIndex,
-            drilldown.maybeAllowedNodeKinds,
-        );
-    }
-
-    return maybeChildXorNode;
 }
 
 // Both Ast.TNode and ParserContext.Node store an attribute index,
@@ -417,8 +346,6 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
         parentIdById: new Map(nodeIdMapCollection.parentIdById.entries()),
     };
 }
-
-type NumberMap<T> = Map<number, T>;
 
 function expectInMap<T>(map: Map<number, T>, nodeId: number, mapName: string): T {
     const maybeValue: Option<T> = map.get(nodeId);

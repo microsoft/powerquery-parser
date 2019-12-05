@@ -4,11 +4,12 @@
 import { CommonError, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
-import { Ast, NodeIdMap, ParserContext } from "../parser";
-import * as InspectionUtils from "./inspectionUtils";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { Position, isPositionOnXorNode, isPositionAfterXorNode } from "./position";
+import { isPositionAfterXorNode, Position } from "./position";
 import { KeywordInspected, KeywordState } from "./state";
+
+import * as InspectionUtils from "./inspectionUtils";
 
 // if   no parent: exit
 // elif parent is ast: exit
@@ -76,7 +77,7 @@ function maybeGetExaminableNodes(
 
     // const triedFalseParent: Option<FalseParentSearch> = maybeFalseParent(leafAstNode, nodeIdMapCollection);
 
-    // const maybeParentContextNode: Option<ParserContext.Node> = NodeIdMap.maybeParentContextNode(
+    // const maybeParentContextNode: Option<ParserContext.Node> = NodeIdMapUtils.maybeParentContextNode(
     //     nodeIdMapCollection,
     //     leafAstNode.id,
     // );
@@ -85,14 +86,14 @@ function maybeGetExaminableNodes(
     // }
     // const parentContextNode: ParserContext.Node = maybeParentContextNode;
 
-    // NodeIdMap.maybeContextChildByAttributeIndex(
+    // NodeIdMapUtils.maybeContextChildByAttributeIndex(
     //     nodeIdMapCollection,
     //     parentContextNode.id,
     //     leafAstNode.maybeAttributeIndex + 1,
     //     undefined,
     // );
 
-    // const maybeSibling: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeNextSiblingXorNode(
+    // const maybeSibling: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeNextSiblingXorNode(
     //     nodeIdMapCollection,
     //     leafAstNode.id,
     // );
@@ -115,8 +116,11 @@ function maybeGetRoot(
     const nodeIds: ReadonlyArray<number> = [...nodeIdMapCollection.contextNodeById.keys(), ...leafNodeIds];
     let maybeRightMost: Option<NodeIdMap.TXorNode>;
 
-    for (const xorNode of NodeIdMap.expectXorNodes(nodeIdMapCollection, nodeIds)) {
+    for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
         if (!isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
+            if (maybeRightMost === undefined) {
+                maybeRightMost;
+            }
             maybeRightMost = xorNode;
         }
     }
@@ -137,7 +141,10 @@ function maybeFalseParentNode(
     leafNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Option<FalseParentSearch> {
-    let maybeParentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeParentXorNode(nodeIdMapCollection, leafNode.id);
+    let maybeParentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeParentXorNode(
+        nodeIdMapCollection,
+        leafNode.id,
+    );
     if (maybeParentXorNode === undefined) {
         return undefined;
     }
@@ -146,7 +153,7 @@ function maybeFalseParentNode(
     while (maybeParentXorNode !== undefined) {
         const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
         if (IndirectionNodeKinds.indexOf(parentXorNode.node.kind) !== -1) {
-            maybeParentXorNode = NodeIdMap.maybeParentXorNode(nodeIdMapCollection, parentXorNode.node.id);
+            maybeParentXorNode = NodeIdMapUtils.maybeParentXorNode(nodeIdMapCollection, parentXorNode.node.id);
         }
     }
 

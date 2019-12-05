@@ -4,6 +4,7 @@
 import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
+import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
 import * as Localization from "../../localization/error";
@@ -100,7 +101,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     }
 
     if (backup.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMap.expectContextNode(
+        state.maybeCurrentContextNode = NodeIdMapUtils.expectContextNode(
             state.contextState.nodeIdMapCollection.contextNodeById,
             backup.maybeContextNodeId,
         );

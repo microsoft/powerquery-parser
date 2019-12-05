@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, isNever, Option, Result, ResultKind } from ".";
-import { Ast, NodeIdMap, ParserContext } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
 
@@ -114,7 +114,7 @@ export function expectExpandAllAstChildren<State, ResultType>(
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        return childIds.map(nodeId => NodeIdMap.expectAstNode(nodeIdMapCollection.astNodeById, nodeId));
+        return childIds.map(nodeId => NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
     }
