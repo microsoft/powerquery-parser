@@ -16,7 +16,7 @@ export function isPositionBeforeXorNode(position: Position, xorNode: NodeIdMap.T
             return isPositionBeforeAstNode(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return true;
+            return isPositionBeforeContextNode(position, xorNode.node);
 
         default:
             throw isNever(xorNode);
@@ -24,8 +24,8 @@ export function isPositionBeforeXorNode(position: Position, xorNode: NodeIdMap.T
 }
 
 export function isPositionOnXorNode(
-    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: NodeIdMap.TXorNode,
 ): boolean {
     switch (xorNode.kind) {
@@ -33,20 +33,24 @@ export function isPositionOnXorNode(
             return isPositionOnAstNode(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return isPositionOnContextNode(nodeIdMapCollection, position, xorNode.node);
+            return isPositionOnContextNode(position, nodeIdMapCollection, xorNode.node);
 
         default:
             throw isNever(xorNode);
     }
 }
 
-export function isPositionAfterXorNode(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
+export function isPositionAfterXorNode(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    xorNode: NodeIdMap.TXorNode,
+): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
             return isPositionAfterAstNode(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return true;
+            return isPositionAfterContextNode(position, nodeIdMapCollection, xorNode.node);
 
         default:
             throw isNever(xorNode);
@@ -64,19 +68,19 @@ export function isPositionBeforeContextNode(position: Position, contextNode: Par
 }
 
 export function isPositionOnContextNode(
-    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
     contextNode: ParserContext.Node,
 ): boolean {
     return (
         !isPositionBeforeContextNode(position, contextNode) &&
-        !isPositionAfterContextNode(nodeIdMapCollection, position, contextNode)
+        !isPositionAfterContextNode(position, nodeIdMapCollection, contextNode)
     );
 }
 
 export function isPositionAfterContextNode(
-    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
     contextNode: ParserContext.Node,
 ): boolean {
     const maybeLeaf: Option<Ast.TNode> = maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);

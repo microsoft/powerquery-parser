@@ -156,7 +156,7 @@ function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMa
     }
     const eachConstantXorNode: NodeIdMap.TXorNode = maybeEachConstantXorNode;
 
-    if (isPositionAfterXorNode(state.position, eachConstantXorNode)) {
+    if (isPositionAfterXorNode(state.position, state.nodeIdMapCollection, eachConstantXorNode)) {
         addToScopeIfNew(state, "_", eachExprXorNode);
     }
 }
@@ -380,7 +380,7 @@ function inspectInvokeExpressionArguments(
         // Conditionally set maybePositionArgumentIndex.
         // If position is on a comma then count it as belonging to the next index.
         // Eg. `foo(a,|)` is in the second index.
-        if (isPositionOnXorNode(nodeIdMapCollection, position, csvXorNode)) {
+        if (isPositionOnXorNode(position, nodeIdMapCollection, csvXorNode)) {
             if (csvXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
                 const maybeCommaConstant: Option<Ast.Constant> = NodeIdMap.maybeAstChildByAttributeIndex(
                     nodeIdMapCollection,
@@ -802,7 +802,7 @@ function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.T
                 undefined,
             );
             return maybeValue !== undefined
-                ? isPositionOnXorNode(state.nodeIdMapCollection, state.position, maybeValue)
+                ? isPositionOnXorNode(state.position, state.nodeIdMapCollection, maybeValue)
                 : false;
 
         default:

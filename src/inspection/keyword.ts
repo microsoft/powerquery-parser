@@ -116,7 +116,7 @@ function maybeGetRoot(
     let maybeRightMost: Option<NodeIdMap.TXorNode>;
 
     for (const xorNode of NodeIdMap.expectXorNodes(nodeIdMapCollection, nodeIds)) {
-        if (!isPositionAfterXorNode(position, xorNode)) {
+        if (!isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
             maybeRightMost = xorNode;
         }
     }
