@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, ResultKind, TypeUtils } from "../common";
+import { CommonError, Option, ResultKind, TypeUtils, isNever } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
@@ -118,8 +118,25 @@ function maybeGetRoot(
 
     for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
         if (!isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
+            // Hey, it's an easy assignment!
             if (maybeRightMost === undefined) {
-                maybeRightMost;
+                maybeRightMost = xorNode;
+            }
+            // Ugh.
+            else {
+                switch (xorNode.kind) {
+                    case NodeIdMap.XorNodeKind.Ast:
+                        break;
+
+                    case NodeIdMap.XorNodeKind.Context:
+                        break;
+
+                    default:
+                        throw isNever(xorNode);
+                }
+                // const mockPosition: Position {
+                //     xorNode
+                // }
             }
             maybeRightMost = xorNode;
         }

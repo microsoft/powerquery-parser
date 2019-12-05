@@ -2,8 +2,17 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserContext } from "..";
-import { CommonError, Option } from "../../common";
-import { AstNodeById, ChildIdsById, Collection, ContextNodeById, TXorNode, XorNodeKind } from "./nodeIdMap";
+import { CommonError, Option, isNever } from "../../common";
+import {
+    AstNodeById,
+    ChildIdsById,
+    Collection,
+    ContextNodeById,
+    TXorNode,
+    XorNodeKind,
+    ParentIdById,
+} from "./nodeIdMap";
+import { TokenRange } from "../ast";
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
     const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
@@ -96,8 +105,8 @@ export function maybeAstChildren(nodeIdMapCollection: Collection, parentId: numb
     return childIds.map(childId => expectAstNode(astNodeById, childId));
 }
 
-// Both Ast.TNode and ParserContext.Node store an attribute index,
-// which when not undefined represents which child index they are under for their parent.
+// Both Ast.TNode and ParserContext.Node store an attribute index
+// when defined represents which child index they are under for their parent.
 //
 // This function grabs the parent and if they have a child matching the attribute index it is returned as an XorNode.
 // If the parent doesn't have a matching child that means (assuming a valid attributeIndex is given) the parent is
@@ -345,6 +354,210 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
         childIdsById: new Map(nodeIdMapCollection.childIdsById.entries()),
         parentIdById: new Map(nodeIdMapCollection.parentIdById.entries()),
     };
+}
+
+// There are a few assumed invariants about children:
+//  * Children are read left to right.
+//  * Children are placed in childIdsById in the order they were read.
+//  * Therefore the right-most child is the most recently read which also appears last in the document.
+export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
+    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+    let nodeIdsToExplore: number[] = [rootId];
+    let maybeRightMost: Option<Ast.TNode>;
+
+    while (nodeIdsToExplore.length) {
+        const nodeId: number = nodeIdsToExplore.pop()!;
+        const maybeAstNode: Option<Ast.TNode> = astNodeById.get(nodeId);
+
+        let addChildren: boolean = false;
+
+        // Check if Ast.TNode or ParserContext.Node
+        if (maybeAstNode !== undefined) {
+            const astNode: Ast.TNode = maybeAstNode;
+
+            // Is leaf, check if it's more right than the previous record.
+            // As it's a leaf there are no children to add.
+            if (astNode.isLeaf) {
+                // Is the first leaf encountered.
+                if (maybeRightMost === undefined) {
+                    maybeRightMost = astNode;
+                }
+                // Compare current leaf node to the existing record.
+                else if (astNode.tokenRange.tokenIndexStart > maybeRightMost.tokenRange.tokenIndexStart) {
+                    maybeRightMost = astNode;
+                }
+            }
+            // Is not a leaf, no previous record exists.
+            // Add all children to the queue.
+            else if (maybeRightMost === undefined) {
+                addChildren = true;
+            }
+            // Is not a leaf, previous record exists.
+            // Check if we can cull the branch, otherwise add all children to the queue.
+            else if (astNode.tokenRange.tokenIndexEnd > maybeRightMost.tokenRange.tokenIndexStart) {
+                addChildren = true;
+            }
+        }
+        // Must be a ParserContext.Node.
+        // Add all children to the queue as ParserContext.Nodes can have Ast children which are leafs.
+        else {
+            addChildren = true;
+        }
+
+        if (addChildren) {
+            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(nodeId);
+            if (maybeChildIds !== undefined) {
+                // Add the child ids in reversed order to prioritize visiting the right most nodes first.
+                const childIds: ReadonlyArray<number> = maybeChildIds;
+                const reversedChildIds: number[] = [...childIds];
+                reversedChildIds.reverse();
+                nodeIdsToExplore = [...reversedChildIds, ...nodeIdsToExplore];
+            }
+        }
+    }
+
+    return maybeRightMost;
+}
+
+export function isXorNodeParentOfXorNode(
+    parentIdById: ParentIdById,
+    searchParentId: number,
+    searchChildId: number,
+): boolean {
+    let maybeParentId: Option<number> = searchChildId;
+
+    while (maybeParentId !== undefined) {
+        const parentId: number = maybeParentId;
+        if (parentId === searchParentId) {
+            return true;
+        } else {
+            maybeParentId = parentIdById.get(parentId);
+        }
+    }
+
+    return false;
+}
+
+const enum Cmp {
+    LessThan,
+    EqualTo,
+    GreaterThan,
+}
+
+interface CmpXorNodes {
+    readonly tokenIndexStart: Cmp;
+    readonly maybeTokenIndexEnd: Option<Cmp>;
+}
+
+function cmpFrom(left: number, right: number): Cmp {
+    if (left < right) {
+        return Cmp.LessThan;
+    } else if (left === right) {
+        return Cmp.EqualTo;
+    } else {
+        return Cmp.GreaterThan;
+    }
+}
+
+function cmpXorNodes(nodeIdMapCollection: Collection, left: TXorNode, right: TXorNode): CmpXorNodes {
+    let leftTokenStart: number;
+    let leftTokenEnd: number;
+    let rightTokenStart: number;
+    let rightTokenEnd: number;
+
+    switch (left.kind) {
+        case XorNodeKind.Ast:
+            switch (right.kind) {
+                case XorNodeKind.Ast:
+                    {
+                        const leftTokenRange: TokenRange = left.node.tokenRange;
+                        leftTokenStart = leftTokenRange.tokenIndexStart;
+                        leftTokenEnd = leftTokenRange.tokenIndexEnd;
+
+                        const rightTokenRange: TokenRange = right.node.tokenRange;
+                        rightTokenStart = rightTokenRange.tokenIndexStart;
+                        rightTokenEnd = rightTokenRange.tokenIndexEnd;
+                    }
+                    break;
+
+                case XorNodeKind.Context:
+                    {
+                        const leftTokenRange: TokenRange = left.node.tokenRange;
+                        leftTokenStart = leftTokenRange.tokenIndexStart;
+                        leftTokenEnd = leftTokenRange.tokenIndexEnd;
+
+                        rightTokenStart = right.node.tokenIndexStart;
+                        const maybeRightMostChildLeaf: Option<Ast.TNode> = maybeRightMostLeaf(
+                            nodeIdMapCollection,
+                            right.node.id,
+                        );
+                        if (maybeRightMostChildLeaf !== undefined) {
+                            const rightMostChildLeaf: Ast.TNode = maybeRightMostChildLeaf;
+                            rightTokenEnd = rightMostChildLeaf.tokenRange.tokenIndexEnd;
+                        }
+                    }
+                    break;
+
+                default:
+                    throw isNever(right);
+            }
+            break;
+
+        case XorNodeKind.Context:
+            switch (right.kind) {
+                case XorNodeKind.Ast: {
+                    leftTokenStart = left.node.tokenIndexStart;
+                    const maybeRightMostChildLeaf: Option<Ast.TNode> = maybeRightMostLeaf(
+                        nodeIdMapCollection,
+                        left.node.id,
+                    );
+                    if (maybeRightMostChildLeaf !== undefined) {
+                        const rightMostChildLeaf: Ast.TNode = maybeRightMostChildLeaf;
+                        leftTokenEnd = rightMostChildLeaf.tokenRange.tokenIndexEnd;
+                    }
+
+                    const rightTokenRange: TokenRange = right.node.tokenRange;
+                    rightTokenStart = rightTokenRange.tokenIndexStart;
+                    rightTokenEnd = rightTokenRange.tokenIndexEnd;
+                    break;
+                }
+
+                case XorNodeKind.Context:
+                    break;
+
+                default:
+                    throw isNever(right);
+            }
+            break;
+
+        default:
+            throw isNever(left);
+    }
+}
+
+function rightMostNodeTokenIndex(
+    nodeIdMapCollection: Collection,
+    xorNode: TXorNode,
+    getStartInsteadOfEnd: boolean,
+): number {
+    const maybeRightMost: Option<Ast.TNode> = maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id);
+    if (maybeRightMost !== undefined) {
+        const tokenRange: TokenRange = maybeRightMost.tokenRange;
+        return getStartInsteadOfEnd ? tokenRange.tokenIndexStart : tokenRange.tokenIndexEnd;
+    } else {
+        switch (xorNode.kind) {
+            case XorNodeKind.Ast: {
+                const tokenRange: TokenRange = xorNode.node.tokenRange;
+                return getStartInsteadOfEnd ? tokenRange.tokenIndexStart : tokenRange.tokenIndexEnd;
+            }
+
+            case XorNodeKind.Context:
+                return xorNode.node.tokenIndexStart;
+
+            default:
+                throw isNever(xorNode);
+        }
+    }
 }
 
 function expectInMap<T>(map: Map<number, T>, nodeId: number, mapName: string): T {
