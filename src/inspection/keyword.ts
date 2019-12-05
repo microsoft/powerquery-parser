@@ -3,21 +3,21 @@
 
 import { CommonError, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
-import { KeywordKind } from "../lexer";
+import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import * as InspectionUtils from "./inspectionUtils";
-import { IInspectedVisitedNode } from "./node";
-import { Position } from "./position";
+import { IInspectedNode } from "./node";
+import { Position, isPositionOnXorNode, isPositionAfterXorNode } from "./position";
 import { KeywordInspected, KeywordState } from "./state";
 
 // if   no parent: exit
 // elif parent is ast: exit
 // else examing parent's child where child attribute is n+1
 
-interface FindExaminableNode {
-    readonly falseNode: NodeIdMap.TXorNode;
-    readonly visitedNodes: ReadonlyArray<NodeIdMap.TXorNode>;
-}
+// interface FindExaminableNode {
+//     readonly falseNode: NodeIdMap.TXorNode;
+//     readonly visitedNodes: ReadonlyArray<NodeIdMap.TXorNode>;
+// }
 
 interface ExaminableNodes {
     readonly initial: Ast.TNode;
@@ -57,21 +57,24 @@ function maybeGetExaminableNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): Option<ExaminableNodes> {
-    const maybeLeafAstNode: Option<Ast.TNode> = InspectionUtils.maybeClosestAstNode(
-        position,
-        nodeIdMapCollection,
-        leafNodeIds,
-    );
-    if (maybeLeafAstNode === undefined) {
-        return undefined;
-    }
-    const leafAstNode: Ast.TNode = maybeLeafAstNode;
+    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeGetRoot(position, nodeIdMapCollection, leafNodeIds);
+    return undefined;
 
-    if (leafAstNode.maybeAttributeIndex === undefined) {
-        return undefined;
-    }
+    // const maybeLeafAstNode: Option<Ast.TNode> = InspectionUtils.maybeClosestAstNode(
+    //     position,
+    //     nodeIdMapCollection,
+    //     leafNodeIds,
+    // );
+    // if (maybeLeafAstNode === undefined) {
+    //     return undefined;
+    // }
+    // const leafAstNode: Ast.TNode = maybeLeafAstNode;
 
-    const triedFalseParent: Option<FalseParentSearch> = maybeFalseParent(leafAstNode, nodeIdMapCollection);
+    // if (leafAstNode.maybeAttributeIndex === undefined) {
+    //     return undefined;
+    // }
+
+    // const triedFalseParent: Option<FalseParentSearch> = maybeFalseParent(leafAstNode, nodeIdMapCollection);
 
     // const maybeParentContextNode: Option<ParserContext.Node> = NodeIdMap.maybeParentContextNode(
     //     nodeIdMapCollection,
@@ -104,9 +107,24 @@ function maybeGetExaminableNodes(
     // };
 }
 
-function maybeFalseParent(leafNode: Ast.TNode, nodeIdMapCollection: NodeIdMap.Collection): void {
-    
+function maybeGetRoot(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): Option<NodeIdMap.TXorNode> {
+    const nodeIds: ReadonlyArray<number> = [...nodeIdMapCollection.contextNodeById.keys(), ...leafNodeIds];
+    let maybeRightMost: Option<NodeIdMap.TXorNode>;
+
+    for (const xorNode of NodeIdMap.expectXorNodes(nodeIdMapCollection, nodeIds)) {
+        if (!isPositionAfterXorNode(position, xorNode)) {
+            maybeRightMost = xorNode;
+        }
+    }
+
+    return maybeRightMost;
 }
+
+function maybeFalseParent(leafNode: Ast.TNode, nodeIdMapCollection: NodeIdMap.Collection): void {}
 
 const IndirectionNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.ArrayWrapper, Ast.NodeKind.Csv];
 
@@ -143,13 +161,13 @@ function maybeFalseParentNode(
     };
 }
 
-interface TrueParentSearch {
-    readonly maybeTrueSiblingXorNode: Option<NodeIdMap.TXorNode>;
-    readonly falseSiblingXorNode: Option<NodeIdMap.TXorNode>;
-}
+// interface TrueParentSearch {
+//     readonly maybeTrueSiblingXorNode: Option<NodeIdMap.TXorNode>;
+//     readonly falseSiblingXorNode: Option<NodeIdMap.TXorNode>;
+// }
 
 function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
-    const visitedNodes: IInspectedVisitedNode[] = state.result.keywordVisitedNodes as IInspectedVisitedNode[];
+    const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
     visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
     if (state.isKeywordInspectionDone) {
@@ -187,25 +205,6 @@ const DefaultKeywordInspection: KeywordInspected = {
     allowedKeywords: [],
     maybeRequiredKeyword: undefined,
 };
-
-const TExpressionKeywords: ReadonlyArray<KeywordKind> = [
-    KeywordKind.Each,
-    KeywordKind.Error,
-    KeywordKind.False,
-    KeywordKind.HashBinary,
-    KeywordKind.HashDate,
-    KeywordKind.HashDateTime,
-    KeywordKind.HashDateTimeZone,
-    KeywordKind.HashDuration,
-    KeywordKind.HashInfinity,
-    KeywordKind.HashNan,
-    KeywordKind.HashTable,
-    KeywordKind.HashTime,
-    KeywordKind.If,
-    KeywordKind.Let,
-    KeywordKind.True,
-    KeywordKind.Try,
-];
 
 function updateKeywordResult(
     state: KeywordState,

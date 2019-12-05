@@ -6,7 +6,7 @@ import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import * as InspectionUtils from "./inspectionUtils";
-import { IInspectedVisitedNode, InvokeExpressionArgs } from "./node";
+import { IInspectedNode, InvokeExpressionArgs } from "./node";
 import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierInspected, IdentifierState } from "./state";
@@ -92,7 +92,7 @@ export function tryFrom(
 }
 
 function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
-    const visitedNodes: IInspectedVisitedNode[] = state.result.identifierVisitedNodes as IInspectedVisitedNode[];
+    const visitedNodes: IInspectedNode[] = state.result.identifierVisitedNodes as IInspectedNode[];
     visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
     switch (xorNode.node.kind) {
@@ -380,7 +380,7 @@ function inspectInvokeExpressionArguments(
         // Conditionally set maybePositionArgumentIndex.
         // If position is on a comma then count it as belonging to the next index.
         // Eg. `foo(a,|)` is in the second index.
-        if (isPositionOnXorNode(position, csvXorNode)) {
+        if (isPositionOnXorNode(nodeIdMapCollection, position, csvXorNode)) {
             if (csvXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
                 const maybeCommaConstant: Option<Ast.Constant> = NodeIdMap.maybeAstChildByAttributeIndex(
                     nodeIdMapCollection,
@@ -523,9 +523,9 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
 // If position is to the right of a SectionMember equals sign,
 // then add all SectionMember names to scope EXCEPT for the SectionMember the that position is under.
 function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNode): void {
-    const maybeInspectedSectionMember: Option<IInspectedVisitedNode> = ArrayUtils.findReverse(
+    const maybeInspectedSectionMember: Option<IInspectedNode> = ArrayUtils.findReverse(
         state.result.identifierVisitedNodes,
-        (visitedNode: IInspectedVisitedNode) => visitedNode.kind === Ast.NodeKind.SectionMember,
+        (visitedNode: IInspectedNode) => visitedNode.kind === Ast.NodeKind.SectionMember,
     );
     const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> =
         maybeInspectedSectionMember !== undefined
@@ -729,7 +729,7 @@ function maybeSetStartingIdentifierValue(
 }
 
 function maybeNthLastVisitedXorNode(state: IdentifierState, n: number): Option<NodeIdMap.TXorNode> {
-    const identifierInspectedVisitedNodes: ReadonlyArray<IInspectedVisitedNode> = state.result.identifierVisitedNodes;
+    const identifierInspectedVisitedNodes: ReadonlyArray<IInspectedNode> = state.result.identifierVisitedNodes;
     const nthNodeId: number = identifierInspectedVisitedNodes[identifierInspectedVisitedNodes.length - 1 - n].id;
     return NodeIdMap.maybeXorNode(state.nodeIdMapCollection, nthNodeId);
 }
@@ -801,7 +801,9 @@ function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.T
                 2,
                 undefined,
             );
-            return maybeValue !== undefined ? isPositionOnXorNode(state.position, maybeValue) : false;
+            return maybeValue !== undefined
+                ? isPositionOnXorNode(state.nodeIdMapCollection, state.position, maybeValue)
+                : false;
 
         default:
             throw isNever(xorNode);

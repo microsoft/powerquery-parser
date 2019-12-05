@@ -1,35 +1,47 @@
-// // Copyright (c) Microsoft Corporation.
-// // Licensed under the MIT license.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
-// import { expect } from "chai";
-// import "mocha";
-// import { Inspection } from "../..";
-// import { ResultKind } from "../../common";
-// import { Inspected } from "../../inspection";
-// import { KeywordKind } from "../../lexer";
-// import { Ast } from "../../parser";
-// import { expectParseErrInspection, expectTextWithPosition } from "./common";
+import { expect } from "chai";
+import "mocha";
+import { Inspection } from "../..";
+import { ResultKind } from "../../common";
+import { Inspected } from "../../inspection";
+import { KeywordKind, TExpressionKeywords } from "../../lexer";
+import { Ast } from "../../parser";
+import { expectParseErrInspection, expectTextWithPosition } from "./common";
 
-// type AbridgedInspection = [Inspected["allowedKeywords"], Inspected["maybeRequiredKeyword"]];
+type AbridgedInspection = [Inspected["allowedKeywords"], Inspected["maybeRequiredKeyword"]];
 
-// function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected: AbridgedInspection): void {
-//     if (!(triedInspection.kind === ResultKind.Ok)) {
-//         throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
-//     }
-//     const inspection: Inspection.Inspected = triedInspection.value;
-//     const actual: AbridgedInspection = [inspection.allowedKeywords, inspection.maybeRequiredKeyword];
+function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected: AbridgedInspection): void {
+    if (!(triedInspection.kind === ResultKind.Ok)) {
+        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
+    }
+    const inspection: Inspection.Inspected = triedInspection.value;
+    const actual: AbridgedInspection = [inspection.allowedKeywords, inspection.maybeRequiredKeyword];
 
-//     expect(actual).deep.equal(expected);
-// }
+    expect(actual).deep.equal(expected);
+}
 
-// describe(`Inspection`, () => {
-//     describe(`abc123 Keyword`, () => {
-//         describe(`${Ast.NodeKind.IfExpression}`, () => {
-//             it(`if 1 |`, () => {
-//                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if 1 |`);
-//                 const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
-//                 expectNodesEqual(expectParseErrInspection(text, position), expected);
-//             });
-//         });
-//     });
-// });
+describe(`Inspection`, () => {
+    describe(`abc123 Keyword`, () => {
+        describe(`${Ast.NodeKind.IfExpression}`, () => {
+            it(`if |`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |`);
+                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`if 1 |`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if 1 |`);
+                const expected: AbridgedInspection = [[], KeywordKind.Then];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`if 1 t|`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if 1 t|`);
+                const expected: AbridgedInspection = [[], KeywordKind.Then];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+        });
+    });
+});

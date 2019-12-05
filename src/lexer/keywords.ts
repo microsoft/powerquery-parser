@@ -68,3 +68,22 @@ export const Keywords: ReadonlyArray<string> = [
     KeywordKind.HashTable,
     KeywordKind.HashTime,
 ];
+
+export const TExpressionKeywords: ReadonlyArray<KeywordKind> = [
+    KeywordKind.Each,
+    KeywordKind.Error,
+    KeywordKind.False,
+    KeywordKind.HashBinary,
+    KeywordKind.HashDate,
+    KeywordKind.HashDateTime,
+    KeywordKind.HashDateTimeZone,
+    KeywordKind.HashDuration,
+    KeywordKind.HashInfinity,
+    KeywordKind.HashNan,
+    KeywordKind.HashTable,
+    KeywordKind.HashTime,
+    KeywordKind.If,
+    KeywordKind.Let,
+    KeywordKind.True,
+    KeywordKind.Try,
+];
