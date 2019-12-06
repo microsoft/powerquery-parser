@@ -54,7 +54,7 @@ export function tryFrom(
 
         // IDENTIFIER INSPECTION
         // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-        // then store it on here so if we encounter
+        // then store it on here.
         maybeClosestLeafIdentifier: InspectionUtils.maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
     };
 
@@ -67,7 +67,7 @@ export function tryFrom(
         root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
-        InspectionUtils.addParentXorNode,
+        Traverse.maybeExpandXorParent,
         undefined,
     );
     // If an identifier is at the given Position but its definition wasn't found during the inspection,

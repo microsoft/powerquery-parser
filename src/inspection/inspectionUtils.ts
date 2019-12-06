@@ -7,20 +7,6 @@ import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
 import { Position } from "./position";
 
-// Used as the `expandNodesFn` argument in `Traverse.tryTraverseXor`.
-// Returns the TXorNode's parent if one exists.
-export function addParentXorNode<T>(
-    _state: T,
-    xorNode: NodeIdMap.TXorNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<NodeIdMap.TXorNode> {
-    const maybeParent: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeParentXorNode(
-        nodeIdMapCollection,
-        xorNode.node.id,
-    );
-    return maybeParent !== undefined ? [maybeParent] : [];
-}
-
 // Checks if the closest leaf is an identifier.
 // Either returns:
 //  * the given node if it's an identifier

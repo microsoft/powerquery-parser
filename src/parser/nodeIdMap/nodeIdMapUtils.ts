@@ -2,17 +2,18 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserContext } from "..";
-import { CommonError, Option, isNever } from "../../common";
+import { CommonError, isNever, Option } from "../../common";
+import { TokenRange } from "../ast";
 import {
     AstNodeById,
     ChildIdsById,
     Collection,
     ContextNodeById,
+    ParentIdById,
     TXorNode,
     XorNodeKind,
-    ParentIdById,
+    XorNodeTokenRange,
 } from "./nodeIdMap";
-import { TokenRange } from "../ast";
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
     const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
@@ -438,125 +439,36 @@ export function isXorNodeParentOfXorNode(
     return false;
 }
 
-const enum Cmp {
-    LessThan,
-    EqualTo,
-    GreaterThan,
-}
+export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {
+    switch (xorNode.kind) {
+        case XorNodeKind.Ast: {
+            const tokenRange: TokenRange = xorNode.node.tokenRange;
+            return {
+                tokenIndexStart: tokenRange.tokenIndexStart,
+                tokenIndexEnd: tokenRange.tokenIndexEnd,
+            };
+        }
 
-interface CmpXorNodes {
-    readonly tokenIndexStart: Cmp;
-    readonly maybeTokenIndexEnd: Option<Cmp>;
-}
+        case XorNodeKind.Context: {
+            const contextNode: ParserContext.Node = xorNode.node;
+            let tokenIndexEnd: number;
 
-function cmpFrom(left: number, right: number): Cmp {
-    if (left < right) {
-        return Cmp.LessThan;
-    } else if (left === right) {
-        return Cmp.EqualTo;
-    } else {
-        return Cmp.GreaterThan;
-    }
-}
-
-function cmpXorNodes(nodeIdMapCollection: Collection, left: TXorNode, right: TXorNode): CmpXorNodes {
-    let leftTokenStart: number;
-    let leftTokenEnd: number;
-    let rightTokenStart: number;
-    let rightTokenEnd: number;
-
-    switch (left.kind) {
-        case XorNodeKind.Ast:
-            switch (right.kind) {
-                case XorNodeKind.Ast:
-                    {
-                        const leftTokenRange: TokenRange = left.node.tokenRange;
-                        leftTokenStart = leftTokenRange.tokenIndexStart;
-                        leftTokenEnd = leftTokenRange.tokenIndexEnd;
-
-                        const rightTokenRange: TokenRange = right.node.tokenRange;
-                        rightTokenStart = rightTokenRange.tokenIndexStart;
-                        rightTokenEnd = rightTokenRange.tokenIndexEnd;
-                    }
-                    break;
-
-                case XorNodeKind.Context:
-                    {
-                        const leftTokenRange: TokenRange = left.node.tokenRange;
-                        leftTokenStart = leftTokenRange.tokenIndexStart;
-                        leftTokenEnd = leftTokenRange.tokenIndexEnd;
-
-                        rightTokenStart = right.node.tokenIndexStart;
-                        const maybeRightMostChildLeaf: Option<Ast.TNode> = maybeRightMostLeaf(
-                            nodeIdMapCollection,
-                            right.node.id,
-                        );
-                        if (maybeRightMostChildLeaf !== undefined) {
-                            const rightMostChildLeaf: Ast.TNode = maybeRightMostChildLeaf;
-                            rightTokenEnd = rightMostChildLeaf.tokenRange.tokenIndexEnd;
-                        }
-                    }
-                    break;
-
-                default:
-                    throw isNever(right);
+            const maybeRightMostChild: Option<Ast.TNode> = maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id);
+            if (maybeRightMostChild === undefined) {
+                tokenIndexEnd = contextNode.tokenIndexStart;
+            } else {
+                const rightMostChild: Ast.TNode = maybeRightMostChild;
+                tokenIndexEnd = rightMostChild.tokenRange.tokenIndexEnd;
             }
-            break;
 
-        case XorNodeKind.Context:
-            switch (right.kind) {
-                case XorNodeKind.Ast: {
-                    leftTokenStart = left.node.tokenIndexStart;
-                    const maybeRightMostChildLeaf: Option<Ast.TNode> = maybeRightMostLeaf(
-                        nodeIdMapCollection,
-                        left.node.id,
-                    );
-                    if (maybeRightMostChildLeaf !== undefined) {
-                        const rightMostChildLeaf: Ast.TNode = maybeRightMostChildLeaf;
-                        leftTokenEnd = rightMostChildLeaf.tokenRange.tokenIndexEnd;
-                    }
-
-                    const rightTokenRange: TokenRange = right.node.tokenRange;
-                    rightTokenStart = rightTokenRange.tokenIndexStart;
-                    rightTokenEnd = rightTokenRange.tokenIndexEnd;
-                    break;
-                }
-
-                case XorNodeKind.Context:
-                    break;
-
-                default:
-                    throw isNever(right);
-            }
-            break;
+            return {
+                tokenIndexStart: contextNode.tokenIndexStart,
+                tokenIndexEnd,
+            };
+        }
 
         default:
-            throw isNever(left);
-    }
-}
-
-function rightMostNodeTokenIndex(
-    nodeIdMapCollection: Collection,
-    xorNode: TXorNode,
-    getStartInsteadOfEnd: boolean,
-): number {
-    const maybeRightMost: Option<Ast.TNode> = maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id);
-    if (maybeRightMost !== undefined) {
-        const tokenRange: TokenRange = maybeRightMost.tokenRange;
-        return getStartInsteadOfEnd ? tokenRange.tokenIndexStart : tokenRange.tokenIndexEnd;
-    } else {
-        switch (xorNode.kind) {
-            case XorNodeKind.Ast: {
-                const tokenRange: TokenRange = xorNode.node.tokenRange;
-                return getStartInsteadOfEnd ? tokenRange.tokenIndexStart : tokenRange.tokenIndexEnd;
-            }
-
-            case XorNodeKind.Context:
-                return xorNode.node.tokenIndexStart;
-
-            default:
-                throw isNever(xorNode);
-        }
+            throw isNever(xorNode);
     }
 }
 

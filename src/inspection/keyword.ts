@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, ResultKind, TypeUtils, isNever } from "../common";
+import { CommonError, Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
@@ -11,101 +11,44 @@ import { KeywordInspected, KeywordState } from "./state";
 
 import * as InspectionUtils from "./inspectionUtils";
 
-// if   no parent: exit
-// elif parent is ast: exit
-// else examing parent's child where child attribute is n+1
-
-// interface FindExaminableNode {
-//     readonly falseNode: NodeIdMap.TXorNode;
-//     readonly visitedNodes: ReadonlyArray<NodeIdMap.TXorNode>;
-// }
-
-interface ExaminableNodes {
-    readonly initial: Ast.TNode;
-    readonly parent: ParserContext.Node;
-    readonly sibling: ParserContext.Node;
-}
-
 export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<KeywordInspected> {
-    const maybeExaminableNodes: Option<ExaminableNodes> = maybeGetExaminableNodes(
-        position,
-        nodeIdMapCollection,
-        leafNodeIds,
-    );
-    if (maybeExaminableNodes === undefined) {
+    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeGetRoot(position, nodeIdMapCollection, leafNodeIds);
+    if (maybeRoot === undefined) {
         return {
             kind: ResultKind.Ok,
             value: DefaultKeywordInspection,
         };
     }
-    const examinableNodes: ExaminableNodes = maybeExaminableNodes;
-
-    return {
-        kind: ResultKind.Ok,
-        value: DefaultKeywordInspection,
+    const state: TypeUtils.StripReadonly<KeywordState> = {
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+        result: {
+            allowedKeywords: [],
+            maybeRequiredKeyword: undefined,
+            keywordVisitedNodes: [],
+        },
+        isKeywordInspectionDone: false,
     };
+    const root: NodeIdMap.TXorNode = maybeRoot;
+    return Traverse.tryTraverseXor(
+        state,
+        nodeIdMapCollection,
+        root,
+        Traverse.VisitNodeStrategy.BreadthFirst,
+        visitNode,
+        Traverse.maybeExpandXorParent,
+        undefined,
+    );
 }
 
-// Grab the closest leaf next position then try to find the leaf's sibling.
-// If the sibling is a ParserContext.Node instance then return { leaf, parent, sibling},
-// otherwise return undefined;
-function maybeGetExaminableNodes(
-    position: Position,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-): Option<ExaminableNodes> {
-    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeGetRoot(position, nodeIdMapCollection, leafNodeIds);
-    return undefined;
-
-    // const maybeLeafAstNode: Option<Ast.TNode> = InspectionUtils.maybeClosestAstNode(
-    //     position,
-    //     nodeIdMapCollection,
-    //     leafNodeIds,
-    // );
-    // if (maybeLeafAstNode === undefined) {
-    //     return undefined;
-    // }
-    // const leafAstNode: Ast.TNode = maybeLeafAstNode;
-
-    // if (leafAstNode.maybeAttributeIndex === undefined) {
-    //     return undefined;
-    // }
-
-    // const triedFalseParent: Option<FalseParentSearch> = maybeFalseParent(leafAstNode, nodeIdMapCollection);
-
-    // const maybeParentContextNode: Option<ParserContext.Node> = NodeIdMapUtils.maybeParentContextNode(
-    //     nodeIdMapCollection,
-    //     leafAstNode.id,
-    // );
-    // if (maybeParentContextNode === undefined) {
-    //     return undefined;
-    // }
-    // const parentContextNode: ParserContext.Node = maybeParentContextNode;
-
-    // NodeIdMapUtils.maybeContextChildByAttributeIndex(
-    //     nodeIdMapCollection,
-    //     parentContextNode.id,
-    //     leafAstNode.maybeAttributeIndex + 1,
-    //     undefined,
-    // );
-
-    // const maybeSibling: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeNextSiblingXorNode(
-    //     nodeIdMapCollection,
-    //     leafAstNode.id,
-    // );
-    // if (maybeSibling === undefined || maybeSibling.kind === NodeIdMap.XorNodeKind.Ast) {
-    //     return undefined;
-    // }
-
-    // return {
-    //     initial: leafAstNode,
-    //     parent: parentContextNode,
-    //     sibling: maybeSibling.node,
-    // };
+interface MaybeGetRootSearch {
+    readonly rightMostNode: NodeIdMap.TXorNode;
+    readonly nodeTokenRange: NodeIdMap.XorNodeTokenRange;
 }
 
 function maybeGetRoot(
@@ -114,81 +57,35 @@ function maybeGetRoot(
     leafNodeIds: ReadonlyArray<number>,
 ): Option<NodeIdMap.TXorNode> {
     const nodeIds: ReadonlyArray<number> = [...nodeIdMapCollection.contextNodeById.keys(), ...leafNodeIds];
-    let maybeRightMost: Option<NodeIdMap.TXorNode>;
+    let bestMatch: Option<MaybeGetRootSearch>;
 
     for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
         if (!isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
-            // Hey, it's an easy assignment!
-            if (maybeRightMost === undefined) {
-                maybeRightMost = xorNode;
-            }
-            // Ugh.
-            else {
-                switch (xorNode.kind) {
-                    case NodeIdMap.XorNodeKind.Ast:
-                        break;
-
-                    case NodeIdMap.XorNodeKind.Context:
-                        break;
-
-                    default:
-                        throw isNever(xorNode);
+            if (bestMatch === undefined) {
+                bestMatch = {
+                    rightMostNode: xorNode,
+                    nodeTokenRange: NodeIdMapUtils.xorNodeTokenRange(nodeIdMapCollection, xorNode),
+                };
+            } else {
+                const potentialTokenRange: NodeIdMap.XorNodeTokenRange = NodeIdMapUtils.xorNodeTokenRange(
+                    nodeIdMapCollection,
+                    xorNode,
+                );
+                if (
+                    potentialTokenRange.tokenIndexEnd >= bestMatch.nodeTokenRange.tokenIndexEnd &&
+                    potentialTokenRange.tokenIndexStart < bestMatch.nodeTokenRange.tokenIndexStart
+                ) {
+                    bestMatch = {
+                        rightMostNode: xorNode,
+                        nodeTokenRange: potentialTokenRange,
+                    };
                 }
-                // const mockPosition: Position {
-                //     xorNode
-                // }
             }
-            maybeRightMost = xorNode;
         }
     }
 
-    return maybeRightMost;
+    return bestMatch !== undefined ? bestMatch.rightMostNode : undefined;
 }
-
-function maybeFalseParent(leafNode: Ast.TNode, nodeIdMapCollection: NodeIdMap.Collection): void {}
-
-const IndirectionNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.ArrayWrapper, Ast.NodeKind.Csv];
-
-interface FalseParentSearch {
-    trueParentXorNode: NodeIdMap.TXorNode;
-    falseParentXorNode: NodeIdMap.TXorNode;
-}
-
-function maybeFalseParentNode(
-    leafNode: Ast.TNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
-): Option<FalseParentSearch> {
-    let maybeParentXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeParentXorNode(
-        nodeIdMapCollection,
-        leafNode.id,
-    );
-    if (maybeParentXorNode === undefined) {
-        return undefined;
-    }
-    const trueParentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
-
-    while (maybeParentXorNode !== undefined) {
-        const parentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
-        if (IndirectionNodeKinds.indexOf(parentXorNode.node.kind) !== -1) {
-            maybeParentXorNode = NodeIdMapUtils.maybeParentXorNode(nodeIdMapCollection, parentXorNode.node.id);
-        }
-    }
-
-    if (maybeParentXorNode === undefined) {
-        return undefined;
-    }
-    const falseParentXorNode: NodeIdMap.TXorNode = maybeParentXorNode;
-
-    return {
-        trueParentXorNode,
-        falseParentXorNode,
-    };
-}
-
-// interface TrueParentSearch {
-//     readonly maybeTrueSiblingXorNode: Option<NodeIdMap.TXorNode>;
-//     readonly falseSiblingXorNode: Option<NodeIdMap.TXorNode>;
-// }
 
 function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
@@ -226,7 +123,7 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
 
 const DefaultKeywordInspection: KeywordInspected = {
     keywordVisitedNodes: [],
-    allowedKeywords: [],
+    allowedKeywords: TExpressionKeywords,
     maybeRequiredKeyword: undefined,
 };
 

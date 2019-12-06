@@ -23,6 +23,11 @@ export interface IXorNode<Kind, T> {
     readonly node: T;
 }
 
+export interface XorNodeTokenRange {
+    readonly tokenIndexStart: number;
+    readonly tokenIndexEnd: number;
+}
+
 export interface Collection {
     readonly astNodeById: AstNodeById;
     readonly contextNodeById: ContextNodeById;
