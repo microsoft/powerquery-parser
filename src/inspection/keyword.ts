@@ -71,10 +71,25 @@ function maybeGetRoot(
                     nodeIdMapCollection,
                     xorNode,
                 );
-                if (
-                    potentialTokenRange.tokenIndexEnd >= bestMatch.nodeTokenRange.tokenIndexEnd &&
-                    potentialTokenRange.tokenIndexStart < bestMatch.nodeTokenRange.tokenIndexStart
-                ) {
+                // Since we've already proven xorNode is on or before position
+                // we can use token indexes to compare nodes.
+                //
+                // Check if xorNode ends more to the right (higher token end value),
+                // If the end points tie pick the one with a smaller range (higher token start value).
+                // If the ranges tie pick the one one with the higher.
+                let updateBestMatch: boolean = false;
+                if (potentialTokenRange.tokenIndexEnd >= bestMatch.nodeTokenRange.tokenIndexEnd) {
+                    if (potentialTokenRange.tokenIndexStart < bestMatch.nodeTokenRange.tokenIndexStart) {
+                        updateBestMatch = true;
+                    } else if (
+                        potentialTokenRange.tokenIndexStart === bestMatch.nodeTokenRange.tokenIndexStart &&
+                        xorNode.node.id > bestMatch.rightMostNode.node.id
+                    ) {
+                        updateBestMatch = true;
+                    }
+                }
+
+                if (updateBestMatch) {
                     bestMatch = {
                         rightMostNode: xorNode,
                         nodeTokenRange: potentialTokenRange,
