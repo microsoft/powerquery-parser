@@ -72,6 +72,14 @@ describe(`Inspection`, () => {
             });
         });
 
+        describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
+            it(`try true otherwise |`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true otherwise |`);
+                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+        });
+
         describe(`${Ast.NodeKind.SectionMember}`, () => {
             it(`section; [] |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; [] |`);
@@ -81,14 +89,6 @@ describe(`Inspection`, () => {
 
             it(`section; x = |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; x = |`);
-                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
-                expectNodesEqual(expectParseErrInspection(text, position), expected);
-            });
-        });
-
-        describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
-            it(`try true otherwise |`, () => {
-                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true otherwise |`);
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
