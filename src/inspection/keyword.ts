@@ -46,7 +46,7 @@ export function tryFrom(
     );
 }
 
-interface MaybeGetRootSearch {
+interface MaybeRightMostXorNodeSearch {
     readonly rightMostNode: NodeIdMap.TXorNode;
     readonly nodeTokenRange: NodeIdMap.XorNodeTokenRange;
 }
@@ -57,7 +57,7 @@ function maybeRightMostXorNode(
     leafNodeIds: ReadonlyArray<number>,
 ): Option<NodeIdMap.TXorNode> {
     const nodeIds: ReadonlyArray<number> = [...nodeIdMapCollection.contextNodeById.keys(), ...leafNodeIds];
-    let bestMatch: Option<MaybeGetRootSearch>;
+    let bestMatch: Option<MaybeRightMostXorNodeSearch>;
 
     for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
         if (isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
@@ -79,7 +79,7 @@ function maybeRightMostXorNode(
                 // If the ranges tie pick the one one with the larger node id as it was more recently created.
                 let updateBestMatch: boolean = false;
                 if (potentialTokenRange.tokenIndexEnd >= bestMatch.nodeTokenRange.tokenIndexEnd) {
-                    if (potentialTokenRange.tokenIndexStart < bestMatch.nodeTokenRange.tokenIndexStart) {
+                    if (potentialTokenRange.tokenIndexStart > bestMatch.nodeTokenRange.tokenIndexStart) {
                         updateBestMatch = true;
                     } else if (
                         potentialTokenRange.tokenIndexStart === bestMatch.nodeTokenRange.tokenIndexStart &&
@@ -106,26 +106,24 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
     visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
-    if (state.isKeywordInspectionDone || xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+    if (state.isKeywordInspectionDone) {
         return;
     }
-    const contextNode: ParserContext.Node = xorNode.node;
-
-    switch (contextNode.kind) {
+    switch (xorNode.node.kind) {
         case Ast.NodeKind.ErrorHandlingExpression:
-            updateKeywordResult(state, contextNode, visitErrorHandlingExpression);
+            updateKeywordResult(state, xorNode, visitErrorHandlingExpression);
             break;
 
         case Ast.NodeKind.ErrorRaisingExpression:
-            updateKeywordResult(state, contextNode, visitErrorRaisingExpression);
+            updateKeywordResult(state, xorNode, visitErrorRaisingExpression);
             break;
 
         case Ast.NodeKind.IfExpression:
-            updateKeywordResult(state, contextNode, visitIfExpression);
+            updateKeywordResult(state, xorNode, visitIfExpression);
             break;
 
         case Ast.NodeKind.OtherwiseExpression:
-            updateKeywordResult(state, contextNode, visitOtherwiseExpression);
+            updateKeywordResult(state, xorNode, visitOtherwiseExpression);
             break;
 
         default:
@@ -141,10 +139,10 @@ const DefaultKeywordInspection: KeywordInspected = {
 
 function updateKeywordResult(
     state: KeywordState,
-    contextNode: ParserContext.Node,
-    fn: (state: KeywordState, contextNode: ParserContext.Node) => [ReadonlyArray<string>, Option<string>],
+    xorNode: NodeIdMap.TXorNode,
+    fn: (state: KeywordState, xorNode: NodeIdMap.TXorNode) => [ReadonlyArray<string>, Option<string>],
 ): void {
-    const [allowedKeywords, maybeRequiredKeyword] = fn(state, contextNode);
+    const [allowedKeywords, maybeRequiredKeyword] = fn(state, xorNode);
     const result: TypeUtils.StripReadonly<KeywordInspected> = state.result;
     result.allowedKeywords = allowedKeywords;
     result.maybeRequiredKeyword = maybeRequiredKeyword;
@@ -155,9 +153,14 @@ function updateKeywordResult(
 }
 
 function visitErrorHandlingExpression(
-    _state: KeywordState,
-    contextNode: ParserContext.Node,
+    state: KeywordState,
+    xorNode: NodeIdMap.TXorNode,
 ): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[KeywordKind.Otherwise], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
     switch (contextNode.attributeCounter) {
         // `try`
         case 0:
@@ -169,15 +172,24 @@ function visitErrorHandlingExpression(
             return [TExpressionKeywords, undefined];
 
         // `maybeOtherwiseExpression`
+        // Echo the existing values.
+        case 3:
+            return [state.result.allowedKeywords, state.result.maybeRequiredKeyword];
+
         default:
-            throw expectedEarlierAssignment(contextNode);
+            throw invalidAttributeCount(contextNode);
     }
 }
 
 function visitErrorRaisingExpression(
     _state: KeywordState,
-    contextNode: ParserContext.Node,
+    xorNode: NodeIdMap.TXorNode,
 ): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
     switch (contextNode.attributeCounter) {
         // `error`
         case 0:
@@ -190,14 +202,16 @@ function visitErrorRaisingExpression(
 
         // `maybeOtherwiseExpression`
         default:
-            throw expectedEarlierAssignment(contextNode);
+            throw invalidAttributeCount(contextNode);
     }
 }
 
-function visitIfExpression(
-    _state: KeywordState,
-    contextNode: ParserContext.Node,
-): [ReadonlyArray<string>, Option<string>] {
+function visitIfExpression(_state: KeywordState, xorNode: NodeIdMap.TXorNode): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
     switch (contextNode.attributeCounter) {
         // `if`
         case 0:
@@ -231,8 +245,13 @@ function visitIfExpression(
 
 function visitOtherwiseExpression(
     _state: KeywordState,
-    contextNode: ParserContext.Node,
+    xorNode: NodeIdMap.TXorNode,
 ): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
     switch (contextNode.attributeCounter) {
         // `otherwise`
         case 0:
@@ -246,15 +265,6 @@ function visitOtherwiseExpression(
         default:
             throw invalidAttributeCount(contextNode);
     }
-}
-
-function expectedEarlierAssignment(contextNode: ParserContext.Node): CommonError.InvariantError {
-    const details: {} = {
-        id: contextNode.id,
-        kind: contextNode.kind,
-        attributeCounter: contextNode.attributeCounter,
-    };
-    return new CommonError.InvariantError(`expected an earlier visitNode to set isKeywordInspectionDone`, details);
 }
 
 function invalidAttributeCount(contextNode: ParserContext.Node): CommonError.InvariantError {
