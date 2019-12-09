@@ -314,6 +314,26 @@ export function expectAstChildByAttributeIndex(
     return maybeNode;
 }
 
+export function expectContextChildByAttributeIndex(
+    nodeIdMapCollection: Collection,
+    parentId: number,
+    attributeIndex: number,
+    maybeChildNodeKinds: Option<ReadonlyArray<Ast.NodeKind>>,
+): ParserContext.Node {
+    const maybeNode: Option<ParserContext.Node> = maybeContextChildByAttributeIndex(
+        nodeIdMapCollection,
+        parentId,
+        attributeIndex,
+        maybeChildNodeKinds,
+    );
+    if (maybeNode === undefined) {
+        const details: {} = { parentId, attributeIndex };
+        throw new CommonError.InvariantError(`parentId doesn't have a context child at the given index`, details);
+    }
+
+    return maybeNode;
+}
+
 export function expectXorNodes(
     nodeIdMapCollection: Collection,
     nodeIds: ReadonlyArray<number>,
