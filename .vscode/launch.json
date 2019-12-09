@@ -16,8 +16,6 @@
         "999999",
         "-r",
         "ts-node/register",
-        "-g",
-        "abc123",
         "${workspaceFolder}/src/test/**/*.ts"
       ],
       "preLaunchTask": "build",
