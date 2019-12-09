@@ -16,7 +16,7 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<KeywordInspected> {
-    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeGetRoot(position, nodeIdMapCollection, leafNodeIds);
+    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeRightMostXorNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeRoot === undefined) {
         return {
             kind: ResultKind.Ok,
@@ -51,7 +51,7 @@ interface MaybeGetRootSearch {
     readonly nodeTokenRange: NodeIdMap.XorNodeTokenRange;
 }
 
-function maybeGetRoot(
+function maybeRightMostXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -60,7 +60,7 @@ function maybeGetRoot(
     let bestMatch: Option<MaybeGetRootSearch>;
 
     for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
-        if (!isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
+        if (isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
             if (bestMatch === undefined) {
                 bestMatch = {
                     rightMostNode: xorNode,
@@ -76,7 +76,7 @@ function maybeGetRoot(
                 //
                 // Check if xorNode ends more to the right (higher token end value),
                 // If the end points tie pick the one with a smaller range (higher token start value).
-                // If the ranges tie pick the one one with the higher.
+                // If the ranges tie pick the one one with the larger node id as it was more recently created.
                 let updateBestMatch: boolean = false;
                 if (potentialTokenRange.tokenIndexEnd >= bestMatch.nodeTokenRange.tokenIndexEnd) {
                     if (potentialTokenRange.tokenIndexStart < bestMatch.nodeTokenRange.tokenIndexStart) {
@@ -106,10 +106,7 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
     visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
-    if (state.isKeywordInspectionDone) {
-        return;
-    } else if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-        state.isKeywordInspectionDone = true;
+    if (state.isKeywordInspectionDone || xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         return;
     }
     const contextNode: ParserContext.Node = xorNode.node;
