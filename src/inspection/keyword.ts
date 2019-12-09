@@ -85,10 +85,13 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
             updateKeywordResult(state, xorNode, visitOtherwiseExpression);
             break;
 
-        case Ast.NodeKind.SectionMember: {
+        case Ast.NodeKind.ParenthesizedExpression:
+            updateKeywordResult(state, xorNode, visitParenthesizedExpression);
+            break;
+
+        case Ast.NodeKind.SectionMember:
             updateKeywordResult(state, xorNode, visitSectionMember);
             break;
-        }
 
         default:
             break;
@@ -180,8 +183,7 @@ function visitErrorHandlingExpression(
         case 2:
             return [TExpressionKeywords, undefined];
 
-        // `maybeOtherwiseExpression`
-        // Echo the existing values.
+        // maybeOtherwiseExpression
         case 3:
             return [state.result.allowedKeywords, state.result.maybeRequiredKeyword];
 
@@ -303,6 +305,34 @@ function visitOtherwiseExpression(
     }
 }
 
+function visitParenthesizedExpression(
+    _state: KeywordState,
+    xorNode: NodeIdMap.TXorNode,
+): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
+    switch (contextNode.attributeCounter) {
+        // `(`
+        case 0:
+        case 1:
+            return [[], undefined];
+
+        // content
+        case 2:
+            return [TExpressionKeywords, undefined];
+
+        // ')'
+        case 3:
+            return [[], undefined];
+
+        default:
+            throw invalidAttributeCount(contextNode);
+    }
+}
+
 function visitSectionMember(state: KeywordState, xorNode: NodeIdMap.TXorNode): [ReadonlyArray<string>, Option<string>] {
     if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         return [[], undefined];
@@ -310,16 +340,16 @@ function visitSectionMember(state: KeywordState, xorNode: NodeIdMap.TXorNode): [
     const contextNode: ParserContext.Node = xorNode.node;
 
     switch (contextNode.attributeCounter) {
-        // 'maybeLiteralAttributes'
+        // maybeLiteralAttributes
         case 0:
         case 1:
             return [[], undefined];
 
-        // 'maybeSharedConstant'
+        // maybeSharedConstant
         case 2:
             return [[KeywordKind.Shared], undefined];
 
-        // 'namePairedExpression'
+        // namePairedExpression
         case 3: {
             const xorAttributeChild: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
                 state.nodeIdMapCollection,
@@ -330,7 +360,7 @@ function visitSectionMember(state: KeywordState, xorNode: NodeIdMap.TXorNode): [
             return visitSectionMemberIdentifierPairedExpression(state, xorAttributeChild);
         }
 
-        // 'semicolonConstant'
+        // ';'
         case 4:
             return [[], undefined];
 
