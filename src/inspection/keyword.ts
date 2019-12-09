@@ -51,6 +51,50 @@ interface MaybeRightMostXorNodeSearch {
     readonly nodeTokenRange: NodeIdMap.XorNodeTokenRange;
 }
 
+const DefaultKeywordInspection: KeywordInspected = {
+    keywordVisitedNodes: [],
+    allowedKeywords: TExpressionKeywords,
+    maybeRequiredKeyword: undefined,
+};
+
+function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
+    const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
+    visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
+
+    if (state.isKeywordInspectionDone) {
+        return;
+    }
+    switch (xorNode.node.kind) {
+        case Ast.NodeKind.ErrorHandlingExpression:
+            updateKeywordResult(state, xorNode, visitErrorHandlingExpression);
+            break;
+
+        case Ast.NodeKind.ErrorRaisingExpression:
+            updateKeywordResult(state, xorNode, visitErrorRaisingExpression);
+            break;
+
+        case Ast.NodeKind.IdentifierPairedExpression:
+            updateKeywordResult(state, xorNode, visitIdentifierPairedExpression);
+            break;
+
+        case Ast.NodeKind.IfExpression:
+            updateKeywordResult(state, xorNode, visitIfExpression);
+            break;
+
+        case Ast.NodeKind.OtherwiseExpression:
+            updateKeywordResult(state, xorNode, visitOtherwiseExpression);
+            break;
+
+        case Ast.NodeKind.SectionMember: {
+            updateKeywordResult(state, xorNode, visitSectionMember);
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+
 function maybeRightMostXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -102,47 +146,12 @@ function maybeRightMostXorNode(
     return bestMatch !== undefined ? bestMatch.rightMostNode : undefined;
 }
 
-function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
-    const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
-    visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
-
-    if (state.isKeywordInspectionDone) {
-        return;
-    }
-    switch (xorNode.node.kind) {
-        case Ast.NodeKind.ErrorHandlingExpression:
-            updateKeywordResult(state, xorNode, visitErrorHandlingExpression);
-            break;
-
-        case Ast.NodeKind.ErrorRaisingExpression:
-            updateKeywordResult(state, xorNode, visitErrorRaisingExpression);
-            break;
-
-        case Ast.NodeKind.IfExpression:
-            updateKeywordResult(state, xorNode, visitIfExpression);
-            break;
-
-        case Ast.NodeKind.OtherwiseExpression:
-            updateKeywordResult(state, xorNode, visitOtherwiseExpression);
-            break;
-
-        default:
-            break;
-    }
-}
-
-const DefaultKeywordInspection: KeywordInspected = {
-    keywordVisitedNodes: [],
-    allowedKeywords: TExpressionKeywords,
-    maybeRequiredKeyword: undefined,
-};
-
 function updateKeywordResult(
     state: KeywordState,
     xorNode: NodeIdMap.TXorNode,
     fn: (state: KeywordState, xorNode: NodeIdMap.TXorNode) => [ReadonlyArray<string>, Option<string>],
 ): void {
-    const [allowedKeywords, maybeRequiredKeyword] = fn(state, xorNode);
+    const [allowedKeywords, maybeRequiredKeyword]: [ReadonlyArray<string>, Option<string>] = fn(state, xorNode);
     const result: TypeUtils.StripReadonly<KeywordInspected> = state.result;
     result.allowedKeywords = allowedKeywords;
     result.maybeRequiredKeyword = maybeRequiredKeyword;
@@ -200,7 +209,34 @@ function visitErrorRaisingExpression(
         case 2:
             return [TExpressionKeywords, undefined];
 
-        // `maybeOtherwiseExpression`
+        default:
+            throw invalidAttributeCount(contextNode);
+    }
+}
+
+function visitIdentifierPairedExpression(
+    _state: KeywordState,
+    xorNode: NodeIdMap.TXorNode,
+): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
+    switch (contextNode.attributeCounter) {
+        // key
+        case 0:
+        case 1:
+            return [[], undefined];
+
+        // '='
+        case 2:
+            return [[], undefined];
+
+        // value
+        case 3:
+            return [TExpressionKeywords, undefined];
+
         default:
             throw invalidAttributeCount(contextNode);
     }
@@ -264,6 +300,59 @@ function visitOtherwiseExpression(
 
         default:
             throw invalidAttributeCount(contextNode);
+    }
+}
+
+function visitSectionMember(state: KeywordState, xorNode: NodeIdMap.TXorNode): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
+    switch (contextNode.attributeCounter) {
+        // 'maybeLiteralAttributes'
+        case 0:
+        case 1:
+            return [[], undefined];
+
+        // 'maybeSharedConstant'
+        case 2:
+            return [[KeywordKind.Shared], undefined];
+
+        // 'namePairedExpression'
+        case 3: {
+            const xorAttributeChild: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+                state.nodeIdMapCollection,
+                contextNode.id,
+                2,
+                [Ast.NodeKind.IdentifierPairedExpression],
+            );
+            return visitSectionMemberIdentifierPairedExpression(state, xorAttributeChild);
+        }
+
+        // 'semicolonConstant'
+        case 4:
+            return [[], undefined];
+
+        default:
+            throw invalidAttributeCount(contextNode);
+    }
+}
+
+function visitSectionMemberIdentifierPairedExpression(
+    _state: KeywordState,
+    xorNode: NodeIdMap.TXorNode,
+): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+    const attributeCounter: number = contextNode.attributeCounter;
+    // Failed to parse an identifier, meaning the optional 'shared' constant is available.
+    if (attributeCounter === 0 || attributeCounter === 1) {
+        return [[KeywordKind.Shared], undefined];
+    } else {
+        return visitIdentifierPairedExpression(_state, xorNode);
     }
 }
 
