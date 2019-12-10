@@ -6,7 +6,7 @@ import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { isPositionAfterXorNode, Position } from "./position";
+import { isPositionBeforeXorNode, Position } from "./position";
 import { KeywordInspected, KeywordState } from "./state";
 
 import * as InspectionUtils from "./inspectionUtils";
@@ -107,7 +107,7 @@ function maybeRightMostXorNode(
     let bestMatch: Option<MaybeRightMostXorNodeSearch>;
 
     for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
-        if (isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
+        if (!isPositionBeforeXorNode(position, xorNode)) {
             if (bestMatch === undefined) {
                 bestMatch = {
                     rightMostNode: xorNode,

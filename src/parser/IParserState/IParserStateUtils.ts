@@ -358,14 +358,8 @@ export function testIsOnTokenKind(
     expectedTokenKind: TokenKind,
 ): Option<ParseError.ExpectedTokenKindError> {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
-        const maybeTokenWithColumnNumber: Option<ParseError.TokenWithColumnNumber> =
-            state.maybeCurrentToken !== undefined
-                ? {
-                      token: state.maybeCurrentToken,
-                      columnNumber: state.lexerSnapshot.columnNumberStartFrom(state.maybeCurrentToken),
-                  }
-                : undefined;
-        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
+        const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
+        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeToken);
     } else {
         return undefined;
     }
@@ -379,10 +373,8 @@ export function testIsOnAnyTokenKind(
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(state.maybeCurrentTokenKind) === -1;
 
     if (isError) {
-        const maybeTokenWithColumnNumber: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(
-            state,
-        );
-        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
+        const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
+        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeToken);
     } else {
         return undefined;
     }
