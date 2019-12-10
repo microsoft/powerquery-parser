@@ -107,7 +107,7 @@ export function startContext(
         }
     }
 
-    const node: Node = {
+    const contextNode: Node = {
         id: nodeId,
         kind: nodeKind,
         tokenIndexStart,
@@ -116,9 +116,12 @@ export function startContext(
         isClosed: false,
         maybeAttributeIndex,
     };
-    nodeIdMapCollection.contextNodeById.set(nodeId, node);
+    nodeIdMapCollection.contextNodeById.set(nodeId, contextNode);
+    if (state.root.maybeNode === undefined) {
+        state.root.maybeNode = contextNode;
+    }
 
-    return node;
+    return contextNode;
 }
 
 // Returns the Node's parent context (if one exists).
@@ -200,12 +203,12 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
 
-    const maybeNode: Option<Node> = contextNodeById.get(nodeId);
-    if (maybeNode === undefined) {
+    const maybeContextNode: Option<Node> = contextNodeById.get(nodeId);
+    if (maybeContextNode === undefined) {
         const details: {} = { nodeId };
         throw new CommonError.InvariantError(`Context nodeId not in state.`, details);
     }
-    const node: Node = maybeNode;
+    const contextNode: Node = maybeContextNode;
 
     // If Node was a leaf node, remove it from the list of leaf nodes.
     removeLeafOrNoop(state, nodeId);
@@ -245,7 +248,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         // The child Node inherits the attributeIndex.
         const childXorNode: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
         const mutableChildXorNode: TypeUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
-        mutableChildXorNode.maybeAttributeIndex = node.maybeAttributeIndex;
+        mutableChildXorNode.maybeAttributeIndex = contextNode.maybeAttributeIndex;
     }
     // Is a leaf node, not root node.
     // Delete the node from the list of children under the node's parent.
@@ -267,14 +270,14 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
 
 export function deepCopy(state: State): State {
     const nodeIdMapCollection: NodeIdMap.Collection = NodeIdMapUtils.deepCopyCollection(state.nodeIdMapCollection);
-    const maybeRootNode: Option<Node> =
+    const maybeRootContextNode: Option<Node> =
         state.root.maybeNode !== undefined
             ? nodeIdMapCollection.contextNodeById.get(state.root.maybeNode.id)
             : undefined;
 
     return {
         root: {
-            maybeNode: maybeRootNode,
+            maybeNode: maybeRootContextNode,
         },
         nodeIdMapCollection: nodeIdMapCollection,
         idCounter: state.idCounter,
