@@ -408,11 +408,18 @@ export function unterminatedBracketError(state: IParserState): ParseError.Unterm
 }
 
 export function maybeCurrentTokenWithColumnNumber(state: IParserState): Option<ParseError.TokenWithColumnNumber> {
-    const maybeCurrentToken: Option<Token> = state.maybeCurrentToken;
-    if (maybeCurrentToken === undefined) {
+    return maybeTokenWithColumnNumber(state, state.tokenIndex);
+}
+
+export function maybeTokenWithColumnNumber(
+    state: IParserState,
+    tokenIndex: number,
+): Option<ParseError.TokenWithColumnNumber> {
+    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+    if (maybeToken === undefined) {
         return undefined;
     }
-    const currentToken: Token = maybeCurrentToken;
+    const currentToken: Token = maybeToken;
 
     return {
         token: currentToken,

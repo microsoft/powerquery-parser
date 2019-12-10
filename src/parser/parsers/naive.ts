@@ -81,8 +81,8 @@ export function readGeneralizedIdentifier(
     }
 
     if (tokenRangeStartIndex === tokenRangeEndIndex) {
-        throw new CommonError.InvariantError(
-            `readGeneralizedIdentifier has tokenRangeStartIndex === tokenRangeEndIndex`,
+        throw new ParseError.ExpectedGeneralizedIdentifierError(
+            IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
         );
     }
 

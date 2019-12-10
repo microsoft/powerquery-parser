@@ -12,6 +12,7 @@ export type TParseError = CommonError.CommonError | ParseError;
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
     | ExpectedCsvContinuationError
+    | ExpectedGeneralizedIdentifierError
     | ExpectedTokenKindError
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
@@ -44,6 +45,12 @@ export class ExpectedAnyTokenKindError extends Error {
 export class ExpectedTokenKindError extends Error {
     constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
         super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
+    }
+}
+
+export class ExpectedGeneralizedIdentifierError extends Error {
+    constructor(readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
+        super(Localization.parserExpectedGeneralizedIdentifier(maybeFoundToken));
     }
 }
 
@@ -96,6 +103,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
     return (
         x instanceof ExpectedAnyTokenKindError ||
         x instanceof ExpectedCsvContinuationError ||
+        x instanceof ExpectedGeneralizedIdentifierError ||
         x instanceof ExpectedTokenKindError ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||

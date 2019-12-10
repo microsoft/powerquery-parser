@@ -458,13 +458,15 @@ function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.
 function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    const previousXorNode: NodeIdMap.TXorNode = expectPreviousXorNode(state);
-    const previousNodeKind: Ast.NodeKind = previousXorNode.node.kind;
-    // It's safe to filter out the two cases where the user is on a Constant.
+    // It's safe to filter out the two cases where the user is on a wrapper constant.
     // They are either on the `[`, which is to the left of the equals sign,
     // or they are on the `]` which is outside of the record.
-    if (previousNodeKind === Ast.NodeKind.Constant) {
-        return;
+    const previousXorNode: NodeIdMap.TXorNode = expectPreviousXorNode(state);
+    if (previousXorNode.node.kind === Ast.NodeKind.Constant) {
+        const previousConstantNode: Ast.Constant = previousXorNode.node as Ast.Constant;
+        if (previousConstantNode.literal === "[" || previousConstantNode.literal === "]") {
+            return;
+        }
     }
 
     const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
@@ -478,11 +480,22 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
     }
     const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
 
-    // Record -> ArrayWrapper -> Csv -> KeyValuePair
-    const positionKeyValuePairXorNode: NodeIdMap.TXorNode = expectNthLastVisitedXorNode(state, 3, [
-        Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-    ]);
+    // If we didn't come from a `Record -> ArrayWrapper -> Csv -> KeyValuePair` path then exit.
+    // Eg. `[a=1,|`
+    const maybePositionKeyValuePairXorNode: Option<NodeIdMap.TXorNode> = maybeNthLastVisitedXorNode(state, 3);
+
+    if (maybePositionKeyValuePairXorNode === undefined) {
+        return;
+    }
+    const positionKeyValuePairXorNode: NodeIdMap.TXorNode = maybePositionKeyValuePairXorNode;
+    const positionNodeKind: Ast.NodeKind = positionKeyValuePairXorNode.node.kind;
+    if (
+        positionNodeKind !== Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral &&
+        positionNodeKind !== Ast.NodeKind.GeneralizedIdentifierPairedExpression
+    ) {
+        return;
+    }
+
     // Only add to scope if position is on the right hand of the assignment.
     if (!isInKeyValuePairAssignment(state, positionKeyValuePairXorNode)) {
         return;
