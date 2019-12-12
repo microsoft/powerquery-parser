@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, ResultKind, Traverse, TypeUtils } from "../common";
+import { CommonError, /*isNever,*/ Option, ResultKind, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
@@ -42,7 +42,7 @@ export function tryFrom(
         Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         Traverse.maybeExpandXorParent,
-        undefined,
+        earlyExit,
     );
 }
 
@@ -61,9 +61,6 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
     visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
-    if (state.isKeywordInspectionDone) {
-        return;
-    }
     switch (xorNode.node.kind) {
         case Ast.NodeKind.ErrorHandlingExpression:
             updateKeywordResult(state, xorNode, visitErrorHandlingExpression);
@@ -81,12 +78,20 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
             updateKeywordResult(state, xorNode, visitIfExpression);
             break;
 
+        case Ast.NodeKind.ListExpression:
+            updateKeywordResult(state, xorNode, visitListExpression);
+            break;
+
         case Ast.NodeKind.OtherwiseExpression:
             updateKeywordResult(state, xorNode, visitOtherwiseExpression);
             break;
 
         case Ast.NodeKind.ParenthesizedExpression:
             updateKeywordResult(state, xorNode, visitParenthesizedExpression);
+            break;
+
+        case Ast.NodeKind.RangeExpression:
+            updateKeywordResult(state, xorNode, visitRangeExpression);
             break;
 
         case Ast.NodeKind.SectionMember:
@@ -96,6 +101,10 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
         default:
             break;
     }
+}
+
+function earlyExit(state: KeywordState, _xorNode: NodeIdMap.TXorNode): boolean {
+    return state.isKeywordInspectionDone;
 }
 
 function maybeRightMostXorNode(
@@ -281,6 +290,93 @@ function visitIfExpression(_state: KeywordState, xorNode: NodeIdMap.TXorNode): [
     }
 }
 
+function visitListExpression(
+    state: KeywordState,
+    xorNode: NodeIdMap.TXorNode,
+): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const maybeSourceCsv: Option<NodeIdMap.TXorNode> = maybePreviousCsvXorNode(state, xorNode);
+    if (maybeSourceCsv === undefined) {
+        return [[], undefined];
+    }
+    const sourceCsvXorNode: NodeIdMap.TXorNode = maybeSourceCsv;
+
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        [Ast.NodeKind.ArrayWrapper],
+    );
+    if (maybeCsvArrayXorNode === undefined) {
+        return [[], undefined];
+    }
+    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
+
+    const maybeNextCsv: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        csvArrayXorNode.node.id,
+        sourceCsvXorNode.node.maybeAttributeIndex! + 1,
+        [Ast.NodeKind.Csv],
+    );
+
+    // It might not exist because
+    if (maybeNextCsv === undefined) {
+        switch (sourceCsvXorNode.kind) {
+            // No next sibling, fully parsed.
+            // Eg. '{1,|' or '{1|'
+            case NodeIdMap.XorNodeKind.Ast: {
+                const csv: Ast.TCsv = sourceCsvXorNode.node as Ast.TCsv;
+                if (csv.maybeCommaConstant) {
+                    return [TExpressionKeywords, undefined];
+                } else {
+                    return [[], undefined];
+                }
+            }
+
+            // No next sibling, failed to parse.
+            // Eg. '{|' or '{1| x'
+            case NodeIdMap.XorNodeKind.Context:
+                return [TExpressionKeywords, undefined];
+
+            default:
+                break;
+        }
+    }
+    // Has next sibling
+    else {
+        const nextCsv: NodeIdMap.TXorNode = maybeNextCsv;
+        const sourceCsvNode: Ast.TCsv = sourceCsvXorNode.node as Ast.TCsv;
+    }
+}
+
+function maybePreviousCsvXorNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): Option<NodeIdMap.TXorNode> {
+    const visitedNodes: ReadonlyArray<IInspectedNode> = state.result.keywordVisitedNodes;
+    const numVisitedNodes: number = visitedNodes.length;
+    if (numVisitedNodes < 2) {
+        return undefined;
+    }
+
+    for (let index: number = 0; index >= 0; index = numVisitedNodes - 2) {
+        const potentialSource = visitedNodes[index];
+        if (potentialSource.kind === Ast.NodeKind.Csv) {
+            return NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, potentialSource.id);
+        }
+    }
+
+    return undefined;
+
+    // if (xorNode.node.kind !== Ast.NodeKind.Csv) {
+    //     const details: {} = {
+    //         nodeKind: xorNode.node.kind,
+    //         nodeId: xorNode.node.id,
+    //     };
+    //     throw new CommonError.InvariantError(`expected ${Ast.NodeKind.Csv} but got something else`, details);
+    // }
+}
+
 function visitOtherwiseExpression(
     _state: KeywordState,
     xorNode: NodeIdMap.TXorNode,
@@ -327,6 +423,34 @@ function visitParenthesizedExpression(
         // ')'
         case 3:
             return [[], undefined];
+
+        default:
+            throw invalidAttributeCount(contextNode);
+    }
+}
+
+function visitRangeExpression(
+    _state: KeywordState,
+    xorNode: NodeIdMap.TXorNode,
+): [ReadonlyArray<string>, Option<string>] {
+    if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
+        return [[], undefined];
+    }
+    const contextNode: ParserContext.Node = xorNode.node;
+
+    switch (contextNode.attributeCounter) {
+        // left
+        case 0:
+        case 1:
+            return [TExpressionKeywords, undefined];
+
+        // '..'
+        case 2:
+            return [[], undefined];
+
+        // right
+        case 3:
+            return [TExpressionKeywords, undefined];
 
         default:
             throw invalidAttributeCount(contextNode);
