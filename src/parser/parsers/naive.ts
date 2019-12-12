@@ -2015,7 +2015,6 @@ function readCsvArray<T>(
 
         const node: T & Ast.TCsvType = valueReader();
         const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
-        continueReadingValues = maybeCommaConstant !== undefined;
 
         const element: Ast.TCsv & Ast.ICsv<T & Ast.TCsvType> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -2024,8 +2023,10 @@ function readCsvArray<T>(
             node,
             maybeCommaConstant,
         };
-        elements.push(element);
         IParserStateUtils.endContext(state, element);
+        elements.push(element);
+
+        continueReadingValues = maybeCommaConstant !== undefined;
     }
 
     const astNode: Ast.ICsvArray<T & Ast.TCsvType> = {

@@ -6,7 +6,7 @@ import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { isPositionBeforeXorNode, Position } from "./position";
+import { isPositionAfterXorNode, Position } from "./position";
 import { KeywordInspected, KeywordState } from "./state";
 
 import * as InspectionUtils from "./inspectionUtils";
@@ -58,6 +58,7 @@ const DefaultKeywordInspection: KeywordInspected = {
 };
 
 function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
+    // Immediately add the visitedNode so that if it errors out we have a better trace.
     const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
     visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
@@ -116,7 +117,7 @@ function maybeRightMostXorNode(
     let bestMatch: Option<MaybeRightMostXorNodeSearch>;
 
     for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
-        if (!isPositionBeforeXorNode(position, xorNode)) {
+        if (isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
             if (bestMatch === undefined) {
                 bestMatch = {
                     rightMostNode: xorNode,
@@ -299,7 +300,7 @@ function visitListExpression(
     if (maybePreviousInspectedNode === undefined) {
         const details: {} = { xorNodeId: xorNode.node.id };
         throw new CommonError.InvariantError(
-            `should've had a child either of ${Ast.NodeKind.Constant} (open/close constant) or ${Ast.NodeKind.ArrayWrapper}.`,
+            `should've had a child of either ${Ast.NodeKind.Constant} (open/close constant) or ${Ast.NodeKind.ArrayWrapper}.`,
             details,
         );
     }
@@ -308,7 +309,7 @@ function visitListExpression(
         state.nodeIdMapCollection,
         previousInspectedNode.id,
     );
-    // '{'
+    // '{' first case
     if (previousXorNode.node.maybeAttributeIndex === 0) {
         return [TExpressionKeywords, undefined];
     }
@@ -321,6 +322,11 @@ function visitListExpression(
     const backtrack: ArrayWrapperBacktrack = maybeBacktrack;
     const csv: Option<NodeIdMap.TXorNode> = backtrack.csv;
     const maybeSibling: Option<NodeIdMap.TXorNode> = backtrack.maybeSibling;
+
+    // '{' second case
+    if (csv.node.maybeAttributeIndex === 0 && csv.kind === NodeIdMap.XorNodeKind.Context) {
+        return [TExpressionKeywords, undefined];
+    }
 
     // It might not exist because
     if (maybeSibling === undefined) {
@@ -369,13 +375,13 @@ function maybeArrayWrapperBacktrack(state: KeywordState, xorNode: NodeIdMap.TXor
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const visitedNodes: ReadonlyArray<IInspectedNode> = state.result.keywordVisitedNodes;
 
-    const maybeArrayWrapper: Option<IInspectedNode> = visitedNodes[visitedNodes.length - 1];
+    const maybeArrayWrapper: Option<IInspectedNode> = visitedNodes[visitedNodes.length - 2];
     if (maybeArrayWrapper.kind !== Ast.NodeKind.ArrayWrapper) {
         return undefined;
     }
     const arrayWrapper: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, maybeArrayWrapper.id);
 
-    const maybeInspectedCsv: Option<IInspectedNode> = visitedNodes[visitedNodes.length - 2];
+    const maybeInspectedCsv: Option<IInspectedNode> = visitedNodes[visitedNodes.length - 3];
     if (maybeInspectedCsv === undefined || maybeInspectedCsv.kind !== Ast.NodeKind.Csv) {
         const details: {} = { originalNodeId: xorNode.node.id };
         throw new CommonError.InvariantError(
@@ -385,7 +391,7 @@ function maybeArrayWrapperBacktrack(state: KeywordState, xorNode: NodeIdMap.TXor
     }
     const csv: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, maybeInspectedCsv.id);
 
-    const maybeInspectedCsvNode: Option<IInspectedNode> = visitedNodes[visitedNodes.length - 2];
+    const maybeInspectedCsvNode: Option<IInspectedNode> = visitedNodes[visitedNodes.length - 4];
     if (maybeInspectedCsvNode === undefined) {
         const details: {} = { originalNodeId: xorNode.node.id };
         throw new CommonError.InvariantError(

@@ -112,7 +112,7 @@ export function isPositionBeforeTokenPosition(position: Position, tokenPositionS
     } else if (positionLineNumber > tokenPositionStart.lineNumber) {
         return false;
     } else {
-        return position.lineCodeUnit <= tokenPositionStart.lineCodeUnit;
+        return position.lineCodeUnit < tokenPositionStart.lineCodeUnit;
     }
 }
 
@@ -124,6 +124,7 @@ export function isPositionAfterTokenPosition(position: Position, tokenPositionEn
     } else if (positionLineNumber > tokenPositionEnd.lineNumber) {
         return true;
     } else {
-        return position.lineCodeUnit > tokenPositionEnd.lineCodeUnit;
+        // Offset the fact that tokenPositionEnd has an exclusive range
+        return position.lineCodeUnit > tokenPositionEnd.lineCodeUnit - 1;
     }
 }
