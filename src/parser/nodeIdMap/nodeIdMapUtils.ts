@@ -381,7 +381,11 @@ export function deepCopyCollection(nodeIdMapCollection: Collection): Collection 
 //  * Children are read left to right.
 //  * Children are placed in childIdsById in the order they were read.
 //  * Therefore the right-most child is the most recently read which also appears last in the document.
-export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: number): Option<Ast.TNode> {
+export function maybeRightMostLeaf(
+    nodeIdMapCollection: Collection,
+    rootId: number,
+    maybeCondition: Option<(node: Ast.TNode) => boolean> = undefined,
+): Option<Ast.TNode> {
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
     let nodeIdsToExplore: number[] = [rootId];
     let maybeRightMost: Option<Ast.TNode>;
@@ -395,6 +399,9 @@ export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: numb
         // Check if Ast.TNode or ParserContext.Node
         if (maybeAstNode !== undefined) {
             const astNode: Ast.TNode = maybeAstNode;
+            if (maybeCondition && !maybeCondition(astNode)) {
+                continue;
+            }
 
             // Is leaf, check if it's more right than the previous record.
             // As it's a leaf there are no children to add.
@@ -438,6 +445,31 @@ export function maybeRightMostLeaf(nodeIdMapCollection: Collection, rootId: numb
     }
 
     return maybeRightMost;
+}
+
+export function maybeRightMostLeafWhere(
+    nodeIdMapCollection: Collection,
+    rootId: number,
+    maybeCondition: Option<(node: Ast.TNode) => boolean>,
+): Option<Ast.TNode> {
+    return maybeRightMostLeaf(nodeIdMapCollection, rootId, maybeCondition);
+}
+
+export function leftMostXorNode(nodeIdMapCollection: Collection, rootId: number): TXorNode {
+    let currentNode: Option<TXorNode> = expectXorNode(nodeIdMapCollection, rootId);
+    let potentialNode: Option<TXorNode> = expectXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        currentNode.node.id,
+        0,
+        undefined,
+    );
+
+    while (potentialNode !== undefined) {
+        currentNode = potentialNode;
+        potentialNode = expectXorChildByAttributeIndex(nodeIdMapCollection, currentNode.node.id, 0, undefined);
+    }
+
+    return currentNode;
 }
 
 export function isXorNodeParentOfXorNode(

@@ -10,6 +10,7 @@ export type TInspectedVisitedNode = InspectedInvokeExpression;
 export interface IInspectedNode {
     readonly kind: Ast.NodeKind;
     readonly id: number;
+    readonly maybeAttributeIndex: Option<number>;
     readonly maybePositionStart: Option<TokenPosition>;
     readonly maybePositionEnd: Option<TokenPosition>;
 }

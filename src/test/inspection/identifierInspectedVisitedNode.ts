@@ -70,6 +70,7 @@ describe(`Inspection`, () => {
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 4,
                             lineCodeUnit: 4,
@@ -84,6 +85,7 @@ describe(`Inspection`, () => {
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -98,6 +100,7 @@ describe(`Inspection`, () => {
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -112,6 +115,7 @@ describe(`Inspection`, () => {
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -126,6 +130,7 @@ describe(`Inspection`, () => {
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 11,
                             lineCodeUnit: 11,
@@ -147,6 +152,7 @@ describe(`Inspection`, () => {
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -161,6 +167,7 @@ describe(`Inspection`, () => {
                     {
                         id: 10,
                         kind: Ast.NodeKind.IdentifierExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -175,6 +182,7 @@ describe(`Inspection`, () => {
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -189,6 +197,7 @@ describe(`Inspection`, () => {
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -203,6 +212,7 @@ describe(`Inspection`, () => {
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -217,6 +227,7 @@ describe(`Inspection`, () => {
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 11,
                             lineCodeUnit: 11,
@@ -246,6 +257,7 @@ describe(`Inspection`, () => {
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 4,
                             lineCodeUnit: 4,
@@ -260,6 +272,7 @@ describe(`Inspection`, () => {
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -274,6 +287,7 @@ describe(`Inspection`, () => {
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -288,6 +302,7 @@ describe(`Inspection`, () => {
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -302,6 +317,7 @@ describe(`Inspection`, () => {
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: undefined,
                         maybePositionStart: {
                             codeUnit: 0,
@@ -312,6 +328,7 @@ describe(`Inspection`, () => {
                     {
                         id: 1,
                         kind: Ast.NodeKind.LogicalExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: undefined,
                         maybePositionStart: {
                             codeUnit: 0,
@@ -329,6 +346,7 @@ describe(`Inspection`, () => {
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -343,6 +361,7 @@ describe(`Inspection`, () => {
                     {
                         id: 10,
                         kind: Ast.NodeKind.IdentifierExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -357,6 +376,7 @@ describe(`Inspection`, () => {
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -371,6 +391,7 @@ describe(`Inspection`, () => {
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -385,6 +406,7 @@ describe(`Inspection`, () => {
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: {
                             codeUnit: 10,
                             lineCodeUnit: 10,
@@ -399,6 +421,7 @@ describe(`Inspection`, () => {
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: undefined,
                         maybePositionStart: {
                             codeUnit: 0,
@@ -409,6 +432,7 @@ describe(`Inspection`, () => {
                     {
                         id: 1,
                         kind: Ast.NodeKind.LogicalExpression,
+                        maybeAttributeIndex: undefined,
                         maybePositionEnd: undefined,
                         maybePositionStart: {
                             codeUnit: 0,

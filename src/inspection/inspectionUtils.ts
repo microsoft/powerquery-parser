@@ -122,6 +122,7 @@ export function inspectedVisitedNodeFrom(xorNode: NodeIdMap.TXorNode): IInspecte
     return {
         kind: xorNode.node.kind,
         id: xorNode.node.id,
+        maybeAttributeIndex: xorNode.node.maybeAttributeIndex,
         maybePositionStart,
         maybePositionEnd,
     };

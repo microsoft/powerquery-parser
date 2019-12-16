@@ -23,7 +23,7 @@ function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected:
 }
 
 describe(`Inspection`, () => {
-    describe(`abc123 Keyword`, () => {
+    describe(`Keyword`, () => {
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try |`);
@@ -46,7 +46,13 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.IfExpression}`, () => {
+        describe(`abc123 ${Ast.NodeKind.IfExpression}`, () => {
+            it(`if|`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if|`);
+                const expected: AbridgedInspection = [[], KeywordKind.If];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
             it(`if |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |`);
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];

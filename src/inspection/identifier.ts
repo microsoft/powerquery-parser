@@ -343,6 +343,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExprXorNode: Node
     unsafeResult.maybeInvokeExpression = {
         kind: Ast.NodeKind.InvokeExpression,
         id: invokeExprXorNode.node.id,
+        maybeAttributeIndex: invokeExprXorNode.node.maybeAttributeIndex,
         maybePositionEnd,
         maybePositionStart,
         maybeName,

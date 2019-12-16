@@ -6,7 +6,7 @@ import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { isPositionAfterXorNode, Position } from "./position";
+import { isPositionAfterXorNode, Position, isPositionAfterAstNode } from "./position";
 import { KeywordInspected, KeywordState } from "./state";
 
 import * as InspectionUtils from "./inspectionUtils";
@@ -16,13 +16,20 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<KeywordInspected> {
-    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeRightMostXorNode(position, nodeIdMapCollection, leafNodeIds);
+    // TODO: add root to nodeIdMapCollection
+    const maybeRoot: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeafWhere(
+        nodeIdMapCollection,
+        Math.min(...nodeIdMapCollection.contextNodeById.keys(), ...nodeIdMapCollection.astNodeById.keys()),
+        undefined,
+    );
     if (maybeRoot === undefined) {
         return {
             kind: ResultKind.Ok,
             value: DefaultKeywordInspection,
         };
     }
+    const root: Ast.TNode = translateRoot(nodeIdMapCollection, maybeRoot);
+
     const state: TypeUtils.StripReadonly<KeywordState> = {
         position,
         nodeIdMapCollection,
@@ -34,16 +41,16 @@ export function tryFrom(
         },
         isKeywordInspectionDone: false,
     };
-    const root: NodeIdMap.TXorNode = maybeRoot;
-    return Traverse.tryTraverseXor(
-        state,
-        nodeIdMapCollection,
-        root,
-        Traverse.VisitNodeStrategy.BreadthFirst,
-        visitNode,
-        Traverse.maybeExpandXorParent,
-        earlyExit,
-    );
+    // const root: NodeIdMap.TXorNode = maybeRoot;
+    // return Traverse.tryTraverseXor(
+    //     state,
+    //     nodeIdMapCollection,
+    //     root,
+    //     Traverse.VisitNodeStrategy.BreadthFirst,
+    //     visitNode,
+    //     Traverse.maybeExpandXorParent,
+    //     earlyExit,
+    // );
 }
 
 interface MaybeRightMostXorNodeSearch {
@@ -65,6 +72,87 @@ const DefaultKeywordInspection: KeywordInspected = {
     allowedKeywords: TExpressionKeywords,
     maybeRequiredKeyword: undefined,
 };
+
+interface Origin {
+    readonly root: NodeIdMap.TXorNode;
+    readonly originalRoot: Ast.TNode;
+}
+
+function translateRoot(nodeIdMapCollection: NodeIdMap.Collection, root: Ast.TNode): Origin {
+    if (root.kind === Ast.NodeKind.Constant) {
+        switch (root.literal) {
+            case Ast.ConstantKind.Comma:
+                return translateComma(nodeIdMapCollection, root);
+
+            case Ast.ConstantKind.Equal:
+                return translateEqual(nodeIdMapCollection, root);
+
+            default:
+                return {
+                    root: {
+                        kind: NodeIdMap.XorNodeKind.Ast,
+                        node: root,
+                    },
+                    originalRoot: root,
+                };
+        }
+    } else {
+        return {
+            root: {
+                kind: NodeIdMap.XorNodeKind.Ast,
+                node: root,
+            },
+            originalRoot: root,
+        };
+    }
+}
+
+function translateEqual(nodeIdMapCollection: NodeIdMap.Collection, originalRoot: Ast.TNode): Origin {
+    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, originalRoot.id);
+    switch (parent.node.kind) {
+        case Ast.NodeKind.EqualityExpression:
+        case Ast.NodeKind.FieldTypeSpecification:
+        case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
+        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+        case Ast.NodeKind.IdentifierExpressionPairedExpression:
+        case Ast.NodeKind.IdentifierPairedExpression: {
+            const root: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+                nodeIdMapCollection,
+                parent.node.id,
+                originalRoot.maybeAttributeIndex! + 1,
+                undefined,
+            );
+            return {
+                root,
+                originalRoot,
+            };
+        }
+
+        default:
+            throw invalidRootTranslate(translateEqual.name, originalRoot);
+    }
+}
+
+function translateComma(nodeIdMapCollection: NodeIdMap.Collection, originalRoot: Ast.TNode): Origin {
+    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, originalRoot.id);
+    if (parent.node.kind !== Ast.NodeKind.Csv) {
+        throw invalidRootTranslate(translateComma.name, originalRoot);
+    }
+
+    const arrayWrapper: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, parent.node.id);
+    const siblingCsv: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        arrayWrapper.node.id,
+        parent.node.maybeAttributeIndex! + 1,
+        undefined,
+    );
+    const root: NodeIdMap.TXorNode = NodeIdMapUtils.leftMostXorNode(nodeIdMapCollection, siblingCsv.node.id);
+
+    return {
+        root,
+        originalRoot,
+    };
+}
 
 function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     // Immediately add the visitedNode so that if it errors out we have a better trace.
@@ -267,40 +355,30 @@ function visitIdentifierPairedExpression(
     }
 }
 
-function visitIfExpression(_state: KeywordState, xorNode: NodeIdMap.TXorNode): [ReadonlyArray<string>, Option<string>] {
+function visitIfExpression(state: KeywordState, xorNode: NodeIdMap.TXorNode): [ReadonlyArray<string>, Option<string>] {
     if (xorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         return [[], undefined];
     }
-    const contextNode: ParserContext.Node = xorNode.node;
 
-    switch (contextNode.attributeCounter) {
-        // `if`
+    const previousInspected: IInspectedNode = previousInspectedNode(state);
+    switch (previousInspected.maybeAttributeIndex) {
+        // 'if'
         case 0:
-        case 1:
             return [[], KeywordKind.If];
-
-        // condition
+        // 'then'
         case 2:
-            return [TExpressionKeywords, undefined];
-
-        // `then`
-        case 3:
             return [[], KeywordKind.Then];
-
-        // trueExpression
+        // 'else'
         case 4:
-            return [TExpressionKeywords, undefined];
-
-        // `else`
-        case 5:
             return [[], KeywordKind.Else];
 
-        // falseExpression
-        case 6:
+        case 1:
+        case 3:
+        case 5:
             return [TExpressionKeywords, undefined];
 
         default:
-            throw invalidAttributeCount(contextNode);
+            throw invalidPreviousInspected(previousInspected);
     }
 }
 
@@ -425,18 +503,18 @@ function visitWrappedExpressionArray(
     xorNode: NodeIdMap.TXorNode,
 ): [ReadonlyArray<string>, Option<string>] {
     const inspectedNodes: ReadonlyArray<IInspectedNode> = state.result.keywordVisitedNodes;
-    const maybePreviousInspectedNode: Option<IInspectedNode> = inspectedNodes[inspectedNodes.length - 2];
-    if (maybePreviousInspectedNode === undefined) {
+    const maybePreviousInspected: Option<IInspectedNode> = inspectedNodes[inspectedNodes.length - 2];
+    if (maybePreviousInspected === undefined) {
         const details: {} = { xorNodeId: xorNode.node.id };
         throw new CommonError.InvariantError(
             `should've had a child of either ${Ast.NodeKind.Constant} (open/close constant) or ${Ast.NodeKind.ArrayWrapper}.`,
             details,
         );
     }
-    const previousInspectedNode: IInspectedNode = maybePreviousInspectedNode;
+    const previousInspected: IInspectedNode = maybePreviousInspected;
     const previousXorNode: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorNode(
         state.nodeIdMapCollection,
-        previousInspectedNode.id,
+        previousInspected.id,
     );
     // Open wrapper constant, first case
     if (previousXorNode.node.maybeAttributeIndex === 0) {
@@ -549,6 +627,23 @@ function visitSectionMemberIdentifierPairedExpression(
     }
 }
 
+function invalidPreviousInspected(previousInspected: IInspectedNode): CommonError.InvariantError {
+    const details: {} = {
+        id: previousInspected.id,
+        kind: previousInspected.kind,
+        attributeCounter: previousInspected.maybeAttributeIndex,
+    };
+    return new CommonError.InvariantError(`Unable to continue based on the previously inspected node`, details);
+}
+
+function invalidRootTranslate(fnName: string, originalRoot: Ast.TNode): CommonError.InvariantError {
+    const details: {} = {
+        nodeId: originalRoot.id,
+        nodeKind: originalRoot.kind,
+    };
+    return new CommonError.InvariantError(`Unknown nodeKind for ${fnName}`, details);
+}
+
 function invalidAttributeCount(contextNode: ParserContext.Node): CommonError.InvariantError {
     const details: {} = {
         id: contextNode.id,
@@ -559,4 +654,17 @@ function invalidAttributeCount(contextNode: ParserContext.Node): CommonError.Inv
         `ParserContext.Node should never have reached the found attribute index`,
         details,
     );
+}
+
+function maybePreviousInspectedNode(state: KeywordState): Option<IInspectedNode> {
+    const inspectedNodes: ReadonlyArray<IInspectedNode> = state.result.keywordVisitedNodes;
+    return inspectedNodes[inspectedNodes.length - 2];
+}
+
+function previousInspectedNode(state: KeywordState): IInspectedNode {
+    const maybeInspected: Option<IInspectedNode> = maybePreviousInspectedNode(state);
+    if (maybeInspected === undefined) {
+        throw new CommonError.InvariantError("must have at least 2 inspected nodes");
+    }
+    return maybeInspected;
 }
