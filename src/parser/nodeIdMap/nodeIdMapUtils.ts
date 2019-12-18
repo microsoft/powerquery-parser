@@ -15,6 +15,20 @@ import {
     XorNodeTokenRange,
 } from "./nodeIdMap";
 
+export function xorNodeFromAst(node: Ast.TNode): TXorNode {
+    return {
+        kind: XorNodeKind.Ast,
+        node,
+    };
+}
+
+export function xorNodeFromContext(node: ParserContext.Node): TXorNode {
+    return {
+        kind: XorNodeKind.Context,
+        node,
+    };
+}
+
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): Option<TXorNode> {
     const maybeAstNode: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(nodeId);
     if (maybeAstNode) {
@@ -489,6 +503,19 @@ export function isXorNodeParentOfXorNode(
     }
 
     return false;
+}
+
+export function expectAncestry(nodeIdMapCollection: Collection, rootId: number): ReadonlyArray<TXorNode> {
+    const ancestryIds: number[] = [];
+
+    let maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(rootId);
+    while (maybeParentId) {
+        const parentId: number = maybeParentId;
+        ancestryIds.push(parentId);
+        maybeParentId = nodeIdMapCollection.parentIdById.get(parentId);
+    }
+
+    return expectXorNodes(nodeIdMapCollection, ancestryIds);
 }
 
 export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {

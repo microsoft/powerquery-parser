@@ -6,8 +6,8 @@ import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { isPositionAfterXorNode, Position, isPositionAfterAstNode } from "./position";
-import { KeywordInspected, KeywordState } from "./state";
+import { Position, isPositionAfterAstNode, isPositionAfterContextNode } from "./position";
+import { KeywordInspected, KeywordRoot, KeywordState } from "./state";
 
 import * as InspectionUtils from "./inspectionUtils";
 
@@ -16,20 +16,15 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<KeywordInspected> {
-    // TODO: add root to nodeIdMapCollection
-    const maybeRoot: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeafWhere(
-        nodeIdMapCollection,
-        Math.min(...nodeIdMapCollection.contextNodeById.keys(), ...nodeIdMapCollection.astNodeById.keys()),
-        undefined,
-    );
+    const maybeRoot: NodeIdMap.TXorNode = findRoot(position, nodeIdMapCollection, leafNodeIds);
     if (maybeRoot === undefined) {
         return {
             kind: ResultKind.Ok,
             value: DefaultKeywordInspection,
         };
     }
-    const root: Ast.TNode = translateRoot(nodeIdMapCollection, maybeRoot);
 
+    const keywordRoot: KeywordRoot = translateRoot(nodeIdMapCollection, maybeRoot);
     const state: TypeUtils.StripReadonly<KeywordState> = {
         position,
         nodeIdMapCollection,
@@ -39,23 +34,19 @@ export function tryFrom(
             maybeRequiredKeyword: undefined,
             keywordVisitedNodes: [],
         },
+        keywordRoot,
         isKeywordInspectionDone: false,
     };
-    // const root: NodeIdMap.TXorNode = maybeRoot;
-    // return Traverse.tryTraverseXor(
-    //     state,
-    //     nodeIdMapCollection,
-    //     root,
-    //     Traverse.VisitNodeStrategy.BreadthFirst,
-    //     visitNode,
-    //     Traverse.maybeExpandXorParent,
-    //     earlyExit,
-    // );
-}
 
-interface MaybeRightMostXorNodeSearch {
-    readonly rightMostNode: NodeIdMap.TXorNode;
-    readonly nodeTokenRange: NodeIdMap.XorNodeTokenRange;
+    return Traverse.tryTraverseXor(
+        state,
+        nodeIdMapCollection,
+        keywordRoot.root,
+        Traverse.VisitNodeStrategy.BreadthFirst,
+        visitNode,
+        Traverse.maybeExpandXorParent,
+        earlyExit,
+    );
 }
 
 interface WrappedArrayBacktrack {
@@ -73,42 +64,130 @@ const DefaultKeywordInspection: KeywordInspected = {
     maybeRequiredKeyword: undefined,
 };
 
-interface Origin {
-    readonly root: NodeIdMap.TXorNode;
-    readonly originalRoot: Ast.TNode;
+function findRoot(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): NodeIdMap.TXorNode {
+    let lowerNodeIdBound: number = Number.MIN_SAFE_INTEGER;
+    let higherNodeIdBound: number = Number.MAX_SAFE_INTEGER;
+    let maybeBestMatch: Option<NodeIdMap.TXorNode> = undefined;
+
+    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
+    for (const nodeId of leafNodeIds) {
+        if (nodeId <= lowerNodeIdBound || nodeId >= higherNodeIdBound) {
+            continue;
+        }
+
+        const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
+        if (
+            isPositionAfterAstNode(position, candidate) &&
+            (maybeBestMatch === undefined || maybeBestMatch.node.id < candidate.id)
+        ) {
+            maybeBestMatch = NodeIdMapUtils.xorNodeFromAst(candidate);
+            lowerNodeIdBound = Math.max(lowerNodeIdBound, candidate.id);
+            higherNodeIdBound = Math.min(higherNodeIdBound, candidate.id);
+        }
+    }
+
+    const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
+    for (const candidate of contextNodeById.values()) {
+        if (
+            isPositionAfterContextNode(position, nodeIdMapCollection, candidate) &&
+            (maybeBestMatch === undefined || maybeBestMatch.node.id < candidate.id)
+        ) {
+            maybeBestMatch = NodeIdMapUtils.xorNodeFromContext(candidate);
+            lowerNodeIdBound = Math.max(lowerNodeIdBound, candidate.id);
+            higherNodeIdBound = Math.min(higherNodeIdBound, candidate.id);
+        }
+    }
+
+    if (maybeBestMatch === undefined) {
+        throw new CommonError.InvariantError(
+            "Couldn't find any root. This should only happen if nodeIdMap/leafNodeIds have no values, and that error should have been caught earlier.",
+        );
+    }
+
+    return maybeBestMatch;
 }
 
-function translateRoot(nodeIdMapCollection: NodeIdMap.Collection, root: Ast.TNode): Origin {
-    if (root.kind === Ast.NodeKind.Constant) {
-        switch (root.literal) {
-            case Ast.ConstantKind.Comma:
-                return translateComma(nodeIdMapCollection, root);
+type TRootTransformationFn = Option<
+    (
+        nodeIdMapCollection: NodeIdMap.Collection,
+        originalRoot: NodeIdMap.TXorNode,
+        offender: NodeIdMap.TXorNode,
+    ) => NodeIdMap.TXorNode
+>;
 
-            case Ast.ConstantKind.Equal:
-                return translateEqual(nodeIdMapCollection, root);
+function translateRoot(nodeIdMapCollection: NodeIdMap.Collection, root: NodeIdMap.TXorNode): NodeIdMap.TXorNode {
+    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectAncestry(
+        nodeIdMapCollection,
+        root.node.id,
+    );
 
-            default:
-                return {
-                    root: {
-                        kind: NodeIdMap.XorNodeKind.Ast,
-                        node: root,
-                    },
-                    originalRoot: root,
-                };
+    let maybeTransformationFn: TRootTransformationFn = undefined;
+    let maybeOffender: Option<NodeIdMap.TXorNode> = undefined;
+    for (const ancestor of ancestry) {
+        maybeTransformationFn = maybeRootTransformationFn(ancestor.node.kind);
+        if (maybeTransformationFn !== undefined) {
+            maybeOffender = ancestor;
+            break;
         }
-    } else {
-        return {
-            root: {
-                kind: NodeIdMap.XorNodeKind.Ast,
-                node: root,
-            },
-            originalRoot: root,
-        };
+    }
+
+    if (maybeTransformationFn === undefined) {
+        return root;
+    }
+    const transformationFn: TRootTransformationFn = maybeTransformationFn;
+    const offender: NodeIdMap.TXorNode = maybeOffender!;
+    const transformedRoot: NodeIdMap.TXorNode = transformationFn(nodeIdMapCollection, root, offender);
+
+    let newRoot: NodeIdMap.TXorNode = transformedRoot;
+    let maybeFirstChild: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        newRoot.node.id,
+        0,
+        undefined,
+    );
+    while (maybeFirstChild !== undefined) {
+        const firstChild: NodeIdMap.TXorNode = maybeFirstChild;
+        newRoot = firstChild;
+        maybeFirstChild = NodeIdMapUtils.expectXorChildByAttributeIndex(
+            nodeIdMapCollection,
+            newRoot.node.id,
+            0,
+            undefined,
+        );
+    }
+
+    return translateRoot(nodeIdMapCollection, newRoot);
+}
+
+function maybeRootTransformationFn(nodeKind: Ast.NodeKind): Option<TRootTransformationFn> {
+    // tslint:disable-next-line: switch-default
+    switch (nodeKind) {
+        case Ast.NodeKind.Csv:
+            return translateComma;
+
+        case Ast.NodeKind.EqualityExpression:
+        case Ast.NodeKind.FieldTypeSpecification:
+        case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
+        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+        case Ast.NodeKind.IdentifierExpressionPairedExpression:
+        case Ast.NodeKind.IdentifierPairedExpression:
+            return translateEqual;
+
+        default:
+            return undefined;
     }
 }
 
-function translateEqual(nodeIdMapCollection: NodeIdMap.Collection, originalRoot: Ast.TNode): Origin {
-    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, originalRoot.id);
+function translateEqual(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    currentRoot: Ast.TNode,
+    offender: NodeIdMap.TXorNode,
+): KeywordRoot {
+    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, currentRoot.id);
     switch (parent.node.kind) {
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.FieldTypeSpecification:
@@ -119,24 +198,28 @@ function translateEqual(nodeIdMapCollection: NodeIdMap.Collection, originalRoot:
             const root: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 parent.node.id,
-                originalRoot.maybeAttributeIndex! + 1,
+                currentRoot.maybeAttributeIndex! + 1,
                 undefined,
             );
             return {
                 root,
-                originalRoot,
+                originalRoot: currentRoot,
             };
         }
 
         default:
-            throw invalidRootTranslate(translateEqual.name, originalRoot);
+            throw invalidRootTranslate(translateEqual.name, currentRoot);
     }
 }
 
-function translateComma(nodeIdMapCollection: NodeIdMap.Collection, originalRoot: Ast.TNode): Origin {
-    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, originalRoot.id);
+function translateComma(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    currentRoot: Ast.TNode,
+    offender: NodeIdMap.TXorNode,
+): KeywordRoot {
+    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, currentRoot.id);
     if (parent.node.kind !== Ast.NodeKind.Csv) {
-        throw invalidRootTranslate(translateComma.name, originalRoot);
+        throw invalidRootTranslate(translateComma.name, currentRoot);
     }
 
     const arrayWrapper: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, parent.node.id);
@@ -150,7 +233,7 @@ function translateComma(nodeIdMapCollection: NodeIdMap.Collection, originalRoot:
 
     return {
         root,
-        originalRoot,
+        originalRoot: currentRoot,
     };
 }
 
@@ -207,57 +290,6 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
 
 function earlyExit(state: KeywordState, _xorNode: NodeIdMap.TXorNode): boolean {
     return state.isKeywordInspectionDone;
-}
-
-function maybeRightMostXorNode(
-    position: Position,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-): Option<NodeIdMap.TXorNode> {
-    const nodeIds: ReadonlyArray<number> = [...nodeIdMapCollection.contextNodeById.keys(), ...leafNodeIds];
-    let bestMatch: Option<MaybeRightMostXorNodeSearch>;
-
-    for (const xorNode of NodeIdMapUtils.expectXorNodes(nodeIdMapCollection, nodeIds)) {
-        if (isPositionAfterXorNode(position, nodeIdMapCollection, xorNode)) {
-            if (bestMatch === undefined) {
-                bestMatch = {
-                    rightMostNode: xorNode,
-                    nodeTokenRange: NodeIdMapUtils.xorNodeTokenRange(nodeIdMapCollection, xorNode),
-                };
-            } else {
-                const potentialTokenRange: NodeIdMap.XorNodeTokenRange = NodeIdMapUtils.xorNodeTokenRange(
-                    nodeIdMapCollection,
-                    xorNode,
-                );
-                // Since we've already proven xorNode is on or before position
-                // we can use token indexes to compare nodes.
-                //
-                // Check if xorNode ends more to the right (higher token end value),
-                // If the end points tie pick the one with a smaller range (higher token start value).
-                // If the ranges tie pick the one one with the larger node id as it was more recently created.
-                let updateBestMatch: boolean = false;
-                if (potentialTokenRange.tokenIndexEnd >= bestMatch.nodeTokenRange.tokenIndexEnd) {
-                    if (potentialTokenRange.tokenIndexStart > bestMatch.nodeTokenRange.tokenIndexStart) {
-                        updateBestMatch = true;
-                    } else if (
-                        potentialTokenRange.tokenIndexStart === bestMatch.nodeTokenRange.tokenIndexStart &&
-                        xorNode.node.id > bestMatch.rightMostNode.node.id
-                    ) {
-                        updateBestMatch = true;
-                    }
-                }
-
-                if (updateBestMatch) {
-                    bestMatch = {
-                        rightMostNode: xorNode,
-                        nodeTokenRange: potentialTokenRange,
-                    };
-                }
-            }
-        }
-    }
-
-    return bestMatch !== undefined ? bestMatch.rightMostNode : undefined;
 }
 
 function updateKeywordResult(

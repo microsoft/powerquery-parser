@@ -46,14 +46,14 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`abc123 ${Ast.NodeKind.IfExpression}`, () => {
+        describe(`${Ast.NodeKind.IfExpression}`, () => {
             it(`if|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if|`);
                 const expected: AbridgedInspection = [[], KeywordKind.If];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`if |`, () => {
+            it(`abc123 if |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |`);
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
