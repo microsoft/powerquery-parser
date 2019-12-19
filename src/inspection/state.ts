@@ -18,7 +18,6 @@ export interface IState<T> extends Traverse.IState<T> {
 }
 
 export interface KeywordState extends IState<KeywordInspected> {
-    readonly keywordRoot: KeywordRoot;
     isKeywordInspectionDone: boolean;
 }
 
@@ -47,12 +46,4 @@ export interface IdentifierInspected extends IInspected {
     // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
     // then if we encounter the identifier's assignment we will store metadata.
     readonly maybePositionIdentifier: Option<TPositionIdentifier>;
-}
-
-// Normally a kewyrod inspection starts by going to the right most leaf node on or before the inspection position,
-// but on certain nodes the starting postion is shifted to the right one.
-// Eg. '{1,|' shouldn't be inspecting the second Csv item instead of the first.
-export interface KeywordRoot {
-    readonly root: NodeIdMap.TXorNode;
-    readonly originalRoot: NodeIdMap.TXorNode;
 }
