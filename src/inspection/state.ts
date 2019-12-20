@@ -22,10 +22,9 @@ export interface KeywordState extends IState<KeywordInspected> {
 }
 
 export interface IdentifierState extends IState<IdentifierInspected> {
-    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-    // then we store that leaf here.
-    // Later if we encounter the assignment for this identifier then it's stored in Inspected.maybePositionIdentifier
-    readonly maybeClosestLeafIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
+    // If the position is on either an (Identifier | GeneralizedIdentifier)
+    // If we encounter the assignment for this identifier then it's stored in Inspected.maybeIdentifierUnderPosition
+    readonly maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
 }
 
 // tslint:disable-next-line: no-empty-interface
@@ -45,5 +44,5 @@ export interface IdentifierInspected extends IInspected {
     readonly maybeInvokeExpression: Option<InspectedInvokeExpression>;
     // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
     // then if we encounter the identifier's assignment we will store metadata.
-    readonly maybePositionIdentifier: Option<TPositionIdentifier>;
+    readonly maybeIdentifierUnderPosition: Option<TPositionIdentifier>;
 }

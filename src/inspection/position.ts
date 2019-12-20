@@ -100,8 +100,14 @@ export function isPositionOnAstNode(position: Position, astNode: Ast.TNode): boo
     return !isPositionBeforeAstNode(position, astNode) && !isPositionAfterAstNode(position, astNode);
 }
 
+export function isPositionOnOrDirectlyAfterAstNode(position: Position, astNode: Ast.TNode): boolean {
+    return (
+        isPositionOnAstNode(position, astNode) || isPositionOnTokenPosition(position, astNode.tokenRange.positionEnd)
+    );
+}
+
 export function isPositionAfterAstNode(position: Position, astNode: Ast.TNode): boolean {
-    return isPositionAfterTokenPosition(position, astNode.tokenRange.positionEnd);
+    return isPositionAfterTokenPosition(position, astNode.tokenRange.positionEnd, true);
 }
 
 export function isPositionBeforeTokenPosition(position: Position, tokenPositionStart: TokenPosition): boolean {
@@ -116,15 +122,27 @@ export function isPositionBeforeTokenPosition(position: Position, tokenPositionS
     }
 }
 
-export function isPositionAfterTokenPosition(position: Position, tokenPositionEnd: TokenPosition): boolean {
+export function isPositionOnTokenPosition(position: Position, tokenPosition: TokenPosition): boolean {
+    return position.lineNumber === tokenPosition.lineNumber && position.lineCodeUnit === tokenPosition.lineCodeUnit;
+}
+
+export function isPositionAfterTokenPosition(
+    position: Position,
+    tokenPosition: TokenPosition,
+    exclusiveUpperBound: boolean,
+): boolean {
     const positionLineNumber: number = position.lineNumber;
 
-    if (positionLineNumber < tokenPositionEnd.lineNumber) {
+    if (positionLineNumber < tokenPosition.lineNumber) {
         return false;
-    } else if (positionLineNumber > tokenPositionEnd.lineNumber) {
+    } else if (positionLineNumber > tokenPosition.lineNumber) {
         return true;
     } else {
         // Offset the fact that tokenPositionEnd has an exclusive range
-        return position.lineCodeUnit > tokenPositionEnd.lineCodeUnit - 1;
+        if (exclusiveUpperBound) {
+            return position.lineCodeUnit > tokenPosition.lineCodeUnit - 1;
+        } else {
+            return position.lineCodeUnit > tokenPosition.lineCodeUnit;
+        }
     }
 }

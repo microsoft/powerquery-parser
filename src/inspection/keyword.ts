@@ -7,12 +7,14 @@ import { KeywordKind, TExpressionKeywords, TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
 import { isPositionAfterAstNode, isPositionAfterContextNode, Position } from "./position";
+import { TPositionIdentifier } from "./positionIdentifier";
 import { KeywordInspected, KeywordState } from "./state";
 
 import * as InspectionUtils from "./inspectionUtils";
 
 export function tryFrom(
     position: Position,
+    maybeIdentifierOnPosition: Option<TPositionIdentifier>,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<KeywordInspected> {
@@ -171,44 +173,49 @@ function recursiveRootTranslation(
         root.node.id,
     );
 
-    let maybeTransformationFn: TRootTranslationFn = undefined;
-    let maybeOffender: Option<NodeIdMap.TXorNode> = undefined;
-    for (let index: number = ancestry.length; index >= 0; index -= 1) {
+    for (let index: number = ancestry.length - 1; index >= 0; index -= 1) {
         const ancestor: NodeIdMap.TXorNode = ancestry[index];
-        maybeTransformationFn = maybeRootTransformationFn(ancestor.node.kind);
+        const maybeTransformationFn: TRootTranslationFn = maybeRootTransformationFn(ancestor.node.kind);
+
         if (maybeTransformationFn !== undefined) {
-            maybeOffender = ancestor;
-            break;
+            const transformationFn: TRootTranslationFn = maybeTransformationFn;
+            const maybeTransformedRoot: Option<NodeIdMap.TXorNode> = transformationFn(
+                nodeIdMapCollection,
+                ancestry,
+                index,
+            );
+
+            if (maybeTransformedRoot !== undefined) {
+                const transformedRoot: NodeIdMap.TXorNode = maybeTransformedRoot;
+                if (transformedRoot.node.id === root.node.id) {
+                    const details: {} = { nodeId: root.node.id };
+                    throw new CommonError.InvariantError("a transformation didn't actually change anything", details);
+                }
+
+                return recursiveRootTranslation(
+                    nodeIdMapCollection,
+                    NodeIdMapUtils.leftMostXorNode(nodeIdMapCollection, transformedRoot.node.id),
+                );
+            }
         }
     }
 
-    if (maybeTransformationFn === undefined) {
-        return root;
-    }
-
-    const transformationFn: TRootTranslationFn = maybeTransformationFn;
-    const offender: NodeIdMap.TXorNode = maybeOffender!;
-    const transformedRoot: NodeIdMap.TXorNode = transformationFn(nodeIdMapCollection, root, offender);
-
-    return recursiveRootTranslation(
-        nodeIdMapCollection,
-        NodeIdMapUtils.leftMostXorNode(nodeIdMapCollection, transformedRoot.node.id),
-    );
+    return root;
 }
 
 type TRootTranslationFn = Option<
     (
         nodeIdMapCollection: NodeIdMap.Collection,
-        originalRoot: NodeIdMap.TXorNode,
-        offender: NodeIdMap.TXorNode,
-    ) => NodeIdMap.TXorNode
+        ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
+        offendingIndex: number,
+    ) => Option<NodeIdMap.TXorNode>
 >;
 
 function maybeRootTransformationFn(nodeKind: Ast.NodeKind): Option<TRootTranslationFn> {
     // tslint:disable-next-line: switch-default
     switch (nodeKind) {
         case Ast.NodeKind.Csv:
-            return translateComma;
+            return translateCsv;
 
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.FieldTypeSpecification:
@@ -216,20 +223,26 @@ function maybeRootTransformationFn(nodeKind: Ast.NodeKind): Option<TRootTranslat
         case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
         case Ast.NodeKind.IdentifierExpressionPairedExpression:
         case Ast.NodeKind.IdentifierPairedExpression:
-            return translateEqual;
+            return translateKeyValuePair;
 
         default:
             return undefined;
     }
 }
 
-function translateEqual(
+function translateKeyValuePair(
     nodeIdMapCollection: NodeIdMap.Collection,
-    currentRoot: NodeIdMap.TXorNode,
-    _offender: NodeIdMap.TXorNode,
-): NodeIdMap.TXorNode {
-    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, currentRoot.node.id);
-    switch (parent.node.kind) {
+    ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
+    offendingIndex: number,
+): Option<NodeIdMap.TXorNode> {
+    const previous: NodeIdMap.TXorNode = ancestry[offendingIndex - 1];
+    // If the trigger wasn't a '=' constant then no translation should take place.
+    if (previous.node.maybeAttributeIndex !== 1) {
+        return undefined;
+    }
+
+    const keyValuePair: NodeIdMap.TXorNode = ancestry[offendingIndex];
+    switch (keyValuePair.node.kind) {
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.FieldTypeSpecification:
         case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
@@ -239,33 +252,38 @@ function translateEqual(
             // Value portion of key-value-pair
             return NodeIdMapUtils.expectXorChildByAttributeIndex(
                 nodeIdMapCollection,
-                parent.node.id,
-                currentRoot.node.maybeAttributeIndex! + 1,
+                keyValuePair.node.id,
+                2,
                 undefined,
             );
         }
 
         default:
-            throw invalidRootTranslate(translateEqual.name, currentRoot);
+            throw invalidRootTranslate(translateKeyValuePair.name, keyValuePair);
     }
 }
 
-function translateComma(
+function translateCsv(
     nodeIdMapCollection: NodeIdMap.Collection,
-    currentRoot: NodeIdMap.TXorNode,
-    _offender: NodeIdMap.TXorNode,
-): NodeIdMap.TXorNode {
-    const parent: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, currentRoot.node.id);
-    if (parent.node.kind !== Ast.NodeKind.Csv) {
-        throw invalidRootTranslate(translateComma.name, currentRoot);
+    ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
+    offendingIndex: number,
+): Option<NodeIdMap.TXorNode> {
+    const commaConstant: NodeIdMap.TXorNode = ancestry[offendingIndex - 1];
+    if (commaConstant.node.maybeAttributeIndex !== 1) {
+        return undefined;
     }
 
-    const arrayWrapper: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, parent.node.id);
+    const csv: NodeIdMap.TXorNode = ancestry[offendingIndex];
+    const arrayWrapper: NodeIdMap.TXorNode = NodeIdMapUtils.expectParentXorNode(nodeIdMapCollection, csv.node.id);
+    if (arrayWrapper.node.kind !== Ast.NodeKind.ArrayWrapper) {
+        throw invalidRootTranslate(translateCsv.name, csv);
+    }
+
     // Sibling Csv
     return NodeIdMapUtils.expectXorChildByAttributeIndex(
         nodeIdMapCollection,
         arrayWrapper.node.id,
-        parent.node.maybeAttributeIndex! + 1,
+        csv.node.maybeAttributeIndex! + 1,
         undefined,
     );
 }

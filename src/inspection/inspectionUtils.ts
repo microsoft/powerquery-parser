@@ -5,17 +5,18 @@ import { isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { Position } from "./position";
+import { isPositionOnOrDirectlyAfterAstNode, Position } from "./position";
 
-// Checks if the closest leaf is an identifier.
-// Either returns:
-//  * the given node if it's an identifier
-//  * the given node's parent if it's an identifier
-//  * undefined
-export function maybeClosestLeafIdentifier(
+// Checks if:
+//  * the node is some sort of identifier
+//  * position is on the node
+export function maybeIdentifierOnPostion(
+    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     closestLeaf: Ast.TNode,
 ): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
+    let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
+
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
     if (closestLeaf.kind === Ast.NodeKind.Constant && closestLeaf.literal === `@`) {
         const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(closestLeaf.id);
@@ -25,12 +26,21 @@ export function maybeClosestLeafIdentifier(
         const parentId: number = maybeParentId;
 
         const parent: Ast.TNode = NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
-        return parent.kind === Ast.NodeKind.IdentifierExpression ? parent.identifier : undefined;
+        if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
+            return undefined;
+        }
+        identifier = parent.identifier;
     } else if (
         closestLeaf.kind === Ast.NodeKind.Identifier ||
         closestLeaf.kind === Ast.NodeKind.GeneralizedIdentifier
     ) {
-        return closestLeaf;
+        identifier = closestLeaf;
+    } else {
+        return undefined;
+    }
+
+    if (isPositionOnOrDirectlyAfterAstNode(position, identifier)) {
+        return identifier;
     } else {
         return undefined;
     }

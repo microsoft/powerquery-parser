@@ -6,7 +6,13 @@ import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode, InvokeExpressionArgs } from "./node";
-import { isPositionAfterXorNode, isPositionOnAstNode, isPositionOnXorNode, Position } from "./position";
+import {
+    isPositionAfterTokenPosition,
+    isPositionAfterXorNode,
+    isPositionOnAstNode,
+    isPositionOnXorNode,
+    Position,
+} from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierInspected, IdentifierState } from "./state";
 
@@ -45,7 +51,7 @@ export function tryFrom(
             identifierVisitedNodes: [],
             scope: new Map(),
             maybeInvokeExpression: undefined,
-            maybePositionIdentifier: undefined,
+            maybeIdentifierUnderPosition: undefined,
         },
         // COMMON
         position,
@@ -53,9 +59,8 @@ export function tryFrom(
         leafNodeIds,
 
         // IDENTIFIER INSPECTION
-        // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-        // then store it on here.
-        maybeClosestLeafIdentifier: InspectionUtils.maybeClosestLeafIdentifier(nodeIdMapCollection, closestLeaf),
+        // Storage for if position is on an (Identifier | GeneralizedIdentifier).
+        maybeIdentifierUnderPosition: InspectionUtils.maybeIdentifierOnPostion(position, nodeIdMapCollection, closestLeaf),
     };
 
     const triedTraverse: TriedTraverse<TypeUtils.StripReadonly<IdentifierInspected>> = Traverse.tryTraverseXor<
@@ -70,20 +75,20 @@ export function tryFrom(
         Traverse.maybeExpandXorParent,
         undefined,
     );
-    // If an identifier is at the given Position but its definition wasn't found during the inspection,
-    // then create an UndefinedIdentifier for maybePositionIdentifier.
+    // If position is on an identifier but the identifier's definition wasn't found during the inspection,
+    // then create an UndefinedIdentifier for maybeIdentifierOnPosition.
     if (
         triedTraverse.kind === ResultKind.Ok &&
-        state.maybeClosestLeafIdentifier &&
-        state.result.maybePositionIdentifier === undefined
+        state.maybeIdentifierUnderPosition &&
+        state.result.maybeIdentifierUnderPosition === undefined
     ) {
         return {
             kind: ResultKind.Ok,
             value: {
                 ...triedTraverse.value,
-                maybePositionIdentifier: {
+                maybeIdentifierUnderPosition: {
                     kind: PositionIdentifierKind.Undefined,
-                    identifier: state.maybeClosestLeafIdentifier,
+                    identifier: state.maybeIdentifierUnderPosition,
                 },
             },
         };
@@ -142,7 +147,7 @@ const DefaultIdentifierInspection: IdentifierInspected = {
     identifierVisitedNodes: [],
     scope: new Map(),
     maybeInvokeExpression: undefined,
-    maybePositionIdentifier: undefined,
+    maybeIdentifierUnderPosition: undefined,
 };
 
 function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMap.TXorNode): void {
@@ -551,7 +556,6 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
     }
     const sectionMemberXorNode: NodeIdMap.TXorNode = maybeSectionMemberXorNode;
 
-    // Handles the case `section foo; x = 1|` where we don't want to add section members to the scope.
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeSemicolonConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
@@ -559,11 +563,12 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
         3,
         [Ast.NodeKind.Constant],
     );
+    // We don't want to add section members if we're on or after ';' constant.
     if (maybeSemicolonConstantXorNode !== undefined) {
         const semicolonConstantXorNode: NodeIdMap.TXorNode = maybeSemicolonConstantXorNode;
         if (semicolonConstantXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
             const semicolonConstant: Ast.Constant = semicolonConstantXorNode.node as Ast.Constant;
-            if (isPositionOnAstNode(state.position, semicolonConstant)) {
+            if (isPositionAfterTokenPosition(state.position, semicolonConstant.tokenRange.positionStart, false)) {
                 return;
             }
         }
@@ -711,9 +716,9 @@ function maybeSetStartingIdentifierValue(
 ): void {
     if (
         // Nothing to assign as position wasn't on an identifier
-        state.maybeClosestLeafIdentifier === undefined ||
+        state.maybeIdentifierUnderPosition === undefined ||
         // Already assigned the result
-        state.result.maybePositionIdentifier !== undefined
+        state.result.maybeIdentifierUnderPosition !== undefined
     ) {
         return;
     }
@@ -732,9 +737,9 @@ function maybeSetStartingIdentifierValue(
     }
     const key: Ast.GeneralizedIdentifier | Ast.Identifier = keyAstNode;
 
-    if (key.literal === state.maybeClosestLeafIdentifier.literal) {
+    if (key.literal === state.maybeIdentifierUnderPosition.literal) {
         const unsafeResult: TypeUtils.StripReadonly<IdentifierInspected> = state.result;
-        unsafeResult.maybePositionIdentifier = {
+        unsafeResult.maybeIdentifierUnderPosition = {
             kind: PositionIdentifierKind.Local,
             identifier: key,
             definition: valueXorNode,

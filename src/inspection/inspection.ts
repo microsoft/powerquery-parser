@@ -33,6 +33,7 @@ export function tryFrom(
 
     const triedInspectedKeyword: TriedTraverse<KeywordInspected> = keywordInspectedTryFrom(
         position,
+        triedInspectedIdentifier.value.maybeIdentifierUnderPosition,
         nodeIdMapCollection,
         leafNodeIds,
     );
