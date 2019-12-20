@@ -85,7 +85,13 @@ export function isPositionAfterContextNode(
 ): boolean {
     const maybeLeaf: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
-        return false;
+        // We're assuming position is a valid range for the document.
+        // Therefore if the context node didn't have a token (caused by EOF) we can make this assumption.
+        if (contextNode.maybeTokenStart === undefined) {
+            return false;
+        } else {
+            return isPositionAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, true);
+        }
     }
     const leaf: Ast.TNode = maybeLeaf;
 

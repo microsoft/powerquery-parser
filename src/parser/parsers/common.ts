@@ -29,28 +29,23 @@ export function readToken(state: IParserState): string {
 }
 
 export function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
-    const maybeConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, tokenKind);
-    if (maybeConstant === undefined) {
-        const maybeErr: Option<ParseError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(
-            state,
-            tokenKind,
-        );
-        if (maybeErr) {
-            throw maybeErr;
-        } else {
-            const details: {} = {
-                expectedTokenKind: tokenKind,
-                actualTokenKind: state.maybeCurrentTokenKind,
-            };
+    IParserStateUtils.startContext(state, Ast.NodeKind.Constant);
 
-            throw new CommonError.InvariantError(
-                `failures from ${maybeReadTokenKindAsConstant.name} should be reportable by ${IParserStateUtils.testIsOnTokenKind.name}`,
-                details,
-            );
-        }
+    const maybeErr: Option<ParseError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(state, tokenKind);
+    if (maybeErr) {
+        throw maybeErr;
     }
 
-    return maybeConstant;
+    const literal: string = readToken(state);
+    const astNode: Ast.Constant = {
+        ...IParserStateUtils.expectContextNodeMetadata(state),
+        kind: Ast.NodeKind.Constant,
+        isLeaf: true,
+        literal,
+    };
+    IParserStateUtils.endContext(state, astNode);
+
+    return astNode;
 }
 
 export function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Option<Ast.Constant> {

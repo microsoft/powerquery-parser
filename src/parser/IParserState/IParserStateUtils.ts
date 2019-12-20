@@ -32,18 +32,6 @@ export function newState(lexerSnapshot: LexerSnapshot): IParserState {
     };
 }
 
-export function deepCopy(state: IParserState): IParserState {
-    return {
-        lexerSnapshot: state.lexerSnapshot,
-        tokenIndex: state.tokenIndex,
-        maybeCurrentToken: state.maybeCurrentToken,
-        maybeCurrentTokenKind: state.maybeCurrentTokenKind,
-        contextState: ParserContext.deepCopy(state.contextState),
-        maybeCurrentContextNode:
-            state.maybeCurrentContextNode !== undefined ? { ...state.maybeCurrentContextNode } : undefined,
-    };
-}
-
 export function applyState(originalState: IParserState, otherState: IParserState): void {
     originalState.tokenIndex = otherState.tokenIndex;
     originalState.maybeCurrentToken = otherState.maybeCurrentToken;

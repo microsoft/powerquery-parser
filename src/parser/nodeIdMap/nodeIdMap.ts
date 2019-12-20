@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, ParserContext } from "..";
+import { Option } from "../../common";
 
 export const enum XorNodeKind {
     Ast = "Ast",
@@ -33,6 +34,7 @@ export interface Collection {
     readonly contextNodeById: ContextNodeById;
     readonly parentIdById: ParentIdById;
     readonly childIdsById: ChildIdsById;
+    readonly maybeRightMostLeaf: Option<Ast.TNode>;
 }
 
 type NumberMap<T> = Map<number, T>;

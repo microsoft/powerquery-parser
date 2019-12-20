@@ -91,7 +91,7 @@ function abridgedMaybeIdentifierUnderPositionFrom(
     }
 }
 
-describe(`abc123 Inspection`, () => {
+describe(`Inspection`, () => {
     describe(`AbridgedPositionIdentifier`, () => {
         describe("Ast", () => {
             it(`x |`, () => {

@@ -23,7 +23,7 @@ function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected:
 }
 
 describe(`Inspection`, () => {
-    describe(`Keyword`, () => {
+    describe(`abc123 Keyword`, () => {
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try |`);
@@ -189,7 +189,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`[a=1|,b`, () => {
+            it(`abc123 [a=1|,b`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=1|,b`);
                 const expected: AbridgedInspection = [[], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);

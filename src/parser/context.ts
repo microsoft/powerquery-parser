@@ -60,6 +60,7 @@ export function newState(): State {
             contextNodeById: new Map(),
             parentIdById: new Map(),
             childIdsById: new Map(),
+            maybeRightMostLeaf: undefined,
         },
         idCounter: 0,
         leafNodeIds: [],
@@ -144,6 +145,17 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         throw new CommonError.InvariantError("can't end a context that doesn't belong to state");
     }
     nodeIdMapCollection.astNodeById.set(astNode.id, astNode);
+
+    // Update maybeRightMostLeaf when applicable
+    if (astNode.isLeaf) {
+        if (
+            nodeIdMapCollection.maybeRightMostLeaf === undefined ||
+            nodeIdMapCollection.maybeRightMostLeaf.tokenRange.tokenIndexStart < astNode.tokenRange.tokenIndexStart
+        ) {
+            const unsafeNodeIdMapCollection: TypeUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
+            unsafeNodeIdMapCollection.maybeRightMostLeaf = astNode;
+        }
+    }
 
     return maybeParentNode;
 }
@@ -266,23 +278,6 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
 
     // Return the node's parent if it exits
     return maybeParentId !== undefined ? NodeIdMapUtils.expectContextNode(contextNodeById, maybeParentId) : undefined;
-}
-
-export function deepCopy(state: State): State {
-    const nodeIdMapCollection: NodeIdMap.Collection = NodeIdMapUtils.deepCopyCollection(state.nodeIdMapCollection);
-    const maybeRootContextNode: Option<Node> =
-        state.root.maybeNode !== undefined
-            ? nodeIdMapCollection.contextNodeById.get(state.root.maybeNode.id)
-            : undefined;
-
-    return {
-        root: {
-            maybeNode: maybeRootContextNode,
-        },
-        nodeIdMapCollection: nodeIdMapCollection,
-        idCounter: state.idCounter,
-        leafNodeIds: state.leafNodeIds.slice(),
-    };
 }
 
 function removeLeafOrNoop(state: State, nodeId: number): void {

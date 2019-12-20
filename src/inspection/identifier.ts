@@ -60,7 +60,11 @@ export function tryFrom(
 
         // IDENTIFIER INSPECTION
         // Storage for if position is on an (Identifier | GeneralizedIdentifier).
-        maybeIdentifierUnderPosition: InspectionUtils.maybeIdentifierOnPostion(position, nodeIdMapCollection, closestLeaf),
+        maybeIdentifierUnderPosition: InspectionUtils.maybeIdentifierOnPostion(
+            position,
+            nodeIdMapCollection,
+            closestLeaf,
+        ),
     };
 
     const triedTraverse: TriedTraverse<TypeUtils.StripReadonly<IdentifierInspected>> = Traverse.tryTraverseXor<
@@ -76,7 +80,7 @@ export function tryFrom(
         undefined,
     );
     // If position is on an identifier but the identifier's definition wasn't found during the inspection,
-    // then create an UndefinedIdentifier for maybeIdentifierOnPosition.
+    // then create an UndefinedIdentifier for maybeIdentifierUnderPosition.
     if (
         triedTraverse.kind === ResultKind.Ok &&
         state.maybeIdentifierUnderPosition &&

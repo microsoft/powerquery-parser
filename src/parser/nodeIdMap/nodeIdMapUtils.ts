@@ -376,21 +376,6 @@ export function expectXorChildren(nodeIdMapCollection: Collection, parentId: num
     return expectXorNodes(nodeIdMapCollection, childIds);
 }
 
-export function deepCopyCollection(nodeIdMapCollection: Collection): Collection {
-    const contextNodeById: ContextNodeById = new Map<number, ParserContext.Node>();
-    nodeIdMapCollection.contextNodeById.forEach((value: ParserContext.Node, key: number) => {
-        contextNodeById.set(key, { ...value });
-    });
-    return {
-        // Ast.TNode is readonly so a shallow copy should be safe
-        astNodeById: new Map(nodeIdMapCollection.astNodeById.entries()),
-        contextNodeById,
-        // Shallow copies of Map<number, number> is safe
-        childIdsById: new Map(nodeIdMapCollection.childIdsById.entries()),
-        parentIdById: new Map(nodeIdMapCollection.parentIdById.entries()),
-    };
-}
-
 // There are a few assumed invariants about children:
 //  * Children are read left to right.
 //  * Children are placed in childIdsById in the order they were read.
@@ -506,7 +491,7 @@ export function isXorNodeParentOfXorNode(
 }
 
 export function expectAncestry(nodeIdMapCollection: Collection, rootId: number): ReadonlyArray<TXorNode> {
-    const ancestryIds: number[] = [];
+    const ancestryIds: number[] = [rootId];
 
     let maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(rootId);
     while (maybeParentId) {

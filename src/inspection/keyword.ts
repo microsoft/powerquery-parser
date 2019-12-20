@@ -14,7 +14,7 @@ import * as InspectionUtils from "./inspectionUtils";
 
 export function tryFrom(
     position: Position,
-    maybeIdentifierOnPosition: Option<TPositionIdentifier>,
+    maybeIdentifierUnderPosition: Option<TPositionIdentifier>,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<KeywordInspected> {
@@ -49,6 +49,14 @@ export function tryFrom(
         earlyExit,
     );
 }
+
+type TRootTranslationFn = Option<
+    (
+        nodeIdMapCollection: NodeIdMap.Collection,
+        ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
+        offendingIndex: number,
+    ) => Option<NodeIdMap.TXorNode>
+>;
 
 interface RootSearch {
     readonly maybeAstNode: Option<Ast.TNode>;
@@ -144,6 +152,7 @@ function rootSearch(
         if (isPositionAfterContextNode(position, nodeIdMapCollection, candidate)) {
             if (maybeBestContextNode === undefined) {
                 maybeBestContextNode = candidate;
+                continue;
             }
             const bestContextNode: ParserContext.Node = maybeBestContextNode;
             const bestTokenIndexStart: number = bestContextNode.tokenIndexStart;
@@ -203,14 +212,6 @@ function recursiveRootTranslation(
     return root;
 }
 
-type TRootTranslationFn = Option<
-    (
-        nodeIdMapCollection: NodeIdMap.Collection,
-        ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
-        offendingIndex: number,
-    ) => Option<NodeIdMap.TXorNode>
->;
-
 function maybeRootTransformationFn(nodeKind: Ast.NodeKind): Option<TRootTranslationFn> {
     // tslint:disable-next-line: switch-default
     switch (nodeKind) {
@@ -268,8 +269,8 @@ function translateCsv(
     ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
     offendingIndex: number,
 ): Option<NodeIdMap.TXorNode> {
-    const commaConstant: NodeIdMap.TXorNode = ancestry[offendingIndex - 1];
-    if (commaConstant.node.maybeAttributeIndex !== 1) {
+    const maybeCommaConstant: Option<NodeIdMap.TXorNode> = ancestry[offendingIndex - 1];
+    if (maybeCommaConstant === undefined || maybeCommaConstant.node.maybeAttributeIndex !== 1) {
         return undefined;
     }
 
@@ -293,50 +294,50 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
     const visitedNodes: IInspectedNode[] = state.result.keywordVisitedNodes as IInspectedNode[];
     visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
 
-    // switch (xorNode.node.kind) {
-    //     case Ast.NodeKind.ErrorHandlingExpression:
-    //         updateKeywordResult(state, xorNode, visitErrorHandlingExpression);
-    //         break;
+    switch (xorNode.node.kind) {
+        case Ast.NodeKind.ErrorHandlingExpression:
+            updateKeywordResult(state, xorNode, visitErrorHandlingExpression);
+            break;
 
-    //     case Ast.NodeKind.ErrorRaisingExpression:
-    //         updateKeywordResult(state, xorNode, visitErrorRaisingExpression);
-    //         break;
+        case Ast.NodeKind.ErrorRaisingExpression:
+            updateKeywordResult(state, xorNode, visitErrorRaisingExpression);
+            break;
 
-    //     case Ast.NodeKind.IdentifierPairedExpression:
-    //         updateKeywordResult(state, xorNode, visitIdentifierPairedExpression);
-    //         break;
+        case Ast.NodeKind.IdentifierPairedExpression:
+            updateKeywordResult(state, xorNode, visitIdentifierPairedExpression);
+            break;
 
-    //     case Ast.NodeKind.IfExpression:
-    //         updateKeywordResult(state, xorNode, visitIfExpression);
-    //         break;
+        case Ast.NodeKind.IfExpression:
+            updateKeywordResult(state, xorNode, visitIfExpression);
+            break;
 
-    //     case Ast.NodeKind.InvokeExpression:
-    //         updateKeywordResult(state, xorNode, visitWrappedExpressionArray);
-    //         break;
+        case Ast.NodeKind.InvokeExpression:
+            updateKeywordResult(state, xorNode, visitWrappedExpressionArray);
+            break;
 
-    //     case Ast.NodeKind.ListExpression:
-    //         updateKeywordResult(state, xorNode, visitWrappedExpressionArray);
-    //         break;
+        case Ast.NodeKind.ListExpression:
+            updateKeywordResult(state, xorNode, visitWrappedExpressionArray);
+            break;
 
-    //     case Ast.NodeKind.OtherwiseExpression:
-    //         updateKeywordResult(state, xorNode, visitOtherwiseExpression);
-    //         break;
+        case Ast.NodeKind.OtherwiseExpression:
+            updateKeywordResult(state, xorNode, visitOtherwiseExpression);
+            break;
 
-    //     case Ast.NodeKind.ParenthesizedExpression:
-    //         updateKeywordResult(state, xorNode, visitParenthesizedExpression);
-    //         break;
+        case Ast.NodeKind.ParenthesizedExpression:
+            updateKeywordResult(state, xorNode, visitParenthesizedExpression);
+            break;
 
-    //     case Ast.NodeKind.RangeExpression:
-    //         updateKeywordResult(state, xorNode, visitRangeExpression);
-    //         break;
+        case Ast.NodeKind.RangeExpression:
+            updateKeywordResult(state, xorNode, visitRangeExpression);
+            break;
 
-    //     case Ast.NodeKind.SectionMember:
-    //         updateKeywordResult(state, xorNode, visitSectionMember);
-    //         break;
+        case Ast.NodeKind.SectionMember:
+            updateKeywordResult(state, xorNode, visitSectionMember);
+            break;
 
-    //     default:
-    //         break;
-    // }
+        default:
+            break;
+    }
 }
 
 function earlyExit(state: KeywordState, _xorNode: NodeIdMap.TXorNode): boolean {
