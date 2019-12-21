@@ -6,61 +6,196 @@ import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords, TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { isPositionAfterAstNode, isPositionAfterContextNode, Position } from "./position";
+import { isPositionAfterAstNode, isPositionAfterContextNode, isPositionOnXorNodeStart, Position } from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
 import { KeywordInspected, KeywordState } from "./state";
 
 import * as InspectionUtils from "./inspectionUtils";
 
 export function tryFrom(
-    position: Position,
-    maybeIdentifierUnderPosition: Option<TPositionIdentifier>,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): TriedTraverse<KeywordInspected> {
-    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeTranslatedRoot(position, nodeIdMapCollection, leafNodeIds);
+    position: Position,
+    maybeIdentifierUnderPosition: Option<TPositionIdentifier>,
+): TriedTraverse<Autocomplete> {
+    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeAutocompleteRoot(position, nodeIdMapCollection, leafNodeIds);
     if (maybeRoot === undefined) {
         return {
             kind: ResultKind.Ok,
-            value: DefaultKeywordInspection,
+            value: EmptyAutocomplete,
         };
     }
     const root: NodeIdMap.TXorNode = maybeRoot;
-
-    const state: TypeUtils.StripReadonly<KeywordState> = {
-        position,
+    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectAncestry(
         nodeIdMapCollection,
-        leafNodeIds,
-        result: {
-            allowedKeywords: [],
-            maybeRequiredKeyword: undefined,
-            keywordVisitedNodes: [],
-        },
-        isKeywordInspectionDone: false,
-    };
-
-    return Traverse.tryTraverseXor(
-        state,
-        nodeIdMapCollection,
-        root,
-        Traverse.VisitNodeStrategy.BreadthFirst,
-        visitNode,
-        Traverse.maybeExpandXorParent,
-        earlyExit,
+        root.node.id,
     );
+
+    const maybeSearch: Option<AutocompleteFnSearch> = maybeAutocompleteFn(ancestry);
+    if (maybeSearch === undefined) {
+        return {
+            kind: ResultKind.Ok,
+            value: EmptyAutocomplete,
+        };
+    }
+    const search: AutocompleteFnSearch = maybeSearch;
+
+    const state: AutocompleteState = {
+        nodeIdMapCollection,
+        position,
+        maybeIdentifierUnderPosition,
+        ancestry,
+        triggerAncestorIndex: search.triggerAncestorIndex,
+    };
+    try {
+        return {
+            kind: ResultKind.Ok,
+            value: search.fn(state),
+        };
+    } catch (e) {
+        return {
+            kind: ResultKind.Err,
+            error: CommonError.ensureCommonError(e),
+        };
+    }
 }
 
-type TRootTranslationFn = Option<
-    (
-        nodeIdMapCollection: NodeIdMap.Collection,
-        ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
-        offendingIndex: number,
-    ) => Option<NodeIdMap.TXorNode>
->;
+type TAutocompleteFn = (state: AutocompleteState) => Autocomplete;
+
+interface Autocomplete {
+    readonly maybeRequired: Option<string>;
+    readonly allowedKeywords: ReadonlyArray<KeywordKind>;
+}
+
+interface AutocompleteFnSearch {
+    readonly fn: TAutocompleteFn;
+    readonly triggerAncestorIndex: number;
+}
+
+interface AutocompleteState {
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly position: Position;
+    readonly maybeIdentifierUnderPosition: Option<TPositionIdentifier>;
+    readonly ancestry: ReadonlyArray<NodeIdMap.TXorNode>;
+    readonly triggerAncestorIndex: number;
+}
 
 interface RootSearch {
     readonly maybeAstNode: Option<Ast.TNode>;
     readonly maybeContextNode: Option<ParserContext.Node>;
+}
+
+const EmptyAutocomplete: Autocomplete = {
+    maybeRequired: undefined,
+    allowedKeywords: TExpressionKeywords,
+};
+
+function maybeAutocompleteFn(ancestry: ReadonlyArray<NodeIdMap.TXorNode>): Option<AutocompleteFnSearch> {
+    let maybeFn: Option<TAutocompleteFn>;
+    let index: number = ancestry.length - 1;
+
+    for (index; index >= 0; index -= 1) {
+        const ancestor: NodeIdMap.TXorNode = ancestry[index];
+        switch (ancestor.node.kind) {
+            case Ast.NodeKind.IfExpression:
+                maybeFn = autocompleteIfExpression;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    if (maybeFn !== undefined) {
+        return {
+            fn: maybeFn,
+            triggerAncestorIndex: index,
+        };
+    } else {
+        return undefined;
+    }
+}
+
+function autocompleteIfExpression(state: AutocompleteState): Autocomplete {
+    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = state.ancestry;
+    const triggerAncestorIndex: number = state.triggerAncestorIndex;
+
+    const ifExpr: NodeIdMap.TXorNode = triggerAncestor(state);
+    // '|if ...'
+    if (isPositionOnXorNodeStart(state.position, ifExpr)) {
+        return createExpressionAutocomplete(state);
+    }
+
+    const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
+    switch (previousAncestor.node.maybeAttributeIndex) {
+        // 'if'
+        case 0:
+            return createExpressionAutocomplete(state);
+
+        // condition-expression
+        case 1:
+            break;
+
+        // 'then'
+        case 2:
+            return createExpressionAutocomplete(state);
+
+        // true-expression
+        case 3:
+            break;
+
+        // 'else'
+        case 4:
+            return createExpressionAutocomplete(state);
+
+        // false-condition
+        case 5:
+            break;
+
+        default:
+            throw unknownAttributeIndex(previousAncestor);
+    }
+}
+
+function unknownAttributeIndex(xorNode: NodeIdMap.TXorNode): CommonError.InvariantError {
+    const details: {} = {
+        id: xorNode.node.id,
+        kind: xorNode.node.kind,
+        maybeAttributeIndex: xorNode.node.maybeAttributeIndex,
+    };
+    return new CommonError.InvariantError(`node has an attribute index that we don't know how to handle`, details);
+}
+
+function triggerAncestor(state: AutocompleteState): NodeIdMap.TXorNode {
+    return state.ancestry[state.triggerAncestorIndex];
+}
+
+function maybePreviousAncestor(state: AutocompleteState): Option<NodeIdMap.TXorNode> {
+    return state.ancestry[state.triggerAncestorIndex - 1];
+}
+
+function expectPreviousAncestor(state: AutocompleteState): NodeIdMap.TXorNode {
+    const maybeAncestor: Option<NodeIdMap.TXorNode> = maybePreviousAncestor(state);
+    if (maybeAncestor === undefined) {
+        const details: {} = { triggerAncestorIndex: state.triggerAncestorIndex };
+        throw new CommonError.InvariantError("expected to find the trigger ancestor", details);
+    }
+    return maybeAncestor;
+}
+
+function createAutocomplete(
+    state: AutocompleteState,
+    allowedKeywords: ReadonlyArray<KeywordKind>,
+    maybeRequired: Option<KeywordKind> = undefined,
+): Autocomplete {
+    return {
+        allowedKeywords,
+        maybeRequired,
+    };
+}
+
+function createExpressionAutocomplete(state: AutocompleteState): Autocomplete {
+    return createAutocomplete(state, TExpressionKeywords, undefined);
 }
 
 interface WrappedArrayBacktrack {
@@ -72,25 +207,7 @@ interface WrappedArrayBacktrack {
     readonly maybeSibling: Option<NodeIdMap.TXorNode>;
 }
 
-const DefaultKeywordInspection: KeywordInspected = {
-    keywordVisitedNodes: [],
-    allowedKeywords: TExpressionKeywords,
-    maybeRequiredKeyword: undefined,
-};
-
-function maybeTranslatedRoot(
-    position: Position,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-): Option<NodeIdMap.TXorNode> {
-    const maybeInitial: Option<NodeIdMap.TXorNode> = maybeInitialRoot(position, nodeIdMapCollection, leafNodeIds);
-    if (maybeInitial === undefined) {
-        return undefined;
-    }
-    return recursiveRootTranslation(nodeIdMapCollection, maybeInitial);
-}
-
-function maybeInitialRoot(
+function maybeAutocompleteRoot(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -171,64 +288,6 @@ function rootSearch(
         maybeAstNode: maybeBestAstNode,
         maybeContextNode: maybeBestContextNode,
     };
-}
-
-function recursiveRootTranslation(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    root: NodeIdMap.TXorNode,
-): NodeIdMap.TXorNode {
-    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectAncestry(
-        nodeIdMapCollection,
-        root.node.id,
-    );
-
-    for (let index: number = ancestry.length - 1; index >= 0; index -= 1) {
-        const ancestor: NodeIdMap.TXorNode = ancestry[index];
-        const maybeTransformationFn: TRootTranslationFn = maybeRootTransformationFn(ancestor.node.kind);
-
-        if (maybeTransformationFn !== undefined) {
-            const transformationFn: TRootTranslationFn = maybeTransformationFn;
-            const maybeTransformedRoot: Option<NodeIdMap.TXorNode> = transformationFn(
-                nodeIdMapCollection,
-                ancestry,
-                index,
-            );
-
-            if (maybeTransformedRoot !== undefined) {
-                const transformedRoot: NodeIdMap.TXorNode = maybeTransformedRoot;
-                if (transformedRoot.node.id === root.node.id) {
-                    const details: {} = { nodeId: root.node.id };
-                    throw new CommonError.InvariantError("a transformation didn't actually change anything", details);
-                }
-
-                return recursiveRootTranslation(
-                    nodeIdMapCollection,
-                    NodeIdMapUtils.leftMostXorNode(nodeIdMapCollection, transformedRoot.node.id),
-                );
-            }
-        }
-    }
-
-    return root;
-}
-
-function maybeRootTransformationFn(nodeKind: Ast.NodeKind): Option<TRootTranslationFn> {
-    // tslint:disable-next-line: switch-default
-    switch (nodeKind) {
-        case Ast.NodeKind.Csv:
-            return translateCsv;
-
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.FieldTypeSpecification:
-        case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
-        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-        case Ast.NodeKind.IdentifierExpressionPairedExpression:
-        case Ast.NodeKind.IdentifierPairedExpression:
-            return translateKeyValuePair;
-
-        default:
-            return undefined;
-    }
 }
 
 function translateKeyValuePair(
@@ -338,10 +397,6 @@ function visitNode(state: KeywordState, xorNode: NodeIdMap.TXorNode): void {
         default:
             break;
     }
-}
-
-function earlyExit(state: KeywordState, _xorNode: NodeIdMap.TXorNode): boolean {
-    return state.isKeywordInspectionDone;
 }
 
 function updateKeywordResult(

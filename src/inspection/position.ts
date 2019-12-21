@@ -40,6 +40,19 @@ export function isPositionOnXorNode(
     }
 }
 
+export function isPositionOnXorNodeStart(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return isPositionOnAstNodeStart(position, xorNode.node);
+
+        case NodeIdMap.XorNodeKind.Context:
+            return isPositionOnContextNodeStart(position, xorNode.node);
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
 export function isPositionAfterXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -78,6 +91,12 @@ export function isPositionOnContextNode(
     );
 }
 
+export function isPositionOnContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
+    return contextNode.maybeTokenStart !== undefined
+        ? isPositionOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
+        : false;
+}
+
 export function isPositionAfterContextNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -104,6 +123,10 @@ export function isPositionBeforeAstNode(position: Position, astNode: Ast.TNode):
 
 export function isPositionOnAstNode(position: Position, astNode: Ast.TNode): boolean {
     return !isPositionBeforeAstNode(position, astNode) && !isPositionAfterAstNode(position, astNode);
+}
+
+export function isPositionOnAstNodeStart(position: Position, astNode: Ast.TNode): boolean {
+    return isPositionOnTokenPosition(position, astNode.tokenRange.positionStart);
 }
 
 export function isPositionOnOrDirectlyAfterAstNode(position: Position, astNode: Ast.TNode): boolean {
