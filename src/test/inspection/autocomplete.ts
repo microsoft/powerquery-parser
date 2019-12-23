@@ -67,7 +67,7 @@ describe(`Inspection`, () => {
 
             it(`if|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if|`);
-                const expected: AbridgedInspection = [[], KeywordKind.If];
+                const expected: AbridgedInspection = [[], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
@@ -147,7 +147,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`{1,|2`, () => {
+            it(`abc123 {1,|2`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{1,|2`);
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);

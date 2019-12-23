@@ -9,9 +9,9 @@ import {
     isPositionAfterAstNode,
     isPositionAfterContextNode,
     isPositionOnContextNodeStart,
+    isPositionOnXorNodeEnd,
     isPositionOnXorNodeStart,
     Position,
-    isPositionOnXorNodeEnd,
 } from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
 import { AutocompleteInspected } from "./state";
@@ -26,7 +26,7 @@ export function tryFrom(
     if (maybeRoot === undefined) {
         return {
             kind: ResultKind.Ok,
-            value: EmptyAutocomplete,
+            value: ExpressionAutocomplete,
         };
     }
     const root: NodeIdMap.TXorNode = maybeRoot;
@@ -89,6 +89,11 @@ interface RootSearch {
 
 const EmptyAutocomplete: AutocompleteInspected = {
     maybeRequiredAutocomplete: undefined,
+    allowedAutocompleteKeywords: [],
+};
+
+const ExpressionAutocomplete: AutocompleteInspected = {
+    maybeRequiredAutocomplete: undefined,
     allowedAutocompleteKeywords: TExpressionKeywords,
 };
 
@@ -112,6 +117,13 @@ function maybeAutocompleteFn(ancestry: ReadonlyArray<NodeIdMap.TXorNode>): Optio
                     triggerAncestor: ancestor,
                 };
 
+            case Ast.NodeKind.ListExpression:
+                return {
+                    fn: autocompleteListExpression,
+                    triggerAncestorIndex: index,
+                    triggerAncestor: ancestor,
+                };
+
             default:
                 break;
         }
@@ -121,11 +133,13 @@ function maybeAutocompleteFn(ancestry: ReadonlyArray<NodeIdMap.TXorNode>): Optio
 }
 
 function autocompleteErrorRaisingExpression(state: AutocompleteState): AutocompleteInspected {
-    if (isPositionOnXorNodeStart(state.position, state.triggerAncestor)) {
+    const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
+
+    // '|if'
+    if (previousAncestor.node.maybeAttributeIndex === 0 && isPositionOnXorNodeStart(state.position, previousAncestor)) {
         return createExpressionAutocomplete(state);
     }
 
-    const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
     switch (previousAncestor.node.maybeAttributeIndex) {
         // 'error'
         case 0:
@@ -141,11 +155,13 @@ function autocompleteErrorRaisingExpression(state: AutocompleteState): Autocompl
 }
 
 function autocompleteIfExpression(state: AutocompleteState): AutocompleteInspected {
-    if (isPositionOnXorNodeStart(state.position, state.triggerAncestor)) {
+    const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
+
+    // '|if'
+    if (previousAncestor.node.maybeAttributeIndex === 0 && isPositionOnXorNodeStart(state.position, previousAncestor)) {
         return createExpressionAutocomplete(state);
     }
 
-    const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
     switch (previousAncestor.node.maybeAttributeIndex) {
         // 'if'
         case 0:
@@ -176,6 +192,29 @@ function autocompleteIfExpression(state: AutocompleteState): AutocompleteInspect
     }
 }
 
+function autocompleteListExpression(state: AutocompleteState): AutocompleteInspected {
+    const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
+    const previousAttributeIndex: Option<number> = previousAncestor.node.maybeAttributeIndex;
+    const position: Position = state.position;
+
+    // '|{'
+    if (previousAttributeIndex === 0 && isPositionOnXorNodeStart(position, previousAncestor)) {
+        return createExpressionAutocomplete(state);
+    }
+    // '}|'
+    if (previousAttributeIndex === 2 && isPositionOnXorNodeEnd(position, previousAncestor)) {
+        return EmptyAutocomplete;
+    }
+
+    const arrayWrapper: NodeIdMap.TXorNode = previousAncestor;
+    const csv: NodeIdMap.TXorNode = expectPreviousAncestor(state, 2);
+    const csvNode: NodeIdMap.TXorNode = expectPreviousAncestor(state, 3);
+    const numElements: number = state.nodeIdMapCollection.childIdsById.get(arrayWrapper.node.id)!.length;
+    const isCsvLastElement: boolean = csv.node.maybeAttributeIndex === numElements - 1;
+
+    throw new Error();
+}
+
 function unknownAttributeIndex(xorNode: NodeIdMap.TXorNode): CommonError.InvariantError {
     const details: {} = {
         id: xorNode.node.id,
@@ -185,20 +224,12 @@ function unknownAttributeIndex(xorNode: NodeIdMap.TXorNode): CommonError.Invaria
     return new CommonError.InvariantError(`node has an attribute index that we don't know how to handle`, details);
 }
 
-function expectTriggerNode(state: AutocompleteState): NodeIdMap.TXorNode {
-    const maybeNode: Option<NodeIdMap.TXorNode> = state.ancestry[state.triggerAncestorIndex];
-    if (maybeNode === undefined) {
-        throw new CommonError.InvariantError("couldn't find trigger node");
-    }
-    return maybeNode;
+function maybePreviousAncestor(state: AutocompleteState, nth: number = 1): Option<NodeIdMap.TXorNode> {
+    return state.ancestry[state.triggerAncestorIndex - nth];
 }
 
-function maybePreviousAncestor(state: AutocompleteState): Option<NodeIdMap.TXorNode> {
-    return state.ancestry[state.triggerAncestorIndex - 1];
-}
-
-function expectPreviousAncestor(state: AutocompleteState): NodeIdMap.TXorNode {
-    const maybeAncestor: Option<NodeIdMap.TXorNode> = maybePreviousAncestor(state);
+function expectPreviousAncestor(state: AutocompleteState, nth: number = 1): NodeIdMap.TXorNode {
+    const maybeAncestor: Option<NodeIdMap.TXorNode> = maybePreviousAncestor(state, nth);
     if (maybeAncestor === undefined) {
         const details: {} = { triggerAncestorIndex: state.triggerAncestorIndex };
         throw new CommonError.InvariantError("expected to find the trigger ancestor", details);
