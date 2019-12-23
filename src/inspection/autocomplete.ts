@@ -8,9 +8,10 @@ import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import {
     isPositionAfterAstNode,
     isPositionAfterContextNode,
+    isPositionOnContextNodeStart,
     isPositionOnXorNodeStart,
     Position,
-    isPositionOnContextNodeStart,
+    isPositionOnXorNodeEnd,
 } from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
 import { AutocompleteInspected } from "./state";
@@ -48,6 +49,7 @@ export function tryFrom(
         position,
         maybeIdentifierUnderPosition,
         ancestry,
+        triggerAncestor: search.triggerAncestor,
         triggerAncestorIndex: search.triggerAncestorIndex,
     };
     try {
@@ -67,6 +69,7 @@ type TAutocompleteFn = (state: AutocompleteState) => AutocompleteInspected;
 
 interface AutocompleteFnSearch {
     readonly fn: TAutocompleteFn;
+    readonly triggerAncestor: NodeIdMap.TXorNode;
     readonly triggerAncestorIndex: number;
 }
 
@@ -75,6 +78,7 @@ interface AutocompleteState {
     readonly position: Position;
     readonly maybeIdentifierUnderPosition: Option<TPositionIdentifier>;
     readonly ancestry: ReadonlyArray<NodeIdMap.TXorNode>;
+    readonly triggerAncestor: NodeIdMap.TXorNode;
     readonly triggerAncestorIndex: number;
 }
 
@@ -94,10 +98,18 @@ function maybeAutocompleteFn(ancestry: ReadonlyArray<NodeIdMap.TXorNode>): Optio
     for (let index: number = 0; index < numAncestors; index += 1) {
         const ancestor: NodeIdMap.TXorNode = ancestry[index];
         switch (ancestor.node.kind) {
+            case Ast.NodeKind.ErrorRaisingExpression:
+                return {
+                    fn: autocompleteErrorRaisingExpression,
+                    triggerAncestor: ancestor,
+                    triggerAncestorIndex: index,
+                };
+
             case Ast.NodeKind.IfExpression:
                 return {
                     fn: autocompleteIfExpression,
                     triggerAncestorIndex: index,
+                    triggerAncestor: ancestor,
                 };
 
             default:
@@ -108,18 +120,36 @@ function maybeAutocompleteFn(ancestry: ReadonlyArray<NodeIdMap.TXorNode>): Optio
     return undefined;
 }
 
-function autocompleteIfExpression(state: AutocompleteState): AutocompleteInspected {
-    const triggerNode: NodeIdMap.TXorNode = expectTriggerNode(state);
-    if (isPositionOnXorNodeStart(state.position, triggerNode)) {
+function autocompleteErrorRaisingExpression(state: AutocompleteState): AutocompleteInspected {
+    if (isPositionOnXorNodeStart(state.position, state.triggerAncestor)) {
         return createExpressionAutocomplete(state);
     }
 
     const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
+    switch (previousAncestor.node.maybeAttributeIndex) {
+        // 'error'
+        case 0:
+            return createRequiredAutcomplete(state, previousAncestor, Ast.ConstantKind.Error);
 
+        // error-raising-expression
+        case 1:
+            return createExpressionAutocomplete(state);
+
+        default:
+            throw unknownAttributeIndex(state.triggerAncestor);
+    }
+}
+
+function autocompleteIfExpression(state: AutocompleteState): AutocompleteInspected {
+    if (isPositionOnXorNodeStart(state.position, state.triggerAncestor)) {
+        return createExpressionAutocomplete(state);
+    }
+
+    const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
     switch (previousAncestor.node.maybeAttributeIndex) {
         // 'if'
         case 0:
-            return createRequiredAutcomplete(state, Ast.ConstantKind.If);
+            return createRequiredAutcomplete(state, previousAncestor, Ast.ConstantKind.If);
 
         // condition-expression
         case 1:
@@ -127,7 +157,7 @@ function autocompleteIfExpression(state: AutocompleteState): AutocompleteInspect
 
         // 'then'
         case 2:
-            return createRequiredAutcomplete(state, Ast.ConstantKind.Then);
+            return createRequiredAutcomplete(state, previousAncestor, Ast.ConstantKind.Then);
 
         // true-expression
         case 3:
@@ -135,7 +165,7 @@ function autocompleteIfExpression(state: AutocompleteState): AutocompleteInspect
 
         // 'else'
         case 4:
-            return createRequiredAutcomplete(state, Ast.ConstantKind.Else);
+            return createRequiredAutcomplete(state, previousAncestor, Ast.ConstantKind.Else);
 
         // false-condition
         case 5:
@@ -187,24 +217,19 @@ function createAutocomplete(
     };
 }
 
-function createAutocompleteConstant(
+function createRequiredAutcomplete(
     state: AutocompleteState,
-    xorNode: NodeIdMap.TXorNode,
-    constantKind: Ast.ConstantKind,
-    fallback: ReadonlyArray<KeywordKind>,
+    requiredNode: NodeIdMap.TXorNode,
+    required: string,
 ): AutocompleteInspected {
-    if (isPositionOnXorNodeStart(state.position, xorNode)) {
-        return {
-            allowedAutocompleteKeywords: fallback,
-            maybeRequiredAutocomplete: undefined,
-        };
-    } else {
-        return createRequiredAutcomplete(state, constantKind);
-    }
-}
+    const maybeRequiredAutocomplete: Option<string> = isPositionOnXorNodeEnd(state.position, requiredNode)
+        ? undefined
+        : required;
 
-function createRequiredAutcomplete(state: AutocompleteState, required: string): AutocompleteInspected {
-    return createAutocomplete(state, [], required);
+    return {
+        allowedAutocompleteKeywords: [],
+        maybeRequiredAutocomplete,
+    };
 }
 
 function createExpressionAutocomplete(state: AutocompleteState): AutocompleteInspected {

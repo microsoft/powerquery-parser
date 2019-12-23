@@ -53,6 +53,19 @@ export function isPositionOnXorNodeStart(position: Position, xorNode: NodeIdMap.
     }
 }
 
+export function isPositionOnXorNodeEnd(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return isPositionOnAstNodeEnd(position, xorNode.node);
+
+        case NodeIdMap.XorNodeKind.Context:
+            return false;
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
 export function isPositionAfterXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -127,6 +140,10 @@ export function isPositionOnAstNode(position: Position, astNode: Ast.TNode): boo
 
 export function isPositionOnAstNodeStart(position: Position, astNode: Ast.TNode): boolean {
     return isPositionOnTokenPosition(position, astNode.tokenRange.positionStart);
+}
+
+export function isPositionOnAstNodeEnd(position: Position, astNode: Ast.TNode): boolean {
+    return isPositionOnTokenPosition(position, astNode.tokenRange.positionEnd);
 }
 
 export function isPositionOnOrDirectlyAfterAstNode(position: Position, astNode: Ast.TNode): boolean {

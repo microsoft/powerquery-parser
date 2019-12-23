@@ -38,10 +38,16 @@ describe(`Inspection`, () => {
             });
         });
 
-        describe(`abc123 ${Ast.NodeKind.ErrorRaisingExpression}`, () => {
+        describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
             it(`if |error`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |error`);
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`if error|`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if error|`);
+                const expected: AbridgedInspection = [[], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
