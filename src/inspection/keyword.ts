@@ -5,7 +5,13 @@ import { CommonError, Option, ResultKind } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords, TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import { isPositionAfterAstNode, isPositionAfterContextNode, isPositionOnXorNodeStart, Position } from "./position";
+import {
+    isPositionAfterAstNode,
+    isPositionAfterContextNode,
+    isPositionOnXorNodeStart,
+    Position,
+    isPositionOnContextNodeStart,
+} from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
 import { AutocompleteInspected } from "./state";
 
@@ -264,7 +270,10 @@ function rootSearch(
     let maybeBestContextNode: Option<ParserContext.Node>;
     const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
     for (const candidate of contextNodeById.values()) {
-        if (isPositionAfterContextNode(position, nodeIdMapCollection, candidate)) {
+        if (
+            isPositionAfterContextNode(position, nodeIdMapCollection, candidate) ||
+            isPositionOnContextNodeStart(position, candidate)
+        ) {
             if (maybeBestContextNode === undefined) {
                 maybeBestContextNode = candidate;
                 continue;
