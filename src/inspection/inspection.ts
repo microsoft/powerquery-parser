@@ -4,8 +4,8 @@
 import { ResultKind, Traverse } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { NodeIdMap } from "../parser";
+import { tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { tryFrom as identifierInspectedTryFrom } from "./identifier";
-import { tryFrom as autocompleteInspectedTryFrom } from "./keyword";
 import { Position } from "./position";
 import { AutocompleteInspected, IdentifierInspected, Inspected } from "./state";
 
