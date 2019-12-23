@@ -5,9 +5,9 @@ import { ResultKind, Traverse } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { NodeIdMap } from "../parser";
 import { tryFrom as identifierInspectedTryFrom } from "./identifier";
-import { tryFrom as keywordInspectedTryFrom } from "./keyword";
+import { tryFrom as autocompleteInspectedTryFrom } from "./keyword";
 import { Position } from "./position";
-import { IdentifierInspected, Inspected, KeywordInspected } from "./state";
+import { AutocompleteInspected, IdentifierInspected, Inspected } from "./state";
 
 // Inspection is designed to run sub-inspections,
 // eg. one inspection for scope and one for keywords.
@@ -31,11 +31,11 @@ export function tryFrom(
         return triedInspectedIdentifier;
     }
 
-    const triedInspectedKeyword: TriedTraverse<KeywordInspected> = keywordInspectedTryFrom(
-        position,
-        triedInspectedIdentifier.value.maybeIdentifierUnderPosition,
+    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
         nodeIdMapCollection,
         leafNodeIds,
+        position,
+        triedInspectedIdentifier.value.maybeIdentifierUnderPosition,
     );
     if (triedInspectedKeyword.kind === ResultKind.Err) {
         return triedInspectedKeyword;
