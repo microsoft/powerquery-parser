@@ -192,3 +192,87 @@ export function isPositionAfterTokenPosition(
         }
     }
 }
+
+interface PositionNodeSearch<T> {
+    readonly maybeOnOrBefore: Option<T>;
+    readonly maybeAfter: Option<T>;
+}
+
+function positionNodeSearch
+
+function positionAstSearch(
+    position: Position,
+    astNodeById: NodeIdMap.AstNodeById,
+    leafNodeIds: ReadonlyArray<number>,
+): PositionNodeSearch<Ast.TNode> {
+    let maybeCurrentOnOrBefore: Option<Ast.TNode>;
+    let maybeCurrentAfter: Option<Ast.TNode>;
+
+    for (const nodeId of leafNodeIds) {
+        const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
+        if (isPositionAfterAstNode(position, candidate)) {
+            if (maybeCurrentOnOrBefore === undefined) {
+                maybeCurrentOnOrBefore = candidate;
+            } else {
+                const currentOnOrBefore: Ast.TNode = maybeCurrentOnOrBefore;
+
+                if (candidate.tokenRange.tokenIndexStart > currentOnOrBefore.tokenRange.tokenIndexStart) {
+                    maybeCurrentOnOrBefore = candidate;
+                }
+            }
+        } else {
+            if (maybeCurrentAfter === undefined) {
+                maybeCurrentAfter = candidate;
+            } else {
+                const currentAfter: Ast.TNode = maybeCurrentAfter;
+
+                if (candidate.tokenRange.tokenIndexStart < currentAfter.tokenRange.tokenIndexStart) {
+                    maybeCurrentAfter = candidate;
+                }
+            }
+        }
+    }
+
+    return {
+        maybeOnOrBefore: maybeCurrentOnOrBefore,
+        maybeAfter: maybeCurrentAfter,
+    };
+}
+
+function positionContextSearch(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+): PositionNodeSearch<ParserContext.Node> {
+    const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
+    let maybeCurrentOnOrBefore: Option<ParserContext.Node>;
+    let maybeCurrentAfter: Option<ParserContext.Node>;
+
+    for (const candidate of contextNodeById.values()) {
+        if (isPositionAfterContextNode(position, nodeIdMapCollection, candidate)) {
+            if (maybeCurrentOnOrBefore === undefined) {
+                maybeCurrentOnOrBefore = candidate;
+            } else {
+                const currentOnOrBefore: ParserContext.Node = maybeCurrentOnOrBefore;
+
+                if (candidate.tokenIndexStart > currentOnOrBefore.tokenIndexStart) {
+                    maybeCurrentOnOrBefore = candidate;
+                }
+            }
+        } else {
+            if (maybeCurrentAfter === undefined) {
+                maybeCurrentAfter = candidate;
+            } else {
+                const currentAfter: ParserContext.Node = maybeCurrentAfter;
+
+                if (candidate.tokenIndexStart < currentAfter.tokenIndexStart) {
+                    maybeCurrentAfter = candidate;
+                }
+            }
+        }
+    }
+
+    return {
+        maybeOnOrBefore: maybeCurrentOnOrBefore,
+        maybeAfter: maybeCurrentAfter,
+    };
+}
