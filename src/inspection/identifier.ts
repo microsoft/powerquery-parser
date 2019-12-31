@@ -6,13 +6,7 @@ import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode, InvokeExpressionArgs } from "./node";
-import {
-    isPositionAfterTokenPosition,
-    isPositionAfterXorNode,
-    isPositionOnAstNode,
-    isPositionOnXorNode,
-    Position,
-} from "./position";
+import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind } from "./positionIdentifier";
 import { IdentifierInspected, IdentifierState } from "./state";
 
@@ -166,7 +160,7 @@ function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMa
     }
     const eachConstantXorNode: NodeIdMap.TXorNode = maybeEachConstantXorNode;
 
-    if (isPositionAfterXorNode(state.position, state.nodeIdMapCollection, eachConstantXorNode)) {
+    if (PositionUtils.isAfterXorNode(state.position, state.nodeIdMapCollection, eachConstantXorNode)) {
         addToScopeIfNew(state, "_", eachExprXorNode);
     }
 }
@@ -201,7 +195,7 @@ function inspectFunctionExpression(state: IdentifierState, fnExprXorNode: NodeId
         Ast.NodeKind.ParameterList,
     ]) as Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>>;
 
-    if (isPositionOnAstNode(state.position, parameters)) {
+    if (PositionUtils.isOnAstNode(state.position, parameters)) {
         return;
     }
 
@@ -317,7 +311,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExprXorNode: Node
     // and as it's a context node it hasn't parsed all attributes.
     if (invokeExprXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         const invokeExpr: Ast.InvokeExpression = invokeExprXorNode.node as Ast.InvokeExpression;
-        if (isPositionOnAstNode(state.position, invokeExpr.closeWrapperConstant)) {
+        if (PositionUtils.isOnAstNode(state.position, invokeExpr.closeWrapperConstant)) {
             return;
         }
     }
@@ -391,7 +385,7 @@ function inspectInvokeExpressionArguments(
         // Conditionally set maybePositionArgumentIndex.
         // If position is on a comma then count it as belonging to the next index.
         // Eg. `foo(a,|)` is in the second index.
-        if (isPositionOnXorNode(position, nodeIdMapCollection, csvXorNode)) {
+        if (PositionUtils.isOnXorNode(position, nodeIdMapCollection, csvXorNode)) {
             if (csvXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
                 const maybeCommaConstant: Option<Ast.Constant> = NodeIdMapUtils.maybeAstChildByAttributeIndex(
                     nodeIdMapCollection,
@@ -399,7 +393,7 @@ function inspectInvokeExpressionArguments(
                     1,
                     [Ast.NodeKind.Constant],
                 ) as Option<Ast.Constant>;
-                if (maybeCommaConstant && isPositionOnAstNode(position, maybeCommaConstant)) {
+                if (maybeCommaConstant && PositionUtils.isOnAstNode(position, maybeCommaConstant)) {
                     maybePositionArgumentIndex = index + 1;
                 } else {
                     maybePositionArgumentIndex = index;
@@ -572,7 +566,7 @@ function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNo
         const semicolonConstantXorNode: NodeIdMap.TXorNode = maybeSemicolonConstantXorNode;
         if (semicolonConstantXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
             const semicolonConstant: Ast.Constant = semicolonConstantXorNode.node as Ast.Constant;
-            if (isPositionAfterTokenPosition(state.position, semicolonConstant.tokenRange.positionStart, false)) {
+            if (PositionUtils.isAfterTokenPosition(state.position, semicolonConstant.tokenRange.positionStart, false)) {
                 return;
             }
         }
@@ -814,7 +808,7 @@ function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.T
                 | Ast.GeneralizedIdentifierPairedAnyLiteral
                 | Ast.GeneralizedIdentifierPairedExpression
                 | Ast.IdentifierPairedExpression;
-            return isPositionOnAstNode(state.position, astNode.value);
+            return PositionUtils.isOnAstNode(state.position, astNode.value);
         }
 
         case NodeIdMap.XorNodeKind.Context:
@@ -825,7 +819,7 @@ function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.T
                 undefined,
             );
             return maybeValue !== undefined
-                ? isPositionOnXorNode(state.position, state.nodeIdMapCollection, maybeValue)
+                ? PositionUtils.isOnXorNode(state.position, state.nodeIdMapCollection, maybeValue)
                 : false;
 
         default:

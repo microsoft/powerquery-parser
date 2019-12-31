@@ -5,7 +5,7 @@ import { isNever, Option } from "../common";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { IInspectedNode } from "./node";
-import { isPositionOnOrDirectlyAfterAstNode, Position } from "./position";
+import { Position, PositionUtils } from "./position";
 
 // Checks if:
 //  * the node is some sort of identifier
@@ -39,7 +39,7 @@ export function maybeIdentifierOnPostion(
         return undefined;
     }
 
-    if (isPositionOnOrDirectlyAfterAstNode(position, identifier)) {
+    if (PositionUtils.isOnOrDirectlyAfterAstNode(position, identifier)) {
         return identifier;
     } else {
         return undefined;

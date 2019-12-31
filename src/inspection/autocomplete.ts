@@ -5,14 +5,7 @@ import { CommonError, Option, ResultKind } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { KeywordKind, TExpressionKeywords, TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import {
-    isPositionAfterAstNode,
-    isPositionAfterContextNode,
-    isPositionOnContextNodeStart,
-    isPositionOnXorNodeEnd,
-    isPositionOnXorNodeStart,
-    Position,
-} from "./position";
+import { Position, PositionUtils } from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
 import { AutocompleteInspected } from "./state";
 
@@ -136,7 +129,10 @@ function autocompleteErrorRaisingExpression(state: AutocompleteState): Autocompl
     const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
 
     // '|if'
-    if (previousAncestor.node.maybeAttributeIndex === 0 && isPositionOnXorNodeStart(state.position, previousAncestor)) {
+    if (
+        previousAncestor.node.maybeAttributeIndex === 0 &&
+        PositionUtils.isOnXorNodeStart(state.position, previousAncestor)
+    ) {
         return createExpressionAutocomplete(state);
     }
 
@@ -158,7 +154,10 @@ function autocompleteIfExpression(state: AutocompleteState): AutocompleteInspect
     const previousAncestor: NodeIdMap.TXorNode = expectPreviousAncestor(state);
 
     // '|if'
-    if (previousAncestor.node.maybeAttributeIndex === 0 && isPositionOnXorNodeStart(state.position, previousAncestor)) {
+    if (
+        previousAncestor.node.maybeAttributeIndex === 0 &&
+        PositionUtils.isOnXorNodeStart(state.position, previousAncestor)
+    ) {
         return createExpressionAutocomplete(state);
     }
 
@@ -198,11 +197,11 @@ function autocompleteListExpression(state: AutocompleteState): AutocompleteInspe
     const position: Position = state.position;
 
     // '|{'
-    if (previousAttributeIndex === 0 && isPositionOnXorNodeStart(position, previousAncestor)) {
+    if (previousAttributeIndex === 0 && PositionUtils.isOnXorNodeStart(position, previousAncestor)) {
         return createExpressionAutocomplete(state);
     }
     // '}|'
-    if (previousAttributeIndex === 2 && isPositionOnXorNodeEnd(position, previousAncestor)) {
+    if (previousAttributeIndex === 2 && PositionUtils.isOnXorNodeEnd(position, previousAncestor)) {
         return EmptyAutocomplete;
     }
 
@@ -253,7 +252,7 @@ function createRequiredAutcomplete(
     requiredNode: NodeIdMap.TXorNode,
     required: string,
 ): AutocompleteInspected {
-    const maybeRequiredAutocomplete: Option<string> = isPositionOnXorNodeEnd(state.position, requiredNode)
+    const maybeRequiredAutocomplete: Option<string> = PositionUtils.isOnXorNodeEnd(state.position, requiredNode)
         ? undefined
         : required;
 
@@ -306,7 +305,7 @@ function rootSearch(
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
-        if (isPositionAfterAstNode(position, candidate)) {
+        if (PositionUtils.isAfterAstNode(position, candidate)) {
             if (maybeBestAstNode === undefined) {
                 maybeBestAstNode = candidate;
             }
@@ -327,8 +326,8 @@ function rootSearch(
     const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
     for (const candidate of contextNodeById.values()) {
         if (
-            isPositionAfterContextNode(position, nodeIdMapCollection, candidate) ||
-            isPositionOnContextNodeStart(position, candidate)
+            PositionUtils.isAfterContextNode(position, nodeIdMapCollection, candidate) ||
+            PositionUtils.isOnContextNodeStart(position, candidate)
         ) {
             if (maybeBestContextNode === undefined) {
                 maybeBestContextNode = candidate;
