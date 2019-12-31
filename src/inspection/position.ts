@@ -194,11 +194,60 @@ export function isPositionAfterTokenPosition(
 }
 
 interface PositionNodeSearch<T> {
-    readonly maybeOnOrBefore: Option<T>;
-    readonly maybeAfter: Option<T>;
+    readonly maybeOnOrBeforePosition: Option<T>;
+    readonly maybeAfterPosition: Option<T>;
 }
 
-function positionNodeSearch
+const ShiftRightConstantKinds: ReadonlyArray<string> = [
+    Ast.ConstantKind.Comma,
+    Ast.ConstantKind.Equal,
+    Ast.ConstantKind.FatArrow,
+    Ast.ConstantKind.LeftBrace,
+    Ast.ConstantKind.LeftBracket,
+    Ast.ConstantKind.LeftParenthesis,
+    Ast.ConstantKind.RightBrace,
+    Ast.ConstantKind.RightBracket,
+    Ast.ConstantKind.RightParenthesis,
+];
+
+function positionNodeSearch(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): Option<NodeIdMap.TXorNode> {
+    const astSearch: PositionNodeSearch<Ast.TNode> = positionAstSearch(
+        position,
+        nodeIdMapCollection.astNodeById,
+        leafNodeIds,
+    );
+    const contextSearch: PositionNodeSearch<ParserContext.Node> = positionContextSearch(position, nodeIdMapCollection);
+
+    let shiftRight: boolean;
+    if (astSearch.maybeOnOrBeforePosition && astSearch.maybeOnOrBeforePosition.kind === Ast.NodeKind.Constant) {
+        const constant: Ast.Constant = astSearch.maybeOnOrBeforePosition;
+        shiftRight = ShiftRightConstantKinds.indexOf(constant.literal) !== -1;
+    } else {
+        shiftRight = false;
+    }
+
+    if (shiftRight) {
+        if (astSearch.maybeAfterPosition !== undefined) {
+            return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
+        } else if (contextSearch.maybeAfterPosition !== undefined) {
+            return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeAfterPosition);
+        } else {
+            return undefined;
+        }
+    } else {
+        if (astSearch.maybeOnOrBeforePosition !== undefined) {
+            return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeOnOrBeforePosition);
+        } else if (contextSearch.maybeOnOrBeforePosition !== undefined) {
+            return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
+        } else {
+            return undefined;
+        }
+    }
+}
 
 function positionAstSearch(
     position: Position,
@@ -234,8 +283,8 @@ function positionAstSearch(
     }
 
     return {
-        maybeOnOrBefore: maybeCurrentOnOrBefore,
-        maybeAfter: maybeCurrentAfter,
+        maybeOnOrBeforePosition: maybeCurrentOnOrBefore,
+        maybeAfterPosition: maybeCurrentAfter,
     };
 }
 
@@ -272,7 +321,7 @@ function positionContextSearch(
     }
 
     return {
-        maybeOnOrBefore: maybeCurrentOnOrBefore,
-        maybeAfter: maybeCurrentAfter,
+        maybeOnOrBeforePosition: maybeCurrentOnOrBefore,
+        maybeAfterPosition: maybeCurrentAfter,
     };
 }
