@@ -327,7 +327,7 @@ function rootSearch(
     for (const candidate of contextNodeById.values()) {
         if (
             PositionUtils.isAfterContextNode(position, nodeIdMapCollection, candidate) ||
-            PositionUtils.isOnContextNodeStart(position, candidate)
+            PositionUtils.isUnderContextNodeStart(position, candidate)
         ) {
             if (maybeBestContextNode === undefined) {
                 maybeBestContextNode = candidate;

@@ -4,7 +4,7 @@
 import { isNever, Option } from "../../common";
 import { Token, TokenPosition } from "../../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
-import { Position } from "./position";
+import { ActiveXorNode, Position } from "./position";
 
 export function maybeCurrentNode(
     position: Position,
@@ -68,7 +68,7 @@ export function isOnXorNode(
             return isOnAstNode(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return isOnContextNode(position, nodeIdMapCollection, xorNode.node);
+            return isUnderContextNode(position, nodeIdMapCollection, xorNode.node);
 
         default:
             throw isNever(xorNode);
@@ -81,7 +81,7 @@ export function isOnXorNodeStart(position: Position, xorNode: NodeIdMap.TXorNode
             return isOnAstNodeStart(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return isOnContextNodeStart(position, xorNode.node);
+            return isUnderContextNodeStart(position, xorNode.node);
 
         default:
             throw isNever(xorNode);
@@ -128,7 +128,7 @@ export function isBeforeContextNode(position: Position, contextNode: ParserConte
     return isBeforeTokenPosition(position, tokenStart.positionStart);
 }
 
-export function isOnContextNode(
+export function isUnderContextNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     contextNode: ParserContext.Node,
@@ -138,7 +138,7 @@ export function isOnContextNode(
     );
 }
 
-export function isOnContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
+export function isUnderContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
     return contextNode.maybeTokenStart !== undefined
         ? isOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
         : false;
