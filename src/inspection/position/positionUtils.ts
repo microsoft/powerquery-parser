@@ -4,9 +4,9 @@
 import { isNever, Option } from "../../common";
 import { Token, TokenPosition } from "../../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
-import { ActiveXorNode, Position } from "./position";
+import { Position } from "./position";
 
-export function maybeCurrentNode(
+export function maybeActiveNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -27,18 +27,18 @@ export function maybeCurrentNode(
     }
 
     if (shiftRight) {
-        if (astSearch.maybeAfterPosition !== undefined) {
-            return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
-        } else if (contextSearch.maybeAfterPosition !== undefined) {
+        if (contextSearch.maybeAfterPosition !== undefined) {
             return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeAfterPosition);
+        } else if (astSearch.maybeAfterPosition !== undefined) {
+            return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
         } else {
             return undefined;
         }
     } else {
-        if (astSearch.maybeOnOrBeforePosition !== undefined) {
-            return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeOnOrBeforePosition);
-        } else if (contextSearch.maybeOnOrBeforePosition !== undefined) {
+        if (contextSearch.maybeOnOrBeforePosition !== undefined) {
             return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
+        } else if (astSearch.maybeOnOrBeforePosition !== undefined) {
+            return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeOnOrBeforePosition);
         } else {
             return undefined;
         }
@@ -242,6 +242,9 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
     Ast.ConstantKind.RightParenthesis,
 ];
 
+// Returns the closest Ast nodes that are:
+// * on or to the left of position
+// * to the right of position
 function positionAstSearch(
     position: Position,
     astNodeById: NodeIdMap.AstNodeById,
@@ -281,6 +284,9 @@ function positionAstSearch(
     };
 }
 
+// Returns the closest context nodes that are:
+// * on or to the left of position
+// * to the right of position
 function positionContextSearch(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,

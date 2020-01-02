@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultKind, Traverse } from "../common";
+import { Option, ResultKind, Traverse } from "../common";
 import { TriedTraverse } from "../common/traversal";
-import { NodeIdMap } from "../parser";
+import { NodeIdMap, NodeIdMapUtils } from "../parser";
 import { tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { tryFrom as identifierInspectedTryFrom } from "./identifier";
-import { Position } from "./position";
+import { Position, PositionUtils } from "./position";
 import { AutocompleteInspected, IdentifierInspected, Inspected } from "./state";
 
 // Inspection is designed to run sub-inspections,
@@ -22,7 +22,18 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedInspection {
+    const maybeActiveXorNode: Option<NodeIdMap.TXorNode> = PositionUtils.maybeActiveNode(
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+    );
+    const activeXorNodeAncestry: ReadonlyArray<NodeIdMap.TXorNode> =
+        maybeActiveXorNode !== undefined
+            ? NodeIdMapUtils.expectAncestry(nodeIdMapCollection, maybeActiveXorNode.node.id)
+            : [];
+
     const triedInspectedIdentifier: TriedTraverse<IdentifierInspected> = identifierInspectedTryFrom(
+        activeXorNodeAncestry,
         position,
         nodeIdMapCollection,
         leafNodeIds,

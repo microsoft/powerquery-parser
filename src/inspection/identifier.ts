@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, CommonError, isNever, Option, ResultKind, Traverse, TypeUtils } from "../common";
+import { ArrayUtils, CommonError, isNever, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import { IInspectedNode, InvokeExpressionArgs } from "./node";
+import { IInspectedNode, InspectedInvokeExpression, InvokeExpressionArgs } from "./node";
 import { Position, PositionUtils } from "./position";
-import { PositionIdentifierKind } from "./positionIdentifier";
-import { IdentifierInspected, IdentifierState } from "./state";
+import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
 import * as InspectionUtils from "./inspectionUtils";
 
@@ -17,88 +16,86 @@ import * as InspectionUtils from "./inspectionUtils";
 
 // TODO: maybeInvokeExpression should be split into its own inspection.
 
+interface IdentifierState {
+    nodeIndex: number;
+    readonly result: IdentifierInspected;
+    readonly activeXorNodeAncestry: ReadonlyArray<NodeIdMap.TXorNode>;
+    readonly position: Position;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+    // If the position is on either an (Identifier | GeneralizedIdentifier)
+    // If we encounter the assignment for this identifier then it's stored in Inspected.maybeIdentifierUnderPosition
+    readonly maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
+}
+
+export interface IdentifierInspected {
+    // A map of (identifier, what caused the identifier to be added).
+    scope: ReadonlyMap<string, NodeIdMap.TXorNode>;
+    // Metadata on the first InvokeExpression encountered.
+    maybeInvokeExpression: Option<InspectedInvokeExpression>;
+    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
+    // then if we encounter the identifier's assignment we will store metadata.
+    maybeIdentifierUnderPosition: Option<TPositionIdentifier>;
+}
+
 export function tryFrom(
+    activeXorNodeAncestry: ReadonlyArray<NodeIdMap.TXorNode>,
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): TriedTraverse<TypeUtils.StripReadonly<IdentifierInspected>> {
-    const maybeClosestLeaf: Option<Ast.TNode> = InspectionUtils.maybeClosestAstNode(
-        position,
-        nodeIdMapCollection,
-        leafNodeIds,
-    );
-    if (maybeClosestLeaf === undefined) {
+): TriedTraverse<IdentifierInspected> {
+    if (activeXorNodeAncestry.length === 0 || activeXorNodeAncestry[0].kind !== NodeIdMap.XorNodeKind.Ast) {
         return {
             kind: ResultKind.Ok,
             value: DefaultIdentifierInspection,
         };
     }
-
-    const closestLeaf: Ast.TNode = maybeClosestLeaf;
-    const root: NodeIdMap.TXorNode = {
-        kind: NodeIdMap.XorNodeKind.Ast,
-        node: closestLeaf,
-    };
+    const activeXorNode: NodeIdMap.TXorNode = activeXorNodeAncestry[0];
 
     const state: IdentifierState = {
+        nodeIndex: 0,
         result: {
-            identifierVisitedNodes: [],
             scope: new Map(),
             maybeInvokeExpression: undefined,
             maybeIdentifierUnderPosition: undefined,
         },
-        // COMMON
+        activeXorNodeAncestry,
         position,
         nodeIdMapCollection,
         leafNodeIds,
-
-        // IDENTIFIER INSPECTION
         // Storage for if position is on an (Identifier | GeneralizedIdentifier).
         maybeIdentifierUnderPosition: InspectionUtils.maybeIdentifierOnPostion(
             position,
             nodeIdMapCollection,
-            closestLeaf,
+            activeXorNode,
         ),
     };
 
-    const triedTraverse: TriedTraverse<TypeUtils.StripReadonly<IdentifierInspected>> = Traverse.tryTraverseXor<
-        IdentifierState,
-        TypeUtils.StripReadonly<IdentifierInspected>
-    >(
-        state,
-        nodeIdMapCollection,
-        root,
-        Traverse.VisitNodeStrategy.BreadthFirst,
-        visitNode,
-        Traverse.maybeExpandXorParent,
-        undefined,
-    );
-    // If position is on an identifier but the identifier's definition wasn't found during the inspection,
-    // then create an UndefinedIdentifier for maybeIdentifierUnderPosition.
-    if (
-        triedTraverse.kind === ResultKind.Ok &&
-        state.maybeIdentifierUnderPosition &&
-        state.result.maybeIdentifierUnderPosition === undefined
-    ) {
+    try {
+        const numAncestors: number = activeXorNodeAncestry.length;
+        for (let index: number = 0; index < numAncestors; index += 1) {
+            state.nodeIndex = index;
+            const xorNode: NodeIdMap.TXorNode = activeXorNodeAncestry[index];
+            visitNode(state, xorNode);
+        }
+
+        if (state.maybeIdentifierUnderPosition && state.result.maybeIdentifierUnderPosition === undefined) {
+            state.result.maybeIdentifierUnderPosition = {
+                kind: PositionIdentifierKind.Undefined,
+                identifier: state.maybeIdentifierUnderPosition,
+            };
+        }
+
         return {
             kind: ResultKind.Ok,
-            value: {
-                ...triedTraverse.value,
-                maybeIdentifierUnderPosition: {
-                    kind: PositionIdentifierKind.Undefined,
-                    identifier: state.maybeIdentifierUnderPosition,
-                },
-            },
+            value: state.result,
         };
-    } else {
-        return triedTraverse;
+    } catch (err) {
+        throw err;
     }
 }
 
 function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
-    const visitedNodes: IInspectedNode[] = state.result.identifierVisitedNodes as IInspectedNode[];
-    visitedNodes.push(InspectionUtils.inspectedVisitedNodeFrom(xorNode));
-
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode);
@@ -132,8 +129,8 @@ function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
             inspectRecordExpressionOrLiteral(state, xorNode);
             break;
 
-        case Ast.NodeKind.Section:
-            inspectSection(state, xorNode);
+        case Ast.NodeKind.SectionMember:
+            inspectSectionMember(state, xorNode);
             break;
 
         default:
@@ -142,7 +139,6 @@ function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
 }
 
 const DefaultIdentifierInspection: IdentifierInspected = {
-    identifierVisitedNodes: [],
     scope: new Map(),
     maybeInvokeExpression: undefined,
     maybeIdentifierUnderPosition: undefined,
@@ -228,7 +224,7 @@ function inspectIdentifier(state: IdentifierState, identifierXorNode: NodeIdMap.
         }
 
         const identifier: Ast.Identifier = identifierXorNode.node;
-        if (isParentOfNodeKind(state.nodeIdMapCollection, identifier.id, Ast.NodeKind.IdentifierExpression)) {
+        if (isParentOfNodeKind(state, Ast.NodeKind.IdentifierExpression)) {
             return;
         }
         addAstToScopeIfNew(state, identifier.literal, identifier);
@@ -452,7 +448,7 @@ function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.
         );
         if (maybeValueXorNode) {
             const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
-            maybeSetStartingIdentifierValue(state, keyXorNode, valueXorNode);
+            maybeSetIdentifierUnderPositionValue(state, keyXorNode, valueXorNode);
         }
     }
 }
@@ -486,7 +482,7 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
 
     // If we didn't come from a `Record -> ArrayWrapper -> Csv -> KeyValuePair` path then exit.
     // Eg. `[a=1,|`
-    const maybePositionKeyValuePairXorNode: Option<NodeIdMap.TXorNode> = maybeNthLastVisitedXorNode(state, 3);
+    const maybePositionKeyValuePairXorNode: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(state, 3);
 
     if (maybePositionKeyValuePairXorNode === undefined) {
         return;
@@ -533,96 +529,71 @@ function inspectRecordExpressionOrLiteral(state: IdentifierState, recordXorNode:
         );
         if (maybeValueXorNode) {
             const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
-            maybeSetStartingIdentifierValue(state, keyXorNode, valueXorNode);
+            maybeSetIdentifierUnderPositionValue(state, keyXorNode, valueXorNode);
         }
     }
 }
 
-// If position is to the right of a SectionMember equals sign,
-// then add all SectionMember names to scope EXCEPT for the SectionMember the that position is under.
-function inspectSection(state: IdentifierState, sectionXorNode: NodeIdMap.TXorNode): void {
-    const maybeInspectedSectionMember: Option<IInspectedNode> = ArrayUtils.findReverse(
-        state.result.identifierVisitedNodes,
-        (visitedNode: IInspectedNode) => visitedNode.kind === Ast.NodeKind.SectionMember,
-    );
-    const maybeSectionMemberXorNode: Option<NodeIdMap.TXorNode> =
-        maybeInspectedSectionMember !== undefined
-            ? NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, maybeInspectedSectionMember.id)
-            : undefined;
-    if (maybeSectionMemberXorNode === undefined) {
+function inspectSectionMember(state: IdentifierState, sectionMember: NodeIdMap.TXorNode): void {
+    const previousXorNode: NodeIdMap.TXorNode = expectPreviousXorNode(state);
+    // Check if it's part of the key-value-pair.
+    if (previousXorNode.node.maybeAttributeIndex !== 2) {
         return;
     }
-    const sectionMemberXorNode: NodeIdMap.TXorNode = maybeSectionMemberXorNode;
-
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const maybeSemicolonConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-        nodeIdMapCollection,
-        sectionMemberXorNode.node.id,
-        3,
-        [Ast.NodeKind.Constant],
-    );
-    // We don't want to add section members if we're on or after ';' constant.
-    if (maybeSemicolonConstantXorNode !== undefined) {
-        const semicolonConstantXorNode: NodeIdMap.TXorNode = maybeSemicolonConstantXorNode;
-        if (semicolonConstantXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-            const semicolonConstant: Ast.Constant = semicolonConstantXorNode.node as Ast.Constant;
-            if (PositionUtils.isAfterTokenPosition(state.position, semicolonConstant.tokenRange.positionStart, false)) {
-                return;
-            }
-        }
+    const keyValuePairChild: NodeIdMap.TXorNode = expectPreviousXorNode(state, 2);
+    // Check if it's in the value portion of the key-value-pair.
+    if (keyValuePairChild.node.maybeAttributeIndex !== 2) {
+        return;
     }
 
-    const sectionMembersArrayXorNode: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+    // Add all SectionMember names to the scope EXPECT for the current one.
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const sectionMemberArray: NodeIdMap.TXorNode = expectNextXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
+    const sectionMembers: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
         nodeIdMapCollection,
-        sectionXorNode.node.id,
-        4,
-        [Ast.NodeKind.ArrayWrapper],
+        sectionMemberArray.node.id,
     );
-    const sectionMemberXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
-        nodeIdMapCollection,
-        sectionMembersArrayXorNode.node.id,
-    );
+    for (const iterSectionMember of sectionMembers) {
+        // Ignore if it's the current SectionMember.
+        if (iterSectionMember.node.id === sectionMember.node.id) {
+            continue;
+        }
 
-    for (const sectionMember of sectionMemberXorNodes) {
-        const maybeIdentifierPairedExprXorNode: Option<
-            NodeIdMap.TXorNode
-        > = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, sectionMember.node.id, 2, [
-            Ast.NodeKind.IdentifierPairedExpression,
-        ]);
-        if (maybeIdentifierPairedExprXorNode === undefined) {
+        const maybeKeyValuePair: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            nodeIdMapCollection,
+            sectionMember.node.id,
+            2,
+            [Ast.NodeKind.IdentifierPairedExpression],
+        );
+        if (maybeKeyValuePair === undefined) {
             continue;
         }
-        const identifierPairedExprXorNode: NodeIdMap.TXorNode = maybeIdentifierPairedExprXorNode;
-        if (isInKeyValuePairAssignment(state, identifierPairedExprXorNode)) {
-            continue;
-        }
+        const keyValuePair: NodeIdMap.TXorNode = maybeKeyValuePair;
 
         // Add name to scope.
-        const identifierPairedExprId: number = identifierPairedExprXorNode.node.id;
-        const maybeNameXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeName: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
-            identifierPairedExprId,
+            keyValuePair.node.id,
             0,
             [Ast.NodeKind.Identifier],
         );
-        if (maybeNameXorNode === undefined) {
+        if (maybeName === undefined) {
             continue;
         }
-        const nameXorNode: NodeIdMap.TXorNode = maybeNameXorNode;
-        if (nameXorNode.kind === NodeIdMap.XorNodeKind.Ast && nameXorNode.node.kind === Ast.NodeKind.Identifier) {
-            addToScopeIfNew(state, nameXorNode.node.literal, identifierPairedExprXorNode);
+        const name: NodeIdMap.TXorNode = maybeName;
+        if (name.kind === NodeIdMap.XorNodeKind.Ast && name.node.kind === Ast.NodeKind.Identifier) {
+            addToScopeIfNew(state, name.node.literal, keyValuePair);
         }
 
-        // Add PositionIdentifier
-        const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeValue: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
-            identifierPairedExprId,
+            keyValuePair.node.id,
             2,
             undefined,
         );
-        if (maybeValueXorNode !== undefined) {
-            const valueXorNode: NodeIdMap.TXorNode = maybeValueXorNode;
-            maybeSetStartingIdentifierValue(state, nameXorNode, valueXorNode);
+        if (maybeValue !== undefined) {
+            const value: NodeIdMap.TXorNode = maybeValue;
+            maybeSetIdentifierUnderPositionValue(state, name, value);
         }
     }
 }
@@ -636,24 +607,9 @@ function expectedNodeKindError(xorNode: NodeIdMap.TXorNode, expected: Ast.NodeKi
     return new CommonError.InvariantError(`expected xorNode to be of kind ${expected}`, details);
 }
 
-function isParentOfNodeKind(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    childId: number,
-    parentNodeKind: Ast.NodeKind,
-): boolean {
-    const maybeParentNodeId: Option<number> = nodeIdMapCollection.parentIdById.get(childId);
-    if (maybeParentNodeId === undefined) {
-        return false;
-    }
-    const parentNodeId: number = maybeParentNodeId;
-
-    const maybeParentNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorNode(nodeIdMapCollection, parentNodeId);
-    if (maybeParentNode === undefined) {
-        return false;
-    }
-    const parent: NodeIdMap.TXorNode = maybeParentNode;
-
-    return parent.node.kind === parentNodeKind;
+function isParentOfNodeKind(state: IdentifierState, parentNodeKind: Ast.NodeKind): boolean {
+    const maybeParent: Option<NodeIdMap.TXorNode> = maybeNextXorNode(state);
+    return maybeParent !== undefined ? maybeParent.node.kind === parentNodeKind : false;
 }
 
 function addToScopeIfNew(state: IdentifierState, key: string, xorNode: NodeIdMap.TXorNode): void {
@@ -707,7 +663,7 @@ function nodesOnCsvFromCsvArray(
     return result;
 }
 
-function maybeSetStartingIdentifierValue(
+function maybeSetIdentifierUnderPositionValue(
     state: IdentifierState,
     keyXorNode: NodeIdMap.TXorNode,
     valueXorNode: NodeIdMap.TXorNode,
@@ -745,18 +701,20 @@ function maybeSetStartingIdentifierValue(
     }
 }
 
-function maybeNthLastVisitedXorNode(state: IdentifierState, n: number): Option<NodeIdMap.TXorNode> {
-    const identifierInspectedVisitedNodes: ReadonlyArray<IInspectedNode> = state.result.identifierVisitedNodes;
-    const nthNodeId: number = identifierInspectedVisitedNodes[identifierInspectedVisitedNodes.length - 1 - n].id;
-    return NodeIdMapUtils.maybeXorNode(state.nodeIdMapCollection, nthNodeId);
+function maybePreviousXorNode(state: IdentifierState, n: number = 1): Option<NodeIdMap.TXorNode> {
+    return state.activeXorNodeAncestry[state.activeXorNodeAncestry.length - 1 - n];
 }
 
-function expectNthLastVisitedXorNode(
+function maybeNextXorNode(state: IdentifierState, n: number = 1): Option<NodeIdMap.TXorNode> {
+    return state.activeXorNodeAncestry[state.nodeIndex + n];
+}
+
+function expectPreviousXorNode(
     state: IdentifierState,
-    n: number,
+    n: number = 1,
     maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
 ): NodeIdMap.TXorNode {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeNthLastVisitedXorNode(state, n);
+    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(state, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError("no previous node");
     }
@@ -774,11 +732,27 @@ function expectNthLastVisitedXorNode(
     return maybeXorNode;
 }
 
-function expectPreviousXorNode(
+function expectNextXorNode(
     state: IdentifierState,
+    n: number = 1,
     maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
 ): NodeIdMap.TXorNode {
-    return expectNthLastVisitedXorNode(state, 1, maybeAllowedNodeKinds);
+    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeNextXorNode(state, n);
+    if (maybeXorNode === undefined) {
+        throw new CommonError.InvariantError("no next node");
+    }
+    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+
+    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(xorNode.node.kind) === -1) {
+        const details: {} = {
+            nodeId: xorNode.node.id,
+            expectedAny: maybeAllowedNodeKinds,
+            actual: xorNode.node.kind,
+        };
+        throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);
+    }
+
+    return maybeXorNode;
 }
 
 function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.TXorNode): boolean {

@@ -13,8 +13,13 @@ import { Position, PositionUtils } from "./position";
 export function maybeIdentifierOnPostion(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    closestLeaf: Ast.TNode,
+    activeXorNode: NodeIdMap.TXorNode,
 ): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
+    if (activeXorNode.kind !== NodeIdMap.XorNodeKind.Ast) {
+        return undefined;
+    }
+    const closestLeaf: Ast.TNode = activeXorNode.node;
+
     let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
