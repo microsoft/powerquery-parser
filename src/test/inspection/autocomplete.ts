@@ -147,7 +147,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`abc123 {1,|2`, () => {
+            it(`{1,|2`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{1,|2`);
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);

@@ -1,32 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, CommonError, isNever, Option, ResultKind, TypeUtils } from "../common";
+import { CommonError, isNever, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import { IInspectedNode, InspectedInvokeExpression, InvokeExpressionArgs } from "./node";
 import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
-import * as InspectionUtils from "./inspectionUtils";
-
 // This inspection selects the closest leaf node, then recursively traveling up the node's parents.
 // It tracks what identifiers are within scope, and what value was used in their assignment (if available).
-
-// TODO: maybeInvokeExpression should be split into its own inspection.
-
-interface IdentifierState {
-    nodeIndex: number;
-    readonly result: IdentifierInspected;
-    readonly activeXorNodeAncestry: ReadonlyArray<NodeIdMap.TXorNode>;
-    readonly position: Position;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
-    // If the position is on either an (Identifier | GeneralizedIdentifier)
-    // If we encounter the assignment for this identifier then it's stored in Inspected.maybeIdentifierUnderPosition
-    readonly maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
-}
 
 export interface IdentifierInspected {
     // A map of (identifier, what caused the identifier to be added).
@@ -38,19 +21,30 @@ export interface IdentifierInspected {
     maybeIdentifierUnderPosition: Option<TPositionIdentifier>;
 }
 
+export interface InspectedInvokeExpression {
+    readonly xorNode: NodeIdMap.TXorNode;
+    readonly maybeName: Option<string>;
+    readonly maybeArguments: Option<InvokeExpressionArgs>;
+}
+
+export interface InvokeExpressionArgs {
+    readonly numArguments: number;
+    readonly positionArgumentIndex: number;
+}
+
 export function tryFrom(
-    activeXorNodeAncestry: ReadonlyArray<NodeIdMap.TXorNode>,
+    travelPath: ReadonlyArray<NodeIdMap.TXorNode>,
+    maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>,
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<IdentifierInspected> {
-    if (activeXorNodeAncestry.length === 0 || activeXorNodeAncestry[0].kind !== NodeIdMap.XorNodeKind.Ast) {
+    if (travelPath.length === 0 || travelPath[0].kind !== NodeIdMap.XorNodeKind.Ast) {
         return {
             kind: ResultKind.Ok,
             value: DefaultIdentifierInspection,
         };
     }
-    const activeXorNode: NodeIdMap.TXorNode = activeXorNodeAncestry[0];
 
     const state: IdentifierState = {
         nodeIndex: 0,
@@ -59,23 +53,19 @@ export function tryFrom(
             maybeInvokeExpression: undefined,
             maybeIdentifierUnderPosition: undefined,
         },
-        activeXorNodeAncestry,
+        activeXorNodeAncestry: travelPath,
         position,
         nodeIdMapCollection,
         leafNodeIds,
         // Storage for if position is on an (Identifier | GeneralizedIdentifier).
-        maybeIdentifierUnderPosition: InspectionUtils.maybeIdentifierOnPostion(
-            position,
-            nodeIdMapCollection,
-            activeXorNode,
-        ),
+        maybeIdentifierUnderPosition,
     };
 
     try {
-        const numAncestors: number = activeXorNodeAncestry.length;
-        for (let index: number = 0; index < numAncestors; index += 1) {
+        const numNodes: number = travelPath.length;
+        for (let index: number = 0; index < numNodes; index += 1) {
             state.nodeIndex = index;
-            const xorNode: NodeIdMap.TXorNode = activeXorNodeAncestry[index];
+            const xorNode: NodeIdMap.TXorNode = travelPath[index];
             visitNode(state, xorNode);
         }
 
@@ -93,6 +83,18 @@ export function tryFrom(
     } catch (err) {
         throw err;
     }
+}
+
+interface IdentifierState {
+    nodeIndex: number;
+    readonly result: IdentifierInspected;
+    readonly activeXorNodeAncestry: ReadonlyArray<NodeIdMap.TXorNode>;
+    readonly position: Position;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+    // If the position is on either an (Identifier | GeneralizedIdentifier)
+    // If we encounter the assignment for this identifier then it's stored in Inspected.maybeIdentifierUnderPosition
+    readonly maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
 }
 
 function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
@@ -340,11 +342,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExprXorNode: Node
 
     const unsafeResult: TypeUtils.StripReadonly<IdentifierInspected> = state.result;
     unsafeResult.maybeInvokeExpression = {
-        kind: Ast.NodeKind.InvokeExpression,
-        id: invokeExprXorNode.node.id,
-        maybeAttributeIndex: invokeExprXorNode.node.maybeAttributeIndex,
-        maybePositionEnd,
-        maybePositionStart,
+        xorNode: invokeExprXorNode,
         maybeName,
         maybeArguments: inspectInvokeExpressionArguments(state, invokeExprXorNode),
     };

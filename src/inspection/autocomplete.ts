@@ -7,7 +7,11 @@ import { KeywordKind, TExpressionKeywords, TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { Position, PositionUtils } from "./position";
 import { TPositionIdentifier } from "./positionIdentifier";
-import { AutocompleteInspected } from "./state";
+
+export interface AutocompleteInspected {
+    readonly maybeRequiredAutocomplete: Option<string>;
+    readonly allowedAutocompleteKeywords: ReadonlyArray<KeywordKind>;
+}
 
 export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,

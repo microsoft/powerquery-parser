@@ -4,9 +4,43 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { ResultKind } from "../../common";
-import { Ast } from "../../parser";
+import { isNever, Option, ResultKind } from "../../common";
+import { Token } from "../../lexer";
+import { Ast, NodeIdMap } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
+
+interface AbridgedTravelPathNode {
+    readonly id: number;
+    readonly kind: Ast.NodeKind;
+    readonly maybePositionStartCodeUnit: Option<number>;
+}
+
+function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<AbridgedTravelPathNode> {
+    return inspected.travelPath.map((xorNode: NodeIdMap.TXorNode) => {
+        let maybePositionStartCodeUnit: Option<number>;
+
+        switch (xorNode.kind) {
+            case NodeIdMap.XorNodeKind.Ast:
+                maybePositionStartCodeUnit = xorNode.node.tokenRange.positionStart.codeUnit;
+                break;
+
+            case NodeIdMap.XorNodeKind.Context:
+                const maybeTokenStart: Option<Token> = xorNode.node.maybeTokenStart;
+                maybePositionStartCodeUnit =
+                    maybeTokenStart !== undefined ? maybeTokenStart.positionStart.codeUnit : undefined;
+                break;
+
+            default:
+                throw isNever(xorNode);
+        }
+
+        return {
+            id: xorNode.node.id,
+            kind: xorNode.node.kind,
+            maybePositionStartCodeUnit,
+        };
+    });
+}
 
 function expectInspected(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
     if (!(triedInspection.kind === ResultKind.Ok)) {
@@ -17,16 +51,16 @@ function expectInspected(triedInspection: Inspection.TriedInspection): Inspectio
 
 function expectNodesEqual(
     triedInspection: Inspection.TriedInspection,
-    expected: ReadonlyArray<Inspection.IInspectedNode>,
+    expected: ReadonlyArray<AbridgedTravelPathNode>,
 ): void {
     const inspected: Inspection.Inspected = expectInspected(triedInspection);
-    const actual: ReadonlyArray<Inspection.IInspectedNode> = inspected.identifierVisitedNodes;
+    const actual: ReadonlyArray<AbridgedTravelPathNode> = abrigedTravelPathFrom(inspected);
 
     expect(actual).deep.equal(expected);
 }
 
 function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.NodeKind, expectedNum: number): void {
-    const actualNum: number = inspected.identifierVisitedNodes.filter(x => x.kind === expectedKind).length;
+    const actualNum: number = inspected.travelPath.filter(xorNode => xorNode.node.kind === expectedKind).length;
     expect(actualNum).to.equal(
         expectedNum,
         `expected to find ${expectedNum} of ${expectedKind}, but found ${actualNum} instead.`,
@@ -37,17 +71,17 @@ function expectNthOfNodeKind<T>(
     inspected: Inspection.Inspected,
     nodeKind: Ast.NodeKind,
     nth: number,
-): T & Inspection.IInspectedNode {
+): T & NodeIdMap.TXorNode {
     if (nth <= 0) {
         throw new Error("nth must be > 0");
     }
 
     let nthFound: number = 0;
-    for (const node of inspected.identifierVisitedNodes) {
-        if (node.kind === nodeKind) {
+    for (const xorNode of inspected.travelPath) {
+        if (xorNode.node.kind === nodeKind) {
             nthFound += 1;
             if (nth === nthFound) {
-                return (node as unknown) as T & Inspection.IInspectedNode;
+                return (xorNode as unknown) as T & NodeIdMap.TXorNode;
             }
         }
     }
@@ -60,87 +94,37 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
             it(`|[foo = bar]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar]`);
-                const expected: ReadonlyArray<Inspection.IInspectedNode> = [];
+                const expected: ReadonlyArray<AbridgedTravelPathNode> = [];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`[foo| = bar]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo| = bar]`);
-                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
+                const expected: ReadonlyArray<AbridgedTravelPathNode> = [
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 4,
-                            lineCodeUnit: 4,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 11,
-                            lineCodeUnit: 11,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 0,
-                            lineCodeUnit: 0,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 0,
                     },
                 ];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
@@ -148,96 +132,36 @@ describe(`Inspection`, () => {
 
             it(`[foo = bar|]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo = bar|]`);
-                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
+                const expected: ReadonlyArray<AbridgedTravelPathNode> = [
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 7,
-                            lineCodeUnit: 7,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 7,
                     },
                     {
                         id: 10,
                         kind: Ast.NodeKind.IdentifierExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 7,
-                            lineCodeUnit: 7,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 7,
                     },
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 11,
-                            lineCodeUnit: 11,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 0,
-                            lineCodeUnit: 0,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 0,
                     },
                 ];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
@@ -247,94 +171,42 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
             it(`|[foo = bar`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar`);
-                const expected: ReadonlyArray<Inspection.IInspectedNode> = [];
+                const expected: ReadonlyArray<AbridgedTravelPathNode> = [];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
             it(`[foo| = bar`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo| = bar`);
-                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
+                const expected: ReadonlyArray<AbridgedTravelPathNode> = [
                     {
                         id: 7,
                         kind: Ast.NodeKind.GeneralizedIdentifier,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 4,
-                            lineCodeUnit: 4,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: undefined,
-                        maybePositionStart: {
-                            codeUnit: 0,
-                            lineCodeUnit: 0,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 0,
                     },
                     {
                         id: 1,
                         kind: Ast.NodeKind.LogicalExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: undefined,
-                        maybePositionStart: {
-                            codeUnit: 0,
-                            lineCodeUnit: 0,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 0,
                     },
                 ];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
@@ -342,103 +214,41 @@ describe(`Inspection`, () => {
 
             it(`[foo = bar|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[foo = bar|`);
-                const expected: ReadonlyArray<Inspection.IInspectedNode> = [
+                const expected: ReadonlyArray<AbridgedTravelPathNode> = [
                     {
                         id: 11,
                         kind: Ast.NodeKind.Identifier,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 7,
-                            lineCodeUnit: 7,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 7,
                     },
                     {
                         id: 10,
                         kind: Ast.NodeKind.IdentifierExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 7,
-                            lineCodeUnit: 7,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 7,
                     },
                     {
                         id: 6,
                         kind: Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 5,
                         kind: Ast.NodeKind.Csv,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 4,
                         kind: Ast.NodeKind.ArrayWrapper,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: {
-                            codeUnit: 10,
-                            lineCodeUnit: 10,
-                            lineNumber: 0,
-                        },
-                        maybePositionStart: {
-                            codeUnit: 1,
-                            lineCodeUnit: 1,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 1,
                     },
                     {
                         id: 2,
                         kind: Ast.NodeKind.RecordExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: undefined,
-                        maybePositionStart: {
-                            codeUnit: 0,
-                            lineCodeUnit: 0,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 0,
                     },
                     {
                         id: 1,
                         kind: Ast.NodeKind.LogicalExpression,
-                        maybeAttributeIndex: undefined,
-                        maybePositionEnd: undefined,
-                        maybePositionStart: {
-                            codeUnit: 0,
-                            lineCodeUnit: 0,
-                            lineNumber: 0,
-                        },
+                        maybePositionStartCodeUnit: 0,
                     },
                 ];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
@@ -458,7 +268,7 @@ describe(`Inspection`, () => {
                 Ast.NodeKind.InvokeExpression,
                 1,
             );
-            expect(inspected.maybeInvokeExpression!.id).to.equal(firstInvokeExpr.id);
+            expect(inspected.maybeInvokeExpression!.xorNode).to.equal(firstInvokeExpr.xorNode);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
             expect(inspectedInvokeExpr.maybeName).to.equal("Foo");
@@ -475,20 +285,10 @@ describe(`Inspection`, () => {
                 Ast.NodeKind.InvokeExpression,
                 1,
             );
-            expect(inspected.maybeInvokeExpression!.id).to.equal(firstInvokeExpr.id);
+            expect(inspected.maybeInvokeExpression!.xorNode).to.equal(firstInvokeExpr.xorNode);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
             expect(inspectedInvokeExpr.maybeName).to.equal("Foo");
-            expect(inspectedInvokeExpr.maybePositionStart).deep.equal({
-                codeUnit: 7,
-                lineCodeUnit: 7,
-                lineNumber: 0,
-            });
-            expect(inspectedInvokeExpr.maybePositionEnd).deep.equal({
-                codeUnit: 9,
-                lineCodeUnit: 9,
-                lineNumber: 0,
-            });
         });
 
         it("single invoke expression - Foo(a|)", () => {
@@ -502,7 +302,7 @@ describe(`Inspection`, () => {
                 Ast.NodeKind.InvokeExpression,
                 1,
             );
-            expect(inspected.maybeInvokeExpression!.id).to.equal(firstInvokeExpr.id);
+            expect(inspected.maybeInvokeExpression!.xorNode).to.equal(firstInvokeExpr.xorNode);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
             expect(inspectedInvokeExpr.maybeArguments).not.equal(undefined, "should be truthy");
@@ -522,7 +322,7 @@ describe(`Inspection`, () => {
                 Ast.NodeKind.InvokeExpression,
                 1,
             );
-            expect(inspected.maybeInvokeExpression!.id).to.equal(firstInvokeExpr.id);
+            expect(inspected.maybeInvokeExpression!.xorNode).to.equal(firstInvokeExpr.xorNode);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
             expect(inspectedInvokeExpr.maybeArguments).not.equal(undefined, "should be truthy");
@@ -542,7 +342,7 @@ describe(`Inspection`, () => {
                 Ast.NodeKind.InvokeExpression,
                 1,
             );
-            expect(inspected.maybeInvokeExpression!.id).to.equal(firstInvokeExpr.id);
+            expect(inspected.maybeInvokeExpression!.xorNode).to.equal(firstInvokeExpr.xorNode);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
             expect(inspectedInvokeExpr.maybeArguments).not.equal(undefined, "should be truthy");
