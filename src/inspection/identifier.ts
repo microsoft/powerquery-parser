@@ -147,20 +147,14 @@ const DefaultIdentifierInspection: IdentifierInspected = {
 };
 
 function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMap.TXorNode): void {
-    const maybeEachConstantXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-        state.nodeIdMapCollection,
-        eachExprXorNode.node.id,
-        0,
-        undefined,
-    );
-    if (maybeEachConstantXorNode === undefined) {
+    const previous: NodeIdMap.TXorNode = expectPreviousXorNode(state);
+    // If you came from the TExpression in the EachExpression,
+    // then add '_' to the scope.
+    if (previous.node.maybeAttributeIndex !== 1) {
         return;
     }
-    const eachConstantXorNode: NodeIdMap.TXorNode = maybeEachConstantXorNode;
 
-    if (PositionUtils.isAfterXorNode(state.position, state.nodeIdMapCollection, eachConstantXorNode)) {
-        addToScopeIfNew(state, "_", eachExprXorNode);
-    }
+    addToScopeIfNew(state, "_", eachExprXorNode);
 }
 
 // If position is to the right of a fat arrow,
