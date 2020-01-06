@@ -35,7 +35,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`abc123 each |1`, () => {
+            it(`each |1`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |1`);
                 const expected: AbridgedScope = ["_"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
@@ -61,7 +61,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`each|`, () => {
+            it(`abc123 each|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
                 const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);

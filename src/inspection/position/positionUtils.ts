@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { isNever, Option } from "../../common";
+import { isNever, Option, CommonError } from "../../common";
 import { Token, TokenPosition } from "../../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
 import { Position } from "./position";
@@ -21,7 +21,19 @@ export function maybeActiveNode(
     let shiftRight: boolean;
     if (astSearch.maybeOnOrBeforePosition && astSearch.maybeOnOrBeforePosition.kind === Ast.NodeKind.Constant) {
         const constant: Ast.Constant = astSearch.maybeOnOrBeforePosition;
-        shiftRight = ShiftRightConstantKinds.indexOf(constant.literal) !== -1;
+        if (ShiftRightConstantKinds.indexOf(constant.literal) !== -1) {
+            if (astSearch.maybeAfterPosition !== undefined) {
+                return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
+            } else if (contextSearch.maybeAfterPosition !== undefined) {
+                return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeAfterPosition);
+            } else if (contextSearch.maybeOnOrBeforePosition !== undefined) {
+                return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
+            } else {
+                throw new CommonError.InvariantError("shouldn't ever reach this case");
+            }
+        } else {
+            shiftRight = isAfterTokenPosition(position, constant.tokenRange.positionEnd, false);
+        }
     } else {
         shiftRight = false;
     }

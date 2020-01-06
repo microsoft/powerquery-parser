@@ -39,7 +39,7 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<IdentifierInspected> {
-    if (travelPath.length === 0 || travelPath[0].kind !== NodeIdMap.XorNodeKind.Ast) {
+    if (travelPath.length === 0 && travelPath[0].kind !== NodeIdMap.XorNodeKind.Ast) {
         return {
             kind: ResultKind.Ok,
             value: DefaultIdentifierInspection,
@@ -168,13 +168,8 @@ function inspectFunctionExpression(state: IdentifierState, fnExprXorNode: NodeId
     // Eg. of positions that would NOT add to the scope.
     // `(x|, y) => x + y`
     // `(x, y)| => x + y`
-    const maybeExprXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-        state.nodeIdMapCollection,
-        fnExprXorNode.node.id,
-        3,
-        undefined,
-    );
-    if (maybeExprXorNode === undefined) {
+    const previous: NodeIdMap.TXorNode = expectPreviousXorNode(state);
+    if (previous.node.maybeAttributeIndex !== 3) {
         return;
     }
 
@@ -186,10 +181,6 @@ function inspectFunctionExpression(state: IdentifierState, fnExprXorNode: NodeId
     > = NodeIdMapUtils.expectAstChildByAttributeIndex(state.nodeIdMapCollection, fnExprXorNode.node.id, 0, [
         Ast.NodeKind.ParameterList,
     ]) as Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>>;
-
-    if (PositionUtils.isOnAstNode(state.position, parameters)) {
-        return;
-    }
 
     for (const parameterCsv of parameters.content.elements) {
         const parameterName: Ast.Identifier = parameterCsv.node.name;
