@@ -4,7 +4,8 @@
 import { isNever, Option, CommonError } from "../../common";
 import { Token, TokenPosition } from "../../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
-import { Position } from "./position";
+import { Position, ActiveNode, RelativePosition } from "./position";
+import { relative } from "path";
 
 export function maybeActiveNode(
     position: Position,
@@ -21,19 +22,20 @@ export function maybeActiveNode(
     let shiftRight: boolean;
     if (astSearch.maybeOnOrBeforePosition && astSearch.maybeOnOrBeforePosition.kind === Ast.NodeKind.Constant) {
         const constant: Ast.Constant = astSearch.maybeOnOrBeforePosition;
-        if (ShiftRightConstantKinds.indexOf(constant.literal) !== -1) {
-            if (astSearch.maybeAfterPosition !== undefined) {
-                return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
-            } else if (contextSearch.maybeAfterPosition !== undefined) {
-                return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeAfterPosition);
-            } else if (contextSearch.maybeOnOrBeforePosition !== undefined) {
-                return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
-            } else {
-                throw new CommonError.InvariantError("shouldn't ever reach this case");
-            }
-        } else {
-            shiftRight = isAfterTokenPosition(position, constant.tokenRange.positionEnd, false);
-        }
+        // if (ShiftRightConstantKinds.indexOf(constant.literal) !== -1) {
+        //     if (astSearch.maybeAfterPosition !== undefined) {
+        //         return NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
+        //     } else if (contextSearch.maybeAfterPosition !== undefined) {
+        //         return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeAfterPosition);
+        //     } else if (contextSearch.maybeOnOrBeforePosition !== undefined) {
+        //         return NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
+        //     } else {
+        //         throw new CommonError.InvariantError("shouldn't ever reach this case");
+        //     }
+        // } else {
+        //     shiftRight = isAfterTokenPosition(position, constant.tokenRange.positionEnd, false);
+        // }
+        shiftRight = isAfterTokenPosition(position, constant.tokenRange.positionEnd, false);
     } else {
         shiftRight = false;
     }
@@ -55,6 +57,77 @@ export function maybeActiveNode(
             return undefined;
         }
     }
+}
+
+export function maybeActiveNode2(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+): Option<ActiveNode> {
+    const astSearch: PositionNodeSearch<Ast.TNode> = positionAstSearch(
+        position,
+        nodeIdMapCollection.astNodeById,
+        leafNodeIds,
+    );
+    const contextSearch: PositionNodeSearch<ParserContext.Node> = positionContextSearch(position, nodeIdMapCollection);
+
+    let shiftRight: boolean;
+    if (astSearch.maybeOnOrBeforePosition && astSearch.maybeOnOrBeforePosition.kind === Ast.NodeKind.Constant) {
+        const constant: Ast.Constant = astSearch.maybeOnOrBeforePosition;
+        shiftRight =
+            // 'foo |'
+            isAfterTokenPosition(position, constant.tokenRange.positionEnd, false) ||
+            // 'key=|value'
+            ShiftRightConstantKinds.indexOf(constant.literal) !== -1;
+    } else {
+        shiftRight = false;
+    }
+
+    let maybeXorNode: Option<NodeIdMap.TXorNode>;
+    if (shiftRight) {
+        if (astSearch.maybeAfterPosition !== undefined) {
+            maybeXorNode = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
+        } else if (contextSearch.maybeAfterPosition !== undefined) {
+            maybeXorNode = NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeAfterPosition);
+        } else if (
+            contextSearch.maybeOnOrBeforePosition &&
+            isUnderContextNodeStart(position, contextSearch.maybeOnOrBeforePosition)
+        ) {
+            maybeXorNode = NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
+        } else {
+            maybeXorNode = undefined;
+        }
+    } else {
+        if (astSearch.maybeOnOrBeforePosition) {
+            maybeXorNode = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeOnOrBeforePosition);
+        } else if (contextSearch.maybeOnOrBeforePosition) {
+            maybeXorNode = NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
+        } else {
+            maybeXorNode = undefined;
+        }
+    }
+
+    if (maybeXorNode === undefined) {
+        return undefined;
+    }
+    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+
+    let relativePosition: RelativePosition;
+    if (isBeforeXorNode(position, maybeXorNode)) {
+        relativePosition = RelativePosition.Left;
+    } else if (isAfterXorNode(position, nodeIdMapCollection, xorNode)) {
+        relativePosition = RelativePosition.Right;
+    } else {
+        relativePosition = RelativePosition.Under;
+    }
+
+    return {
+        xorNode,
+        relativePosition,
+        isNoopXorNode:
+            xorNode.kind === NodeIdMap.XorNodeKind.Context &&
+            NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id) === undefined,
+    };
 }
 
 export function isBeforeXorNode(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
