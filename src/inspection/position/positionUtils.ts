@@ -17,88 +17,62 @@ export function maybeActiveNode(
         nodeIdMapCollection,
     );
 
-    throw new Error();
+    let maybeRoot: Option<NodeIdMap.TXorNode>;
+    if (astSearch.maybeOnOrBeforePosition) {
+        const astNode: Ast.TNode = astSearch.maybeOnOrBeforePosition;
 
-    // let maybeRoot: Option<NodeIdMap.TXorNode>;
-    // if (astSearch.maybeOnOrBeforePosition) {
-    //     const astNode: Ast.TNode = astSearch.maybeOnOrBeforePosition;
+        if (astNode.kind === Ast.NodeKind.Constant) {
+            const constant: Ast.Constant = astNode;
 
-    //     // 'let x=|'
-    //     // 'let x=|1'
-    //     if (astNode.kind === Ast.NodeKind.Constant && ShiftRightConstantKinds.indexOf(astNode.literal) !== -1) {
-    //         if (astSearch.maybeAfterPosition) {
-    //             maybeRoot = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
-    //         }
+            // 'let x=|'
+            // 'let x=|1'
+            if (
+                ShiftRightConstantKinds.indexOf(constant.literal) !== -1 ||
+                isAfterTokenPosition(position, constant.tokenRange.positionEnd, false)
+            ) {
+                if (astSearch.maybeAfterPosition) {
+                    maybeRoot = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
+                } else if (maybeContextSearch) {
+                    maybeRoot = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
+                } else {
+                    maybeRoot = undefined;
+                }
+            }
+            // Position is either under or to the right of a constant.
+            else {
+                maybeRoot = NodeIdMapUtils.xorNodeFromAst(constant);
+            }
+        }
+    } else if (maybeContextSearch) {
+        maybeRoot = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
+    } else {
+        maybeRoot = undefined;
+    }
 
-    //         const maybeContextNode: Option<ParserContext.Node> =
-    //             contextSearch.maybeAfterPosition || contextSearch.maybeOnOrBeforePosition;
-    //         if (contextSearch.maybeAfterPosition !== undefined || contextSearch.maybeOnOrBeforePosition !== undefined) {
-    //             maybeRoot = NodeIdMapUtils.xorNodeFromContext(
-    //                 contextSearch.maybeAfterPosition || contextSearch.maybeOnOrBeforePosition,
-    //             );
-    //         }
-    //     }
-    // }
+    if (maybeRoot === undefined) {
+        return undefined;
+    }
+    const root: NodeIdMap.TXorNode = maybeRoot;
+    const rootId: number = root.node.id;
 
-    // if (astSearch.maybeOnOrBeforePosition && astSearch.maybeOnOrBeforePosition.kind === Ast.NodeKind.Constant) {
-    //     const constant: Ast.Constant = astSearch.maybeOnOrBeforePosition;
-    //     shiftRight =
-    //         // // 'foo |'
-    //         // isAfterTokenPosition(position, constant.tokenRange.positionEnd, false) ||
-    //         // 'key=|value'
-    //         ShiftRightConstantKinds.indexOf(constant.literal) !== -1;
-    // } else {
-    //     shiftRight = false;
-    // }
+    let relativePosition: RelativePosition;
+    if (isBeforeXorNode(position, maybeRoot)) {
+        relativePosition = RelativePosition.Left;
+    } else if (isAfterXorNode(position, nodeIdMapCollection, root)) {
+        relativePosition = RelativePosition.Right;
+    } else {
+        relativePosition = RelativePosition.Under;
+    }
 
-    // let maybeRoot: Option<NodeIdMap.TXorNode>;
-    // if (shiftRight) {
-    //     if (astSearch.maybeAfterPosition !== undefined) {
-    //         maybeRoot = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
-    //     } else if (contextSearch.maybeAfterPosition !== undefined) {
-    //         maybeRoot = NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeAfterPosition);
-    //     } else if (
-    //         contextSearch.maybeOnOrBeforePosition &&
-    //         isUnderContextNodeStart(position, contextSearch.maybeOnOrBeforePosition)
-    //     ) {
-    //         maybeRoot = NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
-    //     } else {
-    //         maybeRoot = undefined;
-    //     }
-    // } else {
-    //     if (astSearch.maybeOnOrBeforePosition) {
-    //         maybeRoot = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeOnOrBeforePosition);
-    //     } else if (contextSearch.maybeOnOrBeforePosition) {
-    //         maybeRoot = NodeIdMapUtils.xorNodeFromContext(contextSearch.maybeOnOrBeforePosition);
-    //     } else {
-    //         maybeRoot = undefined;
-    //     }
-    // }
-
-    // if (maybeRoot === undefined) {
-    //     return undefined;
-    // }
-    // const root: NodeIdMap.TXorNode = maybeRoot;
-    // const rootId: number = root.node.id;
-
-    // let relativePosition: RelativePosition;
-    // if (isBeforeXorNode(position, maybeRoot)) {
-    //     relativePosition = RelativePosition.Left;
-    // } else if (isAfterXorNode(position, nodeIdMapCollection, root)) {
-    //     relativePosition = RelativePosition.Right;
-    // } else {
-    //     relativePosition = RelativePosition.Under;
-    // }
-
-    // return {
-    //     position,
-    //     root,
-    //     ancestory: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, rootId),
-    //     relativePosition,
-    //     isNoopXorNode:
-    //         root.kind === NodeIdMap.XorNodeKind.Context &&
-    //         NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, rootId) === undefined,
-    // };
+    return {
+        position,
+        root,
+        ancestory: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, rootId),
+        relativePosition,
+        isNoopXorNode:
+            root.kind === NodeIdMap.XorNodeKind.Context &&
+            NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, rootId) === undefined,
+    };
 }
 
 export function isBeforeXorNode(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
@@ -286,11 +260,6 @@ interface AstNodeSearch {
     readonly maybeAfterPosition: Option<Ast.TNode>;
 }
 
-interface ContextNodeSearch {
-    readonly maybeOnPosition: Option<ParserContext.Node>;
-    readonly maybeAfterPosition: Option<ParserContext.Node>;
-}
-
 const ShiftRightConstantKinds: ReadonlyArray<string> = [
     Ast.ConstantKind.Comma,
     Ast.ConstantKind.Equal,
@@ -303,9 +272,6 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
     Ast.ConstantKind.RightParenthesis,
 ];
 
-// Returns the closest Ast nodes that are:
-// * on or to the left of position
-// * to the right of position
 function positionAstSearch(
     position: Position,
     astNodeById: NodeIdMap.AstNodeById,
@@ -316,7 +282,7 @@ function positionAstSearch(
 
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
-        if (isAfterAstNode(position, candidate)) {
+        if (isAfterTokenPosition(position, candidate.tokenRange.positionEnd, false)) {
             if (maybeCurrentOnOrBefore === undefined) {
                 maybeCurrentOnOrBefore = candidate;
             } else {
@@ -345,9 +311,6 @@ function positionAstSearch(
     };
 }
 
-// Returns the closest context nodes that are:
-// * on position
-// * to the right of position
 function positionContextSearch(
     maybeOnOrBeforePositionAst: Option<Ast.TNode>,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -361,7 +324,7 @@ function positionContextSearch(
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (
             candidate.maybeTokenStart &&
-            candidate.tokenIndexStart === onOrBeforePositionAst.tokenRange.tokenIndexStart
+            candidate.maybeTokenStart.positionStart.codeUnit === onOrBeforePositionAst.tokenRange.positionStart.codeUnit
         ) {
             if (maybeCurrent === undefined || maybeCurrent.id < candidate.id) {
                 maybeCurrent = candidate;
@@ -370,42 +333,4 @@ function positionContextSearch(
     }
 
     return maybeCurrent;
-
-    // const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
-    // let maybeOn: Option<ParserContext.Node>;
-    // let maybeCurrentAfter: Option<ParserContext.Node>;
-
-    // for (const candidate of contextNodeById.values()) {
-    //     if (candidate.maybeTokenStart && isOnTokenPosition(position, candidate.maybeTokenStart.positionStart)) {
-    //         maybeOn = candidate;
-    //     }
-    //     else if (isAfterContextNode())
-
-    //     if (isAfterContextNode(position, nodeIdMapCollection, candidate)) {
-    //         if (maybeOn === undefined) {
-    //             maybeOn = candidate;
-    //         } else {
-    //             const currentOnOrBefore: ParserContext.Node = maybeOn;
-
-    //             if (candidate.tokenIndexStart > currentOnOrBefore.tokenIndexStart) {
-    //                 maybeOn = candidate;
-    //             }
-    //         }
-    //     } else {
-    //         if (maybeCurrentAfter === undefined) {
-    //             maybeCurrentAfter = candidate;
-    //         } else {
-    //             const currentAfter: ParserContext.Node = maybeCurrentAfter;
-
-    //             if (candidate.tokenIndexStart < currentAfter.tokenIndexStart) {
-    //                 maybeCurrentAfter = candidate;
-    //             }
-    //         }
-    //     }
-    // }
-
-    // return {
-    //     maybeOnOrBeforePosition: maybeOn,
-    //     maybeAfterPosition: maybeCurrentAfter,
-    // };
 }

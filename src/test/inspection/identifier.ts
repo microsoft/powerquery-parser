@@ -22,8 +22,8 @@ function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspecti
 
 describe(`Inspection`, () => {
     describe(`Identifier`, () => {
-        describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
-            it(`abc123 each|`, () => {
+        describe(`abc123 ${Ast.NodeKind.EachExpression} (Ast)`, () => {
+            it(`each|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
                 const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
