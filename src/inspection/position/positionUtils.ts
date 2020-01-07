@@ -42,6 +42,8 @@ export function maybeActiveNode(
             else {
                 maybeRoot = NodeIdMapUtils.xorNodeFromAst(constant);
             }
+        } else {
+            maybeRoot = NodeIdMapUtils.xorNodeFromAst(astNode);
         }
     } else if (maybeContextSearch) {
         maybeRoot = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
@@ -282,23 +284,23 @@ function positionAstSearch(
 
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
-        if (isAfterTokenPosition(position, candidate.tokenRange.positionEnd, false)) {
+        // Is position to the right of the candidate?
+        // 'x|' should NOT have position as after the candidate.
+        if (isAfterTokenPosition(position, candidate.tokenRange.positionEnd, true)) {
             if (maybeCurrentOnOrBefore === undefined) {
                 maybeCurrentOnOrBefore = candidate;
             } else {
-                const currentOnOrBefore: Ast.TNode = maybeCurrentOnOrBefore;
-
-                if (candidate.tokenRange.tokenIndexStart > currentOnOrBefore.tokenRange.tokenIndexStart) {
+                if (candidate.tokenRange.tokenIndexStart > maybeCurrentOnOrBefore.tokenRange.tokenIndexStart) {
                     maybeCurrentOnOrBefore = candidate;
                 }
             }
-        } else {
+        }
+        // Position is after the candidate
+        else {
             if (maybeCurrentAfter === undefined) {
                 maybeCurrentAfter = candidate;
             } else {
-                const currentAfter: Ast.TNode = maybeCurrentAfter;
-
-                if (candidate.tokenRange.tokenIndexStart < currentAfter.tokenRange.tokenIndexStart) {
+                if (candidate.tokenRange.tokenIndexStart < maybeCurrentAfter.tokenRange.tokenIndexStart) {
                     maybeCurrentAfter = candidate;
                 }
             }
