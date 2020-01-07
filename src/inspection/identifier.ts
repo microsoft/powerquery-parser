@@ -5,7 +5,8 @@ import { CommonError, isNever, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import { ActiveNode, Position, PositionUtils } from "./position";
+import { ActiveNode } from "./activeNode";
+import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
 // This inspection selects the closest leaf node, then recursively traveling up the node's parents.

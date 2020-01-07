@@ -4,9 +4,10 @@
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { Ast, NodeIdMap, NodeIdMapUtils } from "../parser";
+import { ActiveNode, ActiveNodeUtils, RelativePosition } from "./activeNode";
 import { AutocompleteInspected, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { IdentifierInspected, tryFrom as identifierInspectedTryFrom } from "./identifier";
-import { ActiveNode, Position, PositionUtils, RelativePosition } from "./position";
+import { Position } from "./position";
 
 // Inspection is designed to run sub-inspections,
 // eg. one inspection for scope and one for keywords.
@@ -25,7 +26,7 @@ export function tryFrom(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedInspection {
-    const maybeActiveNode: Option<ActiveNode> = PositionUtils.maybeActiveNode(
+    const maybeActiveNode: Option<ActiveNode> = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
         leafNodeIds,
