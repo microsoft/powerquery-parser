@@ -19,47 +19,52 @@ export function tryFrom(
     position: Position,
     maybeIdentifierUnderPosition: Option<TPositionIdentifier>,
 ): TriedTraverse<AutocompleteInspected> {
-    const maybeRoot: Option<NodeIdMap.TXorNode> = maybeAutocompleteRoot(position, nodeIdMapCollection, leafNodeIds);
-    if (maybeRoot === undefined) {
-        return {
-            kind: ResultKind.Ok,
-            value: ExpressionAutocomplete,
-        };
-    }
-    const root: NodeIdMap.TXorNode = maybeRoot;
-    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectAncestry(
-        nodeIdMapCollection,
-        root.node.id,
-    );
-
-    const maybeSearch: Option<AutocompleteFnSearch> = maybeAutocompleteFn(ancestry);
-    if (maybeSearch === undefined) {
-        return {
-            kind: ResultKind.Ok,
-            value: EmptyAutocomplete,
-        };
-    }
-    const search: AutocompleteFnSearch = maybeSearch;
-
-    const state: AutocompleteState = {
-        nodeIdMapCollection,
-        position,
-        maybeIdentifierUnderPosition,
-        ancestry,
-        triggerAncestor: search.triggerAncestor,
-        triggerAncestorIndex: search.triggerAncestorIndex,
+    return {
+        kind: ResultKind.Ok,
+        value: ExpressionAutocomplete,
     };
-    try {
-        return {
-            kind: ResultKind.Ok,
-            value: search.fn(state),
-        };
-    } catch (e) {
-        return {
-            kind: ResultKind.Err,
-            error: CommonError.ensureCommonError(e),
-        };
-    }
+
+    // const maybeRoot: Option<NodeIdMap.TXorNode> = maybeAutocompleteRoot(position, nodeIdMapCollection, leafNodeIds);
+    // if (maybeRoot === undefined) {
+    //     return {
+    //         kind: ResultKind.Ok,
+    //         value: ExpressionAutocomplete,
+    //     };
+    // }
+    // const root: NodeIdMap.TXorNode = maybeRoot;
+    // const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectAncestry(
+    //     nodeIdMapCollection,
+    //     root.node.id,
+    // );
+
+    // const maybeSearch: Option<AutocompleteFnSearch> = maybeAutocompleteFn(ancestry);
+    // if (maybeSearch === undefined) {
+    //     return {
+    //         kind: ResultKind.Ok,
+    //         value: EmptyAutocomplete,
+    //     };
+    // }
+    // const search: AutocompleteFnSearch = maybeSearch;
+
+    // const state: AutocompleteState = {
+    //     nodeIdMapCollection,
+    //     position,
+    //     maybeIdentifierUnderPosition,
+    //     ancestry,
+    //     triggerAncestor: search.triggerAncestor,
+    //     triggerAncestorIndex: search.triggerAncestorIndex,
+    // };
+    // try {
+    //     return {
+    //         kind: ResultKind.Ok,
+    //         value: search.fn(state),
+    //     };
+    // } catch (e) {
+    //     return {
+    //         kind: ResultKind.Err,
+    //         error: CommonError.ensureCommonError(e),
+    //     };
+    // }
 }
 
 type TAutocompleteFn = (state: AutocompleteState) => AutocompleteInspected;
@@ -234,8 +239,7 @@ function maybePreviousAncestor(state: AutocompleteState, nth: number = 1): Optio
 function expectPreviousAncestor(state: AutocompleteState, nth: number = 1): NodeIdMap.TXorNode {
     const maybeAncestor: Option<NodeIdMap.TXorNode> = maybePreviousAncestor(state, nth);
     if (maybeAncestor === undefined) {
-        const details: {} = { triggerAncestorIndex: state.triggerAncestorIndex };
-        throw new CommonError.InvariantError("expected to find the trigger ancestor", details);
+        throw new CommonError.InvariantError("expected to find a previous ancestor");
     }
     return maybeAncestor;
 }

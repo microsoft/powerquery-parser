@@ -127,7 +127,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`abc123 f|oo`, () => {
+            it(`f|oo`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`f|oo`);
                 const expected: AbridgedScope = ["foo"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
@@ -279,13 +279,13 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`[a=1, b=2|]`, () => {
+            it(`abc123 [a=1, b=2|]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=1, b=2|]`);
                 const expected: AbridgedScope = ["a"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`[a=1, b=2|, c=3]`, () => {
+            it(`abc123 [a=1, b=2|, c=3]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=1, b=2|, c=3]`);
                 const expected: AbridgedScope = ["a", "c"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
@@ -297,7 +297,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`[a=[|b=1]]`, () => {
+            it(`abc123 [a=[|b=1]]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=[|b=1]]`);
                 const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);

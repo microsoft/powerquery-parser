@@ -285,8 +285,9 @@ function positionAstSearch(
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
         // Is position to the right of the candidate?
-        // 'x|' should NOT have position as after the candidate.
-        if (isAfterTokenPosition(position, candidate.tokenRange.positionEnd, true)) {
+        // 'foo|'
+        // 'fo|o'
+        if (isAfterTokenPosition(position, candidate.tokenRange.positionStart, false)) {
             if (maybeCurrentOnOrBefore === undefined) {
                 maybeCurrentOnOrBefore = candidate;
             } else {
