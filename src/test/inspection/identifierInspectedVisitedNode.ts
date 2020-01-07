@@ -16,7 +16,11 @@ interface AbridgedTravelPathNode {
 }
 
 function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<AbridgedTravelPathNode> {
-    return inspected.travelPath.map((xorNode: NodeIdMap.TXorNode) => {
+    if (inspected.maybeActiveNode === undefined) {
+        return [];
+    }
+
+    return inspected.maybeActiveNode.ancestory.map((xorNode: NodeIdMap.TXorNode) => {
         let maybePositionStartCodeUnit: Option<number>;
 
         switch (xorNode.kind) {
@@ -60,7 +64,10 @@ function expectNodesEqual(
 }
 
 function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.NodeKind, expectedNum: number): void {
-    const actualNum: number = inspected.travelPath.filter(xorNode => xorNode.node.kind === expectedKind).length;
+    const actualNum: number =
+        inspected.maybeActiveNode !== undefined
+            ? inspected.maybeActiveNode.ancestory.filter(xorNode => xorNode.node.kind === expectedKind).length
+            : -1;
     expect(actualNum).to.equal(
         expectedNum,
         `expected to find ${expectedNum} of ${expectedKind}, but found ${actualNum} instead.`,
@@ -74,10 +81,12 @@ function expectNthOfNodeKind<T>(
 ): T & NodeIdMap.TXorNode {
     if (nth <= 0) {
         throw new Error("nth must be > 0");
+    } else if (inspected.maybeActiveNode === undefined) {
+        throw new Error("expected to have an active node");
     }
 
     let nthFound: number = 0;
-    for (const xorNode of inspected.travelPath) {
+    for (const xorNode of inspected.maybeActiveNode.ancestory) {
         if (xorNode.node.kind === nodeKind) {
             nthFound += 1;
             if (nth === nthFound) {

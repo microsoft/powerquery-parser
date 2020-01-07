@@ -23,6 +23,18 @@ function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspecti
 describe(`Inspection`, () => {
     describe(`Identifier`, () => {
         describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
+            it(`abc123 each|`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
+                const expected: AbridgedScope = [];
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`each |`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |`);
+                const expected: AbridgedScope = ["_"];
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
+            });
+
             it(`|each 1`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|each 1`);
                 const expected: AbridgedScope = [];
@@ -61,7 +73,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`abc123 each|`, () => {
+            it(`each|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
                 const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);

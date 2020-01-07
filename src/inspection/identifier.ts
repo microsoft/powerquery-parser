@@ -5,7 +5,7 @@ import { CommonError, isNever, Option, ResultKind, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import { Position, PositionUtils } from "./position";
+import { ActiveNode, Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
 // This inspection selects the closest leaf node, then recursively traveling up the node's parents.
@@ -33,18 +33,18 @@ export interface InvokeExpressionArgs {
 }
 
 export function tryFrom(
-    travelPath: ReadonlyArray<NodeIdMap.TXorNode>,
+    maybeActiveNode: Option<ActiveNode>,
     maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>,
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): TriedTraverse<IdentifierInspected> {
-    if (travelPath.length === 0 && travelPath[0].kind !== NodeIdMap.XorNodeKind.Ast) {
+    if (maybeActiveNode === undefined) {
         return {
             kind: ResultKind.Ok,
             value: DefaultIdentifierInspection,
         };
     }
+    const activeNode: ActiveNode = maybeActiveNode;
 
     const state: IdentifierState = {
         nodeIndex: 0,
@@ -53,8 +53,7 @@ export function tryFrom(
             maybeInvokeExpression: undefined,
             maybeIdentifierUnderPosition: undefined,
         },
-        activeXorNodeAncestry: travelPath,
-        position,
+        activeNode,
         nodeIdMapCollection,
         leafNodeIds,
         // Storage for if position is on an (Identifier | GeneralizedIdentifier).
@@ -62,10 +61,11 @@ export function tryFrom(
     };
 
     try {
-        const numNodes: number = travelPath.length;
+        const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestory;
+        const numNodes: number = ancestry.length;
         for (let index: number = 0; index < numNodes; index += 1) {
             state.nodeIndex = index;
-            const xorNode: NodeIdMap.TXorNode = travelPath[index];
+            const xorNode: NodeIdMap.TXorNode = ancestry[index];
             visitNode(state, xorNode);
         }
 
@@ -81,15 +81,17 @@ export function tryFrom(
             value: state.result,
         };
     } catch (err) {
-        throw err;
+        return {
+            kind: ResultKind.Err,
+            error: CommonError.ensureCommonError(err),
+        };
     }
 }
 
 interface IdentifierState {
     nodeIndex: number;
     readonly result: IdentifierInspected;
-    readonly activeXorNodeAncestry: ReadonlyArray<NodeIdMap.TXorNode>;
-    readonly position: Position;
+    readonly activeNode: ActiveNode;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     // If the position is on either an (Identifier | GeneralizedIdentifier)
@@ -294,7 +296,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExprXorNode: Node
     // and as it's a context node it hasn't parsed all attributes.
     if (invokeExprXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         const invokeExpr: Ast.InvokeExpression = invokeExprXorNode.node as Ast.InvokeExpression;
-        if (PositionUtils.isOnAstNode(state.position, invokeExpr.closeWrapperConstant)) {
+        if (PositionUtils.isOnAstNode(state.activeNode.position, invokeExpr.closeWrapperConstant)) {
             return;
         }
     }
@@ -350,7 +352,7 @@ function inspectInvokeExpressionArguments(
     const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const position: Position = state.position;
+    const position: Position = state.activeNode.position;
     const csvXorNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
         state.nodeIdMapCollection,
         csvArrayXorNode.node.id,
@@ -685,11 +687,11 @@ function maybeSetIdentifierUnderPositionValue(
 }
 
 function maybePreviousXorNode(state: IdentifierState, n: number = 1): Option<NodeIdMap.TXorNode> {
-    return state.activeXorNodeAncestry[state.activeXorNodeAncestry.length - 1 - n];
+    return state.activeNode.ancestory[state.activeNode.ancestory.length - 1 - n];
 }
 
 function maybeNextXorNode(state: IdentifierState, n: number = 1): Option<NodeIdMap.TXorNode> {
-    return state.activeXorNodeAncestry[state.nodeIndex + n];
+    return state.activeNode.ancestory[state.nodeIndex + n];
 }
 
 function expectPreviousXorNode(
@@ -765,7 +767,7 @@ function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.T
                 | Ast.GeneralizedIdentifierPairedAnyLiteral
                 | Ast.GeneralizedIdentifierPairedExpression
                 | Ast.IdentifierPairedExpression;
-            return PositionUtils.isOnAstNode(state.position, astNode.value);
+            return PositionUtils.isOnAstNode(state.activeNode.position, astNode.value);
         }
 
         case NodeIdMap.XorNodeKind.Context:
@@ -776,7 +778,7 @@ function isInKeyValuePairAssignment(state: IdentifierState, xorNode: NodeIdMap.T
                 undefined,
             );
             return maybeValue !== undefined
-                ? PositionUtils.isOnXorNode(state.position, state.nodeIdMapCollection, maybeValue)
+                ? PositionUtils.isOnXorNode(state.activeNode.position, state.nodeIdMapCollection, maybeValue)
                 : false;
 
         default:

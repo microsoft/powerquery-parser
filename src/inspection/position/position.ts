@@ -10,7 +10,9 @@ export interface Position {
 
 // An active node can be thought of as the node the user is expecting their autocomplete to show options for.
 export interface ActiveNode {
-    readonly xorNode: NodeIdMap.TXorNode;
+    readonly position: Position;
+    readonly root: NodeIdMap.TXorNode;
+    readonly ancestory: ReadonlyArray<NodeIdMap.TXorNode>;
     readonly relativePosition: RelativePosition;
     readonly isNoopXorNode: boolean;
 }
