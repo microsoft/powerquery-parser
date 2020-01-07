@@ -6,6 +6,19 @@ import { Token, TokenPosition } from "../../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
 import { Position } from "./position";
 
+export function isBeforeOrOnXorNodeStart(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
+    switch (xorNode.kind) {
+        case NodeIdMap.XorNodeKind.Ast:
+            return isBeforeOrOnAstNodeStart(position, xorNode.node);
+
+        case NodeIdMap.XorNodeKind.Context:
+            return isBeforeOrOnContextNodeStart(position, xorNode.node);
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
 export function isBeforeXorNode(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
@@ -89,6 +102,10 @@ export function isBeforeContextNode(position: Position, contextNode: ParserConte
     return isBeforeTokenPosition(position, tokenStart.positionStart);
 }
 
+export function isBeforeOrOnContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
+    return isBeforeContextNode(position, contextNode) || isUnderContextNodeStart(position, contextNode);
+}
+
 export function isUnderContextNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -141,8 +158,8 @@ export function isOnAstNodeEnd(position: Position, astNode: Ast.TNode): boolean 
     return isOnTokenPosition(position, astNode.tokenRange.positionEnd);
 }
 
-export function isOnOrDirectlyAfterAstNode(position: Position, astNode: Ast.TNode): boolean {
-    return isOnAstNode(position, astNode) || isOnTokenPosition(position, astNode.tokenRange.positionEnd);
+export function isBeforeOrOnAstNodeStart(position: Position, astNode: Ast.TNode): boolean {
+    return isBeforeAstNode(position, astNode) || isOnAstNodeStart(position, astNode);
 }
 
 export function isAfterAstNode(position: Position, astNode: Ast.TNode): boolean {

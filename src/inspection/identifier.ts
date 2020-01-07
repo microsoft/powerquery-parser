@@ -111,11 +111,11 @@ function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
             break;
 
         case Ast.NodeKind.Identifier:
-            inspectIdentifier(state, xorNode);
+            inspectIdentifier(state, xorNode, true);
             break;
 
         case Ast.NodeKind.IdentifierExpression:
-            inspectIdentifierExpression(state, xorNode);
+            inspectIdentifierExpression(state, xorNode, true);
             break;
 
         case Ast.NodeKind.IdentifierPairedExpression:
@@ -205,23 +205,45 @@ function inspectGeneralizedIdentifier(state: IdentifierState, genIdentifierXorNo
     }
 }
 
-function inspectIdentifier(state: IdentifierState, identifierXorNode: NodeIdMap.TXorNode): void {
-    // Ignore the context case as the node has two possible states:
+function inspectIdentifier(state: IdentifierState, identifierXorNode: NodeIdMap.TXorNode, isRoot: boolean): void {
+    // Ignore the case of a Context node as there are two possible states:
     // An empty context (no children), or an Ast.TNode instance.
-    if (identifierXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
-        if (identifierXorNode.node.kind !== Ast.NodeKind.Identifier) {
-            throw expectedNodeKindError(identifierXorNode, Ast.NodeKind.Identifier);
-        }
-
-        const identifier: Ast.Identifier = identifierXorNode.node;
-        if (isParentOfNodeKind(state, Ast.NodeKind.IdentifierExpression)) {
-            return;
-        }
-        addAstToScopeIfNew(state, identifier.literal, identifier);
+    // Both have no identifier attached to it.
+    //
+    // Ignore the case of where the parent is an IdentifierExpression as the parent handle adding to the scope.
+    if (
+        identifierXorNode.kind !== NodeIdMap.XorNodeKind.Ast ||
+        isParentOfNodeKind(state, Ast.NodeKind.IdentifierExpression)
+    ) {
+        return;
     }
+
+    if (identifierXorNode.node.kind !== Ast.NodeKind.Identifier) {
+        throw expectedNodeKindError(identifierXorNode, Ast.NodeKind.Identifier);
+    }
+    const identifier: Ast.Identifier = identifierXorNode.node;
+
+    // Don't add the identifier to scope if it's the root and position is before the identifier starts.
+    // 'a +| b'
+    // '|foo'
+    if (isRoot && PositionUtils.isBeforeOrOnAstNodeStart(state.activeNode.position, identifier)) {
+        return;
+    }
+    addAstToScopeIfNew(state, identifier.literal, identifier);
 }
 
-function inspectIdentifierExpression(state: IdentifierState, identifierExprXorNode: NodeIdMap.TXorNode): void {
+function inspectIdentifierExpression(
+    state: IdentifierState,
+    identifierExprXorNode: NodeIdMap.TXorNode,
+    isRoot: boolean,
+): void {
+    // Don't add the identifier to scope if it's the root and position is before the identifier starts.
+    // 'a +| b'
+    // '|foo'
+    if (isRoot && PositionUtils.isBeforeOrOnXorNodeStart(state.activeNode.position, identifierExprXorNode)) {
+        return;
+    }
+
     switch (identifierExprXorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast: {
             if (identifierExprXorNode.node.kind !== Ast.NodeKind.IdentifierExpression) {
@@ -431,7 +453,7 @@ function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.
             continue;
         }
         const keyXorNode: NodeIdMap.TXorNode = maybeKeyXorNode;
-        inspectIdentifier(state, keyXorNode);
+        inspectIdentifier(state, keyXorNode, false);
 
         const maybeValueXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,

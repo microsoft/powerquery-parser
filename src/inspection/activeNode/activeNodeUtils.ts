@@ -58,7 +58,7 @@ export function maybeActiveNode(
     const rootId: number = root.node.id;
 
     let relativePosition: RelativePosition;
-    if (PositionUtils.isBeforeXorNode(position, maybeRoot)) {
+    if (PositionUtils.isBeforeXorNode(position, maybeRoot) || PositionUtils.isOnXorNodeStart(position, maybeRoot)) {
         relativePosition = RelativePosition.Left;
     } else if (PositionUtils.isAfterXorNode(position, nodeIdMapCollection, root)) {
         relativePosition = RelativePosition.Right;
