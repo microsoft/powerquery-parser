@@ -12,7 +12,7 @@ export interface Position {
 export interface ActiveNode {
     readonly position: Position;
     readonly root: NodeIdMap.TXorNode;
-    readonly ancestory: ReadonlyArray<NodeIdMap.TXorNode>;
+    readonly ancestry: ReadonlyArray<NodeIdMap.TXorNode>;
     readonly relativePosition: RelativePosition;
     readonly isNoopXorNode: boolean;
 }

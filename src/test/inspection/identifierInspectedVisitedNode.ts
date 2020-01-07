@@ -20,7 +20,7 @@ function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<A
         return [];
     }
 
-    return inspected.maybeActiveNode.ancestory.map((xorNode: NodeIdMap.TXorNode) => {
+    return inspected.maybeActiveNode.ancestry.map((xorNode: NodeIdMap.TXorNode) => {
         let maybePositionStartCodeUnit: Option<number>;
 
         switch (xorNode.kind) {
@@ -66,7 +66,7 @@ function expectNodesEqual(
 function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.NodeKind, expectedNum: number): void {
     const actualNum: number =
         inspected.maybeActiveNode !== undefined
-            ? inspected.maybeActiveNode.ancestory.filter(xorNode => xorNode.node.kind === expectedKind).length
+            ? inspected.maybeActiveNode.ancestry.filter(xorNode => xorNode.node.kind === expectedKind).length
             : -1;
     expect(actualNum).to.equal(
         expectedNum,
@@ -86,7 +86,7 @@ function expectNthOfNodeKind<T>(
     }
 
     let nthFound: number = 0;
-    for (const xorNode of inspected.maybeActiveNode.ancestory) {
+    for (const xorNode of inspected.maybeActiveNode.ancestry) {
         if (xorNode.node.kind === nodeKind) {
             nthFound += 1;
             if (nth === nthFound) {

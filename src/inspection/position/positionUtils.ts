@@ -69,7 +69,7 @@ export function maybeActiveNode(
     return {
         position,
         root,
-        ancestory: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, rootId),
+        ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, rootId),
         relativePosition,
         isNoopXorNode:
             root.kind === NodeIdMap.XorNodeKind.Context &&
