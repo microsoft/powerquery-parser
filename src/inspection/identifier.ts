@@ -394,24 +394,24 @@ function inspectInvokeExpressionArguments(
 // If position is to the right of an equals sign,
 // then add all keys to the scope EXCEPT for the key that the position is under.
 function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.TXorNode): void {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-
-    const maybeCsvArrayXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-        nodeIdMapCollection,
-        letExprXorNode.node.id,
-        1,
-        [Ast.NodeKind.ArrayWrapper],
-    );
-    if (maybeCsvArrayXorNode === undefined) {
+    const maybePreviousAttributeIndex: Option<number> = expectPreviousXorNode(state).node.maybeAttributeIndex;
+    if (maybePreviousAttributeIndex !== 3 && !isInKeyValuePairAssignment(state)) {
         return;
     }
-    const csvArrayXorNode: NodeIdMap.TXorNode = maybeCsvArrayXorNode;
 
-    for (const keyValuePairXorNode of xorNodesOnCsvFromCsvArray(nodeIdMapCollection, csvArrayXorNode)) {
-        if (isInKeyValuePairAssignment(state, keyValuePairXorNode)) {
-            continue;
-        }
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
+    let csvArray: NodeIdMap.TXorNode;
+    // Ancestor is the expression
+    if (maybePreviousAttributeIndex === 3) {
+        csvArray = NodeIdMapUtils.expectXorChildByAttributeIndex(nodeIdMapCollection, letExprXorNode.node.id, 1, [
+            Ast.NodeKind.ArrayWrapper,
+        ]);
+    } else {
+        csvArray = expectPreviousXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
+    }
+
+    for (const keyValuePairXorNode of xorNodesOnCsvFromCsvArray(nodeIdMapCollection, csvArray)) {
         const keyValuePairId: number = keyValuePairXorNode.node.id;
         const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
@@ -440,44 +440,19 @@ function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.
 
 // If position is to the right of an equals sign,
 // then add all keys to scope EXCEPT for the one the that position is under.
-function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, recordXorNode: NodeIdMap.TXorNode): void {
+function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, _: NodeIdMap.TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    // It's safe to filter out the two cases where the user is on a wrapper constant.
-    // They are either on the `[`, which is to the left of the equals sign,
-    // or they are on the `]` which is outside of the record.
-    const previousXorNode: NodeIdMap.TXorNode = expectPreviousXorNode(state);
-    if (previousXorNode.node.kind === Ast.NodeKind.Constant) {
-        const previousConstant: Ast.Constant = previousXorNode.node as Ast.Constant;
-        if (
-            previousConstant.literal === Ast.ConstantKind.LeftBracket ||
-            previousConstant.literal === Ast.ConstantKind.RightBracket
-        ) {
-            return;
-        }
-    }
-
-    const maybeCsvArray: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
-    if (maybeCsvArray === undefined) {
+    // Only add to scope if you're in the right hand of an assignment.
+    if (!isInKeyValuePairAssignment(state)) {
         return;
     }
-    const csvArray: NodeIdMap.TXorNode = maybeCsvArray;
 
-    // If we didn't come from a `Record -> ArrayWrapper -> Csv -> KeyValuePair` path then exit.
-    // Eg. `[a=1,|`
-    const maybeKeyValuePair: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(state, 3, [
+    const csvArray: NodeIdMap.TXorNode = expectPreviousXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
+    const keyValuePair: NodeIdMap.TXorNode = expectPreviousXorNode(state, 3, [
         Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
     ]);
-    if (maybeKeyValuePair === undefined) {
-        return;
-    }
-    const keyValuePair: NodeIdMap.TXorNode = maybeKeyValuePair;
-
-    // Only add to scope if position is on the right hand of the assignment.
-    if (!isInKeyValuePairAssignment(state, keyValuePair)) {
-        return;
-    }
 
     for (const xorNode of xorNodesOnCsvFromCsvArray(nodeIdMapCollection, csvArray)) {
         const nodeId: number = xorNode.node.id;
@@ -513,18 +488,10 @@ function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, recordXo
 }
 
 function inspectSectionMember(state: IdentifierState, sectionMember: NodeIdMap.TXorNode): void {
-    const previousXorNode: NodeIdMap.TXorNode = expectPreviousXorNode(state);
-    // Check if it's part of the key-value-pair.
-    if (previousXorNode.node.maybeAttributeIndex !== 2) {
-        return;
-    }
-    const keyValuePairChild: NodeIdMap.TXorNode = expectPreviousXorNode(state, 2);
-    // Check if it's in the value portion of the key-value-pair.
-    if (keyValuePairChild.node.maybeAttributeIndex !== 2) {
+    if (!isInKeyValuePairAssignment(state)) {
         return;
     }
 
-    // Add all SectionMember names to the scope EXPECT for the current one.
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const sectionMemberArray: NodeIdMap.TXorNode = expectNextXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
     const sectionMembers: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
@@ -539,7 +506,7 @@ function inspectSectionMember(state: IdentifierState, sectionMember: NodeIdMap.T
 
         const maybeKeyValuePair: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
-            sectionMember.node.id,
+            iterSectionMember.node.id,
             2,
             [Ast.NodeKind.IdentifierPairedExpression],
         );
@@ -713,7 +680,7 @@ function expectPreviousXorNode(
             expectedAny: maybeAllowedNodeKinds,
             actual: xorNode.node.kind,
         };
-        throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);
+        throw new CommonError.InvariantError(`incorrect node kind for previous xorNode`, details);
     }
 
     return maybeXorNode;
@@ -742,23 +709,31 @@ function expectNextXorNode(
     return maybeXorNode;
 }
 
-function isInKeyValuePairAssignment(state: IdentifierState, keyValuePair: NodeIdMap.TXorNode): boolean {
-    const astNodeKind: Ast.NodeKind = keyValuePair.node.kind;
-    if (
-        astNodeKind !== Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral &&
-        astNodeKind !== Ast.NodeKind.GeneralizedIdentifierPairedExpression &&
-        astNodeKind !== Ast.NodeKind.IdentifierPairedExpression
-    ) {
-        const details: {} = {
-            expectedAny: [
-                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                Ast.NodeKind.IdentifierPairedExpression,
-            ],
-            actual: astNodeKind,
-        };
-        throw new CommonError.InvariantError("unknown Ast.NodeKind", details);
+function isInKeyValuePairAssignment(state: IdentifierState): boolean {
+    // How far back do we look to find a paired expression?
+    //
+    // For SectionMember it's a single indirection, eg:
+    // 'X -> KeyValuePair'
+    //
+    // For everything else it's 3, where the extra 2 come from an array of Csvs, eg:
+    // 'Current -> ArrayWrapper -> Csv -> KeyValuePair'
+    let n: number;
+    if (state.activeNode.ancestry[state.nodeIndex].node.kind === Ast.NodeKind.SectionMember) {
+        n = 1;
+    } else {
+        n = 3;
     }
+
+    const maybeKeyValuePair: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(state, n, [
+        Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+        Ast.NodeKind.IdentifierPairedExpression,
+        Ast.NodeKind.IdentifierExpressionPairedExpression,
+    ]);
+    if (maybeKeyValuePair === undefined) {
+        return false;
+    }
+    const keyValuePair: NodeIdMap.TXorNode = maybeKeyValuePair;
 
     const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = state.activeNode.ancestry;
 
