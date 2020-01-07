@@ -403,16 +403,23 @@ function inspectLetExpression(state: IdentifierState, letExprXorNode: NodeIdMap.
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     let csvArray: NodeIdMap.TXorNode;
+    let maybeAncestorKeyValuePair: Option<NodeIdMap.TXorNode>;
     // Ancestor is the expression
     if (maybePreviousAttributeIndex === 3) {
         csvArray = NodeIdMapUtils.expectXorChildByAttributeIndex(nodeIdMapCollection, letExprXorNode.node.id, 1, [
             Ast.NodeKind.ArrayWrapper,
         ]);
+        maybeAncestorKeyValuePair = undefined;
     } else {
         csvArray = expectPreviousXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
+        maybeAncestorKeyValuePair = expectPreviousXorNode(state, 3, [Ast.NodeKind.IdentifierPairedExpression]);
     }
 
     for (const keyValuePairXorNode of xorNodesOnCsvFromCsvArray(nodeIdMapCollection, csvArray)) {
+        if (maybeAncestorKeyValuePair && maybeAncestorKeyValuePair.node.id === keyValuePairXorNode.node.id) {
+            continue;
+        }
+
         const keyValuePairId: number = keyValuePairXorNode.node.id;
         const maybeKeyXorNode: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,

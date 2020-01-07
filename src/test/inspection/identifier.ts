@@ -387,7 +387,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`abc123 section foo; x = 1; y = 2; z = let a = 1 in |b;`, () => {
+            it(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `section foo; x = 1; y = 2; z = let a = 1 in |b;`,
                 );
@@ -431,7 +431,7 @@ describe(`Inspection`, () => {
 
             it(`let a = |1 in x`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = |1 in x`);
-                const expected: AbridgedScope = ["a"];
+                const expected: AbridgedScope = [];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
@@ -503,7 +503,7 @@ describe(`Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`let x = (let y = 1 in z|) in`, () => {
+            it(`abc123 let x = (let y = 1 in z|) in`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `let x = (let y = 1 in z|) in`,
                 );
