@@ -50,9 +50,9 @@ export function tryFrom(
     }
 
     const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
+        maybeActiveNode,
         nodeIdMapCollection,
         leafNodeIds,
-        position,
         triedInspectedIdentifier.value.maybeIdentifierUnderPosition,
     );
     if (triedInspectedKeyword.kind === ResultKind.Err) {
