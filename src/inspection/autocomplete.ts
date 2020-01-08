@@ -3,7 +3,7 @@
 
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
-import { NodeIdMap } from "../parser";
+import { NodeIdMap, Ast } from "../parser";
 import { ActiveNode } from "./activeNode";
 import { TPositionIdentifier } from "./positionIdentifier";
 
@@ -58,48 +58,6 @@ export function tryFrom(
             error: CommonError.ensureCommonError(err),
         };
     }
-
-    // const maybeRoot: Option<NodeIdMap.TXorNode> = maybeAutocompleteRoot(position, nodeIdMapCollection, leafNodeIds);
-    // if (maybeRoot === undefined) {
-    //     return {
-    //         kind: ResultKind.Ok,
-    //         value: ExpressionAutocomplete,
-    //     };
-    // }
-    // const root: NodeIdMap.TXorNode = maybeRoot;
-    // const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectAncestry(
-    //     nodeIdMapCollection,
-    //     root.node.id,
-    // );
-
-    // const maybeSearch: Option<AutocompleteFnSearch> = maybeAutocompleteFn(ancestry);
-    // if (maybeSearch === undefined) {
-    //     return {
-    //         kind: ResultKind.Ok,
-    //         value: EmptyAutocomplete,
-    //     };
-    // }
-    // const search: AutocompleteFnSearch = maybeSearch;
-
-    // const state: AutocompleteState = {
-    //     nodeIdMapCollection,
-    //     position,
-    //     maybeIdentifierUnderPosition,
-    //     ancestry,
-    //     triggerAncestor: search.triggerAncestor,
-    //     triggerAncestorIndex: search.triggerAncestorIndex,
-    // };
-    // try {
-    //     return {
-    //         kind: ResultKind.Ok,
-    //         value: search.fn(state),
-    //     };
-    // } catch (e) {
-    //     return {
-    //         kind: ResultKind.Err,
-    //         error: CommonError.ensureCommonError(e),
-    //     };
-    // }
 }
 
 interface AutocompleteState {
@@ -124,6 +82,9 @@ const ExpressionAutocomplete: AutocompleteInspected = {
 
 function visitNode(xorNode: NodeIdMap.TXorNode): void {
     switch (xorNode.node.kind) {
+        case Ast.NodeKind.IfExpression:
+            break;
+
         default:
             break;
     }
