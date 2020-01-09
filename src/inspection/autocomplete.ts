@@ -61,6 +61,11 @@ const EmptyAutocomplete: AutocompleteInspected = {
     allowedAutocompleteKeywords: [],
 };
 
+const ErrorHandlingExpressionAutocomplete: AutocompleteInspected = {
+    maybeRequiredAutocomplete: undefined,
+    allowedAutocompleteKeywords: [...TExpressionKeywords, KeywordKind.Otherwise],
+};
+
 const ExpressionAutocomplete: AutocompleteInspected = {
     maybeRequiredAutocomplete: undefined,
     allowedAutocompleteKeywords: TExpressionKeywords,
@@ -70,11 +75,7 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     // Ast.NodeKind.ErrorHandlingExpression
     [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Try)],
     [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 1), ExpressionAutocomplete],
-    [
-        createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 2),
-        autocompleteConstantFactory(Ast.ConstantKind.Otherwise),
-    ],
-    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 3), ExpressionAutocomplete],
+    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 2), ErrorHandlingExpressionAutocomplete],
 
     // Ast.NodeKind.ErrorRaisingExpression
     [

@@ -31,9 +31,17 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`try true |`, () => {
+            it(`abc123 try true |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true |`);
-                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                const expected: AbridgedInspection = [[...TExpressionKeywords, KeywordKind.Otherwise], undefined];
+                expectNodesEqual(expectParseOkInspection(text, position), expected);
+            });
+
+            it(`try true otherwise| false`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `try true otherwise| false`,
+                );
+                const expected: AbridgedInspection = [[...TExpressionKeywords, KeywordKind.Otherwise], undefined];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
         });
