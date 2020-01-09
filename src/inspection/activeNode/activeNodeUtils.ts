@@ -4,8 +4,17 @@
 import { Option } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
 import { Position, PositionUtils } from "../position";
-import { ActiveNode, RelativePosition } from "./activeNode";
+import { ActiveNode } from "./activeNode";
 
+// Read ActiveNode's comments before this.
+//
+// The naive approach is to grab the closest Ast node to the left of your position.
+//
+// The first edge case is because some nodes should shift which ActiveNode is selected one to the right.
+//  'let x =|' -> The ActiveNode should be the assignment.
+//
+// The second edge case is because often there are parser errors.
+//  'if true t|' -> The parser errors out in a Context for a Constant ('then').
 export function maybeActiveNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -24,8 +33,7 @@ export function maybeActiveNode(
         if (astNode.kind === Ast.NodeKind.Constant) {
             const constant: Ast.Constant = astNode;
 
-            // 'let x=|'
-            // 'let x=|1'
+            // Shift the ActiveNode to the right.
             if (
                 ShiftRightConstantKinds.indexOf(constant.literal) !== -1 ||
                 PositionUtils.isAfterTokenPosition(position, constant.tokenRange.positionEnd, false)
@@ -37,12 +45,14 @@ export function maybeActiveNode(
                 } else {
                     maybeRoot = undefined;
                 }
-            }
-            // Position is either under or to the right of a constant.
-            else {
+            } else {
                 maybeRoot = NodeIdMapUtils.xorNodeFromAst(constant);
             }
-        } else if (
+        }
+        // While typing certain types of literals we want to stay on the literal instead of moving to a Context.
+        //  'let foo| ='
+        //  '1 + 23|'
+        else if (
             PositionUtils.isOnAstNodeEnd(position, astNode) &&
             (astNode.kind === Ast.NodeKind.Identifier ||
                 astNode.kind === Ast.NodeKind.IdentifierExpression ||
@@ -65,27 +75,11 @@ export function maybeActiveNode(
         return undefined;
     }
     const root: NodeIdMap.TXorNode = maybeRoot;
-    const rootId: number = root.node.id;
-
-    let relativePosition: RelativePosition;
-    if (PositionUtils.isOnXorNodeStart(position, maybeRoot)) {
-        relativePosition = RelativePosition.Start;
-    } else if (PositionUtils.isBeforeXorNode(position, maybeRoot)) {
-        relativePosition = RelativePosition.Left;
-    } else if (PositionUtils.isAfterXorNode(position, nodeIdMapCollection, root)) {
-        relativePosition = RelativePosition.Right;
-    } else {
-        relativePosition = RelativePosition.Under;
-    }
 
     return {
         position,
         root,
-        ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, rootId),
-        relativePosition,
-        isNoopXorNode:
-            root.kind === NodeIdMap.XorNodeKind.Context &&
-            NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, rootId) === undefined,
+        ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, root.node.id),
     };
 }
 
@@ -106,6 +100,12 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
     Ast.ConstantKind.RightParenthesis,
 ];
 
+// Search for:
+//  the Ast node which is located <= the given position
+//  AND the Ast node which is located >= the given position
+//
+// We need both because some nodes shift the selected ActiveNode one to the right.
+//  'let x=|1 in foo'
 function positionAstSearch(
     position: Position,
     astNodeById: NodeIdMap.AstNodeById,
@@ -116,9 +116,6 @@ function positionAstSearch(
 
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
-        // Is position to the right of the candidate?
-        // 'foo|'
-        // 'fo|o'
         if (PositionUtils.isAfterTokenPosition(position, candidate.tokenRange.positionStart, false)) {
             if (maybeCurrentOnOrBefore === undefined) {
                 maybeCurrentOnOrBefore = candidate;
@@ -153,14 +150,10 @@ function positionContextSearch(
     if (maybeOnOrBeforePositionAst === undefined) {
         return undefined;
     }
-    const onOrBeforePositionAst: Ast.TNode = maybeOnOrBeforePositionAst;
 
     let maybeCurrent: Option<ParserContext.Node> = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
-        if (
-            candidate.maybeTokenStart
-            // && candidate.maybeTokenStart.positionStart.codeUnit === onOrBeforePositionAst.tokenRange.positionStart.codeUnit
-        ) {
+        if (candidate.maybeTokenStart) {
             if (maybeCurrent === undefined || maybeCurrent.id < candidate.id) {
                 maybeCurrent = candidate;
             }

@@ -3,8 +3,8 @@
 
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { TriedTraverse } from "../common/traversal";
-import { Ast, NodeIdMap, NodeIdMapUtils } from "../parser";
-import { ActiveNode, ActiveNodeUtils, RelativePosition } from "./activeNode";
+import { NodeIdMap } from "../parser";
+import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { AutocompleteInspected, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { IdentifierInspected, tryFrom as identifierInspectedTryFrom } from "./identifier";
 import { Position } from "./position";
@@ -32,16 +32,8 @@ export function tryFrom(
         leafNodeIds,
     );
 
-    let maybePositionIdentifier: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
-    if (maybeActiveNode) {
-        maybeGetIdentifierUnderPostion(nodeIdMapCollection, maybeActiveNode);
-    } else {
-        maybePositionIdentifier = undefined;
-    }
-
     const triedInspectedIdentifier: TriedTraverse<IdentifierInspected> = identifierInspectedTryFrom(
         maybeActiveNode,
-        maybePositionIdentifier,
         nodeIdMapCollection,
         leafNodeIds,
     );
@@ -62,44 +54,4 @@ export function tryFrom(
             ...triedInspectedKeyword.value,
         },
     };
-}
-
-// Checks if:
-//  * the node is some sort of identifier
-//  * position is on the node
-export function maybeGetIdentifierUnderPostion(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode,
-): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
-    if (activeNode.root.kind !== NodeIdMap.XorNodeKind.Ast) {
-        return undefined;
-    }
-    const root: Ast.TNode = activeNode.root.node;
-
-    let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
-
-    // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (root.kind === Ast.NodeKind.Constant && root.literal === `@`) {
-        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(root.id);
-        if (maybeParentId === undefined) {
-            return undefined;
-        }
-        const parentId: number = maybeParentId;
-
-        const parent: Ast.TNode = NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
-        if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
-            return undefined;
-        }
-        identifier = parent.identifier;
-    } else if (root.kind === Ast.NodeKind.Identifier || root.kind === Ast.NodeKind.GeneralizedIdentifier) {
-        identifier = root;
-    } else {
-        return undefined;
-    }
-
-    if (activeNode.relativePosition === RelativePosition.Under) {
-        return identifier;
-    } else {
-        return undefined;
-    }
 }

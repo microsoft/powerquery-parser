@@ -9,16 +9,17 @@ import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
-// This inspection selects the closest leaf node, then recursively traveling up the node's parents.
-// It tracks what identifiers are within scope, and what value was used in their assignment (if available).
-
+// The inspection takes ActiveNode.ancestry and travels across all nodes to build up a scope.
 export interface IdentifierInspected {
-    // A map of (identifier, what caused the identifier to be added).
+    // The scope of a given position.
+    //  '[x = 1, y = 2|, z = 3]'-> returns a scope of [['x', XorNode for 1], ['z', XorNode for 3]]
     scope: ReadonlyMap<string, NodeIdMap.TXorNode>;
-    // Metadata on the first InvokeExpression encountered.
+    // Metadata on the deepest InvokeExpression encountered.
+    //  'foo(bar(1, 2|), 3)' -> returns metadata for the 'bar' InvokeExpression
+    //  'createLambda(x)(y, z|) -> returns metadata for the anonymous lambda returned by 'createLambda'.
     maybeInvokeExpression: Option<InspectedInvokeExpression>;
-    // If the position picks either an (Identifier | GeneralizedIdentifier) as its leaf node,
-    // then if we encounter the identifier's assignment we will store metadata.
+    // If the activeNode started on an identifier and we encounter the assignment of that identifier,
+    // then we store the assignment here.
     maybeIdentifierUnderPosition: Option<TPositionIdentifier>;
 }
 
@@ -35,7 +36,6 @@ export interface InvokeExpressionArgs {
 
 export function tryFrom(
     maybeActiveNode: Option<ActiveNode>,
-    maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): Result<IdentifierInspected, CommonError.CommonError> {
@@ -47,6 +47,9 @@ export function tryFrom(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
+    // I know it looks weird that there are two maybeIdentifierUnderPosition fields.
+    // The top level attribute is a map of ActiveNode.root to an identifier,
+    // and the inner attribute is a map of (identifier, identifier assignment) if the identifier assignment is reached.
     const state: IdentifierState = {
         nodeIndex: 0,
         result: {
@@ -57,8 +60,7 @@ export function tryFrom(
         activeNode,
         nodeIdMapCollection,
         leafNodeIds,
-        // Storage for if position is on an (Identifier | GeneralizedIdentifier).
-        maybeIdentifierUnderPosition,
+        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, activeNode),
     };
 
     try {
@@ -67,7 +69,7 @@ export function tryFrom(
         for (let index: number = 0; index < numNodes; index += 1) {
             state.nodeIndex = index;
             const xorNode: NodeIdMap.TXorNode = ancestry[index];
-            visitNode(state, xorNode);
+            inspectNode(state, xorNode);
         }
 
         if (state.maybeIdentifierUnderPosition && state.result.maybeIdentifierUnderPosition === undefined) {
@@ -95,12 +97,14 @@ interface IdentifierState {
     readonly activeNode: ActiveNode;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
-    // If the position is on either an (Identifier | GeneralizedIdentifier)
-    // If we encounter the assignment for this identifier then it's stored in Inspected.maybeIdentifierUnderPosition
+    // The cache of an evaluation that otherwise would need to be evaluated on every identifier encountered.
+    // If ActiveNode.root is an identifier then store the indirection to it as an Ast.
+    // If during inspection the assignment for that identifier is encountered then we store it
+    // under result using the same name as this field.
     readonly maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
 }
 
-function visitNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
+function inspectNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode);
@@ -149,10 +153,10 @@ const DefaultIdentifierInspection: IdentifierInspected = {
     maybeIdentifierUnderPosition: undefined,
 };
 
+// If you came from the TExpression in the EachExpression,
+// then add '_' to the scope.
 function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMap.TXorNode): void {
     const previous: NodeIdMap.TXorNode = InspectionUtils.expectPreviousXorNode(state);
-    // If you came from the TExpression in the EachExpression,
-    // then add '_' to the scope.
     if (previous.node.maybeAttributeIndex !== 1) {
         return;
     }
@@ -160,17 +164,13 @@ function inspectEachExpression(state: IdentifierState, eachExprXorNode: NodeIdMa
     addToScopeIfNew(state, "_", eachExprXorNode);
 }
 
-// If position is to the right of a fat arrow,
+// If position is to the right of '=>',
 // then add all parameter names to the scope.
 function inspectFunctionExpression(state: IdentifierState, fnExprXorNode: NodeIdMap.TXorNode): void {
     if (fnExprXorNode.node.kind !== Ast.NodeKind.FunctionExpression) {
         throw expectedNodeKindError(fnExprXorNode, Ast.NodeKind.FunctionExpression);
     }
 
-    // Parameter names are added to scope only if position is in the expression body.
-    // Eg. of positions that would NOT add to the scope.
-    // `(x|, y) => x + y`
-    // `(x, y)| => x + y`
     const previous: NodeIdMap.TXorNode = InspectionUtils.expectPreviousXorNode(state);
     if (previous.node.maybeAttributeIndex !== 3) {
         return;
@@ -678,5 +678,42 @@ function maybeSetIdentifierUnderPositionValue(
             identifier: key,
             definition: valueXorNode,
         };
+    }
+}
+
+function maybeIdentifierUnderPosition(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
+): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
+    const root: NodeIdMap.TXorNode = activeNode.root;
+    if (root.kind !== NodeIdMap.XorNodeKind.Ast) {
+        return undefined;
+    }
+
+    let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
+
+    // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
+    if (root.node.kind === Ast.NodeKind.Constant && root.node.literal === `@`) {
+        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(root.node.id);
+        if (maybeParentId === undefined) {
+            return undefined;
+        }
+        const parentId: number = maybeParentId;
+
+        const parent: Ast.TNode = NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
+        if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
+            return undefined;
+        }
+        identifier = parent.identifier;
+    } else if (root.node.kind === Ast.NodeKind.Identifier || root.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
+        identifier = root.node;
+    } else {
+        return undefined;
+    }
+
+    if (PositionUtils.isInAstNode(activeNode.position, identifier)) {
+        return identifier;
+    } else {
+        return undefined;
     }
 }

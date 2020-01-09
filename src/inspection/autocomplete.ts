@@ -4,7 +4,7 @@
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
-import { ActiveNode, RelativePosition } from "./activeNode";
+import { ActiveNode } from "./activeNode";
 import { PositionUtils } from "./position";
 
 export interface AutocompleteInspected {
