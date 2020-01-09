@@ -101,8 +101,8 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
 ];
 
 // Search for:
-//  the Ast node which is located <= the given position
-//  AND the Ast node which is located >= the given position
+//  * the Ast node which is located <= the given position
+//  * AND the Ast node which is located >= the given position
 //
 // We need both because some nodes shift the selected ActiveNode one to the right.
 //  'let x=|1 in foo'

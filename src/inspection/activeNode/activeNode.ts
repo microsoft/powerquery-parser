@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option } from "../../common";
-import { Ast, NodeIdMap } from "../../parser";
+import { NodeIdMap } from "../../parser";
 import { Position } from "../position";
 
 // An ActiveNode represents the context a text editor user expects their cursor to be in.

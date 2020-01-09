@@ -3,9 +3,8 @@
 
 import { InspectionUtils } from ".";
 import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../common";
-import { TokenPosition, Token } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import { ActiveNode, ActiveNodeUtils } from "./activeNode";
+import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
