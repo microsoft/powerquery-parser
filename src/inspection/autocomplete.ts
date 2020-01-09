@@ -67,6 +67,23 @@ const ExpressionAutocomplete: AutocompleteInspected = {
 };
 
 const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
+    // Ast.NodeKind.ErrorHandlingExpression
+    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Try)],
+    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 1), ExpressionAutocomplete],
+    [
+        createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 2),
+        autocompleteConstantFactory(Ast.ConstantKind.Otherwise),
+    ],
+    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 3), ExpressionAutocomplete],
+
+    // Ast.NodeKind.ErrorRaisingExpression
+    [
+        createAutocompleteKey(Ast.NodeKind.ErrorRaisingExpression, 0),
+        autocompleteConstantFactory(Ast.ConstantKind.Error),
+    ],
+    [createAutocompleteKey(Ast.NodeKind.ErrorRaisingExpression, 1), ExpressionAutocomplete],
+
+    // Ast.NodeKind.IfExpression
     [createAutocompleteKey(Ast.NodeKind.IfExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.If)],
     [createAutocompleteKey(Ast.NodeKind.IfExpression, 1), ExpressionAutocomplete],
     [createAutocompleteKey(Ast.NodeKind.IfExpression, 2), autocompleteConstantFactory(Ast.ConstantKind.Then)],
