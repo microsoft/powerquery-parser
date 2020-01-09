@@ -21,7 +21,7 @@ function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspecti
 }
 
 describe(`Inspection`, () => {
-    describe(`Identifier`, () => {
+    describe(`qweasdzxc Identifier`, () => {
         describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
             it(`|each 1`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|each 1`);

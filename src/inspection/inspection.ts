@@ -49,12 +49,7 @@ export function tryFrom(
         return triedInspectedIdentifier;
     }
 
-    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
-        maybeActiveNode,
-        nodeIdMapCollection,
-        leafNodeIds,
-        triedInspectedIdentifier.value.maybeIdentifierUnderPosition,
-    );
+    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(maybeActiveNode);
     if (triedInspectedKeyword.kind === ResultKind.Err) {
         return triedInspectedKeyword;
     }

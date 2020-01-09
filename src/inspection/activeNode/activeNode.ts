@@ -14,13 +14,8 @@ export interface ActiveNode {
 }
 
 export const enum RelativePosition {
-    // Some literals automatically shift the context one to the right,
-    // making position be to the left of the active node.
-    // 'foo =| bar'
+    Start = "Start",
     Left = "Left",
-    // Within TokenRange for XorNode. Treat the ending position as inclusive.
-    // 'fo|o' and 'foo|'
     Under = "Under",
-    // 'foo |'
     Right = "Right",
 }

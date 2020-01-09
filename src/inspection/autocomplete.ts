@@ -3,71 +3,57 @@
 
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
-import { NodeIdMap, Ast } from "../parser";
-import { ActiveNode } from "./activeNode";
-import { TPositionIdentifier } from "./positionIdentifier";
+import { Ast, NodeIdMap } from "../parser";
+import { ActiveNode, RelativePosition } from "./activeNode";
+import { PositionUtils } from "./position";
 
 export interface AutocompleteInspected {
     readonly maybeRequiredAutocomplete: Option<string>;
     readonly allowedAutocompleteKeywords: ReadonlyArray<KeywordKind>;
 }
 
-export function tryFrom(
-    maybeActiveNode: Option<ActiveNode>,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    maybeIdentifierUnderPosition: Option<TPositionIdentifier>,
-): Result<AutocompleteInspected, CommonError.CommonError> {
+export function tryFrom(maybeActiveNode: Option<ActiveNode>): Result<AutocompleteInspected, CommonError.CommonError> {
     if (maybeActiveNode === undefined) {
         return {
             kind: ResultKind.Ok,
             value: ExpressionAutocomplete,
         };
     }
-    const activeNode: ActiveNode = maybeActiveNode;
 
-    const state: AutocompleteState = {
-        nodeIndex: 0,
-        isDone: false,
-        maybeResult: undefined,
-        activeNode,
-        nodeIdMapCollection,
-        leafNodeIds,
-        maybeIdentifierUnderPosition,
-    };
+    const activeNode: ActiveNode = maybeActiveNode;
+    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
+    const numNodes: number = ancestry.length;
+    let maybeInspected: Option<AutocompleteInspected>;
 
     try {
-        const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
-        const numNodes: number = ancestry.length;
-        for (let index: number = 0; index < numNodes; index += 1) {
-            state.nodeIndex = index;
-            const xorNode: NodeIdMap.TXorNode = ancestry[index];
-            visitNode(xorNode);
-            if (state.isDone) {
+        for (let index: number = 1; index < numNodes; index += 1) {
+            const child: NodeIdMap.TXorNode = ancestry[index - 1];
+            const parent: NodeIdMap.TXorNode = ancestry[index];
+
+            if (
+                parent.kind === NodeIdMap.XorNodeKind.Context &&
+                PositionUtils.isOnContextNodeStart(activeNode.position, parent.node)
+            ) {
+                continue;
+            }
+
+            const autocompleteKey: string = createAutocompleteKey(parent.node.kind, child.node.maybeAttributeIndex);
+            maybeInspected = AutocompleteMap.get(autocompleteKey);
+            if (maybeInspected !== undefined) {
                 break;
             }
         }
-
-        return {
-            kind: ResultKind.Ok,
-            value: state.maybeResult !== undefined ? state.maybeResult : EmptyAutocomplete,
-        };
     } catch (err) {
         return {
             kind: ResultKind.Err,
             error: CommonError.ensureCommonError(err),
         };
     }
-}
 
-interface AutocompleteState {
-    nodeIndex: number;
-    isDone: boolean;
-    readonly maybeResult: Option<AutocompleteInspected>;
-    readonly activeNode: ActiveNode;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
-    readonly maybeIdentifierUnderPosition: Option<TPositionIdentifier>;
+    return {
+        kind: ResultKind.Ok,
+        value: maybeInspected !== undefined ? maybeInspected : EmptyAutocomplete,
+    };
 }
 
 const EmptyAutocomplete: AutocompleteInspected = {
@@ -80,14 +66,25 @@ const ExpressionAutocomplete: AutocompleteInspected = {
     allowedAutocompleteKeywords: TExpressionKeywords,
 };
 
-function visitNode(xorNode: NodeIdMap.TXorNode): void {
-    switch (xorNode.node.kind) {
-        case Ast.NodeKind.IfExpression:
-            break;
+const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
+    [createAutocompleteKey(Ast.NodeKind.IfExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.If)],
+    [createAutocompleteKey(Ast.NodeKind.IfExpression, 1), ExpressionAutocomplete],
+    [createAutocompleteKey(Ast.NodeKind.IfExpression, 2), autocompleteConstantFactory(Ast.ConstantKind.Then)],
+    [createAutocompleteKey(Ast.NodeKind.IfExpression, 3), ExpressionAutocomplete],
+    [createAutocompleteKey(Ast.NodeKind.IfExpression, 4), autocompleteConstantFactory(Ast.ConstantKind.Else)],
+    [createAutocompleteKey(Ast.NodeKind.IfExpression, 5), ExpressionAutocomplete],
+]);
 
-        default:
-            break;
-    }
+// [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
+function createAutocompleteKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number>): string {
+    return [nodeKind, maybeAttributeIndex].join(",");
+}
+
+function autocompleteConstantFactory(constantKind: Ast.ConstantKind): AutocompleteInspected {
+    return {
+        allowedAutocompleteKeywords: [],
+        maybeRequiredAutocomplete: constantKind,
+    };
 }
 
 // function autocompleteErrorRaisingExpression(state: AutocompleteState): AutocompleteInspected {

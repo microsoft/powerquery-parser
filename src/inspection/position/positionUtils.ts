@@ -32,17 +32,17 @@ export function isBeforeXorNode(position: Position, xorNode: NodeIdMap.TXorNode)
     }
 }
 
-export function isOnXorNode(
+export function isInXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: NodeIdMap.TXorNode,
 ): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            return isOnAstNode(position, xorNode.node);
+            return isInAstNode(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return isUnderContextNode(position, nodeIdMapCollection, xorNode.node);
+            return isInContextNode(position, nodeIdMapCollection, xorNode.node);
 
         default:
             throw isNever(xorNode);
@@ -55,7 +55,7 @@ export function isOnXorNodeStart(position: Position, xorNode: NodeIdMap.TXorNode
             return isOnAstNodeStart(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return isUnderContextNodeStart(position, xorNode.node);
+            return isOnContextNodeStart(position, xorNode.node);
 
         default:
             throw isNever(xorNode);
@@ -103,10 +103,10 @@ export function isBeforeContextNode(position: Position, contextNode: ParserConte
 }
 
 export function isBeforeOrOnContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
-    return isBeforeContextNode(position, contextNode) || isUnderContextNodeStart(position, contextNode);
+    return isBeforeContextNode(position, contextNode) || isOnContextNodeStart(position, contextNode);
 }
 
-export function isUnderContextNode(
+export function isInContextNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     contextNode: ParserContext.Node,
@@ -116,7 +116,7 @@ export function isUnderContextNode(
     );
 }
 
-export function isUnderContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
+export function isOnContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
     return contextNode.maybeTokenStart !== undefined
         ? isOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
         : false;
@@ -146,7 +146,7 @@ export function isBeforeAstNode(position: Position, astNode: Ast.TNode): boolean
     return isBeforeTokenPosition(position, astNode.tokenRange.positionStart);
 }
 
-export function isOnAstNode(position: Position, astNode: Ast.TNode): boolean {
+export function isInAstNode(position: Position, astNode: Ast.TNode): boolean {
     return !isBeforeAstNode(position, astNode) && !isAfterAstNode(position, astNode);
 }
 

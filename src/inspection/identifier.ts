@@ -319,7 +319,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExprXorNode: Node
     // and as it's a context node it hasn't parsed all attributes.
     if (invokeExprXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
         const invokeExpr: Ast.InvokeExpression = invokeExprXorNode.node as Ast.InvokeExpression;
-        if (PositionUtils.isOnAstNode(state.activeNode.position, invokeExpr.closeWrapperConstant)) {
+        if (PositionUtils.isInAstNode(state.activeNode.position, invokeExpr.closeWrapperConstant)) {
             return;
         }
     }
@@ -389,7 +389,7 @@ function inspectInvokeExpressionArguments(
         // Conditionally set maybePositionArgumentIndex.
         // If position is on a comma then count it as belonging to the next index.
         // Eg. `foo(a,|)` is in the second index.
-        if (PositionUtils.isOnXorNode(position, nodeIdMapCollection, csvXorNode)) {
+        if (PositionUtils.isInXorNode(position, nodeIdMapCollection, csvXorNode)) {
             if (csvXorNode.kind === NodeIdMap.XorNodeKind.Ast) {
                 const maybeCommaConstant: Option<Ast.Constant> = NodeIdMapUtils.maybeAstChildByAttributeIndex(
                     nodeIdMapCollection,
@@ -397,7 +397,7 @@ function inspectInvokeExpressionArguments(
                     1,
                     [Ast.NodeKind.Constant],
                 ) as Option<Ast.Constant>;
-                if (maybeCommaConstant && PositionUtils.isOnAstNode(position, maybeCommaConstant)) {
+                if (maybeCommaConstant && PositionUtils.isInAstNode(position, maybeCommaConstant)) {
                     maybePositionArgumentIndex = index + 1;
                 } else {
                     maybePositionArgumentIndex = index;

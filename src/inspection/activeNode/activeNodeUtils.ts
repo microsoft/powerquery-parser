@@ -42,8 +42,18 @@ export function maybeActiveNode(
             else {
                 maybeRoot = NodeIdMapUtils.xorNodeFromAst(constant);
             }
-        } else {
+        } else if (
+            PositionUtils.isOnAstNodeEnd(position, astNode) &&
+            (astNode.kind === Ast.NodeKind.Identifier ||
+                astNode.kind === Ast.NodeKind.IdentifierExpression ||
+                (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric))
+        ) {
             maybeRoot = NodeIdMapUtils.xorNodeFromAst(astNode);
+        } else {
+            maybeRoot =
+                maybeContextSearch !== undefined
+                    ? NodeIdMapUtils.xorNodeFromContext(maybeContextSearch)
+                    : NodeIdMapUtils.xorNodeFromAst(astNode);
         }
     } else if (maybeContextSearch) {
         maybeRoot = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
@@ -58,7 +68,9 @@ export function maybeActiveNode(
     const rootId: number = root.node.id;
 
     let relativePosition: RelativePosition;
-    if (PositionUtils.isBeforeXorNode(position, maybeRoot) || PositionUtils.isOnXorNodeStart(position, maybeRoot)) {
+    if (PositionUtils.isOnXorNodeStart(position, maybeRoot)) {
+        relativePosition = RelativePosition.Start;
+    } else if (PositionUtils.isBeforeXorNode(position, maybeRoot)) {
         relativePosition = RelativePosition.Left;
     } else if (PositionUtils.isAfterXorNode(position, nodeIdMapCollection, root)) {
         relativePosition = RelativePosition.Right;
@@ -146,8 +158,8 @@ function positionContextSearch(
     let maybeCurrent: Option<ParserContext.Node> = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (
-            candidate.maybeTokenStart &&
-            candidate.maybeTokenStart.positionStart.codeUnit === onOrBeforePositionAst.tokenRange.positionStart.codeUnit
+            candidate.maybeTokenStart
+            // && candidate.maybeTokenStart.positionStart.codeUnit === onOrBeforePositionAst.tokenRange.positionStart.codeUnit
         ) {
             if (maybeCurrent === undefined || maybeCurrent.id < candidate.id) {
                 maybeCurrent = candidate;
