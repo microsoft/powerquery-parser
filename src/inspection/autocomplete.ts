@@ -29,6 +29,7 @@ export function tryFrom(maybeActiveNode: Option<ActiveNode>): Result<Autocomplet
         for (let index: number = 1; index < numNodes; index += 1) {
             const child: NodeIdMap.TXorNode = ancestry[index - 1];
             const parent: NodeIdMap.TXorNode = ancestry[index];
+            const mapKey: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
 
             // If a node is in a context state then it should be up to the parent to autocomplete.
             // Continue to let a later iteration handle autocomplete.
@@ -38,13 +39,12 @@ export function tryFrom(maybeActiveNode: Option<ActiveNode>): Result<Autocomplet
             ) {
                 continue;
             }
-            const autocompleteKey: string = createAutocompleteKey(parent.node.kind, child.node.maybeAttributeIndex);
 
-            const maybeEdgeCaseFn: Option<TAutocompleteFn> = AutocompleteEdgeCaseMap.get(autocompleteKey);
+            const maybeEdgeCaseFn: Option<TAutocompleteFn> = AutocompleteEdgeCaseMap.get(mapKey);
             if (maybeEdgeCaseFn) {
                 maybeInspected = maybeEdgeCaseFn(activeNode, index);
             } else {
-                maybeInspected = AutocompleteMap.get(autocompleteKey);
+                maybeInspected = AutocompleteMap.get(mapKey);
             }
 
             if (maybeInspected !== undefined) {
@@ -85,42 +85,48 @@ const AutocompleteEdgeCaseMap: Map<string, TAutocompleteFn> = new Map([]);
 
 const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     // Ast.NodeKind.ErrorHandlingExpression
-    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Try)],
-    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 1), ExpressionAutocomplete],
-    [createAutocompleteKey(Ast.NodeKind.ErrorHandlingExpression, 2), ErrorHandlingExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.ErrorHandlingExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Try)],
+    [createMapKey(Ast.NodeKind.ErrorHandlingExpression, 1), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.ErrorHandlingExpression, 2), ErrorHandlingExpressionAutocomplete],
 
     // Ast.NodeKind.ErrorRaisingExpression
-    [
-        createAutocompleteKey(Ast.NodeKind.ErrorRaisingExpression, 0),
-        autocompleteConstantFactory(Ast.ConstantKind.Error),
-    ],
-    [createAutocompleteKey(Ast.NodeKind.ErrorRaisingExpression, 1), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Error)],
+    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1), ExpressionAutocomplete],
+
+    // Ast.NodeKind.IdentifierPairedExpression
+    [createMapKey(Ast.NodeKind.IdentifierPairedExpression, 2), ExpressionAutocomplete],
+
+    // Ast.NodeKind.IdentifierExpressionPairedExpression
+    [createMapKey(Ast.NodeKind.IdentifierExpressionPairedExpression, 2), ExpressionAutocomplete],
 
     // Ast.NodeKind.IfExpression
-    [createAutocompleteKey(Ast.NodeKind.IfExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.If)],
-    [createAutocompleteKey(Ast.NodeKind.IfExpression, 1), ExpressionAutocomplete],
-    [createAutocompleteKey(Ast.NodeKind.IfExpression, 2), autocompleteConstantFactory(Ast.ConstantKind.Then)],
-    [createAutocompleteKey(Ast.NodeKind.IfExpression, 3), ExpressionAutocomplete],
-    [createAutocompleteKey(Ast.NodeKind.IfExpression, 4), autocompleteConstantFactory(Ast.ConstantKind.Else)],
-    [createAutocompleteKey(Ast.NodeKind.IfExpression, 5), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.IfExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.If)],
+    [createMapKey(Ast.NodeKind.IfExpression, 1), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.IfExpression, 2), autocompleteConstantFactory(Ast.ConstantKind.Then)],
+    [createMapKey(Ast.NodeKind.IfExpression, 3), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.IfExpression, 4), autocompleteConstantFactory(Ast.ConstantKind.Else)],
+    [createMapKey(Ast.NodeKind.IfExpression, 5), ExpressionAutocomplete],
 
     // Ast.NodeKind.InvokeExpression
-    [createAutocompleteKey(Ast.NodeKind.InvokeExpression, 0), ExpressionAutocomplete],
-    [createAutocompleteKey(Ast.NodeKind.InvokeExpression, 1), ExpressionAutocomplete],
-    [createAutocompleteKey(Ast.NodeKind.InvokeExpression, 2), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.InvokeExpression, 0), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.InvokeExpression, 1), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.InvokeExpression, 2), ExpressionAutocomplete],
+
+    // Ast.NodeKind.IfExpression
+    [createMapKey(Ast.NodeKind.ListExpression, 1), ExpressionAutocomplete],
 
     // Ast.NodeKind.ParenthesizedExpression
-    [createAutocompleteKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
+    [createMapKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
 ]);
 
 // [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
-function createAutocompleteKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number>): string {
+function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number>): string {
     return [nodeKind, maybeAttributeIndex].join(",");
 }
 
 function autocompleteConstantFactory(constantKind: Ast.ConstantKind): AutocompleteInspected {
     return {
-        allowedAutocompleteKeywords: [],
         maybeRequiredAutocomplete: constantKind,
+        allowedAutocompleteKeywords: [],
     };
 }
