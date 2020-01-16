@@ -4,7 +4,7 @@
 import { InspectionUtils } from ".";
 import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../common";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
-import { ActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
@@ -155,7 +155,7 @@ const DefaultIdentifierInspection: IdentifierInspected = {
 // If you came from the TExpression in the EachExpression,
 // then add '_' to the scope.
 function inspectEachExpression(state: IdentifierState, eachExpr: NodeIdMap.TXorNode): void {
-    const previous: NodeIdMap.TXorNode = InspectionUtils.expectPreviousXorNode(state);
+    const previous: NodeIdMap.TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex);
     if (previous.node.maybeAttributeIndex !== 1) {
         return;
     }
@@ -170,7 +170,7 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: NodeIdMap.TXo
         throw expectedNodeKindError(fnExpr, Ast.NodeKind.FunctionExpression);
     }
 
-    const previous: NodeIdMap.TXorNode = InspectionUtils.expectPreviousXorNode(state);
+    const previous: NodeIdMap.TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex);
     if (previous.node.maybeAttributeIndex !== 3) {
         return;
     }
@@ -333,9 +333,12 @@ function inspectInvokeExpression(state: IdentifierState, invokeExpr: NodeIdMap.T
 
 function inspectInvokeExpressionArguments(state: IdentifierState, _: NodeIdMap.TXorNode): Option<InvokeExpressionArgs> {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArray: Option<NodeIdMap.TXorNode> = InspectionUtils.maybePreviousXorNode(state, 1, [
-        Ast.NodeKind.ArrayWrapper,
-    ]);
+    const maybeCsvArray: Option<NodeIdMap.TXorNode> = ActiveNodeUtils.maybePreviousXorNode(
+        state.activeNode,
+        state.nodeIndex,
+        1,
+        [Ast.NodeKind.ArrayWrapper],
+    );
     if (maybeCsvArray === undefined) {
         return undefined;
     }
@@ -384,8 +387,10 @@ function inspectInvokeExpressionArguments(state: IdentifierState, _: NodeIdMap.T
 // If position is to the right of an equals sign,
 // then add all keys to the scope EXCEPT for the key that the position is under.
 function inspectLetExpression(state: IdentifierState, letExpr: NodeIdMap.TXorNode): void {
-    const maybePreviousAttributeIndex: Option<number> = InspectionUtils.expectPreviousXorNode(state).node
-        .maybeAttributeIndex;
+    const maybePreviousAttributeIndex: Option<number> = ActiveNodeUtils.expectPreviousXorNode(
+        state.activeNode,
+        state.nodeIndex,
+    ).node.maybeAttributeIndex;
     if (maybePreviousAttributeIndex !== 3 && !InspectionUtils.isInKeyValuePairAssignment(state)) {
         return;
     }
@@ -401,8 +406,10 @@ function inspectLetExpression(state: IdentifierState, letExpr: NodeIdMap.TXorNod
         ]);
         maybeAncestorKeyValuePair = undefined;
     } else {
-        csvArray = InspectionUtils.expectPreviousXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
-        maybeAncestorKeyValuePair = InspectionUtils.expectPreviousXorNode(state, 3, [
+        csvArray = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 1, [
+            Ast.NodeKind.ArrayWrapper,
+        ]);
+        maybeAncestorKeyValuePair = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 3, [
             Ast.NodeKind.IdentifierPairedExpression,
         ]);
     }
@@ -448,11 +455,15 @@ function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, _: NodeI
         return;
     }
 
-    const csvArray: NodeIdMap.TXorNode = InspectionUtils.expectPreviousXorNode(state, 1, [Ast.NodeKind.ArrayWrapper]);
-    const keyValuePair: NodeIdMap.TXorNode = InspectionUtils.expectPreviousXorNode(state, 3, [
-        Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+    const csvArray: NodeIdMap.TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 1, [
+        Ast.NodeKind.ArrayWrapper,
     ]);
+    const keyValuePair: NodeIdMap.TXorNode = ActiveNodeUtils.expectPreviousXorNode(
+        state.activeNode,
+        state.nodeIndex,
+        3,
+        [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, Ast.NodeKind.GeneralizedIdentifierPairedExpression],
+    );
 
     for (const csv of xorNodesOnCsvFromCsvArray(nodeIdMapCollection, csvArray)) {
         const nodeId: number = csv.node.id;
@@ -493,9 +504,12 @@ function inspectSectionMember(state: IdentifierState, sectionMember: NodeIdMap.T
     }
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const sectionMemberArray: NodeIdMap.TXorNode = InspectionUtils.expectNextXorNode(state, 1, [
-        Ast.NodeKind.ArrayWrapper,
-    ]);
+    const sectionMemberArray: NodeIdMap.TXorNode = ActiveNodeUtils.expectNextXorNode(
+        state.activeNode,
+        state.nodeIndex,
+        1,
+        [Ast.NodeKind.ArrayWrapper],
+    );
     const sectionMembers: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
         nodeIdMapCollection,
         sectionMemberArray.node.id,
@@ -555,7 +569,7 @@ function expectedNodeKindError(xorNode: NodeIdMap.TXorNode, expected: Ast.NodeKi
 }
 
 function isParentOfNodeKind(state: IdentifierState, parentNodeKind: Ast.NodeKind): boolean {
-    const maybeParent: Option<NodeIdMap.TXorNode> = InspectionUtils.maybeNextXorNode(state);
+    const maybeParent: Option<NodeIdMap.TXorNode> = ActiveNodeUtils.maybeNextXorNode(state.activeNode, state.nodeIndex);
     return maybeParent !== undefined ? maybeParent.node.kind === parentNodeKind : false;
 }
 

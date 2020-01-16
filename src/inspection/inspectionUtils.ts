@@ -1,73 +1,10 @@
 import { CommonError, Option } from "../common";
 import { Ast, NodeIdMap } from "../parser";
-import { ActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 
 export interface InspectionState {
     readonly nodeIndex: number;
     readonly activeNode: ActiveNode;
-}
-
-export function maybePreviousXorNode(
-    state: InspectionState,
-    n: number = 1,
-    maybeNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
-): Option<NodeIdMap.TXorNode> {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = state.activeNode.ancestry[state.nodeIndex - n];
-    if (maybeXorNode !== undefined && maybeNodeKinds !== undefined) {
-        return maybeNodeKinds.indexOf(maybeXorNode.node.kind) !== -1 ? maybeXorNode : undefined;
-    } else {
-        return maybeXorNode;
-    }
-}
-
-export function maybeNextXorNode(state: InspectionState, n: number = 1): Option<NodeIdMap.TXorNode> {
-    return state.activeNode.ancestry[state.nodeIndex + n];
-}
-
-export function expectPreviousXorNode(
-    state: InspectionState,
-    n: number = 1,
-    maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
-): NodeIdMap.TXorNode {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(state, n);
-    if (maybeXorNode === undefined) {
-        throw new CommonError.InvariantError("no previous node");
-    }
-    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
-
-    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(xorNode.node.kind) === -1) {
-        const details: {} = {
-            nodeId: xorNode.node.id,
-            expectedAny: maybeAllowedNodeKinds,
-            actual: xorNode.node.kind,
-        };
-        throw new CommonError.InvariantError(`incorrect node kind for previous xorNode`, details);
-    }
-
-    return maybeXorNode;
-}
-
-export function expectNextXorNode(
-    state: InspectionState,
-    n: number = 1,
-    maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
-): NodeIdMap.TXorNode {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeNextXorNode(state, n);
-    if (maybeXorNode === undefined) {
-        throw new CommonError.InvariantError("no next node");
-    }
-    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
-
-    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(xorNode.node.kind) === -1) {
-        const details: {} = {
-            nodeId: xorNode.node.id,
-            expectedAny: maybeAllowedNodeKinds,
-            actual: xorNode.node.kind,
-        };
-        throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);
-    }
-
-    return maybeXorNode;
 }
 
 // Should only be called: RecordLiteral, RecordExpression, SectionMember
@@ -86,12 +23,17 @@ export function isInKeyValuePairAssignment(state: InspectionState): boolean {
         n = 3;
     }
 
-    const maybeKeyValuePair: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(state, n, [
-        Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-        Ast.NodeKind.IdentifierPairedExpression,
-        Ast.NodeKind.IdentifierExpressionPairedExpression,
-    ]);
+    const maybeKeyValuePair: Option<NodeIdMap.TXorNode> = ActiveNodeUtils.maybePreviousXorNode(
+        state.activeNode,
+        state.nodeIndex,
+        n,
+        [
+            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.IdentifierExpressionPairedExpression,
+        ],
+    );
     if (maybeKeyValuePair === undefined) {
         return false;
     }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option } from "../../common";
+import { CommonError, Option } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
@@ -81,6 +81,76 @@ export function maybeActiveNode(
         root,
         ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, root.node.id),
     };
+}
+
+export function maybePreviousXorNode(
+    activeNode: ActiveNode,
+    ancestorIndex: number,
+    n: number = 1,
+    maybeNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
+): Option<NodeIdMap.TXorNode> {
+    const maybeXorNode: Option<NodeIdMap.TXorNode> = activeNode.ancestry[ancestorIndex - n];
+    if (maybeXorNode !== undefined && maybeNodeKinds !== undefined) {
+        return maybeNodeKinds.indexOf(maybeXorNode.node.kind) !== -1 ? maybeXorNode : undefined;
+    } else {
+        return maybeXorNode;
+    }
+}
+
+export function maybeNextXorNode(
+    activeNode: ActiveNode,
+    ancestorIndex: number,
+    n: number = 1,
+): Option<NodeIdMap.TXorNode> {
+    return activeNode.ancestry[ancestorIndex + n];
+}
+
+export function expectPreviousXorNode(
+    activeNode: ActiveNode,
+    ancestorIndex: number,
+    n: number = 1,
+    maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
+): NodeIdMap.TXorNode {
+    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(activeNode, ancestorIndex, n);
+    if (maybeXorNode === undefined) {
+        throw new CommonError.InvariantError("no previous node");
+    }
+    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+
+    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(xorNode.node.kind) === -1) {
+        const details: {} = {
+            nodeId: xorNode.node.id,
+            expectedAny: maybeAllowedNodeKinds,
+            actual: xorNode.node.kind,
+        };
+        throw new CommonError.InvariantError(`incorrect node kind for previous xorNode`, details);
+    }
+
+    return maybeXorNode;
+}
+
+export function expectNextXorNode(
+    activeNode: ActiveNode,
+    ancestorIndex: number,
+    n: number = 1,
+    maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
+): NodeIdMap.TXorNode {
+    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeNextXorNode(activeNode, ancestorIndex, n);
+    if (maybeXorNode === undefined) {
+        throw new CommonError.InvariantError("no next node");
+    }
+    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+
+    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(xorNode.node.kind) === -1) {
+        const details: {} = {
+            nodeId: xorNode.node.id,
+            expectedAny: maybeAllowedNodeKinds,
+            actual: xorNode.node.kind,
+        };
+        throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);
+    }
+
+    return maybeXorNode;
 }
 
 interface AstNodeSearch {
