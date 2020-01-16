@@ -4,7 +4,7 @@
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { KeywordKind, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
-import { ActiveNode, ActiveNodeUtils } from "./activeNode";
+import { ActiveNode } from "./activeNode";
 import { PositionUtils } from "./position";
 
 export interface AutocompleteInspected {
@@ -81,9 +81,7 @@ const ExpressionAutocomplete: AutocompleteInspected = {
     allowedAutocompleteKeywords: TExpressionKeywords,
 };
 
-const AutocompleteEdgeCaseMap: Map<string, TAutocompleteFn> = new Map([
-    [createAutocompleteKey(Ast.NodeKind.InvokeExpression, 1), autocompleteInvokeExpression],
-]);
+const AutocompleteEdgeCaseMap: Map<string, TAutocompleteFn> = new Map([]);
 
 const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     // Ast.NodeKind.ErrorHandlingExpression
@@ -105,6 +103,14 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     [createAutocompleteKey(Ast.NodeKind.IfExpression, 3), ExpressionAutocomplete],
     [createAutocompleteKey(Ast.NodeKind.IfExpression, 4), autocompleteConstantFactory(Ast.ConstantKind.Else)],
     [createAutocompleteKey(Ast.NodeKind.IfExpression, 5), ExpressionAutocomplete],
+
+    // Ast.NodeKind.InvokeExpression
+    [createAutocompleteKey(Ast.NodeKind.InvokeExpression, 0), ExpressionAutocomplete],
+    [createAutocompleteKey(Ast.NodeKind.InvokeExpression, 1), ExpressionAutocomplete],
+    [createAutocompleteKey(Ast.NodeKind.InvokeExpression, 2), ExpressionAutocomplete],
+
+    // Ast.NodeKind.ParenthesizedExpression
+    [createAutocompleteKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
 ]);
 
 // [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
@@ -117,21 +123,4 @@ function autocompleteConstantFactory(constantKind: Ast.ConstantKind): Autocomple
         allowedAutocompleteKeywords: [],
         maybeRequiredAutocomplete: constantKind,
     };
-}
-
-function autocompleteInvokeExpression(activeNode: ActiveNode, currentIndex: number): Option<AutocompleteInspected> {
-    // Ignore the open and close brackets.
-    if (ActiveNodeUtils.expectPreviousXorNode(activeNode, currentIndex).node.maybeAttributeIndex !== 1) {
-        return undefined;
-    }
-
-    // InvokeExpression -> ArrayWrapper -> Csv -> node
-    const innerNode: NodeIdMap.TXorNode = ActiveNodeUtils.expectPreviousXorNode(activeNode, currentIndex, 3, undefined);
-
-    // Don't autocomplete if you're to the right of a Csv's comma constant.
-    if (innerNode.node.maybeAttributeIndex === 1) {
-        return undefined;
-    }
-
-    return ExpressionAutocomplete;
 }

@@ -224,13 +224,13 @@ describe(`Inspection`, () => {
         //     });
         // });
 
-        // describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
-        //     it(`+(|`, () => {
-        //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+(|`);
-        //         const expected: AbridgedInspection = [TExpressionKeywords, undefined];
-        //         expectNodesEqual(expectParseErrInspection(text, position), expected);
-        //     });
-        // });
+        describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
+            it(`+(|`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+(|`);
+                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+        });
 
         // describe(`${Ast.NodeKind.RecordExpression}`, () => {
         //     it(`[|`, () => {
