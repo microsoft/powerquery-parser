@@ -93,6 +93,9 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Error)],
     [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1), ExpressionAutocomplete],
 
+    // Ast.NodeKind.GeneralizedIdentifierPairedExpression
+    [createMapKey(Ast.NodeKind.GeneralizedIdentifierPairedExpression, 2), ExpressionAutocomplete],
+
     // Ast.NodeKind.IdentifierPairedExpression
     [createMapKey(Ast.NodeKind.IdentifierPairedExpression, 2), ExpressionAutocomplete],
 
