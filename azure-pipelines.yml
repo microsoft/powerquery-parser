@@ -39,7 +39,7 @@ steps:
   inputs:
     inputType: 'Basic'
     targetType: 'F'
-    targetArgument: '$(Build.SourcesDirectory)'
+    targetArgument: '$(Build.SourcesDirectory)/src'
     result: 'PoliCheck.xml'
 
 - task: PublishTestResults@2
