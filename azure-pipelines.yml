@@ -26,6 +26,13 @@ steps:
 - script: npm test
   displayName: 'run tests'
 
+- task: PoliCheck@1
+  inputs:
+    inputType: 'Basic'
+    targetType: 'F'
+    targetArgument: '$(Build.SourcesDirectory)'
+    result: 'PoliCheck.xml'
+
 - task: PublishTestResults@2
   condition: succeededOrFailed()
   inputs:
