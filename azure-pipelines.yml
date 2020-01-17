@@ -56,6 +56,6 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-   PathtoPublish: '$(System.DefaultWorkingDirectory)/PoliCheck.xml'
+   PathtoPublish: '$(System.DefaultWorkingDirectory)/../_sdt/logs/PoliCheck'
    ArtifactName: PoliCheck
   displayName: 'publish policheck results'
