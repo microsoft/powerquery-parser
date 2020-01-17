@@ -18,19 +18,29 @@ steps:
     versionSpec: '10.x'
   displayName: 'Install Node.js'
 
-- script: npm install
+- task: Npm@1
+  displayName: 'npm install'
+  inputs:
+    command: 'install'
 
-- script: npm run-script build
+- task: Npm@1
+  displayName: 'build'
+  inputs:
+    command: 'custom'
+    customCommand: 'run build'
 
-- script: npm test
-  displayName: 'run tests'
+- task: Npm@1
+  displayName: 'npm test'
+  inputs:
+    command: 'custom'
+    customCommand: 'test'
 
 - task: PoliCheck@1
   inputs:
     inputType: 'Basic'
     targetType: 'F'
     targetArgument: '$(Build.SourcesDirectory)'
-    result: '$(Build.ArtifactStagingDirectory)/PoliCheck.xml'
+    result: 'PoliCheck.xml'
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
@@ -44,8 +54,8 @@ steps:
     ArtifactName: lib
   displayName: 'publish lib'
 
-# - task: PublishBuildArtifacts@1
-#  inputs:
-#    PathtoPublish: '$(Build.ArtifactStagingDirectory)/PoliCheck.xml'
-#    ArtifactName: PoliCheck
-#  displayName: 'publish policheck results'
+- task: PublishBuildArtifacts@1
+  inputs:
+   PathtoPublish: '$(System.DefaultWorkingDirectory)/PoliCheck.xml'
+   ArtifactName: PoliCheck
+  displayName: 'publish policheck results'
