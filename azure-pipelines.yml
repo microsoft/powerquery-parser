@@ -18,10 +18,9 @@ steps:
     versionSpec: '10.x'
   displayName: 'Install Node.js'
 
-- script: |
-    npm install
-    npm run-script build
-  displayName: 'npm install and build'
+- script: npm install
+
+- script: npm run-script build
 
 - script: npm test
   displayName: 'run tests'
@@ -41,12 +40,12 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)/lib'
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
     ArtifactName: lib
   displayName: 'publish lib'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/PoliCheck.xml'
-    ArtifactName: PoliCheck
-  displayName: 'publish policheck results'
+# - task: PublishBuildArtifacts@1
+#  inputs:
+#    PathtoPublish: '$(Build.ArtifactStagingDirectory)/PoliCheck.xml'
+#    ArtifactName: PoliCheck
+#  displayName: 'publish policheck results'
