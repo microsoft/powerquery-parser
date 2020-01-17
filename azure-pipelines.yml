@@ -41,7 +41,7 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
+    PathtoPublish: '$(Build.SourcesDirectory)/lib'
     ArtifactName: lib
   displayName: 'publish lib'
 
