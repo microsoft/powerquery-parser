@@ -739,7 +739,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
     } else if (chr1 === "}") {
         token = readConstant(LineTokenKind.RightBrace, text, positionStart, 1);
     } else if (chr1 === '"') {
-        const read: LineModeAlteringRead = readStringLiteralOrStart(text, positionStart);
+        const read: LineModeAlteringRead = readOrStartStringLiteral(text, positionStart);
         token = read.token;
         lineMode = read.lineMode;
     } else if (chr1 === "0") {
@@ -802,7 +802,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
         if (chr2 === "/") {
             token = readLineComment(text, positionStart);
         } else if (chr2 === "*") {
-            const read: LineModeAlteringRead = readMultilineCommentOrStartStart(text, positionStart);
+            const read: LineModeAlteringRead = readOrStartMultilineComment(text, positionStart);
             token = read.token;
             lineMode = read.lineMode;
         } else {
@@ -812,7 +812,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
         const chr2: string = text[positionStart + 1];
 
         if (chr2 === '"') {
-            const read: LineModeAlteringRead = readQuotedIdentifierOrStart(text, positionStart);
+            const read: LineModeAlteringRead = readOrStartQuotedIdentifier(text, positionStart);
             token = read.token;
             lineMode = read.lineMode;
         } else {
@@ -844,7 +844,7 @@ function drainWhitespace(text: string, position: number): number {
     return position;
 }
 
-function readStringLiteralOrStart(text: string, currentPosition: number): LineModeAlteringRead {
+function readOrStartStringLiteral(text: string, currentPosition: number): LineModeAlteringRead {
     const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 1);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
@@ -890,7 +890,7 @@ function readLineComment(text: string, positionStart: number): LineToken {
     return readRestOfLine(LineTokenKind.LineComment, text, positionStart);
 }
 
-function readMultilineCommentOrStartStart(text: string, positionStart: number): LineModeAlteringRead {
+function readOrStartMultilineComment(text: string, positionStart: number): LineModeAlteringRead {
     const indexOfCloseComment: number = text.indexOf("*/", positionStart + 2);
     if (indexOfCloseComment === -1) {
         return {
@@ -942,7 +942,7 @@ function maybeReadKeyword(text: string, currentPosition: number): Option<LineTok
     }
 }
 
-function readQuotedIdentifierOrStart(text: string, currentPosition: number): LineModeAlteringRead {
+function readOrStartQuotedIdentifier(text: string, currentPosition: number): LineModeAlteringRead {
     const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 2);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
