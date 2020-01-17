@@ -223,9 +223,9 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`abc123 try true otherwise |false`, () => {
+            it(`try true otherwise |false`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `try true otherwise| false`,
+                    `try true otherwise |false`,
                 );
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);

@@ -135,7 +135,7 @@ function autocompleteErrorHandlingExpression(
     if (maybeChildAttributeIndex === 0) {
         return autocompleteConstantFactory(Ast.ConstantKind.Try);
     } else if (maybeChildAttributeIndex === 1) {
-        if (child.kind === NodeIdMap.XorNodeKind.Ast && PositionUtils.isAfterAstNode(position, child.node, true)) {
+        if (child.kind === NodeIdMap.XorNodeKind.Ast && PositionUtils.isAfterAstNode(position, child.node, false)) {
             return {
                 allowedAutocompleteKeywords: [],
                 maybeRequiredAutocomplete: KeywordKind.Otherwise,
