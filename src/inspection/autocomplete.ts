@@ -2,21 +2,17 @@
 // Licensed under the MIT license.
 
 import { CommonError, Option, Result, ResultKind } from "../common";
-import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, NodeIdMap, ParseError } from "../parser";
-import { ActiveNode, ActiveNodeUtils } from "./activeNode";
-import { PositionUtils } from "./position";
+import { KeywordKind, TExpressionKeywords } from "../lexer";
+import { Ast, NodeIdMap } from "../parser";
+import { ActiveNode } from "./activeNode";
+import { Position, PositionUtils } from "./position";
 
 export interface AutocompleteInspected {
     readonly maybeRequiredAutocomplete: Option<string>;
     readonly allowedAutocompleteKeywords: ReadonlyArray<KeywordKind>;
 }
 
-export function tryFrom(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    maybeActiveNode: Option<ActiveNode>,
-    maybeParseError: Option<ParseError.ParseError>,
-): Result<AutocompleteInspected, CommonError.CommonError> {
+export function tryFrom(maybeActiveNode: Option<ActiveNode>): Result<AutocompleteInspected, CommonError.CommonError> {
     if (maybeActiveNode === undefined) {
         return {
             kind: ResultKind.Ok,
@@ -45,13 +41,7 @@ export function tryFrom(
 
             switch (parent.node.kind) {
                 case Ast.NodeKind.ErrorHandlingExpression:
-                    maybeInspected = autocompleteErrorHandlingExpression(
-                        nodeIdMapCollection,
-                        activeNode,
-                        parent,
-                        child,
-                        maybeParseError,
-                    );
+                    maybeInspected = autocompleteErrorHandlingExpression(activeNode.position, child);
                     break;
 
                 default:
@@ -138,20 +128,14 @@ function autocompleteConstantFactory(constantKind: Ast.ConstantKind): Autocomple
 }
 
 function autocompleteErrorHandlingExpression(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode,
-    parent: NodeIdMap.TXorNode,
+    position: Position,
     child: NodeIdMap.TXorNode,
-    maybeParseError: Option<ParseError.ParseError>,
 ): Option<AutocompleteInspected> {
     const maybeChildAttributeIndex: Option<number> = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
         return autocompleteConstantFactory(Ast.ConstantKind.Try);
     } else if (maybeChildAttributeIndex === 1) {
-        if (
-            child.kind === NodeIdMap.XorNodeKind.Ast &&
-            PositionUtils.isAfterAstNode(activeNode.position, child.node, true)
-        ) {
+        if (child.kind === NodeIdMap.XorNodeKind.Ast && PositionUtils.isAfterAstNode(position, child.node, true)) {
             return {
                 allowedAutocompleteKeywords: [],
                 maybeRequiredAutocomplete: KeywordKind.Otherwise,

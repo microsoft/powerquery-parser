@@ -75,7 +75,7 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
         nodeIdMapCollection = parseOk.nodeIdMapCollection;
     }
 
-    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds, maybeParseError);
+    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds);
 }
 
 export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {

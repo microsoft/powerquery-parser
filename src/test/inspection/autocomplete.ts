@@ -31,34 +31,6 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`try true |`, () => {
-                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true |`);
-                const expected: AbridgedInspection = [[], Ast.ConstantKind.Otherwise];
-                expectNodesEqual(expectParseOkInspection(text, position), expected);
-            });
-
-            it(`try true otherwise| false`, () => {
-                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `try true otherwise| false`,
-                );
-                const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
-                expectNodesEqual(expectParseOkInspection(text, position), expected);
-            });
-
-            it(`abc123 try true otherwise |false`, () => {
-                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `try true otherwise| false`,
-                );
-                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
-                expectNodesEqual(expectParseOkInspection(text, position), expected);
-            });
-
-            it(`try true oth|`, () => {
-                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true oth|`);
-                const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
-                expectNodesEqual(expectParseErrInspection(text, position), expected);
-            });
-
             it(`try true|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true|`);
                 const expected: AbridgedInspection = [TExpressionKeywords, undefined];
@@ -67,7 +39,7 @@ describe(`Inspection`, () => {
 
             it(`try true |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true |`);
-                const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
+                const expected: AbridgedInspection = [[], Ast.ConstantKind.Otherwise];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
         });
@@ -242,13 +214,35 @@ describe(`Inspection`, () => {
             });
         });
 
-        // describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
-        //     it(`try true otherwise |`, () => {
-        //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true otherwise |`);
-        //         const expected: AbridgedInspection = [TExpressionKeywords, undefined];
-        //         expectNodesEqual(expectParseErrInspection(text, position), expected);
-        //     });
-        // });
+        describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
+            it(`try true otherwise| false`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `try true otherwise| false`,
+                );
+                const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
+                expectNodesEqual(expectParseOkInspection(text, position), expected);
+            });
+
+            it(`abc123 try true otherwise |false`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `try true otherwise| false`,
+                );
+                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                expectNodesEqual(expectParseOkInspection(text, position), expected);
+            });
+
+            it(`try true oth|`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true oth|`);
+                const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`try true otherwise |`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true otherwise |`);
+                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+        });
 
         describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
             it(`+(|`, () => {

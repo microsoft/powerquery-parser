@@ -25,7 +25,6 @@ export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    maybeParseError: Option<ParseError.ParseError>,
 ): TriedInspection {
     const maybeActiveNode: Option<ActiveNode> = ActiveNodeUtils.maybeActiveNode(
         position,
@@ -42,11 +41,7 @@ export function tryFrom(
         return triedInspectedIdentifier;
     }
 
-    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
-        nodeIdMapCollection,
-        maybeActiveNode,
-        maybeParseError,
-    );
+    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(maybeActiveNode);
     if (triedInspectedKeyword.kind === ResultKind.Err) {
         return triedInspectedKeyword;
     }
