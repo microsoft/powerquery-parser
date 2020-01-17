@@ -31,7 +31,7 @@ steps:
     inputType: 'Basic'
     targetType: 'F'
     targetArgument: '$(Build.SourcesDirectory)'
-    result: 'PoliCheck.xml'
+    result: '$(Build.ArtifactStagingDirectory)/PoliCheck.xml'
 
 - task: PublishTestResults@2
   condition: succeededOrFailed()
@@ -44,3 +44,9 @@ steps:
     PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
     ArtifactName: lib
   displayName: 'publish lib'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/PoliCheck.xml'
+    ArtifactName: PoliCheck
+  displayName: 'publish policheck results'
