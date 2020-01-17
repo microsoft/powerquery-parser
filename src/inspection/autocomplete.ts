@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, Option, Result, ResultKind, TypeUtils } from "../common";
-import { KeywordKind, TExpressionKeywords, Keywords } from "../lexer";
+import { KeywordKind, Keywords, TExpressionKeywords } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -61,14 +61,7 @@ export function tryFrom(maybeActiveNode: Option<ActiveNode>): Result<Autocomplet
         };
     }
 
-    if (maybeInspected === undefined) {
-        return {
-            kind: ResultKind.Ok,
-            value: EmptyAutocomplete,
-        };
-    }
-
-    let inspected: AutocompleteInspected = maybeInspected;
+    let inspected: AutocompleteInspected = maybeInspected || EmptyAutocomplete;
     if (activeNode.maybeIdentifierUnderPosition) {
         inspected = updateWithPostionIdentifier(activeNode, inspected);
     }
@@ -153,6 +146,53 @@ function updateWithPostionIdentifier(activeNode: ActiveNode, inspected: Autocomp
 }
 
 function isInKeywordContext(activeNode: ActiveNode): boolean {
+    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
+    const maybePrevious: NodeIdMap.TXorNode = ancestry[1];
+    if (maybePrevious === undefined) {
+        return true;
+    }
+    // Possibly: InvokeExpression
+    else if (maybePrevious.node.kind === Ast.NodeKind.IdentifierExpression) {
+        if (
+            isAncestryOfNodeKindChain(ancestry, 2, [
+                Ast.NodeKind.Csv,
+                Ast.NodeKind.ArrayWrapper,
+                Ast.NodeKind.InvokeExpression,
+            ])
+        ) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function isAncestryOfNodeKindChain(
+    ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
+    start: number,
+    chain: ReadonlyArray<Ast.NodeKind>,
+): boolean {
+    const ancestryLength: number = ancestry.length;
+    if (start < 0) {
+        const details: {} = {
+            start,
+            ancestryLength,
+        };
+        throw new CommonError.InvariantError("invalid start", details);
+    } else if (start >= ancestryLength) {
+        return false;
+    }
+
+    const chainLength: number = chain.length;
+    for (let index: number = 0; index < chainLength; index += 1) {
+        const maybeAncestor: Option<NodeIdMap.TXorNode> = ancestry[index + start];
+        if (maybeAncestor === undefined) {
+            return false;
+        } else if (maybeAncestor.node.kind !== chain[index]) {
+            return false;
+        }
+    }
+
     return true;
 }
 
