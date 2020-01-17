@@ -1716,10 +1716,8 @@ export function disambiguateParenthesis(
         }
 
         if (nestedDepth === 0) {
-            // (as X) could either be either case,
-            // so we need to consume type X and see if it's followed by a FatArrow.
-            //
-            // It's important we backup and eventually restore the original Parser state.
+            // '(x as number) as number' could either be either case,
+            // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (IParserStateUtils.isTokenKind(state, TokenKind.KeywordAs, offsetTokenIndex + 1)) {
                 const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
