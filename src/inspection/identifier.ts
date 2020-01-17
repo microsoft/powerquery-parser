@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { InspectionUtils } from ".";
-import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../common";
+import { CommonError, isNever, Option, Result, ResultKind } from "../common";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -59,7 +59,6 @@ export function tryFrom(
         activeNode,
         nodeIdMapCollection,
         leafNodeIds,
-        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, activeNode),
     };
 
     try {
@@ -71,10 +70,10 @@ export function tryFrom(
             inspectNode(state, xorNode);
         }
 
-        if (state.maybeIdentifierUnderPosition && state.result.maybeIdentifierUnderPosition === undefined) {
+        if (activeNode.maybeIdentifierUnderPosition && state.result.maybeIdentifierUnderPosition === undefined) {
             state.result.maybeIdentifierUnderPosition = {
                 kind: PositionIdentifierKind.Undefined,
-                identifier: state.maybeIdentifierUnderPosition,
+                identifier: activeNode.maybeIdentifierUnderPosition,
             };
         }
 
@@ -96,11 +95,6 @@ interface IdentifierState {
     readonly activeNode: ActiveNode;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
-    // The cache of an evaluation that otherwise would need to be evaluated on every identifier encountered.
-    // If ActiveNode.root is an identifier then store the indirection to it as an Ast.
-    // If during inspection the assignment for that identifier is encountered then we store it
-    // under result using the same name as this field.
-    readonly maybeIdentifierUnderPosition: Option<Ast.Identifier | Ast.GeneralizedIdentifier>;
 }
 
 function inspectNode(state: IdentifierState, xorNode: NodeIdMap.TXorNode): void {
@@ -601,7 +595,7 @@ function maybeSetIdentifierUnderPositionResult(
 ): void {
     if (
         // Nothing to assign as position wasn't on an identifier
-        state.maybeIdentifierUnderPosition === undefined ||
+        state.activeNode.maybeIdentifierUnderPosition === undefined ||
         // Already assigned the result
         state.result.maybeIdentifierUnderPosition !== undefined
     ) {
@@ -622,50 +616,12 @@ function maybeSetIdentifierUnderPositionResult(
     }
     const keyIdentifier: Ast.GeneralizedIdentifier | Ast.Identifier = keyAstNode;
 
-    if (keyIdentifier.literal === state.maybeIdentifierUnderPosition.literal) {
-        const unsafeResult: TypeUtils.StripReadonly<IdentifierInspected> = state.result;
-        unsafeResult.maybeIdentifierUnderPosition = {
+    if (keyIdentifier.literal === state.activeNode.maybeIdentifierUnderPosition.literal) {
+        state.result.maybeIdentifierUnderPosition = {
             kind: PositionIdentifierKind.Local,
             identifier: keyIdentifier,
             definition: value,
         };
-    }
-}
-
-function maybeIdentifierUnderPosition(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode,
-): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
-    const leaf: NodeIdMap.TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
-    if (leaf.kind !== NodeIdMap.XorNodeKind.Ast) {
-        return undefined;
-    }
-
-    let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
-
-    // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.literal === `@`) {
-        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(leaf.node.id);
-        if (maybeParentId === undefined) {
-            return undefined;
-        }
-        const parentId: number = maybeParentId;
-
-        const parent: Ast.TNode = NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
-        if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
-            return undefined;
-        }
-        identifier = parent.identifier;
-    } else if (leaf.node.kind === Ast.NodeKind.Identifier || leaf.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
-        identifier = leaf.node;
-    } else {
-        return undefined;
-    }
-
-    if (PositionUtils.isInAstNode(activeNode.position, identifier, false)) {
-        return identifier;
-    } else {
-        return undefined;
     }
 }
 

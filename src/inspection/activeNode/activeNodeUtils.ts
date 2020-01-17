@@ -79,6 +79,7 @@ export function maybeActiveNode(
     return {
         position,
         ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, leaf.node.id),
+        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(position, nodeIdMapCollection, leaf),
     };
 }
 
@@ -239,4 +240,41 @@ function positionContextSearch(
     }
 
     return maybeCurrent;
+}
+
+function maybeIdentifierUnderPosition(
+    position: Position,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leaf: NodeIdMap.TXorNode,
+): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
+    if (leaf.kind !== NodeIdMap.XorNodeKind.Ast) {
+        return undefined;
+    }
+
+    let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
+
+    // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
+    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.literal === `@`) {
+        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(leaf.node.id);
+        if (maybeParentId === undefined) {
+            return undefined;
+        }
+        const parentId: number = maybeParentId;
+
+        const parent: Ast.TNode = NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
+        if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
+            return undefined;
+        }
+        identifier = parent.identifier;
+    } else if (leaf.node.kind === Ast.NodeKind.Identifier || leaf.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
+        identifier = leaf.node;
+    } else {
+        return undefined;
+    }
+
+    if (PositionUtils.isInAstNode(position, identifier, false)) {
+        return identifier;
+    } else {
+        return undefined;
+    }
 }
