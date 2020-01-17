@@ -82,12 +82,12 @@ describe(`Inspection`, () => {
             it("true o|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`true o|`);
                 const expected: AbridgedInspection = [[KeywordKind.Or], undefined];
-                expectNodesEqual(expectParseOkInspection(text, position), expected);
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
             it("try true o|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true o|`);
-                const expected: AbridgedInspection = [[KeywordKind.Otherwise], undefined];
+                const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
@@ -117,11 +117,11 @@ describe(`Inspection`, () => {
 
             it("if true t|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if true t|`);
-                const expected: AbridgedInspection = [[KeywordKind.Then], undefined];
+                const expected: AbridgedInspection = [[], KeywordKind.Then];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it("t|", () => {
+            it("abc123 t|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`t|`);
                 const expected: AbridgedInspection = [[KeywordKind.True, KeywordKind.Try, KeywordKind.Type], undefined];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);

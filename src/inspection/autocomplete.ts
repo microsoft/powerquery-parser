@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, Option, Result, ResultKind, TypeUtils } from "../common";
-import { KeywordKind, Keywords, TExpressionKeywords } from "../lexer";
+import { KeywordKind, Keywords, TExpressionKeywords, TokenKind } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -120,15 +120,35 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     [createMapKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
 ]);
 
+// key is the first letter of ActiveNode.maybeIdentifierUnderPosition.
+// For some reason as of now Typescript needs explicit typing for Map initialization
+const PartialKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
+    string,
+    ReadonlyArray<KeywordKind>
+>([
+    ["e", [KeywordKind.Each, KeywordKind.Error]],
+    ["i", [KeywordKind.If]],
+    ["l", [KeywordKind.Let]],
+    ["n", [KeywordKind.Not]],
+    ["t", [KeywordKind.True, KeywordKind.Try, KeywordKind.Type]],
+]);
+
 function updateWithPostionIdentifier(activeNode: ActiveNode, inspected: AutocompleteInspected): AutocompleteInspected {
     if (!isInKeywordContext(activeNode)) {
         return inspected;
     }
 
     const positionIdentifier: string = activeNode.maybeIdentifierUnderPosition!.literal;
+    const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialKeywordAutocompleteMap.get(
+        positionIdentifier[0].toLowerCase(),
+    );
+    if (maybeAllowedKeywords === undefined) {
+        return inspected;
+    }
+    const allowedKeywords: ReadonlyArray<KeywordKind> = maybeAllowedKeywords;
     const newAllowedAutocompleteKeywords: KeywordKind[] = [...inspected.allowedAutocompleteKeywords];
 
-    for (const keyword of Keywords) {
+    for (const keyword of allowedKeywords) {
         if (
             // Identifier might be an incomplete keyword.
             keyword.indexOf(positionIdentifier) === 0 &&
