@@ -3,7 +3,7 @@
 
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { TriedTraverse } from "../common/traversal";
-import { NodeIdMap } from "../parser";
+import { NodeIdMap, ParseError } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { AutocompleteInspected, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { IdentifierInspected, tryFrom as identifierInspectedTryFrom } from "./identifier";
@@ -25,6 +25,7 @@ export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
+    maybeParseError: Option<ParseError.ParseError>,
 ): TriedInspection {
     const maybeActiveNode: Option<ActiveNode> = ActiveNodeUtils.maybeActiveNode(
         position,
@@ -41,7 +42,11 @@ export function tryFrom(
         return triedInspectedIdentifier;
     }
 
-    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(maybeActiveNode);
+    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
+        nodeIdMapCollection,
+        maybeActiveNode,
+        maybeParseError,
+    );
     if (triedInspectedKeyword.kind === ResultKind.Err) {
         return triedInspectedKeyword;
     }

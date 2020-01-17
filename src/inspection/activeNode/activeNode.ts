@@ -12,8 +12,7 @@ import { Position } from "../position";
 export interface ActiveNode {
     // Position in a text editor
     readonly position: Position;
-    // The root Ast leaf or Context node which is calculated using position.
-    readonly root: NodeIdMap.TXorNode;
     // A full parental ancestry of the root.
+    // [root, parent of root, parent of parent of root, ...]
     readonly ancestry: ReadonlyArray<NodeIdMap.TXorNode>;
 }

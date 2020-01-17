@@ -50,6 +50,7 @@ export function tryParse(lexerSnapshot: LexerSnapshot, parser: IParser<IParserSt
 export function tryInspection(triedParse: TriedParse, position: Inspection.Position): TriedInspection {
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
+    let maybeParseError: Option<ParseError.ParseError>;
 
     if (triedParse.kind === ResultKind.Err) {
         if (triedParse.error instanceof CommonError.CommonError) {
@@ -61,6 +62,8 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
                 kind: ResultKind.Err,
                 error: triedParse.error,
             };
+        } else {
+            maybeParseError = triedParse.error;
         }
 
         const context: ParserContext.State = triedParse.error.context;
@@ -72,7 +75,7 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
         nodeIdMapCollection = parseOk.nodeIdMapCollection;
     }
 
-    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds);
+    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds, maybeParseError);
 }
 
 export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {

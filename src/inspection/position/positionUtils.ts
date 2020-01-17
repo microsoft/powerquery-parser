@@ -36,10 +36,11 @@ export function isInXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: NodeIdMap.TXorNode,
+    exclusiveUpperBound: boolean = true,
 ): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            return isInAstNode(position, xorNode.node);
+            return isInAstNode(position, xorNode.node, exclusiveUpperBound);
 
         case NodeIdMap.XorNodeKind.Context:
             return isInContextNode(position, nodeIdMapCollection, xorNode.node);
@@ -79,13 +80,14 @@ export function isAfterXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: NodeIdMap.TXorNode,
+    exclusiveUpperBound: boolean = true,
 ): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
-            return isAfterAstNode(position, xorNode.node);
+            return isAfterAstNode(position, xorNode.node, exclusiveUpperBound);
 
         case NodeIdMap.XorNodeKind.Context:
-            return isAfterContextNode(position, nodeIdMapCollection, xorNode.node);
+            return isAfterContextNode(position, nodeIdMapCollection, xorNode.node, exclusiveUpperBound);
 
         default:
             throw isNever(xorNode);
@@ -126,6 +128,7 @@ export function isAfterContextNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     contextNode: ParserContext.Node,
+    exclusiveUpperBound: boolean = true,
 ): boolean {
     const maybeLeaf: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
@@ -134,20 +137,20 @@ export function isAfterContextNode(
         if (contextNode.maybeTokenStart === undefined) {
             return false;
         } else {
-            return isAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, true);
+            return isAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, exclusiveUpperBound);
         }
     }
     const leaf: Ast.TNode = maybeLeaf;
 
-    return isAfterAstNode(position, leaf);
+    return isAfterAstNode(position, leaf, exclusiveUpperBound);
 }
 
 export function isBeforeAstNode(position: Position, astNode: Ast.TNode): boolean {
     return isBeforeTokenPosition(position, astNode.tokenRange.positionStart);
 }
 
-export function isInAstNode(position: Position, astNode: Ast.TNode): boolean {
-    return !isBeforeAstNode(position, astNode) && !isAfterAstNode(position, astNode);
+export function isInAstNode(position: Position, astNode: Ast.TNode, exclusiveUpperBound: boolean = true): boolean {
+    return !isBeforeAstNode(position, astNode) && !isAfterAstNode(position, astNode, exclusiveUpperBound);
 }
 
 export function isOnAstNodeStart(position: Position, astNode: Ast.TNode): boolean {
@@ -162,8 +165,8 @@ export function isBeforeOrOnAstNodeStart(position: Position, astNode: Ast.TNode)
     return isBeforeAstNode(position, astNode) || isOnAstNodeStart(position, astNode);
 }
 
-export function isAfterAstNode(position: Position, astNode: Ast.TNode): boolean {
-    return isAfterTokenPosition(position, astNode.tokenRange.positionEnd, true);
+export function isAfterAstNode(position: Position, astNode: Ast.TNode, exclusiveUpperBound: boolean): boolean {
+    return isAfterTokenPosition(position, astNode.tokenRange.positionEnd, exclusiveUpperBound);
 }
 
 export function isBeforeTokenPosition(position: Position, tokenPositionStart: TokenPosition): boolean {

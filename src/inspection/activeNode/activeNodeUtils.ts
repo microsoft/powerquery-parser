@@ -26,7 +26,7 @@ export function maybeActiveNode(
         nodeIdMapCollection,
     );
 
-    let maybeRoot: Option<NodeIdMap.TXorNode>;
+    let maybeLeaf: Option<NodeIdMap.TXorNode>;
     if (astSearch.maybeOnOrBeforePosition) {
         const astNode: Ast.TNode = astSearch.maybeOnOrBeforePosition;
 
@@ -39,14 +39,14 @@ export function maybeActiveNode(
                 PositionUtils.isAfterTokenPosition(position, constant.tokenRange.positionEnd, false)
             ) {
                 if (astSearch.maybeAfterPosition) {
-                    maybeRoot = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
+                    maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
                 } else if (maybeContextSearch) {
-                    maybeRoot = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
+                    maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
                 } else {
-                    maybeRoot = undefined;
+                    maybeLeaf = undefined;
                 }
             } else {
-                maybeRoot = NodeIdMapUtils.xorNodeFromAst(constant);
+                maybeLeaf = NodeIdMapUtils.xorNodeFromAst(constant);
             }
         }
         // While typing certain types of literals we want to stay on the literal instead of moving to a Context.
@@ -58,29 +58,37 @@ export function maybeActiveNode(
                 astNode.kind === Ast.NodeKind.IdentifierExpression ||
                 (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric))
         ) {
-            maybeRoot = NodeIdMapUtils.xorNodeFromAst(astNode);
+            maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astNode);
         } else {
-            maybeRoot =
+            maybeLeaf =
                 maybeContextSearch !== undefined
                     ? NodeIdMapUtils.xorNodeFromContext(maybeContextSearch)
                     : NodeIdMapUtils.xorNodeFromAst(astNode);
         }
     } else if (maybeContextSearch) {
-        maybeRoot = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
+        maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
     } else {
-        maybeRoot = undefined;
+        maybeLeaf = undefined;
     }
 
-    if (maybeRoot === undefined) {
+    if (maybeLeaf === undefined) {
         return undefined;
     }
-    const root: NodeIdMap.TXorNode = maybeRoot;
+    const leaf: NodeIdMap.TXorNode = maybeLeaf;
 
     return {
         position,
-        root,
-        ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, root.node.id),
+        ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, leaf.node.id),
     };
+}
+
+export function expectRoot(activeNode: ActiveNode): NodeIdMap.TXorNode {
+    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
+    return ancestry[ancestry.length - 1];
+}
+
+export function expectLeaf(activeNode: ActiveNode): NodeIdMap.TXorNode {
+    return activeNode.ancestry[0];
 }
 
 export function maybePreviousXorNode(

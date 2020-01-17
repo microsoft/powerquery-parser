@@ -636,16 +636,16 @@ function maybeIdentifierUnderPosition(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
 ): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
-    const root: NodeIdMap.TXorNode = activeNode.root;
-    if (root.kind !== NodeIdMap.XorNodeKind.Ast) {
+    const leaf: NodeIdMap.TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
+    if (leaf.kind !== NodeIdMap.XorNodeKind.Ast) {
         return undefined;
     }
 
     let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (root.node.kind === Ast.NodeKind.Constant && root.node.literal === `@`) {
-        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(root.node.id);
+    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.literal === `@`) {
+        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(leaf.node.id);
         if (maybeParentId === undefined) {
             return undefined;
         }
@@ -656,13 +656,13 @@ function maybeIdentifierUnderPosition(
             return undefined;
         }
         identifier = parent.identifier;
-    } else if (root.node.kind === Ast.NodeKind.Identifier || root.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
-        identifier = root.node;
+    } else if (leaf.node.kind === Ast.NodeKind.Identifier || leaf.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
+        identifier = leaf.node;
     } else {
         return undefined;
     }
 
-    if (PositionUtils.isInAstNode(activeNode.position, identifier)) {
+    if (PositionUtils.isInAstNode(activeNode.position, identifier, false)) {
         return identifier;
     } else {
         return undefined;
