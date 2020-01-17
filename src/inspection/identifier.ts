@@ -8,7 +8,7 @@ import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
-// The inspection takes ActiveNode.ancestry and travels across all nodes to build up a scope.
+// The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface IdentifierInspected {
     // The scope of a given position.
     //  '[x = 1, y = 2|, z = 3]'-> returns a scope of [['x', XorNode for 1], ['z', XorNode for 3]]
