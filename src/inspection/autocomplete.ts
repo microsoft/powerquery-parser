@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result, ResultKind } from "../common";
-import { KeywordKind, TExpressionKeywords } from "../lexer";
+import { CommonError, Option, Result, ResultKind, TypeUtils } from "../common";
+import { KeywordKind, TExpressionKeywords, Keywords } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -61,9 +61,21 @@ export function tryFrom(maybeActiveNode: Option<ActiveNode>): Result<Autocomplet
         };
     }
 
+    if (maybeInspected === undefined) {
+        return {
+            kind: ResultKind.Ok,
+            value: EmptyAutocomplete,
+        };
+    }
+
+    let inspected: AutocompleteInspected = maybeInspected;
+    if (activeNode.maybeIdentifierUnderPosition) {
+        inspected = updateWithPostionIdentifier(activeNode, inspected);
+    }
+
     return {
         kind: ResultKind.Ok,
-        value: maybeInspected !== undefined ? maybeInspected : EmptyAutocomplete,
+        value: inspected,
     };
 }
 
@@ -114,6 +126,35 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     // Ast.NodeKind.ParenthesizedExpression
     [createMapKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
 ]);
+
+function updateWithPostionIdentifier(activeNode: ActiveNode, inspected: AutocompleteInspected): AutocompleteInspected {
+    if (!isInKeywordContext(activeNode)) {
+        return inspected;
+    }
+
+    const positionIdentifier: string = activeNode.maybeIdentifierUnderPosition!.literal;
+    const newAllowedAutocompleteKeywords: KeywordKind[] = [...inspected.allowedAutocompleteKeywords];
+
+    for (const keyword of Keywords) {
+        if (
+            // Identifier might be an incomplete keyword.
+            keyword.indexOf(positionIdentifier) === 0 &&
+            // Keyword isn't already in the list of allowed keywords.
+            newAllowedAutocompleteKeywords.indexOf(keyword) === -1
+        ) {
+            newAllowedAutocompleteKeywords.push(keyword);
+        }
+    }
+
+    return {
+        maybeRequiredAutocomplete: inspected.maybeRequiredAutocomplete,
+        allowedAutocompleteKeywords: newAllowedAutocompleteKeywords,
+    };
+}
+
+function isInKeywordContext(activeNode: ActiveNode): boolean {
+    return true;
+}
 
 // [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
 function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number>): string {
