@@ -113,3 +113,27 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
         x instanceof UnusedTokensRemainError
     );
 }
+
+export function tokenFrom(err: TInnerParseError): Option<Token> {
+    if (
+        (err instanceof ExpectedAnyTokenKindError ||
+            err instanceof ExpectedCsvContinuationError ||
+            err instanceof ExpectedGeneralizedIdentifierError ||
+            err instanceof ExpectedTokenKindError) &&
+        err.maybeFoundToken
+    ) {
+        return err.maybeFoundToken.token;
+    } else if (err instanceof InvalidPrimitiveTypeError) {
+        return err.token;
+    } else if (err instanceof RequiredParameterAfterOptionalParameterError) {
+        return err.missingOptionalToken;
+    } else if (err instanceof UnterminatedBracketError) {
+        return err.openBracketToken;
+    } else if (err instanceof UnterminatedParenthesesError) {
+        return err.openParenthesesToken;
+    } else if (err instanceof UnusedTokensRemainError) {
+        return err.firstUnusedToken;
+    } else {
+        return undefined;
+    }
+}

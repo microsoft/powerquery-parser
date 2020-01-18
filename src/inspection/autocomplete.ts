@@ -3,7 +3,7 @@
 
 import { CommonError, Option, Result, ResultKind, TypeUtils } from "../common";
 import { KeywordKind, Keywords, TExpressionKeywords, TokenKind } from "../lexer";
-import { Ast, NodeIdMap } from "../parser";
+import { Ast, NodeIdMap, ParseError } from "../parser";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
@@ -12,7 +12,10 @@ export interface AutocompleteInspected {
     readonly allowedAutocompleteKeywords: ReadonlyArray<KeywordKind>;
 }
 
-export function tryFrom(maybeActiveNode: Option<ActiveNode>): Result<AutocompleteInspected, CommonError.CommonError> {
+export function tryFrom(
+    maybeActiveNode: Option<ActiveNode>,
+    maybeParseError: Option<ParseError.ParseError>,
+): Result<AutocompleteInspected, CommonError.CommonError> {
     if (maybeActiveNode === undefined) {
         return {
             kind: ResultKind.Ok,
