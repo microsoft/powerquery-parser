@@ -33,8 +33,8 @@ export function tryFrom(
 
     try {
         for (let index: number = 1; index < numNodes; index += 1) {
-            const child: NodeIdMap.TXorNode = ancestry[index - 1];
             const parent: NodeIdMap.TXorNode = ancestry[index];
+            const child: NodeIdMap.TXorNode = ancestry[index - 1];
 
             // If a node is in a context state then it should be up to the parent to autocomplete.
             // Continue to let a later iteration handle autocomplete.
@@ -47,7 +47,11 @@ export function tryFrom(
 
             switch (parent.node.kind) {
                 case Ast.NodeKind.ErrorHandlingExpression:
-                    maybeInspected = autocompleteErrorHandlingExpression(activeNode.position, child);
+                    maybeInspected = autocompleteErrorHandlingExpression(
+                        activeNode.position,
+                        child,
+                        maybeParseErrorToken,
+                    );
                     break;
 
                 default:
@@ -132,7 +136,7 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
 
 // key is the first letter of ActiveNode.maybeIdentifierUnderPosition.
 // Does not contain joining keywords, such as 'as', 'and', etc.
-// For some reason as of now Typescript needs explicit typing for Map initialization
+// For some reason as of now Typescript needs explicit typing for Map initialization.
 const PartialKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
     string,
     ReadonlyArray<KeywordKind>
@@ -145,7 +149,7 @@ const PartialKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = n
 ]);
 
 // key is the first letter of ParseError.maybeTokenFrom(maybeParseError.innerError) if it's an identifier.
-// For some reason as of now Typescript needs explicit typing for Map initialization
+// For some reason as of now Typescript needs explicit typing for Map initialization.
 const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
     string,
     ReadonlyArray<KeywordKind>
@@ -276,12 +280,38 @@ function autocompleteConstantFactory(constantKind: Ast.ConstantKind): Autocomple
 function autocompleteErrorHandlingExpression(
     position: Position,
     child: NodeIdMap.TXorNode,
+    maybeParseErrorToken: Option<Token>,
 ): Option<AutocompleteInspected> {
     const maybeChildAttributeIndex: Option<number> = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
         return autocompleteConstantFactory(Ast.ConstantKind.Try);
     } else if (maybeChildAttributeIndex === 1) {
-        if (child.kind === NodeIdMap.XorNodeKind.Ast && PositionUtils.isAfterAstNode(position, child.node, false)) {
+        // 'try true o|' creates a ParseError.
+        // It's ambigous if the next token should be either 'otherwise' or 'or'.
+        if (maybeParseErrorToken !== undefined && maybeParseErrorToken.kind === TokenKind.Identifier) {
+            const tokenData: string = maybeParseErrorToken.data;
+
+            // Explicit case.
+            if (tokenData.length > 1 && KeywordKind.Otherwise.indexOf(tokenData) === 0) {
+                return {
+                    allowedAutocompleteKeywords: [],
+                    maybeRequiredAutocomplete: KeywordKind.Otherwise,
+                };
+            }
+            // In the ambigous case we don't know what they're typing yet, so we suggest both.
+            // In the unknown identifier case we know it's incorrect, so we suggest the only valid keywords allowed,
+            // 'otherwise' and 'or'.
+            // In both cases the return is the same.
+            else {
+                return {
+                    allowedAutocompleteKeywords: [KeywordKind.Or, KeywordKind.Otherwise],
+                    maybeRequiredAutocomplete: undefined,
+                };
+            }
+        } else if (
+            child.kind === NodeIdMap.XorNodeKind.Ast &&
+            PositionUtils.isAfterAstNode(position, child.node, false)
+        ) {
             return {
                 allowedAutocompleteKeywords: [],
                 maybeRequiredAutocomplete: KeywordKind.Otherwise,

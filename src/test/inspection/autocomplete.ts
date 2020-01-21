@@ -31,7 +31,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it("abc123 x a|", () => {
+            it("x a|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`x a|`);
                 const expected: AbridgedInspection = [[KeywordKind.And, KeywordKind.As], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
@@ -79,7 +79,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it("abc123 true o|", () => {
+            it("true o|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`true o|`);
                 const expected: AbridgedInspection = [[KeywordKind.Or], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
@@ -87,6 +87,18 @@ describe(`Inspection`, () => {
 
             it("try true o|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true o|`);
+                const expected: AbridgedInspection = [[KeywordKind.Or, KeywordKind.Otherwise], undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it("try true ot|", () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true ot|`);
+                const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it("try true oth|", () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true oth|`);
                 const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
