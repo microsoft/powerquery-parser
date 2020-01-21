@@ -114,7 +114,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
     );
 }
 
-export function tokenFrom(err: TInnerParseError): Option<Token> {
+export function maybeTokenFrom(err: TInnerParseError): Option<Token> {
     if (
         (err instanceof ExpectedAnyTokenKindError ||
             err instanceof ExpectedCsvContinuationError ||

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result, ResultKind, TypeUtils } from "../common";
-import { KeywordKind, Keywords, TExpressionKeywords, TokenKind } from "../lexer";
-import { Ast, NodeIdMap, ParseError } from "../parser";
+import { CommonError, Option, Result, ResultKind } from "../common";
+import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
@@ -23,6 +23,9 @@ export function tryFrom(
         };
     }
 
+    const maybeParseErrorToken: Option<Token> = maybeParseError
+        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
+        : undefined;
     const activeNode: ActiveNode = maybeActiveNode;
     const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
     const numNodes: number = ancestry.length;
@@ -65,8 +68,12 @@ export function tryFrom(
     }
 
     let inspected: AutocompleteInspected = maybeInspected || EmptyAutocomplete;
-    if (activeNode.maybeIdentifierUnderPosition) {
-        inspected = updateWithPostionIdentifier(activeNode, inspected);
+    if (activeNode.maybeIdentifierUnderPosition && isInKeywordContext(activeNode)) {
+        inspected = updateWithPostionIdentifier(inspected, activeNode);
+    }
+
+    if (maybeParseErrorToken !== undefined && maybeParseErrorToken.kind === TokenKind.Identifier) {
+        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
     }
 
     return {
@@ -124,6 +131,7 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
 ]);
 
 // key is the first letter of ActiveNode.maybeIdentifierUnderPosition.
+// Does not contain joining keywords, such as 'as', 'and', etc.
 // For some reason as of now Typescript needs explicit typing for Map initialization
 const PartialKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
     string,
@@ -136,25 +144,59 @@ const PartialKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = n
     ["t", [KeywordKind.True, KeywordKind.Try, KeywordKind.Type]],
 ]);
 
-function updateWithPostionIdentifier(activeNode: ActiveNode, inspected: AutocompleteInspected): AutocompleteInspected {
-    if (!isInKeywordContext(activeNode)) {
-        return inspected;
-    }
+// key is the first letter of ParseError.maybeTokenFrom(maybeParseError.innerError) if it's an identifier.
+// For some reason as of now Typescript needs explicit typing for Map initialization
+const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
+    string,
+    ReadonlyArray<KeywordKind>
+>([["a", [KeywordKind.And, KeywordKind.As]], ["o", [KeywordKind.Or]], ["m", [KeywordKind.Meta]]]);
 
-    const positionIdentifier: string = activeNode.maybeIdentifierUnderPosition!.literal;
+function updateWithPostionIdentifier(inspected: AutocompleteInspected, activeNode: ActiveNode): AutocompleteInspected {
+    const key: string = activeNode.maybeIdentifierUnderPosition!.literal;
     const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialKeywordAutocompleteMap.get(
-        positionIdentifier[0].toLowerCase(),
+        key[0].toLocaleLowerCase(),
+    );
+
+    return maybeAllowedKeywords !== undefined
+        ? updateWithIdentifierKey(inspected, key, maybeAllowedKeywords)
+        : inspected;
+}
+
+function updateWithParseErrorToken(
+    inspected: AutocompleteInspected,
+    activeNode: ActiveNode,
+    token: Token,
+): AutocompleteInspected {
+    const key: string = token.data;
+    const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialConjunctionKeywordAutocompleteMap.get(
+        key[0].toLocaleLowerCase(),
     );
     if (maybeAllowedKeywords === undefined) {
         return inspected;
     }
     const allowedKeywords: ReadonlyArray<KeywordKind> = maybeAllowedKeywords;
-    const newAllowedAutocompleteKeywords: KeywordKind[] = [...inspected.allowedAutocompleteKeywords];
 
+    for (const ancestor of activeNode.ancestry) {
+        if (NodeIdMapUtils.isTUnaryType(ancestor)) {
+            return updateWithIdentifierKey(inspected, key, allowedKeywords);
+        }
+    }
+
+    return inspected;
+}
+
+function updateWithIdentifierKey(
+    inspected: AutocompleteInspected,
+    key: string,
+    allowedKeywords: ReadonlyArray<KeywordKind>,
+): AutocompleteInspected {
+    const newAllowedAutocompleteKeywords: KeywordKind[] = [...inspected.allowedAutocompleteKeywords];
     for (const keyword of allowedKeywords) {
         if (
-            // Identifier might be an incomplete keyword.
-            keyword.indexOf(positionIdentifier) === 0 &&
+            // allowedKeywords is a map of 'first character' -> 'all possible keywords that start with the character',
+            // meaning 'an' maps 'a' to '["and", "as"].
+            // This check prevents 'an' adding "and" as well.
+            keyword.indexOf(key) === 0 &&
             // Keyword isn't already in the list of allowed keywords.
             newAllowedAutocompleteKeywords.indexOf(keyword) === -1
         ) {
@@ -163,7 +205,7 @@ function updateWithPostionIdentifier(activeNode: ActiveNode, inspected: Autocomp
     }
 
     return {
-        maybeRequiredAutocomplete: inspected.maybeRequiredAutocomplete,
+        ...inspected,
         allowedAutocompleteKeywords: newAllowedAutocompleteKeywords,
     };
 }

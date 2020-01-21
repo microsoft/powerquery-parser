@@ -471,23 +471,33 @@ export function leftMostXorNode(nodeIdMapCollection: Collection, rootId: number)
     return currentNode;
 }
 
-export function isXorNodeParentOfXorNode(
-    parentIdById: ParentIdById,
-    searchParentId: number,
-    searchChildId: number,
-): boolean {
-    let maybeParentId: Option<number> = searchChildId;
+export function isTUnaryType(xorNode: TXorNode): boolean {
+    return xorNode.node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpresion(xorNode);
+}
 
-    while (maybeParentId !== undefined) {
-        const parentId: number = maybeParentId;
-        if (parentId === searchParentId) {
+export function isTTypeExpresion(xorNode: TXorNode): boolean {
+    return xorNode.node.kind === Ast.NodeKind.TypePrimaryType || isTPrimaryExpression(xorNode);
+}
+
+export function isTPrimaryExpression(xorNode: TXorNode): boolean {
+    switch (xorNode.node.kind) {
+        case Ast.NodeKind.LiteralExpression:
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.IdentifierExpression:
+        case Ast.NodeKind.ParenthesizedExpression:
+        case Ast.NodeKind.InvokeExpression:
+        case Ast.NodeKind.RecursivePrimaryExpression:
+        case Ast.NodeKind.NotImplementedExpression:
             return true;
-        } else {
-            maybeParentId = parentIdById.get(parentId);
-        }
-    }
 
-    return false;
+        default:
+            return isTFieldAccessExpression(xorNode);
+    }
+}
+
+export function isTFieldAccessExpression(xorNode: TXorNode): boolean {
+    return xorNode.node.kind === Ast.NodeKind.FieldSelector || xorNode.node.kind === Ast.NodeKind.FieldProjection;
 }
 
 export function expectAncestry(nodeIdMapCollection: Collection, rootId: number): ReadonlyArray<TXorNode> {
