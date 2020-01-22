@@ -169,6 +169,13 @@ export function isAfterAstNode(position: Position, astNode: Ast.TNode, exclusive
     return isAfterTokenPosition(position, astNode.tokenRange.positionEnd, exclusiveUpperBound);
 }
 
+export function isInToken(position: Position, token: Token, exclusiveUpperBound: boolean = true): boolean {
+    return (
+        !isBeforeTokenPosition(position, token.positionStart) &&
+        !isAfterTokenPosition(position, token.positionEnd, exclusiveUpperBound)
+    );
+}
+
 export function isBeforeTokenPosition(position: Position, tokenPositionStart: TokenPosition): boolean {
     const positionLineNumber: number = position.lineNumber;
 

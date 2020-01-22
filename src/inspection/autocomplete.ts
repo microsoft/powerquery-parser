@@ -4,7 +4,7 @@
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
-import { ActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
 export interface AutocompleteInspected {
@@ -14,6 +14,7 @@ export interface AutocompleteInspected {
 
 export function tryFrom(
     maybeActiveNode: Option<ActiveNode>,
+    nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseError: Option<ParseError.ParseError>,
 ): Result<AutocompleteInspected, CommonError.CommonError> {
     if (maybeActiveNode === undefined) {
@@ -54,6 +55,10 @@ export function tryFrom(
                     );
                     break;
 
+                case Ast.NodeKind.SectionMember:
+                    maybeInspected = autocompleteSectionMember(nodeIdMapCollection, activeNode, parent, child, index);
+                    break;
+
                 default:
                     const mapKey: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
                     maybeInspected = AutocompleteMap.get(mapKey);
@@ -76,7 +81,11 @@ export function tryFrom(
         inspected = updateWithPostionIdentifier(inspected, activeNode);
     }
 
-    if (maybeParseErrorToken !== undefined && maybeParseErrorToken.kind === TokenKind.Identifier) {
+    if (
+        maybeParseErrorToken !== undefined &&
+        maybeParseErrorToken.kind === TokenKind.Identifier &&
+        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false)
+    ) {
         inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
     }
 
@@ -98,7 +107,7 @@ const ExpressionAutocomplete: AutocompleteInspected = {
 
 const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     // Ast.NodeKind.ErrorRaisingExpression
-    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Error)],
+    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.Error)],
     [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1), ExpressionAutocomplete],
 
     // Ast.NodeKind.GeneralizedIdentifierPairedExpression
@@ -111,11 +120,11 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     [createMapKey(Ast.NodeKind.IdentifierExpressionPairedExpression, 2), ExpressionAutocomplete],
 
     // Ast.NodeKind.IfExpression
-    [createMapKey(Ast.NodeKind.IfExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.If)],
+    [createMapKey(Ast.NodeKind.IfExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.If)],
     [createMapKey(Ast.NodeKind.IfExpression, 1), ExpressionAutocomplete],
-    [createMapKey(Ast.NodeKind.IfExpression, 2), autocompleteConstantFactory(Ast.ConstantKind.Then)],
+    [createMapKey(Ast.NodeKind.IfExpression, 2), autocompleteRequiredFactory(Ast.ConstantKind.Then)],
     [createMapKey(Ast.NodeKind.IfExpression, 3), ExpressionAutocomplete],
-    [createMapKey(Ast.NodeKind.IfExpression, 4), autocompleteConstantFactory(Ast.ConstantKind.Else)],
+    [createMapKey(Ast.NodeKind.IfExpression, 4), autocompleteRequiredFactory(Ast.ConstantKind.Else)],
     [createMapKey(Ast.NodeKind.IfExpression, 5), ExpressionAutocomplete],
 
     // Ast.NodeKind.InvokeExpression
@@ -127,11 +136,14 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     [createMapKey(Ast.NodeKind.ListExpression, 1), ExpressionAutocomplete],
 
     // Ast.NodeKind.OtherwiseExpression
-    [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), autocompleteConstantFactory(Ast.ConstantKind.Otherwise)],
+    [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.Otherwise)],
     [createMapKey(Ast.NodeKind.OtherwiseExpression, 1), ExpressionAutocomplete],
 
     // Ast.NodeKind.ParenthesizedExpression
     [createMapKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
+
+    // Ast.NodeKind.SectionMember
+    [createMapKey(Ast.NodeKind.SectionMember, 1), autocompleteRequiredFactory(Ast.ConstantKind.Shared)],
 ]);
 
 // key is the first letter of ActiveNode.maybeIdentifierUnderPosition.
@@ -169,9 +181,9 @@ function updateWithPostionIdentifier(inspected: AutocompleteInspected, activeNod
 function updateWithParseErrorToken(
     inspected: AutocompleteInspected,
     activeNode: ActiveNode,
-    token: Token,
+    errorToken: Token,
 ): AutocompleteInspected {
-    const key: string = token.data;
+    const key: string = errorToken.data;
     const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialConjunctionKeywordAutocompleteMap.get(
         key[0].toLocaleLowerCase(),
     );
@@ -200,7 +212,7 @@ function updateWithIdentifierKey(
             // allowedKeywords is a map of 'first character' -> 'all possible keywords that start with the character',
             // meaning 'an' maps 'a' to '["and", "as"].
             // This check prevents 'an' adding "and" as well.
-            keyword.indexOf(key) === 0 &&
+            keyword.startsWith(key) &&
             // Keyword isn't already in the list of allowed keywords.
             newAllowedAutocompleteKeywords.indexOf(keyword) === -1
         ) {
@@ -270,7 +282,7 @@ function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number
     return [nodeKind, maybeAttributeIndex].join(",");
 }
 
-function autocompleteConstantFactory(constantKind: Ast.ConstantKind): AutocompleteInspected {
+function autocompleteRequiredFactory(constantKind: Ast.ConstantKind): AutocompleteInspected {
     return {
         maybeRequiredAutocomplete: constantKind,
         allowedAutocompleteKeywords: [],
@@ -280,33 +292,47 @@ function autocompleteConstantFactory(constantKind: Ast.ConstantKind): Autocomple
 function autocompleteErrorHandlingExpression(
     position: Position,
     child: NodeIdMap.TXorNode,
-    maybeParseErrorToken: Option<Token>,
+    maybeErrorToken: Option<Token>,
 ): Option<AutocompleteInspected> {
     const maybeChildAttributeIndex: Option<number> = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
-        return autocompleteConstantFactory(Ast.ConstantKind.Try);
+        return autocompleteRequiredFactory(Ast.ConstantKind.Try);
     } else if (maybeChildAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
         // It's ambigous if the next token should be either 'otherwise' or 'or'.
-        if (maybeParseErrorToken !== undefined && maybeParseErrorToken.kind === TokenKind.Identifier) {
-            const tokenData: string = maybeParseErrorToken.data;
+        if (maybeErrorToken !== undefined) {
+            const errorToken: Token = maybeErrorToken;
 
-            // Explicit case.
-            if (tokenData.length > 1 && KeywordKind.Otherwise.indexOf(tokenData) === 0) {
-                return {
-                    allowedAutocompleteKeywords: [],
-                    maybeRequiredAutocomplete: KeywordKind.Otherwise,
-                };
+            // First we test if we can autocomplete using the error token.
+            if (
+                (errorToken.kind === TokenKind.Identifier &&
+                    PositionUtils.isInToken(position, maybeErrorToken, false)) ||
+                PositionUtils.isBeforeTokenPosition(position, errorToken.positionStart)
+            ) {
+                const tokenData: string = maybeErrorToken.data;
+
+                // If we can exclude 'or' then the only thing we can autocomplete is 'otherwise'.
+                if (tokenData.length > 1 && KeywordKind.Otherwise.startsWith(tokenData)) {
+                    return {
+                        allowedAutocompleteKeywords: [],
+                        maybeRequiredAutocomplete: KeywordKind.Otherwise,
+                    };
+                }
+                // In the ambigous case we don't know what they're typing yet, so we suggest both.
+                // In the case of an identifier that doesn't match a 'or' or 'otherwise'
+                // we still suggest the only valid keywords allowed.
+                // In both cases the return is the same.
+                else {
+                    return {
+                        allowedAutocompleteKeywords: [KeywordKind.Or, KeywordKind.Otherwise],
+                        maybeRequiredAutocomplete: undefined,
+                    };
+                }
             }
-            // In the ambigous case we don't know what they're typing yet, so we suggest both.
-            // In the unknown identifier case we know it's incorrect, so we suggest the only valid keywords allowed,
-            // 'otherwise' and 'or'.
-            // In both cases the return is the same.
+
+            // There exists an error token we can't map it to an OtherwiseExpression.
             else {
-                return {
-                    allowedAutocompleteKeywords: [KeywordKind.Or, KeywordKind.Otherwise],
-                    maybeRequiredAutocomplete: undefined,
-                };
+                return undefined;
             }
         } else if (
             child.kind === NodeIdMap.XorNodeKind.Ast &&
@@ -322,4 +348,48 @@ function autocompleteErrorHandlingExpression(
     } else {
         return undefined;
     }
+}
+
+function autocompleteSectionMember(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
+    parent: NodeIdMap.TXorNode,
+    child: NodeIdMap.TXorNode,
+    ancestorIndex: number,
+): Option<AutocompleteInspected> {
+    if (child.node.maybeAttributeIndex === 2) {
+        const maybeSharedConstant: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            nodeIdMapCollection,
+            parent.node.id,
+            1,
+            [Ast.NodeKind.Constant],
+        );
+
+        // 'shared' exists.
+        if (maybeSharedConstant !== undefined) {
+            return undefined;
+        } else {
+            // SectionMember -> IdentifierPairedExpression -> Identifier
+            const maybeName: Option<NodeIdMap.TXorNode> = ActiveNodeUtils.maybePreviousXorNode(
+                activeNode,
+                ancestorIndex,
+                2,
+                [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
+            );
+            // Test if the currently typed name could be the start of 'shared'.
+            if (maybeName && maybeName.kind === NodeIdMap.XorNodeKind.Ast) {
+                const name: Ast.Identifier = maybeName.node as Ast.Identifier;
+                if (KeywordKind.Shared.startsWith(name.literal)) {
+                    return {
+                        maybeRequiredAutocomplete: undefined,
+                        allowedAutocompleteKeywords: [KeywordKind.Shared],
+                    };
+                }
+            } else {
+                return undefined;
+            }
+        }
+    }
+
+    return undefined;
 }

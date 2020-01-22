@@ -91,6 +91,12 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
+            it("try true o |", () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true o |`);
+                const expected: AbridgedInspection = [[], undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
             it("try true ot|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true ot|`);
                 const expected: AbridgedInspection = [[], KeywordKind.Otherwise];
@@ -121,8 +127,14 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it("section; [] s|", () => {
-                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; s|`);
+            it("section; shared x|", () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; shared x|`);
+                const expected: AbridgedInspection = [[], undefined];
+                expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it("abc123 section; [] s|", () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; [] s|`);
                 const expected: AbridgedInspection = [[KeywordKind.Shared], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });

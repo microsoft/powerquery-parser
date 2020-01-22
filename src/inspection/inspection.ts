@@ -44,6 +44,7 @@ export function tryFrom(
 
     const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
         maybeActiveNode,
+        nodeIdMapCollection,
         maybeParseError,
     );
     if (triedInspectedKeyword.kind === ResultKind.Err) {
