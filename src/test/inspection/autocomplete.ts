@@ -115,7 +115,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it("[] s|", () => {
+            it("abc123 [] s|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[] s|`);
                 const expected: AbridgedInspection = [[KeywordKind.Section], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
@@ -133,7 +133,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it("abc123 section; [] s|", () => {
+            it("section; [] s|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; [] s|`);
                 const expected: AbridgedInspection = [[KeywordKind.Shared], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);

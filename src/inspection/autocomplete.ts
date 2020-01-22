@@ -76,15 +76,34 @@ export function tryFrom(
         };
     }
 
+    // Edge case for 'sect|'
+    const root: NodeIdMap.TXorNode = ancestry[ancestry.length - 1];
+    if (
+        maybeInspected === undefined &&
+        root.node.kind === Ast.NodeKind.IdentifierExpression &&
+        PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, root, false) &&
+        KeywordKind.Section.startsWith((root.node as Ast.IdentifierExpression).identifier.literal)
+    ) {
+        maybeInspected = {
+            maybeRequiredAutocomplete: undefined,
+            allowedAutocompleteKeywords: [KeywordKind.Section],
+        };
+    }
+
+    // Naive autocomplete identifiers as keywords while in a keyword context.
     let inspected: AutocompleteInspected = maybeInspected || EmptyAutocomplete;
     if (activeNode.maybeIdentifierUnderPosition && isInKeywordContext(activeNode)) {
         inspected = updateWithPostionIdentifier(inspected, activeNode);
     }
 
+    // Naive autocomplete a ParseError's token if it's an identifier.
     if (
         maybeParseErrorToken !== undefined &&
         maybeParseErrorToken.kind === TokenKind.Identifier &&
-        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false)
+        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false) &&
+        // Edge case for SectionExpression with a partial identifier match on 'section'
+        // '[] s|'
+        (maybeInspected === undefined || maybeInspected.allowedAutocompleteKeywords.indexOf(KeywordKind.Section) === -1)
     ) {
         inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
     }
@@ -142,8 +161,14 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     // Ast.NodeKind.ParenthesizedExpression
     [createMapKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
 
-    // Ast.NodeKind.SectionMember
-    [createMapKey(Ast.NodeKind.SectionMember, 1), autocompleteRequiredFactory(Ast.ConstantKind.Shared)],
+    // Ast.NodeKind.Section
+    [
+        createMapKey(Ast.NodeKind.Section, 1),
+        {
+            maybeRequiredAutocomplete: undefined,
+            allowedAutocompleteKeywords: [KeywordKind.Section],
+        },
+    ],
 ]);
 
 // key is the first letter of ActiveNode.maybeIdentifierUnderPosition.
