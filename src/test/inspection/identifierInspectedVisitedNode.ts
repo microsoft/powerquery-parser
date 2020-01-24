@@ -64,10 +64,17 @@ function expectNodesEqual(
 }
 
 function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.NodeKind, expectedNum: number): void {
-    const actualNum: number =
-        inspected.maybeActiveNode !== undefined
-            ? inspected.maybeActiveNode.ancestry.filter(xorNode => xorNode.node.kind === expectedKind).length
-            : -1;
+    let actualNum: number;
+
+    if (inspected.maybeActiveNode === undefined) {
+        actualNum = -1;
+    } else {
+        const nodesOfKind: ReadonlyArray<NodeIdMap.TXorNode> = inspected.maybeActiveNode.ancestry.filter(
+            (xorNode: NodeIdMap.TXorNode) => xorNode.node.kind === expectedKind,
+        );
+        actualNum = nodesOfKind.length;
+    }
+
     expect(actualNum).to.equal(
         expectedNum,
         `expected to find ${expectedNum} of ${expectedKind}, but found ${actualNum} instead.`,
@@ -271,7 +278,7 @@ describe(`Inspection`, () => {
             const inspected: Inspection.Inspected = expectInspected(expectParseOkInspection(text, position));
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
-            expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+            expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
             const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
                 inspected,
                 Ast.NodeKind.InvokeExpression,
@@ -288,7 +295,7 @@ describe(`Inspection`, () => {
             const inspected: Inspection.Inspected = expectInspected(expectParseOkInspection(text, position));
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 2);
 
-            expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+            expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
             const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
                 inspected,
                 Ast.NodeKind.InvokeExpression,
@@ -305,7 +312,7 @@ describe(`Inspection`, () => {
             const inspected: Inspection.Inspected = expectInspected(expectParseOkInspection(text, position));
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
-            expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+            expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
             const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
                 inspected,
                 Ast.NodeKind.InvokeExpression,
@@ -325,7 +332,7 @@ describe(`Inspection`, () => {
             const inspected: Inspection.Inspected = expectInspected(expectParseErrInspection(text, position));
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
-            expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+            expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
             const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
                 inspected,
                 Ast.NodeKind.InvokeExpression,
@@ -345,7 +352,7 @@ describe(`Inspection`, () => {
             const inspected: Inspection.Inspected = expectInspected(expectParseErrInspection(text, position));
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
-            expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+            expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
             const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
                 inspected,
                 Ast.NodeKind.InvokeExpression,

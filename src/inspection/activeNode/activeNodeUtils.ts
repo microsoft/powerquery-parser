@@ -8,7 +8,7 @@ import { ActiveNode } from "./activeNode";
 
 // Read ActiveNode's comments before this.
 //
-// Searches all leaf Ast.TNodes and context nodes to find the "active" node.
+// Searches all leaf Ast.TNodes and Context nodes to find the "active" node.
 // ' 1 + ' -> the second operand, a Context node, in an ArithmeticExpression.
 // 'let x=|1 in x' -> the value part of the key-value-pair.
 // 'foo(|)' -> the zero length ArrayWrapper of an InvokeExpression
@@ -21,7 +21,8 @@ import { ActiveNode } from "./activeNode";
 // '1+|' is an error and the latest leaf is '+',
 // but the ActiveNode should be the second operand in the ArithmeticExpression.
 //
-// Third, sometimes we don't want to shift contexts at all.
+// Third, sometimes we don't want to shift at all.
+// Nodes that prevent shifting are called anchor nodes.
 // 'if x t|' shouldn't shift to the Constant for 'then', instead the ActiveNode should select 't'.
 // 'let x = 1|' shouldn't shift to the Constant for 'in', instead the ActiveNode should select '1'.
 export function maybeActiveNode(
@@ -45,7 +46,7 @@ export function maybeActiveNode(
             maybeLeaf = undefined;
         }
     } else {
-        if (astSearch.maybeNode !== undefined && isPositionAnchored(position, astSearch.maybeNode)) {
+        if (astSearch.maybeNode !== undefined && isAnchorNode(position, astSearch.maybeNode)) {
             maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
         } else if (maybeContextSearch !== undefined) {
             maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
@@ -66,61 +67,6 @@ export function maybeActiveNode(
         ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, leaf.node.id),
         maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(position, nodeIdMapCollection, leaf),
     };
-
-    // let maybeLeaf: Option<NodeIdMap.TXorNode>;
-    // if (astSearch.maybeOnOrBeforePosition) {
-    //     const astNode: Ast.TNode = astSearch.maybeOnOrBeforePosition;
-
-    //     if (astNode.kind === Ast.NodeKind.Constant) {
-    //         const constant: Ast.Constant = astNode;
-
-    //         if (
-    //             ShiftRightConstantKinds.indexOf(constant.literal) !== -1 ||
-    //             PositionUtils.isAfterTokenPosition(position, constant.tokenRange.positionEnd, false)
-    //         ) {
-    //             if (astSearch.maybeAfterPosition) {
-    //                 maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeAfterPosition);
-    //             } else if (maybeContextSearch) {
-    //                 maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
-    //             } else {
-    //                 maybeLeaf = undefined;
-    //             }
-    //         } else {
-    //             maybeLeaf = NodeIdMapUtils.xorNodeFromAst(constant);
-    //         }
-    //     }
-    //     // While typing certain types of literals we want to stay on the literal instead of moving to a Context.
-    //     //  'let foo| ='
-    //     //  '1 + 23|'
-    //     else if (
-    //         PositionUtils.isOnAstNodeEnd(position, astNode) &&
-    //         (astNode.kind === Ast.NodeKind.Identifier ||
-    //             astNode.kind === Ast.NodeKind.IdentifierExpression ||
-    //             (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric))
-    //     ) {
-    //         maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astNode);
-    //     } else {
-    //         maybeLeaf =
-    //             maybeContextSearch !== undefined
-    //                 ? NodeIdMapUtils.xorNodeFromContext(maybeContextSearch)
-    //                 : NodeIdMapUtils.xorNodeFromAst(astNode);
-    //     }
-    // } else if (maybeContextSearch) {
-    //     maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
-    // } else {
-    //     maybeLeaf = undefined;
-    // }
-
-    // if (maybeLeaf === undefined) {
-    //     return undefined;
-    // }
-    // const leaf: NodeIdMap.TXorNode = maybeLeaf;
-
-    // return {
-    //     position,
-    //     ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, leaf.node.id),
-    //     maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(position, nodeIdMapCollection, leaf),
-    // };
 }
 
 export function expectRoot(activeNode: ActiveNode): NodeIdMap.TXorNode {
@@ -239,7 +185,7 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
     ...DrilldownConstantKind,
 ];
 
-function isPositionAnchored(position: Position, astNode: Ast.TNode): boolean {
+function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
     return (
         PositionUtils.isOnAstNodeEnd(position, astNode) &&
         (astNode.kind === Ast.NodeKind.Identifier ||
