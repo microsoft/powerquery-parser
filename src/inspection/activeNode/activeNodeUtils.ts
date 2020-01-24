@@ -281,13 +281,9 @@ function positionAstSearch(
 }
 
 function positionContextSearch(
-    maybeOnOrBeforePositionAst: Option<Ast.TNode>,
+    _maybeOnOrBeforePositionAst: Option<Ast.TNode>,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Option<ParserContext.Node> {
-    if (maybeOnOrBeforePositionAst === undefined) {
-        return undefined;
-    }
-
     let maybeCurrent: Option<ParserContext.Node> = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.maybeTokenStart) {

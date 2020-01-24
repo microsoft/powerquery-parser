@@ -23,7 +23,7 @@ function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected:
 }
 
 describe(`Inspection`, () => {
-    describe(`Autocomplete`, () => {
+    describe(`qweasdzxc Autocomplete`, () => {
         describe("partial keyword", () => {
             it("a|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`a|`);

@@ -5,7 +5,7 @@ import { InspectionUtils } from ".";
 import { CommonError, isNever, Option, Result, ResultKind } from "../common";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
-import { Position, PositionUtils } from "./position";
+import { PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
@@ -334,41 +334,59 @@ function inspectInvokeExpressionArguments(state: IdentifierState, _: NodeIdMap.T
     if (maybeCsvArray === undefined) {
         return undefined;
     }
+    // const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    // const position: Position = state.activeNode.position;
     const csvArray: NodeIdMap.TXorNode = maybeCsvArray;
-
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const position: Position = state.activeNode.position;
     const csvNodes: ReadonlyArray<NodeIdMap.TXorNode> = NodeIdMapUtils.expectXorChildren(
         state.nodeIdMapCollection,
         csvArray.node.id,
     );
     const numArguments: number = csvNodes.length;
 
-    let maybePositionArgumentIndex: Option<number>;
-    for (let index: number = 0; index < numArguments; index += 1) {
-        const csv: NodeIdMap.TXorNode = csvNodes[index];
+    const maybeAncestorCsv: Option<NodeIdMap.TXorNode> = ActiveNodeUtils.maybePreviousXorNode(
+        state.activeNode,
+        state.nodeIndex,
+        2,
+        [Ast.NodeKind.Csv],
+    );
+    const maybePositionArgumentIndex: Option<number> =
+        maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;
 
-        // Conditionally set maybePositionArgumentIndex.
-        // If position is on a comma then count it as belonging to the next index.
-        // Eg. `foo(a,|)` is in the second index.
-        if (PositionUtils.isInXorNode(position, nodeIdMapCollection, csv)) {
-            if (csv.kind === NodeIdMap.XorNodeKind.Ast) {
-                const maybeCommaConstant: Option<Ast.Constant> = NodeIdMapUtils.maybeAstChildByAttributeIndex(
-                    nodeIdMapCollection,
-                    csv.node.id,
-                    1,
-                    [Ast.NodeKind.Constant],
-                ) as Option<Ast.Constant>;
-                if (maybeCommaConstant && PositionUtils.isInAstNode(position, maybeCommaConstant)) {
-                    maybePositionArgumentIndex = index + 1;
-                } else {
-                    maybePositionArgumentIndex = index;
-                }
-            } else {
-                maybePositionArgumentIndex = index;
-            }
-        }
-    }
+    // let maybePositionArgumentIndex: Option<number>;
+    // // It's possible to come from an empty ArrayWrapper.
+    // // 'foo(|)'
+    // if (maybeAncestorCsv) {
+    //     const ancestorCsv: NodeIdMap.TXorNode = maybeAncestorCsv;
+    //     if (ancestorCsv.kind === NodeIdMap.XorNodeKind.Ast) {
+    //     } else {
+    //         maybePositionArgumentIndex = ancestorCsv.node.maybeAttributeIndex;
+    //     }
+    // }
+
+    // for (let index: number = 0; index < numArguments; index += 1) {
+    //     const csv: NodeIdMap.TXorNode = csvNodes[index];
+
+    //     // Conditionally set maybePositionArgumentIndex.
+    //     // If position is on a comma then count it as belonging to the next index.
+    //     // Eg. `foo(a,|)` is in the second index.
+    //     if (PositionUtils.isInXorNode(position, nodeIdMapCollection, csv)) {
+    //         if (csv.kind === NodeIdMap.XorNodeKind.Ast) {
+    //             const maybeCommaConstant: Option<Ast.Constant> = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    //                 nodeIdMapCollection,
+    //                 csv.node.id,
+    //                 1,
+    //                 [Ast.NodeKind.Constant],
+    //             ) as Option<Ast.Constant>;
+    //             if (maybeCommaConstant && PositionUtils.isInAstNode(position, maybeCommaConstant)) {
+    //                 maybePositionArgumentIndex = index + 1;
+    //             } else {
+    //                 maybePositionArgumentIndex = index;
+    //             }
+    //         } else {
+    //             maybePositionArgumentIndex = index;
+    //         }
+    //     }
+    // }
 
     return {
         numArguments,
