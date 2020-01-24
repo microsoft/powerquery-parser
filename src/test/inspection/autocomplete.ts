@@ -23,7 +23,7 @@ function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected:
 }
 
 describe(`Inspection`, () => {
-    describe(`qweasdzxc Autocomplete`, () => {
+    describe(`Autocomplete`, () => {
         describe("partial keyword", () => {
             it("a|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`a|`);
@@ -115,7 +115,7 @@ describe(`Inspection`, () => {
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it("abc123 [] s|", () => {
+            it("[] s|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[] s|`);
                 const expected: AbridgedInspection = [[KeywordKind.Section], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);

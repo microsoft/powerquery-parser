@@ -304,12 +304,10 @@ function inspectInvokeExpression(state: IdentifierState, invokeExpr: NodeIdMap.T
         return;
     }
 
-    // Check if position is on closeWrapperConstant (')').
-    // The check isn't needed for a context node as the final attribute is the closeWrapperConstant,
-    // and as it's a context node it hasn't parsed all attributes.
+    // Check if position is in the wrapped contents (InvokeExpression arguments).
     if (invokeExpr.kind === NodeIdMap.XorNodeKind.Ast) {
         const invokeExprAstNode: Ast.InvokeExpression = invokeExpr.node as Ast.InvokeExpression;
-        if (PositionUtils.isInAstNode(state.activeNode.position, invokeExprAstNode.closeWrapperConstant)) {
+        if (!PositionUtils.isInAstNode(state.activeNode.position, invokeExprAstNode.content, false)) {
             return;
         }
     }

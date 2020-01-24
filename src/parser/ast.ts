@@ -1188,3 +1188,33 @@ export function isTBinOpExpression(node: TNode): node is TBinOpExpression {
             return false;
     }
 }
+
+export function isPairedConstant(x: ConstantKind, y: ConstantKind): boolean {
+    if (x.length !== 1 || y.length !== 1) {
+        return false;
+    }
+
+    // If given x === ')' and y === '(' then swap positions.
+    const low: ConstantKind = x < y ? x : y;
+    const high: ConstantKind = low === x ? y : x;
+
+    return (
+        (low === ConstantKind.LeftBrace && high === ConstantKind.RightBrace) ||
+        (low === ConstantKind.LeftBracket && high === ConstantKind.RightBracket) ||
+        (low === ConstantKind.LeftParenthesis && high === ConstantKind.RightParenthesis)
+    );
+}
+
+// ------------------------------------------
+// ---------- validation functions ----------
+// ------------------------------------------
+
+export function testAnyNodeKind(
+    value: NodeKind,
+    allowedNodeKinds: ReadonlyArray<NodeKind>,
+    details: Option<{}> = undefined,
+): Option<CommonError.InvariantError> {
+    return allowedNodeKinds.indexOf(value) === -1
+        ? new CommonError.InvariantError(`NodeKind value is not an allowed NodeKind value`, details)
+        : undefined;
+}
