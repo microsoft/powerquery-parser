@@ -352,42 +352,6 @@ function inspectInvokeExpressionArguments(state: IdentifierState, _: NodeIdMap.T
     const maybePositionArgumentIndex: Option<number> =
         maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;
 
-    // let maybePositionArgumentIndex: Option<number>;
-    // // It's possible to come from an empty ArrayWrapper.
-    // // 'foo(|)'
-    // if (maybeAncestorCsv) {
-    //     const ancestorCsv: NodeIdMap.TXorNode = maybeAncestorCsv;
-    //     if (ancestorCsv.kind === NodeIdMap.XorNodeKind.Ast) {
-    //     } else {
-    //         maybePositionArgumentIndex = ancestorCsv.node.maybeAttributeIndex;
-    //     }
-    // }
-
-    // for (let index: number = 0; index < numArguments; index += 1) {
-    //     const csv: NodeIdMap.TXorNode = csvNodes[index];
-
-    //     // Conditionally set maybePositionArgumentIndex.
-    //     // If position is on a comma then count it as belonging to the next index.
-    //     // Eg. `foo(a,|)` is in the second index.
-    //     if (PositionUtils.isInXorNode(position, nodeIdMapCollection, csv)) {
-    //         if (csv.kind === NodeIdMap.XorNodeKind.Ast) {
-    //             const maybeCommaConstant: Option<Ast.Constant> = NodeIdMapUtils.maybeAstChildByAttributeIndex(
-    //                 nodeIdMapCollection,
-    //                 csv.node.id,
-    //                 1,
-    //                 [Ast.NodeKind.Constant],
-    //             ) as Option<Ast.Constant>;
-    //             if (maybeCommaConstant && PositionUtils.isInAstNode(position, maybeCommaConstant)) {
-    //                 maybePositionArgumentIndex = index + 1;
-    //             } else {
-    //                 maybePositionArgumentIndex = index;
-    //             }
-    //         } else {
-    //             maybePositionArgumentIndex = index;
-    //         }
-    //     }
-    // }
-
     return {
         numArguments,
         positionArgumentIndex: maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0,

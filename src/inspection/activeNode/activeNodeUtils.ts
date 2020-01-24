@@ -31,30 +31,19 @@ export function maybeActiveNode(
     leafNodeIds: ReadonlyArray<number>,
 ): Option<ActiveNode> {
     const astSearch: AstNodeSearch = positionAstSearch(position, nodeIdMapCollection, leafNodeIds);
-    const maybeContextSearch: Option<ParserContext.Node> = positionContextSearch(
-        astSearch.maybeNode,
-        nodeIdMapCollection,
-    );
+    const maybeContextSearch: Option<ParserContext.Node> = positionContextSearch(astSearch, nodeIdMapCollection);
 
     let maybeLeaf: Option<NodeIdMap.TXorNode>;
-    if (astSearch.isOnShiftConstant) {
-        if (astSearch.maybeNode !== undefined) {
-            maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
-        } else if (maybeContextSearch !== undefined) {
-            maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
-        } else {
-            maybeLeaf = undefined;
-        }
+    if (astSearch.maybeShiftedNode !== undefined) {
+        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeShiftedNode);
+    } else if (astSearch.maybeNode !== undefined && isAnchorNode(position, astSearch.maybeNode)) {
+        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
+    } else if (maybeContextSearch !== undefined) {
+        maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
+    } else if (astSearch.maybeNode !== undefined) {
+        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
     } else {
-        if (astSearch.maybeNode !== undefined && isAnchorNode(position, astSearch.maybeNode)) {
-            maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
-        } else if (maybeContextSearch !== undefined) {
-            maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
-        } else if (astSearch.maybeNode !== undefined) {
-            maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
-        } else {
-            maybeLeaf = undefined;
-        }
+        maybeLeaf = undefined;
     }
 
     if (maybeLeaf === undefined) {
@@ -166,7 +155,7 @@ export function expectNextXorNode(
 
 interface AstNodeSearch {
     readonly maybeNode: Option<Ast.TNode>;
-    readonly isOnShiftConstant: boolean;
+    readonly maybeShiftedNode: Option<Ast.TNode>;
 }
 
 const DrilldownConstantKind: ReadonlyArray<string> = [
@@ -202,7 +191,7 @@ function positionAstSearch(
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     let maybeCurrentOnOrBefore: Option<Ast.TNode>;
     let maybeCurrentAfter: Option<Ast.TNode>;
-    let isOnShiftConstant: boolean;
+    let maybeShiftedNode: Option<Ast.TNode>;
 
     // Find:
     //  the closest leaf to the left or on position.
@@ -210,7 +199,7 @@ function positionAstSearch(
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
         // Check if on or before position.
-        if (PositionUtils.isAfterTokenPosition(position, candidate.tokenRange.positionStart, false)) {
+        if (!PositionUtils.isBeforeTokenPosition(position, candidate.tokenRange.positionStart)) {
             if (maybeCurrentOnOrBefore === undefined) {
                 maybeCurrentOnOrBefore = candidate;
             } else {
@@ -258,35 +247,42 @@ function positionAstSearch(
                 1,
                 [Ast.NodeKind.ArrayWrapper],
             );
-            maybeCurrentOnOrBefore = arrayWrapper;
-            isOnShiftConstant = true;
+            maybeShiftedNode = arrayWrapper;
         }
         // Requires a shift to the right.
         else if (ShiftRightConstantKinds.indexOf(currentOnOrBefore.literal) !== -1) {
-            maybeCurrentOnOrBefore = maybeCurrentAfter;
-            isOnShiftConstant = true;
+            maybeShiftedNode = maybeCurrentAfter;
         }
         // No shifting.
         else {
-            isOnShiftConstant = false;
+            maybeShiftedNode = undefined;
         }
     } else {
-        isOnShiftConstant = false;
+        maybeShiftedNode = undefined;
     }
 
     return {
         maybeNode: maybeCurrentOnOrBefore,
-        isOnShiftConstant,
+        maybeShiftedNode,
     };
 }
 
 function positionContextSearch(
-    _maybeOnOrBeforePositionAst: Option<Ast.TNode>,
+    astNodeSearch: AstNodeSearch,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Option<ParserContext.Node> {
+    if (astNodeSearch.maybeNode === undefined) {
+        return undefined;
+    }
+    const tokenIndexLowBound: number = astNodeSearch.maybeNode.tokenRange.tokenIndexStart;
+
     let maybeCurrent: Option<ParserContext.Node> = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.maybeTokenStart) {
+            if (candidate.tokenIndexStart < tokenIndexLowBound) {
+                continue;
+            }
+
             if (maybeCurrent === undefined || maybeCurrent.id < candidate.id) {
                 maybeCurrent = candidate;
             }

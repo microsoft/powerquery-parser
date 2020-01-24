@@ -20,7 +20,7 @@ function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspecti
     expect(actual).deep.equal(expected);
 }
 
-describe(`Inspection`, () => {
+describe(`qweasdzxc Inspection`, () => {
     describe(`Identifier`, () => {
         describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
             it(`|each 1`, () => {

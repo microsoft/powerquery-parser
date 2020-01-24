@@ -347,7 +347,7 @@ describe(`Inspection`, () => {
             expect(args.positionArgumentIndex).to.equal(0);
         });
 
-        it("abc123 single invoke expression - Foo(a,|)", () => {
+        it("single invoke expression - Foo(a,|)", () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a,|)");
             const inspected: Inspection.Inspected = expectInspected(expectParseErrInspection(text, position));
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
