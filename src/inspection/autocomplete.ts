@@ -186,15 +186,24 @@ function autocompleteAst(
     }
     const leaf: Ast.TNode = xorLeaf.node;
     const position: Position = activeNode.position;
+    const maybeTriedInspected: Option<Result<AutocompleteInspected, CommonError.CommonError>> = traverseAncestors(
+        activeNode,
+        nodeIdMapCollection,
+        undefined,
+    );
 
-    if (PositionUtils.isOnAstNodeEnd(position, leaf)) {
+    if (PositionUtils.isOnAstNodeStart(position, leaf)) {
         if (isInExpressionContext(activeNode)) {
             return ResultUtils.okFactory(ExpressionAutocomplete);
         } else {
             throw new Error("NYI");
         }
     } else if (!PositionUtils.isInAstNode(position, leaf)) {
-        return ResultUtils.okFactory(EmptyAutocomplete);
+        if (activeNode.maybeIdentifierUnderPosition !== undefined) {
+            return ResultUtils.okFactory(positionIdentifierAutocomplete(activeNode));
+        } else {
+            return ResultUtils.okFactory(EmptyAutocomplete);
+        }
     } else {
         throw new Error("NYI");
     }
@@ -366,15 +375,30 @@ const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Keywor
     ReadonlyArray<KeywordKind>
 >([["a", [KeywordKind.And, KeywordKind.As]], ["o", [KeywordKind.Or]], ["m", [KeywordKind.Meta]]]);
 
-function updateWithPostionIdentifier(inspected: AutocompleteInspected, activeNode: ActiveNode): AutocompleteInspected {
+function positionIdentifierAutocomplete(activeNode: ActiveNode): AutocompleteInspected {
     const key: string = activeNode.maybeIdentifierUnderPosition!.literal;
-    const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialKeywordAutocompleteMap.get(
+    const maybePotentialKeywords: Option<ReadonlyArray<KeywordKind>> = PartialKeywordAutocompleteMap.get(
         key[0].toLocaleLowerCase(),
     );
+    if (maybePotentialKeywords === undefined) {
+        return EmptyAutocomplete;
+    }
+    const potentialKeywords: ReadonlyArray<KeywordKind> = maybePotentialKeywords;
 
-    return maybeAllowedKeywords !== undefined
-        ? updateWithIdentifierKey(inspected, key, maybeAllowedKeywords)
-        : inspected;
+    const allowedKeywords: KeywordKind[] = [];
+    for (const keyword of potentialKeywords) {
+        // potentialKeywords is a map of 'first character' -> 'all possible keywords that start with the character',
+        // meaning 'an' maps 'a' to '["and", "as"].
+        // This check prevents 'an' adding "and" as well.
+        if (keyword.startsWith(key)) {
+            allowedKeywords.push(keyword);
+        }
+    }
+
+    return {
+        maybeRequiredAutocomplete: undefined,
+        allowedAutocompleteKeywords: allowedKeywords,
+    };
 }
 
 function updateWithParseErrorToken(
