@@ -31,7 +31,7 @@ export function tryFrom(
     const leaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
     const triedAutocomplete: TriedAutocomplete =
         leaf.kind === NodeIdMap.XorNodeKind.Ast
-            ? autocompleteAst(activeNode, nodeIdMapCollection)
+            ? autocompleteAst(activeNode, nodeIdMapCollection, maybeParseError)
             : autocompleteContext(activeNode, nodeIdMapCollection, maybeParseError);
 
     if (ResultUtils.isErr(triedAutocomplete)) {
@@ -211,6 +211,7 @@ function traverseAncestors(
 function autocompleteAst(
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
+    maybeParseError: Option<ParseError.ParseError>,
 ): Result<AutocompleteInspected, CommonError.CommonError> {
     const xorLeaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
     if (xorLeaf.kind !== NodeIdMap.XorNodeKind.Ast) {
@@ -222,7 +223,7 @@ function autocompleteAst(
     const maybeTriedInspected: Option<Result<AutocompleteInspected, CommonError.CommonError>> = traverseAncestors(
         activeNode,
         nodeIdMapCollection,
-        undefined,
+        maybeParseError,
     );
 
     if (maybeTriedInspected !== undefined) {
@@ -261,7 +262,7 @@ function autocompleteContext(
     const maybeTriedInspected: Option<Result<AutocompleteInspected, CommonError.CommonError>> = traverseAncestors(
         activeNode,
         nodeIdMapCollection,
-        undefined,
+        maybeParseError,
     );
 
     if (maybeTriedInspected !== undefined) {

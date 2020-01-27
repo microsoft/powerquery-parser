@@ -217,7 +217,7 @@ describe(`qweasdzxc Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`if i|f`, () => {
+            it(`abc123 if i|f`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if i|f`);
                 const expected: AbridgedInspection = [[KeywordKind.If], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);

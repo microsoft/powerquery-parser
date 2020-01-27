@@ -175,12 +175,43 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
 ];
 
 function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
-    return (
-        PositionUtils.isOnAstNodeEnd(position, astNode) &&
-        (astNode.kind === Ast.NodeKind.Identifier ||
-            astNode.kind === Ast.NodeKind.IdentifierExpression ||
-            (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric))
-    );
+    if (!PositionUtils.isInAstNode(position, astNode, true, true)) {
+        return false;
+    }
+
+    if (astNode.kind === Ast.NodeKind.Identifier) {
+        return true;
+    } else if (
+        astNode.kind === Ast.NodeKind.LiteralExpression &&
+        (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric)
+    ) {
+        return true;
+    } else if (astNode.kind === Ast.NodeKind.Constant) {
+        switch (astNode.literal) {
+            case Ast.ConstantKind.As:
+            case Ast.ConstantKind.Each:
+            case Ast.ConstantKind.Else:
+            case Ast.ConstantKind.Error:
+            case Ast.ConstantKind.If:
+            case Ast.ConstantKind.In:
+            case Ast.ConstantKind.Is:
+            case Ast.ConstantKind.Section:
+            case Ast.ConstantKind.Shared:
+            case Ast.ConstantKind.Let:
+            case Ast.ConstantKind.Meta:
+            case Ast.ConstantKind.Null:
+            case Ast.ConstantKind.Otherwise:
+            case Ast.ConstantKind.Then:
+            case Ast.ConstantKind.Try:
+            case Ast.ConstantKind.Type:
+                return true;
+
+            default:
+                return false;
+        }
+    } else {
+        return false;
+    }
 }
 
 function positionAstSearch(
