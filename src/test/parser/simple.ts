@@ -676,6 +676,17 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
         });
+
+        it(`[a.1]`, () => {
+            const text: string = `[a.1]`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.FieldSelector, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Ast.NodeKind.Constant, 2],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
     });
 
     it(Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, () => {

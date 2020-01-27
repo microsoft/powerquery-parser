@@ -23,6 +23,12 @@ interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
 }
 
+const InvalidGeneralizedIdentifierTokenKinds: ReadonlyArray<TokenKind> = [
+    TokenKind.Comma,
+    TokenKind.Equal,
+    TokenKind.RightBracket,
+];
+
 // -------------------------------------------
 // ---------- // 12.1.6 Identifiers ----------
 // -------------------------------------------
@@ -43,6 +49,7 @@ export function readIdentifier(state: IParserState, _parser: IParser<IParserStat
     return astNode;
 }
 
+// This behavior matches the C# parser and not the language specification.
 export function readGeneralizedIdentifier(
     state: IParserState,
     _parser: IParser<IParserState>,
@@ -53,29 +60,12 @@ export function readGeneralizedIdentifier(
     let literal: string;
     let astNode: Ast.GeneralizedIdentifier;
 
-    // Edge case where GeneralizedIdentifier is only decmal numbers.
-    // The logic should be more robust as it should technically support the following:
-    // `1.a`
-    // `෬` - non ASCII character from Unicode class Nd (U+0DEC SINHALA LITH DIGIT SIX)
-    if (
-        state.maybeCurrentToken !== undefined &&
-        state.maybeCurrentToken.kind === TokenKind.NumericLiteral &&
-        state.maybeCurrentToken.data.match("^\\d+$")
-    ) {
-        literal = readToken(state);
-        astNode = {
-            ...IParserStateUtils.expectContextNodeMetadata(state),
-            kind: nodeKind,
-            isLeaf: true,
-            literal,
-        };
-        IParserStateUtils.endContext(state, astNode);
-        return astNode;
-    }
-
     const tokenRangeStartIndex: number = state.tokenIndex;
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
-    while (IParserStateUtils.isOnGeneralizedIdentifierToken(state)) {
+    while (
+        state.maybeCurrentTokenKind &&
+        InvalidGeneralizedIdentifierTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
+    ) {
         readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
     }
@@ -1257,7 +1247,7 @@ export function readFieldSpecificationList(
             } else {
                 throw fieldSpecificationListReadError(state, allowOpenMarker);
             }
-        } else if (IParserStateUtils.isOnGeneralizedIdentifierToken(state)) {
+        } else if (IParserStateUtils.isOnGeneralizedIdentifierStart(state)) {
             const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
             IParserStateUtils.startContext(state, csvNodeKind);
 
