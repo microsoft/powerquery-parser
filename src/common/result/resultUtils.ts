@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Err, Ok, ResultKind } from "./result";
+import { Err, Ok, Result, ResultKind } from "./result";
 
 export function okFactory<T>(value: T): Ok<T> {
     return {
@@ -15,4 +15,12 @@ export function errFactory<E>(error: E): Err<E> {
         kind: ResultKind.Err,
         error,
     };
+}
+
+export function isOk<T, E>(result: Result<T, E>): result is Ok<T> {
+    return result.kind === ResultKind.Ok;
+}
+
+export function isErr<T, E>(result: Result<T, E>): result is Err<E> {
+    return result.kind === ResultKind.Err;
 }

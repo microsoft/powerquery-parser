@@ -199,7 +199,7 @@ function positionAstSearch(
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
         // Check if on or before position.
-        if (!PositionUtils.isBeforeTokenPosition(position, candidate.tokenRange.positionStart)) {
+        if (!PositionUtils.isBeforeTokenPosition(position, candidate.tokenRange.positionStart, true)) {
             if (maybeCurrentOnOrBefore === undefined) {
                 maybeCurrentOnOrBefore = candidate;
             } else {
@@ -322,7 +322,7 @@ function maybeIdentifierUnderPosition(
         return undefined;
     }
 
-    if (PositionUtils.isInAstNode(position, identifier, false)) {
+    if (PositionUtils.isInAstNode(position, identifier, false, true)) {
         return identifier;
     } else {
         return undefined;

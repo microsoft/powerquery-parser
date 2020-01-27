@@ -5,7 +5,7 @@ import { InspectionUtils } from ".";
 import { CommonError, isNever, Option, Result, ResultKind } from "../common";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
-import { PositionUtils } from "./position";
+import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
@@ -216,7 +216,8 @@ function inspectIdentifier(state: IdentifierState, identifier: NodeIdMap.TXorNod
     // Don't add the identifier to scope if it's the root and position is before the identifier starts.
     // 'a +| b'
     // '|foo'
-    if (isRoot && PositionUtils.isBeforeOrOnAstNodeStart(state.activeNode.position, identifierAstNode)) {
+    const position: Position = state.activeNode.position;
+    if (isRoot && PositionUtils.isBeforeAstNode(position, identifierAstNode, true)) {
         return;
     }
     addAstToScopeIfNew(state, identifierAstNode.literal, identifierAstNode);
@@ -230,7 +231,7 @@ function inspectIdentifierExpression(
     // Don't add the identifier to scope if it's the root and position is before the identifier starts.
     // 'a +| b'
     // '|foo'
-    if (isRoot && PositionUtils.isBeforeOrOnXorNodeStart(state.activeNode.position, identifierExpr)) {
+    if (isRoot && PositionUtils.isBeforeXorNode(state.activeNode.position, identifierExpr, true)) {
         return;
     }
 
@@ -307,7 +308,7 @@ function inspectInvokeExpression(state: IdentifierState, invokeExpr: NodeIdMap.T
     // Check if position is in the wrapped contents (InvokeExpression arguments).
     if (invokeExpr.kind === NodeIdMap.XorNodeKind.Ast) {
         const invokeExprAstNode: Ast.InvokeExpression = invokeExpr.node as Ast.InvokeExpression;
-        if (!PositionUtils.isInAstNode(state.activeNode.position, invokeExprAstNode.content, false)) {
+        if (!PositionUtils.isInAstNode(state.activeNode.position, invokeExprAstNode.content, true, true)) {
             return;
         }
     }
