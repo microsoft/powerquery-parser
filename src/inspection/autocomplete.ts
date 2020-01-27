@@ -4,7 +4,7 @@
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseError, ParserContext } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
@@ -39,25 +39,28 @@ export function tryFrom(
     }
     let autocomplete: AutocompleteInspected = triedAutocomplete.value;
 
-    let maybePositionIdentifier: Option<string>;
+    let maybePositionName: Option<string>;
     if (activeNode.maybeIdentifierUnderPosition !== undefined) {
-        maybePositionIdentifier = activeNode.maybeIdentifierUnderPosition.literal;
-    } else if (
-        PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, leaf, true, true) &&
+        maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
+    }
+    // 'null', 'true', or 'false'.
+    else if (
         leaf.kind === NodeIdMap.XorNodeKind.Ast &&
-        leaf.node.kind === Ast.NodeKind.Constant
+        leaf.node.kind === Ast.NodeKind.LiteralExpression &&
+        (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null) &&
+        PositionUtils.isInAstNode(activeNode.position, leaf.node, false, true)
     ) {
-        maybePositionIdentifier = leaf.node.literal;
+        maybePositionName = leaf.node.literal;
     }
 
-    if (maybePositionIdentifier !== undefined) {
-        const positionIdentifier: string = maybePositionIdentifier;
-        const filteredKeywords: ReadonlyArray<KeywordKind> = autocomplete.allowedAutocompleteKeywords.filter(
-            (keyword: KeywordKind) => keyword.startsWith(positionIdentifier),
+    if (maybePositionName !== undefined) {
+        const positionName: string = maybePositionName;
+        const likelyKeywords: ReadonlyArray<KeywordKind> = autocomplete.allowedAutocompleteKeywords.filter(
+            (kind: KeywordKind) => kind.startsWith(positionName),
         );
         autocomplete = {
             ...autocomplete,
-            allowedAutocompleteKeywords: filteredKeywords,
+            allowedAutocompleteKeywords: likelyKeywords,
         };
     }
 
@@ -248,7 +251,24 @@ function autocompleteContext(
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseError: Option<ParseError.ParseError>,
 ): Result<AutocompleteInspected, CommonError.CommonError> {
-    throw new Error("NYI");
+    const xorLeaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
+    if (xorLeaf.kind !== NodeIdMap.XorNodeKind.Context) {
+        const details: {} = { leafId: xorLeaf.node.id };
+        throw new CommonError.InvariantError("leaf should be Context node", details);
+    }
+    const leaf: ParserContext.Node = xorLeaf.node;
+    const position: Position = activeNode.position;
+    const maybeTriedInspected: Option<Result<AutocompleteInspected, CommonError.CommonError>> = traverseAncestors(
+        activeNode,
+        nodeIdMapCollection,
+        undefined,
+    );
+
+    if (maybeTriedInspected !== undefined) {
+        return maybeTriedInspected;
+    } else {
+        throw new Error("NYI");
+    }
     // const maybeParseErrorToken: Option<Token> = maybeParseError
     //     ? ParseError.maybeTokenFrom(maybeParseError.innerError)
     //     : undefined;

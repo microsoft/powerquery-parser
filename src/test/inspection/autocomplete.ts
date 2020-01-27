@@ -159,7 +159,7 @@ describe(`qweasdzxc Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it(`abc123 try true|`, () => {
+            it(`try true|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true|`);
                 const expected: AbridgedInspection = [[KeywordKind.True], undefined];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);

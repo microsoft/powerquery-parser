@@ -171,7 +171,7 @@ describe(`qweasdzxc Inspection`, () => {
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
-            it(`foo(x, y|)`, () => {
+            it(`abc123 foo(x, y|)`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`foo(x, y|)`);
                 const expected: AbridgedScope = ["y"];
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);

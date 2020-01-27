@@ -198,8 +198,22 @@ function positionAstSearch(
     //  the closest leaf to the right of position.
     for (const nodeId of leafNodeIds) {
         const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
-        // Check if on or before position.
-        if (!PositionUtils.isBeforeTokenPosition(position, candidate.tokenRange.positionStart, true)) {
+
+        let isBoundIncluded: boolean;
+        if (
+            // let x|=1
+            (candidate.kind === Ast.NodeKind.Constant && ShiftRightConstantKinds.indexOf(candidate.literal) !== -1) ||
+            // let x=|1
+            (maybeCurrentOnOrBefore !== undefined &&
+                maybeCurrentOnOrBefore.kind === Ast.NodeKind.Constant &&
+                ShiftRightConstantKinds.indexOf(maybeCurrentOnOrBefore.literal) !== -1)
+        ) {
+            isBoundIncluded = false;
+        } else {
+            isBoundIncluded = true;
+        }
+
+        if (!PositionUtils.isBeforeTokenPosition(position, candidate.tokenRange.positionStart, isBoundIncluded)) {
             if (maybeCurrentOnOrBefore === undefined) {
                 maybeCurrentOnOrBefore = candidate;
             } else {

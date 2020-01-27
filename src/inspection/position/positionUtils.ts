@@ -194,7 +194,7 @@ export function isBeforeTokenPosition(
     } else if (positionLineNumber > tokenPosition.lineNumber) {
         return false;
     } else {
-        const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit - 1 : tokenPosition.lineCodeUnit;
+        const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit : tokenPosition.lineCodeUnit + 1;
         return position.lineCodeUnit < upperBound;
     }
 }
@@ -215,7 +215,7 @@ export function isAfterTokenPosition(
     } else if (positionLineNumber > tokenPosition.lineNumber) {
         return true;
     } else {
-        const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit + 1 : tokenPosition.lineCodeUnit;
+        const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit : tokenPosition.lineCodeUnit - 1;
         return position.lineCodeUnit > upperBound;
     }
 }
