@@ -1106,6 +1106,12 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
         });
 
+        it(`#nan`, () => {
+            const text: string = `#nan`;
+            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            expectAbridgeNodes(text, expected);
+        });
+
         it(`""`, () => {
             const text: string = `""`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
@@ -1118,7 +1124,7 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
         });
 
-        it(`${Ast.NodeKind.LiteralExpression} ${Ast.LiteralKind.Null}`, () => {
+        it(`null`, () => {
             const text: string = `null`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
             expectAbridgeNodes(text, expected);
