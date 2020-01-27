@@ -758,6 +758,7 @@ export function readLiteralExpression(state: IParserState, _parser: IParser<IPar
     const expectedTokenKinds: ReadonlyArray<TokenKind> = [
         TokenKind.HexLiteral,
         TokenKind.KeywordFalse,
+        TokenKind.KeywordHashNan,
         TokenKind.KeywordTrue,
         TokenKind.NumericLiteral,
         TokenKind.NullLiteral,

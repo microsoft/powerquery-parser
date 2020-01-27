@@ -1055,6 +1055,7 @@ export const enum IdentifierConstant {
 export function literalKindFrom(maybeTokenKind: Option<TokenKind>): Option<LiteralKind> {
     switch (maybeTokenKind) {
         case TokenKind.HexLiteral:
+        case TokenKind.KeywordHashNan:
         case TokenKind.NumericLiteral:
             return LiteralKind.Numeric;
 
