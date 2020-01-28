@@ -29,10 +29,7 @@ export function tryFrom(
     const activeNode: ActiveNode = maybeActiveNode;
 
     const leaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
-    const triedAutocomplete: TriedAutocomplete =
-        leaf.kind === NodeIdMap.XorNodeKind.Ast
-            ? autocompleteAst(activeNode, nodeIdMapCollection, maybeParseError)
-            : autocompleteContext(activeNode, nodeIdMapCollection, maybeParseError);
+    const triedAutocomplete: TriedAutocomplete = tryAutocomplete(activeNode, nodeIdMapCollection, maybeParseError);
 
     if (ResultUtils.isErr(triedAutocomplete)) {
         return triedAutocomplete;
@@ -155,6 +152,51 @@ export function tryFrom(
     // };
 }
 
+function tryAutocomplete(
+    activeNode: ActiveNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    maybeParseError: Option<ParseError.ParseError>,
+): Result<AutocompleteInspected, CommonError.CommonError> {
+    const triedInspected: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
+        activeNode,
+        nodeIdMapCollection,
+        maybeParseError,
+    );
+    if (ResultUtils.isErr(triedInspected)) {
+        return triedInspected;
+    }
+
+    // Check if they're typing for the first time at the start of the file,
+    // which defaults to searching for an identifier.
+    if (
+        maybeParseError === undefined &&
+        activeNode.ancestry.length === 2 &&
+        activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
+        activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
+    ) {
+        return ResultUtils.okFactory(ExpressionAutocomplete);
+    }
+
+    if (ResultUtils.isErr(triedInspected)) {
+        return triedInspected;
+    }
+
+    let inspected: AutocompleteInspected = triedInspected.value;
+    const maybeParseErrorToken: Option<Token> = maybeParseError
+        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
+        : undefined;
+
+    if (
+        maybeParseError !== undefined &&
+        maybeParseErrorToken &&
+        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
+    ) {
+        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
+    }
+
+    return ResultUtils.okFactory(inspected);
+}
+
 function traverseAncestors(
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -208,173 +250,87 @@ function traverseAncestors(
     return ResultUtils.okFactory(EmptyAutocomplete);
 }
 
-function autocompleteAst(
-    activeNode: ActiveNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseError: Option<ParseError.ParseError>,
-): Result<AutocompleteInspected, CommonError.CommonError> {
-    const xorLeaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
-    if (xorLeaf.kind !== NodeIdMap.XorNodeKind.Ast) {
-        const details: {} = { leafId: xorLeaf.node.id };
-        throw new CommonError.InvariantError("leaf should be Ast node", details);
-    }
+// const maybeParseErrorToken: Option<Token> = maybeParseError
+//     ? ParseError.maybeTokenFrom(maybeParseError.innerError)
+//     : undefined;
+// const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
+// const numNodes: number = ancestry.length;
+// let maybeInspected: Option<AutocompleteInspected>;
 
-    const triedInspected: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
-        activeNode,
-        nodeIdMapCollection,
-        maybeParseError,
-    );
-    if (ResultUtils.isErr(triedInspected)) {
-        return triedInspected;
-    }
+// try {
+//     for (let index: number = 1; index < numNodes; index += 1) {
+//         const parent: NodeIdMap.TXorNode = ancestry[index];
+//         const child: NodeIdMap.TXorNode = ancestry[index - 1];
+//         // If a node is in a Context state then it should be up to the parent to autocomplete.
+//         // Continue to let a later iteration handle autocomplete.
+//         if (
+//             parent.kind === NodeIdMap.XorNodeKind.Context &&
+//             PositionUtils.isOnContextNodeStart(activeNode.position, parent.node)
+//         ) {
+//             continue;
+//         }
+//         switch (parent.node.kind) {
+//             case Ast.NodeKind.ErrorHandlingExpression:
+//                 maybeInspected = autocompleteErrorHandlingExpression(
+//                     activeNode.position,
+//                     child,
+//                     maybeParseErrorToken,
+//                 );
+//                 break;
+//             case Ast.NodeKind.SectionMember:
+//                 maybeInspected = autocompleteSectionMember(nodeIdMapCollection, activeNode, parent, child, index);
+//                 break;
+//             default:
+//                 const mapKey: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
+//                 maybeInspected = AutocompleteMap.get(mapKey);
+//                 break;
+//         }
+//         if (maybeInspected !== undefined) {
+//             break;
+//         }
+//     }
+// } catch (err) {
+//     return {
+//         kind: ResultKind.Err,
+//         error: CommonError.ensureCommonError(err),
+//     };
+// }
 
-    // Check if they're typing for the first time at the start of the file,
-    // which defaults to searching for an identifier.
-    if (
-        maybeParseError === undefined &&
-        activeNode.ancestry.length === 2 &&
-        activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
-        activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
-    ) {
-        return ResultUtils.okFactory(ExpressionAutocomplete);
-    }
+// const inspected: AutocompleteInspected = maybeInspected || EmptyAutocomplete;
 
-    if (ResultUtils.isErr(triedInspected)) {
-        return triedInspected;
-    }
-
-    let inspected: AutocompleteInspected = triedInspected.value;
-    const maybeParseErrorToken: Option<Token> = maybeParseError
-        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
-        : undefined;
-
-    if (
-        maybeParseError !== undefined &&
-        maybeParseErrorToken &&
-        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
-    ) {
-        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
-    }
-
-    return ResultUtils.okFactory(inspected);
-}
-
-function autocompleteContext(
-    activeNode: ActiveNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseError: Option<ParseError.ParseError>,
-): Result<AutocompleteInspected, CommonError.CommonError> {
-    const xorLeaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
-    if (xorLeaf.kind !== NodeIdMap.XorNodeKind.Context) {
-        const details: {} = { leafId: xorLeaf.node.id };
-        throw new CommonError.InvariantError("leaf should be Context node", details);
-    }
-    const triedInspected: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
-        activeNode,
-        nodeIdMapCollection,
-        maybeParseError,
-    );
-    if (ResultUtils.isErr(triedInspected)) {
-        return triedInspected;
-    }
-
-    let inspected: AutocompleteInspected = triedInspected.value;
-    const maybeParseErrorToken: Option<Token> = maybeParseError
-        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
-        : undefined;
-
-    if (
-        maybeParseError !== undefined &&
-        maybeParseErrorToken &&
-        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
-    ) {
-        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
-    }
-
-    return ResultUtils.okFactory(inspected);
-
-    // const maybeParseErrorToken: Option<Token> = maybeParseError
-    //     ? ParseError.maybeTokenFrom(maybeParseError.innerError)
-    //     : undefined;
-    // const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
-    // const numNodes: number = ancestry.length;
-    // let maybeInspected: Option<AutocompleteInspected>;
-
-    // try {
-    //     for (let index: number = 1; index < numNodes; index += 1) {
-    //         const parent: NodeIdMap.TXorNode = ancestry[index];
-    //         const child: NodeIdMap.TXorNode = ancestry[index - 1];
-    //         // If a node is in a Context state then it should be up to the parent to autocomplete.
-    //         // Continue to let a later iteration handle autocomplete.
-    //         if (
-    //             parent.kind === NodeIdMap.XorNodeKind.Context &&
-    //             PositionUtils.isOnContextNodeStart(activeNode.position, parent.node)
-    //         ) {
-    //             continue;
-    //         }
-    //         switch (parent.node.kind) {
-    //             case Ast.NodeKind.ErrorHandlingExpression:
-    //                 maybeInspected = autocompleteErrorHandlingExpression(
-    //                     activeNode.position,
-    //                     child,
-    //                     maybeParseErrorToken,
-    //                 );
-    //                 break;
-    //             case Ast.NodeKind.SectionMember:
-    //                 maybeInspected = autocompleteSectionMember(nodeIdMapCollection, activeNode, parent, child, index);
-    //                 break;
-    //             default:
-    //                 const mapKey: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
-    //                 maybeInspected = AutocompleteMap.get(mapKey);
-    //                 break;
-    //         }
-    //         if (maybeInspected !== undefined) {
-    //             break;
-    //         }
-    //     }
-    // } catch (err) {
-    //     return {
-    //         kind: ResultKind.Err,
-    //         error: CommonError.ensureCommonError(err),
-    //     };
-    // }
-
-    // const inspected: AutocompleteInspected = maybeInspected || EmptyAutocomplete;
-
-    // // // Edge case for 'sect|'
-    // // const root: NodeIdMap.TXorNode = ancestry[ancestry.length - 1];
-    // // if (
-    // //     maybeInspected === undefined &&
-    // //     root.node.kind === Ast.NodeKind.IdentifierExpression &&
-    // //     PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, root, false) &&
-    // //     KeywordKind.Section.startsWith((root.node as Ast.IdentifierExpression).identifier.literal)
-    // // ) {
-    // //     maybeInspected = {
-    // //         maybeRequiredAutocomplete: undefined,
-    // //         allowedAutocompleteKeywords: [KeywordKind.Section],
-    // //     };
-    // // }
-    // // // Naive autocomplete identifiers as keywords while in a keyword context.
-    // // let inspected: AutocompleteInspected = maybeInspected || EmptyAutocomplete;
-    // // if (activeNode.maybeIdentifierUnderPosition && isInKeywordContext(activeNode)) {
-    // //     inspected = updateWithPostionIdentifier(inspected, activeNode);
-    // // }
-    // // // Naive autocomplete a ParseError's token if it's an identifier.
-    // // if (
-    // //     maybeParseErrorToken !== undefined &&
-    // //     maybeParseErrorToken.kind === TokenKind.Identifier &&
-    // //     PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false) &&
-    // //     // Edge case for SectionExpression with a partial identifier match on 'section'
-    // //     // '[] s|'
-    // //     (maybeInspected === undefined || maybeInspected.allowedAutocompleteKeywords.indexOf(KeywordKind.Section) === -1)
-    // // ) {
-    // //     inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
-    // // }
-    // return {
-    //     kind: ResultKind.Ok,
-    //     value: inspected,
-    // };
-}
+// // // Edge case for 'sect|'
+// // const root: NodeIdMap.TXorNode = ancestry[ancestry.length - 1];
+// // if (
+// //     maybeInspected === undefined &&
+// //     root.node.kind === Ast.NodeKind.IdentifierExpression &&
+// //     PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, root, false) &&
+// //     KeywordKind.Section.startsWith((root.node as Ast.IdentifierExpression).identifier.literal)
+// // ) {
+// //     maybeInspected = {
+// //         maybeRequiredAutocomplete: undefined,
+// //         allowedAutocompleteKeywords: [KeywordKind.Section],
+// //     };
+// // }
+// // // Naive autocomplete identifiers as keywords while in a keyword context.
+// // let inspected: AutocompleteInspected = maybeInspected || EmptyAutocomplete;
+// // if (activeNode.maybeIdentifierUnderPosition && isInKeywordContext(activeNode)) {
+// //     inspected = updateWithPostionIdentifier(inspected, activeNode);
+// // }
+// // // Naive autocomplete a ParseError's token if it's an identifier.
+// // if (
+// //     maybeParseErrorToken !== undefined &&
+// //     maybeParseErrorToken.kind === TokenKind.Identifier &&
+// //     PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false) &&
+// //     // Edge case for SectionExpression with a partial identifier match on 'section'
+// //     // '[] s|'
+// //     (maybeInspected === undefined || maybeInspected.allowedAutocompleteKeywords.indexOf(KeywordKind.Section) === -1)
+// // ) {
+// //     inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
+// // }
+// return {
+//     kind: ResultKind.Ok,
+//     value: inspected,
+// };
 
 const EmptyAutocomplete: AutocompleteInspected = {
     maybeRequiredAutocomplete: undefined,
