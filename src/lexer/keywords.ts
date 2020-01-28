@@ -84,6 +84,7 @@ export const TExpressionKeywords: ReadonlyArray<KeywordKind> = [
     KeywordKind.HashTime,
     KeywordKind.If,
     KeywordKind.Let,
+    KeywordKind.Not,
     KeywordKind.True,
     KeywordKind.Try,
 ];
