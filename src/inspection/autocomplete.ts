@@ -239,6 +239,7 @@ function traverseAncestors(
                     maybeInspected = AutocompleteMap.get(mapKey);
                     break;
             }
+
             if (maybeInspected !== undefined) {
                 return ResultUtils.okFactory(maybeInspected);
             }
@@ -369,7 +370,7 @@ const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     [createMapKey(Ast.NodeKind.InvokeExpression, 1), ExpressionAutocomplete],
     [createMapKey(Ast.NodeKind.InvokeExpression, 2), ExpressionAutocomplete],
 
-    // Ast.NodeKind.IfExpression
+    // Ast.NodeKind.ListExpression
     [createMapKey(Ast.NodeKind.ListExpression, 1), ExpressionAutocomplete],
 
     // Ast.NodeKind.OtherwiseExpression
@@ -409,32 +410,6 @@ const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Keywor
     string,
     ReadonlyArray<KeywordKind>
 >([["a", [KeywordKind.And, KeywordKind.As]], ["o", [KeywordKind.Or]], ["m", [KeywordKind.Meta]]]);
-
-function positionIdentifierAutocomplete(activeNode: ActiveNode): AutocompleteInspected {
-    const key: string = activeNode.maybeIdentifierUnderPosition!.literal;
-    const maybePotentialKeywords: Option<ReadonlyArray<KeywordKind>> = PartialKeywordAutocompleteMap.get(
-        key[0].toLocaleLowerCase(),
-    );
-    if (maybePotentialKeywords === undefined) {
-        return EmptyAutocomplete;
-    }
-    const potentialKeywords: ReadonlyArray<KeywordKind> = maybePotentialKeywords;
-
-    const allowedKeywords: KeywordKind[] = [];
-    for (const keyword of potentialKeywords) {
-        // potentialKeywords is a map of 'first character' -> 'all possible keywords that start with the character',
-        // meaning 'an' maps 'a' to '["and", "as"].
-        // This check prevents 'an' adding "and" as well.
-        if (keyword.startsWith(key)) {
-            allowedKeywords.push(keyword);
-        }
-    }
-
-    return {
-        maybeRequiredAutocomplete: undefined,
-        allowedAutocompleteKeywords: allowedKeywords,
-    };
-}
 
 function updateWithParseErrorToken(
     inspected: AutocompleteInspected,

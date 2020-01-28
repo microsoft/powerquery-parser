@@ -57,13 +57,17 @@ export function isOnXorNodeStart(position: Position, xorNode: NodeIdMap.TXorNode
     }
 }
 
-export function isOnXorNodeEnd(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
+export function isOnXorNodeEnd(
+    position: Position,
+    xorNode: NodeIdMap.TXorNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+): boolean {
     switch (xorNode.kind) {
         case NodeIdMap.XorNodeKind.Ast:
             return isOnAstNodeEnd(position, xorNode.node);
 
         case NodeIdMap.XorNodeKind.Context:
-            return false;
+            return isOnContextNodeEnd(position, xorNode.node, nodeIdMapCollection);
 
         default:
             throw isNever(xorNode);
@@ -119,6 +123,19 @@ export function isOnContextNodeStart(position: Position, contextNode: ParserCont
     return contextNode.maybeTokenStart !== undefined
         ? isOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
         : false;
+}
+
+export function isOnContextNodeEnd(
+    position: Position,
+    contextNode: ParserContext.Node,
+    nodeIdMapCollection: NodeIdMap.Collection,
+): boolean {
+    const maybeLeaf: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+    if (maybeLeaf === undefined) {
+        return false;
+    }
+
+    return isOnAstNodeEnd(position, maybeLeaf);
 }
 
 export function isAfterContextNode(
