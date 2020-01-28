@@ -218,6 +218,16 @@ function autocompleteAst(
         const details: {} = { leafId: xorLeaf.node.id };
         throw new CommonError.InvariantError("leaf should be Ast node", details);
     }
+
+    // Check if they're typing at the begining of the file
+    if (
+        activeNode.ancestry.length === 2 &&
+        activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
+        activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
+    ) {
+        return ResultUtils.okFactory(ExpressionAutocomplete);
+    }
+
     const leaf: Ast.TNode = xorLeaf.node;
     const position: Position = activeNode.position;
     const maybeTriedInspected: Option<Result<AutocompleteInspected, CommonError.CommonError>> = traverseAncestors(
