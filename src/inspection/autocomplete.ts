@@ -219,7 +219,8 @@ function autocompleteAst(
         throw new CommonError.InvariantError("leaf should be Ast node", details);
     }
 
-    // Check if they're typing at the begining of the file
+    // Check if they're typing for the first time at the start of the file,
+    // which defaults to searching for an identifier.
     if (
         activeNode.ancestry.length === 2 &&
         activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
