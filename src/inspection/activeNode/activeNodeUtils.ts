@@ -171,6 +171,7 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
     Ast.ConstantKind.RightBrace,
     Ast.ConstantKind.RightBracket,
     Ast.ConstantKind.RightParenthesis,
+    Ast.ConstantKind.Semicolon,
     ...DrilldownConstantKind,
 ];
 
