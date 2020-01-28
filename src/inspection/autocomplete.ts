@@ -159,7 +159,7 @@ function traverseAncestors(
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseError: Option<ParseError.ParseError>,
-): Option<Result<AutocompleteInspected, CommonError.CommonError>> {
+): Result<AutocompleteInspected, CommonError.CommonError> {
     const maybeParseErrorToken: Option<Token> = maybeParseError
         ? ParseError.maybeTokenFrom(maybeParseError.innerError)
         : undefined;
@@ -205,7 +205,7 @@ function traverseAncestors(
         return ResultUtils.errFactory(CommonError.ensureCommonError(err));
     }
 
-    return undefined;
+    return ResultUtils.okFactory(EmptyAutocomplete);
 }
 
 function autocompleteAst(
@@ -219,9 +219,19 @@ function autocompleteAst(
         throw new CommonError.InvariantError("leaf should be Ast node", details);
     }
 
+    const triedInspected: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
+        activeNode,
+        nodeIdMapCollection,
+        maybeParseError,
+    );
+    if (ResultUtils.isErr(triedInspected)) {
+        return triedInspected;
+    }
+
     // Check if they're typing for the first time at the start of the file,
     // which defaults to searching for an identifier.
     if (
+        maybeParseError === undefined &&
         activeNode.ancestry.length === 2 &&
         activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
@@ -229,33 +239,20 @@ function autocompleteAst(
         return ResultUtils.okFactory(ExpressionAutocomplete);
     }
 
-    const leaf: Ast.TNode = xorLeaf.node;
-    const position: Position = activeNode.position;
-    const maybeTriedInspected: Option<Result<AutocompleteInspected, CommonError.CommonError>> = traverseAncestors(
-        activeNode,
-        nodeIdMapCollection,
-        maybeParseError,
-    );
-
-    if (maybeTriedInspected !== undefined) {
-        return maybeTriedInspected;
-    } else {
-        throw new Error("NYI");
-        // if (PositionUtils.isOnAstNodeStart(position, leaf)) {
-        //     if (isInExpressionContext(activeNode)) {
-        //         return ResultUtils.okFactory(ExpressionAutocomplete);
-        //     } else {
-        //         throw new Error("NYI");
-        //     }
-        // } else if (!PositionUtils.isInAstNode(position, leaf)) {
-        //     if (activeNode.maybeIdentifierUnderPosition !== undefined) {
-        //         return ResultUtils.okFactory(positionIdentifierAutocomplete(activeNode));
-        //     } else {
-        //         return ResultUtils.okFactory(EmptyAutocomplete);
-        //     }
-        // } else {
-        //     throw new Error("NYI");
+    if (ResultUtils.isErr(triedInspected)) {
+        return triedInspected;
     }
+
+    let inspected: AutocompleteInspected = triedInspected.value;
+    const maybeParseErrorToken: Option<Token> = maybeParseError
+        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
+        : undefined;
+
+    if (maybeParseError !== undefined && maybeParseErrorToken) {
+        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
+    }
+
+    return ResultUtils.okFactory(inspected);
 }
 
 function autocompleteContext(
@@ -270,17 +267,26 @@ function autocompleteContext(
     }
     const leaf: ParserContext.Node = xorLeaf.node;
     const position: Position = activeNode.position;
-    const maybeTriedInspected: Option<Result<AutocompleteInspected, CommonError.CommonError>> = traverseAncestors(
+    const triedInspected: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
         activeNode,
         nodeIdMapCollection,
         maybeParseError,
     );
-
-    if (maybeTriedInspected !== undefined) {
-        return maybeTriedInspected;
-    } else {
-        throw new Error("NYI");
+    if (ResultUtils.isErr(triedInspected)) {
+        return triedInspected;
     }
+
+    let inspected: AutocompleteInspected = triedInspected.value;
+    const maybeParseErrorToken: Option<Token> = maybeParseError
+        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
+        : undefined;
+
+    if (maybeParseError !== undefined && maybeParseErrorToken) {
+        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
+    }
+
+    return ResultUtils.okFactory(inspected);
+
     // const maybeParseErrorToken: Option<Token> = maybeParseError
     //     ? ParseError.maybeTokenFrom(maybeParseError.innerError)
     //     : undefined;
@@ -471,9 +477,9 @@ function positionIdentifierAutocomplete(activeNode: ActiveNode): AutocompleteIns
 function updateWithParseErrorToken(
     inspected: AutocompleteInspected,
     activeNode: ActiveNode,
-    errorToken: Token,
+    parseErrorToken: Token,
 ): AutocompleteInspected {
-    const key: string = errorToken.data;
+    const key: string = parseErrorToken.data;
     const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialConjunctionKeywordAutocompleteMap.get(
         key[0].toLocaleLowerCase(),
     );
@@ -522,12 +528,13 @@ function isInExpressionContext(activeNode: ActiveNode): boolean {
 
 function isInKeywordContext(activeNode: ActiveNode): boolean {
     const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
-    const maybePrevious: NodeIdMap.TXorNode = ancestry[1];
+    const maybePrevious: Option<NodeIdMap.TXorNode> = ancestry[1];
     if (maybePrevious === undefined) {
         return true;
     }
+
     // Possibly: InvokeExpression
-    else if (maybePrevious.node.kind === Ast.NodeKind.IdentifierExpression) {
+    if (maybePrevious.node.kind === Ast.NodeKind.IdentifierExpression) {
         if (
             isAncestryOfNodeKindChain(ancestry, 2, [
                 Ast.NodeKind.Csv,
