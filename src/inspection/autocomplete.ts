@@ -248,7 +248,11 @@ function autocompleteAst(
         ? ParseError.maybeTokenFrom(maybeParseError.innerError)
         : undefined;
 
-    if (maybeParseError !== undefined && maybeParseErrorToken) {
+    if (
+        maybeParseError !== undefined &&
+        maybeParseErrorToken &&
+        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
+    ) {
         inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
     }
 
@@ -265,8 +269,6 @@ function autocompleteContext(
         const details: {} = { leafId: xorLeaf.node.id };
         throw new CommonError.InvariantError("leaf should be Context node", details);
     }
-    const leaf: ParserContext.Node = xorLeaf.node;
-    const position: Position = activeNode.position;
     const triedInspected: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
         activeNode,
         nodeIdMapCollection,
@@ -281,7 +283,11 @@ function autocompleteContext(
         ? ParseError.maybeTokenFrom(maybeParseError.innerError)
         : undefined;
 
-    if (maybeParseError !== undefined && maybeParseErrorToken) {
+    if (
+        maybeParseError !== undefined &&
+        maybeParseErrorToken &&
+        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
+    ) {
         inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
     }
 
