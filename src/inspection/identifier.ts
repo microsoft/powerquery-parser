@@ -226,12 +226,13 @@ function inspectIdentifier(state: IdentifierState, identifier: NodeIdMap.TXorNod
 function inspectIdentifierExpression(
     state: IdentifierState,
     identifierExpr: NodeIdMap.TXorNode,
-    isRoot: boolean,
+    isLeaf: boolean,
 ): void {
-    // Don't add the identifier to scope if it's the root and position is before the identifier starts.
+    // Don't add the identifier to scope if it's the leaf,
+    // and if the position is before the start of the identifier.
     // 'a +| b'
     // '|foo'
-    if (isRoot && PositionUtils.isBeforeXorNode(state.activeNode.position, identifierExpr, true)) {
+    if (isLeaf && PositionUtils.isBeforeXorNode(state.activeNode.position, identifierExpr, false)) {
         return;
     }
 
