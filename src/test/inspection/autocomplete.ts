@@ -145,7 +145,7 @@ describe(`qweasdzxc Inspection`, () => {
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
-            it("t|", () => {
+            it("abc123 t|", () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`t|`);
                 const expected: AbridgedInspection = [[KeywordKind.True, KeywordKind.Try, KeywordKind.Type], undefined];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
@@ -380,7 +380,7 @@ describe(`qweasdzxc Inspection`, () => {
             });
         });
 
-        describe(`abc123 ${Ast.NodeKind.RecordExpression}`, () => {
+        describe(`${Ast.NodeKind.RecordExpression}`, () => {
             it(`+[|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[|`);
                 const expected: AbridgedInspection = [[], undefined];

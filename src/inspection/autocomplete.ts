@@ -28,40 +28,44 @@ export function tryFrom(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
+    let maybePositionName: Option<string>;
     const leaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
-    const triedAutocomplete: TriedAutocomplete = tryAutocomplete(activeNode, nodeIdMapCollection, maybeParseError);
+    const maybeParseErrorToken: Option<Token> = maybeParseError
+        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
+        : undefined;
+    if (PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, leaf, false, true)) {
+        if (activeNode.maybeIdentifierUnderPosition !== undefined) {
+            maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
+        }
+        // 'null', 'true', or 'false'.
+        else if (
+            leaf.kind === NodeIdMap.XorNodeKind.Ast &&
+            leaf.node.kind === Ast.NodeKind.LiteralExpression &&
+            (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null) &&
+            PositionUtils.isInAstNode(activeNode.position, leaf.node, false, true)
+        ) {
+            maybePositionName = leaf.node.literal;
+        }
+    }
 
+    const triedAutocomplete: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
+        activeNode,
+        nodeIdMapCollection,
+        maybePositionName,
+        maybeParseErrorToken,
+    );
     if (ResultUtils.isErr(triedAutocomplete)) {
         return triedAutocomplete;
     }
-    let autocomplete: AutocompleteInspected = triedAutocomplete.value;
 
-    let maybePositionName: Option<string>;
-    if (activeNode.maybeIdentifierUnderPosition !== undefined) {
-        maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
-    }
-    // 'null', 'true', or 'false'.
-    else if (
-        leaf.kind === NodeIdMap.XorNodeKind.Ast &&
-        leaf.node.kind === Ast.NodeKind.LiteralExpression &&
-        (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null) &&
-        PositionUtils.isInAstNode(activeNode.position, leaf.node, false, true)
-    ) {
-        maybePositionName = leaf.node.literal;
-    }
+    const inspected: AutocompleteInspected = handleEdgeCases(
+        triedAutocomplete.value,
+        activeNode,
+        maybePositionName,
+        maybeParseErrorToken,
+    );
 
-    if (maybePositionName !== undefined) {
-        const positionName: string = maybePositionName;
-        const likelyKeywords: ReadonlyArray<KeywordKind> = autocomplete.allowedAutocompleteKeywords.filter(
-            (kind: KeywordKind) => kind.startsWith(positionName),
-        );
-        autocomplete = {
-            ...autocomplete,
-            allowedAutocompleteKeywords: likelyKeywords,
-        };
-    }
-
-    return ResultUtils.okFactory(autocomplete);
+    return ResultUtils.okFactory(inspected);
 
     // const maybeParseErrorToken: Option<Token> = maybeParseError
     //     ? ParseError.maybeTokenFrom(maybeParseError.innerError)
@@ -152,59 +156,50 @@ export function tryFrom(
     // };
 }
 
-function tryAutocomplete(
+function handleEdgeCases(
+    inspected: AutocompleteInspected,
     activeNode: ActiveNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseError: Option<ParseError.ParseError>,
-): Result<AutocompleteInspected, CommonError.CommonError> {
-    const triedInspected: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
-        activeNode,
-        nodeIdMapCollection,
-        maybeParseError,
-    );
-    if (ResultUtils.isErr(triedInspected)) {
-        return triedInspected;
-    }
-
+    maybePositionName: Option<string>,
+    maybeParseErrorToken: Option<Token>,
+): AutocompleteInspected {
     // Check if they're typing for the first time at the start of the file,
     // which defaults to searching for an identifier.
     if (
-        maybeParseError === undefined &&
+        maybeParseErrorToken === undefined &&
         activeNode.ancestry.length === 2 &&
         activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
-        return ResultUtils.okFactory(ExpressionAutocomplete);
+        inspected = ExpressionAutocomplete;
     }
-
-    if (ResultUtils.isErr(triedInspected)) {
-        return triedInspected;
-    }
-
-    let inspected: AutocompleteInspected = triedInspected.value;
-    const maybeParseErrorToken: Option<Token> = maybeParseError
-        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
-        : undefined;
 
     if (
-        maybeParseError !== undefined &&
-        maybeParseErrorToken &&
+        maybeParseErrorToken !== undefined &&
         PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
     ) {
         inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
     }
 
-    return ResultUtils.okFactory(inspected);
+    if (maybePositionName !== undefined) {
+        const positionName: string = maybePositionName;
+        const likelyKeywords: ReadonlyArray<KeywordKind> = inspected.allowedAutocompleteKeywords.filter(
+            (kind: KeywordKind) => kind.startsWith(positionName),
+        );
+        inspected = {
+            ...inspected,
+            allowedAutocompleteKeywords: likelyKeywords,
+        };
+    }
+
+    return inspected;
 }
 
 function traverseAncestors(
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseError: Option<ParseError.ParseError>,
+    maybePositionName: Option<string>,
+    maybeParseErrorToken: Option<Token>,
 ): Result<AutocompleteInspected, CommonError.CommonError> {
-    const maybeParseErrorToken: Option<Token> = maybeParseError
-        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
-        : undefined;
     const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
     const numNodes: number = ancestry.length;
 
@@ -234,10 +229,17 @@ function traverseAncestors(
                     maybeInspected = autocompleteSectionMember(nodeIdMapCollection, activeNode, parent, child, index);
                     break;
 
-                default:
-                    const mapKey: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
-                    maybeInspected = AutocompleteMap.get(mapKey);
+                default: {
+                    const key: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
+                    if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
+                        if (maybePositionName !== undefined) {
+                            maybeInspected = ExpressionAutocomplete;
+                        }
+                    } else {
+                        maybeInspected = AutocompleteMap.get(key);
+                    }
                     break;
+                }
             }
 
             if (maybeInspected !== undefined) {
@@ -343,42 +345,33 @@ const ExpressionAutocomplete: AutocompleteInspected = {
     allowedAutocompleteKeywords: TExpressionKeywords,
 };
 
+const AutocompleteExpressionKeys: ReadonlyArray<string> = [
+    createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1),
+    createMapKey(Ast.NodeKind.GeneralizedIdentifierPairedExpression, 2),
+    createMapKey(Ast.NodeKind.IdentifierPairedExpression, 2),
+    createMapKey(Ast.NodeKind.IdentifierExpressionPairedExpression, 2),
+    createMapKey(Ast.NodeKind.IfExpression, 1),
+    createMapKey(Ast.NodeKind.IfExpression, 3),
+    createMapKey(Ast.NodeKind.IfExpression, 5),
+    createMapKey(Ast.NodeKind.InvokeExpression, 0),
+    createMapKey(Ast.NodeKind.InvokeExpression, 1),
+    createMapKey(Ast.NodeKind.InvokeExpression, 2),
+    createMapKey(Ast.NodeKind.ListExpression, 1),
+    createMapKey(Ast.NodeKind.OtherwiseExpression, 1),
+    createMapKey(Ast.NodeKind.ParenthesizedExpression, 1),
+];
+
 const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
     // Ast.NodeKind.ErrorRaisingExpression
     [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.Error)],
-    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1), ExpressionAutocomplete],
-
-    // Ast.NodeKind.GeneralizedIdentifierPairedExpression
-    [createMapKey(Ast.NodeKind.GeneralizedIdentifierPairedExpression, 2), ExpressionAutocomplete],
-
-    // Ast.NodeKind.IdentifierPairedExpression
-    [createMapKey(Ast.NodeKind.IdentifierPairedExpression, 2), ExpressionAutocomplete],
-
-    // Ast.NodeKind.IdentifierExpressionPairedExpression
-    [createMapKey(Ast.NodeKind.IdentifierExpressionPairedExpression, 2), ExpressionAutocomplete],
 
     // Ast.NodeKind.IfExpression
     [createMapKey(Ast.NodeKind.IfExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.If)],
-    [createMapKey(Ast.NodeKind.IfExpression, 1), ExpressionAutocomplete],
     [createMapKey(Ast.NodeKind.IfExpression, 2), autocompleteRequiredFactory(Ast.ConstantKind.Then)],
-    [createMapKey(Ast.NodeKind.IfExpression, 3), ExpressionAutocomplete],
     [createMapKey(Ast.NodeKind.IfExpression, 4), autocompleteRequiredFactory(Ast.ConstantKind.Else)],
-    [createMapKey(Ast.NodeKind.IfExpression, 5), ExpressionAutocomplete],
-
-    // Ast.NodeKind.InvokeExpression
-    [createMapKey(Ast.NodeKind.InvokeExpression, 0), ExpressionAutocomplete],
-    [createMapKey(Ast.NodeKind.InvokeExpression, 1), ExpressionAutocomplete],
-    [createMapKey(Ast.NodeKind.InvokeExpression, 2), ExpressionAutocomplete],
-
-    // Ast.NodeKind.ListExpression
-    [createMapKey(Ast.NodeKind.ListExpression, 1), ExpressionAutocomplete],
 
     // Ast.NodeKind.OtherwiseExpression
     [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.Otherwise)],
-    [createMapKey(Ast.NodeKind.OtherwiseExpression, 1), ExpressionAutocomplete],
-
-    // Ast.NodeKind.ParenthesizedExpression
-    [createMapKey(Ast.NodeKind.ParenthesizedExpression, 1), ExpressionAutocomplete],
 
     // Ast.NodeKind.Section
     [
