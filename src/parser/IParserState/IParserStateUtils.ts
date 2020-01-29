@@ -7,6 +7,7 @@ import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { IParserState } from "./IParserState";
 
 import * as Localization from "../../localization/error";
+import { NodeIdMapUtils } from "../nodeIdMap";
 
 export interface FastStateBackup {
     readonly tokenIndex: number;
@@ -28,18 +29,6 @@ export function newState(lexerSnapshot: LexerSnapshot): IParserState {
         maybeCurrentTokenKind: maybeCurrentToken !== undefined ? maybeCurrentToken.kind : undefined,
         contextState: ParserContext.newState(),
         maybeCurrentContextNode: undefined,
-    };
-}
-
-export function deepCopy(state: IParserState): IParserState {
-    return {
-        lexerSnapshot: state.lexerSnapshot,
-        tokenIndex: state.tokenIndex,
-        maybeCurrentToken: state.maybeCurrentToken,
-        maybeCurrentTokenKind: state.maybeCurrentTokenKind,
-        contextState: ParserContext.deepCopy(state.contextState),
-        maybeCurrentContextNode:
-            state.maybeCurrentContextNode !== undefined ? { ...state.maybeCurrentContextNode } : undefined,
     };
 }
 
@@ -100,7 +89,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     }
 
     if (backup.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMap.expectContextNode(
+        state.maybeCurrentContextNode = NodeIdMapUtils.expectContextNode(
             state.contextState.nodeIdMapCollection.contextNodeById,
             backup.maybeContextNodeId,
         );

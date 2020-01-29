@@ -4,6 +4,7 @@
 import { Ast, NodeIdMap } from ".";
 import { CommonError, Option, TypeUtils } from "../common";
 import { Token } from "../lexer";
+import { NodeIdMapUtils } from "./nodeIdMap";
 
 // Parsing use to be one giant evaluation, leading to an all-or-nothing outcome which was unsuitable for a
 // document that was being live edited.
@@ -59,6 +60,7 @@ export function newState(): State {
             contextNodeById: new Map(),
             parentIdById: new Map(),
             childIdsById: new Map(),
+            maybeRightMostLeaf: undefined,
         },
         idCounter: 0,
         leafNodeIds: [],
@@ -106,7 +108,7 @@ export function startContext(
         }
     }
 
-    const node: Node = {
+    const contextNode: Node = {
         id: nodeId,
         kind: nodeKind,
         tokenIndexStart,
@@ -115,9 +117,12 @@ export function startContext(
         isClosed: false,
         maybeAttributeIndex,
     };
-    nodeIdMapCollection.contextNodeById.set(nodeId, node);
+    nodeIdMapCollection.contextNodeById.set(nodeId, contextNode);
+    if (state.root.maybeNode === undefined) {
+        state.root.maybeNode = contextNode;
+    }
 
-    return node;
+    return contextNode;
 }
 
 // Returns the Node's parent context (if one exists).
@@ -140,6 +145,17 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         throw new CommonError.InvariantError("can't end a context that doesn't belong to state");
     }
     nodeIdMapCollection.astNodeById.set(astNode.id, astNode);
+
+    // Update maybeRightMostLeaf when applicable
+    if (astNode.isLeaf) {
+        if (
+            nodeIdMapCollection.maybeRightMostLeaf === undefined ||
+            nodeIdMapCollection.maybeRightMostLeaf.tokenRange.tokenIndexStart < astNode.tokenRange.tokenIndexStart
+        ) {
+            const unsafeNodeIdMapCollection: TypeUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
+            unsafeNodeIdMapCollection.maybeRightMostLeaf = astNode;
+        }
+    }
 
     return maybeParentNode;
 }
@@ -199,12 +215,12 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
 
-    const maybeNode: Option<Node> = contextNodeById.get(nodeId);
-    if (maybeNode === undefined) {
+    const maybeContextNode: Option<Node> = contextNodeById.get(nodeId);
+    if (maybeContextNode === undefined) {
         const details: {} = { nodeId };
         throw new CommonError.InvariantError(`Context nodeId not in state.`, details);
     }
-    const node: Node = maybeNode;
+    const contextNode: Node = maybeContextNode;
 
     // If Node was a leaf node, remove it from the list of leaf nodes.
     removeLeafOrNoop(state, nodeId);
@@ -242,9 +258,9 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
         }
 
         // The child Node inherits the attributeIndex.
-        const childXorNode: NodeIdMap.TXorNode = NodeIdMap.expectXorNode(state.nodeIdMapCollection, childId);
+        const childXorNode: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
         const mutableChildXorNode: TypeUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
-        mutableChildXorNode.maybeAttributeIndex = node.maybeAttributeIndex;
+        mutableChildXorNode.maybeAttributeIndex = contextNode.maybeAttributeIndex;
     }
     // Is a leaf node, not root node.
     // Delete the node from the list of children under the node's parent.
@@ -261,24 +277,7 @@ export function deleteContext(state: State, nodeId: number): Option<Node> {
     parentIdById.delete(nodeId);
 
     // Return the node's parent if it exits
-    return maybeParentId !== undefined ? NodeIdMap.expectContextNode(contextNodeById, maybeParentId) : undefined;
-}
-
-export function deepCopy(state: State): State {
-    const nodeIdMapCollection: NodeIdMap.Collection = NodeIdMap.deepCopyCollection(state.nodeIdMapCollection);
-    const maybeRootNode: Option<Node> =
-        state.root.maybeNode !== undefined
-            ? nodeIdMapCollection.contextNodeById.get(state.root.maybeNode.id)
-            : undefined;
-
-    return {
-        root: {
-            maybeNode: maybeRootNode,
-        },
-        nodeIdMapCollection: nodeIdMapCollection,
-        idCounter: state.idCounter,
-        leafNodeIds: state.leafNodeIds.slice(),
-    };
+    return maybeParentId !== undefined ? NodeIdMapUtils.expectContextNode(contextNodeById, maybeParentId) : undefined;
 }
 
 function removeLeafOrNoop(state: State, nodeId: number): void {
@@ -297,7 +296,7 @@ function removeOrReplaceChildId(
     maybeReplacementId: Option<number>,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMap.expectChildIds(childIdsById, parentId);
+    const childIds: ReadonlyArray<number> = NodeIdMapUtils.expectChildIds(childIdsById, parentId);
     const replacementIndex: number = childIds.indexOf(childId);
     if (replacementIndex === -1) {
         const details: {} = {

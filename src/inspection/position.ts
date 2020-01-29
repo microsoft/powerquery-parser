@@ -3,7 +3,7 @@
 
 import { isNever, Option } from "../common";
 import { Token, TokenPosition } from "../lexer";
-import { Ast, NodeIdMap, ParserContext } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 
 export interface Position {
     readonly lineNumber: number;
@@ -79,7 +79,7 @@ export function isPositionAfterContextNode(
     position: Position,
     contextNode: ParserContext.Node,
 ): boolean {
-    const maybeRightMostAstNode: Option<Ast.TNode> = NodeIdMap.maybeRightMostAstDescendant(
+    const maybeRightMostAstNode: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeaf(
         nodeIdMapCollection,
         contextNode.id,
     );
