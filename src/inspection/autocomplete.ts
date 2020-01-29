@@ -472,62 +472,6 @@ function updateWithIdentifierKey(
     };
 }
 
-function isInExpressionContext(activeNode: ActiveNode): boolean {
-    return true;
-}
-
-function isInKeywordContext(activeNode: ActiveNode): boolean {
-    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
-    const maybePrevious: Option<NodeIdMap.TXorNode> = ancestry[1];
-    if (maybePrevious === undefined) {
-        return true;
-    }
-
-    // Possibly: InvokeExpression
-    if (maybePrevious.node.kind === Ast.NodeKind.IdentifierExpression) {
-        if (
-            isAncestryOfNodeKindChain(ancestry, 2, [
-                Ast.NodeKind.Csv,
-                Ast.NodeKind.ArrayWrapper,
-                Ast.NodeKind.InvokeExpression,
-            ])
-        ) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-function isAncestryOfNodeKindChain(
-    ancestry: ReadonlyArray<NodeIdMap.TXorNode>,
-    start: number,
-    chain: ReadonlyArray<Ast.NodeKind>,
-): boolean {
-    const ancestryLength: number = ancestry.length;
-    if (start < 0) {
-        const details: {} = {
-            start,
-            ancestryLength,
-        };
-        throw new CommonError.InvariantError("invalid start", details);
-    } else if (start >= ancestryLength) {
-        return false;
-    }
-
-    const chainLength: number = chain.length;
-    for (let index: number = 0; index < chainLength; index += 1) {
-        const maybeAncestor: Option<NodeIdMap.TXorNode> = ancestry[index + start];
-        if (maybeAncestor === undefined) {
-            return false;
-        } else if (maybeAncestor.node.kind !== chain[index]) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 // [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
 function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number>): string {
     return [nodeKind, maybeAttributeIndex].join(",");
