@@ -191,7 +191,7 @@ export function isOnIdentifierConstant(state: IParserState, identifierConstant: 
     }
 }
 
-export function isOnGeneralizedIdentifierToken(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
+export function isOnGeneralizedIdentifierStart(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
     const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
     if (maybeToken === undefined) {
         return false;

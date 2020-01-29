@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { IParserState, IParserStateUtils, ParseError, Parser, TriedParse } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
@@ -12,16 +12,16 @@ function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
     const lexerState: Lexer.State = Lexer.stateFrom(text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
 
-    if (!(triedSnapshot.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedSnapshot.kind === ResultKind.Ok`);
+    if (!ResultUtils.isOk(triedSnapshot)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedSnapshot)`);
     }
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
     const triedParse: TriedParse = Parser.CombinatorialParser.readDocument(parserState, Parser.CombinatorialParser);
 
-    if (!(triedParse.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
+    if (!ResultUtils.isErr(triedParse)) {
+        throw new Error(`AssertFailed: ResultUtils.isErr(triedParse)`);
     }
     const error: ParseError.TParseError = triedParse.error;
 

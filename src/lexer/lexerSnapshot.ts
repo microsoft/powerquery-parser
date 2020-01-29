@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Lexer, LexError } from ".";
-import { CommonError, Option, Result, ResultKind, StringUtils } from "../common";
+import { CommonError, Option, Result, ResultUtils, StringUtils } from "../common";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import { IToken, LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
 
@@ -18,10 +18,7 @@ export class LexerSnapshot {
 
     public static tryFrom(state: Lexer.State): TriedLexerSnapshot {
         try {
-            return {
-                kind: ResultKind.Ok,
-                value: LexerSnapshot.factory(state),
-            };
+            return ResultUtils.okFactory(LexerSnapshot.factory(state));
         } catch (e) {
             let error: LexError.TLexError;
             if (LexError.isTInnerLexError(e)) {
@@ -29,10 +26,7 @@ export class LexerSnapshot {
             } else {
                 error = CommonError.ensureCommonError(e);
             }
-            return {
-                kind: ResultKind.Err,
-                error,
-            };
+            return ResultUtils.errFactory(error);
         }
     }
 

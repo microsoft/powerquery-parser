@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { Inspected } from "../../inspection";
 import { KeywordKind, TExpressionKeywords } from "../../lexer";
 import { Ast } from "../../parser";
@@ -13,8 +13,8 @@ import { expectParseErrInspection, expectParseOkInspection, expectTextWithPositi
 type AbridgedInspection = Inspected["autocompleteKeywords"];
 
 function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected: AbridgedInspection): void {
-    if (!(triedInspection.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
+    if (!ResultUtils.isOk(triedInspection)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
     }
     const inspection: Inspection.Inspected = triedInspection.value;
     const actual: AbridgedInspection = inspection.autocompleteKeywords;

@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import "mocha";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { TriedLexParse, tryLexParse } from "../../jobs";
 import { IParser, IParserState, Parser } from "../../parser";
 
@@ -65,7 +65,7 @@ function parseAllFiles(parserName: string, parser: IParser<IParserState>): void 
                 contents = contents.replace(/^\uFEFF/, "");
 
                 const triedLexParse: TriedLexParse = tryLexParse(contents, parser);
-                if (!(triedLexParse.kind === ResultKind.Ok)) {
+                if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }
             });

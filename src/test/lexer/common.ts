@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { expect } from "chai";
-import { Option, ResultKind } from "../../common";
+import { Option, ResultUtils } from "../../common";
 import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../lexer";
 
 export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
@@ -111,9 +111,9 @@ export function expectLexOk(text: string): Lexer.State {
 
 export function expectLexerSnapshot(text: string): LexerSnapshot {
     const state: Lexer.State = expectLexOk(text);
-    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (!(snapshotResult.kind === ResultKind.Ok)) {
-        throw new Error("AssertFailed: snapshotResult.kind === ResultKind.Ok");
+    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    if (!ResultUtils.isOk(triedSnapshot)) {
+        throw new Error("AssertFailed: ResultUtils.isOk(triedSnapshot)");
     }
-    return snapshotResult.value;
+    return triedSnapshot.value;
 }

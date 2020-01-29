@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { isNever, Option, ResultKind } from "../../common";
+import { isNever, Option, ResultUtils } from "../../common";
 import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection";
 import { Token, TokenPosition } from "../../lexer";
 import { NodeIdMap } from "../../parser";
@@ -30,8 +30,8 @@ function expectAbridgedInspectionEqual(
     triedInspection: Inspection.TriedInspection,
     expected: Option<TAbridgedPositionIdentifier>,
 ): void {
-    if (!(triedInspection.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
+    if (!ResultUtils.isOk(triedInspection)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
     }
     const inspection: Inspection.Inspected = triedInspection.value;
     const actual: Option<TAbridgedPositionIdentifier> = abridgedMaybeIdentifierUnderPositionFrom(

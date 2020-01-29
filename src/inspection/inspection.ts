@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result, ResultKind } from "../common";
+import { CommonError, Option, Result, ResultUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { NodeIdMap, ParseError } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
@@ -38,7 +38,7 @@ export function tryFrom(
         nodeIdMapCollection,
         leafNodeIds,
     );
-    if (triedInspectedIdentifier.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedInspectedIdentifier)) {
         return triedInspectedIdentifier;
     }
 
@@ -47,16 +47,13 @@ export function tryFrom(
         nodeIdMapCollection,
         maybeParseError,
     );
-    if (triedInspectedKeyword.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedInspectedKeyword)) {
         return triedInspectedKeyword;
     }
 
-    return {
-        kind: ResultKind.Ok,
-        value: {
-            maybeActiveNode,
-            ...triedInspectedIdentifier.value,
-            ...triedInspectedKeyword.value,
-        },
-    };
+    return ResultUtils.okFactory({
+        maybeActiveNode,
+        ...triedInspectedIdentifier.value,
+        ...triedInspectedKeyword.value,
+    });
 }

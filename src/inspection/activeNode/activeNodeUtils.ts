@@ -180,7 +180,7 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
         return false;
     }
 
-    if (astNode.kind === Ast.NodeKind.Identifier) {
+    if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
         return true;
     } else if (
         astNode.kind === Ast.NodeKind.LiteralExpression &&

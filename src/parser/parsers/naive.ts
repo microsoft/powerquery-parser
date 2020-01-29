@@ -2,12 +2,14 @@
 // Licensed under the MIT license.
 
 import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
-import { CommonError, isNever, Option, Result, ResultKind, TypeUtils } from "../../common";
+import { CommonError, isNever, Option, Result, ResultUtils, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
-import { IParserState, IParserStateUtils } from "../IParserState";
+import { IParserState } from "../IParserState";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
+
+import * as IParserStateUtils from "../IParserState/IParserStateUtils";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -22,6 +24,12 @@ type TriedReadPrimitiveType = Result<
 interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
 }
+
+const InvalidGeneralizedIdentifierTokenKinds: ReadonlyArray<TokenKind> = [
+    TokenKind.Comma,
+    TokenKind.Equal,
+    TokenKind.RightBracket,
+];
 
 // -------------------------------------------
 // ---------- // 12.1.6 Identifiers ----------
@@ -43,6 +51,7 @@ export function readIdentifier(state: IParserState, _parser: IParser<IParserStat
     return astNode;
 }
 
+// This behavior matches the C# parser and not the language specification.
 export function readGeneralizedIdentifier(
     state: IParserState,
     _parser: IParser<IParserState>,
@@ -53,29 +62,12 @@ export function readGeneralizedIdentifier(
     let literal: string;
     let astNode: Ast.GeneralizedIdentifier;
 
-    // Edge case where GeneralizedIdentifier is only decmal numbers.
-    // The logic should be more robust as it should technically support the following:
-    // `1.a`
-    // `෬` - non ASCII character from Unicode class Nd (U+0DEC SINHALA LITH DIGIT SIX)
-    if (
-        state.maybeCurrentToken !== undefined &&
-        state.maybeCurrentToken.kind === TokenKind.NumericLiteral &&
-        state.maybeCurrentToken.data.match("^\\d+$")
-    ) {
-        literal = readToken(state);
-        astNode = {
-            ...IParserStateUtils.expectContextNodeMetadata(state),
-            kind: nodeKind,
-            isLeaf: true,
-            literal,
-        };
-        IParserStateUtils.endContext(state, astNode);
-        return astNode;
-    }
-
     const tokenRangeStartIndex: number = state.tokenIndex;
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
-    while (IParserStateUtils.isOnGeneralizedIdentifierToken(state)) {
+    while (
+        state.maybeCurrentTokenKind &&
+        InvalidGeneralizedIdentifierTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
+    ) {
         readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
     }
@@ -143,10 +135,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
     // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
     // If both fail then return the error which parsed more tokens.
     try {
-        triedReadDocument = {
-            kind: ResultKind.Ok,
-            value: parser.readExpression(state, parser),
-        };
+        triedReadDocument = ResultUtils.okFactory(parser.readExpression(state, parser));
         const maybeErr: Option<ParseError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
         if (maybeErr) {
             throw maybeErr;
@@ -168,10 +157,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
         }
 
         try {
-            triedReadDocument = {
-                kind: ResultKind.Ok,
-                value: parser.readSectionDocument(state, parser),
-            };
+            triedReadDocument = ResultUtils.okFactory(readSectionDocument(state, parser));
             const maybeErr: Option<ParseError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
             if (maybeErr) {
                 throw maybeErr;
@@ -186,14 +172,11 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
                 triedError = sectionError;
             }
 
-            triedReadDocument = {
-                kind: ResultKind.Err,
-                error: triedError,
-            };
+            triedReadDocument = ResultUtils.errFactory(triedError);
         }
     }
 
-    if (triedReadDocument.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedReadDocument)) {
         const currentError: Error = triedReadDocument.error;
         let convertedError: ParseError.TParseError;
         if (ParseError.isTInnerParseError(currentError)) {
@@ -202,10 +185,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
             convertedError = CommonError.ensureCommonError(currentError);
         }
 
-        return {
-            kind: ResultKind.Err,
-            error: convertedError,
-        };
+        return ResultUtils.errFactory(convertedError);
     }
     const document: Ast.TDocument = triedReadDocument.value;
 
@@ -218,14 +198,11 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
     }
 
     const contextState: ParserContext.State = state.contextState;
-    return {
-        kind: ResultKind.Ok,
-        value: {
-            ast: document,
-            nodeIdMapCollection: contextState.nodeIdMapCollection,
-            leafNodeIds: contextState.leafNodeIds,
-        },
-    };
+    return ResultUtils.okFactory({
+        ast: document,
+        nodeIdMapCollection: contextState.nodeIdMapCollection,
+        leafNodeIds: contextState.leafNodeIds,
+    });
 }
 
 // ----------------------------------------------
@@ -334,7 +311,7 @@ export function readExpression(state: IParserState, parser: IParser<IParserState
                 ParenthesisDisambiguation,
                 ParseError.UnterminatedParenthesesError
             > = parser.disambiguateParenthesis(state, parser);
-            if (triedDisambiguation.kind === ResultKind.Err) {
+            if (ResultUtils.isErr(triedDisambiguation)) {
                 throw triedDisambiguation.error;
             }
             const disambiguation: ParenthesisDisambiguation = triedDisambiguation.value;
@@ -758,6 +735,7 @@ export function readLiteralExpression(state: IParserState, _parser: IParser<IPar
     const expectedTokenKinds: ReadonlyArray<TokenKind> = [
         TokenKind.HexLiteral,
         TokenKind.KeywordFalse,
+        TokenKind.KeywordHashNan,
         TokenKind.KeywordTrue,
         TokenKind.NumericLiteral,
         TokenKind.NullLiteral,
@@ -1155,7 +1133,7 @@ export function readTypeExpression(state: IParserState, parser: IParser<IParserS
 export function readType(state: IParserState, parser: IParser<IParserState>): Ast.TType {
     const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
 
-    if (triedReadPrimaryType.kind === ResultKind.Ok) {
+    if (ResultUtils.isOk(triedReadPrimaryType)) {
         return triedReadPrimaryType.value;
     } else {
         return parser.readPrimaryExpression(state, parser);
@@ -1165,7 +1143,7 @@ export function readType(state: IParserState, parser: IParser<IParserState>): As
 export function readPrimaryType(state: IParserState, parser: IParser<IParserState>): Ast.TPrimaryType {
     const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
 
-    if (triedReadPrimaryType.kind === ResultKind.Ok) {
+    if (ResultUtils.isOk(triedReadPrimaryType)) {
         return triedReadPrimaryType.value;
     } else {
         throw triedReadPrimaryType.error;
@@ -1256,7 +1234,7 @@ export function readFieldSpecificationList(
             } else {
                 throw fieldSpecificationListReadError(state, allowOpenMarker);
             }
-        } else if (IParserStateUtils.isOnGeneralizedIdentifierToken(state)) {
+        } else if (IParserStateUtils.isOnGeneralizedIdentifierStart(state)) {
             const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
             IParserStateUtils.startContext(state, csvNodeKind);
 
@@ -1404,35 +1382,20 @@ function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>):
         IParserStateUtils.isNextTokenKind(state, TokenKind.LeftParenthesis);
 
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
-        return {
-            kind: ResultKind.Ok,
-            value: parser.readRecordType(state, parser),
-        };
+        return ResultUtils.okFactory(parser.readRecordType(state, parser));
     } else if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBrace)) {
-        return {
-            kind: ResultKind.Ok,
-            value: parser.readListType(state, parser),
-        };
+        return ResultUtils.okFactory(parser.readListType(state, parser));
     } else if (isTableTypeNext) {
-        return {
-            kind: ResultKind.Ok,
-            value: parser.readTableType(state, parser),
-        };
+        return ResultUtils.okFactory(parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
-        return {
-            kind: ResultKind.Ok,
-            value: parser.readFunctionType(state, parser),
-        };
+        return ResultUtils.okFactory(parser.readFunctionType(state, parser));
     } else if (IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
-        return {
-            kind: ResultKind.Ok,
-            value: parser.readNullableType(state, parser),
-        };
+        return ResultUtils.okFactory(parser.readNullableType(state, parser));
     } else {
         const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
-        if (triedReadPrimitiveType.kind === ResultKind.Err) {
+        if (ResultUtils.isErr(triedReadPrimitiveType)) {
             IParserStateUtils.applyFastStateBackup(state, stateBackup);
         }
         return triedReadPrimitiveType;
@@ -1599,7 +1562,7 @@ export function readAnyLiteral(state: IParserState, parser: IParser<IParserState
 
 export function readPrimitiveType(state: IParserState, parser: IParser<IParserState>): Ast.PrimitiveType {
     const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state, parser);
-    if (triedReadPrimitiveType.kind === ResultKind.Ok) {
+    if (ResultUtils.isOk(triedReadPrimitiveType)) {
         return triedReadPrimitiveType.value;
     } else {
         throw triedReadPrimitiveType.error;
@@ -1622,10 +1585,7 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
     );
     if (maybeErr) {
         const error: ParseError.ExpectedAnyTokenKindError = maybeErr;
-        return {
-            kind: ResultKind.Err,
-            error,
-        };
+        return ResultUtils.errFactory(error);
     }
 
     let primitiveType: Ast.Constant;
@@ -1655,13 +1615,12 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
             default:
                 const token: Token = IParserStateUtils.expectTokenAt(state, state.tokenIndex);
                 IParserStateUtils.applyFastStateBackup(state, stateBackup);
-                return {
-                    kind: ResultKind.Err,
-                    error: new ParseError.InvalidPrimitiveTypeError(
+                return ResultUtils.errFactory(
+                    new ParseError.InvalidPrimitiveTypeError(
                         token,
                         state.lexerSnapshot.graphemePositionStartFrom(token),
                     ),
-                };
+                );
         }
     } else if (IParserStateUtils.isOnTokenKind(state, TokenKind.KeywordType)) {
         primitiveType = readTokenKindAsConstant(state, TokenKind.KeywordType);
@@ -1670,13 +1629,9 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
         IParserStateUtils.applyFastStateBackup(state, stateBackup);
-        return {
-            kind: ResultKind.Err,
-            error: new CommonError.InvariantError(
-                `unknown currentTokenKind, not found in [${expectedTokenKinds}]`,
-                details,
-            ),
-        };
+        return ResultUtils.errFactory(
+            new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
+        );
     }
 
     const astNode: Ast.PrimitiveType = {
@@ -1686,10 +1641,7 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
         primitiveType,
     };
     IParserStateUtils.endContext(state, astNode);
-    return {
-        kind: ResultKind.Ok,
-        value: astNode,
-    };
+    return ResultUtils.okFactory(astNode);
 }
 
 // ------------------------------------
@@ -1727,15 +1679,9 @@ export function disambiguateParenthesis(
                 } catch {
                     IParserStateUtils.applyFastStateBackup(state, stateBackup);
                     if (IParserStateUtils.isOnTokenKind(state, TokenKind.FatArrow)) {
-                        return {
-                            kind: ResultKind.Ok,
-                            value: ParenthesisDisambiguation.FunctionExpression,
-                        };
+                        return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
                     } else {
-                        return {
-                            kind: ResultKind.Ok,
-                            value: ParenthesisDisambiguation.ParenthesizedExpression,
-                        };
+                        return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
                     }
                 }
 
@@ -1747,21 +1693,12 @@ export function disambiguateParenthesis(
                 }
 
                 IParserStateUtils.applyFastStateBackup(state, stateBackup);
-                return {
-                    kind: ResultKind.Ok,
-                    value: disambiguation,
-                };
+                return ResultUtils.okFactory(disambiguation);
             } else {
                 if (IParserStateUtils.isTokenKind(state, TokenKind.FatArrow, offsetTokenIndex + 1)) {
-                    return {
-                        kind: ResultKind.Ok,
-                        value: ParenthesisDisambiguation.FunctionExpression,
-                    };
+                    return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
                 } else {
-                    return {
-                        kind: ResultKind.Ok,
-                        value: ParenthesisDisambiguation.ParenthesizedExpression,
-                    };
+                    return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
                 }
             }
         }
@@ -1769,10 +1706,7 @@ export function disambiguateParenthesis(
         offsetTokenIndex += 1;
     }
 
-    return {
-        kind: ResultKind.Err,
-        error: IParserStateUtils.unterminatedParenthesesError(state),
-    };
+    return ResultUtils.errFactory(IParserStateUtils.unterminatedParenthesesError(state));
 }
 
 // WARNING: Only updates tokenIndex and currentTokenKind,
@@ -1800,23 +1734,14 @@ export function disambiguateBracket(
     const offsetToken: Token = tokens[offsetTokenIndex];
 
     if (!offsetToken) {
-        return {
-            kind: ResultKind.Err,
-            error: IParserStateUtils.unterminatedBracketError(state),
-        };
+        return ResultUtils.errFactory(IParserStateUtils.unterminatedBracketError(state));
     }
 
     let offsetTokenKind: TokenKind = offsetToken.kind;
     if (offsetTokenKind === TokenKind.LeftBracket) {
-        return {
-            kind: ResultKind.Ok,
-            value: BracketDisambiguation.FieldProjection,
-        };
+        return ResultUtils.okFactory(BracketDisambiguation.FieldProjection);
     } else if (offsetTokenKind === TokenKind.RightBracket) {
-        return {
-            kind: ResultKind.Ok,
-            value: BracketDisambiguation.Record,
-        };
+        return ResultUtils.okFactory(BracketDisambiguation.Record);
     } else {
         const totalTokens: number = tokens.length;
         offsetTokenIndex += 1;
@@ -1824,24 +1749,15 @@ export function disambiguateBracket(
             offsetTokenKind = tokens[offsetTokenIndex].kind;
 
             if (offsetTokenKind === TokenKind.Equal) {
-                return {
-                    kind: ResultKind.Ok,
-                    value: BracketDisambiguation.Record,
-                };
+                return ResultUtils.okFactory(BracketDisambiguation.Record);
             } else if (offsetTokenKind === TokenKind.RightBracket) {
-                return {
-                    kind: ResultKind.Ok,
-                    value: BracketDisambiguation.FieldSelection,
-                };
+                return ResultUtils.okFactory(BracketDisambiguation.FieldSelection);
             }
 
             offsetTokenIndex += 1;
         }
 
-        return {
-            kind: ResultKind.Err,
-            error: IParserStateUtils.unterminatedBracketError(state),
-        };
+        return ResultUtils.errFactory(IParserStateUtils.unterminatedBracketError(state));
     }
 }
 

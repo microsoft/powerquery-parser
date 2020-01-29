@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result, ResultKind } from "../common";
+import { CommonError, Option, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
@@ -20,12 +20,9 @@ export function tryFrom(
     maybeParseError: Option<ParseError.ParseError>,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
-        return {
-            kind: ResultKind.Ok,
-            value: {
-                autocompleteKeywords: ExpressionAutocomplete,
-            },
-        };
+        return ResultUtils.okFactory({
+            autocompleteKeywords: ExpressionAutocomplete,
+        });
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
