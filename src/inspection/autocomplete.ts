@@ -194,6 +194,10 @@ function traverseAncestors(
                     );
                     break;
 
+                case Ast.NodeKind.ListExpression:
+                    maybeInspected = autocompleteListExpression(activeNode, child, index);
+                    break;
+
                 case Ast.NodeKind.SectionMember:
                     maybeInspected = autocompleteSectionMember(nodeIdMapCollection, activeNode, parent, child, index);
                     break;
@@ -591,6 +595,50 @@ function autocompleteErrorHandlingExpression(
         } else {
             return ExpressionAutocomplete;
         }
+    } else {
+        return undefined;
+    }
+}
+
+function autocompleteListExpression(
+    activeNode: ActiveNode,
+    child: NodeIdMap.TXorNode,
+    ancestorIndex: number,
+): Option<AutocompleteInspected> {
+    // '{' or '}'
+    if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
+        return undefined;
+    } else if (child.node.maybeAttributeIndex !== 1) {
+        const details: {} = {
+            nodeId: child.node.id,
+            maybeAttributeIndex: child.node.maybeAttributeIndex,
+        };
+        throw new CommonError.InvariantError("ListExpression child has an invalid maybeAttributeIndex", details);
+    }
+
+    // ListExpression -> ArrayWrapper -> Csv -> X
+    const nodeOrComma: NodeIdMap.TXorNode = ActiveNodeUtils.expectPreviousXorNode(
+        activeNode,
+        ancestorIndex,
+        3,
+        undefined,
+    );
+    if (nodeOrComma.node.maybeAttributeIndex !== 0) {
+        return undefined;
+    }
+
+    let itemNode: NodeIdMap.TXorNode;
+    if (nodeOrComma.node.kind === Ast.NodeKind.RangeExpression) {
+        itemNode = ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 4, undefined);
+    } else {
+        itemNode = nodeOrComma;
+    }
+
+    if (
+        itemNode.kind === NodeIdMap.XorNodeKind.Context ||
+        PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)
+    ) {
+        return ExpressionAutocomplete;
     } else {
         return undefined;
     }
