@@ -58,12 +58,19 @@ export function tryFrom(
         return triedAutocomplete;
     }
 
-    const inspected: AutocompleteInspected = handleEdgeCases(
-        triedAutocomplete.value,
-        activeNode,
-        maybePositionName,
-        maybeParseErrorToken,
-    );
+    let inspected: AutocompleteInspected = handleEdgeCases(triedAutocomplete.value, activeNode, maybeParseErrorToken);
+    inspected = filterRecommendations(inspected, maybePositionName);
+
+    if (maybePositionName !== undefined) {
+        const positionName: string = maybePositionName;
+        const likelyKeywords: ReadonlyArray<KeywordKind> = inspected.allowedAutocompleteKeywords.filter(
+            (kind: KeywordKind) => kind.startsWith(positionName),
+        );
+        inspected = {
+            ...inspected,
+            allowedAutocompleteKeywords: likelyKeywords,
+        };
+    }
 
     return ResultUtils.okFactory(inspected);
 
@@ -156,44 +163,6 @@ export function tryFrom(
     // };
 }
 
-function handleEdgeCases(
-    inspected: AutocompleteInspected,
-    activeNode: ActiveNode,
-    maybePositionName: Option<string>,
-    maybeParseErrorToken: Option<Token>,
-): AutocompleteInspected {
-    // Check if they're typing for the first time at the start of the file,
-    // which defaults to searching for an identifier.
-    if (
-        maybeParseErrorToken === undefined &&
-        activeNode.ancestry.length === 2 &&
-        activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
-        activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
-    ) {
-        inspected = ExpressionAutocomplete;
-    }
-
-    if (
-        maybeParseErrorToken !== undefined &&
-        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
-    ) {
-        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
-    }
-
-    if (maybePositionName !== undefined) {
-        const positionName: string = maybePositionName;
-        const likelyKeywords: ReadonlyArray<KeywordKind> = inspected.allowedAutocompleteKeywords.filter(
-            (kind: KeywordKind) => kind.startsWith(positionName),
-        );
-        inspected = {
-            ...inspected,
-            allowedAutocompleteKeywords: likelyKeywords,
-        };
-    }
-
-    return inspected;
-}
-
 function traverseAncestors(
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -251,6 +220,50 @@ function traverseAncestors(
     }
 
     return ResultUtils.okFactory(EmptyAutocomplete);
+}
+
+function handleEdgeCases(
+    inspected: AutocompleteInspected,
+    activeNode: ActiveNode,
+    maybeParseErrorToken: Option<Token>,
+): AutocompleteInspected {
+    // Check if they're typing for the first time at the start of the file,
+    // which defaults to searching for an identifier.
+    if (
+        maybeParseErrorToken === undefined &&
+        activeNode.ancestry.length === 2 &&
+        activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
+        activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
+    ) {
+        inspected = ExpressionAutocomplete;
+    }
+
+    if (
+        maybeParseErrorToken !== undefined &&
+        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
+    ) {
+        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
+    }
+
+    return inspected;
+}
+
+function filterRecommendations(
+    inspected: AutocompleteInspected,
+    maybePositionName: Option<string>,
+): AutocompleteInspected {
+    if (maybePositionName === undefined) {
+        return inspected;
+    }
+
+    const positionName: string = maybePositionName;
+    const likelyKeywords: ReadonlyArray<KeywordKind> = inspected.allowedAutocompleteKeywords.filter(
+        (kind: KeywordKind) => kind.startsWith(positionName),
+    );
+    return {
+        ...inspected,
+        allowedAutocompleteKeywords: likelyKeywords,
+    };
 }
 
 // const maybeParseErrorToken: Option<Token> = maybeParseError
