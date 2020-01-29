@@ -201,7 +201,10 @@ function traverseAncestors(
                 default: {
                     const key: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
                     if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
-                        if (maybePositionName !== undefined) {
+                        if (
+                            child.kind === NodeIdMap.XorNodeKind.Context ||
+                            PositionUtils.isBeforeAstNode(activeNode.position, child.node, false)
+                        ) {
                             maybeInspected = ExpressionAutocomplete;
                         }
                     } else {

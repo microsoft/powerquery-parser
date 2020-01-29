@@ -207,7 +207,7 @@ describe(`qweasdzxc Inspection`, () => {
 
             it(`if 1|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if 1|`);
-                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                const expected: AbridgedInspection = [[], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
@@ -337,7 +337,7 @@ describe(`qweasdzxc Inspection`, () => {
 
             it(`{1..|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{1..|`);
-                const expected: AbridgedInspection = [[], undefined];
+                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
         });
@@ -403,6 +403,18 @@ describe(`qweasdzxc Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[a|=1`);
                 const expected: AbridgedInspection = [[], undefined];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
+            });
+
+            it(`+[a=1|]`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[a=1|]`);
+                const expected: AbridgedInspection = [[], undefined];
+                expectNodesEqual(expectParseOkInspection(text, position), expected);
+            });
+
+            it(`+[a=| 1]`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[a=| 1]`);
+                const expected: AbridgedInspection = [TExpressionKeywords, undefined];
+                expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`+[a=1|,`, () => {
