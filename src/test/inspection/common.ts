@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { Option, ResultKind } from "../../common";
+import { Option, ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../../parser";
 
@@ -35,8 +35,8 @@ export function expectParseErrInspection(text: string, position: Inspection.Posi
 
 export function expectParseErr(text: string): ParseError.ParseError {
     const triedParse: TriedParse = expectTriedParse(text);
-    if (!(triedParse.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Err`);
+    if (!ResultUtils.isErr(triedParse)) {
+        throw new Error(`AssertFailed: ResultUtils.Err(triedParse)`);
     }
 
     if (!(triedParse.error instanceof ParseError.ParseError)) {
@@ -48,8 +48,8 @@ export function expectParseErr(text: string): ParseError.ParseError {
 
 export function expectParseOk(text: string): ParseOk {
     const triedParse: TriedParse = expectTriedParse(text);
-    if (!(triedParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedParse.kind === ResultKind.Ok: ${triedParse.error.message}`);
+    if (!ResultUtils.isOk(triedParse)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedParse): ${triedParse.error.message}`);
     }
     return triedParse.value;
 }
@@ -62,8 +62,8 @@ function expectTriedParse(text: string): TriedParse {
     }
 
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
-    if (!(triedSnapshot.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedSnapshot.kind === ResultKind.Ok: ${triedSnapshot.error.message}`);
+    if (!ResultUtils.isOk(triedSnapshot)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedSnapshot): ${triedSnapshot.error.message}`);
     }
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 

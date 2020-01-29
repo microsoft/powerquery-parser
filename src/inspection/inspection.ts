@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option, ResultKind, Traverse, TypeUtils } from "../common";
+import { Option, ResultUtils, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
@@ -50,10 +50,7 @@ export function tryFrom(
 ): TriedInspection {
     const maybeClosestLeaf: Option<Ast.TNode> = maybeClosestAstNode(position, nodeIdMapCollection, leafNodeIds);
     if (maybeClosestLeaf === undefined) {
-        return {
-            kind: ResultKind.Ok,
-            value: DefaultInspection,
-        };
+        return ResultUtils.okFactory(DefaultInspection);
     }
 
     const closestLeaf: Ast.TNode = maybeClosestLeaf;
@@ -88,20 +85,17 @@ export function tryFrom(
     // If an identifier is at the given Position but its definition wasn't found during the inspection,
     // then create an UndefinedIdentifier for maybePositionIdentifier.
     if (
-        triedTraverse.kind === ResultKind.Ok &&
+        ResultUtils.isOk(triedTraverse) &&
         state.maybeClosestLeafIdentifier &&
         state.result.maybePositionIdentifier === undefined
     ) {
-        return {
-            kind: ResultKind.Ok,
-            value: {
-                ...triedTraverse.value,
-                maybePositionIdentifier: {
-                    kind: PositionIdentifierKind.Undefined,
-                    identifier: state.maybeClosestLeafIdentifier,
-                },
+        return ResultUtils.okFactory({
+            ...triedTraverse.value,
+            maybePositionIdentifier: {
+                kind: PositionIdentifierKind.Undefined,
+                identifier: state.maybeClosestLeafIdentifier,
             },
-        };
+        });
     } else {
         return triedTraverse;
     }

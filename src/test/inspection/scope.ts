@@ -4,15 +4,15 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { Ast } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
 type AbridgedScope = ReadonlyArray<string>;
 
 function expectAbridgedInspectionEqual(triedInspection: Inspection.TriedInspection, expected: AbridgedScope): void {
-    if (!(triedInspection.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
+    if (!ResultUtils.isOk(triedInspection)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
     }
     const inspection: Inspection.Inspected = triedInspection.value;
     const actual: AbridgedScope = [...inspection.scope.keys()];

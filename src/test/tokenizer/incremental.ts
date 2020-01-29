@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { TriedLexerUpdate } from "../../lexer/lexer";
 import { ILineTokens, IState, IToken, Tokenizer } from "./common";
@@ -29,9 +29,9 @@ class MockDocument2 {
     public applyChange(text: string, range: Lexer.Range): void {
         const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateRange(this.lexerState, range, text);
 
-        if (!(triedLexerUpdate.kind === ResultKind.Ok)) {
+        if (!ResultUtils.isOk(triedLexerUpdate)) {
             const stringifyedResult: string = JSON.stringify(triedLexerUpdate, undefined, 4);
-            throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Ok ${stringifyedResult}`);
+            throw new Error(`AssertFailed: ResultUtils.isOk(triedLexerUpdate) ${stringifyedResult}`);
         }
 
         this.lexerState = triedLexerUpdate.value;
@@ -40,9 +40,9 @@ class MockDocument2 {
     public getText(): string {
         const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(this.lexerState);
 
-        if (!(triedLexerSnapshot.kind === ResultKind.Ok)) {
+        if (!ResultUtils.isOk(triedLexerSnapshot)) {
             const stringifyedResult: string = JSON.stringify(triedLexerSnapshot, undefined, 4);
-            throw new Error(`AssertFailed: triedLexerSnapshot.kind === ResultKind.Ok ${stringifyedResult}`);
+            throw new Error(`AssertFailed: ResultUtils.isOk(triedLexerSnapshot) ${stringifyedResult}`);
         }
 
         return triedLexerSnapshot.value.text;

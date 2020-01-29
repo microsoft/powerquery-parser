@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Option, Result, ResultKind } from ".";
+import { CommonError, isNever, Option, Result } from ".";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
+import { ResultUtils } from "./result";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
 
@@ -92,15 +93,9 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
             expandNodesFn,
             maybeEarlyExitFn,
         );
-        return {
-            kind: ResultKind.Ok,
-            value: state.result,
-        };
+        return ResultUtils.okFactory(state.result);
     } catch (e) {
-        return {
-            kind: ResultKind.Err,
-            error: CommonError.ensureCommonError(e),
-        };
+        return ResultUtils.errFactory(CommonError.ensureCommonError(e));
     }
 }
 
