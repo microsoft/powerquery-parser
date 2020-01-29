@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext, ParseError } from "..";
-import { CommonError, isNever, Option, Result, ResultKind, TypeUtils, ResultUtils } from "../../common";
+import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
+import { CommonError, isNever, Option, Result, ResultUtils, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState } from "../IParserState";

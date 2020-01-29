@@ -3,14 +3,14 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 
 function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
     const state: Lexer.State = Lexer.stateFrom(`foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, `bar`);
-    if (!(triedLexerUpdate.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    if (!ResultUtils.isErr(triedLexerUpdate)) {
+        throw new Error(`AssertFailed: ResultUtils.isErr(triedLexerUpdate): ${JSON.stringify(state)}`);
     }
 
     const error: LexError.LexError = triedLexerUpdate.error;
@@ -47,8 +47,8 @@ function expectExpectedKind(text: string, expectedKind: LexError.ExpectedKind): 
 function expectBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeKind): void {
     const state: Lexer.State = Lexer.stateFrom(`foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateRange(state, range, `bar`);
-    if (!(triedLexerUpdate.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: triedLexerUpdate.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    if (!ResultUtils.isErr(triedLexerUpdate)) {
+        throw new Error(`AssertFailed: ResultUtils.isErr(triedLexerUpdate): ${JSON.stringify(state)}`);
     }
 
     const error: LexError.LexError = triedLexerUpdate.error;
@@ -67,12 +67,12 @@ function expectUnterminatedMultilineTokenKind(
     expectedKind: LexError.UnterminatedMultilineTokenKind,
 ): void {
     const state: Lexer.State = Lexer.stateFrom(text);
-    const snapshotResult: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (!(snapshotResult.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: snapshotResult.kind === ResultKind.Err: ${JSON.stringify(state)}`);
+    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    if (!ResultUtils.isErr(triedSnapshot)) {
+        throw new Error(`AssertFailed: ResultUtils.isErr(triedSnapshot): ${JSON.stringify(state)}`);
     }
 
-    const error: LexError.TLexError = snapshotResult.error;
+    const error: LexError.TLexError = triedSnapshot.error;
     if (!(error.innerError instanceof LexError.UnterminatedMultilineTokenError)) {
         throw new Error(
             `AssertFailed: error.innerError instanceof LexError.UnterminatedMultilineTokenError: ${JSON.stringify(

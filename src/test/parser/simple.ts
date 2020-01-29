@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Option, ResultKind, Traverse } from "../../common";
+import { Option, ResultKind, ResultUtils, Traverse } from "../../common";
 import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, Parser } from "../../parser";
 
@@ -19,8 +19,8 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
 
 function expectLexParseOk(text: string): LexParseOk {
     const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
-    if (!(triedLexParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedLexParse.kind === ResultKind.Ok: ${triedLexParse.error.message}`);
+    if (!ResultUtils.isOk(triedLexParse)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }
     return triedLexParse.value;
 }
@@ -42,8 +42,8 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         undefined,
     );
 
-    if (!(triedTraverse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok: ${triedTraverse.error.message}`);
+    if (!ResultUtils.isOk(triedTraverse)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedTraverse): ${triedTraverse.error.message}`);
     }
 
     return triedTraverse.value;

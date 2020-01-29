@@ -4,13 +4,13 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { Ast } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
 function expectInspected(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
-    if (!(triedInspection.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
+    if (!ResultUtils.isOk(triedInspection)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
     }
     return triedInspection.value;
 }

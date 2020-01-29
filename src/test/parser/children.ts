@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, NodeIdMap, Parser } from "../../parser";
 
@@ -15,8 +15,8 @@ interface ChildIdsByIdEntry {
 
 function expectLexParseOk(text: string): LexParseOk {
     const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
-    if (!(triedLexParse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedLexParse.kind === ResultKind.Ok: ${triedLexParse.error.message}`);
+    if (!ResultUtils.isOk(triedLexParse)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }
     return triedLexParse.value;
 }

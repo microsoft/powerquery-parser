@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultKind } from "../../common";
+import { ResultUtils } from "../../common";
 import { TriedLexParse, tryLexParse } from "../../jobs";
 import * as Localization from "../../localization/error";
 import { ParseError, Parser } from "../../parser";
@@ -11,8 +11,8 @@ import { ParseError, Parser } from "../../parser";
 function expectParserInnerError(text: string): ParseError.TInnerParseError {
     const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
 
-    if (!(triedLexParse.kind === ResultKind.Err)) {
-        throw new Error(`AssertFailed: triedLexParse.kind === ResultKind.Err ${JSON.stringify(triedLexParse)}`);
+    if (!ResultUtils.isErr(triedLexParse)) {
+        throw new Error(`AssertFailed: ResultUtils.isErr(triedLexParse) ${JSON.stringify(triedLexParse)}`);
     } else if (!(triedLexParse.error instanceof ParseError.ParseError)) {
         const errorMessage: string = triedLexParse.error.message;
         throw new Error(`AssertFailed: triedLexParse.error instanceof ParseError - ${errorMessage}`);
