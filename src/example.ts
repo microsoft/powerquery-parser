@@ -4,7 +4,7 @@
 /* tslint:disable:no-console */
 
 import { Inspection } from ".";
-import { Option, ResultKind, ResultUtils } from "./common";
+import { Option, ResultUtils } from "./common";
 import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./jobs";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError, Parser } from "./parser";

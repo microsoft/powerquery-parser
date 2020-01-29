@@ -1,5 +1,5 @@
 import { Ast, ParseError } from "..";
-import { CommonError, isNever, Option, Result, ResultKind, ResultUtils } from "../../common";
+import { CommonError, isNever, Option, Result, ResultUtils } from "../../common";
 import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";

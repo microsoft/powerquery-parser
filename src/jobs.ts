@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from ".";
-import { CommonError, Option, Result, ResultKind, ResultUtils } from "./common";
+import { CommonError, Option, Result, ResultUtils } from "./common";
 import { Inspected, TriedInspection } from "./inspection";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import {

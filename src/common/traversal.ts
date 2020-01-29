@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Option, Result, ResultKind } from ".";
+import { CommonError, isNever, Option, Result } from ".";
 import { Ast, NodeIdMap, ParserContext } from "../parser";
 import { ResultUtils } from "./result";
 

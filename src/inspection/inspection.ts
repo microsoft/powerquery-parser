@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option, ResultKind, Traverse, TypeUtils, ResultUtils } from "../common";
+import { Option, ResultUtils, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
 import { Ast, NodeIdMap } from "../parser";
@@ -90,13 +90,12 @@ export function tryFrom(
         state.result.maybePositionIdentifier === undefined
     ) {
         return ResultUtils.okFactory({
-                ...triedTraverse.value,
-                maybePositionIdentifier: {
-                    kind: PositionIdentifierKind.Undefined,
-                    identifier: state.maybeClosestLeafIdentifier,
-                },
-            })
-        };
+            ...triedTraverse.value,
+            maybePositionIdentifier: {
+                kind: PositionIdentifierKind.Undefined,
+                identifier: state.maybeClosestLeafIdentifier,
+            },
+        });
     } else {
         return triedTraverse;
     }

@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultKind, ResultUtils } from "../../common";
+import { ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { TriedLexerUpdate } from "../../lexer/lexer";
 import { expectLexOk } from "./common";
