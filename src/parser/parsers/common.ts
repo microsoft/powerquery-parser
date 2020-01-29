@@ -1,5 +1,5 @@
 import { Ast, ParseError } from "..";
-import { CommonError, isNever, Option, Result, ResultKind } from "../../common";
+import { CommonError, isNever, Option, Result, ResultKind, ResultUtils } from "../../common";
 import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -83,7 +83,7 @@ export function readBracketDisambiguation(
         BracketDisambiguation,
         ParseError.UnterminatedBracketError
     > = parser.disambiguateBracket(state, parser);
-    if (triedDisambiguation.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedDisambiguation)) {
         throw triedDisambiguation.error;
     }
     const disambiguation: BracketDisambiguation = triedDisambiguation.value;

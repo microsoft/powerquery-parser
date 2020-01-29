@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from ".";
-import { CommonError, Option, Result, ResultKind } from "./common";
+import { CommonError, Option, Result, ResultKind, ResultUtils } from "./common";
 import { Inspected, TriedInspection } from "./inspection";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import {
@@ -33,10 +33,7 @@ export function tryLex(text: string): TriedLexerSnapshot {
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
-        return {
-            kind: ResultKind.Err,
-            error: new LexError.LexError(new LexError.ErrorLineMapError(errorLineMap)),
-        };
+        return ResultUtils.errFactory(new LexError.LexError(new LexError.ErrorLineMapError(errorLineMap)));
     }
 
     return LexerSnapshot.tryFrom(state);
@@ -51,16 +48,13 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
 
-    if (triedParse.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedParse)) {
         if (triedParse.error instanceof CommonError.CommonError) {
             // Returning triedParse /should/ be safe, but Typescript has a problem with it.
             // However, if I repackage the same error it satisfies the type check.
             // There's no harm in having to repackage the error, and by not casting it we can prevent
             // future regressions if TriedParse changes.
-            return {
-                kind: ResultKind.Err,
-                error: triedParse.error,
-            };
+            return ResultUtils.errFactory(triedParse.error);
         }
 
         const context: ParserContext.State = triedParse.error.context;
@@ -77,20 +71,17 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
 
 export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {
     const triedLexerSnapshot: TriedLexerSnapshot = tryLex(text);
-    if (triedLexerSnapshot.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
     const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
 
     const triedParse: TriedParse = tryParse(lexerSnapshot, parser);
-    if (triedParse.kind === ResultKind.Ok) {
-        return {
-            kind: ResultKind.Ok,
-            value: {
-                ...triedParse.value,
-                lexerSnapshot,
-            },
-        };
+    if (ResultUtils.isOk(triedParse)) {
+        return ResultUtils.okFactory({
+            ...triedParse.value,
+            lexerSnapshot,
+        });
     } else {
         return triedParse;
     }
@@ -102,7 +93,7 @@ export function tryLexParseInspection(
     position: Inspection.Position,
 ): TriedLexParseInspection {
     const triedLexParse: TriedLexParse = tryLexParse(text, parser);
-    if (triedLexParse.kind === ResultKind.Err && triedLexParse.error instanceof LexError.LexError) {
+    if (ResultUtils.isErr(triedLexParse) && triedLexParse.error instanceof LexError.LexError) {
         return triedLexParse;
     }
 
@@ -113,15 +104,12 @@ export function tryLexParseInspection(
     > = triedLexParse as Result<LexParseOk, ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>>;
     const triedInspection: TriedInspection = tryInspection(casted, position);
 
-    if (triedInspection.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedInspection)) {
         return triedInspection;
     }
 
-    return {
-        kind: ResultKind.Ok,
-        value: {
-            ...triedInspection.value,
-            triedParse: casted,
-        },
-    };
+    return ResultUtils.okFactory({
+        ...triedInspection.value,
+        triedParse: casted,
+    });
 }

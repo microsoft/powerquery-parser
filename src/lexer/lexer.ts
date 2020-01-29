@@ -10,8 +10,9 @@ import {
     PartialResultKind,
     Pattern,
     Result,
-    ResultKind,
+    ResultUtils,
     StringUtils,
+    PartialResultUtils,
 } from "../common";
 import { Keyword } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
@@ -122,10 +123,7 @@ export function tryUpdateLine(state: State, lineNumber: number, text: string): T
 
     const maybeError: Option<LexError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
     if (maybeError) {
-        return {
-            kind: ResultKind.Err,
-            error: new LexError.LexError(maybeError),
-        };
+        return ResultUtils.errFactory(new LexError.LexError(maybeError));
     }
 
     const line: TLine = lines[lineNumber];
@@ -136,10 +134,7 @@ export function tryUpdateLine(state: State, lineNumber: number, text: string): T
 export function tryUpdateRange(state: State, range: Range, text: string): TriedLexerUpdate {
     const maybeError: Option<LexError.BadRangeError> = maybeBadRangeError(state, range);
     if (maybeError) {
-        return {
-            kind: ResultKind.Err,
-            error: new LexError.LexError(maybeError),
-        };
+        return ResultUtils.errFactory(new LexError.LexError(maybeError));
     }
 
     const splitLines: SplitLine[] = splitOnLineTerminators(text);
@@ -169,12 +164,7 @@ export function tryUpdateRange(state: State, range: Range, text: string): TriedL
         ...retokenizeLines(state.lines, rangeEnd.lineNumber + 1, newLines[newLines.length - 1].lineModeEnd),
     ];
 
-    return {
-        kind: ResultKind.Ok,
-        value: {
-            lines,
-        },
-    };
+    return ResultUtils.okFactory({ lines });
 }
 
 export function tryDeleteLine(state: State, lineNumber: number): TriedLexerUpdate {
@@ -182,19 +172,13 @@ export function tryDeleteLine(state: State, lineNumber: number): TriedLexerUpdat
 
     const maybeError: Option<LexError.BadLineNumberError> = maybeBadLineNumberError(lineNumber, lines);
     if (maybeError) {
-        return {
-            kind: ResultKind.Err,
-            error: new LexError.LexError(maybeError),
-        };
+        ResultUtils.errFactory(new LexError.LexError(maybeError));
     }
 
-    return {
-        kind: ResultKind.Ok,
-        value: {
-            ...state,
-            lines: [...lines.slice(0, lineNumber), ...lines.slice(lineNumber + 1)],
-        },
-    };
+    return ResultUtils.okFactory({
+        ...state,
+        lines: [...lines.slice(0, lineNumber), ...lines.slice(lineNumber + 1)],
+    });
 }
 
 // deep state comparison
@@ -554,28 +538,21 @@ function tokenize(line: TLine, lineNumber: number): TLine {
     let partialTokenizeResult: PartialResult<TokenizeChanges, LexError.TLexError>;
     if (maybeError) {
         if (newTokens.length) {
-            partialTokenizeResult = {
-                kind: PartialResultKind.Partial,
-                value: {
+            partialTokenizeResult = PartialResultUtils.mixedFactory(
+                {
                     tokens: newTokens,
                     lineModeEnd: lineMode,
                 },
-                error: maybeError,
-            };
+                maybeError,
+            );
         } else {
-            partialTokenizeResult = {
-                kind: PartialResultKind.Err,
-                error: maybeError,
-            };
+            partialTokenizeResult = PartialResultUtils.errFactory(maybeError);
         }
     } else {
-        partialTokenizeResult = {
-            kind: PartialResultKind.Ok,
-            value: {
-                tokens: newTokens,
-                lineModeEnd: lineMode,
-            },
-        };
+        partialTokenizeResult = PartialResultUtils.okFactory({
+            tokens: newTokens,
+            lineModeEnd: lineMode,
+        });
     }
 
     return updateLineState(line, partialTokenizeResult);

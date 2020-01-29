@@ -7,7 +7,7 @@ export type PartialResult<T, E> = PartialOk<T> | PartialMixed<T, E> | PartialErr
 
 export const enum PartialResultKind {
     Ok = "Ok",
-    Partial = "Partial",
+    Mixed = "Partial",
     Err = "Err",
 }
 
@@ -17,7 +17,7 @@ export interface PartialOk<T> {
 }
 
 export interface PartialMixed<T, E> {
-    readonly kind: PartialResultKind.Partial;
+    readonly kind: PartialResultKind.Mixed;
     readonly value: T;
     readonly error: E;
 }

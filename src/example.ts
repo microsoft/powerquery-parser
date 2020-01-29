@@ -4,7 +4,7 @@
 /* tslint:disable:no-console */
 
 import { Inspection } from ".";
-import { Option, ResultKind } from "./common";
+import { Option, ResultKind, ResultUtils } from "./common";
 import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./jobs";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError, Parser } from "./parser";
@@ -18,7 +18,7 @@ function parseText(text: string): void {
     const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
-    if (triedLexParse.kind === ResultKind.Ok) {
+    if (ResultUtils.isOk(triedLexParse)) {
         console.log(JSON.stringify(triedLexParse.value, undefined, 4));
     }
     // Else the Result is an Err, then log the jsonified error.
@@ -67,7 +67,7 @@ function lexText(text: string): void {
     // For fine-grained control there is also the method Lexer.tryUpdateRange,
     // which is how Lexer.tryUpdateLine is implemented.
     const triedUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, state.lines.length - 1, "// goodbye world");
-    if (triedUpdate.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedUpdate)) {
         console.log("Failed to update line");
         return;
     }
@@ -84,7 +84,7 @@ function lexText(text: string): void {
 
     // Creating a LexerSnapshot is a Result due to potential multiline token errors.
     const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (triedLexerSnapshot.kind === ResultKind.Ok) {
+    if (ResultUtils.isOk(triedLexerSnapshot)) {
         const snapshot: LexerSnapshot = triedLexerSnapshot.value;
         console.log(`numTokens: ${snapshot.tokens}`);
         console.log(`numComments: ${snapshot.comments}`);
@@ -102,7 +102,7 @@ function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
     const triedInspection: TriedLexParseInspection = tryLexParseInspection(text, Parser.CombinatorialParser, position);
-    if (triedInspection.kind === ResultKind.Err) {
+    if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;
     }
