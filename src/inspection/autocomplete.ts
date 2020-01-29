@@ -28,21 +28,21 @@ export function tryFrom(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    let maybePositionName: Option<string>;
     const leaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
     const maybeParseErrorToken: Option<Token> = maybeParseError
         ? ParseError.maybeTokenFrom(maybeParseError.innerError)
         : undefined;
+
+    let maybePositionName: Option<string>;
     if (PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, leaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
             maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
         }
-        // 'null', 'true', or 'false'.
+        // Matches 'null', 'true', and 'false'.
         else if (
             leaf.kind === NodeIdMap.XorNodeKind.Ast &&
             leaf.node.kind === Ast.NodeKind.LiteralExpression &&
-            (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null) &&
-            PositionUtils.isInAstNode(activeNode.position, leaf.node, false, true)
+            (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null)
         ) {
             maybePositionName = leaf.node.literal;
         }
@@ -523,7 +523,7 @@ function autocompleteRequiredFactory(constantKind: Ast.ConstantKind): Autocomple
 function autocompleteErrorHandlingExpression(
     position: Position,
     child: NodeIdMap.TXorNode,
-    maybeErrorToken: Option<Token>,
+    maybeParseErrorToken: Option<Token>,
 ): Option<AutocompleteInspected> {
     const maybeChildAttributeIndex: Option<number> = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
@@ -531,15 +531,15 @@ function autocompleteErrorHandlingExpression(
     } else if (maybeChildAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
         // It's ambigous if the next token should be either 'otherwise' or 'or'.
-        if (maybeErrorToken !== undefined) {
-            const errorToken: Token = maybeErrorToken;
+        if (maybeParseErrorToken !== undefined) {
+            const errorToken: Token = maybeParseErrorToken;
 
             // First we test if we can autocomplete using the error token.
             if (
                 errorToken.kind === TokenKind.Identifier &&
-                PositionUtils.isInToken(position, maybeErrorToken, false, true)
+                PositionUtils.isInToken(position, maybeParseErrorToken, false, true)
             ) {
-                const tokenData: string = maybeErrorToken.data;
+                const tokenData: string = maybeParseErrorToken.data;
 
                 // If we can exclude 'or' then the only thing we can autocomplete is 'otherwise'.
                 if (tokenData.length > 1 && KeywordKind.Otherwise.startsWith(tokenData)) {
@@ -566,7 +566,7 @@ function autocompleteErrorHandlingExpression(
             }
         } else if (
             child.kind === NodeIdMap.XorNodeKind.Ast &&
-            PositionUtils.isAfterAstNode(position, child.node, false)
+            PositionUtils.isAfterAstNode(position, child.node, true)
         ) {
             return {
                 allowedAutocompleteKeywords: [],
