@@ -4,7 +4,7 @@
 import { Option, ResultUtils, Traverse, TypeUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { TokenPosition } from "../lexer";
-import { Ast, NodeIdMap } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils } from "../parser";
 import { IInspectedNode, InspectedInvokeExpression } from "./node";
 import { Position } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
@@ -123,7 +123,7 @@ function maybeClosestLeafIdentifier(
         }
         const parentId: number = maybeParentId;
 
-        const parent: Ast.TNode = NodeIdMap.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
+        const parent: Ast.TNode = NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
         return parent.kind === Ast.NodeKind.IdentifierExpression ? parent.identifier : undefined;
     } else if (
         closestLeaf.kind === Ast.NodeKind.Identifier ||
@@ -142,7 +142,10 @@ function addParentXorNode(
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    const maybeParent: Option<NodeIdMap.TXorNode> = NodeIdMap.maybeParentXorNode(nodeIdMapCollection, xorNode.node.id);
+    const maybeParent: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeParentXorNode(
+        nodeIdMapCollection,
+        xorNode.node.id,
+    );
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 
@@ -159,7 +162,7 @@ function maybeClosestAstNode(
     let maybeClosestNode: Option<Ast.TNode>;
 
     for (const nodeId of leafNodeIds) {
-        const newNode: Ast.TNode = NodeIdMap.expectAstNode(astNodeById, nodeId);
+        const newNode: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
         maybeClosestNode = closerAstNode(position, maybeClosestNode, newNode);
     }
 
