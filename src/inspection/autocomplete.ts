@@ -242,7 +242,7 @@ function handleEdgeCases(
         activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
-        inspected = ExpressionAutocomplete;
+        inspected = ExpressionAndSectionAutocomplete;
     }
 
     if (
@@ -363,6 +363,11 @@ const EmptyAutocomplete: AutocompleteInspected = {
 const ExpressionAutocomplete: AutocompleteInspected = {
     maybeRequiredAutocomplete: undefined,
     allowedAutocompleteKeywords: TExpressionKeywords,
+};
+
+const ExpressionAndSectionAutocomplete: AutocompleteInspected = {
+    maybeRequiredAutocomplete: undefined,
+    allowedAutocompleteKeywords: [...TExpressionKeywords, KeywordKind.Section],
 };
 
 const AutocompleteExpressionKeys: ReadonlyArray<string> = [
