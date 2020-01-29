@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Option, ResultKind, ResultUtils, Traverse } from "../../common";
+import { Option, ResultUtils, Traverse } from "../../common";
 import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, Parser } from "../../parser";
 
@@ -71,8 +71,8 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
         nthNodeEarlyExit,
     );
 
-    if (!(triedTraverse.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedTraverse.kind === ResultKind.Ok: ${triedTraverse.error.message}`);
+    if (!ResultUtils.isOk(triedTraverse)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedTraverse): ${triedTraverse.error.message}`);
     }
     const maybeAstNode: Option<Ast.TNode> = triedTraverse.value;
     if (!(maybeAstNode !== undefined)) {
