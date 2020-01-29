@@ -8,11 +8,11 @@ import {
     Option,
     PartialResult,
     PartialResultKind,
+    PartialResultUtils,
     Pattern,
     Result,
     ResultUtils,
     StringUtils,
-    PartialResultUtils,
 } from "../common";
 import { Keyword } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
@@ -578,7 +578,7 @@ function updateLineState(
             };
         }
 
-        case PartialResultKind.Partial: {
+        case PartialResultKind.Mixed: {
             const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
             const newTokens: ReadonlyArray<LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
