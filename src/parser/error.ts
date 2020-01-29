@@ -4,6 +4,7 @@
 import { Ast, ParserContext } from ".";
 import { CommonError, Option, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
+
 import * as Localization from "../localization/error";
 
 export type TParseError = CommonError.CommonError | ParseError;
@@ -11,6 +12,7 @@ export type TParseError = CommonError.CommonError | ParseError;
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
     | ExpectedCsvContinuationError
+    | ExpectedGeneralizedIdentifierError
     | ExpectedTokenKindError
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
@@ -43,6 +45,12 @@ export class ExpectedAnyTokenKindError extends Error {
 export class ExpectedTokenKindError extends Error {
     constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
         super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
+    }
+}
+
+export class ExpectedGeneralizedIdentifierError extends Error {
+    constructor(readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
+        super(Localization.parserExpectedGeneralizedIdentifier(maybeFoundToken));
     }
 }
 
@@ -95,6 +103,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
     return (
         x instanceof ExpectedAnyTokenKindError ||
         x instanceof ExpectedCsvContinuationError ||
+        x instanceof ExpectedGeneralizedIdentifierError ||
         x instanceof ExpectedTokenKindError ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||
@@ -103,4 +112,28 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
         x instanceof UnterminatedParenthesesError ||
         x instanceof UnusedTokensRemainError
     );
+}
+
+export function maybeTokenFrom(err: TInnerParseError): Option<Token> {
+    if (
+        (err instanceof ExpectedAnyTokenKindError ||
+            err instanceof ExpectedCsvContinuationError ||
+            err instanceof ExpectedGeneralizedIdentifierError ||
+            err instanceof ExpectedTokenKindError) &&
+        err.maybeFoundToken
+    ) {
+        return err.maybeFoundToken.token;
+    } else if (err instanceof InvalidPrimitiveTypeError) {
+        return err.token;
+    } else if (err instanceof RequiredParameterAfterOptionalParameterError) {
+        return err.missingOptionalToken;
+    } else if (err instanceof UnterminatedBracketError) {
+        return err.openBracketToken;
+    } else if (err instanceof UnterminatedParenthesesError) {
+        return err.openParenthesesToken;
+    } else if (err instanceof UnusedTokensRemainError) {
+        return err.firstUnusedToken;
+    } else {
+        return undefined;
+    }
 }

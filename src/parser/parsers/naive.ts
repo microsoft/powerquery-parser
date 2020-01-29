@@ -6,9 +6,10 @@ import { CommonError, isNever, Option, Result, ResultUtils, TypeUtils } from "..
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState } from "../IParserState";
-import * as IParserStateUtils from "../IParserState/IParserStateUtils";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
+
+import * as IParserStateUtils from "../IParserState/IParserStateUtils";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -72,8 +73,8 @@ export function readGeneralizedIdentifier(
     }
 
     if (tokenRangeStartIndex === tokenRangeEndIndex) {
-        throw new CommonError.InvariantError(
-            `readGeneralizedIdentifier has tokenRangeStartIndex === tokenRangeEndIndex`,
+        throw new ParseError.ExpectedGeneralizedIdentifierError(
+            IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
         );
     }
 
@@ -1667,10 +1668,8 @@ export function disambiguateParenthesis(
         }
 
         if (nestedDepth === 0) {
-            // (as X) could either be either case,
-            // so we need to consume type X and see if it's followed by a FatArrow.
-            //
-            // It's important we backup and eventually restore the original Parser state.
+            // '(x as number) as number' could either be either case,
+            // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (IParserStateUtils.isTokenKind(state, TokenKind.KeywordAs, offsetTokenIndex + 1)) {
                 const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
@@ -1930,7 +1929,6 @@ function readCsvArray<T>(
 
         const node: T & Ast.TCsvType = valueReader();
         const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
-        continueReadingValues = maybeCommaConstant !== undefined;
 
         const element: Ast.TCsv & Ast.ICsv<T & Ast.TCsvType> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1939,8 +1937,10 @@ function readCsvArray<T>(
             node,
             maybeCommaConstant,
         };
-        elements.push(element);
         IParserStateUtils.endContext(state, element);
+        elements.push(element);
+
+        continueReadingValues = maybeCommaConstant !== undefined;
     }
 
     const astNode: Ast.ICsvArray<T & Ast.TCsvType> = {

@@ -176,6 +176,19 @@ export function expectExpandAllXorChildren<State, ResultType>(
     }
 }
 
+// Returns the TXorNode's parent if one exists.
+export function maybeExpandXorParent<T>(
+    _state: T,
+    xorNode: NodeIdMap.TXorNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+): ReadonlyArray<NodeIdMap.TXorNode> {
+    const maybeParent: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeParentXorNode(
+        nodeIdMapCollection,
+        xorNode.node.id,
+    );
+    return maybeParent !== undefined ? [maybeParent] : [];
+}
+
 function traverseRecursion<State, ResultType, Node, NodesById>(
     state: State & IState<ResultType>,
     nodesById: NodesById,

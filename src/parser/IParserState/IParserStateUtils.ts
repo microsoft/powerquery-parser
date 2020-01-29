@@ -4,10 +4,10 @@
 import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
+import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
 import * as Localization from "../../localization/error";
-import { NodeIdMapUtils } from "../nodeIdMap";
 
 export interface FastStateBackup {
     readonly tokenIndex: number;
@@ -346,14 +346,8 @@ export function testIsOnTokenKind(
     expectedTokenKind: TokenKind,
 ): Option<ParseError.ExpectedTokenKindError> {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
-        const maybeTokenWithColumnNumber: Option<ParseError.TokenWithColumnNumber> =
-            state.maybeCurrentToken !== undefined
-                ? {
-                      token: state.maybeCurrentToken,
-                      columnNumber: state.lexerSnapshot.columnNumberStartFrom(state.maybeCurrentToken),
-                  }
-                : undefined;
-        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeTokenWithColumnNumber);
+        const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
+        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeToken);
     } else {
         return undefined;
     }
@@ -367,10 +361,8 @@ export function testIsOnAnyTokenKind(
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(state.maybeCurrentTokenKind) === -1;
 
     if (isError) {
-        const maybeTokenWithColumnNumber: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(
-            state,
-        );
-        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeTokenWithColumnNumber);
+        const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
+        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeToken);
     } else {
         return undefined;
     }
@@ -396,11 +388,18 @@ export function unterminatedBracketError(state: IParserState): ParseError.Unterm
 }
 
 export function maybeCurrentTokenWithColumnNumber(state: IParserState): Option<ParseError.TokenWithColumnNumber> {
-    const maybeCurrentToken: Option<Token> = state.maybeCurrentToken;
-    if (maybeCurrentToken === undefined) {
+    return maybeTokenWithColumnNumber(state, state.tokenIndex);
+}
+
+export function maybeTokenWithColumnNumber(
+    state: IParserState,
+    tokenIndex: number,
+): Option<ParseError.TokenWithColumnNumber> {
+    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+    if (maybeToken === undefined) {
         return undefined;
     }
-    const currentToken: Token = maybeCurrentToken;
+    const currentToken: Token = maybeToken;
 
     return {
         token: currentToken,

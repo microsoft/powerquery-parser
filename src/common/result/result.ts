@@ -17,3 +17,10 @@ export interface Err<E> {
     readonly kind: ResultKind.Err;
     readonly error: E;
 }
+
+export function okFactory<T>(value: T): Ok<T> {
+    return {
+        kind: ResultKind.Ok,
+        value,
+    };
+}

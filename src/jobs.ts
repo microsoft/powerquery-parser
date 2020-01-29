@@ -47,6 +47,7 @@ export function tryParse(lexerSnapshot: LexerSnapshot, parser: IParser<IParserSt
 export function tryInspection(triedParse: TriedParse, position: Inspection.Position): TriedInspection {
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
+    let maybeParseError: Option<ParseError.ParseError>;
 
     if (ResultUtils.isErr(triedParse)) {
         if (triedParse.error instanceof CommonError.CommonError) {
@@ -55,6 +56,8 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
             // There's no harm in having to repackage the error, and by not casting it we can prevent
             // future regressions if TriedParse changes.
             return ResultUtils.errFactory(triedParse.error);
+        } else {
+            maybeParseError = triedParse.error;
         }
 
         const context: ParserContext.State = triedParse.error.context;
@@ -66,7 +69,7 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
         nodeIdMapCollection = parseOk.nodeIdMapCollection;
     }
 
-    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds);
+    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds, maybeParseError);
 }
 
 export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {

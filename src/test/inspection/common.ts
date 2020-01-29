@@ -25,12 +25,17 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 
 export function expectParseOkInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
     const parseOk: ParseOk = expectParseOk(text);
-    return Inspection.tryFrom(position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds);
+    return Inspection.tryFrom(position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
 }
 
 export function expectParseErrInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
     const parseError: ParseError.ParseError = expectParseErr(text);
-    return Inspection.tryFrom(position, parseError.context.nodeIdMapCollection, parseError.context.leafNodeIds);
+    return Inspection.tryFrom(
+        position,
+        parseError.context.nodeIdMapCollection,
+        parseError.context.leafNodeIds,
+        parseError,
+    );
 }
 
 export function expectParseErr(text: string): ParseError.ParseError {

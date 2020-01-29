@@ -1,9 +1,10 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import "mocha";
-import * as path from "path";
 import { ResultUtils } from "../../common";
 import { TriedLexParse, tryLexParse } from "../../jobs";
 import { IParser, IParserState, Parser } from "../../parser";
+
+import * as path from "path";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 

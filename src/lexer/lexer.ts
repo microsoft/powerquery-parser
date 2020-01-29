@@ -14,7 +14,7 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
-import { Keyword } from "./keywords";
+import { KeywordKind } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
 // The lexer
@@ -716,7 +716,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
     } else if (chr1 === "}") {
         token = readConstant(LineTokenKind.RightBrace, text, positionStart, 1);
     } else if (chr1 === '"') {
-        const read: LineModeAlteringRead = readStringLiteralOrStart(text, positionStart);
+        const read: LineModeAlteringRead = readOrStartStringLiteral(text, positionStart);
         token = read.token;
         lineMode = read.lineMode;
     } else if (chr1 === "0") {
@@ -779,7 +779,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
         if (chr2 === "/") {
             token = readLineComment(text, positionStart);
         } else if (chr2 === "*") {
-            const read: LineModeAlteringRead = readMultilineCommentOrStartStart(text, positionStart);
+            const read: LineModeAlteringRead = readOrStartMultilineComment(text, positionStart);
             token = read.token;
             lineMode = read.lineMode;
         } else {
@@ -789,7 +789,7 @@ function tokenizeDefault(line: TLine, lineNumber: number, positionStart: number)
         const chr2: string = text[positionStart + 1];
 
         if (chr2 === '"') {
-            const read: LineModeAlteringRead = readQuotedIdentifierOrStart(text, positionStart);
+            const read: LineModeAlteringRead = readOrStartQuotedIdentifier(text, positionStart);
             token = read.token;
             lineMode = read.lineMode;
         } else {
@@ -821,7 +821,7 @@ function drainWhitespace(text: string, position: number): number {
     return position;
 }
 
-function readStringLiteralOrStart(text: string, currentPosition: number): LineModeAlteringRead {
+function readOrStartStringLiteral(text: string, currentPosition: number): LineModeAlteringRead {
     const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 1);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
@@ -867,7 +867,7 @@ function readLineComment(text: string, positionStart: number): LineToken {
     return readRestOfLine(LineTokenKind.LineComment, text, positionStart);
 }
 
-function readMultilineCommentOrStartStart(text: string, positionStart: number): LineModeAlteringRead {
+function readOrStartMultilineComment(text: string, positionStart: number): LineModeAlteringRead {
     const indexOfCloseComment: number = text.indexOf("*/", positionStart + 2);
     if (indexOfCloseComment === -1) {
         return {
@@ -919,7 +919,7 @@ function maybeReadKeyword(text: string, currentPosition: number): Option<LineTok
     }
 }
 
-function readQuotedIdentifierOrStart(text: string, currentPosition: number): LineModeAlteringRead {
+function readOrStartQuotedIdentifier(text: string, currentPosition: number): LineModeAlteringRead {
     const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 2);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
@@ -1005,67 +1005,67 @@ function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: numb
 
 function maybeKeywordLineTokenKindFrom(data: string): Option<LineTokenKind> {
     switch (data) {
-        case Keyword.And:
+        case KeywordKind.And:
             return LineTokenKind.KeywordAnd;
-        case Keyword.As:
+        case KeywordKind.As:
             return LineTokenKind.KeywordAs;
-        case Keyword.Each:
+        case KeywordKind.Each:
             return LineTokenKind.KeywordEach;
-        case Keyword.Else:
+        case KeywordKind.Else:
             return LineTokenKind.KeywordElse;
-        case Keyword.Error:
+        case KeywordKind.Error:
             return LineTokenKind.KeywordError;
-        case Keyword.False:
+        case KeywordKind.False:
             return LineTokenKind.KeywordFalse;
-        case Keyword.If:
+        case KeywordKind.If:
             return LineTokenKind.KeywordIf;
-        case Keyword.In:
+        case KeywordKind.In:
             return LineTokenKind.KeywordIn;
-        case Keyword.Is:
+        case KeywordKind.Is:
             return LineTokenKind.KeywordIs;
-        case Keyword.Let:
+        case KeywordKind.Let:
             return LineTokenKind.KeywordLet;
-        case Keyword.Meta:
+        case KeywordKind.Meta:
             return LineTokenKind.KeywordMeta;
-        case Keyword.Not:
+        case KeywordKind.Not:
             return LineTokenKind.KeywordNot;
-        case Keyword.Or:
+        case KeywordKind.Or:
             return LineTokenKind.KeywordOr;
-        case Keyword.Otherwise:
+        case KeywordKind.Otherwise:
             return LineTokenKind.KeywordOtherwise;
-        case Keyword.Section:
+        case KeywordKind.Section:
             return LineTokenKind.KeywordSection;
-        case Keyword.Shared:
+        case KeywordKind.Shared:
             return LineTokenKind.KeywordShared;
-        case Keyword.Then:
+        case KeywordKind.Then:
             return LineTokenKind.KeywordThen;
-        case Keyword.True:
+        case KeywordKind.True:
             return LineTokenKind.KeywordTrue;
-        case Keyword.Try:
+        case KeywordKind.Try:
             return LineTokenKind.KeywordTry;
-        case Keyword.Type:
+        case KeywordKind.Type:
             return LineTokenKind.KeywordType;
-        case Keyword.HashBinary:
+        case KeywordKind.HashBinary:
             return LineTokenKind.KeywordHashBinary;
-        case Keyword.HashDate:
+        case KeywordKind.HashDate:
             return LineTokenKind.KeywordHashDate;
-        case Keyword.HashDateTime:
+        case KeywordKind.HashDateTime:
             return LineTokenKind.KeywordHashDateTime;
-        case Keyword.HashDateTimeZone:
+        case KeywordKind.HashDateTimeZone:
             return LineTokenKind.KeywordHashDateTimeZone;
-        case Keyword.HashDuration:
+        case KeywordKind.HashDuration:
             return LineTokenKind.KeywordHashDuration;
-        case Keyword.HashInfinity:
+        case KeywordKind.HashInfinity:
             return LineTokenKind.KeywordHashInfinity;
-        case Keyword.HashNan:
+        case KeywordKind.HashNan:
             return LineTokenKind.KeywordHashNan;
-        case Keyword.HashSections:
+        case KeywordKind.HashSections:
             return LineTokenKind.KeywordHashSections;
-        case Keyword.HashShared:
+        case KeywordKind.HashShared:
             return LineTokenKind.KeywordHashShared;
-        case Keyword.HashTable:
+        case KeywordKind.HashTable:
             return LineTokenKind.KeywordHashTable;
-        case Keyword.HashTime:
+        case KeywordKind.HashTime:
             return LineTokenKind.KeywordHashTime;
         default:
             return undefined;

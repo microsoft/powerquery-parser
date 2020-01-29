@@ -182,6 +182,18 @@ export function parserExpectedAnyTokenKind(
     }
 }
 
+export function parserExpectedGeneralizedIdentifier(maybeTokenWithColumnNumber: Option<TokenWithColumnNumber>): string {
+    if (maybeTokenWithColumnNumber) {
+        const tokenWithColumnNumber: TokenWithColumnNumber = maybeTokenWithColumnNumber;
+        const token: Token = tokenWithColumnNumber.token;
+        const columnNumber: number = tokenWithColumnNumber.columnNumber;
+        return `Expected to find a GeneralizedIdentifier on the line ${token.positionStart.lineNumber +
+            1}, column ${columnNumber + 1}, but a ${token.kind} was found instead: [${token.kind}].`;
+    } else {
+        return `Expected to a GeneralizedIdentifier, but the end-of-file was reached instead.`;
+    }
+}
+
 export function parserRequiredParameterAfterOptionalParameter(positionStart: StringUtils.GraphemePosition): string {
     return `Cannot have a non-optional parameter after an optional parameter. Line ${positionStart.lineNumber +
         1}, column ${positionStart.columnNumber + 1}.`;
