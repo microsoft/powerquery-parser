@@ -4,16 +4,15 @@
 import { CommonError, Option, Result, ResultKind } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseError, ParserContext } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export type TriedAutocomplete = Result<AutocompleteInspected, CommonError.CommonError>;
-
 export interface AutocompleteInspected {
-    readonly maybeRequiredAutocomplete: Option<string>;
-    readonly allowedAutocompleteKeywords: ReadonlyArray<KeywordKind>;
+    readonly autocompleteKeywords: ReadonlyArray<KeywordKind>;
 }
+
+export type TriedAutocomplete = Result<AutocompleteInspected, CommonError.CommonError>;
 
 export function tryFrom(
     maybeActiveNode: Option<ActiveNode>,
@@ -23,7 +22,9 @@ export function tryFrom(
     if (maybeActiveNode === undefined) {
         return {
             kind: ResultKind.Ok,
-            value: ExpressionAutocomplete,
+            value: {
+                autocompleteKeywords: ExpressionAutocomplete,
+            },
         };
     }
     const activeNode: ActiveNode = maybeActiveNode;
@@ -48,7 +49,7 @@ export function tryFrom(
         }
     }
 
-    const triedAutocomplete: Result<AutocompleteInspected, CommonError.CommonError> = traverseAncestors(
+    const triedAutocomplete: Result<ReadonlyArray<KeywordKind>, CommonError.CommonError> = traverseAncestors(
         activeNode,
         nodeIdMapCollection,
         maybePositionName,
@@ -58,21 +59,14 @@ export function tryFrom(
         return triedAutocomplete;
     }
 
-    let inspected: AutocompleteInspected = handleEdgeCases(triedAutocomplete.value, activeNode, maybeParseErrorToken);
+    let inspected: ReadonlyArray<KeywordKind> = handleEdgeCases(
+        triedAutocomplete.value,
+        activeNode,
+        maybeParseErrorToken,
+    );
     inspected = filterRecommendations(inspected, maybePositionName);
 
-    if (maybePositionName !== undefined) {
-        const positionName: string = maybePositionName;
-        const likelyKeywords: ReadonlyArray<KeywordKind> = inspected.allowedAutocompleteKeywords.filter(
-            (kind: KeywordKind) => kind.startsWith(positionName),
-        );
-        inspected = {
-            ...inspected,
-            allowedAutocompleteKeywords: likelyKeywords,
-        };
-    }
-
-    return ResultUtils.okFactory(inspected);
+    return ResultUtils.okFactory({ autocompleteKeywords: inspected });
 }
 
 function traverseAncestors(
@@ -80,11 +74,11 @@ function traverseAncestors(
     nodeIdMapCollection: NodeIdMap.Collection,
     maybePositionName: Option<string>,
     maybeParseErrorToken: Option<Token>,
-): Result<AutocompleteInspected, CommonError.CommonError> {
+): Result<ReadonlyArray<KeywordKind>, CommonError.CommonError> {
     const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
     const numNodes: number = ancestry.length;
 
-    let maybeInspected: Option<AutocompleteInspected>;
+    let maybeInspected: Option<ReadonlyArray<KeywordKind>>;
     try {
         for (let index: number = 1; index < numNodes; index += 1) {
             const parent: NodeIdMap.TXorNode = ancestry[index];
@@ -138,14 +132,14 @@ function traverseAncestors(
         return ResultUtils.errFactory(CommonError.ensureCommonError(err));
     }
 
-    return ResultUtils.okFactory(EmptyAutocomplete);
+    return ResultUtils.okFactory([]);
 }
 
 function handleEdgeCases(
-    inspected: AutocompleteInspected,
+    inspected: ReadonlyArray<KeywordKind>,
     activeNode: ActiveNode,
     maybeParseErrorToken: Option<Token>,
-): AutocompleteInspected {
+): ReadonlyArray<KeywordKind> {
     // Check if they're typing for the first time at the start of the file,
     // which defaults to searching for an identifier.
     if (
@@ -168,37 +162,20 @@ function handleEdgeCases(
 }
 
 function filterRecommendations(
-    inspected: AutocompleteInspected,
+    inspected: ReadonlyArray<KeywordKind>,
     maybePositionName: Option<string>,
-): AutocompleteInspected {
+): ReadonlyArray<KeywordKind> {
     if (maybePositionName === undefined) {
         return inspected;
     }
 
     const positionName: string = maybePositionName;
-    const likelyKeywords: ReadonlyArray<KeywordKind> = inspected.allowedAutocompleteKeywords.filter(
-        (kind: KeywordKind) => kind.startsWith(positionName),
-    );
-    return {
-        ...inspected,
-        allowedAutocompleteKeywords: likelyKeywords,
-    };
+    return inspected.filter((kind: KeywordKind) => kind.startsWith(positionName));
 }
 
-const EmptyAutocomplete: AutocompleteInspected = {
-    maybeRequiredAutocomplete: undefined,
-    allowedAutocompleteKeywords: [],
-};
+const ExpressionAutocomplete: ReadonlyArray<KeywordKind> = TExpressionKeywords;
 
-const ExpressionAutocomplete: AutocompleteInspected = {
-    maybeRequiredAutocomplete: undefined,
-    allowedAutocompleteKeywords: TExpressionKeywords,
-};
-
-const ExpressionAndSectionAutocomplete: AutocompleteInspected = {
-    maybeRequiredAutocomplete: undefined,
-    allowedAutocompleteKeywords: [...TExpressionKeywords, KeywordKind.Section],
-};
+const ExpressionAndSectionAutocomplete: ReadonlyArray<KeywordKind> = [...TExpressionKeywords, KeywordKind.Section];
 
 const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1),
@@ -216,54 +193,37 @@ const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ParenthesizedExpression, 1),
 ];
 
-const AutocompleteMap: Map<string, AutocompleteInspected> = new Map([
+// Autocompletes that are coming from a constant can be resolved using a map.
+// This is possible because reading constants are binary.
+// Either the constant was read and you're in the next context, or you didn't and you're in the constant's context.
+const AutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<string, ReadonlyArray<KeywordKind>>([
     // Ast.NodeKind.ErrorRaisingExpression
-    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.Error)],
+    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), [KeywordKind.Error]],
 
     // Ast.NodeKind.IfExpression
-    [createMapKey(Ast.NodeKind.IfExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.If)],
-    [createMapKey(Ast.NodeKind.IfExpression, 2), autocompleteRequiredFactory(Ast.ConstantKind.Then)],
-    [createMapKey(Ast.NodeKind.IfExpression, 4), autocompleteRequiredFactory(Ast.ConstantKind.Else)],
+    [createMapKey(Ast.NodeKind.IfExpression, 0), [KeywordKind.If]],
+    [createMapKey(Ast.NodeKind.IfExpression, 2), [KeywordKind.Then]],
+    [createMapKey(Ast.NodeKind.IfExpression, 4), [KeywordKind.Else]],
 
     // Ast.NodeKind.OtherwiseExpression
-    [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), autocompleteRequiredFactory(Ast.ConstantKind.Otherwise)],
+    [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), [KeywordKind.Otherwise]],
 
     // Ast.NodeKind.Section
-    [
-        createMapKey(Ast.NodeKind.Section, 1),
-        {
-            maybeRequiredAutocomplete: undefined,
-            allowedAutocompleteKeywords: [KeywordKind.Section],
-        },
-    ],
+    [createMapKey(Ast.NodeKind.Section, 1), [KeywordKind.Section]],
 ]);
 
-// key is the first letter of ActiveNode.maybeIdentifierUnderPosition.
-// Does not contain joining keywords, such as 'as', 'and', etc.
-// For some reason as of now Typescript needs explicit typing for Map initialization.
-const PartialKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
-    string,
-    ReadonlyArray<KeywordKind>
->([
-    ["e", [KeywordKind.Each, KeywordKind.Error]],
-    ["i", [KeywordKind.If]],
-    ["l", [KeywordKind.Let]],
-    ["n", [KeywordKind.Not]],
-    ["t", [KeywordKind.True, KeywordKind.Try, KeywordKind.Type]],
-]);
-
-// key is the first letter of ParseError.maybeTokenFrom(maybeParseError.innerError) if it's an identifier.
-// For some reason as of now Typescript needs explicit typing for Map initialization.
+// Used with maybeParseError to see if a user could be typing a conjunctive keyword such as 'or'. Eg.
+// 'Details[UserName] <> "" o|'
 const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
     string,
     ReadonlyArray<KeywordKind>
 >([["a", [KeywordKind.And, KeywordKind.As]], ["o", [KeywordKind.Or]], ["m", [KeywordKind.Meta]]]);
 
 function updateWithParseErrorToken(
-    inspected: AutocompleteInspected,
+    inspected: ReadonlyArray<KeywordKind>,
     activeNode: ActiveNode,
     parseErrorToken: Token,
-): AutocompleteInspected {
+): ReadonlyArray<KeywordKind> {
     const key: string = parseErrorToken.data;
     const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialConjunctionKeywordAutocompleteMap.get(
         key[0].toLocaleLowerCase(),
@@ -283,11 +243,11 @@ function updateWithParseErrorToken(
 }
 
 function updateWithIdentifierKey(
-    inspected: AutocompleteInspected,
+    inspected: ReadonlyArray<KeywordKind>,
     key: string,
     allowedKeywords: ReadonlyArray<KeywordKind>,
-): AutocompleteInspected {
-    const newAllowedAutocompleteKeywords: KeywordKind[] = [...inspected.allowedAutocompleteKeywords];
+): ReadonlyArray<KeywordKind> {
+    const newAllowedAutocompleteKeywords: KeywordKind[] = [...inspected];
     for (const keyword of allowedKeywords) {
         if (
             // allowedKeywords is a map of 'first character' -> 'all possible keywords that start with the character',
@@ -301,10 +261,7 @@ function updateWithIdentifierKey(
         }
     }
 
-    return {
-        ...inspected,
-        allowedAutocompleteKeywords: newAllowedAutocompleteKeywords,
-    };
+    return newAllowedAutocompleteKeywords;
 }
 
 // [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
@@ -312,21 +269,14 @@ function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number
     return [nodeKind, maybeAttributeIndex].join(",");
 }
 
-function autocompleteRequiredFactory(constantKind: Ast.ConstantKind): AutocompleteInspected {
-    return {
-        maybeRequiredAutocomplete: constantKind,
-        allowedAutocompleteKeywords: [],
-    };
-}
-
 function autocompleteErrorHandlingExpression(
     position: Position,
     child: NodeIdMap.TXorNode,
     maybeParseErrorToken: Option<Token>,
-): Option<AutocompleteInspected> {
+): Option<ReadonlyArray<KeywordKind>> {
     const maybeChildAttributeIndex: Option<number> = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
-        return autocompleteRequiredFactory(Ast.ConstantKind.Try);
+        return [KeywordKind.Try];
     } else if (maybeChildAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
         // It's ambigous if the next token should be either 'otherwise' or 'or'.
@@ -342,20 +292,14 @@ function autocompleteErrorHandlingExpression(
 
                 // If we can exclude 'or' then the only thing we can autocomplete is 'otherwise'.
                 if (tokenData.length > 1 && KeywordKind.Otherwise.startsWith(tokenData)) {
-                    return {
-                        allowedAutocompleteKeywords: [],
-                        maybeRequiredAutocomplete: KeywordKind.Otherwise,
-                    };
+                    return [KeywordKind.Otherwise];
                 }
                 // In the ambigous case we don't know what they're typing yet, so we suggest both.
                 // In the case of an identifier that doesn't match a 'or' or 'otherwise'
                 // we still suggest the only valid keywords allowed.
                 // In both cases the return is the same.
                 else {
-                    return {
-                        allowedAutocompleteKeywords: [KeywordKind.Or, KeywordKind.Otherwise],
-                        maybeRequiredAutocomplete: undefined,
-                    };
+                    return [KeywordKind.Or, KeywordKind.Otherwise];
                 }
             }
 
@@ -367,10 +311,7 @@ function autocompleteErrorHandlingExpression(
             child.kind === NodeIdMap.XorNodeKind.Ast &&
             PositionUtils.isAfterAstNode(position, child.node, true)
         ) {
-            return {
-                allowedAutocompleteKeywords: [],
-                maybeRequiredAutocomplete: KeywordKind.Otherwise,
-            };
+            return [KeywordKind.Otherwise];
         } else {
             return ExpressionAutocomplete;
         }
@@ -383,7 +324,7 @@ function autocompleteListExpression(
     activeNode: ActiveNode,
     child: NodeIdMap.TXorNode,
     ancestorIndex: number,
-): Option<AutocompleteInspected> {
+): Option<ReadonlyArray<KeywordKind>> {
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
         return undefined;
@@ -429,7 +370,7 @@ function autocompleteSectionMember(
     parent: NodeIdMap.TXorNode,
     child: NodeIdMap.TXorNode,
     ancestorIndex: number,
-): Option<AutocompleteInspected> {
+): Option<ReadonlyArray<KeywordKind>> {
     if (child.node.maybeAttributeIndex === 2) {
         const maybeSharedConstant: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
@@ -453,10 +394,7 @@ function autocompleteSectionMember(
             if (maybeName && maybeName.kind === NodeIdMap.XorNodeKind.Ast) {
                 const name: Ast.Identifier = maybeName.node as Ast.Identifier;
                 if (KeywordKind.Shared.startsWith(name.literal)) {
-                    return {
-                        maybeRequiredAutocomplete: undefined,
-                        allowedAutocompleteKeywords: [KeywordKind.Shared],
-                    };
+                    return [KeywordKind.Shared];
                 }
             } else {
                 return undefined;
