@@ -181,7 +181,7 @@ describe(`qweasdzxc Inspection`, () => {
 
             it(`if error|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if error|`);
-                const expected: AbridgedInspection = [KeywordKind.Error];
+                const expected: AbridgedInspection = [];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
@@ -195,7 +195,7 @@ describe(`qweasdzxc Inspection`, () => {
         describe(`${Ast.NodeKind.IfExpression}`, () => {
             it(`if|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if|`);
-                const expected: AbridgedInspection = [KeywordKind.If];
+                const expected: AbridgedInspection = [];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
@@ -255,7 +255,7 @@ describe(`qweasdzxc Inspection`, () => {
 
             it(`if 1 then 1 else|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if 1 then 1 else|`);
-                const expected: AbridgedInspection = [KeywordKind.Else];
+                const expected: AbridgedInspection = [];
                 expectNodesEqual(expectParseErrInspection(text, position), expected);
             });
 
@@ -347,7 +347,7 @@ describe(`qweasdzxc Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `try true otherwise| false`,
                 );
-                const expected: AbridgedInspection = [KeywordKind.Otherwise];
+                const expected: AbridgedInspection = [];
                 expectNodesEqual(expectParseOkInspection(text, position), expected);
             });
 
