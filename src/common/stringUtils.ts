@@ -83,3 +83,29 @@ export function maybeNewlineKindAt(text: string, index: number): Option<NewlineK
             return undefined;
     }
 }
+
+// A quick and dirty way to do string formatting.
+// Continually replaces '{}' until no more exist or you run out of args.
+// Does not handle any escaping.
+export function expectFormat(template: string, ...args: Readonly<any>[]): string {
+    const details: {} = {
+        template,
+        args: [...args],
+    };
+
+    let result: string = template;
+    while (args.length) {
+        if (result.indexOf("{}") === -1) {
+            throw new CommonError.InvariantError("not enough arguments were given during formatting.", details);
+        }
+
+        const arg: any = args.pop();
+        result.replace("{}", arg);
+    }
+
+    if (args.length) {
+        throw new CommonError.InvariantError("too many arguments were given during formatting.", details);
+    }
+
+    return result;
+}
