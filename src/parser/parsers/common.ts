@@ -69,9 +69,9 @@ export function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: Tok
     }
 }
 
-export function readBracketDisambiguation(
-    state: IParserState,
-    parser: IParser<IParserState>,
+export function readBracketDisambiguation<T>(
+    state: T & IParserState,
+    parser: IParser<T & IParserState>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
     const triedDisambiguation: Result<
