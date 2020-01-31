@@ -144,9 +144,9 @@ export let CombinatorialParser: IParser<IParserState> = {
 
     // key-value pairs
     readIdentifierPairedExpressions: Naive.readIdentifierPairedExpressions,
+    readIdentifierPairedExpression: Naive.readIdentifierPairedExpression,
     readGeneralizedIdentifierPairedExpressions: Naive.readGeneralizedIdentifierPairedExpressions,
     readGeneralizedIdentifierPairedExpression: Naive.readGeneralizedIdentifierPairedExpression,
-    readIdentifierPairedExpression: Naive.readIdentifierPairedExpression,
 };
 
 function readLogicalExpression(state: IParserState, parser: IParser<IParserState>): Ast.LogicalExpression {

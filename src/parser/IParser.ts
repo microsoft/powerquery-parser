@@ -171,6 +171,7 @@ export interface IParser<State> {
         onePairRequired: boolean,
         testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
     ) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
+    readonly readIdentifierPairedExpression: (state: State, parser: IParser<State>) => Ast.IdentifierPairedExpression;
     readonly readGeneralizedIdentifierPairedExpressions: (
         state: State,
         parser: IParser<State>,
@@ -181,5 +182,4 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
     ) => Ast.GeneralizedIdentifierPairedExpression;
-    readonly readIdentifierPairedExpression: (state: State, parser: IParser<State>) => Ast.IdentifierPairedExpression;
 }
