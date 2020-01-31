@@ -16,7 +16,6 @@ export type TInnerParseError =
     | ExpectedTokenKindError
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
-    | UnexpectedEndOfTokensError
     | UnterminatedBracketError
     | UnterminatedParenthesesError
     | UnusedTokensRemainError;
@@ -66,12 +65,6 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
     }
 }
 
-export class UnexpectedEndOfTokensError extends Error {
-    constructor(readonly topOfTokenRangeStack: Ast.NodeKind) {
-        super(Localization.parserUnexpectedEndOfTokens(topOfTokenRangeStack));
-    }
-}
-
 export class UnterminatedBracketError extends Error {
     constructor(readonly openBracketToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
         super(Localization.parserUnterminatedBracket(positionStart));
@@ -107,7 +100,6 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
         x instanceof ExpectedTokenKindError ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||
-        x instanceof UnexpectedEndOfTokensError ||
         x instanceof UnterminatedBracketError ||
         x instanceof UnterminatedParenthesesError ||
         x instanceof UnusedTokensRemainError

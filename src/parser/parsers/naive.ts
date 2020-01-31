@@ -25,7 +25,7 @@ interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
 }
 
-const InvalidGeneralizedIdentifierTokenKinds: ReadonlyArray<TokenKind> = [
+const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
     TokenKind.Comma,
     TokenKind.Equal,
     TokenKind.RightBracket,
@@ -66,7 +66,7 @@ export function readGeneralizedIdentifier(
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
     while (
         state.maybeCurrentTokenKind &&
-        InvalidGeneralizedIdentifierTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
+        GeneralizedIdentifierTerminatorTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
     ) {
         readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
