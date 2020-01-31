@@ -3,7 +3,7 @@
 
 import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, Option } from "../../common";
-import { LexerSnapshot, Token, TokenKind } from "../../lexer";
+import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
@@ -279,7 +279,7 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
     }
     const tokenEnd: Token = maybeTokenEnd;
 
-    const tokenRange: Ast.TokenRange = {
+    const tokenRange: TokenRange = {
         tokenIndexStart: currentContextNode.tokenIndexStart,
         tokenIndexEnd,
         positionStart: tokenStart.positionStart,
@@ -410,5 +410,5 @@ export function maybeTokenWithColumnNumber(
 interface ContextNodeMetadata {
     readonly id: number;
     readonly maybeAttributeIndex: Option<number>;
-    readonly tokenRange: Ast.TokenRange;
+    readonly tokenRange: TokenRange;
 }

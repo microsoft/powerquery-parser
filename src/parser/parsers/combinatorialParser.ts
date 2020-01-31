@@ -3,7 +3,7 @@
 
 import { Ast, AstUtils, NodeIdMap, ParserContext } from "..";
 import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../../common";
-import { TokenKind } from "../../lexer";
+import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
@@ -258,8 +258,8 @@ function readBinOpExpression(
         operatorConstant.maybeAttributeIndex = 1;
         right.maybeAttributeIndex = 2;
 
-        const leftTokenRange: Ast.TokenRange = left.tokenRange;
-        const rightTokenRange: Ast.TokenRange = right.tokenRange;
+        const leftTokenRange: TokenRange = left.tokenRange;
+        const rightTokenRange: TokenRange = right.tokenRange;
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
             id: newBinOpExpressionId,
