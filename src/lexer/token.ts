@@ -172,3 +172,10 @@ export interface TokenPosition {
     readonly lineNumber: number;
     readonly codeUnit: number;
 }
+
+export interface TokenRange {
+    readonly tokenIndexStart: number;
+    readonly tokenIndexEnd: number; // exclusive
+    readonly positionStart: TokenPosition;
+    readonly positionEnd: TokenPosition;
+}

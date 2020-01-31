@@ -3,7 +3,7 @@
 
 import { Ast, ParserContext } from "..";
 import { CommonError, isNever, Option } from "../../common";
-import { TokenRange } from "../ast";
+import { TokenRange } from "../../lexer";
 import {
     AstNodeById,
     ChildIdsById,

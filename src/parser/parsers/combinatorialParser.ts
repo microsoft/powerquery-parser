@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext } from "..";
+import { Ast, AstUtils, NodeIdMap, ParserContext } from "..";
 import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../../common";
-import { TokenKind } from "../../lexer";
-import { TokenRange } from "../ast";
+import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
@@ -202,7 +201,7 @@ function readBinOpExpression(
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator: Option<Ast.TBinOpExpressionOperator> = Ast.binOpExpressionOperatorFrom(
+    let maybeOperator: Option<Ast.TBinOpExpressionOperator> = AstUtils.maybeBinOpExpressionOperatorFrom(
         state.maybeCurrentTokenKind,
     );
     while (maybeOperator !== undefined) {
@@ -221,7 +220,7 @@ function readBinOpExpression(
                 break;
         }
 
-        maybeOperator = Ast.binOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
+        maybeOperator = AstUtils.maybeBinOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
     }
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
@@ -240,7 +239,7 @@ function readBinOpExpression(
         let minPrecedence: number = Number.MAX_SAFE_INTEGER;
 
         for (let index: number = 0; index < operators.length; index += 1) {
-            const currentPrecedence: number = Ast.binOpExpressionOperatorPrecedence(operators[index]);
+            const currentPrecedence: number = AstUtils.maybeBinOpExpressionOperatorPrecedence(operators[index]);
             if (minPrecedence > currentPrecedence) {
                 minPrecedence = currentPrecedence;
                 minPrecedenceIndex = index;
@@ -309,7 +308,7 @@ function readBinOpExpression(
     }
 
     const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType = expressions[0];
-    if (!Ast.isTBinOpExpression(lastExpression)) {
+    if (!AstUtils.isTBinOpExpression(lastExpression)) {
         const details: {} = {
             lastExpressionId: lastExpression.id,
             lastExpressionKind: lastExpression.kind,

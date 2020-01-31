@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Option } from "../common";
-import { TokenKind, TokenPosition } from "../lexer/token";
+import { Option } from "../../common";
+import { TokenRange } from "../../lexer/token";
 
 export const enum NodeKind {
     ArithmeticExpression = "ArithmeticExpression",
@@ -72,16 +72,9 @@ export interface INode {
     readonly kind: NodeKind;
     readonly id: number;
     readonly maybeAttributeIndex: Option<number>;
+    // The [start, end) range of a Ast.TNode.
     readonly tokenRange: TokenRange;
     readonly isLeaf: boolean;
-}
-
-// The [start, end) range of a Ast.TNode.
-export interface TokenRange {
-    readonly tokenIndexStart: number;
-    readonly tokenIndexEnd: number; // exclusive
-    readonly positionStart: TokenPosition;
-    readonly positionEnd: TokenPosition;
 }
 
 export type TNode = TDocument | TAuxiliaryNodes;
@@ -333,19 +326,6 @@ export const enum UnaryOperator {
     Positive = "+",
     Negative = "-",
     Not = "not",
-}
-
-export function unaryOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<UnaryOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.Plus:
-            return UnaryOperator.Positive;
-        case TokenKind.Minus:
-            return UnaryOperator.Negative;
-        case TokenKind.KeywordNot:
-            return UnaryOperator.Not;
-        default:
-            return undefined;
-    }
 }
 
 // --------------------------------------------------
@@ -712,37 +692,9 @@ export const enum ArithmeticOperator {
     And = "&",
 }
 
-export function arithmeticOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<ArithmeticOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.Asterisk:
-            return ArithmeticOperator.Multiplication;
-        case TokenKind.Division:
-            return ArithmeticOperator.Division;
-        case TokenKind.Plus:
-            return ArithmeticOperator.Addition;
-        case TokenKind.Minus:
-            return ArithmeticOperator.Subtraction;
-        case TokenKind.Ampersand:
-            return ArithmeticOperator.And;
-        default:
-            return undefined;
-    }
-}
-
 export const enum EqualityOperator {
     EqualTo = "=",
     NotEqualTo = "<>",
-}
-
-export function equalityOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<EqualityOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.Equal:
-            return EqualityOperator.EqualTo;
-        case TokenKind.NotEqual:
-            return EqualityOperator.NotEqualTo;
-        default:
-            return undefined;
-    }
 }
 
 export const enum LogicalOperator {
@@ -750,127 +702,11 @@ export const enum LogicalOperator {
     Or = "or",
 }
 
-export function logicalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<LogicalOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.KeywordAnd:
-            return LogicalOperator.And;
-        case TokenKind.KeywordOr:
-            return LogicalOperator.Or;
-        default:
-            return undefined;
-    }
-}
-
 export const enum RelationalOperator {
     LessThan = "<",
     LessThanEqualTo = "<=",
     GreaterThan = ">",
     GreaterThanEqualTo = ">=",
-}
-
-export function relationalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<RelationalOperator> {
-    switch (maybeTokenKind) {
-        case TokenKind.LessThan:
-            return RelationalOperator.LessThan;
-        case TokenKind.LessThanEqualTo:
-            return RelationalOperator.LessThanEqualTo;
-        case TokenKind.GreaterThan:
-            return RelationalOperator.GreaterThan;
-        case TokenKind.GreaterThanEqualTo:
-            return RelationalOperator.GreaterThanEqualTo;
-        default:
-            return undefined;
-    }
-}
-
-export function binOpExpressionOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<TBinOpExpressionOperator> {
-    switch (maybeTokenKind) {
-        // ArithmeticOperator
-        case TokenKind.Asterisk:
-            return ArithmeticOperator.Multiplication;
-        case TokenKind.Division:
-            return ArithmeticOperator.Division;
-        case TokenKind.Plus:
-            return ArithmeticOperator.Addition;
-        case TokenKind.Minus:
-            return ArithmeticOperator.Subtraction;
-        case TokenKind.Ampersand:
-            return ArithmeticOperator.And;
-
-        // EqualityOperator
-        case TokenKind.Equal:
-            return EqualityOperator.EqualTo;
-        case TokenKind.NotEqual:
-            return EqualityOperator.NotEqualTo;
-
-        // LogicalOperator
-        case TokenKind.KeywordAnd:
-            return LogicalOperator.And;
-        case TokenKind.KeywordOr:
-            return LogicalOperator.Or;
-
-        // RelationalOperator
-        case TokenKind.LessThan:
-            return RelationalOperator.LessThan;
-        case TokenKind.LessThanEqualTo:
-            return RelationalOperator.LessThanEqualTo;
-        case TokenKind.GreaterThan:
-            return RelationalOperator.GreaterThan;
-        case TokenKind.GreaterThanEqualTo:
-            return RelationalOperator.GreaterThanEqualTo;
-
-        // Keyword operator
-        case TokenKind.KeywordAs:
-            return ConstantKind.As;
-        case TokenKind.KeywordIs:
-            return ConstantKind.Is;
-        case TokenKind.KeywordMeta:
-            return ConstantKind.Meta;
-
-        default:
-            return undefined;
-    }
-}
-
-export function binOpExpressionOperatorPrecedence(operator: TBinOpExpressionOperator): number {
-    switch (operator) {
-        case ConstantKind.Meta:
-            return 110;
-
-        case ArithmeticOperator.Multiplication:
-        case ArithmeticOperator.Division:
-            return 100;
-
-        case ArithmeticOperator.Addition:
-        case ArithmeticOperator.Subtraction:
-        case ArithmeticOperator.And:
-            return 90;
-
-        case RelationalOperator.GreaterThan:
-        case RelationalOperator.GreaterThanEqualTo:
-        case RelationalOperator.LessThan:
-        case RelationalOperator.LessThanEqualTo:
-            return 80;
-
-        case EqualityOperator.EqualTo:
-        case EqualityOperator.NotEqualTo:
-            return 70;
-
-        case ConstantKind.As:
-            return 60;
-
-        case ConstantKind.Is:
-            return 50;
-
-        case LogicalOperator.And:
-            return 40;
-
-        case LogicalOperator.Or:
-            return 30;
-
-        default:
-            throw isNever(operator);
-    }
 }
 
 // ------------------------------------------
@@ -1046,176 +882,4 @@ export const enum IdentifierConstant {
     Table = "table",
     Text = "text",
     Time = "time",
-}
-
-// ---------------------------------------------------
-// ---------- string 2 const enum functions ----------
-// ---------------------------------------------------
-
-export function literalKindFrom(maybeTokenKind: Option<TokenKind>): Option<LiteralKind> {
-    switch (maybeTokenKind) {
-        case TokenKind.HexLiteral:
-        case TokenKind.KeywordHashNan:
-        case TokenKind.NumericLiteral:
-            return LiteralKind.Numeric;
-
-        case TokenKind.KeywordFalse:
-        case TokenKind.KeywordTrue:
-            return LiteralKind.Logical;
-
-        case TokenKind.NullLiteral:
-            return LiteralKind.Null;
-
-        case TokenKind.StringLiteral:
-            return LiteralKind.Str;
-
-        default:
-            return undefined;
-    }
-}
-
-export function constantKindFromIdentifieConstant(identifierConstant: IdentifierConstant): Option<ConstantKind> {
-    switch (identifierConstant) {
-        case IdentifierConstant.Action:
-            return ConstantKind.Action;
-        case IdentifierConstant.Any:
-            return ConstantKind.Any;
-        case IdentifierConstant.AnyNonNull:
-            return ConstantKind.AnyNonNull;
-        case IdentifierConstant.Binary:
-            return ConstantKind.Binary;
-        case IdentifierConstant.Date:
-            return ConstantKind.Date;
-        case IdentifierConstant.DateTime:
-            return ConstantKind.DateTime;
-        case IdentifierConstant.DateTimeZone:
-            return ConstantKind.DateTimeZone;
-        case IdentifierConstant.Duration:
-            return ConstantKind.Duration;
-        case IdentifierConstant.Function:
-            return ConstantKind.Function;
-        case IdentifierConstant.List:
-            return ConstantKind.List;
-        case IdentifierConstant.Logical:
-            return ConstantKind.Logical;
-        case IdentifierConstant.None:
-            return ConstantKind.None;
-        case IdentifierConstant.Nullable:
-            return ConstantKind.Nullable;
-        case IdentifierConstant.Number:
-            return ConstantKind.Number;
-        case IdentifierConstant.Optional:
-            return ConstantKind.Optional;
-        case IdentifierConstant.Record:
-            return ConstantKind.Record;
-        case IdentifierConstant.Table:
-            return ConstantKind.Table;
-        case IdentifierConstant.Text:
-            return ConstantKind.Text;
-        case IdentifierConstant.Time:
-            return ConstantKind.Time;
-        default:
-            return undefined;
-    }
-}
-
-// ---------------------------------------
-// ---------- casting functions ----------
-// ---------------------------------------
-
-export function maybeCastToKind<T>(node: TNode, kind: NodeKind): Option<T & TNode> {
-    if (node.kind !== kind) {
-        return undefined;
-    } else {
-        return (node as unknown) as T & TNode;
-    }
-}
-
-export function expectCastToKind<T>(node: TNode, kind: NodeKind): T & TNode {
-    const maybeNode: Option<T & TNode> = maybeCastToKind(node, kind);
-    if (maybeNode === undefined) {
-        const details: {} = {
-            expected: kind,
-            actual: node.kind,
-        };
-        throw new CommonError.InvariantError(`expected xorNode.node.kind to be ${kind}`, details);
-    } else {
-        return maybeNode;
-    }
-}
-
-// -----------------------------------
-// ---------- isX functions ----------
-// -----------------------------------
-
-export function isIdentifierConstant(maybeIdentifierConstant: string): maybeIdentifierConstant is IdentifierConstant {
-    switch (maybeIdentifierConstant) {
-        case IdentifierConstant.Any:
-        case IdentifierConstant.AnyNonNull:
-        case IdentifierConstant.Binary:
-        case IdentifierConstant.Date:
-        case IdentifierConstant.DateTime:
-        case IdentifierConstant.DateTimeZone:
-        case IdentifierConstant.Duration:
-        case IdentifierConstant.Function:
-        case IdentifierConstant.List:
-        case IdentifierConstant.Logical:
-        case IdentifierConstant.None:
-        case IdentifierConstant.Nullable:
-        case IdentifierConstant.Number:
-        case IdentifierConstant.Optional:
-        case IdentifierConstant.Record:
-        case IdentifierConstant.Table:
-        case IdentifierConstant.Text:
-        case IdentifierConstant.Time:
-            return true;
-        default:
-            return false;
-    }
-}
-
-export function isTBinOpExpression(node: TNode): node is TBinOpExpression {
-    switch (node.kind) {
-        case NodeKind.ArithmeticExpression:
-        case NodeKind.AsExpression:
-        case NodeKind.EqualityExpression:
-        case NodeKind.IsExpression:
-        case NodeKind.LogicalExpression:
-        case NodeKind.MetadataExpression:
-        case NodeKind.RelationalExpression:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-export function isPairedConstant(x: ConstantKind, y: ConstantKind): boolean {
-    if (x.length !== 1 || y.length !== 1) {
-        return false;
-    }
-
-    // If given x === ')' and y === '(' then swap positions.
-    const low: ConstantKind = x < y ? x : y;
-    const high: ConstantKind = low === x ? y : x;
-
-    return (
-        (low === ConstantKind.LeftBrace && high === ConstantKind.RightBrace) ||
-        (low === ConstantKind.LeftBracket && high === ConstantKind.RightBracket) ||
-        (low === ConstantKind.LeftParenthesis && high === ConstantKind.RightParenthesis)
-    );
-}
-
-// ------------------------------------------
-// ---------- validation functions ----------
-// ------------------------------------------
-
-export function testAnyNodeKind(
-    value: NodeKind,
-    allowedNodeKinds: ReadonlyArray<NodeKind>,
-    details: Option<{}> = undefined,
-): Option<CommonError.InvariantError> {
-    return allowedNodeKinds.indexOf(value) === -1
-        ? new CommonError.InvariantError(`NodeKind value is not an allowed NodeKind value`, details)
-        : undefined;
 }
