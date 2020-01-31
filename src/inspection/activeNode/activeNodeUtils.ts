@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, Option } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
+import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
@@ -108,7 +108,7 @@ export function expectPreviousXorNode(
             expectedAny: maybeAllowedNodeKinds,
             actual: xorNode.node.kind,
         };
-        const maybeErr: Option<CommonError.InvariantError> = Ast.testAnyNodeKind(
+        const maybeErr: Option<CommonError.InvariantError> = AstUtils.testAnyNodeKind(
             xorNode.node.kind,
             maybeAllowedNodeKinds,
             details,
@@ -140,7 +140,7 @@ export function expectNextXorNode(
             expectedAny: maybeAllowedNodeKinds,
             actual: xorNode.node.kind,
         };
-        const maybeErr: Option<CommonError.InvariantError> = Ast.testAnyNodeKind(
+        const maybeErr: Option<CommonError.InvariantError> = AstUtils.testAnyNodeKind(
             xorNode.node.kind,
             maybeAllowedNodeKinds,
             details,
@@ -275,7 +275,7 @@ function positionAstSearch(
             DrilldownConstantKind.indexOf(maybeCurrentOnOrBefore.literal) !== -1 &&
             maybeCurrentAfter !== undefined &&
             maybeCurrentAfter.kind === Ast.NodeKind.Constant &&
-            Ast.isPairedConstant(
+            AstUtils.isPairedConstant(
                 maybeCurrentOnOrBefore.literal as Ast.ConstantKind,
                 maybeCurrentAfter.literal as Ast.ConstantKind,
             )

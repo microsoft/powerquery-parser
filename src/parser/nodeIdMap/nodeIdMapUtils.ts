@@ -3,7 +3,6 @@
 
 import { Ast, ParserContext } from "..";
 import { CommonError, isNever, Option } from "../../common";
-import { TokenRange } from "../ast";
 import {
     AstNodeById,
     ChildIdsById,
@@ -561,7 +560,7 @@ export function expectAncestry(nodeIdMapCollection: Collection, rootId: number):
 export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
-            const tokenRange: TokenRange = xorNode.node.tokenRange;
+            const tokenRange: Ast.TokenRange = xorNode.node.tokenRange;
             return {
                 tokenIndexStart: tokenRange.tokenIndexStart,
                 tokenIndexEnd: tokenRange.tokenIndexEnd,

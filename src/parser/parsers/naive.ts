@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
+import { Ast, AstUtils, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, isNever, Option, Result, ResultUtils, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
@@ -346,7 +346,7 @@ export function readLogicalExpression(state: IParserState, parser: IParser<IPars
         state,
         Ast.NodeKind.LogicalExpression,
         () => parser.readIsExpression(state, parser),
-        maybeCurrentTokenKind => Ast.logicalOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeLogicalOperatorFrom(maybeCurrentTokenKind),
         () => parser.readIsExpression(state, parser),
     );
 }
@@ -420,7 +420,7 @@ export function readEqualityExpression(state: IParserState, parser: IParser<IPar
         state,
         Ast.NodeKind.EqualityExpression,
         () => parser.readRelationalExpression(state, parser),
-        maybeCurrentTokenKind => Ast.equalityOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeEqualityOperatorFrom(maybeCurrentTokenKind),
         () => parser.readRelationalExpression(state, parser),
     );
 }
@@ -442,7 +442,7 @@ export function readRelationalExpression(
         state,
         Ast.NodeKind.RelationalExpression,
         () => parser.readArithmeticExpression(state, parser),
-        maybeCurrentTokenKind => Ast.relationalOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeRelationalOperatorFrom(maybeCurrentTokenKind),
         () => parser.readArithmeticExpression(state, parser),
     );
 }
@@ -464,7 +464,7 @@ export function readArithmeticExpression(
         state,
         Ast.NodeKind.ArithmeticExpression,
         () => parser.readMetadataExpression(state, parser),
-        maybeCurrentTokenKind => Ast.arithmeticOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeArithmeticOperatorFrom(maybeCurrentTokenKind),
         () => parser.readMetadataExpression(state, parser),
     );
 }
@@ -507,7 +507,7 @@ export function readMetadataExpression(state: IParserState, parser: IParser<IPar
 // -----------------------------------------------
 
 export function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
-    let maybeOperator: Option<Ast.UnaryOperator> = Ast.unaryOperatorFrom(state.maybeCurrentTokenKind);
+    let maybeOperator: Option<Ast.UnaryOperator> = AstUtils.maybeUnaryOperatorFrom(state.maybeCurrentTokenKind);
     if (maybeOperator === undefined) {
         return parser.readTypeExpression(state, parser);
     }
@@ -521,7 +521,7 @@ export function readUnaryExpression(state: IParserState, parser: IParser<IParser
     const operatorConstants: Ast.Constant[] = [];
     while (maybeOperator) {
         operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind));
-        maybeOperator = Ast.unaryOperatorFrom(state.maybeCurrentTokenKind);
+        maybeOperator = AstUtils.maybeUnaryOperatorFrom(state.maybeCurrentTokenKind);
     }
     const operators: Ast.IArrayWrapper<Ast.Constant> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -749,7 +749,7 @@ export function readLiteralExpression(state: IParserState, _parser: IParser<IPar
         throw maybeErr;
     }
 
-    const maybeLiteralKind: Option<Ast.LiteralKind> = Ast.literalKindFrom(state.maybeCurrentTokenKind);
+    const maybeLiteralKind: Option<Ast.LiteralKind> = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
     if (maybeLiteralKind === undefined) {
         throw new CommonError.InvariantError(
             `couldn't convert TokenKind=${state.maybeCurrentTokenKind} into LiteralKind`,
@@ -2172,7 +2172,9 @@ function maybeReadIdentifierConstantAsConstant(
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
 
-        const maybeConstantKind: Option<Ast.ConstantKind> = Ast.constantKindFromIdentifieConstant(identifierConstant);
+        const maybeConstantKind: Option<Ast.ConstantKind> = AstUtils.maybeConstantKindFromIdentifieConstant(
+            identifierConstant,
+        );
         if (!maybeConstantKind) {
             const details: {} = { identifierConstant };
             throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
