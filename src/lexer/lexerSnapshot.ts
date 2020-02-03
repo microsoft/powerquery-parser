@@ -3,6 +3,7 @@
 
 import { Lexer, LexError } from ".";
 import { CommonError, Option, Result, ResultUtils, StringUtils } from "../common";
+import { ILocalizationTemplates } from "../localization";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import { IToken, LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
 
@@ -74,6 +75,7 @@ export class LexerSnapshot {
         const flatTokens: ReadonlyArray<FlatLineToken> = flattenedLines.flatLineTokens;
         const numFlatTokens: number = flatTokens.length;
         const text: string = flattenedLines.text;
+        const localizationTemplates: ILocalizationTemplates = state.localizationTemplates;
 
         let flatIndex: number = 0;
         while (flatIndex < numFlatTokens) {
@@ -90,6 +92,7 @@ export class LexerSnapshot {
 
                 case LineTokenKind.MultilineCommentStart: {
                     const concatenatedTokenRead: ConcatenatedCommentRead = readMultilineComment(
+                        localizationTemplates,
                         flattenedLines,
                         flatToken,
                     );
@@ -100,6 +103,7 @@ export class LexerSnapshot {
 
                 case LineTokenKind.QuotedIdentifierStart: {
                     const concatenatedTokenRead: ConcatenatedTokenRead = readQuotedIdentifier(
+                        localizationTemplates,
                         flattenedLines,
                         flatToken,
                     );
@@ -109,7 +113,11 @@ export class LexerSnapshot {
                 }
 
                 case LineTokenKind.StringLiteralStart: {
-                    const concatenatedTokenRead: ConcatenatedTokenRead = readStringLiteral(flattenedLines, flatToken);
+                    const concatenatedTokenRead: ConcatenatedTokenRead = readStringLiteral(
+                        localizationTemplates,
+                        flattenedLines,
+                        flatToken,
+                    );
                     tokens.push(concatenatedTokenRead.token);
                     flatIndex = concatenatedTokenRead.flatIndexEnd;
                     break;
@@ -172,7 +180,11 @@ function readSingleLineMultilineComment(flatToken: FlatLineToken): MultilineComm
     };
 }
 
-function readMultilineComment(flattenedLines: FlattenedLines, tokenStart: FlatLineToken): ConcatenatedCommentRead {
+function readMultilineComment(
+    localizationTemplates: ILocalizationTemplates,
+    flattenedLines: FlattenedLines,
+    tokenStart: FlatLineToken,
+): ConcatenatedCommentRead {
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
@@ -181,6 +193,7 @@ function readMultilineComment(flattenedLines: FlattenedLines, tokenStart: FlatLi
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
+            localizationTemplates,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.MultilineComment,
         );
@@ -206,7 +219,11 @@ function readMultilineComment(flattenedLines: FlattenedLines, tokenStart: FlatLi
     }
 }
 
-function readQuotedIdentifier(flattenedLines: FlattenedLines, tokenStart: FlatLineToken): ConcatenatedTokenRead {
+function readQuotedIdentifier(
+    localizationTemplates: ILocalizationTemplates,
+    flattenedLines: FlattenedLines,
+    tokenStart: FlatLineToken,
+): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
@@ -215,6 +232,7 @@ function readQuotedIdentifier(flattenedLines: FlattenedLines, tokenStart: FlatLi
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
+            localizationTemplates,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
@@ -239,7 +257,11 @@ function readQuotedIdentifier(flattenedLines: FlattenedLines, tokenStart: FlatLi
     }
 }
 
-function readStringLiteral(flattenedLines: FlattenedLines, tokenStart: FlatLineToken): ConcatenatedTokenRead {
+function readStringLiteral(
+    localizationTemplates: ILocalizationTemplates,
+    flattenedLines: FlattenedLines,
+    tokenStart: FlatLineToken,
+): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
@@ -248,6 +270,7 @@ function readStringLiteral(flattenedLines: FlattenedLines, tokenStart: FlatLineT
     const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
+            localizationTemplates,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.String,
         );

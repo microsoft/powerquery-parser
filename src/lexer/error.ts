@@ -3,7 +3,7 @@
 
 import { Lexer } from ".";
 import { CommonError, StringUtils } from "../common";
-import { Localization, ILocalizationTemplates } from "../localization";
+import { ILocalizationTemplates, Localization } from "../localization";
 
 export type TLexError = CommonError.CommonError | LexError;
 
