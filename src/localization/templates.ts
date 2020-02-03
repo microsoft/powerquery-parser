@@ -43,3 +43,5 @@ export interface ILocalizationTemplates {
 }
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([["en-us", enUs]]);
+
+export const DefaultTemplates: ILocalizationTemplates = enUs;

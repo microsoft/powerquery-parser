@@ -42,8 +42,8 @@ export function tryLex(settings: Settings, text: string): TriedLexerSnapshot {
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse(lexerSnapshot: LexerSnapshot, parser: IParser<IParserState>): TriedParse {
-    const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
+export function tryParse(settings: Settings, lexerSnapshot: LexerSnapshot, parser: IParser<IParserState>): TriedParse {
+    const parserState: IParserState = IParserStateUtils.newState(settings, lexerSnapshot);
     return parser.readDocument(parserState, parser);
 }
 
@@ -82,7 +82,7 @@ export function tryLexParse(settings: Settings, text: string, parser: IParser<IP
     }
     const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
 
-    const triedParse: TriedParse = tryParse(lexerSnapshot, parser);
+    const triedParse: TriedParse = tryParse(settings, lexerSnapshot, parser);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,

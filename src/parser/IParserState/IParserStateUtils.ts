@@ -4,6 +4,7 @@
 import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
+import { Settings } from "../../settings";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
@@ -17,10 +18,11 @@ export interface FastStateBackup {
 // ---------- State ----------
 // ---------------------------
 
-export function newState(lexerSnapshot: LexerSnapshot): IParserState {
+export function newState(settings: Settings, lexerSnapshot: LexerSnapshot): IParserState {
     const maybeCurrentToken: Option<Token> = lexerSnapshot.tokens[0];
 
     return {
+        localizationTemplates: settings.localizationTemplates,
         lexerSnapshot,
         tokenIndex: 0,
         maybeCurrentToken,
@@ -313,6 +315,7 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
 export function testCsvContinuationLetExpression(state: IParserState): Option<ParseError.ExpectedCsvContinuationError> {
     if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
+            state.localizationTemplates,
             ParseError.CsvContinuationKind.LetExpression,
             maybeCurrentTokenWithColumnNumber(state),
         );
@@ -327,6 +330,7 @@ export function testCsvContinuationDanglingComma(
 ): Option<ParseError.ExpectedCsvContinuationError> {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
+            state.localizationTemplates,
             ParseError.CsvContinuationKind.DanglingComma,
             maybeCurrentTokenWithColumnNumber(state),
         );
@@ -345,7 +349,7 @@ export function testIsOnTokenKind(
 ): Option<ParseError.ExpectedTokenKindError> {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
         const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
-        return new ParseError.ExpectedTokenKindError(expectedTokenKind, maybeToken);
+        return new ParseError.ExpectedTokenKindError(state.localizationTemplates, expectedTokenKind, maybeToken);
     } else {
         return undefined;
     }
@@ -360,7 +364,7 @@ export function testIsOnAnyTokenKind(
 
     if (isError) {
         const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
-        return new ParseError.ExpectedAnyTokenKindError(expectedAnyTokenKind, maybeToken);
+        return new ParseError.ExpectedAnyTokenKindError(state.localizationTemplates, expectedAnyTokenKind, maybeToken);
     } else {
         return undefined;
     }
@@ -369,7 +373,11 @@ export function testIsOnAnyTokenKind(
 export function testNoMoreTokens(state: IParserState): Option<ParseError.UnusedTokensRemainError> {
     if (state.tokenIndex !== state.lexerSnapshot.tokens.length) {
         const token: Token = expectTokenAt(state, state.tokenIndex);
-        return new ParseError.UnusedTokensRemainError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+        return new ParseError.UnusedTokensRemainError(
+            state.localizationTemplates,
+            token,
+            state.lexerSnapshot.graphemePositionStartFrom(token),
+        );
     } else {
         return undefined;
     }
@@ -377,12 +385,20 @@ export function testNoMoreTokens(state: IParserState): Option<ParseError.UnusedT
 
 export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedParenthesesError {
     const token: Token = expectTokenAt(state, state.tokenIndex);
-    return new ParseError.UnterminatedParenthesesError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+    return new ParseError.UnterminatedParenthesesError(
+        state.localizationTemplates,
+        token,
+        state.lexerSnapshot.graphemePositionStartFrom(token),
+    );
 }
 
 export function unterminatedBracketError(state: IParserState): ParseError.UnterminatedBracketError {
     const token: Token = expectTokenAt(state, state.tokenIndex);
-    return new ParseError.UnterminatedBracketError(token, state.lexerSnapshot.graphemePositionStartFrom(token));
+    return new ParseError.UnterminatedBracketError(
+        state.localizationTemplates,
+        token,
+        state.lexerSnapshot.graphemePositionStartFrom(token),
+    );
 }
 
 export function maybeCurrentTokenWithColumnNumber(state: IParserState): Option<ParseError.TokenWithColumnNumber> {
