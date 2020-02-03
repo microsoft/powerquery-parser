@@ -333,3 +333,5 @@ xunit.xml
 test-results.xml
 tsconfig.tsbuildinfo
 *.tgz
+
+src/localization/templates.json
