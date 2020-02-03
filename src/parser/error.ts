@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext } from ".";
+import { ParserContext } from ".";
 import { CommonError, Option, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
 
