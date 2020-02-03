@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, AstUtils, NodeIdMap, ParserContext } from "..";
-import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../../common";
-import { TokenKind, TokenRange, TokenPosition } from "../../lexer";
-import { BracketDisambiguation, IParser } from "../IParser";
-import { IParserState, IParserStateUtils } from "../IParserState";
-import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
+import { Option } from "../../common";
+import { TokenPosition } from "../../lexer";
+import { IParser } from "../IParser";
+import { IParserState } from "../IParserState";
+import { Ast } from "../ast";
 
 export interface BenchmarkState extends IParserState {
     functionTimestamps: Map<number, FunctionTimestamp>;
@@ -29,6 +28,179 @@ export interface FunctionTimestamp {
     readonly timeStart: number;
     timeEnd: Option<number>;
     timeDuration: Option<number>;
+}
+
+export function createBenchmark<S>(
+    originalState: S & IParserState,
+    originalParser: IParser<S & IParserState>,
+): BenchmarkParser {
+    const benchmarkState: BenchmarkState = {
+        ...originalState,
+        functionTimestamps: new Map(),
+        functionTimestampCounter: 0,
+    };
+
+    let benchmarkParser: BenchmarkParser<BenchmarkState> = {} as BenchmarkParser<BenchmarkState>;
+    benchmarkParser.getThis = () => {
+        return benchmarkParser;
+    };
+
+    benchmarkParser.readIdentifier = (s: BenchmarkState, p: BenchmarkParser<BenchmarkState>) =>
+        traceFunction<IParserState, Ast.Identifier>(s, p, originalParser.readIdentifier);
+
+    return {
+        // 12.1.6 Identifiers
+        readIdentifier: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readIdentifier),
+        readGeneralizedIdentifier: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readGeneralizedIdentifier),
+        readKeyword: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readKeyword),
+
+        // 12.2.1 Documents
+        readDocument: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readDocument),
+
+        // 12.2.2 Section Documents
+        readSectionDocument: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readSectionDocument),
+        readSectionMembers: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readSectionMembers),
+        readSectionMember: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readSectionMember),
+
+        // 12.2.3.1 Expressions
+        readExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readExpression),
+
+        // 12.2.3.2 Logical expressions
+        readLogicalExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readLogicalExpression),
+
+        // 12.2.3.3 Is expression
+        readIsExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readIsExpression),
+        readNullablePrimitiveType: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readNullablePrimitiveType),
+
+        // 12.2.3.4 As expression
+        readAsExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readAsExpression),
+
+        // 12.2.3.5 Equality expression
+        readEqualityExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readEqualityExpression),
+
+        // 12.2.3.6 Relational expression
+        readRelationalExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readRelationalExpression),
+
+        // 12.2.3.7 Arithmetic expressions
+        readArithmeticExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readArithmeticExpression),
+
+        // 12.2.3.8 Metadata expression
+        readMetadataExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readMetadataExpression),
+
+        // 12.2.3.9 Unary expression
+        readUnaryExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readUnaryExpression),
+
+        // 12.2.3.10 Primary expression
+        readPrimaryExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readPrimaryExpression),
+        readRecursivePrimaryExpression: (s: BenchmarkState, parser, head) =>
+            traceFunction(s, parser, () => parser.readRecursivePrimaryExpression(s, parser, head)),
+
+        // 12.2.3.11 Literal expression
+        readLiteralExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readLiteralExpression),
+
+        // 12.2.3.12 Identifier expression
+        readIdentifierExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readIdentifierExpression),
+
+        // 12.2.3.14 Parenthesized expression
+        readParenthesizedExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readParenthesizedExpression),
+
+        // 12.2.3.15 Not-implemented expression
+        readNotImplementedExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readNotImplementedExpression),
+
+        // 12.2.3.16 Invoke expression
+        readInvokeExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readInvokeExpression),
+
+        // 12.2.3.17 List expression
+        readListExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readListExpression),
+        readListItem: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readListItem),
+
+        // 12.2.3.18 Record expression
+        readRecordExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readRecordExpression),
+
+        // 12.2.3.19 Item access expression
+        readItemAccessExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readItemAccessExpression),
+
+        // 12.2.3.20 Field access expression
+        readFieldSelection: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readFieldSelection),
+        readFieldProjection: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readFieldProjection),
+        readFieldSelector: (s: BenchmarkState, parser, allowOptional) =>
+            traceFunction(s, parser, () => parser.readFieldSelector(s, parser, allowOptional)),
+
+        // 12.2.3.21 Function expression
+        readFunctionExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readFunctionExpression),
+        readParameterList: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readParameterList),
+        readAsType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readAsType),
+
+        // 12.2.3.22 Each expression
+        readEachExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readEachExpression),
+
+        // 12.2.3.23 Let expression
+        readLetExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readLetExpression),
+
+        // 12.2.3.24 If expression
+        readIfExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readIfExpression),
+
+        // 12.2.3.25 Type expression
+        readTypeExpression: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readTypeExpression),
+        readType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readType),
+        readPrimaryType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readPrimaryType),
+        readRecordType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readRecordType),
+        readTableType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readTableType),
+        readFieldSpecificationList: (s: BenchmarkState, parser, allowOpenMarker, testPostCommaError) =>
+            traceFunction(s, parser, () =>
+                parser.readFieldSpecificationList(s, parser, allowOpenMarker, testPostCommaError),
+            ),
+        readListType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readListType),
+        readFunctionType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readFunctionType),
+        readParameterSpecificationList: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readParameterSpecificationList),
+        readNullableType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readNullableType),
+
+        // 12.2.3.26 Error raising expression
+        readErrorRaisingExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readErrorRaisingExpression),
+
+        // 12.2.3.27 Error handling expression
+        readErrorHandlingExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readErrorHandlingExpression),
+
+        // 12.2.4 Literal Attributes
+        readRecordLiteral: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readRecordLiteral),
+        readFieldNamePairedAnyLiterals: (s: BenchmarkState, parser, onePairRequired, testPostCommaError) =>
+            traceFunction(s, parser, () =>
+                parser.readFieldNamePairedAnyLiterals(s, parser, onePairRequired, testPostCommaError),
+            ),
+        readListLiteral: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readListLiteral),
+        readAnyLiteral: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readAnyLiteral),
+        readPrimitiveType: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.readPrimitiveType),
+
+        // Disambiguation
+        disambiguateBracket: (s: BenchmarkState, parser) => traceFunction(s, parser, parser.disambiguateBracket),
+        disambiguateParenthesis: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.disambiguateParenthesis),
+
+        // key-value pairs
+        readIdentifierPairedExpressions: (s: BenchmarkState, parser, onePairRequired, testPostCommaError) =>
+            traceFunction(s, parser, () =>
+                parser.readIdentifierPairedExpressions(s, parser, onePairRequired, testPostCommaError),
+            ),
+        readIdentifierPairedExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readIdentifierPairedExpression),
+        readGeneralizedIdentifierPairedExpressions: (s: BenchmarkState, parser, onePairRequired, testPostCommaError) =>
+            traceFunction(s, parser, () =>
+                parser.readGeneralizedIdentifierPairedExpressions(s, parser, onePairRequired, testPostCommaError),
+            ),
+        readGeneralizedIdentifierPairedExpression: (s: BenchmarkState, parser) =>
+            traceFunction(s, parser, parser.readGeneralizedIdentifierPairedExpression),
+    };
 }
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
@@ -174,10 +346,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, parser.readGeneralizedIdentifierPairedExpression),
 };
 
-function functionEntry<T>(
-    state: BenchmarkState,
-    fn: (state: BenchmarkState, parser: IParser<BenchmarkState>) => T,
-): number {
+function functionEntry<T, S>(state: BenchmarkState, fn: (state: S, parser: IParser<S>) => T): number {
     const tokenPosition: TokenPosition = state.maybeCurrentToken!.positionStart;
     const id: number = state.functionTimestampCounter;
     state.functionTimestampCounter += 1;
@@ -213,13 +382,13 @@ function functionExit(state: BenchmarkState, id: number): void {
     fnTimestamp.codeUnitEnd = tokenPosition.codeUnit;
 }
 
-function traceFunction<T>(
-    state: BenchmarkState,
-    parser: IParser<BenchmarkState>,
-    fn: (state: BenchmarkState, parser: IParser<BenchmarkState>) => T,
+function traceFunction<OriginalState, T>(
+    benchmarkState: OriginalState & IParserState & BenchmarkState,
+    benchmarkParser: IParser<OriginalState & IParserState & BenchmarkState>,
+    fn: (state: OriginalState & IParserState, parser: IParser<OriginalState & IParserState>) => T,
 ): T {
-    const fnCallId: number = functionEntry(state, fn);
-    const result: T = fn(state, parser);
-    functionExit(state, fnCallId);
+    const fnCallId: number = functionEntry(benchmarkState, fn);
+    const result: T = fn(benchmarkState, benchmarkParser);
+    functionExit(benchmarkState, fnCallId);
     return result;
 }
