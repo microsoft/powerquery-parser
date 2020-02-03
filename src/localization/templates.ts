@@ -1,4 +1,4 @@
-import * as enUs from "./templates/en-US.json";
+import * as templates from "./templates.json";
 
 export interface ILocalizationTemplates {
     readonly error_common_invariantError_details: string;
@@ -41,7 +41,4 @@ export interface ILocalizationTemplates {
     readonly error_parse_unusedTokens: string;
 }
 
-export const LocalizationTemplateByLocale: Map<string, ILocalizationTemplates> = new Map<
-    string,
-    ILocalizationTemplates
->([["en-US", enUs]]);
+export const LocalizationTemplates: ILocalizationTemplates = templates;
