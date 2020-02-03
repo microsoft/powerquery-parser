@@ -30,7 +30,6 @@
     "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Expected to find a generalized identifier but the end-of-stream was reached first",
     "error_parse_expectTokenKind_1_other": "Expected to find a {} but found a {} instead",
     "error_parse_expectTokenKind_2_endOfStream": "Expected to find a {} but the end-of-stream was reached instead",
-    "error_parse_invalidLiteral": "Expected to find a literal but {} was found instead",
     "error_parse_invalidPrimitiveType": "Expected to find a primitive literal but {} was found instead",
     "error_parse_requiredParameterAfterOptional": "You cannot have a non-optional parameter after an optional parameter",
     "error_parse_unexpected": "You cannot have a non-optional parameter after an optional parameter",

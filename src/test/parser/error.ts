@@ -5,9 +5,8 @@ import { expect } from "chai";
 import "mocha";
 import { ResultUtils } from "../../common";
 import { TriedLexParse, tryLexParse } from "../../jobs";
+import { Localization } from "../../localization";
 import { ParseError, Parser } from "../../parser";
-
-import * as Localization from "../../localization/error";
 
 function expectParserInnerError(text: string): ParseError.TInnerParseError {
     const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
@@ -64,42 +63,56 @@ describe("Parser.Error", () => {
     it(`Dangling Comma for LetExpression`, () => {
         const text: string = "let a = 1, in 1";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
-        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationLetExpression());
+        expect(continuationError.message).to.equal(
+            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.LetExpression),
+        );
     });
 
     it(`Dangling Comma for ListExpression`, () => {
         const text: string = "{1, }";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
-        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+        expect(continuationError.message).to.equal(
+            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+        );
     });
 
     it(`Dangling Comma for FunctionExpression`, () => {
         const text: string = "(a, ) => a";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
-        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+        expect(continuationError.message).to.equal(
+            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+        );
     });
 
     it(`Dangling Comma for FunctionType`, () => {
         const text: string = "type function (a as number, ) as number";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
-        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+        expect(continuationError.message).to.equal(
+            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+        );
     });
 
     it(`Dangling Comma for RecordExpression`, () => {
         const text: string = "[a = 1,]";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
-        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+        expect(continuationError.message).to.equal(
+            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+        );
     });
 
     it(`Dangling Comma for RecordType`, () => {
         const text: string = "type [a = 1,]";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
-        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+        expect(continuationError.message).to.equal(
+            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+        );
     });
 
     it(`Dangling Comma for TableType`, () => {
         const text: string = "type table [a = 1,]";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
-        expect(continuationError.message).to.equal(Localization.parserExpectedCsvContinuationDanglingComma());
+        expect(continuationError.message).to.equal(
+            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+        );
     });
 });

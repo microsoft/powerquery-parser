@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Localization } from "../localization/templates";
+import { Localization } from "../localization";
 import { Option } from "./option";
 
 export type TInnerCommonError = InvariantError | UnknownError;

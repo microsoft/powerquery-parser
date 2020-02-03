@@ -4,7 +4,7 @@
 import { ParserContext } from ".";
 import { CommonError, Option, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
-import { Localization } from "../localization/templates";
+import { Localization } from "../localization";
 
 export type TParseError = CommonError.CommonError | ParseError;
 
@@ -22,6 +22,11 @@ export type TInnerParseError =
 export const enum CsvContinuationKind {
     DanglingComma = "DanglingComma",
     LetExpression = "LetExpression",
+}
+
+export const enum UnterminatedKind {
+    Bracket = "Bracket",
+    Parenthesis = "Parenthesis",
 }
 
 export class ParseError extends Error {
@@ -59,31 +64,31 @@ export class ExpectedGeneralizedIdentifierError extends Error {
 
 export class InvalidPrimitiveTypeError extends Error {
     constructor(readonly token: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserInvalidPrimitiveType(token, positionStart));
+        super(Localization.error_parse_invalidPrimitiveType(token));
     }
 }
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
     constructor(readonly missingOptionalToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserRequiredParameterAfterOptionalParameter(positionStart));
+        super(Localization.error_parse_requiredParameterAfterOptional());
     }
 }
 
 export class UnterminatedBracketError extends Error {
     constructor(readonly openBracketToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserUnterminatedBracket(positionStart));
+        super(Localization.error_parse_unterminated_bracket());
     }
 }
 
 export class UnterminatedParenthesesError extends Error {
     constructor(readonly openParenthesesToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserUnterminatedParentheses(positionStart));
+        super(Localization.error_parse_unterminated_parenthesis());
     }
 }
 
 export class UnusedTokensRemainError extends Error {
     constructor(readonly firstUnusedToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserUnusedTokensRemain(positionStart));
+        super(Localization.error_parse_unusedTokens());
     }
 }
 
