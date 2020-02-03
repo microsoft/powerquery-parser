@@ -32,10 +32,10 @@ export interface ILocalizationTemplates {
     readonly error_parse_csvContinuation_2_letExpression: string;
     readonly error_parse_expectAnyTokenKind_1_other: string;
     readonly error_parse_expectAnyTokenKind_2_endOfStream: string;
-    readonly error_parse_expectGeneralizedIdentifier: string;
-    readonly error_parse_expectGeneralizedIdentifier_endOfStream: string;
-    readonly error_parse_expectTokenKind: string;
-    readonly error_parse_expectTokenKind_endOfStream: string;
+    readonly error_parse_expectGeneralizedIdentifier_1_other: string;
+    readonly error_parse_expectGeneralizedIdentifier_2_endOfStream: string;
+    readonly error_parse_expectTokenKind_1_other: string;
+    readonly error_parse_expectTokenKind_2_endOfStream: string;
     readonly error_parse_invalidLiteral: string;
     readonly error_parse_invalidPrimitiveType: string;
     readonly error_parse_requiredParameterAfterOptional: string;
@@ -64,10 +64,11 @@ interface ILocalization {
         expectedAnyTokenKind: ReadonlyArray<TokenKind>,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => string;
-    readonly error_parse_expectGeneralizedIdentifier: () => string;
-    readonly error_parse_expectGeneralizedIdentifier_endOfStream: () => string;
-    readonly error_parse_expectTokenKind: () => string;
-    readonly error_parse_expectTokenKind_endOfStream: () => string;
+    readonly error_parse_expectGeneralizedIdentifier: (maybeFoundToken: Option<TokenWithColumnNumber>) => string;
+    readonly error_parse_expectTokenKind: (
+        expectedAnyTokenKind: TokenKind,
+        maybeFoundToken: Option<TokenWithColumnNumber>,
+    ) => string;
     readonly error_parse_invalidLiteral: () => string;
     readonly error_parse_invalidPrimitiveType: () => string;
     readonly error_parse_requiredParameterAfterOptional: () => string;
@@ -207,6 +208,29 @@ export const Localization: ILocalization = {
                 Templates.error_parse_expectAnyTokenKind_2_endOfStream,
                 expectedAnyTokenKind,
             );
+        }
+    },
+
+    error_parse_expectGeneralizedIdentifier: (maybeFoundToken: Option<TokenWithColumnNumber>) => {
+        if (maybeFoundToken !== undefined) {
+            return StringUtils.expectFormat(
+                Templates.error_parse_expectGeneralizedIdentifier_1_other,
+                maybeFoundToken.token.kind,
+            );
+        } else {
+            return Templates.error_parse_expectGeneralizedIdentifier_2_endOfStream;
+        }
+    },
+
+    error_parse_expectTokenKind: (expectedAnyTokenKind: TokenKind, maybeFoundToken: Option<TokenWithColumnNumber>) => {
+        if (maybeFoundToken !== undefined) {
+            return StringUtils.expectFormat(
+                Templates.error_parse_expectTokenKind_1_other,
+                expectedAnyTokenKind,
+                maybeFoundToken,
+            );
+        } else {
+            return StringUtils.expectFormat(Templates.error_parse_expectTokenKind_2_endOfStream, expectedAnyTokenKind);
         }
     },
 };

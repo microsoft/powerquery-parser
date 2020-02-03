@@ -47,13 +47,13 @@ export class ExpectedAnyTokenKindError extends Error {
 
 export class ExpectedTokenKindError extends Error {
     constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
-        super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
+        super(Localization.error_parse_expectTokenKind(expectedTokenKind, maybeFoundToken));
     }
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
     constructor(readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
-        super(Localization.parserExpectedGeneralizedIdentifier(maybeFoundToken));
+        super(Localization.error_parse_expectGeneralizedIdentifier(maybeFoundToken));
     }
 }
 
