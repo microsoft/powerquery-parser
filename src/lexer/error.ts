@@ -55,7 +55,7 @@ export class LexError extends Error {
 
 export class BadLineNumberError extends Error {
     constructor(readonly kind: BadLineNumberKind, readonly lineNumber: number, readonly numLines: number) {
-        super(Localization.lexBadLineNumber(kind, lineNumber, numLines));
+        super(Localization.error_lex_badLineNumber(kind));
     }
 }
 
@@ -106,7 +106,7 @@ export class UnterminatedMultilineTokenError extends Error {
         readonly graphemePosition: StringUtils.GraphemePosition,
         readonly kind: UnterminatedMultilineTokenKind,
     ) {
-        super(Localization.lexUnterminatedMultilineToken(graphemePosition, kind));
+        super(Localization.error_lex_unterminatedMultilineToken(kind));
     }
 }
 
