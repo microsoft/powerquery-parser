@@ -6,7 +6,6 @@ import { Option } from "../common/option";
 import { Lexer, LexError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
 import { TokenWithColumnNumber } from "../parser/error";
-import { LocalizationTemplates } from "./templates";
 
 export function invariantError(reason: string, maybeJsonifyable: Option<any>): string {
     if (maybeJsonifyable !== undefined) {

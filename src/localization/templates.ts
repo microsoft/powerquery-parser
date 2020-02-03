@@ -17,10 +17,10 @@ export interface ILocalizationTemplates {
     readonly error_lex_badRange_7_sameLine_codeUnitStartGreaterThanCodeUnitEnd: string;
     readonly error_lex_badState: string;
     readonly error_lex_endOfStream: string;
-    readonly error_lex_endOfStreamPartway: string;
-    readonly error_lex_expectedKind_hex: string;
-    readonly error_lex_expectedKind_keywordOrIdentifier: string;
-    readonly error_lex_expectedKind_numeric: string;
+    readonly error_lex_endOfStreamPartwayRead: string;
+    readonly error_lex_expectedKind_1_hex: string;
+    readonly error_lex_expectedKind_2_keywordOrIdentifier: string;
+    readonly error_lex_expectedKind_3_numeric: string;
     readonly error_lex_lineMap: string;
     readonly error_lex_unexpectedRead: string;
     readonly error_lex_unterminatedMultilineToken_comment: string;
@@ -56,11 +56,9 @@ interface ILocalization {
     readonly error_lex_badRange: (kind: LexError.BadRangeKind) => string;
     readonly error_lex_badState: () => string;
     readonly error_lex_endOfStream: () => string;
-    readonly error_lex_endOfStreamPartway: () => string;
-    readonly error_lex_expectedKind_hex: () => string;
-    readonly error_lex_expectedKind_keywordOrIdentifier: () => string;
-    readonly error_lex_expectedKind_numeric: () => string;
-    readonly error_lex_lineMap: () => string;
+    readonly error_lex_endOfStreamPartwayRead: () => string;
+    readonly error_lex_expectedKind: (kind: LexError.ExpectedKind) => string;
+    readonly error_lex_lineMap: (errorLineMap: Lexer.ErrorLineMap) => string;
     readonly error_lex_unexpectedRead: () => string;
     readonly error_lex_unterminatedMultilineToken_comment: () => string;
     readonly error_lex_unterminatedMultilineToken_quotedIdentifier: () => string;
@@ -143,4 +141,28 @@ export const Localization: ILocalization = {
     error_lex_badState: () => Templates.error_lex_badState,
 
     error_lex_endOfStream: () => Templates.error_lex_endOfStream,
+
+    error_lex_endOfStreamPartwayRead: () => Templates.error_lex_endOfStreamPartwayRead,
+
+    error_lex_expectedKind: (kind: LexError.ExpectedKind) => {
+        switch (kind) {
+            case LexError.ExpectedKind.HexLiteral:
+                return Templates.error_lex_expectedKind_1_hex;
+
+            case LexError.ExpectedKind.KeywordOrIdentifier:
+                return Templates.error_lex_expectedKind_2_keywordOrIdentifier;
+
+            case LexError.ExpectedKind.Numeric:
+                return Templates.error_lex_expectedKind_3_numeric;
+
+            default:
+                throw isNever(kind);
+        }
+    },
+
+    error_lex_lineMap: (errorLineMap: Lexer.ErrorLineMap) => {
+        return StringUtils.expectFormat(Templates.error_lex_lineMap, [...errorLineMap.keys()]);
+    },
+
+    error_lex_unexpectedRead: () => Templates.error_lex_unexpectedRead,
 };

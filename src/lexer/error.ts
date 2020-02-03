@@ -73,7 +73,7 @@ export class BadStateError extends Error {
 
 export class ErrorLineMapError extends Error {
     constructor(readonly errorLineMap: Lexer.ErrorLineMap) {
-        super(Localization.lexErrorLineMap(errorLineMap));
+        super(Localization.error_lex_lineMap(errorLineMap));
     }
 }
 
@@ -85,19 +85,19 @@ export class EndOfStreamError extends Error {
 
 export class ExpectedError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition, readonly kind: ExpectedKind) {
-        super(Localization.lexExpected(graphemePosition, kind));
+        super(Localization.error_lex_expectedKind(kind));
     }
 }
 
 export class UnexpectedEofError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.lexUnexpectedEof(graphemePosition));
+        super(Localization.error_lex_endOfStreamPartwayRead());
     }
 }
 
 export class UnexpectedReadError extends Error {
     constructor(readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.lexUnexpectedRead(graphemePosition));
+        super(Localization.error_lex_unexpectedRead());
     }
 }
 
