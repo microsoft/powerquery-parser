@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as templates from "./templates.json";
+import * as enUs from "./templates/en-US.json";
 
 export interface ILocalizationTemplates {
     readonly error_common_invariantError_1_details: string;
@@ -42,4 +42,4 @@ export interface ILocalizationTemplates {
     readonly error_parse_unusedTokens: string;
 }
 
-export const Templates: ILocalizationTemplates = templates;
+export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([["en-us", enUs]]);

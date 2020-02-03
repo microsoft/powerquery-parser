@@ -4,9 +4,9 @@
 import { expect } from "chai";
 import "mocha";
 import { ResultUtils } from "../../common";
-import { TriedLexParse, tryLexParse } from "../../jobs";
 import { Localization } from "../../localization";
 import { ParseError, Parser } from "../../parser";
+import { TriedLexParse, tryLexParse } from "../../tasks";
 
 function expectParserInnerError(text: string): ParseError.TInnerParseError {
     const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);

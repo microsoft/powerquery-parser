@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import "mocha";
 import { ResultUtils } from "../../common";
-import { TriedLexParse, tryLexParse } from "../../jobs";
 import { IParser, IParserState, Parser } from "../../parser";
+import { TriedLexParse, tryLexParse } from "../../tasks";
 
 import * as path from "path";
 

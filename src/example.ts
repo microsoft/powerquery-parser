@@ -5,9 +5,9 @@
 
 import { Inspection } from ".";
 import { Option, ResultUtils } from "./common";
-import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./jobs";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError, Parser } from "./parser";
+import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./tasks";
 
 parseText(`if true then 1 else 2`);
 

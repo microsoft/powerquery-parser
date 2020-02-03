@@ -15,6 +15,7 @@ import {
     ParserContext,
     TriedParse,
 } from "./parser";
+import { Settings } from "./settings";
 
 export type TriedLexParse = Result<LexParseOk, LexError.TLexError | ParseError.TParseError>;
 
@@ -28,12 +29,14 @@ export interface LexParseInspectionOk extends Inspected {
     readonly triedParse: TriedParse;
 }
 
-export function tryLex(text: string): TriedLexerSnapshot {
-    const state: Lexer.State = Lexer.stateFrom(text);
+export function tryLex(settings: Settings, text: string): TriedLexerSnapshot {
+    const state: Lexer.State = Lexer.stateFrom(settings, text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
-        return ResultUtils.errFactory(new LexError.LexError(new LexError.ErrorLineMapError(errorLineMap)));
+        return ResultUtils.errFactory(
+            new LexError.LexError(new LexError.ErrorLineMapError(settings.localizationTemplates, errorLineMap)),
+        );
     }
 
     return LexerSnapshot.tryFrom(state);
@@ -72,8 +75,8 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
     return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds, maybeParseError);
 }
 
-export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {
-    const triedLexerSnapshot: TriedLexerSnapshot = tryLex(text);
+export function tryLexParse(settings: Settings, text: string, parser: IParser<IParserState>): TriedLexParse {
+    const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
@@ -91,11 +94,12 @@ export function tryLexParse(text: string, parser: IParser<IParserState>): TriedL
 }
 
 export function tryLexParseInspection(
+    settings: Settings,
     text: string,
     parser: IParser<IParserState>,
     position: Inspection.Position,
 ): TriedLexParseInspection {
-    const triedLexParse: TriedLexParse = tryLexParse(text, parser);
+    const triedLexParse: TriedLexParse = tryLexParse(settings, text, parser);
     if (ResultUtils.isErr(triedLexParse) && triedLexParse.error instanceof LexError.LexError) {
         return triedLexParse;
     }

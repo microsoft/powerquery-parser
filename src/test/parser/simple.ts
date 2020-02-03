@@ -4,8 +4,8 @@
 import { expect } from "chai";
 import "mocha";
 import { Option, ResultUtils, Traverse } from "../../common";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, Parser } from "../../parser";
+import { LexParseOk, TriedLexParse, tryLexParse } from "../../tasks";
 
 type AbridgedNode = [Ast.NodeKind, Option<number>];
 

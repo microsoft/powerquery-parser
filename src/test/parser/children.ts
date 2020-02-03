@@ -4,8 +4,8 @@
 import { expect } from "chai";
 import "mocha";
 import { ResultUtils } from "../../common";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
 import { Ast, NodeIdMap, Parser } from "../../parser";
+import { LexParseOk, TriedLexParse, tryLexParse } from "../../tasks";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;
