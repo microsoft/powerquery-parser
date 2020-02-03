@@ -100,7 +100,7 @@ export function expectFormat(template: string, ...args: any[]): string {
         }
 
         const arg: any = args.pop();
-        result.replace("{}", arg);
+        result = result.replace("{}", arg);
     }
 
     if (args.length) {

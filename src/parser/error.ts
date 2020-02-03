@@ -4,8 +4,7 @@
 import { ParserContext } from ".";
 import { CommonError, Option, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
-
-import * as Localization from "../localization/error";
+import { Localization } from "../localization/templates";
 
 export type TParseError = CommonError.CommonError | ParseError;
 
@@ -20,6 +19,11 @@ export type TInnerParseError =
     | UnterminatedParenthesesError
     | UnusedTokensRemainError;
 
+export const enum CsvContinuationKind {
+    DanglingComma = "DanglingComma",
+    LetExpression = "LetExpression",
+}
+
 export class ParseError extends Error {
     constructor(readonly innerError: TInnerParseError, readonly context: ParserContext.State) {
         super(innerError.message);
@@ -27,8 +31,8 @@ export class ParseError extends Error {
 }
 
 export class ExpectedCsvContinuationError extends Error {
-    constructor(readonly message: string, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
-        super(message);
+    constructor(readonly kind: CsvContinuationKind, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
+        super(Localization.error_parse_csvContinuation(kind));
     }
 }
 
@@ -37,7 +41,7 @@ export class ExpectedAnyTokenKindError extends Error {
         readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
         readonly maybeFoundToken: Option<TokenWithColumnNumber>,
     ) {
-        super(Localization.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
+        super(Localization.error_parse_expectAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
     }
 }
 

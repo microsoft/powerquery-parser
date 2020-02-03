@@ -7,8 +7,6 @@ import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
-import * as Localization from "../../localization/error";
-
 export interface FastStateBackup {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;
@@ -315,7 +313,7 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
 export function testCsvContinuationLetExpression(state: IParserState): Option<ParseError.ExpectedCsvContinuationError> {
     if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
-            Localization.parserExpectedCsvContinuationLetExpression(),
+            ParseError.CsvContinuationKind.LetExpression,
             maybeCurrentTokenWithColumnNumber(state),
         );
     }
@@ -329,7 +327,7 @@ export function testCsvContinuationDanglingComma(
 ): Option<ParseError.ExpectedCsvContinuationError> {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
-            Localization.parserExpectedCsvContinuationDanglingComma(),
+            ParseError.CsvContinuationKind.DanglingComma,
             maybeCurrentTokenWithColumnNumber(state),
         );
     } else {

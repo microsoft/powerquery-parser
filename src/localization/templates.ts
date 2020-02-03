@@ -1,6 +1,8 @@
 import { StringUtils, Option, isNever } from "../common";
-import { Lexer, LexError } from "../lexer";
+import { Lexer, LexError, TokenKind } from "../lexer";
 import * as templates from "./templates.json";
+import { ParseError } from "../parser";
+import { TokenWithColumnNumber } from "../parser/error";
 
 export interface ILocalizationTemplates {
     readonly error_common_invariantError_1_details: string;
@@ -26,10 +28,10 @@ export interface ILocalizationTemplates {
     readonly error_lex_unterminatedMultilineToken_1_comment: string;
     readonly error_lex_unterminatedMultilineToken_2_quotedIdentifier: string;
     readonly error_lex_unterminatedMultilineToken_3_string: string;
-    readonly error_parse_csvContinuation_danglingComma: string;
-    readonly error_parse_csvContinuation_letExpression: string;
-    readonly error_parse_expectAnyTokenKind: string;
-    readonly error_parse_expectAnyTokenKind_endOfStream: string;
+    readonly error_parse_csvContinuation_1_danglingComma: string;
+    readonly error_parse_csvContinuation_2_letExpression: string;
+    readonly error_parse_expectAnyTokenKind_1_other: string;
+    readonly error_parse_expectAnyTokenKind_2_endOfStream: string;
     readonly error_parse_expectGeneralizedIdentifier: string;
     readonly error_parse_expectGeneralizedIdentifier_endOfStream: string;
     readonly error_parse_expectTokenKind: string;
@@ -57,10 +59,11 @@ interface ILocalization {
     readonly error_lex_lineMap: (errorLineMap: Lexer.ErrorLineMap) => string;
     readonly error_lex_unexpectedRead: () => string;
     readonly error_lex_unterminatedMultilineToken: (kind: LexError.UnterminatedMultilineTokenKind) => string;
-    readonly error_parse_csvContinuation_danglingComma: () => string;
-    readonly error_parse_csvContinuation_letExpression: () => string;
-    readonly error_parse_expectAnyTokenKind: () => string;
-    readonly error_parse_expectAnyTokenKind_endOfStream: () => string;
+    readonly error_parse_csvContinuation: (kind: ParseError.CsvContinuationKind) => string;
+    readonly error_parse_expectAnyTokenKind: (
+        expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        maybeFoundToken: Option<TokenWithColumnNumber>,
+    ) => string;
     readonly error_parse_expectGeneralizedIdentifier: () => string;
     readonly error_parse_expectGeneralizedIdentifier_endOfStream: () => string;
     readonly error_parse_expectTokenKind: () => string;
@@ -173,6 +176,37 @@ export const Localization: ILocalization = {
 
             default:
                 throw isNever(kind);
+        }
+    },
+
+    error_parse_csvContinuation: (kind: ParseError.CsvContinuationKind) => {
+        switch (kind) {
+            case ParseError.CsvContinuationKind.DanglingComma:
+                return Templates.error_parse_csvContinuation_1_danglingComma;
+
+            case ParseError.CsvContinuationKind.LetExpression:
+                return Templates.error_parse_csvContinuation_2_letExpression;
+
+            default:
+                throw isNever(kind);
+        }
+    },
+
+    error_parse_expectAnyTokenKind: (
+        expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        maybeFoundToken: Option<TokenWithColumnNumber>,
+    ) => {
+        if (maybeFoundToken !== undefined) {
+            return StringUtils.expectFormat(
+                Templates.error_parse_expectAnyTokenKind_1_other,
+                expectedAnyTokenKind,
+                maybeFoundToken.token.kind,
+            );
+        } else {
+            return StringUtils.expectFormat(
+                Templates.error_parse_expectAnyTokenKind_2_endOfStream,
+                expectedAnyTokenKind,
+            );
         }
     },
 };
