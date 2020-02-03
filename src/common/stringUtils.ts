@@ -87,7 +87,7 @@ export function maybeNewlineKindAt(text: string, index: number): Option<NewlineK
 // A quick and dirty way to do string formatting.
 // Continually replaces '{}' until no more exist or you run out of args.
 // Does not handle any escaping.
-export function expectFormat(template: string, ...args: Readonly<any>[]): string {
+export function expectFormat(template: string, ...args: any[]): string {
     const details: {} = {
         template,
         args: [...args],

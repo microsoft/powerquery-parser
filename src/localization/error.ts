@@ -6,20 +6,17 @@ import { Option } from "../common/option";
 import { Lexer, LexError, Token, TokenKind } from "../lexer";
 import { Ast } from "../parser";
 import { TokenWithColumnNumber } from "../parser/error";
+import { LocalizationTemplates } from "./templates";
 
 export function invariantError(reason: string, maybeJsonifyable: Option<any>): string {
     if (maybeJsonifyable !== undefined) {
-        return `InvariantError: ${reason} - ${JSON.stringify(maybeJsonifyable, undefined, 4)}`;
+        return StringUtils.expectFormat(
+            LocalizationTemplates.error_common_invariantError_details,
+            reason,
+            JSON.stringify(maybeJsonifyable, undefined, 4),
+        );
     } else {
-        return `InvariantError: ${reason}`;
-    }
-}
-
-export function notYetImplemented(reason: string, maybeJsonifyable: Option<any>): string {
-    if (maybeJsonifyable !== undefined) {
-        return `NotYetImplemented: ${reason} - ${JSON.stringify(maybeJsonifyable, undefined, 4)}`;
-    } else {
-        return `NotYetImplemented: ${reason}`;
+        return StringUtils.expectFormat(LocalizationTemplates.error_common_invariantError_noDetails, reason);
     }
 }
 
@@ -115,6 +112,8 @@ export function lexUnterminatedMultilineToken(
 ): string {
     switch (kind) {
         case LexError.UnterminatedMultilineTokenKind.MultilineComment:
+            return StringUtils.expectFormat(LocalizationTemplates.error_lex_unterminatedMultilineToken_comment)
+
             return `Unterminated multiline comment starting on line ${graphemePosition.lineNumber +
                 1}, column ${graphemePosition.columnNumber + 1}.`;
 

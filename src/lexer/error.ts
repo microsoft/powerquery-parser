@@ -3,8 +3,7 @@
 
 import { Lexer } from ".";
 import { CommonError, StringUtils } from "../common";
-
-import * as Localization from "../localization/error";
+import { Localization } from "../localization/templates";
 
 export type TLexError = CommonError.CommonError | LexError;
 
@@ -62,13 +61,13 @@ export class BadLineNumberError extends Error {
 
 export class BadRangeError extends Error {
     constructor(readonly range: Lexer.Range, readonly kind: BadRangeKind) {
-        super(Localization.lexBadRange(kind));
+        super(Localization.error_lex_badRange(kind));
     }
 }
 
 export class BadStateError extends Error {
     constructor(readonly innerError: TLexError) {
-        super(Localization.lexBadState());
+        super(Localization.error_lex_badState());
     }
 }
 
@@ -80,7 +79,7 @@ export class ErrorLineMapError extends Error {
 
 export class EndOfStreamError extends Error {
     constructor() {
-        super(Localization.lexEndOfStream());
+        super(Localization.error_lex_endOfStream());
     }
 }
 
