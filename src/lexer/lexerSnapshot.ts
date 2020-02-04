@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Lexer, LexError } from ".";
-import { CommonError, Option, Result, ResultUtils, StringUtils } from "../common";
+import { CommonError, Result, ResultUtils, StringUtils } from "../common";
 import { ILocalizationTemplates } from "../localization";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import { IToken, LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
@@ -190,7 +190,7 @@ function readMultilineComment(
         tokenStart,
         LineTokenKind.MultilineCommentContent,
     );
-    const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
+    const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             localizationTemplates,
@@ -229,7 +229,7 @@ function readQuotedIdentifier(
         tokenStart,
         LineTokenKind.QuotedIdentifierContent,
     );
-    const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
+    const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             localizationTemplates,
@@ -267,7 +267,7 @@ function readStringLiteral(
         tokenStart,
         LineTokenKind.StringLiteralContent,
     );
-    const maybeTokenEnd: Option<FlatLineToken> = collection.maybeTokenEnd;
+    const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             localizationTemplates,
@@ -397,7 +397,7 @@ interface ConcatenatedTokenRead {
 interface FlatLineCollection {
     readonly tokenStart: FlatLineToken;
     readonly collectedTokens: ReadonlyArray<FlatLineToken>;
-    readonly maybeTokenEnd: Option<FlatLineToken>;
+    readonly maybeTokenEnd: FlatLineToken | undefined;
 }
 
 interface LineTerminator {
