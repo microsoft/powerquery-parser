@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParserContext } from ".";
-import { CommonError, Option, StringUtils } from "../common";
+import { CommonError, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
 import { ILocalizationTemplates, Localization } from "../localization";
 
@@ -39,7 +39,7 @@ export class ExpectedCsvContinuationError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly kind: CsvContinuationKind,
-        readonly maybeFoundToken: Option<TokenWithColumnNumber>,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_csvContinuation(templates, kind));
     }
@@ -49,7 +49,7 @@ export class ExpectedAnyTokenKindError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-        readonly maybeFoundToken: Option<TokenWithColumnNumber>,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKind, maybeFoundToken));
     }
@@ -59,14 +59,14 @@ export class ExpectedTokenKindError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly expectedTokenKind: TokenKind,
-        readonly maybeFoundToken: Option<TokenWithColumnNumber>,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectTokenKind(templates, expectedTokenKind, maybeFoundToken));
     }
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
-    constructor(templates: ILocalizationTemplates, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
+    constructor(templates: ILocalizationTemplates, readonly maybeFoundToken: TokenWithColumnNumber | undefined) {
         super(Localization.error_parse_expectGeneralizedIdentifier(templates, maybeFoundToken));
     }
 }
@@ -144,7 +144,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
     );
 }
 
-export function maybeTokenFrom(err: TInnerParseError): Option<Token> {
+export function maybeTokenFrom(err: TInnerParseError): Token | undefined {
     if (
         (err instanceof ExpectedAnyTokenKindError ||
             err instanceof ExpectedCsvContinuationError ||

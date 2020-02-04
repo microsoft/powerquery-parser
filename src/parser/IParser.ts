@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, IParserState, NodeIdMap, ParseError } from ".";
-import { Option, Result } from "../common";
+import { Result } from "../common";
 
 export type TriedParse = Result<ParseOk, ParseError.TParseError>;
 
@@ -108,7 +108,7 @@ export interface IParser<State> {
     readonly readParameterList: (
         state: State,
         parser: IParser<State>,
-    ) => Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>>;
+    ) => Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined>;
     readonly readAsType: (state: State, parser: IParser<State>) => Ast.AsType;
 
     // 12.2.3.22 Each expression
@@ -130,7 +130,7 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         allowOpenMarker: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
     ) => Ast.FieldSpecificationList;
     readonly readListType: (state: State, parser: IParser<State>) => Ast.ListType;
     readonly readFunctionType: (state: State, parser: IParser<State>) => Ast.FunctionType;
@@ -149,7 +149,7 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>;
     readonly readListLiteral: (state: State, parser: IParser<State>) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: State, parser: IParser<State>) => Ast.TAnyLiteral;
@@ -169,13 +169,13 @@ export interface IParser<State> {
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpressions: (
         state: State,
         parser: IParser<State>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpression: (
         state: State,

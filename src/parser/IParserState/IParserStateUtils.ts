@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
-import { CommonError, Option } from "../../common";
+import { CommonError } from "../../common";
 import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
 import { ParseSettings } from "../../settings";
 import { NodeIdMapUtils } from "../nodeIdMap";
@@ -11,7 +11,7 @@ import { IParserState } from "./IParserState";
 export interface FastStateBackup {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;
-    readonly maybeContextNodeId: Option<number>;
+    readonly maybeContextNodeId: number | undefined;
 }
 
 // ---------------------------
@@ -19,7 +19,7 @@ export interface FastStateBackup {
 // ---------------------------
 
 export function newState(settings: ParseSettings, lexerSnapshot: LexerSnapshot): IParserState {
-    const maybeCurrentToken: Option<Token> = lexerSnapshot.tokens[0];
+    const maybeCurrentToken: Token | undefined = lexerSnapshot.tokens[0];
 
     return {
         localizationTemplates: settings.localizationTemplates,
@@ -80,7 +80,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     }
 
     for (const nodeId of newAstNodeIds.sort().reverse()) {
-        const maybeParent: Option<number> = nodeIdMapCollection.parentIdById.get(nodeId);
+        const maybeParent: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
         const parentWillBeDeleted: boolean = maybeParent !== undefined && maybeParent >= backupIdCounter;
         ParserContext.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
@@ -116,7 +116,7 @@ export function endContext(state: IParserState, astNode: Ast.TNode): void {
         );
     }
 
-    const maybeParentOfContextNode: Option<ParserContext.Node> = ParserContext.endContext(
+    const maybeParentOfContextNode: ParserContext.Node | undefined = ParserContext.endContext(
         state.contextState,
         state.maybeCurrentContextNode,
         astNode,
@@ -124,7 +124,7 @@ export function endContext(state: IParserState, astNode: Ast.TNode): void {
     state.maybeCurrentContextNode = maybeParentOfContextNode;
 }
 
-export function deleteContext(state: IParserState, maybeNodeId: Option<number>): void {
+export function deleteContext(state: IParserState, maybeNodeId: number | undefined): void {
     let nodeId: number;
     if (maybeNodeId === undefined) {
         if (state.maybeCurrentContextNode === undefined) {
@@ -155,7 +155,7 @@ export function incrementAttributeCounter(state: IParserState): void {
 // -------------------------
 
 export function isTokenKind(state: IParserState, tokenKind: TokenKind, tokenIndex: number): boolean {
-    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
 
     if (maybeToken) {
         return maybeToken.kind === tokenKind;
@@ -192,7 +192,7 @@ export function isOnIdentifierConstant(state: IParserState, identifierConstant: 
 }
 
 export function isOnGeneralizedIdentifierStart(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
-    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
     if (maybeToken === undefined) {
         return false;
     }
@@ -265,7 +265,7 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
     }
     const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
 
-    const maybeTokenStart: Option<Token> = currentContextNode.maybeTokenStart;
+    const maybeTokenStart: Token | undefined = currentContextNode.maybeTokenStart;
     if (maybeTokenStart === undefined) {
         throw new CommonError.InvariantError(`maybeTokenStart should be truthy`);
     }
@@ -273,7 +273,7 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
 
     // inclusive token index
     const tokenIndexEnd: number = state.tokenIndex - 1;
-    const maybeTokenEnd: Option<Token> = state.lexerSnapshot.tokens[tokenIndexEnd];
+    const maybeTokenEnd: Token | undefined = state.lexerSnapshot.tokens[tokenIndexEnd];
     if (maybeTokenEnd === undefined) {
         throw new CommonError.InvariantError(`maybeTokenEnd should be truthy`);
     }
@@ -296,7 +296,7 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
 
 export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
-    const maybeToken: Option<Token> = lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Token | undefined = lexerSnapshot.tokens[tokenIndex];
 
     if (maybeToken) {
         return maybeToken;
@@ -312,7 +312,9 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
 // All of these tests assume you're in a given context and have just read a `,`.
 // Eg. testCsvEndLetExpression assumes you're in a LetExpression context and have just read a `,`.
 
-export function testCsvContinuationLetExpression(state: IParserState): Option<ParseError.ExpectedCsvContinuationError> {
+export function testCsvContinuationLetExpression(
+    state: IParserState,
+): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
             state.localizationTemplates,
@@ -327,7 +329,7 @@ export function testCsvContinuationLetExpression(state: IParserState): Option<Pa
 export function testCsvContinuationDanglingComma(
     state: IParserState,
     tokenKind: TokenKind,
-): Option<ParseError.ExpectedCsvContinuationError> {
+): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
             state.localizationTemplates,
@@ -346,9 +348,9 @@ export function testCsvContinuationDanglingComma(
 export function testIsOnTokenKind(
     state: IParserState,
     expectedTokenKind: TokenKind,
-): Option<ParseError.ExpectedTokenKindError> {
+): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
-        const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
+        const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
         return new ParseError.ExpectedTokenKindError(state.localizationTemplates, expectedTokenKind, maybeToken);
     } else {
         return undefined;
@@ -358,19 +360,19 @@ export function testIsOnTokenKind(
 export function testIsOnAnyTokenKind(
     state: IParserState,
     expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-): Option<ParseError.ExpectedAnyTokenKindError> {
+): ParseError.ExpectedAnyTokenKindError | undefined {
     const isError: boolean =
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(state.maybeCurrentTokenKind) === -1;
 
     if (isError) {
-        const maybeToken: Option<ParseError.TokenWithColumnNumber> = maybeCurrentTokenWithColumnNumber(state);
+        const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
         return new ParseError.ExpectedAnyTokenKindError(state.localizationTemplates, expectedAnyTokenKind, maybeToken);
     } else {
         return undefined;
     }
 }
 
-export function testNoMoreTokens(state: IParserState): Option<ParseError.UnusedTokensRemainError> {
+export function testNoMoreTokens(state: IParserState): ParseError.UnusedTokensRemainError | undefined {
     if (state.tokenIndex !== state.lexerSnapshot.tokens.length) {
         const token: Token = expectTokenAt(state, state.tokenIndex);
         return new ParseError.UnusedTokensRemainError(
@@ -401,15 +403,15 @@ export function unterminatedBracketError(state: IParserState): ParseError.Unterm
     );
 }
 
-export function maybeCurrentTokenWithColumnNumber(state: IParserState): Option<ParseError.TokenWithColumnNumber> {
+export function maybeCurrentTokenWithColumnNumber(state: IParserState): ParseError.TokenWithColumnNumber | undefined {
     return maybeTokenWithColumnNumber(state, state.tokenIndex);
 }
 
 export function maybeTokenWithColumnNumber(
     state: IParserState,
     tokenIndex: number,
-): Option<ParseError.TokenWithColumnNumber> {
-    const maybeToken: Option<Token> = state.lexerSnapshot.tokens[tokenIndex];
+): ParseError.TokenWithColumnNumber | undefined {
+    const maybeToken: Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
     if (maybeToken === undefined) {
         return undefined;
     }
@@ -423,6 +425,6 @@ export function maybeTokenWithColumnNumber(
 
 interface ContextNodeMetadata {
     readonly id: number;
-    readonly maybeAttributeIndex: Option<number>;
+    readonly maybeAttributeIndex: number | undefined;
     readonly tokenRange: TokenRange;
 }
