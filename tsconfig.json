@@ -13,9 +13,8 @@
         "declaration": true,
         "rootDir": "src",
         "incremental": true,
-        "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
-        "resolveJsonModule": true
+        "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
     },
-    "include": ["src/**/*.ts", "src/localization/templates/*.json"],
+    "include": ["src/**/*.ts"],
     "exclude": ["node_modules"]
 }
