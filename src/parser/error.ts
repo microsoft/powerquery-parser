@@ -48,10 +48,10 @@ export class ExpectedCsvContinuationError extends Error {
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        readonly expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
         readonly maybeFoundToken: Option<TokenWithColumnNumber>,
     ) {
-        super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKind, maybeFoundToken));
+        super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKinds, maybeFoundToken));
     }
 }
 

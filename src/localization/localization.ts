@@ -32,7 +32,7 @@ interface ILocalization {
     ) => string;
     readonly error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => string;
     readonly error_parse_expectGeneralizedIdentifier: (
@@ -41,7 +41,7 @@ interface ILocalization {
     ) => string;
     readonly error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: TokenKind,
+        expectedTokenKind: TokenKind,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => string;
     readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => string;
@@ -49,6 +49,136 @@ interface ILocalization {
     readonly error_parse_unterminated_bracket: (templates: ILocalizationTemplates) => string;
     readonly error_parse_unterminated_parenthesis: (templates: ILocalizationTemplates) => string;
     readonly error_parse_unusedTokens: (templates: ILocalizationTemplates) => string;
+}
+
+export function localizeTokenKind(tokenKind: TokenKind, localizationTemplates: ILocalizationTemplates): string {
+    switch (tokenKind) {
+        case TokenKind.Ampersand:
+            return localizationTemplates.tokenKind_ampersand;
+        case TokenKind.Asterisk:
+            return localizationTemplates.tokenKind_asterisk;
+        case TokenKind.AtSign:
+            return localizationTemplates.tokenKind_atSign;
+        case TokenKind.Bang:
+            return localizationTemplates.tokenKind_bang;
+        case TokenKind.Comma:
+            return localizationTemplates.tokenKind_comma;
+        case TokenKind.Division:
+            return localizationTemplates.tokenKind_division;
+        case TokenKind.DotDot:
+            return localizationTemplates.tokenKind_dotDot;
+        case TokenKind.Ellipsis:
+            return localizationTemplates.tokenKind_ellipsis;
+        case TokenKind.Equal:
+            return localizationTemplates.tokenKind_equal;
+        case TokenKind.FatArrow:
+            return localizationTemplates.tokenKind_fatArrow;
+        case TokenKind.GreaterThan:
+            return localizationTemplates.tokenKind_greaterThan;
+        case TokenKind.GreaterThanEqualTo:
+            return localizationTemplates.tokenKind_greaterThanEqualTo;
+        case TokenKind.HexLiteral:
+            return localizationTemplates.tokenKind_hexLiteral;
+        case TokenKind.Identifier:
+            return localizationTemplates.tokenKind_identifier;
+        case TokenKind.KeywordAnd:
+            return localizationTemplates.tokenKind_keywordAnd;
+        case TokenKind.KeywordAs:
+            return localizationTemplates.tokenKind_keywordAs;
+        case TokenKind.KeywordEach:
+            return localizationTemplates.tokenKind_keywordEach;
+        case TokenKind.KeywordElse:
+            return localizationTemplates.tokenKind_keywordElse;
+        case TokenKind.KeywordError:
+            return localizationTemplates.tokenKind_keywordError;
+        case TokenKind.KeywordFalse:
+            return localizationTemplates.tokenKind_keywordFalse;
+        case TokenKind.KeywordHashBinary:
+            return localizationTemplates.tokenKind_keywordHashBinary;
+        case TokenKind.KeywordHashDate:
+            return localizationTemplates.tokenKind_keywordHashDate;
+        case TokenKind.KeywordHashDateTime:
+            return localizationTemplates.tokenKind_keywordHashDateTime;
+        case TokenKind.KeywordHashDateTimeZone:
+            return localizationTemplates.tokenKind_keywordHashDateTimeZone;
+        case TokenKind.KeywordHashDuration:
+            return localizationTemplates.tokenKind_keywordHashDuration;
+        case TokenKind.KeywordHashInfinity:
+            return localizationTemplates.tokenKind_keywordHashInfinity;
+        case TokenKind.KeywordHashNan:
+            return localizationTemplates.tokenKind_keywordHashNan;
+        case TokenKind.KeywordHashSections:
+            return localizationTemplates.tokenKind_keywordHashSections;
+        case TokenKind.KeywordHashShared:
+            return localizationTemplates.tokenKind_keywordShared;
+        case TokenKind.KeywordHashTable:
+            return localizationTemplates.tokenKind_keywordHashTable;
+        case TokenKind.KeywordHashTime:
+            return localizationTemplates.tokenKind_keywordHashTime;
+        case TokenKind.KeywordIf:
+            return localizationTemplates.tokenKind_keywordIf;
+        case TokenKind.KeywordIn:
+            return localizationTemplates.tokenKind_keywordIn;
+        case TokenKind.KeywordIs:
+            return localizationTemplates.tokenKind_keywordIs;
+        case TokenKind.KeywordLet:
+            return localizationTemplates.tokenKind_keywordLet;
+        case TokenKind.KeywordMeta:
+            return localizationTemplates.tokenKind_keywordMeta;
+        case TokenKind.KeywordNot:
+            return localizationTemplates.tokenKind_notEqual;
+        case TokenKind.KeywordOr:
+            return localizationTemplates.tokenKind_keywordOr;
+        case TokenKind.KeywordOtherwise:
+            return localizationTemplates.tokenKind_keywordOtherwise;
+        case TokenKind.KeywordSection:
+            return localizationTemplates.tokenKind_keywordSection;
+        case TokenKind.KeywordShared:
+            return localizationTemplates.tokenKind_keywordShared;
+        case TokenKind.KeywordThen:
+            return localizationTemplates.tokenKind_keywordThen;
+        case TokenKind.KeywordTrue:
+            return localizationTemplates.tokenKind_keywordTrue;
+        case TokenKind.KeywordTry:
+            return localizationTemplates.tokenKind_keywordTry;
+        case TokenKind.KeywordType:
+            return localizationTemplates.tokenKind_keywordType;
+        case TokenKind.LeftBrace:
+            return localizationTemplates.tokenKind_leftBrace;
+        case TokenKind.LeftBracket:
+            return localizationTemplates.tokenKind_leftBracket;
+        case TokenKind.LeftParenthesis:
+            return localizationTemplates.tokenKind_leftParenthesis;
+        case TokenKind.LessThan:
+            return localizationTemplates.tokenKind_lessThan;
+        case TokenKind.LessThanEqualTo:
+            return localizationTemplates.tokenKind_lessThanEqualTo;
+        case TokenKind.Minus:
+            return localizationTemplates.tokenKind_minus;
+        case TokenKind.NotEqual:
+            return localizationTemplates.tokenKind_notEqual;
+        case TokenKind.NullLiteral:
+            return localizationTemplates.tokenKind_nullLiteral;
+        case TokenKind.NumericLiteral:
+            return localizationTemplates.tokenKind_numericLiteral;
+        case TokenKind.Plus:
+            return localizationTemplates.tokenKind_plus;
+        case TokenKind.QuestionMark:
+            return localizationTemplates.tokenKind_questionMark;
+        case TokenKind.RightBrace:
+            return localizationTemplates.tokenKind_rightBrace;
+        case TokenKind.RightBracket:
+            return localizationTemplates.tokenKind_rightBracket;
+        case TokenKind.RightParenthesis:
+            return localizationTemplates.tokenKind_rightParenthesis;
+        case TokenKind.Semicolon:
+            return localizationTemplates.tokenKind_semicolon;
+        case TokenKind.StringLiteral:
+            return localizationTemplates.tokenKind_stringLiteral;
+
+        default:
+            throw isNever(tokenKind);
+    }
 }
 
 export const Localization: ILocalization = {
@@ -175,19 +305,22 @@ export const Localization: ILocalization = {
 
     error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => {
+        const localizedExpectedAnyTokenKinds: ReadonlyArray<string> = expectedAnyTokenKinds.map(
+            (tokenKind: TokenKind) => localizeTokenKind(tokenKind, templates),
+        );
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_1_other,
-                expectedAnyTokenKind,
-                maybeFoundToken.token.kind,
+                localizedExpectedAnyTokenKinds.join(", "),
+                localizeTokenKind(maybeFoundToken.token.kind, templates),
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_2_endOfStream,
-                expectedAnyTokenKind,
+                localizedExpectedAnyTokenKinds,
             );
         }
     },
@@ -199,7 +332,7 @@ export const Localization: ILocalization = {
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectGeneralizedIdentifier_1_other,
-                maybeFoundToken.token.kind,
+                localizeTokenKind(maybeFoundToken.token.kind, templates),
             );
         } else {
             return templates.error_parse_expectGeneralizedIdentifier_2_endOfStream;
@@ -208,17 +341,20 @@ export const Localization: ILocalization = {
 
     error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: TokenKind,
+        expectedTokenKind: TokenKind,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => {
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectTokenKind_1_other,
-                expectedAnyTokenKind,
-                maybeFoundToken,
+                localizeTokenKind(expectedTokenKind, templates),
+                localizeTokenKind(maybeFoundToken.token.kind, templates),
             );
         } else {
-            return StringUtils.expectFormat(templates.error_parse_expectTokenKind_2_endOfStream, expectedAnyTokenKind);
+            return StringUtils.expectFormat(
+                templates.error_parse_expectTokenKind_2_endOfStream,
+                localizeTokenKind(expectedTokenKind, templates),
+            );
         }
     },
 
