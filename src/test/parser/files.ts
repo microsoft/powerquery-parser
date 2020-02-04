@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import "mocha";
 import { ResultUtils } from "../../common";
-import { TriedLexParse, tryLexParse } from "../../jobs";
 import { IParser, IParserState, Parser } from "../../parser";
+import { DefaultSettings, Settings } from "../../settings";
+import { TriedLexParse, tryLexParse } from "../../tasks";
 
 import * as path from "path";
 
@@ -53,7 +54,7 @@ function testNameFromFilePath(filepath: string): string {
     return filepath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles(parserName: string, parser: IParser<IParserState>): void {
+function parseAllFiles(settings: Settings, parserName: string): void {
     describe(`use ${parserName} on files directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "files");
 
@@ -64,7 +65,7 @@ function parseAllFiles(parserName: string, parser: IParser<IParserState>): void 
                 let contents: string = readFileSync(filepath, "utf8");
                 contents = contents.replace(/^\uFEFF/, "");
 
-                const triedLexParse: TriedLexParse = tryLexParse(contents, parser);
+                const triedLexParse: TriedLexParse = tryLexParse(settings, contents);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }
@@ -79,5 +80,9 @@ const parsers: ReadonlyArray<[string, IParser<IParserState>]> = [
 ];
 
 for (const [parserName, parser] of parsers) {
-    parseAllFiles(parserName, parser);
+    const settings: Settings = {
+        ...DefaultSettings,
+        parser,
+    };
+    parseAllFiles(settings, parserName);
 }

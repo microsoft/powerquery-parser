@@ -15,6 +15,7 @@ import {
     ParserContext,
     TriedParse,
 } from "./parser";
+import { InspectionSettings, LexSettings, ParseSettings, Settings } from "./settings";
 
 export type TriedLexParse = Result<LexParseOk, LexError.TLexError | ParseError.TParseError>;
 
@@ -28,23 +29,30 @@ export interface LexParseInspectionOk extends Inspected {
     readonly triedParse: TriedParse;
 }
 
-export function tryLex(text: string): TriedLexerSnapshot {
-    const state: Lexer.State = Lexer.stateFrom(text);
+export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot {
+    const state: Lexer.State = Lexer.stateFrom(settings, text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
-        return ResultUtils.errFactory(new LexError.LexError(new LexError.ErrorLineMapError(errorLineMap)));
+        return ResultUtils.errFactory(
+            new LexError.LexError(new LexError.ErrorLineMapError(settings.localizationTemplates, errorLineMap)),
+        );
     }
 
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse(lexerSnapshot: LexerSnapshot, parser: IParser<IParserState>): TriedParse {
-    const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
+export function tryParse(settings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
+    const parser: IParser<IParserState> = settings.parser;
+    const parserState: IParserState = IParserStateUtils.newState(settings, lexerSnapshot);
     return parser.readDocument(parserState, parser);
 }
 
-export function tryInspection(triedParse: TriedParse, position: Inspection.Position): TriedInspection {
+export function tryInspection(
+    settings: InspectionSettings,
+    triedParse: TriedParse,
+    position: Inspection.Position,
+): TriedInspection {
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
     let maybeParseError: Option<ParseError.ParseError>;
@@ -69,17 +77,17 @@ export function tryInspection(triedParse: TriedParse, position: Inspection.Posit
         nodeIdMapCollection = parseOk.nodeIdMapCollection;
     }
 
-    return Inspection.tryFrom(position, nodeIdMapCollection, leafNodeIds, maybeParseError);
+    return Inspection.tryFrom(settings, position, nodeIdMapCollection, leafNodeIds, maybeParseError);
 }
 
-export function tryLexParse(text: string, parser: IParser<IParserState>): TriedLexParse {
-    const triedLexerSnapshot: TriedLexerSnapshot = tryLex(text);
+export function tryLexParse(settings: LexSettings & ParseSettings, text: string): TriedLexParse {
+    const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
     const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
 
-    const triedParse: TriedParse = tryParse(lexerSnapshot, parser);
+    const triedParse: TriedParse = tryParse(settings, lexerSnapshot);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,
@@ -91,11 +99,11 @@ export function tryLexParse(text: string, parser: IParser<IParserState>): TriedL
 }
 
 export function tryLexParseInspection(
+    settings: Settings,
     text: string,
-    parser: IParser<IParserState>,
     position: Inspection.Position,
 ): TriedLexParseInspection {
-    const triedLexParse: TriedLexParse = tryLexParse(text, parser);
+    const triedLexParse: TriedLexParse = tryLexParse(settings, text);
     if (ResultUtils.isErr(triedLexParse) && triedLexParse.error instanceof LexError.LexError) {
         return triedLexParse;
     }
@@ -105,7 +113,7 @@ export function tryLexParseInspection(
         LexParseOk,
         ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>
     > = triedLexParse as Result<LexParseOk, ParseError.TParseError | Exclude<LexError.TLexError, LexError.LexError>>;
-    const triedInspection: TriedInspection = tryInspection(casted, position);
+    const triedInspection: TriedInspection = tryInspection(settings, casted, position);
 
     if (ResultUtils.isErr(triedInspection)) {
         return triedInspection;

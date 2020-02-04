@@ -4,8 +4,10 @@
 import { expect } from "chai";
 import "mocha";
 import { Option, ResultUtils, Traverse } from "../../common";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
-import { Ast, Parser } from "../../parser";
+import { DefaultTemplates } from "../../localization";
+import { Ast } from "../../parser";
+import { DefaultSettings } from "../../settings";
+import { LexParseOk, TriedLexParse, tryLexParse } from "../../tasks";
 
 type AbridgedNode = [Ast.NodeKind, Option<number>];
 
@@ -18,7 +20,7 @@ interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
 }
 
 function expectLexParseOk(text: string): LexParseOk {
-    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
     if (!ResultUtils.isOk(triedLexParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }
@@ -27,7 +29,10 @@ function expectLexParseOk(text: string): LexParseOk {
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     const lexParseOk: LexParseOk = expectLexParseOk(text);
-    const state: CollectAbridgeNodeState = { result: [] };
+    const state: CollectAbridgeNodeState = {
+        localizationTemplates: DefaultTemplates,
+        result: [],
+    };
 
     const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = Traverse.tryTraverseAst<
         CollectAbridgeNodeState,
@@ -52,6 +57,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
     const lexParseOk: LexParseOk = expectLexParseOk(text);
     const state: NthNodeOfKindState = {
+        localizationTemplates: DefaultTemplates,
         result: undefined,
         nodeKind,
         nthCounter: 0,

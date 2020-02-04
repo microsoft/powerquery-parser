@@ -7,6 +7,7 @@ import { Inspection } from "../..";
 import { Option, ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../../parser";
+import { DefaultSettings } from "../../settings";
 
 // Only works with single line expressions
 export function expectTextWithPosition(text: string): [string, Inspection.Position] {
@@ -25,12 +26,13 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 
 export function expectParseOkInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
     const parseOk: ParseOk = expectParseOk(text);
-    return Inspection.tryFrom(position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
+    return Inspection.tryFrom(DefaultSettings, position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
 }
 
 export function expectParseErrInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
     const parseError: ParseError.ParseError = expectParseErr(text);
     return Inspection.tryFrom(
+        DefaultSettings,
         position,
         parseError.context.nodeIdMapCollection,
         parseError.context.leafNodeIds,
@@ -60,7 +62,7 @@ export function expectParseOk(text: string): ParseOk {
 }
 
 function expectTriedParse(text: string): TriedParse {
-    const lexerState: Lexer.State = Lexer.stateFrom(text);
+    const lexerState: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {
         throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
@@ -72,6 +74,6 @@ function expectTriedParse(text: string): TriedParse {
     }
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
+    const parserState: IParserState = IParserStateUtils.newState(DefaultSettings, lexerSnapshot);
     return Parser.CombinatorialParser.readDocument(parserState, Parser.CombinatorialParser);
 }

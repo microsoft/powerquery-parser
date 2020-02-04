@@ -6,6 +6,7 @@ import "mocha";
 import { ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { TriedLexerUpdate } from "../../lexer/lexer";
+import { DefaultSettings } from "../../settings";
 import { ILineTokens, IState, IToken, Tokenizer } from "./common";
 
 const tokenizer: Tokenizer = new Tokenizer("\n");
@@ -23,7 +24,7 @@ class MockDocument2 {
     private lexerState: Lexer.State;
 
     constructor(initialText: string) {
-        this.lexerState = Lexer.stateFrom(initialText);
+        this.lexerState = Lexer.stateFrom(DefaultSettings, initialText);
     }
 
     public applyChange(text: string, range: Lexer.Range): void {

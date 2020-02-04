@@ -5,11 +5,9 @@ import { Ast, AstUtils, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, isNever, Option, Result, ResultUtils, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
-import { IParserState } from "../IParserState";
+import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
-
-import * as IParserStateUtils from "../IParserState/IParserStateUtils";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -25,7 +23,7 @@ interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
     readonly maybeOptionalConstant: Option<Ast.Constant>;
 }
 
-const InvalidGeneralizedIdentifierTokenKinds: ReadonlyArray<TokenKind> = [
+const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
     TokenKind.Comma,
     TokenKind.Equal,
     TokenKind.RightBracket,
@@ -66,7 +64,7 @@ export function readGeneralizedIdentifier(
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
     while (
         state.maybeCurrentTokenKind &&
-        InvalidGeneralizedIdentifierTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
+        GeneralizedIdentifierTerminatorTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
     ) {
         readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
@@ -74,6 +72,7 @@ export function readGeneralizedIdentifier(
 
     if (tokenRangeStartIndex === tokenRangeEndIndex) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
+            state.localizationTemplates,
             IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
         );
     }
@@ -182,7 +181,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
         if (ParseError.isTInnerParseError(currentError)) {
             convertedError = new ParseError.ParseError(currentError, state.contextState);
         } else {
-            convertedError = CommonError.ensureCommonError(currentError);
+            convertedError = CommonError.ensureCommonError(state.localizationTemplates, currentError);
         }
 
         return ResultUtils.errFactory(convertedError);
@@ -1617,6 +1616,7 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
                 IParserStateUtils.applyFastStateBackup(state, stateBackup);
                 return ResultUtils.errFactory(
                     new ParseError.InvalidPrimitiveTypeError(
+                        state.localizationTemplates,
                         token,
                         state.lexerSnapshot.graphemePositionStartFrom(token),
                     ),
@@ -2049,6 +2049,7 @@ function genericReadParameterList<T>(
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token = IParserStateUtils.expectTokenAt(state, state.tokenIndex);
             throw new ParseError.RequiredParameterAfterOptionalParameterError(
+                state.localizationTemplates,
                 token,
                 state.lexerSnapshot.graphemePositionStartFrom(token),
             );

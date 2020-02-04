@@ -4,6 +4,7 @@
 import { CommonError, Option, Result, ResultUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { NodeIdMap, ParseError } from "../parser";
+import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { AutocompleteInspected, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { IdentifierInspected, tryFrom as identifierInspectedTryFrom } from "./identifier";
@@ -22,6 +23,7 @@ export type Inspected = InspectedCommon & IdentifierInspected & AutocompleteInsp
 export type TriedInspection = Result<Inspected, CommonError.CommonError>;
 
 export function tryFrom(
+    settings: InspectionSettings,
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -34,6 +36,7 @@ export function tryFrom(
     );
 
     const triedInspectedIdentifier: TriedTraverse<IdentifierInspected> = identifierInspectedTryFrom(
+        settings,
         maybeActiveNode,
         nodeIdMapCollection,
         leafNodeIds,
@@ -43,6 +46,7 @@ export function tryFrom(
     }
 
     const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
+        settings,
         maybeActiveNode,
         nodeIdMapCollection,
         maybeParseError,

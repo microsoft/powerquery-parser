@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as Error from "./error";
-
-export { Error };
+export { Localization } from "./localization";
+export { DefaultTemplates, ILocalizationTemplates, TemplatesByLocale } from "./templates";

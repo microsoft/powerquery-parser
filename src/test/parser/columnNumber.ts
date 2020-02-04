@@ -7,9 +7,10 @@ import { ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { IParserState, IParserStateUtils, ParseError, Parser, TriedParse } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
+import { DefaultSettings } from "../../settings";
 
 function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const lexerState: Lexer.State = Lexer.stateFrom(text);
+    const lexerState: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
 
     if (!ResultUtils.isOk(triedSnapshot)) {
@@ -17,7 +18,7 @@ function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
     }
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
+    const parserState: IParserState = IParserStateUtils.newState(DefaultSettings, lexerSnapshot);
     const triedParse: TriedParse = Parser.CombinatorialParser.readDocument(parserState, Parser.CombinatorialParser);
 
     if (!ResultUtils.isErr(triedParse)) {

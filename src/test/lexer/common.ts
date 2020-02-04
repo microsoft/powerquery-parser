@@ -4,6 +4,7 @@
 import { expect } from "chai";
 import { Option, ResultUtils } from "../../common";
 import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../lexer";
+import { DefaultSettings } from "../../settings";
 
 export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
 
@@ -94,7 +95,7 @@ export function expectSnapshotAbridgedComments(
 }
 
 export function expectLexOk(text: string): Lexer.State {
-    const state: Lexer.State = Lexer.stateFrom(text);
+    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
         if (!(maybeErrorLineMap !== undefined)) {

@@ -4,7 +4,8 @@
 import * as Inspection from "./inspection";
 
 export * from "./common";
-export * from "./jobs";
 export * from "./lexer";
+export * from "./localization";
 export * from "./parser";
+export * from "./tasks";
 export { Inspection };
