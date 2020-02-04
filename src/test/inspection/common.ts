@@ -63,7 +63,7 @@ export function expectParseOk(text: string): ParseOk {
 
 function expectTriedParse(text: string): TriedParse {
     const lexerState: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
-    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(lexerState);
+    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {
         throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
     }

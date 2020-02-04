@@ -97,7 +97,7 @@ export function expectSnapshotAbridgedComments(
 export function expectLexOk(text: string): Lexer.State {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     if (Lexer.isErrorState(state)) {
-        const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
+        const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
         if (!(maybeErrorLineMap !== undefined)) {
             throw new Error(`AssertFailed: maybeErrorLineMap !== undefined`);
         }

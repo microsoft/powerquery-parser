@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { isNever, Option, ResultUtils } from "../../common";
+import { isNever, ResultUtils } from "../../common";
 import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection";
 import { Token, TokenPosition } from "../../lexer";
 import { NodeIdMap } from "../../parser";
@@ -19,7 +19,7 @@ interface IAbridgedPositionIdentifier {
 
 interface AbridgedLocalIdentifier extends IAbridgedPositionIdentifier {
     readonly kind: PositionIdentifierKind.Local;
-    readonly maybeDefinitionPositionStart: Option<TokenPosition>;
+    readonly maybeDefinitionPositionStart: TokenPosition | undefined;
 }
 
 interface AbridgedUndefinedIdentifier extends IAbridgedPositionIdentifier {
@@ -28,13 +28,13 @@ interface AbridgedUndefinedIdentifier extends IAbridgedPositionIdentifier {
 
 function expectAbridgedInspectionEqual(
     triedInspection: Inspection.TriedInspection,
-    expected: Option<TAbridgedPositionIdentifier>,
+    expected: TAbridgedPositionIdentifier | undefined,
 ): void {
     if (!ResultUtils.isOk(triedInspection)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
     }
     const inspection: Inspection.Inspected = triedInspection.value;
-    const actual: Option<TAbridgedPositionIdentifier> = abridgedMaybeIdentifierUnderPositionFrom(
+    const actual: TAbridgedPositionIdentifier | undefined = abridgedMaybeIdentifierUnderPositionFrom(
         inspection.maybeIdentifierUnderPosition,
     );
 
@@ -42,8 +42,8 @@ function expectAbridgedInspectionEqual(
 }
 
 function abridgedMaybeIdentifierUnderPositionFrom(
-    maybeIdentifierUnderPosition: Option<TPositionIdentifier>,
-): Option<TAbridgedPositionIdentifier> {
+    maybeIdentifierUnderPosition: TPositionIdentifier | undefined,
+): TAbridgedPositionIdentifier | undefined {
     if (maybeIdentifierUnderPosition === undefined) {
         return undefined;
     }
@@ -53,14 +53,14 @@ function abridgedMaybeIdentifierUnderPositionFrom(
         case PositionIdentifierKind.Local: {
             const definition: NodeIdMap.TXorNode = positionIdentifier.definition;
 
-            let maybeDefinitionPositionStart: Option<TokenPosition>;
+            let maybeDefinitionPositionStart: TokenPosition | undefined;
             switch (definition.kind) {
                 case NodeIdMap.XorNodeKind.Ast:
                     maybeDefinitionPositionStart = definition.node.tokenRange.positionStart;
                     break;
 
                 case NodeIdMap.XorNodeKind.Context: {
-                    const maybeTokenStart: Option<Token> = definition.node.maybeTokenStart;
+                    const maybeTokenStart: Token | undefined = definition.node.maybeTokenStart;
                     if (maybeTokenStart !== undefined) {
                         const tokenStart: Token = maybeTokenStart;
                         maybeDefinitionPositionStart = tokenStart.positionStart;
@@ -96,13 +96,13 @@ describe(`Inspection`, () => {
         describe("Ast", () => {
             it(`x |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`x |`);
-                const expected: Option<TAbridgedPositionIdentifier> = undefined;
+                const expected: TAbridgedPositionIdentifier | undefined = undefined;
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
 
             it(`let x = 1 in y|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = 1 in y|`);
-                const expected: Option<TAbridgedPositionIdentifier> = {
+                const expected: TAbridgedPositionIdentifier | undefined = {
                     kind: PositionIdentifierKind.Undefined,
                     identifierLiteral: `y`,
                 };
@@ -113,7 +113,7 @@ describe(`Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `let x = 1, y = 2 in x| * y`,
                 );
-                const expected: Option<TAbridgedPositionIdentifier> = {
+                const expected: TAbridgedPositionIdentifier | undefined = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
                     maybeDefinitionPositionStart: {
@@ -129,7 +129,7 @@ describe(`Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `let x = 1, y = 2 in x * y|`,
                 );
-                const expected: Option<TAbridgedPositionIdentifier> = {
+                const expected: TAbridgedPositionIdentifier | undefined = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `y`,
                     maybeDefinitionPositionStart: {
@@ -143,7 +143,7 @@ describe(`Inspection`, () => {
 
             it(`let x = 1 in [y = x|]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = 1 in [y = x|]`);
-                const expected: Option<TAbridgedPositionIdentifier> = {
+                const expected: TAbridgedPositionIdentifier | undefined = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
                     maybeDefinitionPositionStart: {
@@ -159,7 +159,7 @@ describe(`Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `section; foo = 1; bar = foo|;`,
                 );
-                const expected: Option<TAbridgedPositionIdentifier> = {
+                const expected: TAbridgedPositionIdentifier | undefined = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `foo`,
                     maybeDefinitionPositionStart: {
@@ -175,7 +175,7 @@ describe(`Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `section; foo = 1; bar = foo;|`,
                 );
-                const expected: Option<TAbridgedPositionIdentifier> = undefined;
+                const expected: TAbridgedPositionIdentifier | undefined = undefined;
                 expectAbridgedInspectionEqual(expectParseOkInspection(text, position), expected);
             });
         });
@@ -185,7 +185,7 @@ describe(`Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `let x = 1, y = 2 in x| *`,
                 );
-                const expected: Option<TAbridgedPositionIdentifier> = {
+                const expected: TAbridgedPositionIdentifier | undefined = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
                     maybeDefinitionPositionStart: {
@@ -199,7 +199,7 @@ describe(`Inspection`, () => {
 
             it(`let x = 1 in [y = x|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = 1 in [y = x|`);
-                const expected: Option<TAbridgedPositionIdentifier> = {
+                const expected: TAbridgedPositionIdentifier | undefined = {
                     kind: PositionIdentifierKind.Local,
                     identifierLiteral: `x`,
                     maybeDefinitionPositionStart: {

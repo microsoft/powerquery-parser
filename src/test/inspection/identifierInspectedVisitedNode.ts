@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { isNever, Option, ResultKind } from "../../common";
+import { isNever, ResultKind } from "../../common";
 import { Token } from "../../lexer";
 import { Ast, NodeIdMap } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
@@ -12,7 +12,7 @@ import { expectParseErrInspection, expectParseOkInspection, expectTextWithPositi
 interface AbridgedTravelPathNode {
     readonly id: number;
     readonly kind: Ast.NodeKind;
-    readonly maybePositionStartCodeUnit: Option<number>;
+    readonly maybePositionStartCodeUnit: number | undefined;
 }
 
 function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<AbridgedTravelPathNode> {
@@ -21,7 +21,7 @@ function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<A
     }
 
     return inspected.maybeActiveNode.ancestry.map((xorNode: NodeIdMap.TXorNode) => {
-        let maybePositionStartCodeUnit: Option<number>;
+        let maybePositionStartCodeUnit: number | undefined;
 
         switch (xorNode.kind) {
             case NodeIdMap.XorNodeKind.Ast:
@@ -29,7 +29,7 @@ function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<A
                 break;
 
             case NodeIdMap.XorNodeKind.Context:
-                const maybeTokenStart: Option<Token> = xorNode.node.maybeTokenStart;
+                const maybeTokenStart: Token | undefined = xorNode.node.maybeTokenStart;
                 maybePositionStartCodeUnit =
                     maybeTokenStart !== undefined ? maybeTokenStart.positionStart.codeUnit : undefined;
                 break;
