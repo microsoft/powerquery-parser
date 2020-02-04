@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { expect } from "chai";
-import { Option, ResultUtils } from "../../common";
+import { ResultUtils } from "../../common";
 import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../lexer";
 import { DefaultSettings } from "../../settings";
 

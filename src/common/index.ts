@@ -10,7 +10,6 @@ import * as TypeUtils from "./typeUtils";
 
 export * from "./assert";
 export * from "./error";
-export * from "./option";
 export * from "./partialResult";
 export * from "./patterns";
 export * from "./result";

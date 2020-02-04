@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
-import { Option, ResultUtils } from "../../common";
+import { ResultUtils } from "../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../../parser";
 import { DefaultSettings } from "../../settings";
