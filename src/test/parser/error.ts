@@ -4,12 +4,13 @@
 import { expect } from "chai";
 import "mocha";
 import { ResultUtils } from "../../common";
-import { Localization } from "../../localization";
-import { ParseError, Parser } from "../../parser";
+import { DefaultTemplates, Localization } from "../../localization";
+import { ParseError } from "../../parser";
+import { DefaultSettings } from "../../settings";
 import { TriedLexParse, tryLexParse } from "../../tasks";
 
 function expectParserInnerError(text: string): ParseError.TInnerParseError {
-    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
 
     if (!ResultUtils.isErr(triedLexParse)) {
         throw new Error(`AssertFailed: ResultUtils.isErr(triedLexParse) ${JSON.stringify(triedLexParse)}`);
@@ -64,7 +65,7 @@ describe("Parser.Error", () => {
         const text: string = "let a = 1, in 1";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.LetExpression),
+            Localization.error_parse_csvContinuation(DefaultTemplates, ParseError.CsvContinuationKind.LetExpression),
         );
     });
 
@@ -72,7 +73,7 @@ describe("Parser.Error", () => {
         const text: string = "{1, }";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+            Localization.error_parse_csvContinuation(DefaultTemplates, ParseError.CsvContinuationKind.DanglingComma),
         );
     });
 
@@ -80,7 +81,7 @@ describe("Parser.Error", () => {
         const text: string = "(a, ) => a";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+            Localization.error_parse_csvContinuation(DefaultTemplates, ParseError.CsvContinuationKind.DanglingComma),
         );
     });
 
@@ -88,7 +89,7 @@ describe("Parser.Error", () => {
         const text: string = "type function (a as number, ) as number";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+            Localization.error_parse_csvContinuation(DefaultTemplates, ParseError.CsvContinuationKind.DanglingComma),
         );
     });
 
@@ -96,7 +97,7 @@ describe("Parser.Error", () => {
         const text: string = "[a = 1,]";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+            Localization.error_parse_csvContinuation(DefaultTemplates, ParseError.CsvContinuationKind.DanglingComma),
         );
     });
 
@@ -104,7 +105,7 @@ describe("Parser.Error", () => {
         const text: string = "type [a = 1,]";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+            Localization.error_parse_csvContinuation(DefaultTemplates, ParseError.CsvContinuationKind.DanglingComma),
         );
     });
 
@@ -112,7 +113,7 @@ describe("Parser.Error", () => {
         const text: string = "type table [a = 1,]";
         const continuationError: ParseError.ExpectedCsvContinuationError = expectCsvContinuationError(text);
         expect(continuationError.message).to.equal(
-            Localization.error_parse_csvContinuation(ParseError.CsvContinuationKind.DanglingComma),
+            Localization.error_parse_csvContinuation(DefaultTemplates, ParseError.CsvContinuationKind.DanglingComma),
         );
     });
 });

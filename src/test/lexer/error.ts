@@ -5,9 +5,10 @@ import { expect } from "chai";
 import "mocha";
 import { ResultUtils } from "../../common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
+import { DefaultSettings } from "../../settings";
 
 function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
-    const state: Lexer.State = Lexer.stateFrom(`foo`);
+    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, `bar`);
     if (!ResultUtils.isErr(triedLexerUpdate)) {
         throw new Error(`AssertFailed: ResultUtils.isErr(triedLexerUpdate): ${JSON.stringify(state)}`);
@@ -25,7 +26,7 @@ function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadL
 }
 
 function expectExpectedKind(text: string, expectedKind: LexError.ExpectedKind): void {
-    const state: Lexer.State = Lexer.stateFrom(text);
+    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     expect(state.lines.length).to.equal(1);
 
     const line: Lexer.TLine = state.lines[0];
@@ -45,7 +46,7 @@ function expectExpectedKind(text: string, expectedKind: LexError.ExpectedKind): 
 }
 
 function expectBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeKind): void {
-    const state: Lexer.State = Lexer.stateFrom(`foo`);
+    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateRange(state, range, `bar`);
     if (!ResultUtils.isErr(triedLexerUpdate)) {
         throw new Error(`AssertFailed: ResultUtils.isErr(triedLexerUpdate): ${JSON.stringify(state)}`);
@@ -66,7 +67,7 @@ function expectUnterminatedMultilineTokenKind(
     text: string,
     expectedKind: LexError.UnterminatedMultilineTokenKind,
 ): void {
-    const state: Lexer.State = Lexer.stateFrom(text);
+    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
     if (!ResultUtils.isErr(triedSnapshot)) {
         throw new Error(`AssertFailed: ResultUtils.isErr(triedSnapshot): ${JSON.stringify(state)}`);

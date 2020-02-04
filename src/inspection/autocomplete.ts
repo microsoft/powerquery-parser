@@ -5,6 +5,7 @@ import { CommonError, Option, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
+import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
@@ -15,6 +16,7 @@ export interface AutocompleteInspected {
 export type TriedAutocomplete = Result<AutocompleteInspected, CommonError.CommonError>;
 
 export function tryFrom(
+    settings: InspectionSettings,
     maybeActiveNode: Option<ActiveNode>,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseError: Option<ParseError.ParseError>,
@@ -47,6 +49,7 @@ export function tryFrom(
     }
 
     const triedAutocomplete: Result<ReadonlyArray<KeywordKind>, CommonError.CommonError> = traverseAncestors(
+        settings,
         activeNode,
         nodeIdMapCollection,
         maybeParseErrorToken,
@@ -70,6 +73,7 @@ export function tryFrom(
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
 function traverseAncestors(
+    settings: InspectionSettings,
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseErrorToken: Option<Token>,
@@ -124,7 +128,7 @@ function traverseAncestors(
             }
         }
     } catch (err) {
-        return ResultUtils.errFactory(CommonError.ensureCommonError(err));
+        return ResultUtils.errFactory(CommonError.ensureCommonError(settings.localizationTemplates, err));
     }
 
     return ResultUtils.okFactory([]);

@@ -25,7 +25,7 @@ export class LexerSnapshot {
             if (LexError.isTInnerLexError(e)) {
                 error = new LexError.LexError(e);
             } else {
-                error = CommonError.ensureCommonError(e);
+                error = CommonError.ensureCommonError(state.localizationTemplates, e);
             }
             return ResultUtils.errFactory(error);
         }

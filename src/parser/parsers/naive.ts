@@ -181,7 +181,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
         if (ParseError.isTInnerParseError(currentError)) {
             convertedError = new ParseError.ParseError(currentError, state.contextState);
         } else {
-            convertedError = CommonError.ensureCommonError(currentError);
+            convertedError = CommonError.ensureCommonError(state.localizationTemplates, currentError);
         }
 
         return ResultUtils.errFactory(convertedError);

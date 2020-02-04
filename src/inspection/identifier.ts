@@ -7,6 +7,7 @@ import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
+import { InspectionSettings } from "../settings";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface IdentifierInspected {
@@ -34,6 +35,7 @@ export interface InvokeExpressionArgs {
 }
 
 export function tryFrom(
+    settings: InspectionSettings,
     maybeActiveNode: Option<ActiveNode>,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -84,7 +86,7 @@ export function tryFrom(
     } catch (err) {
         return {
             kind: ResultKind.Err,
-            error: CommonError.ensureCommonError(err),
+            error: CommonError.ensureCommonError(settings.localizationTemplates, err),
         };
     }
 }

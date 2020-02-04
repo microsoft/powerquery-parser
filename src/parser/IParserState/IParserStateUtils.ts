@@ -4,7 +4,7 @@
 import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
 import { CommonError, Option } from "../../common";
 import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
-import { Settings } from "../../settings";
+import { ParseSettings } from "../../settings";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
@@ -18,7 +18,7 @@ export interface FastStateBackup {
 // ---------- State ----------
 // ---------------------------
 
-export function newState(settings: Settings, lexerSnapshot: LexerSnapshot): IParserState {
+export function newState(settings: ParseSettings, lexerSnapshot: LexerSnapshot): IParserState {
     const maybeCurrentToken: Option<Token> = lexerSnapshot.tokens[0];
 
     return {

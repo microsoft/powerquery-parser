@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Lexer, LineToken } from "../../lexer";
+import { DefaultTemplates } from "../../localization";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}
@@ -27,6 +28,7 @@ export class Tokenizer implements TokensProvider {
     public getInitialState(): IState {
         const lexerState: Lexer.State = {
             lines: [],
+            localizationTemplates: DefaultTemplates,
         };
         return new TokenizerState(lexerState);
     }

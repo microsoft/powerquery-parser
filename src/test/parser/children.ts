@@ -4,7 +4,8 @@
 import { expect } from "chai";
 import "mocha";
 import { ResultUtils } from "../../common";
-import { Ast, NodeIdMap, Parser } from "../../parser";
+import { Ast, NodeIdMap } from "../../parser";
+import { DefaultSettings } from "../../settings";
 import { LexParseOk, TriedLexParse, tryLexParse } from "../../tasks";
 
 interface ChildIdsByIdEntry {
@@ -14,7 +15,7 @@ interface ChildIdsByIdEntry {
 }
 
 function expectLexParseOk(text: string): LexParseOk {
-    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
     if (!ResultUtils.isOk(triedLexParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }

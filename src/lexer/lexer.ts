@@ -14,10 +14,10 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
+import { ILocalizationTemplates } from "../localization";
+import { LexSettings } from "../settings";
 import { KeywordKind } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
-import { ILocalizationTemplates } from "../localization";
-import { Settings } from "../settings";
 
 // The lexer
 //  * Takes a mostly functional approach, plus a few throws to propagate errors.
@@ -101,7 +101,7 @@ export interface RangePosition {
     readonly lineCodeUnit: number;
 }
 
-export function stateFrom(settings: Settings, text: string): State {
+export function stateFrom(settings: LexSettings, text: string): State {
     const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
     const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         settings.localizationTemplates,
@@ -548,7 +548,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
             if (LexError.isTInnerLexError(e)) {
                 error = new LexError.LexError(e);
             } else {
-                error = CommonError.ensureCommonError(e);
+                error = CommonError.ensureCommonError(localizationTemplates, e);
             }
             continueLexing = false;
             maybeError = error;

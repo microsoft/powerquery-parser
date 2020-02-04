@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, isNever, Option, Result } from ".";
+import { ILocalizationTemplates } from "../localization";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { ResultUtils } from "./result";
 
@@ -29,6 +30,7 @@ export const enum VisitNodeStrategy {
 }
 
 export interface IState<T> {
+    readonly localizationTemplates: ILocalizationTemplates;
     result: T;
 }
 
@@ -95,7 +97,7 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
         );
         return ResultUtils.okFactory(state.result);
     } catch (e) {
-        return ResultUtils.errFactory(CommonError.ensureCommonError(e));
+        return ResultUtils.errFactory(CommonError.ensureCommonError(state.localizationTemplates, e));
     }
 }
 
