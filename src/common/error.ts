@@ -2,8 +2,6 @@
 // Licensed under the MIT license.
 
 import { DefaultTemplates, ILocalizationTemplates, Localization } from "../localization";
-import { Option } from "./option";
-
 export type TInnerCommonError = InvariantError | UnknownError;
 
 export class CommonError extends Error {
@@ -13,7 +11,7 @@ export class CommonError extends Error {
 }
 
 export class InvariantError extends Error {
-    constructor(readonly invariantBroken: string, readonly maybeDetails: Option<any> = undefined) {
+    constructor(readonly invariantBroken: string, readonly maybeDetails: any | undefined = undefined) {
         super(Localization.error_common_invariantError(DefaultTemplates, invariantBroken, maybeDetails));
     }
 }

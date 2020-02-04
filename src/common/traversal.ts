@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Option, Result } from ".";
+import { CommonError, isNever, Result } from ".";
 import { ILocalizationTemplates } from "../localization";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
 import { ResultUtils } from "./result";
@@ -42,7 +42,7 @@ export function tryTraverseAst<State, ResultType>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Ast.TNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Ast.TNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<State, ResultType, Ast.TNode>>,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
 ): TriedTraverse<ResultType> {
     return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
         state,
@@ -63,7 +63,7 @@ export function tryTraverseXor<State, ResultType>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, NodeIdMap.TXorNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, NodeIdMap.TXorNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<State, ResultType, NodeIdMap.TXorNode>>,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, NodeIdMap.TXorNode> | undefined,
 ): TriedTraverse<ResultType> {
     return tryTraverse<State, ResultType, NodeIdMap.TXorNode, NodeIdMap.Collection>(
         state,
@@ -83,7 +83,7 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<State, ResultType, Node>>,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): TriedTraverse<ResultType> {
     try {
         traverseRecursion<State, ResultType, Node, NodesById>(
@@ -107,7 +107,7 @@ export function expectExpandAllAstChildren<State, ResultType>(
     astNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<Ast.TNode> {
-    const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(astNode.id);
+    const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
@@ -136,12 +136,14 @@ export function expectExpandAllXorChildren<State, ResultType>(
         case NodeIdMap.XorNodeKind.Context: {
             const result: NodeIdMap.TXorNode[] = [];
             const contextNode: ParserContext.Node = xorNode.node;
-            const maybeChildIds: Option<ReadonlyArray<number>> = nodeIdMapCollection.childIdsById.get(contextNode.id);
+            const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
+                contextNode.id,
+            );
 
             if (maybeChildIds !== undefined) {
                 const childIds: ReadonlyArray<number> = maybeChildIds;
                 for (const childId of childIds) {
-                    const maybeAstChild: Option<Ast.TNode> = nodeIdMapCollection.astNodeById.get(childId);
+                    const maybeAstChild: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(childId);
                     if (maybeAstChild) {
                         const astChild: Ast.TNode = maybeAstChild;
                         result.push({
@@ -151,7 +153,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
                         continue;
                     }
 
-                    const maybeContextChild: Option<ParserContext.Node> = nodeIdMapCollection.contextNodeById.get(
+                    const maybeContextChild: ParserContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(
                         childId,
                     );
                     if (maybeContextChild) {
@@ -184,7 +186,7 @@ export function maybeExpandXorParent<T>(
     xorNode: NodeIdMap.TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<NodeIdMap.TXorNode> {
-    const maybeParent: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeParentXorNode(
+    const maybeParent: NodeIdMap.TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(
         nodeIdMapCollection,
         xorNode.node.id,
     );
@@ -198,7 +200,7 @@ function traverseRecursion<State, ResultType, Node, NodesById>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
-    maybeEarlyExitFn: Option<TEarlyExitFn<State, ResultType, Node>>,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): void {
     if (maybeEarlyExitFn && maybeEarlyExitFn(state, node)) {
         return;
