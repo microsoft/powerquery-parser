@@ -41,7 +41,7 @@ interface ILocalization {
     ) => string;
     readonly error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: TokenKind,
+        expectedTokenKind: TokenKind,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => string;
     readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => string;
@@ -308,16 +308,19 @@ export const Localization: ILocalization = {
         expectedAnyTokenKind: ReadonlyArray<TokenKind>,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => {
+        const localizedExpectedAnyTokenKind: ReadonlyArray<string> = expectedAnyTokenKind.map((tokenKind: TokenKind) =>
+            localizeTokenKind(tokenKind, templates),
+        );
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_1_other,
-                expectedAnyTokenKind,
-                maybeFoundToken.token.kind,
+                localizedExpectedAnyTokenKind,
+                localizeTokenKind(maybeFoundToken.token.kind, templates),
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_2_endOfStream,
-                expectedAnyTokenKind,
+                localizedExpectedAnyTokenKind,
             );
         }
     },
@@ -329,7 +332,7 @@ export const Localization: ILocalization = {
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectGeneralizedIdentifier_1_other,
-                maybeFoundToken.token.kind,
+                localizeTokenKind(maybeFoundToken.token.kind, templates),
             );
         } else {
             return templates.error_parse_expectGeneralizedIdentifier_2_endOfStream;
@@ -338,17 +341,20 @@ export const Localization: ILocalization = {
 
     error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: TokenKind,
+        expectedTokenKind: TokenKind,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => {
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectTokenKind_1_other,
-                expectedAnyTokenKind,
-                maybeFoundToken,
+                localizeTokenKind(expectedTokenKind, templates),
+                localizeTokenKind(maybeFoundToken.token.kind, templates),
             );
         } else {
-            return StringUtils.expectFormat(templates.error_parse_expectTokenKind_2_endOfStream, expectedAnyTokenKind);
+            return StringUtils.expectFormat(
+                templates.error_parse_expectTokenKind_2_endOfStream,
+                localizeTokenKind(expectedTokenKind, templates),
+            );
         }
     },
 
