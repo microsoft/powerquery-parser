@@ -359,14 +359,14 @@ export function testIsOnTokenKind(
 
 export function testIsOnAnyTokenKind(
     state: IParserState,
-    expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+    expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
 ): ParseError.ExpectedAnyTokenKindError | undefined {
     const isError: boolean =
-        state.maybeCurrentTokenKind === undefined || expectedAnyTokenKind.indexOf(state.maybeCurrentTokenKind) === -1;
+        state.maybeCurrentTokenKind === undefined || expectedAnyTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1;
 
     if (isError) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
-        return new ParseError.ExpectedAnyTokenKindError(state.localizationTemplates, expectedAnyTokenKind, maybeToken);
+        return new ParseError.ExpectedAnyTokenKindError(state.localizationTemplates, expectedAnyTokenKinds, maybeToken);
     } else {
         return undefined;
     }
