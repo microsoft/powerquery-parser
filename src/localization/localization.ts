@@ -32,7 +32,7 @@ interface ILocalization {
     ) => string;
     readonly error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => string;
     readonly error_parse_expectGeneralizedIdentifier: (
@@ -305,22 +305,22 @@ export const Localization: ILocalization = {
 
     error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKind: ReadonlyArray<TokenKind>,
+        expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
         maybeFoundToken: Option<TokenWithColumnNumber>,
     ) => {
-        const localizedExpectedAnyTokenKind: ReadonlyArray<string> = expectedAnyTokenKind.map((tokenKind: TokenKind) =>
-            localizeTokenKind(tokenKind, templates),
+        const localizedExpectedAnyTokenKinds: ReadonlyArray<string> = expectedAnyTokenKinds.map(
+            (tokenKind: TokenKind) => localizeTokenKind(tokenKind, templates),
         );
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_1_other,
-                localizedExpectedAnyTokenKind,
+                localizedExpectedAnyTokenKinds.join(", "),
                 localizeTokenKind(maybeFoundToken.token.kind, templates),
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_2_endOfStream,
-                localizedExpectedAnyTokenKind,
+                localizedExpectedAnyTokenKinds,
             );
         }
     },
