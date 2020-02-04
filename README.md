@@ -21,7 +21,6 @@ This project uses [prettier](https://github.com/prettier/prettier) as the primar
 ## How to build
 
 - Install NodeJS
-- `npm run setLocale en-US` (defaults to en-US, can be replaced with another supported locale)
 - `npm install`
 - `npm run-script build`
 
