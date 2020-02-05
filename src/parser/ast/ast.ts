@@ -753,7 +753,7 @@ export interface AsType extends IPairedConstant<NodeKind.AsType, TType> {}
 export interface Constant extends INode {
     readonly kind: NodeKind.Constant;
     readonly isLeaf: true;
-    readonly literal: string;
+    readonly constantKind: ConstantKind;
 }
 
 export interface FieldSpecification extends INode {
@@ -796,6 +796,7 @@ export const enum ConstantKind {
     As = "as",
     AtSign = "@",
     Comma = ",",
+    DotDot = "..",
     Each = "each",
     Ellipsis = "...",
     Else = "else",
@@ -859,6 +860,9 @@ export const enum ConstantKind {
     LessThanEqualTo = "<=",
     GreaterThan = ">",
     GreaterThanEqualTo = ">=",
+
+    // UnaryOperator
+    Not = "not",
 }
 
 export const enum IdentifierConstant {
