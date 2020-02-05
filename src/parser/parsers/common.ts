@@ -31,7 +31,7 @@ export function readToken(state: IParserState): string {
 export function readTokenKindAsConstant(
     state: IParserState,
     tokenKind: TokenKind,
-    constantKind: Ast.ConstantKind,
+    constantKind: Ast.TConstantKind,
 ): Ast.Constant {
     IParserStateUtils.startContext(state, Ast.NodeKind.Constant);
 
@@ -66,7 +66,7 @@ export function readTokenKindAsConstant(
 export function maybeReadTokenKindAsConstant(
     state: IParserState,
     tokenKind: TokenKind,
-    constantKind: Ast.ConstantKind,
+    constantKind: Ast.TConstantKind,
 ): Ast.Constant | undefined {
     if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;

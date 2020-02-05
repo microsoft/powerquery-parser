@@ -541,13 +541,7 @@ export function readUnaryExpression(state: IParserState, parser: IParser<IParser
 
     const operatorConstants: Ast.Constant[] = [];
     while (maybeOperator) {
-        operatorConstants.push(
-            readTokenKindAsConstant(
-                state,
-                state.maybeCurrentTokenKind as TokenKind,
-                (maybeOperator as unknown) as Ast.ConstantKind,
-            ),
-        );
+        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind, maybeOperator));
         maybeOperator = AstUtils.maybeUnaryOperatorKindFrom(state.maybeCurrentTokenKind);
     }
     const operators: Ast.IArrayWrapper<Ast.Constant> = {
@@ -1909,14 +1903,16 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
     state: IParserState,
     nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
     leftReader: () => Left,
-    maybeOperatorFrom: (tokenKind: TokenKind | undefined) => Operator | undefined,
+    maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
 ): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const left: Left = leftReader();
 
     // If no operator, return Left
-    const maybeOperator: Operator | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    const maybeOperator: (Operator & Ast.TBinOpExpressionOperator) | undefined = maybeOperatorFrom(
+        state.maybeCurrentTokenKind,
+    );
     if (maybeOperator === undefined) {
         IParserStateUtils.deleteContext(state, undefined);
         return left;
@@ -1925,7 +1921,7 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
     const operatorConstant: Ast.Constant = readTokenKindAsConstant(
         state,
         state.maybeCurrentTokenKind as TokenKind,
-        (maybeOperator as unknown) as Ast.ConstantKind,
+        maybeOperator,
     );
     const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
@@ -1953,13 +1949,15 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
 function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
     state: IParserState,
     nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
-    maybeOperatorFrom: (tokenKind: TokenKind | undefined) => Operator | undefined,
+    maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
 ): Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const rightAsLeft: Right = rightReader();
 
-    const maybeOperator: Operator | undefined = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    const maybeOperator: (Operator & Ast.TBinOpExpressionOperator) | undefined = maybeOperatorFrom(
+        state.maybeCurrentTokenKind,
+    );
     if (maybeOperator === undefined) {
         IParserStateUtils.deleteContext(state, undefined);
         return rightAsLeft;
@@ -1968,7 +1966,7 @@ function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
     const operatorConstant: Ast.Constant = readTokenKindAsConstant(
         state,
         state.maybeCurrentTokenKind as TokenKind,
-        (maybeOperator as unknown) as Ast.ConstantKind,
+        maybeOperator,
     );
     const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,

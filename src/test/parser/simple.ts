@@ -1595,7 +1595,7 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
 
             const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Ast.ConstantKind.Plus);
+            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperator.Positive);
         });
     });
 });
