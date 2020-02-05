@@ -238,7 +238,7 @@ function readBinOpExpression(
         let minPrecedence: number = Number.MAX_SAFE_INTEGER;
 
         for (let index: number = 0; index < operators.length; index += 1) {
-            const currentPrecedence: number = AstUtils.maybeBinOpExpressionOperatorPrecedence(operators[index]);
+            const currentPrecedence: number = AstUtils.binOpExpressionOperatorPrecedence(operators[index]);
             if (minPrecedence > currentPrecedence) {
                 minPrecedence = currentPrecedence;
                 minPrecedenceIndex = index;
@@ -349,8 +349,8 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
         case Ast.KeywordConstantKind.Is:
             return Ast.NodeKind.IsExpression;
 
-        case Ast.LogicalOperator.And:
-        case Ast.LogicalOperator.Or:
+        case Ast.LogicalOperatorKind.And:
+        case Ast.LogicalOperatorKind.Or:
             return Ast.NodeKind.LogicalExpression;
 
         default:

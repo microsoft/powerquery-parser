@@ -1567,7 +1567,7 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
 
             const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperator.Negative);
+            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Negative);
         });
 
         it(`not 1`, () => {
@@ -1581,7 +1581,7 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
 
             const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperator.Not);
+            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Not);
         });
 
         it(`+1`, () => {
@@ -1595,7 +1595,7 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
 
             const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperator.Positive);
+            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Positive);
         });
     });
 });
