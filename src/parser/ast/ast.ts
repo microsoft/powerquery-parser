@@ -794,6 +794,7 @@ export interface Identifier extends INode {
 export const enum ConstantKind {
     // TokenKind
     As = "as",
+    Ampersand = "&",
     AtSign = "@",
     Comma = ",",
     DotDot = "..",
@@ -851,6 +852,10 @@ export const enum ConstantKind {
     Plus = "+",
     Minus = "-",
 
+    // EqualityOperator
+    // EqualTo ('=') is already covered by Equal
+    NotEqual = "<>",
+
     // LogicalOperator
     And = "and",
     Or = "or",
@@ -861,6 +866,7 @@ export const enum ConstantKind {
     GreaterThan = ">",
     GreaterThanEqualTo = ">=",
 
+    // Positive and Negative ('+' and '-') are already by Plus and Minus
     // UnaryOperator
     Not = "not",
 }

@@ -250,7 +250,7 @@ function inspectIdentifierExpression(
 
             const key: string =
                 maybeInclusiveConstant !== undefined
-                    ? maybeInclusiveConstant.literal + identifier.literal
+                    ? maybeInclusiveConstant.constantKind + identifier.literal
                     : identifier.literal;
             addAstToScopeIfNew(state, key, identifierExprAstNode);
             break;
@@ -269,7 +269,8 @@ function inspectIdentifierExpression(
             );
             if (maybeInclusiveConstant !== undefined) {
                 const inclusiveConstant: Ast.Constant = maybeInclusiveConstant.node as Ast.Constant;
-                key += inclusiveConstant.literal;
+                // Adds the '@' prefix.
+                key = inclusiveConstant.constantKind;
             }
 
             const maybeIdentifier: NodeIdMap.TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(

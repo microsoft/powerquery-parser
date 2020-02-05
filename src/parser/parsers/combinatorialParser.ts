@@ -206,7 +206,13 @@ function readBinOpExpression(
     while (maybeOperator !== undefined) {
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
-        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind!));
+        operatorConstants.push(
+            readTokenKindAsConstant(
+                state,
+                state.maybeCurrentTokenKind!,
+                (maybeOperator as unknown) as Ast.ConstantKind,
+            ),
+        );
 
         switch (operator) {
             case Ast.ConstantKind.As:

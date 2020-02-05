@@ -539,7 +539,13 @@ export function readUnaryExpression(state: IParserState, parser: IParser<IParser
 
     const operatorConstants: Ast.Constant[] = [];
     while (maybeOperator) {
-        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind));
+        operatorConstants.push(
+            readTokenKindAsConstant(
+                state,
+                state.maybeCurrentTokenKind as TokenKind,
+                (maybeOperator as unknown) as Ast.ConstantKind,
+            ),
+        );
         maybeOperator = AstUtils.maybeUnaryOperatorFrom(state.maybeCurrentTokenKind);
     }
     const operators: Ast.IArrayWrapper<Ast.Constant> = {
@@ -1902,7 +1908,11 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         return left;
     }
     const operator: Operator = maybeOperator;
-    const operatorConstant: Ast.Constant = readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind);
+    const operatorConstant: Ast.Constant = readTokenKindAsConstant(
+        state,
+        state.maybeCurrentTokenKind as TokenKind,
+        (maybeOperator as unknown) as Ast.ConstantKind,
+    );
     const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,
@@ -1941,7 +1951,11 @@ function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
         return rightAsLeft;
     }
     const operator: Operator = maybeOperator;
-    const operatorConstant: Ast.Constant = readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind);
+    const operatorConstant: Ast.Constant = readTokenKindAsConstant(
+        state,
+        state.maybeCurrentTokenKind as TokenKind,
+        (maybeOperator as unknown) as Ast.ConstantKind,
+    );
     const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,

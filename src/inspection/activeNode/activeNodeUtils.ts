@@ -188,7 +188,7 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
     ) {
         return true;
     } else if (astNode.kind === Ast.NodeKind.Constant) {
-        switch (astNode.literal) {
+        switch (astNode.constantKind) {
             case Ast.ConstantKind.As:
             case Ast.ConstantKind.Each:
             case Ast.ConstantKind.Else:
@@ -234,11 +234,12 @@ function positionAstSearch(
         let isBoundIncluded: boolean;
         if (
             // let x|=1
-            (candidate.kind === Ast.NodeKind.Constant && ShiftRightConstantKinds.indexOf(candidate.literal) !== -1) ||
+            (candidate.kind === Ast.NodeKind.Constant &&
+                ShiftRightConstantKinds.indexOf(candidate.constantKind) !== -1) ||
             // let x=|1
             (maybeCurrentOnOrBefore !== undefined &&
                 maybeCurrentOnOrBefore.kind === Ast.NodeKind.Constant &&
-                ShiftRightConstantKinds.indexOf(maybeCurrentOnOrBefore.literal) !== -1)
+                ShiftRightConstantKinds.indexOf(maybeCurrentOnOrBefore.constantKind) !== -1)
         ) {
             isBoundIncluded = false;
         } else {
@@ -272,13 +273,10 @@ function positionAstSearch(
 
         // Requires a shift into an empty ArrayWrapper.
         if (
-            DrilldownConstantKind.indexOf(maybeCurrentOnOrBefore.literal) !== -1 &&
+            DrilldownConstantKind.indexOf(maybeCurrentOnOrBefore.constantKind) !== -1 &&
             maybeCurrentAfter !== undefined &&
             maybeCurrentAfter.kind === Ast.NodeKind.Constant &&
-            AstUtils.isPairedConstant(
-                maybeCurrentOnOrBefore.literal as Ast.ConstantKind,
-                maybeCurrentAfter.literal as Ast.ConstantKind,
-            )
+            AstUtils.isPairedConstant(maybeCurrentOnOrBefore.constantKind, maybeCurrentAfter.constantKind)
         ) {
             const parent: Ast.TNode = NodeIdMapUtils.expectParentAstNode(nodeIdMapCollection, currentOnOrBefore.id, [
                 Ast.NodeKind.RecordExpression,
@@ -296,7 +294,7 @@ function positionAstSearch(
             maybeShiftedNode = arrayWrapper;
         }
         // Requires a shift to the right.
-        else if (ShiftRightConstantKinds.indexOf(currentOnOrBefore.literal) !== -1) {
+        else if (ShiftRightConstantKinds.indexOf(currentOnOrBefore.constantKind) !== -1) {
             maybeShiftedNode = maybeCurrentAfter;
         }
         // No shifting.
@@ -350,7 +348,7 @@ function maybeIdentifierUnderPosition(
     let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.literal === `@`) {
+    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Ast.ConstantKind.AtSign) {
         const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.node.id);
         if (maybeParentId === undefined) {
             return undefined;

@@ -283,7 +283,7 @@ export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeI
             maybeName =
                 identifierExpression.maybeInclusiveConstant === undefined
                     ? identifierExpression.identifier.literal
-                    : identifierExpression.maybeInclusiveConstant.literal + identifierExpression.identifier.literal;
+                    : identifierExpression.maybeInclusiveConstant.constantKind + identifierExpression.identifier.literal;
         }
     }
 
