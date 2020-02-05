@@ -5,14 +5,14 @@ import { CommonError, isNever } from "../../common";
 import { TokenKind } from "../../lexer";
 import * as Ast from "./ast";
 
-export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperator | undefined {
+export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Plus:
-            return Ast.UnaryOperator.Positive;
+            return Ast.UnaryOperatorKind.Positive;
         case TokenKind.Minus:
-            return Ast.UnaryOperator.Negative;
+            return Ast.UnaryOperatorKind.Negative;
         case TokenKind.KeywordNot:
-            return Ast.UnaryOperator.Not;
+            return Ast.UnaryOperatorKind.Not;
         default:
             return undefined;
     }
@@ -50,18 +50,20 @@ export function maybeEqualityOperatorKindFrom(
     }
 }
 
-export function maybeLogicalOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.LogicalOperator | undefined {
+export function maybeLogicalOperatorKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Ast.LogicalOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.KeywordAnd:
-            return Ast.LogicalOperator.And;
+            return Ast.LogicalOperatorKind.And;
         case TokenKind.KeywordOr:
-            return Ast.LogicalOperator.Or;
+            return Ast.LogicalOperatorKind.Or;
         default:
             return undefined;
     }
 }
 
-export function maybeRelationalOperatorFrom(
+export function maybeRelationalOperatorKindFrom(
     maybeTokenKind: TokenKind | undefined,
 ): Ast.RelationalOperatorKind | undefined {
     switch (maybeTokenKind) {
@@ -102,9 +104,9 @@ export function maybeBinOpExpressionOperatorKindFrom(
 
         // LogicalOperator
         case TokenKind.KeywordAnd:
-            return Ast.LogicalOperator.And;
+            return Ast.LogicalOperatorKind.And;
         case TokenKind.KeywordOr:
-            return Ast.LogicalOperator.Or;
+            return Ast.LogicalOperatorKind.Or;
 
         // RelationalOperator
         case TokenKind.LessThan:
@@ -129,7 +131,7 @@ export function maybeBinOpExpressionOperatorKindFrom(
     }
 }
 
-export function maybeBinOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpressionOperator): number {
+export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpressionOperator): number {
     switch (operator) {
         case Ast.KeywordConstantKind.Meta:
             return 110;
@@ -159,10 +161,10 @@ export function maybeBinOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpre
         case Ast.KeywordConstantKind.Is:
             return 50;
 
-        case Ast.LogicalOperator.And:
+        case Ast.LogicalOperatorKind.And:
             return 40;
 
-        case Ast.LogicalOperator.Or:
+        case Ast.LogicalOperatorKind.Or:
             return 30;
 
         default:
@@ -194,26 +196,26 @@ export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast
 
 export function isIdentifierConstant(
     maybeIdentifierConstant: string,
-): maybeIdentifierConstant is Ast.IdentifierConstant {
+): maybeIdentifierConstant is Ast.IdentifierConstantKind {
     switch (maybeIdentifierConstant) {
-        case Ast.IdentifierConstant.Any:
-        case Ast.IdentifierConstant.AnyNonNull:
-        case Ast.IdentifierConstant.Binary:
-        case Ast.IdentifierConstant.Date:
-        case Ast.IdentifierConstant.DateTime:
-        case Ast.IdentifierConstant.DateTimeZone:
-        case Ast.IdentifierConstant.Duration:
-        case Ast.IdentifierConstant.Function:
-        case Ast.IdentifierConstant.List:
-        case Ast.IdentifierConstant.Logical:
-        case Ast.IdentifierConstant.None:
-        case Ast.IdentifierConstant.Nullable:
-        case Ast.IdentifierConstant.Number:
-        case Ast.IdentifierConstant.Optional:
-        case Ast.IdentifierConstant.Record:
-        case Ast.IdentifierConstant.Table:
-        case Ast.IdentifierConstant.Text:
-        case Ast.IdentifierConstant.Time:
+        case Ast.IdentifierConstantKind.Any:
+        case Ast.IdentifierConstantKind.AnyNonNull:
+        case Ast.IdentifierConstantKind.Binary:
+        case Ast.IdentifierConstantKind.Date:
+        case Ast.IdentifierConstantKind.DateTime:
+        case Ast.IdentifierConstantKind.DateTimeZone:
+        case Ast.IdentifierConstantKind.Duration:
+        case Ast.IdentifierConstantKind.Function:
+        case Ast.IdentifierConstantKind.List:
+        case Ast.IdentifierConstantKind.Logical:
+        case Ast.IdentifierConstantKind.None:
+        case Ast.IdentifierConstantKind.Nullable:
+        case Ast.IdentifierConstantKind.Number:
+        case Ast.IdentifierConstantKind.Optional:
+        case Ast.IdentifierConstantKind.Record:
+        case Ast.IdentifierConstantKind.Table:
+        case Ast.IdentifierConstantKind.Text:
+        case Ast.IdentifierConstantKind.Time:
             return true;
         default:
             return false;
@@ -241,7 +243,7 @@ export function isPairedWrapperConstantKinds(x: Ast.TConstantKind, y: Ast.TConst
         return false;
     }
 
-    // If given x === ')' and y === '(' then swap positions.
+    // If given x === ')' and y === '(', then swap positions.
     const low: Ast.TConstantKind = x < y ? x : y;
     const high: Ast.TConstantKind = low === x ? y : x;
 

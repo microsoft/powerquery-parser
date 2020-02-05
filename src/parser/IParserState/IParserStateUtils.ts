@@ -176,7 +176,7 @@ export function isOnTokenKind(
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
-export function isOnIdentifierConstant(state: IParserState, identifierConstant: Ast.IdentifierConstant): boolean {
+export function isOnIdentifierConstant(state: IParserState, identifierConstant: Ast.IdentifierConstantKind): boolean {
     if (isOnTokenKind(state, TokenKind.Identifier)) {
         const currentToken: Token = state.lexerSnapshot.tokens[state.tokenIndex];
         if (currentToken === undefined || currentToken.data === undefined) {

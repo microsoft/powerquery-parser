@@ -355,7 +355,7 @@ export function readLogicalExpression(state: IParserState, parser: IParser<IPars
     return recursiveReadBinOpExpression<
         Ast.NodeKind.LogicalExpression,
         Ast.TLogicalExpression,
-        Ast.LogicalOperator,
+        Ast.LogicalOperatorKind,
         Ast.TLogicalExpression
     >(
         state,
@@ -391,11 +391,11 @@ export function readNullablePrimitiveType(
     state: IParserState,
     parser: IParser<IParserState>,
 ): Ast.TNullablePrimitiveType {
-    if (IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
+    if (IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstantKind.Nullable)) {
         return readPairedConstant<Ast.NodeKind.NullablePrimitiveType, Ast.PrimitiveType>(
             state,
             Ast.NodeKind.NullablePrimitiveType,
-            () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
+            () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstantKind.Nullable),
             () => parser.readPrimitiveType(state, parser),
         );
     } else {
@@ -459,7 +459,7 @@ export function readRelationalExpression(
         state,
         Ast.NodeKind.RelationalExpression,
         () => parser.readArithmeticExpression(state, parser),
-        maybeCurrentTokenKind => AstUtils.maybeRelationalOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeRelationalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readArithmeticExpression(state, parser),
     );
 }
@@ -510,7 +510,6 @@ export function readMetadataExpression(state: IParserState, parser: IParser<IPar
             kind: nodeKind,
             isLeaf: false,
             left,
-            operator: Ast.KeywordConstantKind.Meta,
             operatorConstant,
             right,
         };
@@ -528,7 +527,9 @@ export function readMetadataExpression(state: IParserState, parser: IParser<IPar
 // -----------------------------------------------
 
 export function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
-    let maybeOperator: Ast.UnaryOperator | undefined = AstUtils.maybeUnaryOperatorKindFrom(state.maybeCurrentTokenKind);
+    let maybeOperator: Ast.UnaryOperatorKind | undefined = AstUtils.maybeUnaryOperatorKindFrom(
+        state.maybeCurrentTokenKind,
+    );
     if (maybeOperator === undefined) {
         return parser.readTypeExpression(state, parser);
     }
@@ -1223,7 +1224,7 @@ export function readTableType(state: IParserState, parser: IParser<IParserState>
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const tableConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Table);
+    const tableConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstantKind.Table);
     const maybeCurrentTokenKind: TokenKind | undefined = state.maybeCurrentTokenKind;
     const isPrimaryExpressionExpected: boolean =
         maybeCurrentTokenKind === TokenKind.AtSign ||
@@ -1299,7 +1300,7 @@ export function readFieldSpecificationList(
 
             const maybeOptionalConstant: Ast.Constant | undefined = maybeReadIdentifierConstantAsConstant(
                 state,
-                Ast.IdentifierConstant.Optional,
+                Ast.IdentifierConstantKind.Optional,
             );
 
             const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
@@ -1422,7 +1423,7 @@ export function readFunctionType(state: IParserState, parser: IParser<IParserSta
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const functionConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Function);
+    const functionConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstantKind.Function);
     const parameters: Ast.IParameterList<Ast.AsType> = parser.readParameterSpecificationList(state, parser);
     const functionReturnType: Ast.AsType = parser.readAsType(state, parser);
 
@@ -1440,13 +1441,13 @@ export function readFunctionType(state: IParserState, parser: IParser<IParserSta
 
 function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>): TriedReadPrimaryType {
     const isTableTypeNext: boolean =
-        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Table) &&
+        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstantKind.Table) &&
         (IParserStateUtils.isNextTokenKind(state, TokenKind.LeftBracket) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.LeftParenthesis) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.AtSign) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.Identifier));
     const isFunctionTypeNext: boolean =
-        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Function) &&
+        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstantKind.Function) &&
         IParserStateUtils.isNextTokenKind(state, TokenKind.LeftParenthesis);
 
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
@@ -1457,7 +1458,7 @@ function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>):
         return ResultUtils.okFactory(parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
         return ResultUtils.okFactory(parser.readFunctionType(state, parser));
-    } else if (IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
+    } else if (IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstantKind.Nullable)) {
         return ResultUtils.okFactory(parser.readNullableType(state, parser));
     } else {
         const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
@@ -1481,7 +1482,7 @@ export function readNullableType(state: IParserState, parser: IParser<IParserSta
     return readPairedConstant<Ast.NodeKind.NullableType, Ast.TType>(
         state,
         Ast.NodeKind.NullableType,
-        () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
+        () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstantKind.Nullable),
         () => parser.readType(state, parser),
     );
 }
@@ -1660,23 +1661,23 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.Identifier)) {
         const currentTokenData: string = state.lexerSnapshot.tokens[state.tokenIndex].data;
         switch (currentTokenData) {
-            case Ast.IdentifierConstant.Action:
-            case Ast.IdentifierConstant.Any:
-            case Ast.IdentifierConstant.AnyNonNull:
-            case Ast.IdentifierConstant.Binary:
-            case Ast.IdentifierConstant.Date:
-            case Ast.IdentifierConstant.DateTime:
-            case Ast.IdentifierConstant.DateTimeZone:
-            case Ast.IdentifierConstant.Duration:
-            case Ast.IdentifierConstant.Function:
-            case Ast.IdentifierConstant.List:
-            case Ast.IdentifierConstant.Logical:
-            case Ast.IdentifierConstant.None:
-            case Ast.IdentifierConstant.Number:
-            case Ast.IdentifierConstant.Record:
-            case Ast.IdentifierConstant.Table:
-            case Ast.IdentifierConstant.Text:
-            case Ast.IdentifierConstant.Time:
+            case Ast.IdentifierConstantKind.Action:
+            case Ast.IdentifierConstantKind.Any:
+            case Ast.IdentifierConstantKind.AnyNonNull:
+            case Ast.IdentifierConstantKind.Binary:
+            case Ast.IdentifierConstantKind.Date:
+            case Ast.IdentifierConstantKind.DateTime:
+            case Ast.IdentifierConstantKind.DateTimeZone:
+            case Ast.IdentifierConstantKind.Duration:
+            case Ast.IdentifierConstantKind.Function:
+            case Ast.IdentifierConstantKind.List:
+            case Ast.IdentifierConstantKind.Logical:
+            case Ast.IdentifierConstantKind.None:
+            case Ast.IdentifierConstantKind.Number:
+            case Ast.IdentifierConstantKind.Record:
+            case Ast.IdentifierConstantKind.Table:
+            case Ast.IdentifierConstantKind.Text:
+            case Ast.IdentifierConstantKind.Time:
                 primitiveType = readIdentifierConstantAsConstant(state, currentTokenData);
                 break;
 
@@ -1905,7 +1906,7 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
     leftReader: () => Left,
     maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
-): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
+): Left | Ast.IBinOpExpression<Kind, Left, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const left: Left = leftReader();
 
@@ -1917,24 +1918,22 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         IParserStateUtils.deleteContext(state, undefined);
         return left;
     }
-    const operator: Operator = maybeOperator;
     const operatorConstant: Ast.Constant = readTokenKindAsConstant(
         state,
         state.maybeCurrentTokenKind as TokenKind,
         maybeOperator,
     );
-    const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
+    const right: Right | Ast.IBinOpExpression<Kind, Right, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,
         Right
     >(state, nodeKind, maybeOperatorFrom, rightReader);
 
-    const astNode: Ast.IBinOpExpression<Kind, Left, Operator, Right> = {
+    const astNode: Ast.IBinOpExpression<Kind, Left, Right> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
         left,
-        operator,
         operatorConstant,
         right,
     };
@@ -1951,7 +1950,7 @@ function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
     nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
     maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
-): Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> {
+): Right | Ast.IBinOpExpression<Kind, Right, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const rightAsLeft: Right = rightReader();
 
@@ -1962,24 +1961,22 @@ function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
         IParserStateUtils.deleteContext(state, undefined);
         return rightAsLeft;
     }
-    const operator: Operator = maybeOperator;
     const operatorConstant: Ast.Constant = readTokenKindAsConstant(
         state,
         state.maybeCurrentTokenKind as TokenKind,
         maybeOperator,
     );
-    const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
+    const right: Right | Ast.IBinOpExpression<Kind, Right, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,
         Right
     >(state, nodeKind, maybeOperatorFrom, rightReader);
 
-    const astNode: Ast.IBinOpExpression<Kind, Right, Operator, Right> = {
+    const astNode: Ast.IBinOpExpression<Kind, Right, Right> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
         left: rightAsLeft,
-        operator,
         operatorConstant,
         right,
     };
@@ -2132,7 +2129,7 @@ function genericReadParameterList<T>(
 
         const maybeOptionalConstant: Ast.Constant | undefined = maybeReadIdentifierConstantAsConstant(
             state,
-            Ast.IdentifierConstant.Optional,
+            Ast.IdentifierConstantKind.Optional,
         );
 
         if (reachedOptionalParameter && !maybeOptionalConstant) {
@@ -2258,7 +2255,7 @@ function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
 
 function readIdentifierConstantAsConstant(
     state: IParserState,
-    identifierConstant: Ast.IdentifierConstant,
+    identifierConstant: Ast.IdentifierConstantKind,
 ): Ast.Constant {
     const maybeConstant: Ast.Constant | undefined = maybeReadIdentifierConstantAsConstant(state, identifierConstant);
     if (!maybeConstant) {
@@ -2271,7 +2268,7 @@ function readIdentifierConstantAsConstant(
 
 function maybeReadIdentifierConstantAsConstant(
     state: IParserState,
-    identifierConstant: Ast.IdentifierConstant,
+    identifierConstant: Ast.IdentifierConstantKind,
 ): Ast.Constant | undefined {
     if (IParserStateUtils.isOnIdentifierConstant(state, identifierConstant)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
