@@ -69,7 +69,7 @@ export function tryFrom(
 }
 
 // Travel the ancestry path in Active node in [parent, child] pairs.
-// Without zipping the values we wouldn't know what we're autocompleting.
+// Without zipping the values we wouldn't know what we're completing for.
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
 function traverseAncestors(
@@ -192,9 +192,9 @@ const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ParenthesizedExpression, 1),
 ];
 
-// Autocompletes that are coming from a constant can be resolved using a map.
-// This is possible because reading constants are binary.
-// Either the constant was read and you're in the next context, or you didn't and you're in the constant's context.
+// If we're coming from a constant then we can quickly evaluate using a map.
+// This is possible because reading a Constant is binary.
+// Either the Constant was read and you're in the next context, or you didn't and you're in the constant's context.
 const AutocompleteConstantMap: Map<string, KeywordKind> = new Map<string, KeywordKind>([
     // Ast.NodeKind.ErrorRaisingExpression
     [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), KeywordKind.Error],
@@ -293,7 +293,7 @@ function autocompleteErrorHandlingExpression(
         return [KeywordKind.Try];
     } else if (maybeChildAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
-        // It's ambigous if the next token should be either 'otherwise' or 'or'.
+        // It's ambiguous if the next token should be either 'otherwise' or 'or'.
         if (maybeParseErrorToken !== undefined) {
             const errorToken: Token = maybeParseErrorToken;
 
@@ -308,7 +308,7 @@ function autocompleteErrorHandlingExpression(
                 if (tokenData.length > 1 && KeywordKind.Otherwise.startsWith(tokenData)) {
                     return [KeywordKind.Otherwise];
                 }
-                // In the ambigous case we don't know what they're typing yet, so we suggest both.
+                // In the ambiguous case we don't know what they're typing yet, so we suggest both.
                 // In the case of an identifier that doesn't match a 'or' or 'otherwise'
                 // we still suggest the only valid keywords allowed.
                 // In both cases the return is the same.
@@ -354,7 +354,7 @@ function autocompleteListExpression(
     }
 
     // We know it's the node component of the Csv,
-    // but we have to drilldown one more level if it's a RangeExpression.
+    // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
             ? ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 4, undefined)

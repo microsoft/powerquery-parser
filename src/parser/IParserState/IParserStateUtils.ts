@@ -45,7 +45,7 @@ export function applyState(originalState: IParserState, otherState: IParserState
 // Instead it's assumed that a backup is made immediately before a try/catch read block.
 // This means the state begins in a parsing context and the backup will either be immediately consumed or dropped.
 // Therefore we only care about the delta between before and after the try/catch block.
-// Thanks to the invariants above and the fact the ids for nodes are an autoincremneting integer
+// Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily just drop all delete all context nodes past the id of when the backup was created.
 export function fastStateBackup(state: IParserState): FastStateBackup {
     return {

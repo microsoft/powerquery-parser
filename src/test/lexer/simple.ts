@@ -125,7 +125,7 @@ type
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
-    it(`operator-or-punctuator`, () => {
+    it(`operator-or-punctuation`, () => {
         const text: string = `
 ,
 ;

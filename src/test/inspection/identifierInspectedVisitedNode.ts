@@ -15,7 +15,7 @@ interface AbridgedTravelPathNode {
     readonly maybePositionStartCodeUnit: number | undefined;
 }
 
-function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<AbridgedTravelPathNode> {
+function abridgedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<AbridgedTravelPathNode> {
     if (inspected.maybeActiveNode === undefined) {
         return [];
     }
@@ -58,7 +58,7 @@ function expectNodesEqual(
     expected: ReadonlyArray<AbridgedTravelPathNode>,
 ): void {
     const inspected: Inspection.Inspected = expectInspected(triedInspection);
-    const actual: ReadonlyArray<AbridgedTravelPathNode> = abrigedTravelPathFrom(inspected);
+    const actual: ReadonlyArray<AbridgedTravelPathNode> = abridgedTravelPathFrom(inspected);
 
     expect(actual).deep.equal(expected);
 }
@@ -268,7 +268,7 @@ describe(`Inspection`, () => {
         });
     });
 
-    describe(`qweasdzxc InvokeExpression`, () => {
+    describe(`InvokeExpression`, () => {
         it("single invoke expression, no parameters", () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(|)");
             const inspected: Inspection.Inspected = expectInspected(expectParseOkInspection(text, position));

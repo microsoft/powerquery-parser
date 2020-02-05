@@ -88,7 +88,7 @@ describe(`Lexer`, () => {
             });
         });
 
-        describe(`QuotedIdentiifer`, () => {
+        describe(`QuotedIdentifer`, () => {
             it(`""`, () => {
                 const text: string = `#""`;
                 const expected: AbridgedLineTokens = [[LineTokenKind.Identifier, `#""`]];

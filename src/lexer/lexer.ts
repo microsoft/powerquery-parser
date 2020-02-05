@@ -447,7 +447,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
         case LineKind.Touched:
             // The line was already fully lexed once.
             // Without any text changes it should throw eof to help diagnose
-            // why it's trying to retokenize
+            // why it's trying to retokenize.
             return {
                 ...line,
                 kind: LineKind.Error,
@@ -502,7 +502,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
     let maybeError: LexError.TLexError | undefined;
 
     // While neither eof nor having encountered an error:
-    //  * Lex according to lineModestart, starting from currentPosition.
+    //  * Lex according to lineModeStart, starting from currentPosition.
     //  * Update currentPosition and lineMode.
     //  * Drain whitespace.
     while (continueLexing) {
