@@ -306,12 +306,7 @@ export type TArithmeticExpression = ArithmeticExpression | TMetadataExpression;
 export type TMetadataExpression = MetadataExpression | TUnaryExpression;
 
 export interface MetadataExpression
-    extends IBinOpExpression<
-        NodeKind.MetadataExpression,
-        TUnaryExpression,
-        KeywordConstantKind.Meta,
-        TUnaryExpression
-    > {}
+    extends IBinOpExpression<NodeKind.MetadataExpression, TUnaryExpression, TUnaryExpression> {}
 
 // -----------------------------------------------
 // ---------- 12.2.3.9 Unary expression ----------
@@ -324,12 +319,6 @@ export interface UnaryExpression extends INode {
     readonly isLeaf: false;
     readonly operators: IArrayWrapper<Constant>;
     readonly typeExpression: TTypeExpression;
-}
-
-export const enum UnaryOperator {
-    Positive = "+",
-    Negative = "-",
-    Not = "not",
 }
 
 // --------------------------------------------------
@@ -356,15 +345,6 @@ export interface LiteralExpression extends INode {
     readonly isLeaf: true;
     readonly literal: string;
     readonly literalKind: LiteralKind;
-}
-
-export const enum LiteralKind {
-    Logical = "Logical",
-    Null = "Null",
-    Numeric = "Numeric",
-    Str = "Str",
-    Record = "Record",
-    List = "List",
 }
 
 // -----------------------------------------------------
@@ -629,74 +609,44 @@ export type TBinOpExpression =
     | RelationalExpression
     | TBinOpExpressionSubtype;
 
-// The following types are needed for recursiveReadBinOpExpressionHelper,
-// and are created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>.
-export type TBinOpExpressionSubtype =
-    | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, KeywordConstantKind.As, TNullablePrimitiveType>
-    | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, KeywordConstantKind.Is, TNullablePrimitiveType>;
-
-export interface IBinOpExpression<Kind, Left, Operator, Right> extends INode {
-    readonly kind: Kind & TBinOpExpressionNodeKind;
-    readonly left: Left;
-    readonly operator: Operator;
-    readonly operatorConstant: Constant;
-    readonly right:
-        | Left
-        | Right
-        | IBinOpExpression<Kind, Left, Operator, Right>
-        | IBinOpExpression<Kind, Right, Operator, Right>;
-}
-
-export interface ArithmeticExpression
-    extends IBinOpExpression<
-        NodeKind.ArithmeticExpression,
-        TArithmeticExpression,
-        ArithmeticOperatorKind,
-        TArithmeticExpression
-    > {}
-
-export interface AsExpression
-    extends IBinOpExpression<
-        NodeKind.AsExpression,
-        TEqualityExpression,
-        KeywordConstantKind.As,
-        TNullablePrimitiveType
-    > {}
-
-export interface EqualityExpression
-    extends IBinOpExpression<
-        NodeKind.EqualityExpression,
-        TEqualityExpression,
-        EqualityOperatorKind,
-        TEqualityExpression
-    > {}
-
-export interface IsExpression
-    extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, KeywordConstantKind.Is, TNullablePrimitiveType> {}
-
-export interface LogicalExpression
-    extends IBinOpExpression<NodeKind.LogicalExpression, TLogicalExpression, LogicalOperator, TLogicalExpression> {}
-
-export interface RelationalExpression
-    extends IBinOpExpression<
-        NodeKind.RelationalExpression,
-        TRelationalExpression,
-        RelationalOperatorKind,
-        TRelationalExpression
-    > {}
-
-// ------------------------------------------------
-// ---------- IBinOpExpression Operators ----------
-// ------------------------------------------------
-
 export type TBinOpExpressionOperator =
     | ArithmeticOperatorKind
     | EqualityOperatorKind
-    | LogicalOperator
+    | LogicalOperatorKind
     | RelationalOperatorKind
     | KeywordConstantKind.As
     | KeywordConstantKind.Is
     | KeywordConstantKind.Meta;
+
+// The following types are needed for recursiveReadBinOpExpressionHelper,
+// and are created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>.
+export type TBinOpExpressionSubtype =
+    | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, TNullablePrimitiveType>
+    | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, TNullablePrimitiveType>;
+
+export interface IBinOpExpression<Kind, Left, Right> extends INode {
+    readonly kind: Kind & TBinOpExpressionNodeKind;
+    readonly left: Left;
+    readonly operatorConstant: Constant;
+    readonly right: Left | Right | IBinOpExpression<Kind, Left, Right> | IBinOpExpression<Kind, Right, Right>;
+}
+
+export interface ArithmeticExpression
+    extends IBinOpExpression<NodeKind.ArithmeticExpression, TArithmeticExpression, TArithmeticExpression> {}
+
+export interface AsExpression
+    extends IBinOpExpression<NodeKind.AsExpression, TEqualityExpression, TNullablePrimitiveType> {}
+
+export interface EqualityExpression
+    extends IBinOpExpression<NodeKind.EqualityExpression, TEqualityExpression, TEqualityExpression> {}
+
+export interface IsExpression extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, TNullablePrimitiveType> {}
+
+export interface LogicalExpression
+    extends IBinOpExpression<NodeKind.LogicalExpression, TLogicalExpression, TLogicalExpression> {}
+
+export interface RelationalExpression
+    extends IBinOpExpression<NodeKind.RelationalExpression, TRelationalExpression, TRelationalExpression> {}
 
 // ------------------------------------------
 // ---------- Key value pair nodes ----------
@@ -736,15 +686,30 @@ export interface AsNullablePrimitiveType
 
 export interface AsType extends IPairedConstant<NodeKind.AsType, TType> {}
 
-// ----------------------------------------
-// ---------- Re-used interfaces ----------
-// ----------------------------------------
+// ------------------------------
+// ---------- Constant ----------
+// ------------------------------
+
+export type TConstantKind =
+    | MiscConstantKind
+    | WrapperConstantKind
+    | KeywordConstantKind
+    | IdentifierConstantKind
+    | ArithmeticOperatorKind
+    | EqualityOperatorKind
+    | LogicalOperatorKind
+    | RelationalOperatorKind
+    | UnaryOperatorKind;
 
 export interface Constant extends INode {
     readonly kind: NodeKind.Constant;
     readonly isLeaf: true;
     readonly constantKind: TConstantKind;
 }
+
+// ----------------------------------------
+// ---------- Re-used interfaces ----------
+// ----------------------------------------
 
 export interface FieldSpecification extends INode {
     readonly kind: NodeKind.FieldSpecification;
@@ -780,17 +745,6 @@ export interface Identifier extends INode {
 // ---------------------------------
 // ---------- const enums ----------
 // ---------------------------------
-
-export type TConstantKind =
-    | MiscConstantKind
-    | WrapperConstantKind
-    | KeywordConstantKind
-    | IdentifierConstant
-    | ArithmeticOperatorKind
-    | EqualityOperatorKind
-    | LogicalOperator
-    | RelationalOperatorKind
-    | UnaryOperator;
 
 export const enum MiscConstantKind {
     // TokenKind
@@ -837,7 +791,7 @@ export const enum KeywordConstantKind {
     Type = "type",
 }
 
-export const enum IdentifierConstant {
+export const enum IdentifierConstantKind {
     Action = "action",
     Any = "any",
     AnyNonNull = "anynonnull",
@@ -872,7 +826,7 @@ export const enum EqualityOperatorKind {
     NotEqualTo = "<>",
 }
 
-export const enum LogicalOperator {
+export const enum LogicalOperatorKind {
     And = "and",
     Or = "or",
 }
@@ -882,4 +836,19 @@ export const enum RelationalOperatorKind {
     LessThanEqualTo = "<=",
     GreaterThan = ">",
     GreaterThanEqualTo = ">=",
+}
+
+export const enum UnaryOperatorKind {
+    Positive = "+",
+    Negative = "-",
+    Not = "not",
+}
+
+export const enum LiteralKind {
+    Logical = "Logical",
+    Null = "Null",
+    Numeric = "Numeric",
+    Str = "Str",
+    Record = "Record",
+    List = "List",
 }
