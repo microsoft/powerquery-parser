@@ -385,6 +385,10 @@ export function testNoMoreTokens(state: IParserState): ParseError.UnusedTokensRe
     }
 }
 
+// -------------------------------------
+// ---------- Error factories ----------
+// -------------------------------------
+
 export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedParenthesesError {
     const token: Token = expectTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedParenthesesError(
@@ -402,6 +406,10 @@ export function unterminatedBracketError(state: IParserState): ParseError.Unterm
         state.lexerSnapshot.graphemePositionStartFrom(token),
     );
 }
+
+// ---------------------------------------------
+// ---------- Column number factories ----------
+// ---------------------------------------------
 
 export function maybeCurrentTokenWithColumnNumber(state: IParserState): ParseError.TokenWithColumnNumber | undefined {
     return maybeTokenWithColumnNumber(state, state.tokenIndex);

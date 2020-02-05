@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap } from "../../parser";
+import { Ast, TXorNode } from "../../parser";
 import { Position } from "../position";
 
 // An ActiveNode represents the context a text editor user expects their cursor to be in.
@@ -14,7 +14,7 @@ export interface ActiveNode {
     readonly position: Position;
     // A full parental ancestry of the root.
     // [root, parent of root, parent of parent of root, ...].
-    readonly ancestry: ReadonlyArray<NodeIdMap.TXorNode>;
+    readonly ancestry: ReadonlyArray<TXorNode>;
     // A cache of an evaluation that otherwise would need to be re-evaluated.
     // If ActiveNode's leaf is an identifier then store the indirection to it as an Ast node.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "../../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
+import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParserContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
@@ -33,7 +33,7 @@ export function maybeActiveNode(
     const astSearch: AstNodeSearch = positionAstSearch(position, nodeIdMapCollection, leafNodeIds);
     const maybeContextSearch: ParserContext.Node | undefined = positionContextSearch(astSearch, nodeIdMapCollection);
 
-    let maybeLeaf: NodeIdMap.TXorNode | undefined;
+    let maybeLeaf: TXorNode | undefined;
     if (astSearch.maybeShiftedNode !== undefined) {
         maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeShiftedNode);
     } else if (astSearch.maybeNode !== undefined && isAnchorNode(position, astSearch.maybeNode)) {
@@ -49,7 +49,7 @@ export function maybeActiveNode(
     if (maybeLeaf === undefined) {
         return undefined;
     }
-    const leaf: NodeIdMap.TXorNode = maybeLeaf;
+    const leaf: TXorNode = maybeLeaf;
 
     return {
         position,
@@ -58,12 +58,12 @@ export function maybeActiveNode(
     };
 }
 
-export function expectRoot(activeNode: ActiveNode): NodeIdMap.TXorNode {
-    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
+export function expectRoot(activeNode: ActiveNode): TXorNode {
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     return ancestry[ancestry.length - 1];
 }
 
-export function expectLeaf(activeNode: ActiveNode): NodeIdMap.TXorNode {
+export function expectLeaf(activeNode: ActiveNode): TXorNode {
     return activeNode.ancestry[0];
 }
 
@@ -72,8 +72,8 @@ export function maybePreviousXorNode(
     ancestorIndex: number,
     n: number = 1,
     maybeNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): NodeIdMap.TXorNode | undefined {
-    const maybeXorNode: NodeIdMap.TXorNode | undefined = activeNode.ancestry[ancestorIndex - n];
+): TXorNode | undefined {
+    const maybeXorNode: TXorNode | undefined = activeNode.ancestry[ancestorIndex - n];
     if (maybeXorNode !== undefined && maybeNodeKinds !== undefined) {
         return maybeNodeKinds.indexOf(maybeXorNode.node.kind) !== -1 ? maybeXorNode : undefined;
     } else {
@@ -81,11 +81,7 @@ export function maybePreviousXorNode(
     }
 }
 
-export function maybeNextXorNode(
-    activeNode: ActiveNode,
-    ancestorIndex: number,
-    n: number = 1,
-): NodeIdMap.TXorNode | undefined {
+export function maybeNextXorNode(activeNode: ActiveNode, ancestorIndex: number, n: number = 1): TXorNode | undefined {
     return activeNode.ancestry[ancestorIndex + n];
 }
 
@@ -94,12 +90,12 @@ export function expectPreviousXorNode(
     ancestorIndex: number,
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): NodeIdMap.TXorNode {
-    const maybeXorNode: NodeIdMap.TXorNode | undefined = maybePreviousXorNode(activeNode, ancestorIndex, n);
+): TXorNode {
+    const maybeXorNode: TXorNode | undefined = maybePreviousXorNode(activeNode, ancestorIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError("no previous node");
     }
-    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+    const xorNode: TXorNode = maybeXorNode;
 
     if (maybeAllowedNodeKinds !== undefined) {
         const details: {} = {
@@ -126,12 +122,12 @@ export function expectNextXorNode(
     ancestorIndex: number,
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): NodeIdMap.TXorNode {
-    const maybeXorNode: NodeIdMap.TXorNode | undefined = maybeNextXorNode(activeNode, ancestorIndex, n);
+): TXorNode {
+    const maybeXorNode: TXorNode | undefined = maybeNextXorNode(activeNode, ancestorIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError("no next node");
     }
-    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+    const xorNode: TXorNode = maybeXorNode;
 
     if (maybeAllowedNodeKinds !== undefined) {
         const details: {} = {
@@ -340,9 +336,9 @@ function positionContextSearch(
 function maybeIdentifierUnderPosition(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    leaf: NodeIdMap.TXorNode,
+    leaf: TXorNode,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
-    if (leaf.kind !== NodeIdMap.XorNodeKind.Ast) {
+    if (leaf.kind !== XorNodeKind.Ast) {
         return undefined;
     }
 

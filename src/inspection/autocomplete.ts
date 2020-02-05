@@ -4,7 +4,7 @@
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
 import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -28,7 +28,7 @@ export function tryFrom(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const leaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
+    const leaf: TXorNode = activeNode.ancestry[0];
     const maybeParseErrorToken: Token | undefined = maybeParseError
         ? ParseError.maybeTokenFrom(maybeParseError.innerError)
         : undefined;
@@ -40,7 +40,7 @@ export function tryFrom(
         }
         // Matches 'null', 'true', and 'false'.
         else if (
-            leaf.kind === NodeIdMap.XorNodeKind.Ast &&
+            leaf.kind === XorNodeKind.Ast &&
             leaf.node.kind === Ast.NodeKind.LiteralExpression &&
             (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null)
         ) {
@@ -78,14 +78,14 @@ function traverseAncestors(
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseErrorToken: Token | undefined,
 ): Result<ReadonlyArray<KeywordKind>, CommonError.CommonError> {
-    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numNodes: number = ancestry.length;
 
     let maybeInspected: ReadonlyArray<KeywordKind> | undefined;
     try {
         for (let index: number = 1; index < numNodes; index += 1) {
-            const parent: NodeIdMap.TXorNode = ancestry[index];
-            const child: NodeIdMap.TXorNode = ancestry[index - 1];
+            const parent: TXorNode = ancestry[index];
+            const child: TXorNode = ancestry[index - 1];
 
             switch (parent.node.kind) {
                 case Ast.NodeKind.ErrorHandlingExpression:
@@ -108,7 +108,7 @@ function traverseAncestors(
                     const key: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
                     if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
                         if (
-                            child.kind === NodeIdMap.XorNodeKind.Context ||
+                            child.kind === XorNodeKind.Context ||
                             PositionUtils.isBeforeAstNode(activeNode.position, child.node, false)
                         ) {
                             maybeInspected = ExpressionAutocomplete;
@@ -267,12 +267,12 @@ function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | unde
 
 function autocompleteKeywordConstant(
     activeNode: ActiveNode,
-    child: NodeIdMap.TXorNode,
+    child: TXorNode,
     keywordKind: KeywordKind,
 ): ReadonlyArray<KeywordKind> | undefined {
     if (PositionUtils.isBeforeXorNode(activeNode.position, child, false)) {
         return undefined;
-    } else if (child.kind === NodeIdMap.XorNodeKind.Ast) {
+    } else if (child.kind === XorNodeKind.Ast) {
         // So long as you're inside of an Ast Constant there's nothing that can be recommended other than the constant.
         // Note that we previously checked isBeforeXorNode so we can use the quicker isOnAstNodeEnd to check
         // if we're inside of the Ast node.
@@ -285,7 +285,7 @@ function autocompleteKeywordConstant(
 
 function autocompleteErrorHandlingExpression(
     position: Position,
-    child: NodeIdMap.TXorNode,
+    child: TXorNode,
     maybeParseErrorToken: Token | undefined,
 ): ReadonlyArray<KeywordKind> | undefined {
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
@@ -321,10 +321,7 @@ function autocompleteErrorHandlingExpression(
             else {
                 return undefined;
             }
-        } else if (
-            child.kind === NodeIdMap.XorNodeKind.Ast &&
-            PositionUtils.isAfterAstNode(position, child.node, true)
-        ) {
+        } else if (child.kind === XorNodeKind.Ast && PositionUtils.isAfterAstNode(position, child.node, true)) {
             return [KeywordKind.Otherwise];
         } else {
             return ExpressionAutocomplete;
@@ -336,7 +333,7 @@ function autocompleteErrorHandlingExpression(
 
 function autocompleteListExpression(
     activeNode: ActiveNode,
-    child: NodeIdMap.TXorNode,
+    child: TXorNode,
     ancestorIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // '{' or '}'
@@ -351,27 +348,19 @@ function autocompleteListExpression(
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: NodeIdMap.TXorNode = ActiveNodeUtils.expectPreviousXorNode(
-        activeNode,
-        ancestorIndex,
-        3,
-        undefined,
-    );
+    const nodeOrComma: TXorNode = ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 3, undefined);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
 
     // We know it's the node component of the Csv,
     // but we have to drilldown one more level if it's a RangeExpression.
-    const itemNode: NodeIdMap.TXorNode =
+    const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
             ? ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 4, undefined)
             : nodeOrComma;
 
-    if (
-        itemNode.kind === NodeIdMap.XorNodeKind.Context ||
-        PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)
-    ) {
+    if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
         return ExpressionAutocomplete;
     } else {
         return undefined;
@@ -383,14 +372,14 @@ function autocompleteListExpression(
 function autocompleteSectionMember(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
-    parent: NodeIdMap.TXorNode,
-    child: NodeIdMap.TXorNode,
+    parent: TXorNode,
+    child: TXorNode,
     ancestorIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // SectionMember.namePairedExpression
     if (child.node.maybeAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
-        const maybeSharedConstant: NodeIdMap.TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeSharedConstant: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             parent.node.id,
             1,
@@ -403,15 +392,13 @@ function autocompleteSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: NodeIdMap.TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(
-            activeNode,
-            ancestorIndex,
-            2,
-            [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
-        );
+        const maybeName: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, ancestorIndex, 2, [
+            Ast.NodeKind.IdentifierPairedExpression,
+            Ast.NodeKind.Identifier,
+        ]);
 
         // Name hasn't been parsed yet so we can exit.
-        if (maybeName === undefined || maybeName.kind !== NodeIdMap.XorNodeKind.Ast) {
+        if (maybeName === undefined || maybeName.kind !== XorNodeKind.Ast) {
             return undefined;
         }
 
