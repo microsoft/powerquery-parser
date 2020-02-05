@@ -16,10 +16,6 @@ export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T
     return [...collection.slice(0, index), ...collection.slice(index + 1)];
 }
 
-export function addElement<T>(collection: ReadonlyArray<T>, element: T): T[] {
-    return [...collection, element];
-}
-
 export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) => boolean): T | undefined {
     const numElements: number = collection.length;
 

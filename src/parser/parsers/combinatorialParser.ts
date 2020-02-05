@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Naive } from ".";
 import { Ast, AstUtils, NodeIdMap, ParserContext } from "..";
 import { ArrayUtils, CommonError, isNever, TypeUtils } from "../../common";
 import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
-
-import * as Naive from "./naive";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while
