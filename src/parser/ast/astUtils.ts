@@ -5,7 +5,7 @@ import { CommonError, isNever } from "../../common";
 import { TokenKind } from "../../lexer";
 import * as Ast from "./ast";
 
-export function maybeUnaryOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperator | undefined {
+export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperator | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Plus:
             return Ast.UnaryOperator.Positive;
@@ -18,7 +18,7 @@ export function maybeUnaryOperatorFrom(maybeTokenKind: TokenKind | undefined): A
     }
 }
 
-export function maybeArithmeticOperatorFrom(
+export function maybeArithmeticOperatorKindFrom(
     maybeTokenKind: TokenKind | undefined,
 ): Ast.ArithmeticOperatorKind | undefined {
     switch (maybeTokenKind) {
@@ -37,7 +37,9 @@ export function maybeArithmeticOperatorFrom(
     }
 }
 
-export function maybeEqualityOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.EqualityOperatorKind | undefined {
+export function maybeEqualityOperatorKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Ast.EqualityOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Equal:
             return Ast.EqualityOperatorKind.EqualTo;
@@ -48,7 +50,7 @@ export function maybeEqualityOperatorFrom(maybeTokenKind: TokenKind | undefined)
     }
 }
 
-export function maybeLogicalOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.LogicalOperator | undefined {
+export function maybeLogicalOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.LogicalOperator | undefined {
     switch (maybeTokenKind) {
         case TokenKind.KeywordAnd:
             return Ast.LogicalOperator.And;
@@ -76,7 +78,7 @@ export function maybeRelationalOperatorFrom(
     }
 }
 
-export function maybeBinOpExpressionOperatorFrom(
+export function maybeBinOpExpressionOperatorKindFrom(
     maybeTokenKind: TokenKind | undefined,
 ): Ast.TBinOpExpressionOperator | undefined {
     switch (maybeTokenKind) {

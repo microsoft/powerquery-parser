@@ -200,7 +200,7 @@ function readBinOpExpression(
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorFrom(
+    let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorKindFrom(
         state.maybeCurrentTokenKind,
     );
     while (maybeOperator !== undefined) {
@@ -215,8 +215,8 @@ function readBinOpExpression(
         );
 
         switch (operator) {
-            case Ast.ConstantKind.As:
-            case Ast.ConstantKind.Is:
+            case Ast.KeywordConstantKind.As:
+            case Ast.KeywordConstantKind.Is:
                 expressions.push(parser.readNullablePrimitiveType(state, parser));
                 break;
 
@@ -225,7 +225,7 @@ function readBinOpExpression(
                 break;
         }
 
-        maybeOperator = AstUtils.maybeBinOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
+        maybeOperator = AstUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
     }
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
@@ -329,7 +329,7 @@ function readBinOpExpression(
 
 function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
     switch (operator) {
-        case Ast.ConstantKind.Meta:
+        case Ast.KeywordConstantKind.Meta:
             return Ast.NodeKind.MetadataExpression;
 
         case Ast.ArithmeticOperatorKind.Multiplication:
@@ -349,10 +349,10 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
         case Ast.EqualityOperatorKind.NotEqualTo:
             return Ast.NodeKind.EqualityExpression;
 
-        case Ast.ConstantKind.As:
+        case Ast.KeywordConstantKind.As:
             return Ast.NodeKind.AsExpression;
 
-        case Ast.ConstantKind.Is:
+        case Ast.KeywordConstantKind.Is:
             return Ast.NodeKind.IsExpression;
 
         case Ast.LogicalOperator.And:
