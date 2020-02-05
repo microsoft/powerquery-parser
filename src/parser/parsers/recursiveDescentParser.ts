@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Naive } from ".";
 import { IParser } from "../IParser";
 import { IParserState } from "../IParserState";
-
-import * as Naive from "./naive";
 
 export let RecursiveDescentParser: IParser<IParserState> = {
     // 12.1.6 Identifiers
