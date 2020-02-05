@@ -306,7 +306,12 @@ export type TArithmeticExpression = ArithmeticExpression | TMetadataExpression;
 export type TMetadataExpression = MetadataExpression | TUnaryExpression;
 
 export interface MetadataExpression
-    extends IBinOpExpression<NodeKind.MetadataExpression, TUnaryExpression, ConstantKind.Meta, TUnaryExpression> {}
+    extends IBinOpExpression<
+        NodeKind.MetadataExpression,
+        TUnaryExpression,
+        KeywordConstantKind.Meta,
+        TUnaryExpression
+    > {}
 
 // -----------------------------------------------
 // ---------- 12.2.3.9 Unary expression ----------
@@ -627,8 +632,8 @@ export type TBinOpExpression =
 // The following types are needed for recursiveReadBinOpExpressionHelper,
 // and are created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>.
 export type TBinOpExpressionSubtype =
-    | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, ConstantKind.As, TNullablePrimitiveType>
-    | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, ConstantKind.Is, TNullablePrimitiveType>;
+    | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, KeywordConstantKind.As, TNullablePrimitiveType>
+    | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, KeywordConstantKind.Is, TNullablePrimitiveType>;
 
 export interface IBinOpExpression<Kind, Left, Operator, Right> extends INode {
     readonly kind: Kind & TBinOpExpressionNodeKind;
@@ -646,18 +651,28 @@ export interface ArithmeticExpression
     extends IBinOpExpression<
         NodeKind.ArithmeticExpression,
         TArithmeticExpression,
-        ArithmeticOperator,
+        ArithmeticOperatorKind,
         TArithmeticExpression
     > {}
 
 export interface AsExpression
-    extends IBinOpExpression<NodeKind.AsExpression, TEqualityExpression, ConstantKind.As, TNullablePrimitiveType> {}
+    extends IBinOpExpression<
+        NodeKind.AsExpression,
+        TEqualityExpression,
+        KeywordConstantKind.As,
+        TNullablePrimitiveType
+    > {}
 
 export interface EqualityExpression
-    extends IBinOpExpression<NodeKind.EqualityExpression, TEqualityExpression, EqualityOperator, TEqualityExpression> {}
+    extends IBinOpExpression<
+        NodeKind.EqualityExpression,
+        TEqualityExpression,
+        EqualityOperatorKind,
+        TEqualityExpression
+    > {}
 
 export interface IsExpression
-    extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, ConstantKind.Is, TNullablePrimitiveType> {}
+    extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, KeywordConstantKind.Is, TNullablePrimitiveType> {}
 
 export interface LogicalExpression
     extends IBinOpExpression<NodeKind.LogicalExpression, TLogicalExpression, LogicalOperator, TLogicalExpression> {}
@@ -666,7 +681,7 @@ export interface RelationalExpression
     extends IBinOpExpression<
         NodeKind.RelationalExpression,
         TRelationalExpression,
-        RelationalOperator,
+        RelationalOperatorKind,
         TRelationalExpression
     > {}
 
@@ -675,38 +690,13 @@ export interface RelationalExpression
 // ------------------------------------------------
 
 export type TBinOpExpressionOperator =
-    | ArithmeticOperator
-    | EqualityOperator
+    | ArithmeticOperatorKind
+    | EqualityOperatorKind
     | LogicalOperator
-    | RelationalOperator
-    | ConstantKind.As
-    | ConstantKind.Is
-    | ConstantKind.Meta;
-
-export const enum ArithmeticOperator {
-    Multiplication = "*",
-    Division = "/",
-    Addition = "+",
-    Subtraction = "-",
-    And = "&",
-}
-
-export const enum EqualityOperator {
-    EqualTo = "=",
-    NotEqualTo = "<>",
-}
-
-export const enum LogicalOperator {
-    And = "and",
-    Or = "or",
-}
-
-export const enum RelationalOperator {
-    LessThan = "<",
-    LessThanEqualTo = "<=",
-    GreaterThan = ">",
-    GreaterThanEqualTo = ">=",
-}
+    | RelationalOperatorKind
+    | KeywordConstantKind.As
+    | KeywordConstantKind.Is
+    | KeywordConstantKind.Meta;
 
 // ------------------------------------------
 // ---------- Key value pair nodes ----------
@@ -753,7 +743,7 @@ export interface AsType extends IPairedConstant<NodeKind.AsType, TType> {}
 export interface Constant extends INode {
     readonly kind: NodeKind.Constant;
     readonly isLeaf: true;
-    readonly constantKind: ConstantKind;
+    readonly constantKind: TConstantKind;
 }
 
 export interface FieldSpecification extends INode {
@@ -791,84 +781,60 @@ export interface Identifier extends INode {
 // ---------- const enums ----------
 // ---------------------------------
 
-export const enum ConstantKind {
+export type TConstantKind =
+    | MiscConstantKind
+    | WrapperConstantKind
+    | KeywordConstantKind
+    | IdentifierConstant
+    | ArithmeticOperatorKind
+    | EqualityOperatorKind
+    | LogicalOperator
+    | RelationalOperatorKind
+    | UnaryOperator;
+
+export const enum MiscConstantKind {
     // TokenKind
-    As = "as",
     Ampersand = "&",
     AtSign = "@",
     Comma = ",",
     DotDot = "..",
-    Each = "each",
     Ellipsis = "...",
-    Else = "else",
     Equal = "=",
-    Error = "error",
     FatArrow = "=>",
-    If = "if",
-    In = "in",
-    Is = "is",
-    Section = "section",
     Semicolon = ";",
-    Shared = "shared",
+    Null = "null",
+    QuestionMark = "?",
+}
+
+export const enum WrapperConstantKind {
     LeftBrace = "{",
     LeftBracket = "[",
     LeftParenthesis = "(",
-    Let = "let",
-    Meta = "meta",
-    Null = "null",
-    Otherwise = "otherwise",
-    QuestionMark = "?",
     RightBrace = "}",
     RightBracket = "]",
     RightParenthesis = ")",
+}
+
+export const enum KeywordConstantKind {
+    And = "and",
+    As = "as",
+    Each = "each",
+    Else = "else",
+    Error = "error",
+    False = "false",
+    If = "if",
+    In = "in",
+    Is = "is",
+    Let = "let",
+    Meta = "meta",
+    Otherwise = "otherwise",
+    Or = "or",
+    Section = "section",
+    Shared = "shared",
     Then = "then",
+    True = "true",
     Try = "try",
     Type = "type",
-
-    // IdentifierConstant
-    Action = "action",
-    Any = "any",
-    AnyNonNull = "anynonnull",
-    Binary = "binary",
-    Date = "date",
-    DateTime = "datetime",
-    DateTimeZone = "datetimezone",
-    Duration = "duration",
-    Function = "function",
-    List = "list",
-    Logical = "logical",
-    None = "none",
-    Nullable = "nullable",
-    Number = "number",
-    Optional = "optional",
-    Record = "record",
-    Table = "table",
-    Text = "text",
-    Time = "time",
-
-    // ArithmeticOperator
-    Asterisk = "*",
-    Division = "/",
-    Plus = "+",
-    Minus = "-",
-
-    // EqualityOperator
-    // EqualTo ('=') is already covered by Equal
-    NotEqual = "<>",
-
-    // LogicalOperator
-    And = "and",
-    Or = "or",
-
-    // RelationalOperator
-    LessThan = "<",
-    LessThanEqualTo = "<=",
-    GreaterThan = ">",
-    GreaterThanEqualTo = ">=",
-
-    // Positive and Negative ('+' and '-') are already by Plus and Minus
-    // UnaryOperator
-    Not = "not",
 }
 
 export const enum IdentifierConstant {
@@ -891,4 +857,29 @@ export const enum IdentifierConstant {
     Table = "table",
     Text = "text",
     Time = "time",
+}
+
+export const enum ArithmeticOperatorKind {
+    Multiplication = "*",
+    Division = "/",
+    Addition = "+",
+    Subtraction = "-",
+    And = "&",
+}
+
+export const enum EqualityOperatorKind {
+    EqualTo = "=",
+    NotEqualTo = "<>",
+}
+
+export const enum LogicalOperator {
+    And = "and",
+    Or = "or",
+}
+
+export const enum RelationalOperatorKind {
+    LessThan = "<",
+    LessThanEqualTo = "<=",
+    GreaterThan = ">",
+    GreaterThanEqualTo = ">=",
 }

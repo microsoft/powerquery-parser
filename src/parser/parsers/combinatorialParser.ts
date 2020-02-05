@@ -332,21 +332,21 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
         case Ast.ConstantKind.Meta:
             return Ast.NodeKind.MetadataExpression;
 
-        case Ast.ArithmeticOperator.Multiplication:
-        case Ast.ArithmeticOperator.Division:
-        case Ast.ArithmeticOperator.Addition:
-        case Ast.ArithmeticOperator.Subtraction:
-        case Ast.ArithmeticOperator.And:
+        case Ast.ArithmeticOperatorKind.Multiplication:
+        case Ast.ArithmeticOperatorKind.Division:
+        case Ast.ArithmeticOperatorKind.Addition:
+        case Ast.ArithmeticOperatorKind.Subtraction:
+        case Ast.ArithmeticOperatorKind.And:
             return Ast.NodeKind.ArithmeticExpression;
 
-        case Ast.RelationalOperator.GreaterThan:
-        case Ast.RelationalOperator.GreaterThanEqualTo:
-        case Ast.RelationalOperator.LessThan:
-        case Ast.RelationalOperator.LessThanEqualTo:
+        case Ast.RelationalOperatorKind.GreaterThan:
+        case Ast.RelationalOperatorKind.GreaterThanEqualTo:
+        case Ast.RelationalOperatorKind.LessThan:
+        case Ast.RelationalOperatorKind.LessThanEqualTo:
             return Ast.NodeKind.RelationalExpression;
 
-        case Ast.EqualityOperator.EqualTo:
-        case Ast.EqualityOperator.NotEqualTo:
+        case Ast.EqualityOperatorKind.EqualTo:
+        case Ast.EqualityOperatorKind.NotEqualTo:
             return Ast.NodeKind.EqualityExpression;
 
         case Ast.ConstantKind.As:

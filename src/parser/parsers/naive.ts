@@ -429,7 +429,7 @@ export function readEqualityExpression(state: IParserState, parser: IParser<IPar
     return recursiveReadBinOpExpression<
         Ast.NodeKind.EqualityExpression,
         Ast.TEqualityExpression,
-        Ast.EqualityOperator,
+        Ast.EqualityOperatorKind,
         Ast.TEqualityExpression
     >(
         state,
@@ -451,7 +451,7 @@ export function readRelationalExpression(
     return recursiveReadBinOpExpression<
         Ast.NodeKind.RelationalExpression,
         Ast.TArithmeticExpression,
-        Ast.RelationalOperator,
+        Ast.RelationalOperatorKind,
         Ast.TArithmeticExpression
     >(
         state,
@@ -473,7 +473,7 @@ export function readArithmeticExpression(
     return recursiveReadBinOpExpression<
         Ast.NodeKind.ArithmeticExpression,
         Ast.TMetadataExpression,
-        Ast.ArithmeticOperator,
+        Ast.ArithmeticOperatorKind,
         Ast.TMetadataExpression
     >(
         state,
@@ -2265,20 +2265,12 @@ function maybeReadIdentifierConstantAsConstant(
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
 
-        const maybeConstantKind: Ast.ConstantKind | undefined = AstUtils.maybeConstantKindFromIdentifieConstant(
-            identifierConstant,
-        );
-        if (!maybeConstantKind) {
-            const details: {} = { identifierConstant };
-            throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
-        }
-
         readToken(state);
         const astNode: Ast.Constant = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,
-            constantKind: maybeConstantKind,
+            constantKind: identifierConstant,
         };
         IParserStateUtils.endContext(state, astNode);
         return astNode;

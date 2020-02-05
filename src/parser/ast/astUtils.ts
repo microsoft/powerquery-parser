@@ -18,29 +18,31 @@ export function maybeUnaryOperatorFrom(maybeTokenKind: TokenKind | undefined): A
     }
 }
 
-export function maybeArithmeticOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.ArithmeticOperator | undefined {
+export function maybeArithmeticOperatorFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Ast.ArithmeticOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Asterisk:
-            return Ast.ArithmeticOperator.Multiplication;
+            return Ast.ArithmeticOperatorKind.Multiplication;
         case TokenKind.Division:
-            return Ast.ArithmeticOperator.Division;
+            return Ast.ArithmeticOperatorKind.Division;
         case TokenKind.Plus:
-            return Ast.ArithmeticOperator.Addition;
+            return Ast.ArithmeticOperatorKind.Addition;
         case TokenKind.Minus:
-            return Ast.ArithmeticOperator.Subtraction;
+            return Ast.ArithmeticOperatorKind.Subtraction;
         case TokenKind.Ampersand:
-            return Ast.ArithmeticOperator.And;
+            return Ast.ArithmeticOperatorKind.And;
         default:
             return undefined;
     }
 }
 
-export function maybeEqualityOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.EqualityOperator | undefined {
+export function maybeEqualityOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.EqualityOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Equal:
-            return Ast.EqualityOperator.EqualTo;
+            return Ast.EqualityOperatorKind.EqualTo;
         case TokenKind.NotEqual:
-            return Ast.EqualityOperator.NotEqualTo;
+            return Ast.EqualityOperatorKind.NotEqualTo;
         default:
             return undefined;
     }
@@ -57,16 +59,18 @@ export function maybeLogicalOperatorFrom(maybeTokenKind: TokenKind | undefined):
     }
 }
 
-export function maybeRelationalOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.RelationalOperator | undefined {
+export function maybeRelationalOperatorFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Ast.RelationalOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.LessThan:
-            return Ast.RelationalOperator.LessThan;
+            return Ast.RelationalOperatorKind.LessThan;
         case TokenKind.LessThanEqualTo:
-            return Ast.RelationalOperator.LessThanEqualTo;
+            return Ast.RelationalOperatorKind.LessThanEqualTo;
         case TokenKind.GreaterThan:
-            return Ast.RelationalOperator.GreaterThan;
+            return Ast.RelationalOperatorKind.GreaterThan;
         case TokenKind.GreaterThanEqualTo:
-            return Ast.RelationalOperator.GreaterThanEqualTo;
+            return Ast.RelationalOperatorKind.GreaterThanEqualTo;
         default:
             return undefined;
     }
@@ -78,21 +82,21 @@ export function maybeBinOpExpressionOperatorFrom(
     switch (maybeTokenKind) {
         // ArithmeticOperator
         case TokenKind.Asterisk:
-            return Ast.ArithmeticOperator.Multiplication;
+            return Ast.ArithmeticOperatorKind.Multiplication;
         case TokenKind.Division:
-            return Ast.ArithmeticOperator.Division;
+            return Ast.ArithmeticOperatorKind.Division;
         case TokenKind.Plus:
-            return Ast.ArithmeticOperator.Addition;
+            return Ast.ArithmeticOperatorKind.Addition;
         case TokenKind.Minus:
-            return Ast.ArithmeticOperator.Subtraction;
+            return Ast.ArithmeticOperatorKind.Subtraction;
         case TokenKind.Ampersand:
-            return Ast.ArithmeticOperator.And;
+            return Ast.ArithmeticOperatorKind.And;
 
         // EqualityOperator
         case TokenKind.Equal:
-            return Ast.EqualityOperator.EqualTo;
+            return Ast.EqualityOperatorKind.EqualTo;
         case TokenKind.NotEqual:
-            return Ast.EqualityOperator.NotEqualTo;
+            return Ast.EqualityOperatorKind.NotEqualTo;
 
         // LogicalOperator
         case TokenKind.KeywordAnd:
@@ -102,21 +106,21 @@ export function maybeBinOpExpressionOperatorFrom(
 
         // RelationalOperator
         case TokenKind.LessThan:
-            return Ast.RelationalOperator.LessThan;
+            return Ast.RelationalOperatorKind.LessThan;
         case TokenKind.LessThanEqualTo:
-            return Ast.RelationalOperator.LessThanEqualTo;
+            return Ast.RelationalOperatorKind.LessThanEqualTo;
         case TokenKind.GreaterThan:
-            return Ast.RelationalOperator.GreaterThan;
+            return Ast.RelationalOperatorKind.GreaterThan;
         case TokenKind.GreaterThanEqualTo:
-            return Ast.RelationalOperator.GreaterThanEqualTo;
+            return Ast.RelationalOperatorKind.GreaterThanEqualTo;
 
         // Keyword operator
         case TokenKind.KeywordAs:
-            return Ast.ConstantKind.As;
+            return Ast.KeywordConstantKind.As;
         case TokenKind.KeywordIs:
-            return Ast.ConstantKind.Is;
+            return Ast.KeywordConstantKind.Is;
         case TokenKind.KeywordMeta:
-            return Ast.ConstantKind.Meta;
+            return Ast.KeywordConstantKind.Meta;
 
         default:
             return undefined;
@@ -125,32 +129,32 @@ export function maybeBinOpExpressionOperatorFrom(
 
 export function maybeBinOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpressionOperator): number {
     switch (operator) {
-        case Ast.ConstantKind.Meta:
+        case Ast.KeywordConstantKind.Meta:
             return 110;
 
-        case Ast.ArithmeticOperator.Multiplication:
-        case Ast.ArithmeticOperator.Division:
+        case Ast.ArithmeticOperatorKind.Multiplication:
+        case Ast.ArithmeticOperatorKind.Division:
             return 100;
 
-        case Ast.ArithmeticOperator.Addition:
-        case Ast.ArithmeticOperator.Subtraction:
-        case Ast.ArithmeticOperator.And:
+        case Ast.ArithmeticOperatorKind.Addition:
+        case Ast.ArithmeticOperatorKind.Subtraction:
+        case Ast.ArithmeticOperatorKind.And:
             return 90;
 
-        case Ast.RelationalOperator.GreaterThan:
-        case Ast.RelationalOperator.GreaterThanEqualTo:
-        case Ast.RelationalOperator.LessThan:
-        case Ast.RelationalOperator.LessThanEqualTo:
+        case Ast.RelationalOperatorKind.GreaterThan:
+        case Ast.RelationalOperatorKind.GreaterThanEqualTo:
+        case Ast.RelationalOperatorKind.LessThan:
+        case Ast.RelationalOperatorKind.LessThanEqualTo:
             return 80;
 
-        case Ast.EqualityOperator.EqualTo:
-        case Ast.EqualityOperator.NotEqualTo:
+        case Ast.EqualityOperatorKind.EqualTo:
+        case Ast.EqualityOperatorKind.NotEqualTo:
             return 70;
 
-        case Ast.ConstantKind.As:
+        case Ast.KeywordConstantKind.As:
             return 60;
 
-        case Ast.ConstantKind.Is:
+        case Ast.KeywordConstantKind.Is:
             return 50;
 
         case Ast.LogicalOperator.And:
@@ -181,53 +185,6 @@ export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast
         case TokenKind.StringLiteral:
             return Ast.LiteralKind.Str;
 
-        default:
-            return undefined;
-    }
-}
-
-export function maybeConstantKindFromIdentifieConstant(
-    identifierConstant: Ast.IdentifierConstant,
-): Ast.ConstantKind | undefined {
-    switch (identifierConstant) {
-        case Ast.IdentifierConstant.Action:
-            return Ast.ConstantKind.Action;
-        case Ast.IdentifierConstant.Any:
-            return Ast.ConstantKind.Any;
-        case Ast.IdentifierConstant.AnyNonNull:
-            return Ast.ConstantKind.AnyNonNull;
-        case Ast.IdentifierConstant.Binary:
-            return Ast.ConstantKind.Binary;
-        case Ast.IdentifierConstant.Date:
-            return Ast.ConstantKind.Date;
-        case Ast.IdentifierConstant.DateTime:
-            return Ast.ConstantKind.DateTime;
-        case Ast.IdentifierConstant.DateTimeZone:
-            return Ast.ConstantKind.DateTimeZone;
-        case Ast.IdentifierConstant.Duration:
-            return Ast.ConstantKind.Duration;
-        case Ast.IdentifierConstant.Function:
-            return Ast.ConstantKind.Function;
-        case Ast.IdentifierConstant.List:
-            return Ast.ConstantKind.List;
-        case Ast.IdentifierConstant.Logical:
-            return Ast.ConstantKind.Logical;
-        case Ast.IdentifierConstant.None:
-            return Ast.ConstantKind.None;
-        case Ast.IdentifierConstant.Nullable:
-            return Ast.ConstantKind.Nullable;
-        case Ast.IdentifierConstant.Number:
-            return Ast.ConstantKind.Number;
-        case Ast.IdentifierConstant.Optional:
-            return Ast.ConstantKind.Optional;
-        case Ast.IdentifierConstant.Record:
-            return Ast.ConstantKind.Record;
-        case Ast.IdentifierConstant.Table:
-            return Ast.ConstantKind.Table;
-        case Ast.IdentifierConstant.Text:
-            return Ast.ConstantKind.Text;
-        case Ast.IdentifierConstant.Time:
-            return Ast.ConstantKind.Time;
         default:
             return undefined;
     }
@@ -277,19 +234,19 @@ export function isTBinOpExpression(node: Ast.TNode): node is Ast.TBinOpExpressio
     }
 }
 
-export function isPairedConstant(x: Ast.ConstantKind, y: Ast.ConstantKind): boolean {
+export function isPairedWrapperConstantKinds(x: Ast.TConstantKind, y: Ast.TConstantKind): boolean {
     if (x.length !== 1 || y.length !== 1) {
         return false;
     }
 
     // If given x === ')' and y === '(' then swap positions.
-    const low: Ast.ConstantKind = x < y ? x : y;
-    const high: Ast.ConstantKind = low === x ? y : x;
+    const low: Ast.TConstantKind = x < y ? x : y;
+    const high: Ast.TConstantKind = low === x ? y : x;
 
     return (
-        (low === Ast.ConstantKind.LeftBrace && high === Ast.ConstantKind.RightBrace) ||
-        (low === Ast.ConstantKind.LeftBracket && high === Ast.ConstantKind.RightBracket) ||
-        (low === Ast.ConstantKind.LeftParenthesis && high === Ast.ConstantKind.RightParenthesis)
+        (low === Ast.WrapperConstantKind.LeftBrace && high === Ast.WrapperConstantKind.RightBrace) ||
+        (low === Ast.WrapperConstantKind.LeftBracket && high === Ast.WrapperConstantKind.RightBracket) ||
+        (low === Ast.WrapperConstantKind.LeftParenthesis && high === Ast.WrapperConstantKind.RightParenthesis)
     );
 }
 
