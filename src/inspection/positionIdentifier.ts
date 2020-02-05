@@ -1,4 +1,4 @@
-import { Ast, NodeIdMap } from "../parser";
+import { Ast, TXorNode } from "../parser";
 
 export type TPositionIdentifier = LocalIdentifier | UndefinedIdentifier;
 
@@ -14,7 +14,7 @@ export interface IPositionIdentifier {
 
 export interface LocalIdentifier extends IPositionIdentifier {
     readonly kind: PositionIdentifierKind.Local;
-    readonly definition: NodeIdMap.TXorNode;
+    readonly definition: TXorNode;
 }
 
 export interface UndefinedIdentifier extends IPositionIdentifier {

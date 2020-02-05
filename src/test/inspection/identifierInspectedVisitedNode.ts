@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../..";
 import { isNever, ResultKind } from "../../common";
 import { Token } from "../../lexer";
-import { Ast, NodeIdMap } from "../../parser";
+import { Ast, TXorNode, XorNodeKind } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
 interface AbridgedTravelPathNode {
@@ -20,15 +20,15 @@ function abrigedTravelPathFrom(inspected: Inspection.Inspected): ReadonlyArray<A
         return [];
     }
 
-    return inspected.maybeActiveNode.ancestry.map((xorNode: NodeIdMap.TXorNode) => {
+    return inspected.maybeActiveNode.ancestry.map((xorNode: TXorNode) => {
         let maybePositionStartCodeUnit: number | undefined;
 
         switch (xorNode.kind) {
-            case NodeIdMap.XorNodeKind.Ast:
+            case XorNodeKind.Ast:
                 maybePositionStartCodeUnit = xorNode.node.tokenRange.positionStart.codeUnit;
                 break;
 
-            case NodeIdMap.XorNodeKind.Context:
+            case XorNodeKind.Context:
                 const maybeTokenStart: Token | undefined = xorNode.node.maybeTokenStart;
                 maybePositionStartCodeUnit =
                     maybeTokenStart !== undefined ? maybeTokenStart.positionStart.codeUnit : undefined;
@@ -69,8 +69,8 @@ function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.
     if (inspected.maybeActiveNode === undefined) {
         actualNum = -1;
     } else {
-        const nodesOfKind: ReadonlyArray<NodeIdMap.TXorNode> = inspected.maybeActiveNode.ancestry.filter(
-            (xorNode: NodeIdMap.TXorNode) => xorNode.node.kind === expectedKind,
+        const nodesOfKind: ReadonlyArray<TXorNode> = inspected.maybeActiveNode.ancestry.filter(
+            (xorNode: TXorNode) => xorNode.node.kind === expectedKind,
         );
         actualNum = nodesOfKind.length;
     }
@@ -81,11 +81,7 @@ function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.
     );
 }
 
-function expectNthOfNodeKind<T>(
-    inspected: Inspection.Inspected,
-    nodeKind: Ast.NodeKind,
-    nth: number,
-): T & NodeIdMap.TXorNode {
+function expectNthOfNodeKind<T>(inspected: Inspection.Inspected, nodeKind: Ast.NodeKind, nth: number): T & TXorNode {
     if (nth <= 0) {
         throw new Error("nth must be > 0");
     } else if (inspected.maybeActiveNode === undefined) {
@@ -97,7 +93,7 @@ function expectNthOfNodeKind<T>(
         if (xorNode.node.kind === nodeKind) {
             nthFound += 1;
             if (nth === nthFound) {
-                return (xorNode as unknown) as T & NodeIdMap.TXorNode;
+                return (xorNode as unknown) as T & TXorNode;
             }
         }
     }
@@ -279,11 +275,7 @@ describe(`Inspection`, () => {
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
             expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
-            const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
-                inspected,
-                Ast.NodeKind.InvokeExpression,
-                1,
-            );
+            const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
             expect(inspected.maybeInvokeExpression!.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
@@ -296,11 +288,7 @@ describe(`Inspection`, () => {
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 2);
 
             expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
-            const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
-                inspected,
-                Ast.NodeKind.InvokeExpression,
-                1,
-            );
+            const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
             expect(inspected.maybeInvokeExpression!.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
@@ -313,11 +301,7 @@ describe(`Inspection`, () => {
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
             expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
-            const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
-                inspected,
-                Ast.NodeKind.InvokeExpression,
-                1,
-            );
+            const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
             expect(inspected.maybeInvokeExpression!.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
@@ -333,11 +317,7 @@ describe(`Inspection`, () => {
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
             expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
-            const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
-                inspected,
-                Ast.NodeKind.InvokeExpression,
-                1,
-            );
+            const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
             expect(inspected.maybeInvokeExpression!.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 
@@ -353,11 +333,7 @@ describe(`Inspection`, () => {
             expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
             expect(inspected.maybeInvokeExpression!).not.equal(undefined, "at least one InvokeExpression was found");
-            const firstInvokeExprNode: NodeIdMap.TXorNode = expectNthOfNodeKind(
-                inspected,
-                Ast.NodeKind.InvokeExpression,
-                1,
-            );
+            const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
             expect(inspected.maybeInvokeExpression!.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
             const inspectedInvokeExpr: Inspection.InspectedInvokeExpression = inspected.maybeInvokeExpression!;
 

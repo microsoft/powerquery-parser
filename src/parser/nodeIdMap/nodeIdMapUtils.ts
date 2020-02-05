@@ -4,15 +4,8 @@
 import { Ast, ParserContext } from "..";
 import { CommonError, isNever } from "../../common";
 import { TokenRange } from "../../lexer";
-import {
-    AstNodeById,
-    ChildIdsById,
-    Collection,
-    ContextNodeById,
-    TXorNode,
-    XorNodeKind,
-    XorNodeTokenRange,
-} from "./nodeIdMap";
+import { AstNodeById, ChildIdsById, Collection, ContextNodeById } from "./nodeIdMap";
+import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
 
 export function xorNodeFromAst(node: Ast.TNode): TXorNode {
     return {

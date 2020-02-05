@@ -3,7 +3,7 @@
 
 import { CommonError, isNever, Result } from ".";
 import { ILocalizationTemplates } from "../localization";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext, TXorNode, XorNodeKind } from "../parser";
 import { ResultUtils } from "./result";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
@@ -59,13 +59,13 @@ export function tryTraverseAst<State, ResultType>(
 export function tryTraverseXor<State, ResultType>(
     state: State & IState<ResultType>,
     nodeIdMapCollection: NodeIdMap.Collection,
-    root: NodeIdMap.TXorNode,
+    root: TXorNode,
     strategy: VisitNodeStrategy,
-    visitNodeFn: TVisitNodeFn<State, ResultType, NodeIdMap.TXorNode, void>,
-    expandNodesFn: TExpandNodesFn<State, ResultType, NodeIdMap.TXorNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, NodeIdMap.TXorNode> | undefined,
+    visitNodeFn: TVisitNodeFn<State, ResultType, TXorNode, void>,
+    expandNodesFn: TExpandNodesFn<State, ResultType, TXorNode, NodeIdMap.Collection>,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
 ): TriedTraverse<ResultType> {
-    return tryTraverse<State, ResultType, NodeIdMap.TXorNode, NodeIdMap.Collection>(
+    return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
         state,
         nodeIdMapCollection,
         root,
@@ -120,21 +120,21 @@ export function expectExpandAllAstChildren<State, ResultType>(
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
 export function expectExpandAllXorChildren<State, ResultType>(
     _state: State & IState<ResultType>,
-    xorNode: NodeIdMap.TXorNode,
+    xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<NodeIdMap.TXorNode> {
+): ReadonlyArray<TXorNode> {
     switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast: {
+        case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
             return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
                 return {
-                    kind: NodeIdMap.XorNodeKind.Ast,
+                    kind: XorNodeKind.Ast,
                     node: childAstNode,
                 };
             });
         }
-        case NodeIdMap.XorNodeKind.Context: {
-            const result: NodeIdMap.TXorNode[] = [];
+        case XorNodeKind.Context: {
+            const result: TXorNode[] = [];
             const contextNode: ParserContext.Node = xorNode.node;
             const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
                 contextNode.id,
@@ -147,7 +147,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
                     if (maybeAstChild) {
                         const astChild: Ast.TNode = maybeAstChild;
                         result.push({
-                            kind: NodeIdMap.XorNodeKind.Ast,
+                            kind: XorNodeKind.Ast,
                             node: astChild,
                         });
                         continue;
@@ -159,7 +159,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
                     if (maybeContextChild) {
                         const contextChild: ParserContext.Node = maybeContextChild;
                         result.push({
-                            kind: NodeIdMap.XorNodeKind.Context,
+                            kind: XorNodeKind.Context,
                             node: contextChild,
                         });
                         continue;
@@ -183,10 +183,10 @@ export function expectExpandAllXorChildren<State, ResultType>(
 // Returns the TXorNode's parent if one exists.
 export function maybeExpandXorParent<T>(
     _state: T,
-    xorNode: NodeIdMap.TXorNode,
+    xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ReadonlyArray<NodeIdMap.TXorNode> {
-    const maybeParent: NodeIdMap.TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(
+): ReadonlyArray<TXorNode> {
+    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(
         nodeIdMapCollection,
         xorNode.node.id,
     );

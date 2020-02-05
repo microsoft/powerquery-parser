@@ -3,15 +3,15 @@
 
 import { isNever } from "../../common";
 import { Token, TokenPosition } from "../../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position } from "./position";
 
-export function isBeforeXorNode(position: Position, xorNode: NodeIdMap.TXorNode, isBoundIncluded: boolean): boolean {
+export function isBeforeXorNode(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {
     switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isBeforeAstNode(position, xorNode.node, isBoundIncluded);
 
-        case NodeIdMap.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isBeforeContextNode(position, xorNode.node, isBoundIncluded);
 
         default:
@@ -22,15 +22,15 @@ export function isBeforeXorNode(position: Position, xorNode: NodeIdMap.TXorNode,
 export function isInXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    xorNode: NodeIdMap.TXorNode,
+    xorNode: TXorNode,
     isLowerBoundIncluded: boolean,
     isUpperBoundIncluded: boolean,
 ): boolean {
     switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isInAstNode(position, xorNode.node, isLowerBoundIncluded, isUpperBoundIncluded);
 
-        case NodeIdMap.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isInContextNode(
                 position,
                 nodeIdMapCollection,
@@ -44,12 +44,12 @@ export function isInXorNode(
     }
 }
 
-export function isOnXorNodeStart(position: Position, xorNode: NodeIdMap.TXorNode): boolean {
+export function isOnXorNodeStart(position: Position, xorNode: TXorNode): boolean {
     switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isOnAstNodeStart(position, xorNode.node);
 
-        case NodeIdMap.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isOnContextNodeStart(position, xorNode.node);
 
         default:
@@ -59,14 +59,14 @@ export function isOnXorNodeStart(position: Position, xorNode: NodeIdMap.TXorNode
 
 export function isOnXorNodeEnd(
     position: Position,
-    xorNode: NodeIdMap.TXorNode,
+    xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): boolean {
     switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isOnAstNodeEnd(position, xorNode.node);
 
-        case NodeIdMap.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isOnContextNodeEnd(position, xorNode.node, nodeIdMapCollection);
 
         default:
@@ -77,14 +77,14 @@ export function isOnXorNodeEnd(
 export function isAfterXorNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    xorNode: NodeIdMap.TXorNode,
+    xorNode: TXorNode,
     isBoundIncluded: boolean,
 ): boolean {
     switch (xorNode.kind) {
-        case NodeIdMap.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isAfterAstNode(position, xorNode.node, isBoundIncluded);
 
-        case NodeIdMap.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isAfterContextNode(position, nodeIdMapCollection, xorNode.node, isBoundIncluded);
 
         default:

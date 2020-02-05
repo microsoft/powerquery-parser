@@ -4,7 +4,7 @@
 import { Ast, NodeIdMap } from ".";
 import { CommonError, TypeUtils } from "../common";
 import { Token } from "../lexer";
-import { NodeIdMapUtils } from "./nodeIdMap";
+import { NodeIdMapUtils, TXorNode } from "./nodeIdMap";
 
 // Parsing use to be one giant evaluation, leading to an all-or-nothing outcome which was unsuitable for a
 // document that was being live edited.
@@ -258,7 +258,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
         }
 
         // The child Node inherits the attributeIndex.
-        const childXorNode: NodeIdMap.TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
+        const childXorNode: TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
         const mutableChildXorNode: TypeUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
         mutableChildXorNode.maybeAttributeIndex = contextNode.maybeAttributeIndex;
     }

@@ -1,5 +1,5 @@
 import { CommonError } from "../common";
-import { Ast, NodeIdMap } from "../parser";
+import { Ast, TXorNode } from "../parser";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 
 export interface InspectionState {
@@ -23,7 +23,7 @@ export function isInKeyValuePairAssignment(state: InspectionState): boolean {
         n = 3;
     }
 
-    const maybeKeyValuePair: NodeIdMap.TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(
+    const maybeKeyValuePair: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(
         state.activeNode,
         state.nodeIndex,
         n,
@@ -37,16 +37,16 @@ export function isInKeyValuePairAssignment(state: InspectionState): boolean {
     if (maybeKeyValuePair === undefined) {
         return false;
     }
-    const keyValuePair: NodeIdMap.TXorNode = maybeKeyValuePair;
+    const keyValuePair: TXorNode = maybeKeyValuePair;
 
-    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = state.activeNode.ancestry;
+    const ancestry: ReadonlyArray<TXorNode> = state.activeNode.ancestry;
 
     const keyValuePairAncestryIndex: number = ancestry.indexOf(keyValuePair);
     if (keyValuePairAncestryIndex === -1) {
         throw new CommonError.InvariantError("xorNode isn't in ancestry");
     }
 
-    const maybeChild: NodeIdMap.TXorNode | undefined = ancestry[keyValuePairAncestryIndex - 1];
+    const maybeChild: TXorNode | undefined = ancestry[keyValuePairAncestryIndex - 1];
     if (maybeChild === undefined) {
         const details: {} = { keyValuePairId: keyValuePair.node.id };
         throw new CommonError.InvariantError("expected xorNode to have a child", details);

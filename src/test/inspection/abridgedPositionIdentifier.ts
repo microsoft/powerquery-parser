@@ -7,7 +7,7 @@ import { Inspection } from "../..";
 import { isNever, ResultUtils } from "../../common";
 import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection";
 import { Token, TokenPosition } from "../../lexer";
-import { NodeIdMap } from "../../parser";
+import { TXorNode, XorNodeKind } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
 
 type TAbridgedPositionIdentifier = AbridgedLocalIdentifier | AbridgedUndefinedIdentifier;
@@ -51,15 +51,15 @@ function abridgedMaybeIdentifierUnderPositionFrom(
 
     switch (positionIdentifier.kind) {
         case PositionIdentifierKind.Local: {
-            const definition: NodeIdMap.TXorNode = positionIdentifier.definition;
+            const definition: TXorNode = positionIdentifier.definition;
 
             let maybeDefinitionPositionStart: TokenPosition | undefined;
             switch (definition.kind) {
-                case NodeIdMap.XorNodeKind.Ast:
+                case XorNodeKind.Ast:
                     maybeDefinitionPositionStart = definition.node.tokenRange.positionStart;
                     break;
 
-                case NodeIdMap.XorNodeKind.Context: {
+                case XorNodeKind.Context: {
                     const maybeTokenStart: Token | undefined = definition.node.maybeTokenStart;
                     if (maybeTokenStart !== undefined) {
                         const tokenStart: Token = maybeTokenStart;
