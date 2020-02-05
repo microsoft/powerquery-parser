@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { isNever, Option } from "../../common";
+import { isNever } from "../../common";
 import { Token, TokenPosition } from "../../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
 import { Position } from "./position";
@@ -97,7 +97,7 @@ export function isBeforeContextNode(
     contextNode: ParserContext.Node,
     isBoundIncluded: boolean,
 ): boolean {
-    const maybeTokenStart: Option<Token> = contextNode.maybeTokenStart;
+    const maybeTokenStart: Token | undefined = contextNode.maybeTokenStart;
     if (maybeTokenStart === undefined) {
         return false;
     }
@@ -130,7 +130,7 @@ export function isOnContextNodeEnd(
     contextNode: ParserContext.Node,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): boolean {
-    const maybeLeaf: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
         return false;
     }
@@ -144,7 +144,7 @@ export function isAfterContextNode(
     contextNode: ParserContext.Node,
     isBoundIncluded: boolean,
 ): boolean {
-    const maybeLeaf: Option<Ast.TNode> = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
         // We're assuming position is a valid range for the document.
         // Therefore if the context node didn't have a token (caused by EOF) we can make this assumption.

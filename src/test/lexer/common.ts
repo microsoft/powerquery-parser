@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { expect } from "chai";
-import { Option, ResultUtils } from "../../common";
+import { ResultUtils } from "../../common";
 import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../lexer";
 import { DefaultSettings } from "../../settings";
 
@@ -97,7 +97,7 @@ export function expectSnapshotAbridgedComments(
 export function expectLexOk(text: string): Lexer.State {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     if (Lexer.isErrorState(state)) {
-        const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
+        const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
         if (!(maybeErrorLineMap !== undefined)) {
             throw new Error(`AssertFailed: maybeErrorLineMap !== undefined`);
         }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Option } from "../../common";
 import { TokenRange } from "../../lexer/token";
 
 export const enum NodeKind {
@@ -71,7 +70,7 @@ export const enum NodeKind {
 export interface INode {
     readonly kind: NodeKind;
     readonly id: number;
-    readonly maybeAttributeIndex: Option<number>;
+    readonly maybeAttributeIndex: number | undefined;
     // The [start, end) range of a Ast.TNode.
     readonly tokenRange: TokenRange;
     readonly isLeaf: boolean;
@@ -222,9 +221,9 @@ export type TDocument = Section | TExpression;
 export interface Section extends INode {
     readonly kind: NodeKind.Section;
     readonly isLeaf: false;
-    readonly maybeLiteralAttributes: Option<RecordLiteral>;
+    readonly maybeLiteralAttributes: RecordLiteral | undefined;
     readonly sectionConstant: Constant;
-    readonly maybeName: Option<Identifier>;
+    readonly maybeName: Identifier | undefined;
     readonly semicolonConstant: Constant;
     readonly sectionMembers: IArrayWrapper<SectionMember>;
 }
@@ -232,8 +231,8 @@ export interface Section extends INode {
 export interface SectionMember extends INode {
     readonly kind: NodeKind.SectionMember;
     readonly isLeaf: false;
-    readonly maybeLiteralAttributes: Option<RecordLiteral>;
-    readonly maybeSharedConstant: Option<Constant>;
+    readonly maybeLiteralAttributes: RecordLiteral | undefined;
+    readonly maybeSharedConstant: Constant | undefined;
     readonly namePairedExpression: IdentifierPairedExpression;
     readonly semicolonConstant: Constant;
 }
@@ -370,7 +369,7 @@ export const enum LiteralKind {
 export interface IdentifierExpression extends INode {
     readonly kind: NodeKind.IdentifierExpression;
     readonly isLeaf: false;
-    readonly maybeInclusiveConstant: Option<Constant>;
+    readonly maybeInclusiveConstant: Constant | undefined;
     readonly identifier: Identifier;
 }
 
@@ -425,7 +424,7 @@ export interface RecordExpression
 
 export interface ItemAccessExpression extends IWrapped<NodeKind.ItemAccessExpression, TExpression> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: Option<Constant>;
+    readonly maybeOptionalConstant: Constant | undefined;
 }
 
 // --------------------------------------------------------
@@ -436,12 +435,12 @@ export type TFieldAccessExpression = FieldSelector | FieldProjection;
 
 export interface FieldSelector extends IWrapped<NodeKind.FieldSelector, GeneralizedIdentifier> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: Option<Constant>;
+    readonly maybeOptionalConstant: Constant | undefined;
 }
 
 export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ICsvArray<FieldSelector>> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: Option<Constant>;
+    readonly maybeOptionalConstant: Constant | undefined;
 }
 
 // ---------------------------------------------------
@@ -451,8 +450,8 @@ export interface FieldProjection extends IWrapped<NodeKind.FieldProjection, ICsv
 export interface FunctionExpression extends INode {
     readonly kind: NodeKind.FunctionExpression;
     readonly isLeaf: false;
-    readonly parameters: IParameterList<Option<AsNullablePrimitiveType>>;
-    readonly maybeFunctionReturnType: Option<AsNullablePrimitiveType>;
+    readonly parameters: IParameterList<AsNullablePrimitiveType | undefined>;
+    readonly maybeFunctionReturnType: AsNullablePrimitiveType | undefined;
     readonly fatArrowConstant: Constant;
     readonly expression: TExpression;
 }
@@ -541,7 +540,7 @@ export interface ErrorHandlingExpression extends INode {
     readonly isLeaf: false;
     readonly tryConstant: Constant;
     readonly protectedExpression: TExpression;
-    readonly maybeOtherwiseExpression: Option<OtherwiseExpression>;
+    readonly maybeOtherwiseExpression: OtherwiseExpression | undefined;
 }
 
 export interface OtherwiseExpression extends IPairedConstant<NodeKind.OtherwiseExpression, TExpression> {}
@@ -586,7 +585,7 @@ export interface ICsvArray<T> extends IArrayWrapper<ICsv<T & TCsvType>> {}
 export interface ICsv<T> extends INode {
     readonly kind: NodeKind.Csv;
     readonly node: T;
-    readonly maybeCommaConstant: Option<Constant>;
+    readonly maybeCommaConstant: Constant | undefined;
 }
 
 export interface IKeyValuePair<Kind, Key, Value> extends INode {
@@ -729,7 +728,7 @@ export interface IdentifierExpressionPairedExpression
 // ---------- Parameter related ----------
 // ---------------------------------------
 
-export type TParameterType = AsType | Option<AsNullablePrimitiveType>;
+export type TParameterType = AsType | AsNullablePrimitiveType | undefined;
 
 export interface IParameterList<T>
     extends IWrapped<NodeKind.ParameterList, ICsvArray<IParameter<T & TParameterType>>> {}
@@ -737,7 +736,7 @@ export interface IParameterList<T>
 export interface IParameter<T> extends INode {
     readonly kind: NodeKind.Parameter;
     readonly isLeaf: false;
-    readonly maybeOptionalConstant: Option<Constant>;
+    readonly maybeOptionalConstant: Constant | undefined;
     readonly name: Identifier;
     readonly maybeParameterType: T & TParameterType;
 }
@@ -760,14 +759,14 @@ export interface Constant extends INode {
 export interface FieldSpecification extends INode {
     readonly kind: NodeKind.FieldSpecification;
     readonly isLeaf: false;
-    readonly maybeOptionalConstant: Option<Constant>;
+    readonly maybeOptionalConstant: Constant | undefined;
     readonly name: GeneralizedIdentifier;
-    readonly maybeFieldTypeSpeification: Option<FieldTypeSpecification>;
+    readonly maybeFieldTypeSpeification: FieldTypeSpecification | undefined;
 }
 export interface FieldSpecificationList
     extends IWrapped<NodeKind.FieldSpecificationList, ICsvArray<FieldSpecification>> {
     // located between content and closeWrapperConstant
-    readonly maybeOpenRecordMarkerConstant: Option<Constant>;
+    readonly maybeOpenRecordMarkerConstant: Constant | undefined;
 }
 
 export interface FieldTypeSpecification extends INode {

@@ -5,7 +5,6 @@ import { LexError } from ".";
 import {
     CommonError,
     isNever,
-    Option,
     PartialResult,
     PartialResultKind,
     PartialResultUtils,
@@ -117,7 +116,7 @@ export function stateFrom(settings: LexSettings, text: string): State {
 export function appendLine(state: State, text: string, lineTerminator: string): State {
     const lines: ReadonlyArray<TLine> = state.lines;
     const numLines: number = lines.length;
-    const maybeLatestLine: Option<TLine> = lines[numLines - 1];
+    const maybeLatestLine: TLine | undefined = lines[numLines - 1];
     const lineModeStart: LineMode = maybeLatestLine ? maybeLatestLine.lineModeEnd : LineMode.Default;
     const untokenizedLine: UntouchedLine = lineFrom(text, lineTerminator, lineModeStart);
     const tokenizedLine: TLine = tokenize(state.localizationTemplates, untokenizedLine, numLines);
@@ -131,7 +130,7 @@ export function appendLine(state: State, text: string, lineTerminator: string): 
 export function tryUpdateLine(state: State, lineNumber: number, text: string): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
-    const maybeError: Option<LexError.BadLineNumberError> = maybeBadLineNumberError(state, lineNumber);
+    const maybeError: LexError.BadLineNumberError | undefined = maybeBadLineNumberError(state, lineNumber);
     if (maybeError) {
         return ResultUtils.errFactory(new LexError.LexError(maybeError));
     }
@@ -142,7 +141,7 @@ export function tryUpdateLine(state: State, lineNumber: number, text: string): T
 }
 
 export function tryUpdateRange(state: State, range: Range, text: string): TriedLexerUpdate {
-    const maybeError: Option<LexError.BadRangeError> = maybeBadRangeError(state, range);
+    const maybeError: LexError.BadRangeError | undefined = maybeBadRangeError(state, range);
     if (maybeError) {
         return ResultUtils.errFactory(new LexError.LexError(maybeError));
     }
@@ -163,7 +162,7 @@ export function tryUpdateRange(state: State, range: Range, text: string): TriedL
     // make sure we have a line terminator
     lastSplitLine.lineTerminator = lineEnd.lineTerminator;
 
-    const maybePreviousLine: Option<TLine> = state.lines[rangeStart.lineNumber - 1];
+    const maybePreviousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
     const previousLineModeEnd: LineMode =
         maybePreviousLine !== undefined ? maybePreviousLine.lineModeEnd : LineMode.Default;
     const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
@@ -187,7 +186,7 @@ export function tryUpdateRange(state: State, range: Range, text: string): TriedL
 export function tryDeleteLine(state: State, lineNumber: number): TriedLexerUpdate {
     const lines: ReadonlyArray<TLine> = state.lines;
 
-    const maybeError: Option<LexError.BadLineNumberError> = maybeBadLineNumberError(state, lineNumber);
+    const maybeError: LexError.BadLineNumberError | undefined = maybeBadLineNumberError(state, lineNumber);
     if (maybeError) {
         ResultUtils.errFactory(new LexError.LexError(maybeError));
     }
@@ -269,7 +268,7 @@ export function isErrorLine(line: TLine): line is TErrorLine {
     }
 }
 
-export function maybeErrorLineMap(state: State): Option<ErrorLineMap> {
+export function maybeErrorLineMap(state: State): ErrorLineMap | undefined {
     const errorLines: ErrorLineMap = new Map();
     const lines: ReadonlyArray<TLine> = state.lines;
     const numLines: number = lines.length;
@@ -413,7 +412,7 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
     const retokenizedLines: TLine[] = [];
     if (previousLineModeEnd !== lines[lineNumber].lineModeStart) {
         const offsetLineNumber: number = lineNumber;
-        let maybeCurrentLine: Option<TLine> = lines[lineNumber];
+        let maybeCurrentLine: TLine | undefined = lines[lineNumber];
 
         while (maybeCurrentLine) {
             const line: TLine = maybeCurrentLine;
@@ -500,7 +499,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
 
     const newTokens: LineToken[] = [];
     let continueLexing: boolean = currentPosition !== text.length;
-    let maybeError: Option<LexError.TLexError>;
+    let maybeError: LexError.TLexError | undefined;
 
     // While neither eof nor having encountered an error:
     //  * Lex according to lineModestart, starting from currentPosition.
@@ -682,7 +681,7 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
 // read either string literal end or eof
 function tokenizeStringLiteralContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const text: string = line.text;
-    const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition);
+    const maybePositionEnd: number | undefined = maybeIndexOfStringEnd(text, currentPosition);
 
     if (maybePositionEnd === undefined) {
         return {
@@ -838,7 +837,11 @@ function drainWhitespace(text: string, position: number): number {
     let continueDraining: boolean = text[position] !== undefined;
 
     while (continueDraining) {
-        const maybeLength: Option<number> = StringUtils.maybeRegexMatchLength(Pattern.RegExpWhitespace, text, position);
+        const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(
+            Pattern.RegExpWhitespace,
+            text,
+            position,
+        );
         if (maybeLength) {
             position += maybeLength;
         } else {
@@ -850,7 +853,7 @@ function drainWhitespace(text: string, position: number): number {
 }
 
 function readOrStartStringLiteral(text: string, currentPosition: number): LineModeAlteringRead {
-    const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 1);
+    const maybePositionEnd: number | undefined = maybeIndexOfStringEnd(text, currentPosition + 1);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
         return {
@@ -871,7 +874,7 @@ function readHexLiteral(
     lineNumber: number,
     positionStart: number,
 ): LineToken {
-    const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
+    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             localizationTemplates,
@@ -890,7 +893,7 @@ function readNumericLiteral(
     lineNumber: number,
     positionStart: number,
 ): LineToken {
-    const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, text, positionStart);
+    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             localizationTemplates,
@@ -929,7 +932,7 @@ function readKeyword(
     lineNumber: number,
     positionStart: number,
 ): LineToken {
-    const maybeLineToken: Option<LineToken> = maybeReadKeyword(text, positionStart);
+    const maybeLineToken: LineToken | undefined = maybeReadKeyword(text, positionStart);
     if (maybeLineToken) {
         return maybeLineToken;
     } else {
@@ -937,10 +940,10 @@ function readKeyword(
     }
 }
 
-function maybeReadKeyword(text: string, currentPosition: number): Option<LineToken> {
+function maybeReadKeyword(text: string, currentPosition: number): LineToken | undefined {
     const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
 
-    const maybeIdentifierPositionEnd: Option<number> = maybeIndexOfRegexEnd(
+    const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfRegexEnd(
         Pattern.RegExpIdentifier,
         text,
         identifierPositionStart,
@@ -951,7 +954,7 @@ function maybeReadKeyword(text: string, currentPosition: number): Option<LineTok
     const identifierPositionEnd: number = maybeIdentifierPositionEnd;
 
     const data: string = text.substring(currentPosition, identifierPositionEnd);
-    const maybeKeywordTokenKind: Option<LineTokenKind> = maybeKeywordLineTokenKindFrom(data);
+    const maybeKeywordTokenKind: LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
     if (maybeKeywordTokenKind === undefined) {
         return undefined;
     } else {
@@ -965,7 +968,7 @@ function maybeReadKeyword(text: string, currentPosition: number): Option<LineTok
 }
 
 function readOrStartQuotedIdentifier(text: string, currentPosition: number): LineModeAlteringRead {
-    const maybePositionEnd: Option<number> = maybeIndexOfStringEnd(text, currentPosition + 2);
+    const maybePositionEnd: number | undefined = maybeIndexOfStringEnd(text, currentPosition + 2);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
 
@@ -995,7 +998,11 @@ function readKeywordOrIdentifier(
     }
     // either keyword or identifier
     else {
-        const maybePositionEnd: Option<number> = maybeIndexOfRegexEnd(Pattern.RegExpIdentifier, text, positionStart);
+        const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(
+            Pattern.RegExpIdentifier,
+            text,
+            positionStart,
+        );
         if (maybePositionEnd === undefined) {
             throw new LexError.ExpectedError(
                 localizationTemplates,
@@ -1005,7 +1012,7 @@ function readKeywordOrIdentifier(
         }
         const positionEnd: number = maybePositionEnd;
         const data: string = text.substring(positionStart, positionEnd);
-        const maybeKeywordTokenKind: Option<LineTokenKind> = maybeKeywordLineTokenKindFrom(data);
+        const maybeKeywordTokenKind: LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
 
         let tokenKind: LineTokenKind;
         if (maybeKeywordTokenKind !== undefined) {
@@ -1049,12 +1056,12 @@ function readRestOfLine(lineTokenKind: LineTokenKind, text: string, positionStar
     return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
 }
 
-function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): Option<number> {
-    const maybeLength: Option<number> = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
+function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
+    const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 
-function maybeKeywordLineTokenKindFrom(data: string): Option<LineTokenKind> {
+function maybeKeywordLineTokenKindFrom(data: string): LineTokenKind | undefined {
     switch (data) {
         case KeywordKind.And:
             return LineTokenKind.KeywordAnd;
@@ -1123,7 +1130,7 @@ function maybeKeywordLineTokenKindFrom(data: string): Option<LineTokenKind> {
     }
 }
 
-function maybeIndexOfStringEnd(text: string, positionStart: number): Option<number> {
+function maybeIndexOfStringEnd(text: string, positionStart: number): number | undefined {
     let indexLow: number = positionStart;
     let positionEnd: number = text.indexOf('"', indexLow);
 
@@ -1151,7 +1158,7 @@ function unexpectedReadError(
     );
 }
 
-function maybeBadLineNumberError(state: State, lineNumber: number): Option<LexError.BadLineNumberError> {
+function maybeBadLineNumberError(state: State, lineNumber: number): LexError.BadLineNumberError | undefined {
     const numLines: number = state.lines.length;
     if (lineNumber >= numLines) {
         return new LexError.BadLineNumberError(
@@ -1173,12 +1180,12 @@ function maybeBadLineNumberError(state: State, lineNumber: number): Option<LexEr
 }
 
 // Validator for Range.
-function maybeBadRangeError(state: State, range: Range): Option<LexError.BadRangeError> {
+function maybeBadRangeError(state: State, range: Range): LexError.BadRangeError | undefined {
     const start: RangePosition = range.start;
     const end: RangePosition = range.end;
     const numLines: number = state.lines.length;
 
-    let maybeKind: Option<LexError.BadRangeKind>;
+    let maybeKind: LexError.BadRangeKind | undefined;
     if (start.lineNumber === end.lineNumber && start.lineCodeUnit > end.lineCodeUnit) {
         maybeKind = LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher;
     } else if (start.lineNumber > end.lineNumber) {

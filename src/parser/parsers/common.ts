@@ -1,5 +1,5 @@
 import { Ast, ParseError } from "..";
-import { CommonError, isNever, Option, Result, ResultUtils } from "../../common";
+import { CommonError, isNever, Result, ResultUtils } from "../../common";
 import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -31,8 +31,11 @@ export function readToken(state: IParserState): string {
 export function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
     IParserStateUtils.startContext(state, Ast.NodeKind.Constant);
 
-    const maybeErr: Option<ParseError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(state, tokenKind);
-    if (maybeErr) {
+    const maybeErr: ParseError.ExpectedTokenKindError | undefined = IParserStateUtils.testIsOnTokenKind(
+        state,
+        tokenKind,
+    );
+    if (maybeErr !== undefined) {
         throw maybeErr;
     }
 
@@ -48,7 +51,7 @@ export function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKin
     return astNode;
 }
 
-export function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Option<Ast.Constant> {
+export function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant | undefined {
     if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);

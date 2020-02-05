@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from ".";
-import { CommonError, Option, Result, ResultUtils } from "./common";
+import { CommonError, Result, ResultUtils } from "./common";
 import { Inspected, TriedInspection } from "./inspection";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import {
@@ -31,7 +31,7 @@ export interface LexParseInspectionOk extends Inspected {
 
 export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot {
     const state: Lexer.State = Lexer.stateFrom(settings, text);
-    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
+    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return ResultUtils.errFactory(
@@ -55,7 +55,7 @@ export function tryInspection(
 ): TriedInspection {
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
-    let maybeParseError: Option<ParseError.ParseError>;
+    let maybeParseError: ParseError.ParseError | undefined;
 
     if (ResultUtils.isErr(triedParse)) {
         if (triedParse.error instanceof CommonError.CommonError) {

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Option } from "../../common";
+import { CommonError, isNever } from "../../common";
 import { TokenKind } from "../../lexer";
 import * as Ast from "./ast";
 
-export function maybeUnaryOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.UnaryOperator> {
+export function maybeUnaryOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperator | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Plus:
             return Ast.UnaryOperator.Positive;
@@ -18,7 +18,7 @@ export function maybeUnaryOperatorFrom(maybeTokenKind: Option<TokenKind>): Optio
     }
 }
 
-export function maybeArithmeticOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.ArithmeticOperator> {
+export function maybeArithmeticOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.ArithmeticOperator | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Asterisk:
             return Ast.ArithmeticOperator.Multiplication;
@@ -35,7 +35,7 @@ export function maybeArithmeticOperatorFrom(maybeTokenKind: Option<TokenKind>): 
     }
 }
 
-export function maybeEqualityOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.EqualityOperator> {
+export function maybeEqualityOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.EqualityOperator | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Equal:
             return Ast.EqualityOperator.EqualTo;
@@ -46,7 +46,7 @@ export function maybeEqualityOperatorFrom(maybeTokenKind: Option<TokenKind>): Op
     }
 }
 
-export function maybeLogicalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.LogicalOperator> {
+export function maybeLogicalOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.LogicalOperator | undefined {
     switch (maybeTokenKind) {
         case TokenKind.KeywordAnd:
             return Ast.LogicalOperator.And;
@@ -57,7 +57,7 @@ export function maybeLogicalOperatorFrom(maybeTokenKind: Option<TokenKind>): Opt
     }
 }
 
-export function maybeRelationalOperatorFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.RelationalOperator> {
+export function maybeRelationalOperatorFrom(maybeTokenKind: TokenKind | undefined): Ast.RelationalOperator | undefined {
     switch (maybeTokenKind) {
         case TokenKind.LessThan:
             return Ast.RelationalOperator.LessThan;
@@ -73,8 +73,8 @@ export function maybeRelationalOperatorFrom(maybeTokenKind: Option<TokenKind>): 
 }
 
 export function maybeBinOpExpressionOperatorFrom(
-    maybeTokenKind: Option<TokenKind>,
-): Option<Ast.TBinOpExpressionOperator> {
+    maybeTokenKind: TokenKind | undefined,
+): Ast.TBinOpExpressionOperator | undefined {
     switch (maybeTokenKind) {
         // ArithmeticOperator
         case TokenKind.Asterisk:
@@ -164,7 +164,7 @@ export function maybeBinOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpre
     }
 }
 
-export function maybeLiteralKindFrom(maybeTokenKind: Option<TokenKind>): Option<Ast.LiteralKind> {
+export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast.LiteralKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.HexLiteral:
         case TokenKind.KeywordHashNan:
@@ -188,7 +188,7 @@ export function maybeLiteralKindFrom(maybeTokenKind: Option<TokenKind>): Option<
 
 export function maybeConstantKindFromIdentifieConstant(
     identifierConstant: Ast.IdentifierConstant,
-): Option<Ast.ConstantKind> {
+): Ast.ConstantKind | undefined {
     switch (identifierConstant) {
         case Ast.IdentifierConstant.Action:
             return Ast.ConstantKind.Action;
@@ -296,8 +296,8 @@ export function isPairedConstant(x: Ast.ConstantKind, y: Ast.ConstantKind): bool
 export function testAnyNodeKind(
     value: Ast.NodeKind,
     allowedNodeKinds: ReadonlyArray<Ast.NodeKind>,
-    details: Option<{}> = undefined,
-): Option<CommonError.InvariantError> {
+    details: {} | undefined = undefined,
+): CommonError.InvariantError | undefined {
     return allowedNodeKinds.indexOf(value) === -1
         ? new CommonError.InvariantError(`NodeKind value is not an allowed NodeKind value`, details)
         : undefined;

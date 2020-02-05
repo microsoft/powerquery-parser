@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, AstUtils, NodeIdMap, ParserContext } from "..";
-import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../../common";
+import { ArrayUtils, CommonError, isNever, TypeUtils } from "../../common";
 import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -201,7 +201,7 @@ function readBinOpExpression(
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator: Option<Ast.TBinOpExpressionOperator> = AstUtils.maybeBinOpExpressionOperatorFrom(
+    let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorFrom(
         state.maybeCurrentTokenKind,
     );
     while (maybeOperator !== undefined) {
@@ -360,7 +360,7 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
 }
 
 function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
-    let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
+    let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
 
     // LL(1)
     switch (state.maybeCurrentTokenKind) {

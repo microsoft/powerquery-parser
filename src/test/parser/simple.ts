@@ -3,17 +3,17 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Option, ResultUtils, Traverse } from "../../common";
+import { ResultUtils, Traverse } from "../../common";
 import { DefaultTemplates } from "../../localization";
 import { Ast } from "../../parser";
 import { DefaultSettings } from "../../settings";
 import { LexParseOk, TriedLexParse, tryLexParse } from "../../tasks";
 
-type AbridgedNode = [Ast.NodeKind, Option<number>];
+type AbridgedNode = [Ast.NodeKind, number | undefined];
 
 interface CollectAbridgeNodeState extends Traverse.IState<AbridgedNode[]> {}
 
-interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
+interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
     readonly nodeKind: Ast.NodeKind;
     readonly nthRequired: number;
     nthCounter: number;
@@ -64,9 +64,9 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
         nthRequired,
     };
 
-    const triedTraverse: Traverse.TriedTraverse<Option<Ast.TNode>> = Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<Ast.TNode | undefined> = Traverse.tryTraverseAst<
         NthNodeOfKindState,
-        Option<Ast.TNode>
+        Ast.TNode | undefined
     >(
         state,
         lexParseOk.nodeIdMapCollection,
@@ -80,7 +80,7 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
     if (!ResultUtils.isOk(triedTraverse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedTraverse): ${triedTraverse.error.message}`);
     }
-    const maybeAstNode: Option<Ast.TNode> = triedTraverse.value;
+    const maybeAstNode: Ast.TNode | undefined = triedTraverse.value;
     if (!(maybeAstNode !== undefined)) {
         throw new Error(`AssertFailed: maybeAstNode !== undefined`);
     }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result, ResultUtils } from "../common";
+import { CommonError, Result, ResultUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { NodeIdMap, ParseError } from "../parser";
 import { InspectionSettings } from "../settings";
@@ -17,7 +17,7 @@ import { Position } from "./position";
 // If all sub-inspections succeed, return the union of all successful traversals.
 
 export interface InspectedCommon {
-    readonly maybeActiveNode: Option<ActiveNode>;
+    readonly maybeActiveNode: ActiveNode | undefined;
 }
 export type Inspected = InspectedCommon & IdentifierInspected & AutocompleteInspected;
 export type TriedInspection = Result<Inspected, CommonError.CommonError>;
@@ -27,9 +27,9 @@ export function tryFrom(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    maybeParseError: Option<ParseError.ParseError>,
+    maybeParseError: ParseError.ParseError | undefined,
 ): TriedInspection {
-    const maybeActiveNode: Option<ActiveNode> = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
         leafNodeIds,

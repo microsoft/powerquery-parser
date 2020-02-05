@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { isNever, Option, StringUtils } from "../common";
+import { isNever, StringUtils } from "../common";
 import { Lexer, LexError, Token, TokenKind } from "../lexer";
 import { ParseError } from "../parser";
 import { TokenWithColumnNumber } from "../parser/error";
@@ -11,7 +11,7 @@ interface ILocalization {
     readonly error_common_invariantError: (
         templates: ILocalizationTemplates,
         reason: string,
-        maybeJsonifyableDetails: Option<any>,
+        maybeJsonifyableDetails: any | undefined,
     ) => string;
     readonly error_common_unknown: (templates: ILocalizationTemplates, message: any) => string;
     readonly error_lex_badLineNumber: (templates: ILocalizationTemplates, kind: LexError.BadLineNumberKind) => string;
@@ -33,16 +33,16 @@ interface ILocalization {
     readonly error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
         expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
-        maybeFoundToken: Option<TokenWithColumnNumber>,
+        maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
     readonly error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,
-        maybeFoundToken: Option<TokenWithColumnNumber>,
+        maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
     readonly error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
         expectedTokenKind: TokenKind,
-        maybeFoundToken: Option<TokenWithColumnNumber>,
+        maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
     readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => string;
     readonly error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) => string;
@@ -185,7 +185,7 @@ export const Localization: ILocalization = {
     error_common_invariantError: (
         templates: ILocalizationTemplates,
         reason: string,
-        maybeJsonifyableDetails: Option<any>,
+        maybeJsonifyableDetails: any | undefined,
     ) => {
         if (maybeJsonifyableDetails !== undefined) {
             return StringUtils.expectFormat(
@@ -306,7 +306,7 @@ export const Localization: ILocalization = {
     error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
         expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
-        maybeFoundToken: Option<TokenWithColumnNumber>,
+        maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
         const localizedExpectedAnyTokenKinds: ReadonlyArray<string> = expectedAnyTokenKinds.map(
             (tokenKind: TokenKind) => localizeTokenKind(tokenKind, templates),
@@ -327,7 +327,7 @@ export const Localization: ILocalization = {
 
     error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,
-        maybeFoundToken: Option<TokenWithColumnNumber>,
+        maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
@@ -342,7 +342,7 @@ export const Localization: ILocalization = {
     error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
         expectedTokenKind: TokenKind,
-        maybeFoundToken: Option<TokenWithColumnNumber>,
+        maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(

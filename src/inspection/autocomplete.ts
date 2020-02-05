@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result } from "../common";
+import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
 import { Ast, NodeIdMap, NodeIdMapUtils, ParseError } from "../parser";
@@ -17,9 +17,9 @@ export type TriedAutocomplete = Result<AutocompleteInspected, CommonError.Common
 
 export function tryFrom(
     settings: InspectionSettings,
-    maybeActiveNode: Option<ActiveNode>,
+    maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseError: Option<ParseError.ParseError>,
+    maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
         return ResultUtils.okFactory({
@@ -29,11 +29,11 @@ export function tryFrom(
     const activeNode: ActiveNode = maybeActiveNode;
 
     const leaf: NodeIdMap.TXorNode = activeNode.ancestry[0];
-    const maybeParseErrorToken: Option<Token> = maybeParseError
+    const maybeParseErrorToken: Token | undefined = maybeParseError
         ? ParseError.maybeTokenFrom(maybeParseError.innerError)
         : undefined;
 
-    let maybePositionName: Option<string>;
+    let maybePositionName: string | undefined;
     if (PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, leaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
             maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
@@ -76,12 +76,12 @@ function traverseAncestors(
     settings: InspectionSettings,
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseErrorToken: Option<Token>,
+    maybeParseErrorToken: Token | undefined,
 ): Result<ReadonlyArray<KeywordKind>, CommonError.CommonError> {
     const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
     const numNodes: number = ancestry.length;
 
-    let maybeInspected: Option<ReadonlyArray<KeywordKind>>;
+    let maybeInspected: ReadonlyArray<KeywordKind> | undefined;
     try {
         for (let index: number = 1; index < numNodes; index += 1) {
             const parent: NodeIdMap.TXorNode = ancestry[index];
@@ -114,7 +114,7 @@ function traverseAncestors(
                             maybeInspected = ExpressionAutocomplete;
                         }
                     } else {
-                        const maybeMappedKeywordKind: Option<KeywordKind> = AutocompleteConstantMap.get(key);
+                        const maybeMappedKeywordKind: KeywordKind | undefined = AutocompleteConstantMap.get(key);
                         if (maybeMappedKeywordKind) {
                             maybeInspected = autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind);
                         }
@@ -137,7 +137,7 @@ function traverseAncestors(
 function handleEdgeCases(
     inspected: ReadonlyArray<KeywordKind>,
     activeNode: ActiveNode,
-    maybeParseErrorToken: Option<Token>,
+    maybeParseErrorToken: Token | undefined,
 ): ReadonlyArray<KeywordKind> {
     // Check if they're typing for the first time at the start of the file,
     // which defaults to searching for an identifier.
@@ -162,7 +162,7 @@ function handleEdgeCases(
 
 function filterRecommendations(
     inspected: ReadonlyArray<KeywordKind>,
-    maybePositionName: Option<string>,
+    maybePositionName: string | undefined,
 ): ReadonlyArray<KeywordKind> {
     if (maybePositionName === undefined) {
         return inspected;
@@ -224,7 +224,7 @@ function updateWithParseErrorToken(
     parseErrorToken: Token,
 ): ReadonlyArray<KeywordKind> {
     const parseErrorTokenData: string = parseErrorToken.data;
-    const maybeAllowedKeywords: Option<ReadonlyArray<KeywordKind>> = PartialConjunctionKeywordAutocompleteMap.get(
+    const maybeAllowedKeywords: ReadonlyArray<KeywordKind> | undefined = PartialConjunctionKeywordAutocompleteMap.get(
         parseErrorTokenData[0].toLocaleLowerCase(),
     );
     if (maybeAllowedKeywords === undefined) {
@@ -261,7 +261,7 @@ function updateUsingConjunctionKeywords(
 // The work around is to stringify the tuple key, even though we lose typing by doing so.
 // Hopefully by having a 'createMapKey' function this will prevent bugs.
 // [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
-function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: Option<number>): string {
+function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | undefined): string {
     return [nodeKind, maybeAttributeIndex].join(",");
 }
 
@@ -269,7 +269,7 @@ function autocompleteKeywordConstant(
     activeNode: ActiveNode,
     child: NodeIdMap.TXorNode,
     keywordKind: KeywordKind,
-): Option<ReadonlyArray<KeywordKind>> {
+): ReadonlyArray<KeywordKind> | undefined {
     if (PositionUtils.isBeforeXorNode(activeNode.position, child, false)) {
         return undefined;
     } else if (child.kind === NodeIdMap.XorNodeKind.Ast) {
@@ -286,9 +286,9 @@ function autocompleteKeywordConstant(
 function autocompleteErrorHandlingExpression(
     position: Position,
     child: NodeIdMap.TXorNode,
-    maybeParseErrorToken: Option<Token>,
-): Option<ReadonlyArray<KeywordKind>> {
-    const maybeChildAttributeIndex: Option<number> = child.node.maybeAttributeIndex;
+    maybeParseErrorToken: Token | undefined,
+): ReadonlyArray<KeywordKind> | undefined {
+    const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
         return [KeywordKind.Try];
     } else if (maybeChildAttributeIndex === 1) {
@@ -338,7 +338,7 @@ function autocompleteListExpression(
     activeNode: ActiveNode,
     child: NodeIdMap.TXorNode,
     ancestorIndex: number,
-): Option<ReadonlyArray<KeywordKind>> {
+): ReadonlyArray<KeywordKind> | undefined {
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
         return undefined;
@@ -386,11 +386,11 @@ function autocompleteSectionMember(
     parent: NodeIdMap.TXorNode,
     child: NodeIdMap.TXorNode,
     ancestorIndex: number,
-): Option<ReadonlyArray<KeywordKind>> {
+): ReadonlyArray<KeywordKind> | undefined {
     // SectionMember.namePairedExpression
     if (child.node.maybeAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
-        const maybeSharedConstant: Option<NodeIdMap.TXorNode> = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeSharedConstant: NodeIdMap.TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             parent.node.id,
             1,
@@ -403,7 +403,7 @@ function autocompleteSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: Option<NodeIdMap.TXorNode> = ActiveNodeUtils.maybePreviousXorNode(
+        const maybeName: NodeIdMap.TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(
             activeNode,
             ancestorIndex,
             2,

@@ -4,7 +4,7 @@
 /* tslint:disable:no-console */
 
 import { Inspection } from ".";
-import { Option, ResultUtils } from "./common";
+import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError } from "./parser";
 import { DefaultSettings } from "./settings";
@@ -50,8 +50,8 @@ function lexText(text: string): void {
     // The lexer state might have an error.
     // To be sure either use the typeguard Lexer.isErrorState,
     // or Lexer.maybeErrorLineMap to get an option containing a map of all lines with errors.
-    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
-    if (maybeErrorLineMap) {
+    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
+    if (maybeErrorLineMap !== undefined) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
 
         for (const [lineNumber, errorLine] of errorLineMap.entries()) {
