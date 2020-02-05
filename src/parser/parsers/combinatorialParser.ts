@@ -200,17 +200,17 @@ function readBinOpExpression(
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorFrom(
+    let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorKindFrom(
         state.maybeCurrentTokenKind,
     );
     while (maybeOperator !== undefined) {
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
-        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind!));
+        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind!, maybeOperator));
 
         switch (operator) {
-            case Ast.ConstantKind.As:
-            case Ast.ConstantKind.Is:
+            case Ast.KeywordConstantKind.As:
+            case Ast.KeywordConstantKind.Is:
                 expressions.push(parser.readNullablePrimitiveType(state, parser));
                 break;
 
@@ -219,7 +219,7 @@ function readBinOpExpression(
                 break;
         }
 
-        maybeOperator = AstUtils.maybeBinOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
+        maybeOperator = AstUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
     }
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
@@ -323,30 +323,30 @@ function readBinOpExpression(
 
 function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
     switch (operator) {
-        case Ast.ConstantKind.Meta:
+        case Ast.KeywordConstantKind.Meta:
             return Ast.NodeKind.MetadataExpression;
 
-        case Ast.ArithmeticOperator.Multiplication:
-        case Ast.ArithmeticOperator.Division:
-        case Ast.ArithmeticOperator.Addition:
-        case Ast.ArithmeticOperator.Subtraction:
-        case Ast.ArithmeticOperator.And:
+        case Ast.ArithmeticOperatorKind.Multiplication:
+        case Ast.ArithmeticOperatorKind.Division:
+        case Ast.ArithmeticOperatorKind.Addition:
+        case Ast.ArithmeticOperatorKind.Subtraction:
+        case Ast.ArithmeticOperatorKind.And:
             return Ast.NodeKind.ArithmeticExpression;
 
-        case Ast.RelationalOperator.GreaterThan:
-        case Ast.RelationalOperator.GreaterThanEqualTo:
-        case Ast.RelationalOperator.LessThan:
-        case Ast.RelationalOperator.LessThanEqualTo:
+        case Ast.RelationalOperatorKind.GreaterThan:
+        case Ast.RelationalOperatorKind.GreaterThanEqualTo:
+        case Ast.RelationalOperatorKind.LessThan:
+        case Ast.RelationalOperatorKind.LessThanEqualTo:
             return Ast.NodeKind.RelationalExpression;
 
-        case Ast.EqualityOperator.EqualTo:
-        case Ast.EqualityOperator.NotEqualTo:
+        case Ast.EqualityOperatorKind.EqualTo:
+        case Ast.EqualityOperatorKind.NotEqualTo:
             return Ast.NodeKind.EqualityExpression;
 
-        case Ast.ConstantKind.As:
+        case Ast.KeywordConstantKind.As:
             return Ast.NodeKind.AsExpression;
 
-        case Ast.ConstantKind.Is:
+        case Ast.KeywordConstantKind.Is:
             return Ast.NodeKind.IsExpression;
 
         case Ast.LogicalOperator.And:
