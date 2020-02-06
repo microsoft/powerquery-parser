@@ -161,21 +161,21 @@ describe("MockDocument validation", () => {
 });
 
 describe("Incremental updates", () => {
-    it("Reparse with no change", () => {
+    it("Re-parse with no change", () => {
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
         const originalLine: string = document.lines[2];
         const count: number = document.applyChangeAndTokenize(originalLine, 2);
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 
-    it("Reparse with simple change", () => {
+    it("Re-parse with simple change", () => {
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
         const modified: string = document.lines[2].replace("source", "source123");
         const count: number = document.applyChangeAndTokenize(modified, 2);
         expect(count).equals(1, "we should not have tokenized more than one line");
     });
 
-    it("Reparse with unterminated string", () => {
+    it("Re-parse with unterminated string", () => {
         const lineNumber: number = 4;
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
         const modified: string = document.lines[lineNumber].replace(`"text",`, `"text`);
@@ -190,7 +190,7 @@ describe("Incremental updates", () => {
         }
     });
 
-    it("Reparse with unterminated block comment", () => {
+    it("Re-parse with unterminated block comment", () => {
         const lineNumber: number = 3;
         const document: MockDocument = new MockDocument(ORIGINAL_QUERY);
         const modified: string = document.lines[lineNumber].replace(`rce),`, `rce), /* my open comment`);

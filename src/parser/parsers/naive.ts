@@ -1305,7 +1305,7 @@ export function readFieldSpecificationList(
 
             const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
 
-            const maybeFieldTypeSpeification: Ast.FieldTypeSpecification | undefined = maybeReadFieldTypeSpecification(
+            const maybeFieldTypeSpecification: Ast.FieldTypeSpecification | undefined = maybeReadFieldTypeSpecification(
                 state,
                 parser,
             );
@@ -1323,7 +1323,7 @@ export function readFieldSpecificationList(
                 isLeaf: false,
                 maybeOptionalConstant,
                 name,
-                maybeFieldTypeSpeification,
+                maybeFieldTypeSpecification,
             };
             IParserStateUtils.endContext(state, field);
 
@@ -2114,8 +2114,8 @@ function genericReadParameterList<T>(
     let continueReadingValues: boolean = !IParserStateUtils.isOnTokenKind(state, TokenKind.RightParenthesis);
     let reachedOptionalParameter: boolean = false;
 
-    const paramaterArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-    IParserStateUtils.startContext(state, paramaterArrayNodeKind);
+    const paramterArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    IParserStateUtils.startContext(state, paramterArrayNodeKind);
 
     const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
     while (continueReadingValues) {
@@ -2177,7 +2177,7 @@ function genericReadParameterList<T>(
 
     const parameterArray: Ast.ICsvArray<Ast.IParameter<T & Ast.TParameterType>> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
-        kind: paramaterArrayNodeKind,
+        kind: paramterArrayNodeKind,
         elements: parameters,
         isLeaf: false,
     };

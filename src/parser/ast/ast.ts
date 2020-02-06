@@ -716,7 +716,7 @@ export interface FieldSpecification extends INode {
     readonly isLeaf: false;
     readonly maybeOptionalConstant: Constant | undefined;
     readonly name: GeneralizedIdentifier;
-    readonly maybeFieldTypeSpeification: FieldTypeSpecification | undefined;
+    readonly maybeFieldTypeSpecification: FieldTypeSpecification | undefined;
 }
 export interface FieldSpecificationList
     extends IWrapped<NodeKind.FieldSpecificationList, ICsvArray<FieldSpecification>> {

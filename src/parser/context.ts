@@ -11,14 +11,14 @@ import { NodeIdMapUtils, TXorNode } from "./nodeIdMap";
 //
 // Take the scenario where a user is in the process of adding another element to a ListExpression.
 // Once a comma is typed the parser would error out as it also expects the yet untyped element.
-// Under the one giant evaluation model there was no way to propegate what was parsed up to that point.
+// Under the one giant evaluation model there was no way to propagate what was parsed up to that point.
 //
 // Context is used as a workbook for Ast.TNodes that have started evaluation but haven't yet finished.
 // It starts out empty, with no children belonging to it.
-// Most (all non-leaf) Ast.TNode's require several sub-Ast.TNodes to be evalauted as well.
+// Most (all non-leaf) Ast.TNode's require several sub-Ast.TNodes to be evaluated as well.
 // For each sub-Ast.TNode that begins evaluation another Context is created and linked as a child of the original.
 // This means if a Ast.TNode has N attributes of type Ast.TNode, then the Ast.TNode is fully evaluated there should be N
-// child contexts created belonging under the orignal Context.
+// child contexts created belonging under the original Context.
 // Once the Ast.TNode evaluation is complete the result is saved on the Context under its maybeAstNode attribute.
 //
 // Back to the scenario listed above, where the user has entered `{1,}`, you could examine the context state to find:
@@ -90,7 +90,7 @@ export function startContext(
 
     const nodeId: number = nextId(state);
 
-    // If a parent context Node exists, update the parent/child mapping attributes and attrbiuteCounter.
+    // If a parent context Node exists, update the parent/child mapping attributes and attributeCounter.
     if (maybeParentNode) {
         const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
         const parentNode: Node = maybeParentNode;

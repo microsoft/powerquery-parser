@@ -514,10 +514,10 @@ export function leftMostXorNode(nodeIdMapCollection: Collection, rootId: number)
 }
 
 export function isTUnaryType(xorNode: TXorNode): boolean {
-    return xorNode.node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpresion(xorNode);
+    return xorNode.node.kind === Ast.NodeKind.UnaryExpression || isTTypeExpression(xorNode);
 }
 
-export function isTTypeExpresion(xorNode: TXorNode): boolean {
+export function isTTypeExpression(xorNode: TXorNode): boolean {
     return xorNode.node.kind === Ast.NodeKind.TypePrimaryType || isTPrimaryExpression(xorNode);
 }
 
