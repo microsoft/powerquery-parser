@@ -186,10 +186,7 @@ export function maybeExpandXorParent<T>(
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<TXorNode> {
-    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(
-        nodeIdMapCollection,
-        xorNode.node.id,
-    );
+    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(nodeIdMapCollection, xorNode.node.id);
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 
