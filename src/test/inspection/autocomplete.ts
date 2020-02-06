@@ -22,7 +22,7 @@ function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected:
     expect(actual).deep.equal(expected);
 }
 
-describe(`qweasdzxc Inspection`, () => {
+describe(`Inspection`, () => {
     describe(`Autocomplete`, () => {
         describe("partial keyword", () => {
             it("a|", () => {
