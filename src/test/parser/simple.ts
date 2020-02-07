@@ -502,7 +502,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Csv, 0],
                 [Ast.NodeKind.FieldSpecification, 0],
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
@@ -1311,7 +1311,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Csv, 0],
                 [Ast.NodeKind.FieldSpecification, 0],
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.Constant, 2],
             ];

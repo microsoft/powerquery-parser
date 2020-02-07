@@ -420,6 +420,14 @@ describe(`Inspection`, () => {
                 const expected: AbridgedScope = ["x"];
                 expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
             });
+
+            it(`section foo; x = 1; y = () => 10|`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                    `section foo; x = 1; y = () => 10|`,
+                );
+                const expected: AbridgedScope = ["x"];
+                expectAbridgedInspectionEqual(expectParseErrInspection(text, position), expected);
+            });
         });
 
         describe(`${Ast.NodeKind.LetExpression} (Ast)`, () => {

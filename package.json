@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.1.32",
+    "version": "0.1.36",
     "description": "A parser for the Power Query/M formula language.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
