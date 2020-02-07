@@ -8,17 +8,10 @@ import { ResultUtils } from "../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
 import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../parser";
 import { DefaultSettings } from "../settings";
+import { LexParseOk, TriedLexParse, tryLexParse } from "../tasks";
 
-export function expectInspectionEqual<T>(
-    triedInspection: Inspection.TriedInspection,
-    expected: T,
-    acutalFactoryFn: (inspected: Inspection.Inspected) => T,
-): void {
-    if (!ResultUtils.isOk(triedInspection)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
-    }
-    const actual: T = acutalFactoryFn(triedInspection.value);
-
+export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
+    const actual: Y = actualFactoryFn(partial);
     expect(actual).deep.equal(expected);
 }
 
@@ -51,6 +44,14 @@ export function expectParseErrInspection(text: string, position: Inspection.Posi
         parseError.context.leafNodeIds,
         parseError,
     );
+}
+
+export function expectLexParseOk(text: string): LexParseOk {
+    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
+    if (!ResultUtils.isOk(triedLexParse)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
+    }
+    return triedLexParse.value;
 }
 
 export function expectParseErr(text: string): ParseError.ParseError {

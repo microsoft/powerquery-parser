@@ -3,11 +3,11 @@
 
 import "mocha";
 import { Inspection } from "../../..";
-import { isNever } from "../../../common";
+import { isNever, ResultUtils } from "../../../common";
 import { Token } from "../../../lexer";
 import { Ast, TXorNode, XorNodeKind } from "../../../parser";
 import {
-    expectInspectionEqual,
+    expectDeepEqual,
     expectParseErrInspection,
     expectParseOkInspection,
     expectTextWithPosition,
@@ -19,7 +19,12 @@ interface AbridgedTravelPathNode {
     readonly maybePositionStartCodeUnit: number | undefined;
 }
 
-function actualFactoryFn(inspected: Inspection.Inspected): ReadonlyArray<AbridgedTravelPathNode> {
+function actualFactoryFn(triedInspection: Inspection.TriedInspection): ReadonlyArray<AbridgedTravelPathNode> {
+    if (!ResultUtils.isOk(triedInspection)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
+    }
+    const inspected: Inspection.Inspected = triedInspection.value;
+
     if (inspected.maybeActiveNode === undefined) {
         return [];
     }
@@ -55,7 +60,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
         it(`|[foo = bar]`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar]`);
             const expected: ReadonlyArray<AbridgedTravelPathNode> = [];
-            expectInspectionEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
         });
 
         it(`[foo| = bar]`, () => {
@@ -87,7 +92,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectInspectionEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
         });
 
         it(`[foo = bar|]`, () => {
@@ -124,7 +129,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectInspectionEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
         });
     });
 
@@ -132,7 +137,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
         it(`|[foo = bar`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar`);
             const expected: ReadonlyArray<AbridgedTravelPathNode> = [];
-            expectInspectionEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
         });
 
         it(`[foo| = bar`, () => {
@@ -169,7 +174,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectInspectionEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
         });
 
         it(`[foo = bar|`, () => {
@@ -211,7 +216,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectInspectionEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
         });
     });
 });

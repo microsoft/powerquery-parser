@@ -6,8 +6,8 @@ import "mocha";
 import { ResultUtils, Traverse } from "../../common";
 import { DefaultTemplates } from "../../localization";
 import { Ast } from "../../parser";
-import { DefaultSettings } from "../../settings";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../../tasks";
+import { LexParseOk } from "../../tasks";
+import { expectLexParseOk } from "../common";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 
@@ -17,14 +17,6 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
     readonly nodeKind: Ast.NodeKind;
     readonly nthRequired: number;
     nthCounter: number;
-}
-
-function expectLexParseOk(text: string): LexParseOk {
-    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
-    if (!ResultUtils.isOk(triedLexParse)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
-    }
-    return triedLexParse.value;
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
