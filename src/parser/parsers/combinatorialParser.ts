@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Naive } from ".";
-import { Ast, AstUtils, NodeIdMap, ParserContext } from "..";
+import { Ast, AstUtils, NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, CommonError, isNever, TypeUtils } from "../../common";
 import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
@@ -245,7 +245,7 @@ function readBinOpExpression(
             }
         }
 
-        const newBinOpExpressionId: number = ParserContext.nextId(state.contextState);
+        const newBinOpExpressionId: number = ParseContextUtils.nextId(state.contextState);
         const left: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParseError, ParserContext } from "..";
+import { Ast, NodeIdMap, ParseError, ParseContext, ParseContextUtils } from "..";
 import { CommonError } from "../../common";
 import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
 import { ParseSettings } from "../../settings";
@@ -27,7 +27,7 @@ export function newState(settings: ParseSettings, lexerSnapshot: LexerSnapshot):
         tokenIndex: 0,
         maybeCurrentToken,
         maybeCurrentTokenKind: maybeCurrentToken !== undefined ? maybeCurrentToken.kind : undefined,
-        contextState: ParserContext.newState(),
+        contextState: ParseContextUtils.newState(),
         maybeCurrentContextNode: undefined,
     };
 }
@@ -61,7 +61,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
     state.maybeCurrentTokenKind = state.maybeCurrentToken !== undefined ? state.maybeCurrentToken.kind : undefined;
 
-    const contextState: ParserContext.State = state.contextState;
+    const contextState: ParseContext.State = state.contextState;
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     const backupIdCounter: number = backup.contextStateIdCounter;
     contextState.idCounter = backupIdCounter;
@@ -82,10 +82,10 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     for (const nodeId of newAstNodeIds.sort().reverse()) {
         const maybeParent: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
         const parentWillBeDeleted: boolean = maybeParent !== undefined && maybeParent >= backupIdCounter;
-        ParserContext.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
+        ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
     for (const nodeId of newContextNodeIds.sort().reverse()) {
-        ParserContext.deleteContext(state.contextState, nodeId);
+        ParseContextUtils.deleteContext(state.contextState, nodeId);
     }
 
     if (backup.maybeContextNodeId) {
@@ -99,7 +99,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
 }
 
 export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void {
-    const newContextNode: ParserContext.Node = ParserContext.startContext(
+    const newContextNode: ParseContext.Node = ParseContextUtils.startContext(
         state.contextState,
         nodeKind,
         state.tokenIndex,
@@ -116,7 +116,7 @@ export function endContext(state: IParserState, astNode: Ast.TNode): void {
         );
     }
 
-    const maybeParentOfContextNode: ParserContext.Node | undefined = ParserContext.endContext(
+    const maybeParentOfContextNode: ParseContext.Node | undefined = ParseContextUtils.endContext(
         state.contextState,
         state.maybeCurrentContextNode,
         astNode,
@@ -132,21 +132,21 @@ export function deleteContext(state: IParserState, maybeNodeId: number | undefin
                 "maybeContextNode should be truthy, can't delete a context if it doesn't exist.",
             );
         } else {
-            const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+            const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
             nodeId = currentContextNode.id;
         }
     } else {
         nodeId = maybeNodeId;
     }
 
-    state.maybeCurrentContextNode = ParserContext.deleteContext(state.contextState, nodeId);
+    state.maybeCurrentContextNode = ParseContextUtils.deleteContext(state.contextState, nodeId);
 }
 
 export function incrementAttributeCounter(state: IParserState): void {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
     }
-    const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
     currentContextNode.attributeCounter += 1;
 }
 
@@ -263,7 +263,7 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
     }
-    const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
     const maybeTokenStart: Token | undefined = currentContextNode.maybeTokenStart;
     if (maybeTokenStart === undefined) {
@@ -286,7 +286,7 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
         positionEnd: tokenEnd.positionEnd,
     };
 
-    const contextNode: ParserContext.Node = state.maybeCurrentContextNode;
+    const contextNode: ParseContext.Node = state.maybeCurrentContextNode;
     return {
         id: contextNode.id,
         maybeAttributeIndex: currentContextNode.maybeAttributeIndex,

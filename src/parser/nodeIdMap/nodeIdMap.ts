@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext } from "..";
+import { Ast, ParseContext } from "..";
 
 export type AstNodeById = NumberMap<Ast.TNode>;
 
-export type ContextNodeById = NumberMap<ParserContext.Node>;
+export type ContextNodeById = NumberMap<ParseContext.Node>;
 
 export type ParentIdById = NumberMap<number>;
 

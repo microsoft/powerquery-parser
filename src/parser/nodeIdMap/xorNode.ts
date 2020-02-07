@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext } from "..";
+import { Ast, ParseContext } from "..";
 
 export const enum XorNodeKind {
     Ast = "Ast",
     Context = "Context",
 }
 
-export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParserContext.Node>;
+export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParseContext.Node>;
 
 export interface IXorNode<Kind, T> {
     readonly kind: Kind & XorNodeKind;

@@ -3,7 +3,7 @@
 
 import { isNever } from "../../common";
 import { Token, TokenPosition } from "../../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position } from "./position";
 
 export function isBeforeXorNode(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {
@@ -94,7 +94,7 @@ export function isAfterXorNode(
 
 export function isBeforeContextNode(
     position: Position,
-    contextNode: ParserContext.Node,
+    contextNode: ParseContext.Node,
     isBoundIncluded: boolean,
 ): boolean {
     const maybeTokenStart: Token | undefined = contextNode.maybeTokenStart;
@@ -109,7 +109,7 @@ export function isBeforeContextNode(
 export function isInContextNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    contextNode: ParserContext.Node,
+    contextNode: ParseContext.Node,
     isLowerBoundIncluded: boolean,
     isHigherBoundIncluded: boolean,
 ): boolean {
@@ -119,7 +119,7 @@ export function isInContextNode(
     );
 }
 
-export function isOnContextNodeStart(position: Position, contextNode: ParserContext.Node): boolean {
+export function isOnContextNodeStart(position: Position, contextNode: ParseContext.Node): boolean {
     return contextNode.maybeTokenStart !== undefined
         ? isOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
         : false;
@@ -127,7 +127,7 @@ export function isOnContextNodeStart(position: Position, contextNode: ParserCont
 
 export function isOnContextNodeEnd(
     position: Position,
-    contextNode: ParserContext.Node,
+    contextNode: ParseContext.Node,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): boolean {
     const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
@@ -141,7 +141,7 @@ export function isOnContextNodeEnd(
 export function isAfterContextNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    contextNode: ParserContext.Node,
+    contextNode: ParseContext.Node,
     isBoundIncluded: boolean,
 ): boolean {
     const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
