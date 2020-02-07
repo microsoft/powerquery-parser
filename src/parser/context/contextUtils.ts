@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParserContext } from ".";
-import { CommonError, TypeUtils } from "../common";
-import { Token } from "../lexer";
-import { NodeIdMapUtils, TXorNode } from "./nodeIdMap";
+import { Ast, NodeIdMap, ParseContext } from "../";
+import { CommonError, TypeUtils } from "../../common";
+import { Token } from "../../lexer";
+import { NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 
 // Parsing use to be one giant evaluation, leading to an all-or-nothing outcome which was unsuitable for a
 // document that was being live edited.
@@ -333,9 +333,8 @@ function removeOrReplaceChildId(
         childIdsById.delete(parentId);
     }
 
-    const maybeParent: ParserContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(parentId) || undefined;
-    if (maybeParent !== undefined) {
-        const parent: ParserContext.Node = maybeParent;
-        parent.attributeCounter = maybeNewChildIds !== undefined ? maybeNewChildIds.length : 0;
+    const maybeParent: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(parentId) || undefined;
+    if (maybeParent !== undefined && maybeReplacementId === undefined) {
+        maybeParent.attributeCounter -= 1;
     }
 }
