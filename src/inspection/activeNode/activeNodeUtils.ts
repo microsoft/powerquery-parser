@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "../../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParserContext, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
@@ -31,7 +31,7 @@ export function maybeActiveNode(
     leafNodeIds: ReadonlyArray<number>,
 ): ActiveNode | undefined {
     const astSearch: AstNodeSearch = positionAstSearch(position, nodeIdMapCollection, leafNodeIds);
-    const maybeContextSearch: ParserContext.Node | undefined = positionContextSearch(astSearch, nodeIdMapCollection);
+    const maybeContextSearch: ParseContext.Node | undefined = positionContextSearch(astSearch, nodeIdMapCollection);
 
     let maybeLeaf: TXorNode | undefined;
     if (astSearch.maybeShiftedNode !== undefined) {
@@ -311,13 +311,13 @@ function positionAstSearch(
 function positionContextSearch(
     astNodeSearch: AstNodeSearch,
     nodeIdMapCollection: NodeIdMap.Collection,
-): ParserContext.Node | undefined {
+): ParseContext.Node | undefined {
     if (astNodeSearch.maybeNode === undefined) {
         return undefined;
     }
     const tokenIndexLowBound: number = astNodeSearch.maybeNode.tokenRange.tokenIndexStart;
 
-    let maybeCurrent: ParserContext.Node | undefined = undefined;
+    let maybeCurrent: ParseContext.Node | undefined = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.maybeTokenStart) {
             if (candidate.tokenIndexStart < tokenIndexLowBound) {

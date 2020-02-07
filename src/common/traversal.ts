@@ -3,7 +3,7 @@
 
 import { CommonError, isNever, Result } from ".";
 import { ILocalizationTemplates } from "../localization";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext, TXorNode, XorNodeKind } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
 import { ResultUtils } from "./result";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
@@ -135,7 +135,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
-            const contextNode: ParserContext.Node = xorNode.node;
+            const contextNode: ParseContext.Node = xorNode.node;
             const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
                 contextNode.id,
             );
@@ -153,11 +153,11 @@ export function expectExpandAllXorChildren<State, ResultType>(
                         continue;
                     }
 
-                    const maybeContextChild: ParserContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(
+                    const maybeContextChild: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(
                         childId,
                     );
                     if (maybeContextChild) {
-                        const contextChild: ParserContext.Node = maybeContextChild;
+                        const contextChild: ParseContext.Node = maybeContextChild;
                         result.push({
                             kind: XorNodeKind.Context,
                             node: contextChild,

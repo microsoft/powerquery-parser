@@ -12,7 +12,7 @@ import {
     NodeIdMap,
     ParseError,
     ParseOk,
-    ParserContext,
+    ParseContext,
     TriedParse,
 } from "./parser";
 import { InspectionSettings, LexSettings, ParseSettings, Settings } from "./settings";
@@ -68,7 +68,7 @@ export function tryInspection(
             maybeParseError = triedParse.error;
         }
 
-        const context: ParserContext.State = triedParse.error.context;
+        const context: ParseContext.State = triedParse.error.context;
         leafNodeIds = context.leafNodeIds;
         nodeIdMapCollection = context.nodeIdMapCollection;
     } else {

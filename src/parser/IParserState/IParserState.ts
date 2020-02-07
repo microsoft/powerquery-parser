@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParserContext } from "..";
+import { ParseContext } from "..";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { ILocalizationTemplates } from "../../localization";
 
@@ -11,6 +11,6 @@ export interface IParserState {
     tokenIndex: number;
     maybeCurrentToken: Token | undefined;
     maybeCurrentTokenKind: TokenKind | undefined;
-    contextState: ParserContext.State;
-    maybeCurrentContextNode: ParserContext.Node | undefined;
+    contextState: ParseContext.State;
+    maybeCurrentContextNode: ParseContext.Node | undefined;
 }
