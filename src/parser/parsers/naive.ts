@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, AstUtils, NodeIdMap, ParseError, ParserContext } from "..";
+import { Ast, AstUtils, NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { CommonError, isNever, Result, ResultUtils, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
@@ -143,11 +143,11 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
         const expressionErrorStateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
-        const expressionErrorContextState: ParserContext.State = state.contextState;
+        const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
         state.tokenIndex = 0;
-        state.contextState = ParserContext.newState();
+        state.contextState = ParseContextUtils.newState();
         state.maybeCurrentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {
@@ -196,7 +196,7 @@ export function readDocument(state: IParserState, parser: IParser<IParserState>)
         );
     }
 
-    const contextState: ParserContext.State = state.contextState;
+    const contextState: ParseContext.State = state.contextState;
     return ResultUtils.okFactory({
         ast: document,
         nodeIdMapCollection: contextState.nodeIdMapCollection,
@@ -639,7 +639,7 @@ export function readRecursivePrimaryExpression(
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
     }
-    const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
     const maybeHeadParentId: number | undefined = nodeIdMapCollection.parentIdById.get(head.id);
     if (maybeHeadParentId !== undefined) {
@@ -674,7 +674,7 @@ export function readRecursivePrimaryExpression(
 
     // Update start positions for recursive primary expression context
     const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    const mutableContext: TypeUtils.StripReadonly<ParserContext.Node> = currentContextNode;
+    const mutableContext: TypeUtils.StripReadonly<ParseContext.Node> = currentContextNode;
     // UNSAFE MARKER
     //
     // Purpose of code block:
