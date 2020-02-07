@@ -3,11 +3,24 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../..";
-import { ResultUtils } from "../../common";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../../parser";
-import { DefaultSettings } from "../../settings";
+import { Inspection } from "..";
+import { ResultUtils } from "../common";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
+import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../parser";
+import { DefaultSettings } from "../settings";
+
+export function expectInspectionEqual<T>(
+    triedInspection: Inspection.TriedInspection,
+    expected: T,
+    acutalFactoryFn: (inspected: Inspection.Inspected) => T,
+): void {
+    if (!ResultUtils.isOk(triedInspection)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
+    }
+    const actual: T = acutalFactoryFn(triedInspection.value);
+
+    expect(actual).deep.equal(expected);
+}
 
 // Only works with single line expressions
 export function expectTextWithPosition(text: string): [string, Inspection.Position] {
