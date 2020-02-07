@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap } from ".";
+import { Ast, NodeIdMap, ParserContext } from ".";
 import { CommonError, TypeUtils } from "../common";
 import { Token } from "../lexer";
 import { NodeIdMapUtils, TXorNode } from "./nodeIdMap";
@@ -331,5 +331,11 @@ function removeOrReplaceChildId(
         childIdsById.set(parentId, newChildIds);
     } else {
         childIdsById.delete(parentId);
+    }
+
+    const maybeParent: ParserContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(parentId) || undefined;
+    if (maybeParent !== undefined) {
+        const parent: ParserContext.Node = maybeParent;
+        parent.attributeCounter = maybeNewChildIds !== undefined ? maybeNewChildIds.length : 0;
     }
 }
