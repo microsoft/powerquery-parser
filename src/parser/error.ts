@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParserContext } from ".";
+import { ParseContext } from ".";
 import { CommonError, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
 import { ILocalizationTemplates, Localization } from "../localization";
@@ -30,7 +30,7 @@ export const enum UnterminatedKind {
 }
 
 export class ParseError extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly context: ParserContext.State) {
+    constructor(readonly innerError: TInnerParseError, readonly context: ParseContext.State) {
         super(innerError.message);
     }
 }

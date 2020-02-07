@@ -4,8 +4,8 @@
 import { Ast, NodeIdMap } from "..";
 import { CommonError, TypeUtils } from "../../common";
 import { Token } from "../../lexer";
-import { Node, State } from "../context";
 import { NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+import { Node, State } from "./context";
 
 export function newState(): State {
     return {

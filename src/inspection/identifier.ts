@@ -3,7 +3,7 @@
 
 import { InspectionUtils } from ".";
 import { CommonError, isNever, Result, ResultKind } from "../common";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParserContext, TXorNode, XorNodeKind } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
 import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -557,7 +557,7 @@ function addAstToScopeIfNew(state: IdentifierState, key: string, astNode: Ast.TN
     });
 }
 
-function addContextToScopeIfNew(state: IdentifierState, key: string, contextNode: ParserContext.Node): void {
+function addContextToScopeIfNew(state: IdentifierState, key: string, contextNode: ParseContext.Node): void {
     addToScopeIfNew(state, key, {
         kind: XorNodeKind.Context,
         node: contextNode,

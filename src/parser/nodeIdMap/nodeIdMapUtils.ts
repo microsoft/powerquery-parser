@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext } from "..";
+import { Ast, ParseContext } from "..";
 import { CommonError, isNever } from "../../common";
 import { TokenRange } from "../../lexer";
 import { AstNodeById, ChildIdsById, Collection, ContextNodeById } from "./nodeIdMap";
@@ -14,7 +14,7 @@ export function xorNodeFromAst(node: Ast.TNode): TXorNode {
     };
 }
 
-export function xorNodeFromContext(node: ParserContext.Node): TXorNode {
+export function xorNodeFromContext(node: ParseContext.Node): TXorNode {
     return {
         kind: XorNodeKind.Context,
         node,
@@ -31,9 +31,9 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): T
         };
     }
 
-    const maybeContextNode: ParserContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
+    const maybeContextNode: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(nodeId);
     if (maybeContextNode) {
-        const contextNode: ParserContext.Node = maybeContextNode;
+        const contextNode: ParseContext.Node = maybeContextNode;
         return {
             kind: XorNodeKind.Context,
             node: contextNode,
@@ -81,7 +81,7 @@ export function maybeParentXorNode(
         return xorNodeFromAst(maybeAstNode);
     }
 
-    const maybeContextNode: ParserContext.Node | undefined = maybeParentContextNode(
+    const maybeContextNode: ParseContext.Node | undefined = maybeParentContextNode(
         nodeIdMapCollection,
         childId,
         maybeAllowedNodeKinds,
@@ -120,17 +120,17 @@ export function maybeParentContextNode(
     nodeIdMapCollection: Collection,
     childId: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): ParserContext.Node | undefined {
+): ParseContext.Node | undefined {
     const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(childId);
     if (maybeParentId === undefined) {
         return undefined;
     }
-    const maybeParent: ParserContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(maybeParentId);
+    const maybeParent: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(maybeParentId);
 
     if (maybeParent === undefined) {
         return undefined;
     }
-    const parent: ParserContext.Node = maybeParent;
+    const parent: ParseContext.Node = maybeParent;
 
     if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(parent.kind) === -1) {
         return undefined;
@@ -221,7 +221,7 @@ export function maybeContextChildByAttributeIndex(
     parentId: number,
     attributeIndex: number,
     maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
-): ParserContext.Node | undefined {
+): ParseContext.Node | undefined {
     const maybeNode: TXorNode | undefined = maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         parentId,
@@ -288,8 +288,8 @@ export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNo
     return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
 }
 
-export function expectContextNode(contextNodeById: ContextNodeById, nodeId: number): ParserContext.Node {
-    return expectInMap<ParserContext.Node>(contextNodeById, nodeId, "contextNodeById");
+export function expectContextNode(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
+    return expectInMap<ParseContext.Node>(contextNodeById, nodeId, "contextNodeById");
 }
 
 export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
@@ -375,8 +375,8 @@ export function expectContextChildByAttributeIndex(
     parentId: number,
     attributeIndex: number,
     maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
-): ParserContext.Node {
-    const maybeNode: ParserContext.Node | undefined = maybeContextChildByAttributeIndex(
+): ParseContext.Node {
+    const maybeNode: ParseContext.Node | undefined = maybeContextChildByAttributeIndex(
         nodeIdMapCollection,
         parentId,
         attributeIndex,
@@ -566,7 +566,7 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
         }
 
         case XorNodeKind.Context: {
-            const contextNode: ParserContext.Node = xorNode.node;
+            const contextNode: ParseContext.Node = xorNode.node;
             let tokenIndexEnd: number;
 
             const maybeRightMostChild: Ast.TNode | undefined = maybeRightMostLeaf(nodeIdMapCollection, xorNode.node.id);
