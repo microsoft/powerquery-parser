@@ -87,25 +87,31 @@ export function maybeNewlineKindAt(text: string, index: number): NewlineKind | u
 // A quick and dirty way to do string formatting.
 // Continually replaces '{}' until no more exist or you run out of args.
 // Does not handle any escaping.
-export function expectFormat(template: string, ...args: any[]): string {
-    const details: {} = {
-        template,
-        args: [...args],
-    };
+export function expectFormat(template: string, args: Map<string, string>): string {
+    throw new Error();
 
-    let result: string = template;
-    while (args.length) {
-        if (result.indexOf("{}") === -1) {
-            throw new CommonError.InvariantError("not enough arguments were given during formatting.", details);
-        }
+    // const details: {} = {
+    //     template,
+    //     args: [...args],
+    // };
 
-        const arg: any = args.pop();
-        result = result.replace("{}", arg);
-    }
+    // let result: string = template;
+    // while (args.length) {
+    //     if (result.indexOf("{}") === -1) {
+    //         throw new CommonError.InvariantError("not enough arguments were given during formatting.", details);
+    //     }
 
-    if (args.length) {
-        throw new CommonError.InvariantError("too many arguments were given during formatting.", details);
-    }
+    //     const arg: any = args.pop();
+    //     result = result.replace("{}", arg);
+    // }
 
-    return result;
+    // if (args.length) {
+    //     throw new CommonError.InvariantError("too many arguments were given during formatting.", details);
+    // }
+
+    // return result;
+}
+
+interface FormatOption {
+    [key: string]: string;
 }

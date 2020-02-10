@@ -160,5 +160,6 @@
     "tokenKind_rightParenthesis": "right parenthesis <')'>",
     "_tokenKind_rightParenthesis.comment": "{Locked=\"<')'>\"}",
     "tokenKind_semicolon": "semicolon <';'>",
-    "_tokenKind_semicolon.comment": "{Locked=\"<';'>\"}"
+    "_tokenKind_semicolon.comment": "{Locked=\"<';'>\"}",
+    "tokenKind_stringLiteral": "string"
 }
