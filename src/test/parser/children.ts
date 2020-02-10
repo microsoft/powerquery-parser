@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../common";
 import { Ast, NodeIdMap } from "../../parser";
-import { DefaultSettings } from "../../settings";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../../tasks";
+import { LexParseOk } from "../../tasks";
+import { expectDeepEqual, expectLexParseOk } from "../common";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;
@@ -14,18 +12,10 @@ interface ChildIdsByIdEntry {
     readonly kind: Ast.NodeKind;
 }
 
-function expectLexParseOk(text: string): LexParseOk {
-    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
-    if (!ResultUtils.isOk(triedLexParse)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
-    }
-    return triedLexParse.value;
-}
-
-function expectChildrenEqual(text: string, expected: ReadonlyArray<ChildIdsByIdEntry>): void {
+function acutalFactoryFn(lexParseOk: LexParseOk): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
-    const lexParseOk: LexParseOk = expectLexParseOk(text);
     const astNodeById: NodeIdMap.AstNodeById = lexParseOk.nodeIdMapCollection.astNodeById;
+
     for (const [key, value] of lexParseOk.nodeIdMapCollection.childIdsById.entries()) {
         actual.push({
             childNodeIds: value,
@@ -33,7 +23,8 @@ function expectChildrenEqual(text: string, expected: ReadonlyArray<ChildIdsByIdE
             kind: astNodeById.get(key)!.kind,
         });
     }
-    expect(actual).deep.equal(expected, JSON.stringify(actual));
+
+    return actual;
 }
 
 describe("Parser.Children", () => {
@@ -61,6 +52,6 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.PrimitiveType,
             },
         ];
-        expectChildrenEqual(text, expected);
+        expectDeepEqual(expectLexParseOk(text), expected, acutalFactoryFn);
     });
 });

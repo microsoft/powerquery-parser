@@ -9,11 +9,11 @@ import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export interface AutocompleteInspected {
+export interface InspectedAutocomplete {
     readonly autocompleteKeywords: ReadonlyArray<KeywordKind>;
 }
 
-export type TriedAutocomplete = Result<AutocompleteInspected, CommonError.CommonError>;
+export type TriedAutocomplete = Result<InspectedAutocomplete, CommonError.CommonError>;
 
 export function tryFrom(
     settings: InspectionSettings,

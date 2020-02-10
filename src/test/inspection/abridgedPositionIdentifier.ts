@@ -8,7 +8,7 @@ import { isNever, ResultUtils } from "../../common";
 import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection";
 import { Token, TokenPosition } from "../../lexer";
 import { TXorNode, XorNodeKind } from "../../parser";
-import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
+import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../common";
 
 type TAbridgedPositionIdentifier = AbridgedLocalIdentifier | AbridgedUndefinedIdentifier;
 

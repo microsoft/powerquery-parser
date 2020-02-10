@@ -3,36 +3,12 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../common";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, ParseError, Parser, TriedParse } from "../../parser";
+import { ParseError } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
-import { DefaultSettings } from "../../settings";
+import { expectParseErr } from "../common";
 
 function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const lexerState: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
-
-    if (!ResultUtils.isOk(triedSnapshot)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedSnapshot)`);
-    }
-    const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
-
-    const parserState: IParserState = IParserStateUtils.newState(DefaultSettings, lexerSnapshot);
-    const triedParse: TriedParse = Parser.CombinatorialParser.readDocument(parserState, Parser.CombinatorialParser);
-
-    if (!ResultUtils.isErr(triedParse)) {
-        throw new Error(`AssertFailed: ResultUtils.isErr(triedParse)`);
-    }
-    const error: ParseError.TParseError = triedParse.error;
-
-    if (!(error instanceof ParseError.ParseError)) {
-        const details: {} = {
-            error2json: JSON.stringify(error, undefined, 4),
-            message: error.message,
-        };
-        throw new Error(`AssertFailed: error instanceof ParseError.ParseError - ${details}`);
-    }
+    const error: ParseError.ParseError = expectParseErr(text);
     const innerError: ParseError.TInnerParseError = error.innerError;
 
     if (!(innerError instanceof ParseError.ExpectedTokenKindError)) {

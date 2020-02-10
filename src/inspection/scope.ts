@@ -10,7 +10,7 @@ import { Position, PositionUtils } from "./position";
 import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
-export interface IdentifierInspected {
+export interface InspectedScope {
     // The scope of a given position.
     //  '[x = 1, y = 2|, z = 3]'-> returns a scope of [['x', XorNode for 1], ['z', XorNode for 3]]
     scope: ReadonlyMap<string, TXorNode>;
@@ -39,7 +39,7 @@ export function tryFrom(
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Result<IdentifierInspected, CommonError.CommonError> {
+): Result<InspectedScope, CommonError.CommonError> {
     if (maybeActiveNode === undefined) {
         return {
             kind: ResultKind.Ok,
@@ -93,7 +93,7 @@ export function tryFrom(
 
 interface IdentifierState {
     nodeIndex: number;
-    readonly result: IdentifierInspected;
+    readonly result: InspectedScope;
     readonly activeNode: ActiveNode;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -142,7 +142,7 @@ function inspectNode(state: IdentifierState, xorNode: TXorNode): void {
     }
 }
 
-const DefaultIdentifierInspection: IdentifierInspected = {
+const DefaultIdentifierInspection: InspectedScope = {
     scope: new Map(),
     maybeInvokeExpression: undefined,
     maybeIdentifierUnderPosition: undefined,
