@@ -3,27 +3,12 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../common";
 import { DefaultTemplates, Localization } from "../../localization";
 import { ParseError } from "../../parser";
-import { DefaultSettings } from "../../settings";
-import { TriedLexParse, tryLexParse } from "../../tasks";
-
-function expectParserInnerError(text: string): ParseError.TInnerParseError {
-    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
-
-    if (!ResultUtils.isErr(triedLexParse)) {
-        throw new Error(`AssertFailed: ResultUtils.isErr(triedLexParse) ${JSON.stringify(triedLexParse)}`);
-    } else if (!(triedLexParse.error instanceof ParseError.ParseError)) {
-        const errorMessage: string = triedLexParse.error.message;
-        throw new Error(`AssertFailed: triedLexParse.error instanceof ParseError - ${errorMessage}`);
-    } else {
-        return triedLexParse.error.innerError;
-    }
-}
+import { expectParseErr } from "../common";
 
 function expectCsvContinuationError(text: string): ParseError.ExpectedCsvContinuationError {
-    const innerError: ParseError.TInnerParseError = expectParserInnerError(text);
+    const innerError: ParseError.TInnerParseError = expectParseErr(text).innerError;
     if (!(innerError instanceof ParseError.ExpectedCsvContinuationError)) {
         throw new Error(
             `AssertFailed: innerError instanceof ParseError.ExpectedCsvContinuationError - ${innerError.message}`,
@@ -36,7 +21,7 @@ function expectCsvContinuationError(text: string): ParseError.ExpectedCsvContinu
 describe("Parser.Error", () => {
     it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
         const text: string = "(optional x, y) => x";
-        const innerError: ParseError.TInnerParseError = expectParserInnerError(text);
+        const innerError: ParseError.TInnerParseError = expectParseErr(text).innerError;
         expect(innerError instanceof ParseError.RequiredParameterAfterOptionalParameterError).to.equal(
             true,
             innerError.message,
@@ -45,19 +30,19 @@ describe("Parser.Error", () => {
 
     it("UnterminatedBracketError: let x = [", () => {
         const text: string = "let x = [";
-        const innerError: ParseError.TInnerParseError = expectParserInnerError(text);
+        const innerError: ParseError.TInnerParseError = expectParseErr(text).innerError;
         expect(innerError instanceof ParseError.UnterminatedBracketError).to.equal(true, innerError.message);
     });
 
     it("UnterminatedParenthesesError: let x = (", () => {
         const text: string = "let x = (";
-        const innerError: ParseError.TInnerParseError = expectParserInnerError(text);
+        const innerError: ParseError.TInnerParseError = expectParseErr(text).innerError;
         expect(innerError instanceof ParseError.UnterminatedParenthesesError).to.equal(true, innerError.message);
     });
 
     it("UnusedTokensRemainError: 1 1", () => {
         const text: string = "1 1";
-        const innerError: ParseError.TInnerParseError = expectParserInnerError(text);
+        const innerError: ParseError.TInnerParseError = expectParseErr(text).innerError;
         expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
     });
 
