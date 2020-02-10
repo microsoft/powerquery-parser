@@ -89,5 +89,5 @@ function expectTriedParse(text: string): TriedParse {
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: IParserState = IParserStateUtils.newState(DefaultSettings, lexerSnapshot);
-    return Parser.CombinatorialParser.readDocument(parserState, Parser.CombinatorialParser);
+    return Parser.CombinatorialParser.readDocument(parserState, DefaultSettings.parser);
 }
