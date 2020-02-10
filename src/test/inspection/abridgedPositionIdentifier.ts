@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../..";
 import { isNever, ResultUtils } from "../../common";
-import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection";
+import { PositionIdentifierKind, TPositionIdentifier } from "../../inspection/scope/positionIdentifier";
 import { Token, TokenPosition } from "../../lexer";
 import { TXorNode, XorNodeKind } from "../../parser";
 import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../common";

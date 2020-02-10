@@ -1,4 +1,4 @@
-import { Ast, TXorNode } from "../parser";
+import { Ast, TXorNode } from "../../parser";
 
 export type TPositionIdentifier = LocalIdentifier | UndefinedIdentifier;
 

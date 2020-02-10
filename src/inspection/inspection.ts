@@ -8,7 +8,7 @@ import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { InspectedAutocomplete, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { Position } from "./position";
-import { InspectedScope, tryFrom as scopeInspectedTryFrom } from "./scope";
+import { InspectedScope, tryFrom as scopeInspectedTryFrom } from "./scope/scope";
 
 // Inspection is designed to run sub-inspections,
 // eg. one inspection for scope and one for keywords.
