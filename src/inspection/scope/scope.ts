@@ -5,12 +5,12 @@ import { CommonError, Result, ResultKind, ResultUtils } from "../../common";
 import { NodeIdMap } from "../../parser";
 import { InspectionSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
-import { InspectedIdentifier, tryFrom as tryInspectIdentifier } from "./identifier";
-import { InspectedInvokeExpression, tryFrom as inspectInvokeExpression } from "./invokeExpression";
+import { InspectedIdentifier, tryInspectIdentifier } from "./identifier";
+import { InspectedInvokeExpression, inspectInvokeExpression } from "./invokeExpression";
 
 export type InspectedScope = InspectedIdentifier & InspectedInvokeExpression;
 
-export function tryFrom(
+export function tryInspectScope(
     settings: InspectionSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,

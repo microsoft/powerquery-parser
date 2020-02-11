@@ -7,7 +7,13 @@ import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } f
 import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
-import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
+
+export type TPositionIdentifier = LocalIdentifier | UndefinedIdentifier;
+
+export const enum PositionIdentifierKind {
+    Local = "Local",
+    Undefined = "Undefined",
+}
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface InspectedIdentifier {
@@ -19,7 +25,21 @@ export interface InspectedIdentifier {
     maybeIdentifierUnderPosition: TPositionIdentifier | undefined;
 }
 
-export function tryFrom(
+export interface IPositionIdentifier {
+    readonly kind: PositionIdentifierKind;
+    readonly identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
+}
+
+export interface LocalIdentifier extends IPositionIdentifier {
+    readonly kind: PositionIdentifierKind.Local;
+    readonly definition: TXorNode;
+}
+
+export interface UndefinedIdentifier extends IPositionIdentifier {
+    readonly kind: PositionIdentifierKind.Undefined;
+}
+
+export function tryInspectIdentifier(
     settings: InspectionSettings,
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,

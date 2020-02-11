@@ -8,7 +8,7 @@ import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { InspectedAutocomplete, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { Position } from "./position";
-import { InspectedScope, tryFrom as scopeInspectedTryFrom } from "./scope/scope";
+import { InspectedScope, tryInspectScope } from "./scope";
 
 // Inspection is designed to run sub-inspections,
 // eg. one inspection for scope and one for keywords.
@@ -35,7 +35,7 @@ export function tryFrom(
         leafNodeIds,
     );
 
-    const triedInspectedScope: TriedTraverse<InspectedScope> = scopeInspectedTryFrom(
+    const triedInspectedScope: TriedTraverse<InspectedScope> = tryInspectScope(
         settings,
         maybeActiveNode,
         nodeIdMapCollection,
