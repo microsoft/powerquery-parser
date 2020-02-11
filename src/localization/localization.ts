@@ -51,7 +51,7 @@ interface ILocalization {
     readonly error_parse_unusedTokens: (templates: ILocalizationTemplates) => string;
 }
 
-export function localizeTokenKind(tokenKind: TokenKind, localizationTemplates: ILocalizationTemplates): string {
+export function localizeTokenKind(localizationTemplates: ILocalizationTemplates, tokenKind: TokenKind): string {
     switch (tokenKind) {
         case TokenKind.Ampersand:
             return localizationTemplates.tokenKind_ampersand;
@@ -184,17 +184,22 @@ export function localizeTokenKind(tokenKind: TokenKind, localizationTemplates: I
 export const Localization: ILocalization = {
     error_common_invariantError: (
         templates: ILocalizationTemplates,
-        reason: string,
+        invariantBroken: string,
         maybeJsonifyableDetails: any | undefined,
     ) => {
         if (maybeJsonifyableDetails !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_common_invariantError_1_details,
-                reason,
-                JSON.stringify(maybeJsonifyableDetails, undefined, 4),
+                new Map([
+                    ["invariantBroken", invariantBroken],
+                    ["details", JSON.stringify(maybeJsonifyableDetails, undefined, 4)],
+                ]),
             );
         } else {
-            return StringUtils.expectFormat(templates.error_common_invariantError_2_noDetails, reason);
+            return StringUtils.expectFormat(
+                templates.error_common_invariantError_2_noDetails,
+                new Map([["invariantBroken", invariantBroken]]),
+            );
         }
     },
 
@@ -266,7 +271,10 @@ export const Localization: ILocalization = {
     },
 
     error_lex_lineMap: (templates: ILocalizationTemplates, errorLineMap: Lexer.ErrorLineMap) => {
-        return StringUtils.expectFormat(templates.error_lex_lineMap, [...errorLineMap.keys()]);
+        const lineNumbers: string = [...errorLineMap.keys()]
+            .map((lineNumber: number) => lineNumber.toString())
+            .join(",");
+        return StringUtils.expectFormat(templates.error_lex_lineMap, new Map([["lineNumbers", lineNumbers]]));
     },
 
     error_lex_unexpectedRead: (templates: ILocalizationTemplates) => templates.error_lex_unexpectedRead,
@@ -308,19 +316,22 @@ export const Localization: ILocalization = {
         expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
-        const localizedExpectedAnyTokenKinds: ReadonlyArray<string> = expectedAnyTokenKinds.map(
-            (tokenKind: TokenKind) => localizeTokenKind(tokenKind, templates),
-        );
+        const localizedExpectedAnyTokenKinds: string = expectedAnyTokenKinds
+            .map((tokenKind: TokenKind) => localizeTokenKind(templates, tokenKind))
+            .join(", ");
+
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_1_other,
-                localizedExpectedAnyTokenKinds.join(", "),
-                localizeTokenKind(maybeFoundToken.token.kind, templates),
+                new Map([
+                    ["foundTokenKind", localizeTokenKind(templates, maybeFoundToken.token.kind)],
+                    ["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds],
+                ]),
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_2_endOfStream,
-                localizedExpectedAnyTokenKinds,
+                new Map([["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds]]),
             );
         }
     },
@@ -330,10 +341,7 @@ export const Localization: ILocalization = {
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
         if (maybeFoundToken !== undefined) {
-            return StringUtils.expectFormat(
-                templates.error_parse_expectGeneralizedIdentifier_1_other,
-                localizeTokenKind(maybeFoundToken.token.kind, templates),
-            );
+            return templates.error_parse_expectGeneralizedIdentifier_1_other;
         } else {
             return templates.error_parse_expectGeneralizedIdentifier_2_endOfStream;
         }
@@ -344,22 +352,29 @@ export const Localization: ILocalization = {
         expectedTokenKind: TokenKind,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
+        const localizedExpectedTokenKind: string = localizeTokenKind(templates, expectedTokenKind);
+
         if (maybeFoundToken !== undefined) {
             return StringUtils.expectFormat(
                 templates.error_parse_expectTokenKind_1_other,
-                localizeTokenKind(expectedTokenKind, templates),
-                localizeTokenKind(maybeFoundToken.token.kind, templates),
+                new Map([
+                    ["expectedTokenKind", localizedExpectedTokenKind],
+                    ["foundTokenKind", localizeTokenKind(templates, maybeFoundToken.token.kind)],
+                ]),
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_parse_expectTokenKind_2_endOfStream,
-                localizeTokenKind(expectedTokenKind, templates),
+                new Map([["expectedTokenKind", localizedExpectedTokenKind]]),
             );
         }
     },
 
     error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => {
-        return StringUtils.expectFormat(templates.error_parse_invalidPrimitiveType, token.data);
+        return StringUtils.expectFormat(
+            templates.error_parse_invalidPrimitiveType,
+            new Map([["foundTokenKind", localizeTokenKind(templates, token.kind)]]),
+        );
     },
 
     error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) =>
