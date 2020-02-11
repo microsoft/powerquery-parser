@@ -19,10 +19,14 @@ export const enum PositionIdentifierKind {
 export interface InspectedIdentifier {
     // The scope of a given position.
     //  '[x = 1, y = 2|, z = 3]'-> returns a scope of [['x', XorNode for 1], ['z', XorNode for 3]]
-    scope: ReadonlyMap<string, TXorNode>;
+    readonly scope: ReadonlyMap<string, TXorNode>;
+    // Evaluated once an inspection is done, otherwise expect an empty map.
+    // Handles identifier indirections. Eg.
+    // 'let x = 1, y = x, a = b' -> returns a scope of [['x', XorNode for 1], ['y', XorNode for 1], ['a', undefined]]
+    readonly normalizedScope: ReadonlyMap<string, TXorNode | undefined>;
     // If the activeNode started on an identifier and we encounter the assignment of that identifier,
     // then we store the assignment here.
-    maybeIdentifierUnderPosition: TPositionIdentifier | undefined;
+    readonly maybeIdentifierUnderPosition: TPositionIdentifier | undefined;
 }
 
 export interface IPositionIdentifier {
@@ -45,13 +49,11 @@ export function tryInspectIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
 ): Result<InspectedIdentifier, CommonError.CommonError> {
-    // I know it looks weird that there are two maybeIdentifierUnderPosition fields.
-    // The top level attribute is a map of ActiveNode.root to an identifier,
-    // and the inner attribute is a map of (identifier, identifier assignment) if the identifier assignment is reached.
     const state: IdentifierState = {
         nodeIndex: 0,
         result: {
             scope: new Map(),
+            normalizedScope: new Map(),
             maybeIdentifierUnderPosition: undefined,
         },
         activeNode,
@@ -69,15 +71,21 @@ export function tryInspectIdentifier(
         }
 
         if (activeNode.maybeIdentifierUnderPosition && state.result.maybeIdentifierUnderPosition === undefined) {
-            state.result.maybeIdentifierUnderPosition = {
-                kind: PositionIdentifierKind.Undefined,
-                identifier: activeNode.maybeIdentifierUnderPosition,
+            state.result = {
+                ...state.result,
+                maybeIdentifierUnderPosition: {
+                    kind: PositionIdentifierKind.Undefined,
+                    identifier: activeNode.maybeIdentifierUnderPosition,
+                },
             };
         }
 
         return {
             kind: ResultKind.Ok,
-            value: state.result,
+            value: {
+                ...state.result,
+                normalizedScope: normalizeScope(state.result.scope),
+            },
         };
     } catch (err) {
         return {
@@ -89,7 +97,7 @@ export function tryInspectIdentifier(
 
 interface IdentifierState {
     nodeIndex: number;
-    readonly result: InspectedIdentifier;
+    result: InspectedIdentifier;
     readonly activeNode: ActiveNode;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -508,10 +516,13 @@ function maybeSetIdentifierUnderPositionResult(state: IdentifierState, key: TXor
     const keyIdentifier: Ast.GeneralizedIdentifier | Ast.Identifier = keyAstNode;
 
     if (keyIdentifier.literal === state.activeNode.maybeIdentifierUnderPosition.literal) {
-        state.result.maybeIdentifierUnderPosition = {
-            kind: PositionIdentifierKind.Local,
-            identifier: keyIdentifier,
-            definition: value,
+        state.result = {
+            ...state.result,
+            maybeIdentifierUnderPosition: {
+                kind: PositionIdentifierKind.Local,
+                identifier: keyIdentifier,
+                definition: value,
+            },
         };
     }
 }
@@ -541,4 +552,27 @@ function xorNodesOnCsvFromCsvArray(
     }
 
     return result;
+}
+
+function normalizeScope(scope: ReadonlyMap<string, TXorNode>): ReadonlyMap<string, TXorNode | undefined> {
+    const normalizedMap: Map<string, TXorNode | undefined> = new Map();
+    for (const [key, xorNode] of scope.entries()) {
+        normalizedMap.set(key, normalizeNode(xorNode, scope));
+    }
+
+    return normalizedMap;
+}
+
+function normalizeNode(xorNode: TXorNode, scope: ReadonlyMap<string, TXorNode>): TXorNode | undefined {
+    while (xorNode.node.kind === Ast.NodeKind.Identifier) {
+        const identifier: Ast.Identifier = xorNode.node as Ast.Identifier;
+        const maybeIndirectNode: TXorNode | undefined = scope.get(identifier.literal);
+
+        if (maybeIndirectNode === undefined) {
+            return undefined;
+        }
+        xorNode = maybeIndirectNode;
+    }
+
+    return xorNode;
 }

@@ -21,7 +21,10 @@ export interface InvokeExpressionArgs {
     readonly positionArgumentIndex: number;
 }
 
-export function inspectInvokeExpression(activeNode: ActiveNode, nodeIdMapCollection: NodeIdMap.Collection): InspectedInvokeExpression {
+export function inspectInvokeExpression(
+    activeNode: ActiveNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+): InspectedInvokeExpression {
     const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
     const position: Position = activeNode.position;

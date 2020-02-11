@@ -54,6 +54,7 @@ export function tryInspectScope(
 
 const DefaultIdentifierInspection: InspectedScope = {
     scope: new Map(),
+    normalizedScope: new Map(),
     maybeInvokeExpression: undefined,
     maybeIdentifierUnderPosition: undefined,
 };
