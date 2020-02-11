@@ -1,53 +1,50 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { InspectionUtils } from ".";
-import { CommonError, isNever, Result, ResultKind } from "../common";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
-import { InspectionSettings } from "../settings";
-import { ActiveNode, ActiveNodeUtils } from "./activeNode";
-import { Position, PositionUtils } from "./position";
-import { PositionIdentifierKind, TPositionIdentifier } from "./positionIdentifier";
+import { InspectionUtils } from "..";
+import { CommonError, isNever, Result, ResultKind } from "../../common";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { InspectionSettings } from "../../settings";
+import { ActiveNode, ActiveNodeUtils } from "../activeNode";
+import { Position, PositionUtils } from "../position";
+
+export type TPositionIdentifier = LocalIdentifier | UndefinedIdentifier;
+
+export const enum PositionIdentifierKind {
+    Local = "Local",
+    Undefined = "Undefined",
+}
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
-export interface InspectedScope {
+export interface InspectedIdentifier {
     // The scope of a given position.
     //  '[x = 1, y = 2|, z = 3]'-> returns a scope of [['x', XorNode for 1], ['z', XorNode for 3]]
     scope: ReadonlyMap<string, TXorNode>;
-    // Metadata on the deepest InvokeExpression encountered.
-    //  'foo(bar(1, 2|), 3)' -> returns metadata for the 'bar' InvokeExpression
-    //  'createLambda(x)(y, z|) -> returns metadata for the anonymous lambda returned by 'createLambda'.
-    maybeInvokeExpression: InspectedInvokeExpression | undefined;
     // If the activeNode started on an identifier and we encounter the assignment of that identifier,
     // then we store the assignment here.
     maybeIdentifierUnderPosition: TPositionIdentifier | undefined;
 }
 
-export interface InspectedInvokeExpression {
-    readonly xorNode: TXorNode;
-    readonly maybeName: string | undefined;
-    readonly maybeArguments: InvokeExpressionArgs | undefined;
+export interface IPositionIdentifier {
+    readonly kind: PositionIdentifierKind;
+    readonly identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 }
 
-export interface InvokeExpressionArgs {
-    readonly numArguments: number;
-    readonly positionArgumentIndex: number;
+export interface LocalIdentifier extends IPositionIdentifier {
+    readonly kind: PositionIdentifierKind.Local;
+    readonly definition: TXorNode;
 }
 
-export function tryFrom(
+export interface UndefinedIdentifier extends IPositionIdentifier {
+    readonly kind: PositionIdentifierKind.Undefined;
+}
+
+export function tryInspectIdentifier(
     settings: InspectionSettings,
-    maybeActiveNode: ActiveNode | undefined,
+    activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Result<InspectedScope, CommonError.CommonError> {
-    if (maybeActiveNode === undefined) {
-        return {
-            kind: ResultKind.Ok,
-            value: DefaultIdentifierInspection,
-        };
-    }
-    const activeNode: ActiveNode = maybeActiveNode;
-
+): Result<InspectedIdentifier, CommonError.CommonError> {
     // I know it looks weird that there are two maybeIdentifierUnderPosition fields.
     // The top level attribute is a map of ActiveNode.root to an identifier,
     // and the inner attribute is a map of (identifier, identifier assignment) if the identifier assignment is reached.
@@ -55,7 +52,6 @@ export function tryFrom(
         nodeIndex: 0,
         result: {
             scope: new Map(),
-            maybeInvokeExpression: undefined,
             maybeIdentifierUnderPosition: undefined,
         },
         activeNode,
@@ -93,7 +89,7 @@ export function tryFrom(
 
 interface IdentifierState {
     nodeIndex: number;
-    readonly result: InspectedScope;
+    readonly result: InspectedIdentifier;
     readonly activeNode: ActiveNode;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -120,10 +116,6 @@ function inspectNode(state: IdentifierState, xorNode: TXorNode): void {
         case Ast.NodeKind.IdentifierPairedExpression:
             break;
 
-        case Ast.NodeKind.InvokeExpression:
-            inspectInvokeExpression(state, xorNode);
-            break;
-
         case Ast.NodeKind.LetExpression:
             inspectLetExpression(state, xorNode);
             break;
@@ -141,12 +133,6 @@ function inspectNode(state: IdentifierState, xorNode: TXorNode): void {
             break;
     }
 }
-
-const DefaultIdentifierInspection: InspectedScope = {
-    scope: new Map(),
-    maybeInvokeExpression: undefined,
-    maybeIdentifierUnderPosition: undefined,
-};
 
 // If you came from the TExpression in the EachExpression,
 // then add '_' to the scope.
@@ -290,73 +276,6 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
         default:
             throw isNever(identifierExpr);
     }
-}
-
-function inspectInvokeExpression(state: IdentifierState, invokeExpr: TXorNode): void {
-    if (invokeExpr.node.kind !== Ast.NodeKind.InvokeExpression) {
-        throw expectedNodeKindError(invokeExpr, Ast.NodeKind.InvokeExpression);
-    }
-    // maybeInvokeExpression should be assigned using the deepest (first) InvokeExpression.
-    // Since an InvokeExpression inspection doesn't add anything else, such as to scope, we can return early.
-    // Eg.
-    // `foo(a, bar(b, c|))` -> first inspectInvokeExpression, sets maybeInvokeExpression
-    // `foo(a|, bar(b, c))` -> second inspectInvokeExpression, early exit
-    else if (state.result.maybeInvokeExpression !== undefined) {
-        return;
-    }
-
-    // Check if position is in the wrapped contents (InvokeExpression arguments).
-    if (invokeExpr.kind === XorNodeKind.Ast) {
-        const invokeExprAstNode: Ast.InvokeExpression = invokeExpr.node as Ast.InvokeExpression;
-        if (!PositionUtils.isInAstNode(state.activeNode.position, invokeExprAstNode.content, true, true)) {
-            return;
-        }
-    }
-
-    const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionName(
-        state.nodeIdMapCollection,
-        invokeExpr.node.id,
-    );
-    state.result.maybeInvokeExpression = {
-        xorNode: invokeExpr,
-        maybeName,
-        maybeArguments: inspectInvokeExpressionArguments(state, invokeExpr),
-    };
-}
-
-function inspectInvokeExpressionArguments(state: IdentifierState, _: TXorNode): InvokeExpressionArgs | undefined {
-    // Grab arguments if they exist, else return early.
-    const maybeCsvArray: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(
-        state.activeNode,
-        state.nodeIndex,
-        1,
-        [Ast.NodeKind.ArrayWrapper],
-    );
-    if (maybeCsvArray === undefined) {
-        return undefined;
-    }
-    // const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    // const position: Position = state.activeNode.position;
-    const csvArray: TXorNode = maybeCsvArray;
-    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapUtils.expectXorChildren(
-        state.nodeIdMapCollection,
-        csvArray.node.id,
-    );
-    const numArguments: number = csvNodes.length;
-
-    const maybeAncestorCsv: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(
-        state.activeNode,
-        state.nodeIndex,
-        2,
-        [Ast.NodeKind.Csv],
-    );
-    const maybePositionArgumentIndex: number | undefined =
-        maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;
-
-    return {
-        numArguments,
-        positionArgumentIndex: maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0,
-    };
 }
 
 // If position is to the right of an equals sign,

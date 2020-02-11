@@ -3,7 +3,7 @@
 
 import { CommonError, isNever } from "../../common";
 import { TokenKind } from "../../lexer";
-import * as Ast from "./ast";
+import { Ast } from "../ast";
 
 export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperatorKind | undefined {
     switch (maybeTokenKind) {

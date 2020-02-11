@@ -10,9 +10,9 @@ import {
     IParserState,
     IParserStateUtils,
     NodeIdMap,
+    ParseContext,
     ParseError,
     ParseOk,
-    ParseContext,
     TriedParse,
 } from "./parser";
 import { InspectionSettings, LexSettings, ParseSettings, Settings } from "./settings";
