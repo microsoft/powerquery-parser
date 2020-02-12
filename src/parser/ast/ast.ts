@@ -691,15 +691,16 @@ export interface AsType extends IPairedConstant<NodeKind.AsType, TType> {}
 // ------------------------------
 
 export type TConstantKind =
-    | MiscConstantKind
-    | WrapperConstantKind
-    | KeywordConstantKind
-    | IdentifierConstantKind
     | ArithmeticOperatorKind
     | EqualityOperatorKind
+    | IdentifierConstantKind
+    | KeywordConstantKind
     | LogicalOperatorKind
+    | MiscConstantKind
+    | PrimitiveTypeConstantKind
     | RelationalOperatorKind
-    | UnaryOperatorKind;
+    | UnaryOperatorKind
+    | WrapperConstantKind;
 
 export interface Constant extends INode {
     readonly kind: NodeKind.Constant;
@@ -756,7 +757,6 @@ export const enum MiscConstantKind {
     Equal = "=",
     FatArrow = "=>",
     Semicolon = ";",
-    Null = "null",
     QuestionMark = "?",
 }
 
@@ -791,7 +791,7 @@ export const enum KeywordConstantKind {
     Type = "type",
 }
 
-export const enum IdentifierConstantKind {
+export const enum PrimitiveTypeConstantKind {
     Action = "action",
     Any = "any",
     AnyNonNull = "anynonnull",
@@ -804,13 +804,18 @@ export const enum IdentifierConstantKind {
     List = "list",
     Logical = "logical",
     None = "none",
-    Nullable = "nullable",
+    Null = "null",
     Number = "number",
-    Optional = "optional",
     Record = "record",
     Table = "table",
     Text = "text",
     Time = "time",
+    Type = "type",
+}
+
+export const enum IdentifierConstantKind {
+    Nullable = "nullable",
+    Optional = "optional",
 }
 
 export const enum ArithmeticOperatorKind {

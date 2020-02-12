@@ -194,28 +194,28 @@ export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast
     }
 }
 
-export function isIdentifierConstant(
-    maybeIdentifierConstant: string,
-): maybeIdentifierConstant is Ast.IdentifierConstantKind {
-    switch (maybeIdentifierConstant) {
-        case Ast.IdentifierConstantKind.Any:
-        case Ast.IdentifierConstantKind.AnyNonNull:
-        case Ast.IdentifierConstantKind.Binary:
-        case Ast.IdentifierConstantKind.Date:
-        case Ast.IdentifierConstantKind.DateTime:
-        case Ast.IdentifierConstantKind.DateTimeZone:
-        case Ast.IdentifierConstantKind.Duration:
-        case Ast.IdentifierConstantKind.Function:
-        case Ast.IdentifierConstantKind.List:
-        case Ast.IdentifierConstantKind.Logical:
-        case Ast.IdentifierConstantKind.None:
+export function isPrimitiveTypeConstantKind(
+    maybePrimitiveTypeConstantKind: string,
+): maybePrimitiveTypeConstantKind is Ast.PrimitiveTypeConstantKind {
+    switch (maybePrimitiveTypeConstantKind) {
         case Ast.IdentifierConstantKind.Nullable:
-        case Ast.IdentifierConstantKind.Number:
         case Ast.IdentifierConstantKind.Optional:
-        case Ast.IdentifierConstantKind.Record:
-        case Ast.IdentifierConstantKind.Table:
-        case Ast.IdentifierConstantKind.Text:
-        case Ast.IdentifierConstantKind.Time:
+        case Ast.PrimitiveTypeConstantKind.Any:
+        case Ast.PrimitiveTypeConstantKind.AnyNonNull:
+        case Ast.PrimitiveTypeConstantKind.Binary:
+        case Ast.PrimitiveTypeConstantKind.Date:
+        case Ast.PrimitiveTypeConstantKind.DateTime:
+        case Ast.PrimitiveTypeConstantKind.DateTimeZone:
+        case Ast.PrimitiveTypeConstantKind.Duration:
+        case Ast.PrimitiveTypeConstantKind.Function:
+        case Ast.PrimitiveTypeConstantKind.List:
+        case Ast.PrimitiveTypeConstantKind.Logical:
+        case Ast.PrimitiveTypeConstantKind.None:
+        case Ast.PrimitiveTypeConstantKind.Number:
+        case Ast.PrimitiveTypeConstantKind.Record:
+        case Ast.PrimitiveTypeConstantKind.Table:
+        case Ast.PrimitiveTypeConstantKind.Text:
+        case Ast.PrimitiveTypeConstantKind.Time:
             return true;
         default:
             return false;
