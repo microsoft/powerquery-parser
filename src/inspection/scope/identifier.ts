@@ -52,6 +52,7 @@ export interface EachScopeItem extends IScopeItem {
 export interface ParameterScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Parameter;
     readonly isOptional: boolean;
+    readonly isNullable: boolean;
     readonly maybeType: Ast.TConstantKind | undefined;
 }
 
@@ -186,6 +187,7 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
         const scopeKey: string = parameterName.literal;
 
         let maybeType: Ast.TConstantKind | undefined;
+        let isNullable: boolean;
         const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = parameterCsv.node.maybeParameterType;
         if (maybeParameterType !== undefined) {
             const asConstant: Ast.TNullablePrimitiveType = maybeParameterType.paired;
@@ -193,10 +195,12 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
             switch (asConstant.kind) {
                 case Ast.NodeKind.NullablePrimitiveType:
                     maybeType = asConstant.paired.primitiveType.constantKind;
+                    isNullable = true;
                     break;
 
                 case Ast.NodeKind.PrimitiveType:
                     maybeType = asConstant.primitiveType.constantKind;
+                    isNullable = false;
                     break;
 
                 default:
@@ -204,11 +208,13 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
             }
         } else {
             maybeType = undefined;
+            isNullable = true;
         }
 
         mightUpdateScope(state, scopeKey, {
             kind: ScopeItemKind.Parameter,
             isOptional: parameterCsv.node.maybeOptionalConstant === undefined,
+            isNullable,
             maybeType,
         });
     }
