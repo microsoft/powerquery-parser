@@ -217,6 +217,13 @@ function inspectIdentifier(state: IdentifierState, identifier: TXorNode, isRoot:
         return;
     }
 
+    // Don't add the identifier if you're coming from inside a ParameterList
+    // '(foo|, bar) => 1'
+    const maybeNext: TXorNode | undefined = ActiveNodeUtils.maybeNextXorNode(state.activeNode, state.nodeIndex);
+    if (maybeNext && maybeNext.node.kind === Ast.NodeKind.Parameter) {
+        return;
+    }
+
     mightUpdateScope(state, identifierAstNode.literal, {
         kind: ScopeItemKind.Undefined,
         xorNode: identifier,
