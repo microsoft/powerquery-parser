@@ -6,12 +6,7 @@ import { Inspection } from "../../..";
 import { ResultUtils } from "../../../common";
 import { ScopeItemKind } from "../../../inspection";
 import { Ast } from "../../../parser";
-import {
-    expectDeepEqual,
-    expectParseErrInspection,
-    expectParseOkInspection,
-    expectTextWithPosition,
-} from "../../common";
+import { expectDeepEqual, expectParseOkInspection, expectTextWithPosition } from "../../common";
 
 type AbridgedScope = ReadonlyArray<AbridgedParameterItem | undefined>;
 
