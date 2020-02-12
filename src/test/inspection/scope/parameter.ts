@@ -12,7 +12,7 @@ type AbridgedScope = ReadonlyArray<AbridgedParameterItem | undefined>;
 
 interface AbridgedParameterItem {
     readonly key: string;
-    readonly isNullable: boolean;
+    readonly isOptional: boolean;
     readonly maybeType: Ast.TConstantKind | undefined;
 }
 
@@ -27,7 +27,7 @@ function actualFactoryFn(triedInspection: Inspection.TriedInspection): AbridgedS
         if (scopeItem.kind === ScopeItemKind.Parameter) {
             abridgedScopeItems.push({
                 key,
-                isNullable: scopeItem.isOptional,
+                isOptional: scopeItem.isOptional,
                 maybeType: scopeItem.maybeType,
             });
         }
@@ -44,27 +44,27 @@ describe(`Inspection - Scope - Parameter`, () => {
         const expected: AbridgedScope = [
             {
                 key: "a",
-                isNullable: true,
+                isOptional: true,
                 maybeType: undefined,
             },
             {
                 key: "b",
-                isNullable: true,
+                isOptional: true,
                 maybeType: Ast.PrimitiveTypeConstantKind.Number,
             },
             {
                 key: "c",
-                isNullable: true,
+                isOptional: true,
                 maybeType: Ast.PrimitiveTypeConstantKind.Function,
             },
             {
                 key: "d",
-                isNullable: false,
+                isOptional: false,
                 maybeType: undefined,
             },
             {
                 key: "e",
-                isNullable: false,
+                isOptional: false,
                 maybeType: Ast.PrimitiveTypeConstantKind.Table,
             },
         ];
