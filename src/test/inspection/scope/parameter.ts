@@ -41,7 +41,7 @@ function actualFactoryFn(triedInspection: Inspection.TriedInspection): AbridgedS
     return abridgedScopeItems;
 }
 
-describe(`abc123 Inspection - Scope - Parameter`, () => {
+describe(`Inspection - Scope - Parameter`, () => {
     it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
             `(a, b as number, c as nullable function, optional d, optional e as table) => 1|`,
