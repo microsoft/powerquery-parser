@@ -51,14 +51,13 @@ export interface EachScopeItem extends IScopeItem {
 
 export interface ParameterScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Parameter;
-    // TODO
-    readonly maybeType: undefined;
+    readonly isOptional: boolean;
+    readonly maybeType: Ast.TConstantKind | undefined;
 }
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface InspectedIdentifier {
     readonly scope: ReadonlyMap<string, TScopeItem>;
-    readonly normalizedScope: ReadonlyMap<string, TScopeItem>;
 }
 
 export function tryInspectIdentifier(
@@ -71,7 +70,6 @@ export function tryInspectIdentifier(
         nodeIndex: 0,
         result: {
             scope: new Map(),
-            normalizedScope: new Map(),
         },
         activeNode,
         nodeIdMapCollection,
@@ -91,7 +89,6 @@ export function tryInspectIdentifier(
             kind: ResultKind.Ok,
             value: {
                 ...state.result,
-                normalizedScope: new Map(),
             },
         };
     } catch (err) {
@@ -187,9 +184,32 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
     for (const parameterCsv of parameters.content.elements) {
         const parameterName: Ast.Identifier = parameterCsv.node.name;
         const scopeKey: string = parameterName.literal;
+
+        let maybeType: Ast.TConstantKind | undefined;
+        const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = parameterCsv.node.maybeParameterType;
+        if (maybeParameterType !== undefined) {
+            const asConstant: Ast.TNullablePrimitiveType = maybeParameterType.paired;
+
+            switch (asConstant.kind) {
+                case Ast.NodeKind.NullablePrimitiveType:
+                    maybeType = asConstant.paired.primitiveType.constantKind;
+                    break;
+
+                case Ast.NodeKind.PrimitiveType:
+                    maybeType = asConstant.primitiveType.constantKind;
+                    break;
+
+                default:
+                    throw isNever(asConstant);
+            }
+        } else {
+            maybeType = undefined;
+        }
+
         mightUpdateScope(state, scopeKey, {
             kind: ScopeItemKind.Parameter,
-            maybeType: undefined,
+            isOptional: parameterCsv.node.maybeOptionalConstant === undefined,
+            maybeType,
         });
     }
 }
@@ -521,27 +541,4 @@ function xorNodesOnCsvFromCsvArray(
     }
 
     return result;
-}
-
-function normalizeScope(scope: ReadonlyMap<string, TXorNode>): ReadonlyMap<string, TXorNode | undefined> {
-    const normalizedMap: Map<string, TXorNode | undefined> = new Map();
-    for (const [key, xorNode] of scope.entries()) {
-        normalizedMap.set(key, normalizeNode(xorNode, scope));
-    }
-
-    return normalizedMap;
-}
-
-function normalizeNode(xorNode: TXorNode, scope: ReadonlyMap<string, TXorNode>): TXorNode | undefined {
-    while (xorNode.node.kind === Ast.NodeKind.Identifier) {
-        const identifier: Ast.Identifier = xorNode.node as Ast.Identifier;
-        const maybeIndirectNode: TXorNode | undefined = scope.get(identifier.literal);
-
-        if (maybeIndirectNode === undefined) {
-            return undefined;
-        }
-        xorNode = maybeIndirectNode;
-    }
-
-    return xorNode;
 }
