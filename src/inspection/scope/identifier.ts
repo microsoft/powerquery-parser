@@ -8,13 +8,19 @@ import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 
-export type TScopeItem = EachScopeItem | KeyValuePairScopeItem | ParameterScopeItem | UndefinedScopeItem;
+export type TScopeItem =
+    | EachScopeItem
+    | KeyValuePairScopeItem
+    | ParameterScopeItem
+    | SectionMemberScopeItem
+    | UndefinedScopeItem;
 
 export const enum ScopeItemKind {
     KeyValuePair = "KeyValuePair",
     Undefined = "Undefined",
     Each = "Each",
     Parameter = "Parameter",
+    SectionMember = "SectionMember",
 }
 
 export interface IScopeItem {
@@ -27,8 +33,15 @@ export interface KeyValuePairScopeItem extends IScopeItem {
     readonly maybeValue: TXorNode | undefined;
 }
 
+export interface SectionMemberScopeItem extends IScopeItem {
+    readonly kind: ScopeItemKind.SectionMember;
+    readonly key: Ast.Identifier;
+    readonly maybeValue: TXorNode | undefined;
+}
+
 export interface UndefinedScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Undefined;
+    readonly xorNode: TXorNode;
 }
 
 export interface EachScopeItem extends IScopeItem {
@@ -166,12 +179,10 @@ function inspectEachExpression(state: IdentifierState, eachExpr: TXorNode): void
         return;
     }
 
-    if (!state.result.scope.has("_")) {
-        unsafeAddToScope(state, "_", {
-            kind: ScopeItemKind.Each,
-            each: eachExpr,
-        });
-    }
+    mightUpdateScope(state, "_", {
+        kind: ScopeItemKind.Each,
+        each: eachExpr,
+    });
 }
 
 // If position is to the right of '=>',
@@ -195,16 +206,13 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
         Ast.NodeKind.ParameterList,
     ]) as Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined>;
 
-    const scope: ReadonlyMap<string, TScopeItem> = state.result.scope;
     for (const parameterCsv of parameters.content.elements) {
         const parameterName: Ast.Identifier = parameterCsv.node.name;
-
-        if (!scope.has(parameterName.literal)) {
-            unsafeAddToScope(state, parameterName.literal, {
-                kind: ScopeItemKind.Parameter,
-                maybeType: undefined,
-            });
-        }
+        const scopeKey: string = parameterName.literal;
+        mightUpdateScope(state, scopeKey, {
+            kind: ScopeItemKind.Parameter,
+            maybeType: undefined,
+        });
     }
 }
 
@@ -230,7 +238,11 @@ function inspectIdentifier(state: IdentifierState, identifier: TXorNode, isRoot:
     if (isRoot && PositionUtils.isBeforeAstNode(position, identifierAstNode, true)) {
         return;
     }
-    addAstToScopeIfNew(state, identifierAstNode.literal, identifierAstNode);
+
+    mightUpdateScope(state, identifierAstNode.literal, {
+        kind: ScopeItemKind.Undefined,
+        xorNode: identifier,
+    });
 }
 
 function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXorNode, isLeaf: boolean): void {
@@ -242,6 +254,7 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
         return;
     }
 
+    let key: string;
     switch (identifierExpr.kind) {
         case XorNodeKind.Ast: {
             if (identifierExpr.node.kind !== Ast.NodeKind.IdentifierExpression) {
@@ -252,16 +265,15 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
             const identifier: Ast.Identifier = identifierExprAstNode.identifier;
             const maybeInclusiveConstant: Ast.Constant | undefined = identifierExprAstNode.maybeInclusiveConstant;
 
-            const key: string =
+            key =
                 maybeInclusiveConstant !== undefined
                     ? maybeInclusiveConstant.constantKind + identifier.literal
                     : identifier.literal;
-            addAstToScopeIfNew(state, key, identifierExprAstNode);
             break;
         }
 
         case XorNodeKind.Context: {
-            let key: string = "";
+            key = "";
             const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
             // Add the optional inclusive constant `@` if it was parsed.
@@ -287,16 +299,18 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
                 const identifier: Ast.Identifier = maybeIdentifier.node as Ast.Identifier;
                 key += identifier.literal;
             }
-
-            if (key.length) {
-                addContextToScopeIfNew(state, key, identifierExpr.node);
-            }
-
             break;
         }
 
         default:
             throw isNever(identifierExpr);
+    }
+
+    if (key.length) {
+        mightUpdateScope(state, key, {
+            kind: ScopeItemKind.Undefined,
+            xorNode: identifierExpr,
+        });
     }
 }
 
@@ -407,13 +421,11 @@ function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, _: TXorN
 
         if (key.kind === XorNodeKind.Ast) {
             const keyAstNode: Ast.GeneralizedIdentifier = key.node as Ast.GeneralizedIdentifier;
-            if (!scope.has(keyAstNode.literal)) {
-                unsafeAddToScope(state, keyAstNode.literal, {
-                    kind: ScopeItemKind.KeyValuePair,
-                    key: keyAstNode,
-                    maybeValue,
-                });
-            }
+            mightUpdateScope(state, keyAstNode.literal, {
+                kind: ScopeItemKind.KeyValuePair,
+                key: keyAstNode,
+                maybeValue,
+            });
         }
     }
 }
@@ -467,7 +479,11 @@ function inspectSectionMember(state: IdentifierState, sectionMember: TXorNode): 
             undefined,
         );
 
-        addToScopeIfNew(state, name.literal, name, maybeValue);
+        mightUpdateScope(state, name.literal, {
+            kind: ScopeItemKind.SectionMember,
+            key: name,
+            maybeValue,
+        });
     }
 }
 
@@ -485,51 +501,17 @@ function isParentOfNodeKind(state: IdentifierState, parentNodeKind: Ast.NodeKind
     return maybeParent !== undefined ? maybeParent.node.kind === parentNodeKind : false;
 }
 
-function unsafeAddToScope(state: IdentifierState, key: string, value: TScopeItem) {
-    const scopeMap: Map<string, IScopeItem> = state.result.scope as Map<string, IScopeItem>;
-    scopeMap.set(key, value);
+function mightUpdateScope(state: IdentifierState, key: string, scopeItem: TScopeItem): void {
+    const unsafeScope: Map<string, TScopeItem> = state.result.scope as Map<string, TScopeItem>;
+    const maybeScopeItem: TScopeItem | undefined = unsafeScope.get(key);
+    const isUpdateNeeded: boolean =
+        maybeScopeItem === undefined ||
+        (maybeScopeItem.kind === ScopeItemKind.Undefined && scopeItem.kind !== ScopeItemKind.Undefined);
+
+    if (isUpdateNeeded) {
+        unsafeScope.set(key, scopeItem);
+    }
 }
-
-// function addToScopeIfNew(
-//     state: IdentifierState,
-//     mapKey: string,
-//     keyXorNode: Ast.Identifier | Ast.GeneralizedIdentifier,
-//     valueXorNode: TXorNode | undefined,
-// ): void {
-//     const scopeMap: Map<string, IScopeItem> = state.result.scope as Map<string, IScopeItem>;
-//     if (!scopeMap.has(mapKey)) {
-//         let scopeItem: IScopeItem;
-//         if (valueXorNode === undefined) {
-//             scopeItem = {
-//                 kind: ScopeItemKind.Undefined,
-//                 maybeKey: keyXorNode,
-//                 maybeValue: undefined,
-//             };
-//         } else {
-//             scopeItem = {
-//                 kind: ScopeItemKind.Local,
-//                 maybeKey: keyXorNode,
-//                 maybeValue: valueXorNode,
-//             };
-//         }
-
-//         scopeMap.set(mapKey, scopeItem);
-//     }
-// }
-
-// function addAstToScopeIfNew(state: IdentifierState, key: string, astNode: Ast.TNode): void {
-//     addToScopeIfNew(state, key, {
-//         kind: XorNodeKind.Ast,
-//         node: astNode,
-//     });
-// }
-
-// function addContextToScopeIfNew(state: IdentifierState, key: string, contextNode: ParseContext.Node): void {
-//     addToScopeIfNew(state, key, {
-//         kind: XorNodeKind.Context,
-//         node: contextNode,
-//     });
-// }
 
 function maybeSetIdentifierUnderPositionResult(state: IdentifierState, key: TXorNode, value: TXorNode): void {
     if (
