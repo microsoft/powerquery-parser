@@ -176,7 +176,7 @@ export function isOnTokenKind(
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
-export function isOnIdentifierConstant(
+export function isOnConstantKind(
     state: IParserState,
     constantKind: Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind,
 ): boolean {
