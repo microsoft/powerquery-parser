@@ -111,7 +111,7 @@ export function readBracketDisambiguation(
     const disambiguation: BracketDisambiguation = triedDisambiguation.value;
     if (allowedVariants.indexOf(disambiguation) === -1) {
         throw new CommonError.InvariantError(
-            `grammer doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
+            `grammar doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
         );
     }
 
