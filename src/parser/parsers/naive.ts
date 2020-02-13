@@ -8,6 +8,7 @@ import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse }
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
+import { MiscConstantKind, WrapperConstantKind } from "../ast/ast";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -1258,14 +1259,14 @@ export function readFieldSpecificationList(
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const leftBracketConstant: Ast.Constant = readTokenKindAsConstant(
+    const leftBracketConstant: Ast.Constant<Ast.WrapperConstantKind.LeftBracket> = readTokenKindAsConstant(
         state,
         TokenKind.LeftBracket,
         Ast.WrapperConstantKind.LeftBracket,
     );
     const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
     let continueReadingValues: boolean = true;
-    let maybeOpenRecordMarkerConstant: Ast.Constant | undefined = undefined;
+    let maybeOpenRecordMarkerConstant: Ast.Constant<Ast.MiscConstantKind.Ellipsis> | undefined = undefined;
 
     const fieldArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, fieldArrayNodeKind);
@@ -1298,10 +1299,9 @@ export function readFieldSpecificationList(
             const fieldSpecificationNodeKind: Ast.NodeKind.FieldSpecification = Ast.NodeKind.FieldSpecification;
             IParserStateUtils.startContext(state, fieldSpecificationNodeKind);
 
-            const maybeOptionalConstant: Ast.Constant | undefined = maybeReadIdentifierConstantAsConstant(
-                state,
-                Ast.IdentifierConstantKind.Optional,
-            );
+            const maybeOptionalConstant:
+                | Ast.Constant<Ast.IdentifierConstantKind.Optional>
+                | undefined = maybeReadIdentifierConstantAsConstant(state, Ast.IdentifierConstantKind.Optional);
 
             const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
 
@@ -1310,7 +1310,7 @@ export function readFieldSpecificationList(
                 parser,
             );
 
-            const maybeCommaConstant: Ast.Constant | undefined = maybeReadTokenKindAsConstant(
+            const maybeCommaConstant: Ast.Constant<MiscConstantKind.Comma> | undefined = maybeReadTokenKindAsConstant(
                 state,
                 TokenKind.Comma,
                 Ast.MiscConstantKind.Comma,
@@ -1349,7 +1349,7 @@ export function readFieldSpecificationList(
     };
     IParserStateUtils.endContext(state, fieldArray);
 
-    const rightBracketConstant: Ast.Constant = readTokenKindAsConstant(
+    const rightBracketConstant: Ast.Constant<Ast.WrapperConstantKind.RightBracket> = readTokenKindAsConstant(
         state,
         TokenKind.RightBracket,
         Ast.WrapperConstantKind.RightBracket,
@@ -1375,7 +1375,7 @@ function maybeReadFieldTypeSpecification(
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const maybeEqualConstant: Ast.Constant | undefined = maybeReadTokenKindAsConstant(
+    const maybeEqualConstant: Ast.Constant<Ast.MiscConstantKind.Equal> | undefined = maybeReadTokenKindAsConstant(
         state,
         TokenKind.Equal,
         Ast.MiscConstantKind.Equal,
@@ -2009,7 +2009,7 @@ function readCsvArray<T>(
         }
 
         const node: T & Ast.TCsvType = valueReader();
-        const maybeCommaConstant: Ast.Constant | undefined = maybeReadTokenKindAsConstant(
+        const maybeCommaConstant: Ast.Constant<Ast.MiscConstantKind.Comma> | undefined = maybeReadTokenKindAsConstant(
             state,
             TokenKind.Comma,
             Ast.MiscConstantKind.Comma,
@@ -2159,7 +2159,7 @@ function genericReadParameterList<T>(
         };
         IParserStateUtils.endContext(state, parameter);
 
-        const maybeCommaConstant: Ast.Constant | undefined = maybeReadTokenKindAsConstant(
+        const maybeCommaConstant: Ast.Constant<Ast.MiscConstantKind.Comma> | undefined = maybeReadTokenKindAsConstant(
             state,
             TokenKind.Comma,
             Ast.MiscConstantKind.Comma,
@@ -2186,7 +2186,7 @@ function genericReadParameterList<T>(
     };
     IParserStateUtils.endContext(state, parameterArray);
 
-    const rightParenthesisConstant: Ast.Constant = readTokenKindAsConstant(
+    const rightParenthesisConstant: Ast.Constant<WrapperConstantKind.RightParenthesis> = readTokenKindAsConstant(
         state,
         TokenKind.RightParenthesis,
         Ast.WrapperConstantKind.RightParenthesis,
