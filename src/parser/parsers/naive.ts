@@ -1926,7 +1926,7 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
     leftReader: () => Left,
     maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
-): Left | Ast.IBinOpExpression<Kind, Left, Right> {
+): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const left: Left = leftReader();
 
@@ -1938,18 +1938,18 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         IParserStateUtils.deleteContext(state, undefined);
         return left;
     }
-    const operatorConstant: Ast.Constant = readTokenKindAsConstant(
+    const operatorConstant: Ast.TConstant & Ast.Constant<Operator & Ast.TConstantKind> = readTokenKindAsConstant(
         state,
-        state.maybeCurrentTokenKind as TokenKind,
+        state.maybeCurrentTokenKind!,
         maybeOperator,
     );
-    const right: Right | Ast.IBinOpExpression<Kind, Right, Right> = recursiveReadBinOpExpressionHelper<
+    const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,
         Right
     >(state, nodeKind, maybeOperatorFrom, rightReader);
 
-    const astNode: Ast.IBinOpExpression<Kind, Left, Right> = {
+    const astNode: Ast.IBinOpExpression<Kind, Left, Operator, Right> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
@@ -1970,7 +1970,7 @@ function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
     nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
     maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
-): Right | Ast.IBinOpExpression<Kind, Right, Right> {
+): Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const rightAsLeft: Right = rightReader();
 
@@ -1981,18 +1981,18 @@ function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
         IParserStateUtils.deleteContext(state, undefined);
         return rightAsLeft;
     }
-    const operatorConstant: Ast.Constant = readTokenKindAsConstant(
+    const operatorConstant: Ast.TConstant & Ast.Constant<Operator & Ast.TConstantKind> = readTokenKindAsConstant(
         state,
-        state.maybeCurrentTokenKind as TokenKind,
+        state.maybeCurrentTokenKind!,
         maybeOperator,
     );
-    const right: Right | Ast.IBinOpExpression<Kind, Right, Right> = recursiveReadBinOpExpressionHelper<
+    const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,
         Right
     >(state, nodeKind, maybeOperatorFrom, rightReader);
 
-    const astNode: Ast.IBinOpExpression<Kind, Right, Right> = {
+    const astNode: Ast.IBinOpExpression<Kind, Right, Operator, Right> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
