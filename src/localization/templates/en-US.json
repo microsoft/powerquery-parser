@@ -1,165 +1,291 @@
 {
     "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
-    "_error_common_invariantError_1_details.comment": "{Locked=\"{invariantBroken, details}\"}",
+    "_error_common_invariantError_1_details.comment": "A fatal error, such as division by 0. Not intended to be user facing. {Locked=\"{invariantBroken, details}\"}",
+
     "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
-    "_error_common_invariantError_2_noDetails.comment": "{Locked=\"invariantBroken\"}",
+    "_error_common_invariantError_2_noDetails.comment": "A fatal error, such as division by 0. Not intended to be user facing. {Locked=\"invariantBroken\"}",
+
     "error_common_unknown": "An unknown error was encountered, innerError: {innerError}",
-    "_error_common_unknown.comment": "{Locked=\"innerError\"}",
+    "_error_common_unknown.comment": "A fatal error from unknown causes. Possibly user facing. {Locked=\"innerError\"}",
+
     "error_lex_badLineNumber_1_greaterThanNumLines": "lineNumber is greater than or equal to the number of lines",
+    "_error_lex_badLineNumber_1_greaterThanNumLines.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing",
+
     "error_lex_badLineNumber_2_lessThanZero": "lineNumber is less than or equal 0",
+    "_error_lex_badLineNumber_2_lessThanZero.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badRange_1_lineNumberEnd_greaterThanLineLength": "end.lineCodeUnit is higher than line's length",
+    "_error_lex_badRange_1_lineNumberEnd_greaterThanLineLength.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badRange_2_lineNumberEnd_greaterThanLineNumbers": "end.lineNumber is higher than State's number of lines",
+    "_error_lex_badRange_2_lineNumberEnd_greaterThanLineNumbers.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badRange_3_lineNumberStart_greaterThanLineLength": "start.lineCodeUnit is higher than line's length",
+    "_error_lex_badRange_3_lineNumberStart_greaterThanLineLength.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badRange_4_lineNumberStart_greaterThanLineNumberEnd": "start.lineNumber is larger than end.lineNumber",
+    "_error_lex_badRange_4_lineNumberStart_greaterThanLineNumberEnd.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badRange_5_lineNumberStart_greaterThanNumLines": "start.lineNumber is higher than State's number of lines.",
+    "_error_lex_badRange_5_lineNumberStart_greaterThanNumLines.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badRange_6_lineNumberStart_lessThanZero": "start.lineNumber is less than 0",
+    "_error_lex_badRange_6_lineNumberStart_lessThanZero.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badRange_7_sameLine_codeUnitStartGreaterThanCodeUnitEnd": "Start and end shared the same line, but start.lineCodeUnit was higher than end.lineCodeUnit",
+    "_error_lex_badRange_7_sameLine_codeUnitStartGreaterThanCodeUnitEnd.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing.",
+
     "error_lex_badState": "The lexer encountered an error last run. Either feed the lexer more text or review lastError",
+    "_error_lex_badState.comment": "The text failed to previously lex, and will continue to fail until more text is added. Not intended to be user facing.",
+
     "error_lex_endOfStream": "The lexer reached end-of-stream",
+    "_error_lex_endOfStream.comment": "The text failed to previously lex, and will continue to fail until more text is added. Not intended to be user facing.",
+
     "error_lex_endOfStreamPartwayRead": "While attempting to read a token the document stream ended part way through",
+    "_error_lex_endOfStreamPartwayRead.comment": "The lexer reached EOF partway through reading a token. Not intended to be user facing.",
+
     "error_lex_expectedKind_1_hex": "Expected a hex literal",
+    "_error_lex_expectedKind_1_hex.comment": "The lexer expected a hex literal ('0xdeadbeef') but failed to find one. Intended to be user facing.",
+
     "error_lex_expectedKind_2_keywordOrIdentifier": "Expected a keyword or identifier",
+    "_error_lex_expectedKind_2_keywordOrIdentifier.comment": "The lexer expected a hex literal ('foo') but failed to find one. Intended to be user facing.",
+
     "error_lex_expectedKind_3_numeric": "Expected a numeric literal",
+    "_error_lex_expectedKind_3_numeric.comment": "The lexer expected a hex literal ('foo') but failed to find one. Intended to be user facing.",
+
     "error_lex_lineMap": "Error on line(s): {lineNumbers}",
-    "_error_lex_lineMap.comment": "{Locked=\"lineNumbers\"}",
+    "_error_lex_lineMap.comment": "A comma separated set of line numbers containing errors. Possibly user facing. {Locked=\"lineNumbers\"}",
+
     "error_lex_unexpectedRead": "Unexpected read during tokenization",
+    "_error_lex_unexpectedRead.comment": "A generic lex error. Possibly user facing.",
+
     "error_lex_unterminatedMultilineToken_1_comment": "Unterminated multiline comment",
+    "_error_lex_unterminatedMultilineToken_1_comment.comment": "The lexer found an unterminated multiline comment. Expected to be user facing.",
+
     "error_lex_unterminatedMultilineToken_2_quotedIdentifier": "Unterminated quoted identifier",
+    "_error_lex_unterminatedMultilineToken_2_quotedIdentifier.comment": "The lexer found an unterminated quoted identifier. Expected to be user facing.",
+
     "error_lex_unterminatedMultilineToken_3_string": "Unterminated string",
+    "_error_lex_unterminatedMultilineToken_3_string.comment": "The lexer found an unterminated multiline string. Expected to be user facing.",
+
     "error_parse_csvContinuation_1_danglingComma": "Did you leave a dangling comma?",
+    "_error_parse_csvContinuation_1_danglingComma.comment": "A common parser error caused by a trailing comma, eg. '{1,2,}'. Expected to be user facing.",
+
     "error_parse_csvContinuation_2_letExpression": "A comma cannot proceed an 'in'",
+    "_error_parse_csvContinuation_2_letExpression.comment": "A common parser error caused by a trailing comma, eg. 'let x = 1, in x'. Expected to be user facing.",
+
     "error_parse_expectAnyTokenKind_1_other": "Expected to find one of the following, but a {foundTokenKind} was found instead: {expectedAnyTokenKinds}",
-    "_error_parse_expectAnyTokenKind_1_other.comment": "{Locked=\"{foundTokenKind, expectedAnyTokenKinds}\"}",
+    "_error_parse_expectAnyTokenKind_1_other.comment": "A common parser error where expectedAnyTokenKinds is a csv collection of localized tokenKind strings and foundTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{foundTokenKind, expectedAnyTokenKinds}\"}",
+
     "error_parse_expectAnyTokenKind_2_endOfStream": "Expected to find one of the following, but the end-of-stream was reached instead: {expectedAnyTokenKinds}",
-    "_error_parse_expectAnyTokenKind_2_endOfStream.comment": "{Locked=\"{expectedAnyTokenKinds}\"}",
+    "_error_parse_expectAnyTokenKind_2_endOfStream.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{expectedAnyTokenKinds}\"}",
+
     "error_parse_expectGeneralizedIdentifier_1_other": "Expected to find a generalized identifier",
+    "_error_parse_expectGeneralizedIdentifier_1_other.comment": "A common parser error. Expected to be user facing.",
+
     "error_parse_expectGeneralizedIdentifier_2_endOfStream": "Expected to find a generalized identifier but the end-of-stream was reached first",
+    "_error_parse_expectGeneralizedIdentifier_2_endOfStream.comment": "A common parser error. Expected to be user facing.",
+
     "error_parse_expectTokenKind_1_other": "Expected to find a {expectedTokenKind}, but a {foundTokenKind} was found instead",
-    "_error_parse_expectTokenKind_1_other.comment": "{Locked=\"{expectedTokenKind, foundTokenKind}\"}",
+    "_error_parse_expectTokenKind_1_other.comment": "A common parser error where expectedTokenKind and foundTokenKind are a localized tokenKind string. Expected to be user facing. {Locked=\"{expectedTokenKind, foundTokenKind}\"}",
+
     "error_parse_expectTokenKind_2_endOfStream": "Expected to find a {expectedTokenKind}, but the end-of-stream was reached instead",
-    "_error_parse_expectTokenKind_2_endOfStream.comment": "{Locked=\"{expectedTokenKind}\"}",
+    "_error_parse_expectTokenKind_2_endOfStream.comment": "A common parser error where expectedTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{expectedTokenKind}\"}",
+
     "error_parse_invalidPrimitiveType": "Expected to find a primitive literal, but a {foundTokenKind} was found instead",
-    "_error_parse_invalidPrimitiveType.comment": "{Locked=\"{foundTokenKind}\"}",
+    "_error_parse_invalidPrimitiveType.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{foundTokenKind}\"}",
+
     "error_parse_requiredParameterAfterOptional": "You cannot have a non-optional parameter after an optional parameter",
+    "_error_parse_requiredParameterAfterOptional.comment": "Optional parameters must come after non-optional parameters, eg. ('(optional x, y) => x + y') causes an error. Expected to be user facing. {Locked=\"{foundTokenKind}\"}",
+
     "error_parse_unterminated_bracket": "Unterminated bracket",
+    "_error_parse_unterminated_bracket.comment": "A common parser where it could not disambiguate a bracket. Expected to be user facing.",
+
     "error_parse_unterminated_parenthesis": "Unterminated parenthesis",
+    "_error_parse_unterminated_parenthesis.comment": "A common parser where it could not disambiguate a parenthesis. Expected to be user facing.",
+
     "error_parse_unusedTokens": "Finished parsing but more tokens remain",
+    "_error_parse_unusedTokens.comment": "A common parser where not every token was parsed. Possibly user facing.",
+
     "tokenKind_ampersand": "ampersand <'&'>",
-    "_tokenKind_ampersand.comment": "{Locked=\"<'&'>\"}",
+    "_tokenKind_ampersand.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'&'>\"}",
+
     "tokenKind_asterisk": "asterisk <'*'>",
-    "_tokenKind_asterisk.comment": "{Locked=\"<'*'>\"}",
+    "_tokenKind_asterisk.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'*'>\"}",
+
     "tokenKind_atSign": "at sign <'@'>",
-    "_tokenKind_atSign.comment": "{Locked=\"<'@'>\"}",
+    "_tokenKind_atSign.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'@'>\"}",
+
     "tokenKind_bang": "exclamation mark <'!'>",
-    "_tokenKind_bang.comment": "{Locked=\"<'!'>\"}",
+    "_tokenKind_bang.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'!'>\"}",
+
     "tokenKind_comma": "comma <','>",
-    "_tokenKind_comma.comment": "{Locked=\"<','>\"}",
+    "_tokenKind_comma.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<','>\"}",
+
     "tokenKind_division": "division operator <'/'>",
-    "_tokenKind_division.comment": "{Locked=\"<'/'>\"}",
+    "_tokenKind_division.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'/'>\"}",
+
     "tokenKind_dotDot": "dot dot <'..'>",
-    "_tokenKind_dotDot.comment": "{Locked=\"<'..'>\"}",
+    "_tokenKind_dotDot.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'..'>\"}",
+
     "tokenKind_ellipsis": "ellipsis <'...'>",
-    "_tokenKind_ellipsis.comment": "{Locked=\"<'...'>\"}",
+    "_tokenKind_ellipsis.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'...'>\"}",
+
     "tokenKind_equal": "equal operator <'='>",
-    "_tokenKind_equal.comment": "{Locked=\"<'='>\"}",
+    "_tokenKind_equal.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'='>\"}",
+
     "tokenKind_fatArrow": "goes to ('=>')",
-    "_tokenKind_fatArrow.comment": "{Locked=\"('=>')\"}",
+    "_tokenKind_fatArrow.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('=>')\"}",
+
     "tokenKind_greaterThan": "greater than operator ('>')",
-    "_tokenKind_greaterThan.comment": "{Locked=\"('>')\"}",
+    "_tokenKind_greaterThan.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('>')\"}",
+
     "tokenKind_greaterThanEqualTo": "greater than or equal to operator ('>=')",
-    "_tokenKind_greaterThanEqualTo.comment": "{Locked=\"('>=')\"}",
+    "_tokenKind_greaterThanEqualTo.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('>=')\"}",
+
     "tokenKind_hexLiteral": "hex literal",
+    "_tokenKind_hexLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing.",
+
     "tokenKind_identifier": "identifier",
+    "_tokenKind_identifier.comment": "The localized representation of a tokenKind enum. Expected to be user facing.",
+
     "tokenKind_keywordAnd": "keyword <'and'>",
-    "_tokenKind_keywordAnd.comment": "{Locked=\"<'and'>\"}",
+    "_tokenKind_keywordAnd.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'and'>\"}",
+
     "tokenKind_keywordAs": "keyword <'as'>",
-    "_tokenKind_keywordAs.comment": "{Locked=\"<'as'>\"}",
+    "_tokenKind_keywordAs.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'as'>\"}",
+
     "tokenKind_keywordEach": "keyword <'each'>",
-    "_tokenKind_keywordEach.comment": "{Locked=\"<'each'>\"}",
+    "_tokenKind_keywordEach.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'each'>\"}",
+
     "tokenKind_keywordElse": "keyword <'else'>",
-    "_tokenKind_keywordElse.comment": "{Locked=\"<'else'>\"}",
+    "_tokenKind_keywordElse.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'else'>\"}",
+
     "tokenKind_keywordError": "keyword <'error'>",
-    "_tokenKind_keywordError.comment": "{Locked=\"<'error'>\"}",
+    "_tokenKind_keywordError.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'error'>\"}",
+
     "tokenKind_keywordFalse": "keyword <'false'>",
-    "_tokenKind_keywordFalse.comment": "{Locked=\"<'false'>\"}",
+    "_tokenKind_keywordFalse.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'false'>\"}",
+
     "tokenKind_keywordHashBinary": "keyword <'#binary'>",
-    "_tokenKind_keywordHashBinary.comment": "{Locked=\"<'#binary'>\"}",
+    "_tokenKind_keywordHashBinary.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#binary'>\"}",
+
     "tokenKind_keywordHashDate": "keyword <'#date'>",
-    "_tokenKind_keywordHashDate.comment": "{Locked=\"<'#date'>\"}",
+    "_tokenKind_keywordHashDate.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#date'>\"}",
+
     "tokenKind_keywordHashDateTime": "keyword <'#datetime'>",
-    "_tokenKind_keywordHashDateTime.comment": "{Locked=\"<'#datetime'>\"}",
+    "_tokenKind_keywordHashDateTime.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#datetime'>\"}",
+
     "tokenKind_keywordHashDateTimeZone": "keyword <'#datetimezone'>",
-    "_tokenKind_keywordHashDateTimeZone.comment": "{Locked=\"<'#datetimezone'>\"}",
+    "_tokenKind_keywordHashDateTimeZone.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#datetimezone'>\"}",
+
     "tokenKind_keywordHashDuration": "keyword <'#duration'>",
-    "_tokenKind_keywordHashDuration.comment": "{Locked=\"<'#duration'>\"}",
+    "_tokenKind_keywordHashDuration.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#duration'>\"}",
+
     "tokenKind_keywordHashInfinity": "keyword <'#infinity'>",
-    "_tokenKind_keywordHashInfinity.comment": "{Locked=\"<'#infinity'>\"}",
+    "_tokenKind_keywordHashInfinity.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#infinity'>\"}",
+
     "tokenKind_keywordHashNan": "keyword <'#nan'>",
-    "_tokenKind_keywordHashNan.comment": "{Locked=\"<'#nan'>\"}",
+    "_tokenKind_keywordHashNan.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#nan'>\"}",
+
     "tokenKind_keywordHashSections": "keyword <'#sections'>",
-    "_tokenKind_keywordHashSections.comment": "{Locked=\"<'#sections'>\"}",
+    "_tokenKind_keywordHashSections.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#sections'>\"}",
+
     "tokenKind_keywordHashShared": "keyword <'#shared'>",
-    "_tokenKind_keywordHashShared.comment": "{Locked=\"<'#shared'>\"}",
+    "_tokenKind_keywordHashShared.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#shared'>\"}",
+
     "tokenKind_keywordHashTable": "keyword <'#table'>",
-    "_tokenKind_keywordHashTable.comment": "{Locked=\"<'#table'>\"}",
+    "_tokenKind_keywordHashTable.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#table'>\"}",
+
     "tokenKind_keywordHashTime": "keyword <'#time'>",
-    "_tokenKind_keywordHashTime.comment": "{Locked=\"<'#time'>\"}",
+    "_tokenKind_keywordHashTime.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#time'>\"}",
+
     "tokenKind_keywordIf": "keyword <'if'>",
-    "_tokenKind_keywordIf.comment": "{Locked=\"<'if'>\"}",
+    "_tokenKind_keywordIf.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'if'>\"}",
+
     "tokenKind_keywordIn": "keyword <'in'>",
-    "_tokenKind_keywordIn.comment": "{Locked=\"<'in'>\"}",
+    "_tokenKind_keywordIn.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'in'>\"}",
+
     "tokenKind_keywordIs": "keyword <'is'>",
-    "_tokenKind_keywordIs.comment": "{Locked=\"<'is'>\"}",
+    "_tokenKind_keywordIs.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'is'>\"}",
+
     "tokenKind_keywordLet": "keyword <'let'>",
-    "_tokenKind_keywordLet.comment": "{Locked=\"<'let'>\"}",
+    "_tokenKind_keywordLet.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'let'>\"}",
+
     "tokenKind_keywordMeta": "keyword <'meta'>",
-    "_tokenKind_keywordMeta.comment": "{Locked=\"<'meta'>\"}",
+    "_tokenKind_keywordMeta.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'meta'>\"}",
+
     "tokenKind_keywordNot": "keyword <'not'>",
-    "_tokenKind_keywordNot.comment": "{Locked=\"<'not'>\"}",
+    "_tokenKind_keywordNot.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'not'>\"}",
+
     "tokenKind_keywordOr": "keyword <'or'>",
-    "_tokenKind_keywordOr.comment": "{Locked=\"<'or'>\"}",
+    "_tokenKind_keywordOr.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'or'>\"}",
+
     "tokenKind_keywordOtherwise": "keyword <'otherwise'>",
-    "_tokenKind_keywordOtherwise.comment": "{Locked=\"<'otherwise'>\"}",
+    "_tokenKind_keywordOtherwise.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'otherwise'>\"}",
+
     "tokenKind_keywordSection": "keyword <'section'>",
-    "_tokenKind_keywordSection.comment": "{Locked=\"<'section'>\"}",
+    "_tokenKind_keywordSection.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'section'>\"}",
+
     "tokenKind_keywordShared": "keyword <'shared'>",
-    "_tokenKind_keywordShared.comment": "{Locked=\"<'shared'>\"}",
+    "_tokenKind_keywordShared.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'shared'>\"}",
+
     "tokenKind_keywordThen": "keyword <'then'>",
-    "_tokenKind_keywordThen.comment": "{Locked=\"<'then'>\"}",
+    "_tokenKind_keywordThen.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'then'>\"}",
+
     "tokenKind_keywordTrue": "keyword <'true'>",
-    "_tokenKind_keywordTrue.comment": "{Locked=\"<'true'>\"}",
+    "_tokenKind_keywordTrue.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'true'>\"}",
+
     "tokenKind_keywordTry": "keyword <'try'>",
-    "_tokenKind_keywordTry.comment": "{Locked=\"<'try'>\"}",
+    "_tokenKind_keywordTry.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'try'>\"}",
+
     "tokenKind_keywordType": "keyword <'type'>",
-    "_tokenKind_keywordType.comment": "{Locked=\"<'type'>\"}",
+    "_tokenKind_keywordType.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'type'>\"}",
+
     "tokenKind_leftBrace": "left brace <'{'>",
-    "_tokenKind_leftBrace.comment": "{Locked=\"<'{'>\"}",
+    "_tokenKind_leftBrace.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'{'>\"}",
+
     "tokenKind_leftBracket": "left bracket <'['>",
-    "_tokenKind_leftBracket.comment": "{Locked=\"<'['>\"}",
+    "_tokenKind_leftBracket.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'['>\"}",
+
     "tokenKind_leftParenthesis": "left parenthesis <'('>",
-    "_tokenKind_leftParenthesis.comment": "{Locked=\"<'('>\"}",
+    "_tokenKind_leftParenthesis.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'('>\"}",
+
     "tokenKind_lessThan": "less than operator ('<')",
-    "_tokenKind_lessThan.comment": "{Locked=\"('<')\"}",
+    "_tokenKind_lessThan.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('<')\"}",
+
     "tokenKind_lessThanEqualTo": "less than or equal to operator ('<=')",
-    "_tokenKind_lessThanEqualTo.comment": "{Locked=\"('<=')\"}",
+    "_tokenKind_lessThanEqualTo.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('<=')\"}",
+
     "tokenKind_minus": "minus <'-'>",
-    "_tokenKind_minus.comment": "{Locked=\"<'-'>\"}",
+    "_tokenKind_minus.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'-'>\"}",
+
     "tokenKind_notEqual": "not equal to operator ('<>')",
-    "_tokenKind_notEqual.comment": "{Locked=\"('<>')\"}",
+    "_tokenKind_notEqual.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('<>')\"}",
+
     "tokenKind_nullLiteral": "<'null'>",
-    "_tokenKind_nullLiteral.comment": "{Locked=\"<'null'>\"}",
+    "_tokenKind_nullLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'null'>\"}",
+
     "tokenKind_numericLiteral": "numeric literal",
+
     "tokenKind_plus": "addition operator <'+'>",
-    "_tokenKind_plus.comment": "{Locked=\"<'+'>\"}",
+    "_tokenKind_plus.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'+'>\"}",
+
     "tokenKind_questionMark": "question mark <'?'>",
-    "_tokenKind_questionMark.comment": "{Locked=\"<'?'>\"}",
+    "_tokenKind_questionMark.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'?'>\"}",
+
     "tokenKind_rightBrace": "right brace <'}'>",
-    "_tokenKind_rightBrace.comment": "{Locked=\"<'}'>\"}",
+    "_tokenKind_rightBrace.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'}'>\"}",
+
     "tokenKind_rightBracket": "right bracket <']'>",
-    "_tokenKind_rightBracket.comment": "{Locked=\"<']'>\"}",
+    "_tokenKind_rightBracket.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<']'>\"}",
+
     "tokenKind_rightParenthesis": "right parenthesis <')'>",
-    "_tokenKind_rightParenthesis.comment": "{Locked=\"<')'>\"}",
+    "_tokenKind_rightParenthesis.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<')'>\"}",
+
     "tokenKind_semicolon": "semicolon <';'>",
-    "_tokenKind_semicolon.comment": "{Locked=\"<';'>\"}",
-    "tokenKind_stringLiteral": "string"
+    "_tokenKind_semicolon.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<';'>\"}",
+
+    "tokenKind_stringLiteral": "string",
+    "_tokenKind_stringLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing."
 }
