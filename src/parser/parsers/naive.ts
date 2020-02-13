@@ -981,7 +981,12 @@ export function readRecordExpression(state: IParserState, parser: IParser<IParse
 // ------------------------------------------------------
 
 export function readItemAccessExpression(state: IParserState, parser: IParser<IParserState>): Ast.ItemAccessExpression {
-    return readWrapped<Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
+    return readWrapped<
+        Ast.NodeKind.ItemAccessExpression,
+        Ast.WrapperConstantKind.LeftBrace,
+        Ast.TExpression,
+        Ast.WrapperConstantKind.RightBrace
+    >(
         state,
         Ast.NodeKind.ItemAccessExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
@@ -2317,8 +2322,10 @@ function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
 function readIdentifierConstantAsConstant(
     state: IParserState,
     constantKind: Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind,
-): Ast.Constant {
-    const maybeConstant: Ast.Constant | undefined = maybeReadIdentifierConstantAsConstant(state, constantKind);
+): Ast.Constant<Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind> {
+    const maybeConstant:
+        | Ast.Constant<Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind>
+        | undefined = maybeReadIdentifierConstantAsConstant(state, constantKind);
     if (!maybeConstant) {
         const details: {} = { constantKind };
         throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
@@ -2330,13 +2337,13 @@ function readIdentifierConstantAsConstant(
 function maybeReadIdentifierConstantAsConstant(
     state: IParserState,
     constantKind: Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind,
-): Ast.Constant | undefined {
+): Ast.Constant<Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind> | undefined {
     if (IParserStateUtils.isOnIdentifierConstant(state, constantKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
 
         readToken(state);
-        const astNode: Ast.Constant = {
+        const astNode: Ast.Constant<Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,

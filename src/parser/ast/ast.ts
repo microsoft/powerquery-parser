@@ -415,7 +415,7 @@ export interface RecordExpression
 
 export interface ItemAccessExpression extends IBraceWrapped<NodeKind.ItemAccessExpression, TExpression> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: Constant<IdentifierConstantKind.Optional> | undefined;
+    readonly maybeOptionalConstant: Constant<MiscConstantKind.QuestionMark> | undefined;
 }
 
 // --------------------------------------------------------
@@ -426,12 +426,12 @@ export type TFieldAccessExpression = FieldSelector | FieldProjection;
 
 export interface FieldSelector extends IBracketWrapped<NodeKind.FieldSelector, GeneralizedIdentifier> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: Constant<IdentifierConstantKind.Optional> | undefined;
+    readonly maybeOptionalConstant: Constant<MiscConstantKind.QuestionMark> | undefined;
 }
 
 export interface FieldProjection extends IBracketWrapped<NodeKind.FieldProjection, ICsvArray<FieldSelector>> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: Constant<IdentifierConstantKind.Optional> | undefined;
+    readonly maybeOptionalConstant: Constant<MiscConstantKind.QuestionMark> | undefined;
 }
 
 // ---------------------------------------------------
