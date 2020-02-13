@@ -1224,7 +1224,7 @@ export function readTableType(state: IParserState, parser: IParser<IParserState>
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const tableConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstantKind.Table);
+    const tableConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.PrimitiveTypeConstantKind.Table);
     const maybeCurrentTokenKind: TokenKind | undefined = state.maybeCurrentTokenKind;
     const isPrimaryExpressionExpected: boolean =
         maybeCurrentTokenKind === TokenKind.AtSign ||
@@ -1423,7 +1423,10 @@ export function readFunctionType(state: IParserState, parser: IParser<IParserSta
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const functionConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstantKind.Function);
+    const functionConstant: Ast.Constant = readIdentifierConstantAsConstant(
+        state,
+        Ast.PrimitiveTypeConstantKind.Function,
+    );
     const parameters: Ast.IParameterList<Ast.AsType> = parser.readParameterSpecificationList(state, parser);
     const functionReturnType: Ast.AsType = parser.readAsType(state, parser);
 
@@ -1441,13 +1444,13 @@ export function readFunctionType(state: IParserState, parser: IParser<IParserSta
 
 function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>): TriedReadPrimaryType {
     const isTableTypeNext: boolean =
-        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstantKind.Table) &&
+        IParserStateUtils.isOnIdentifierConstant(state, Ast.PrimitiveTypeConstantKind.Table) &&
         (IParserStateUtils.isNextTokenKind(state, TokenKind.LeftBracket) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.LeftParenthesis) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.AtSign) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.Identifier));
     const isFunctionTypeNext: boolean =
-        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstantKind.Function) &&
+        IParserStateUtils.isOnIdentifierConstant(state, Ast.PrimitiveTypeConstantKind.Function) &&
         IParserStateUtils.isNextTokenKind(state, TokenKind.LeftParenthesis);
 
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
@@ -1661,23 +1664,23 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.Identifier)) {
         const currentTokenData: string = state.lexerSnapshot.tokens[state.tokenIndex].data;
         switch (currentTokenData) {
-            case Ast.IdentifierConstantKind.Action:
-            case Ast.IdentifierConstantKind.Any:
-            case Ast.IdentifierConstantKind.AnyNonNull:
-            case Ast.IdentifierConstantKind.Binary:
-            case Ast.IdentifierConstantKind.Date:
-            case Ast.IdentifierConstantKind.DateTime:
-            case Ast.IdentifierConstantKind.DateTimeZone:
-            case Ast.IdentifierConstantKind.Duration:
-            case Ast.IdentifierConstantKind.Function:
-            case Ast.IdentifierConstantKind.List:
-            case Ast.IdentifierConstantKind.Logical:
-            case Ast.IdentifierConstantKind.None:
-            case Ast.IdentifierConstantKind.Number:
-            case Ast.IdentifierConstantKind.Record:
-            case Ast.IdentifierConstantKind.Table:
-            case Ast.IdentifierConstantKind.Text:
-            case Ast.IdentifierConstantKind.Time:
+            case Ast.PrimitiveTypeConstantKind.Action:
+            case Ast.PrimitiveTypeConstantKind.Any:
+            case Ast.PrimitiveTypeConstantKind.AnyNonNull:
+            case Ast.PrimitiveTypeConstantKind.Binary:
+            case Ast.PrimitiveTypeConstantKind.Date:
+            case Ast.PrimitiveTypeConstantKind.DateTime:
+            case Ast.PrimitiveTypeConstantKind.DateTimeZone:
+            case Ast.PrimitiveTypeConstantKind.Duration:
+            case Ast.PrimitiveTypeConstantKind.Function:
+            case Ast.PrimitiveTypeConstantKind.List:
+            case Ast.PrimitiveTypeConstantKind.Logical:
+            case Ast.PrimitiveTypeConstantKind.None:
+            case Ast.PrimitiveTypeConstantKind.Number:
+            case Ast.PrimitiveTypeConstantKind.Record:
+            case Ast.PrimitiveTypeConstantKind.Table:
+            case Ast.PrimitiveTypeConstantKind.Text:
+            case Ast.PrimitiveTypeConstantKind.Time:
                 primitiveType = readIdentifierConstantAsConstant(state, currentTokenData);
                 break;
 
@@ -1695,7 +1698,7 @@ function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState
     } else if (IParserStateUtils.isOnTokenKind(state, TokenKind.KeywordType)) {
         primitiveType = readTokenKindAsConstant(state, TokenKind.KeywordType, Ast.KeywordConstantKind.Type);
     } else if (IParserStateUtils.isOnTokenKind(state, TokenKind.NullLiteral)) {
-        primitiveType = readTokenKindAsConstant(state, TokenKind.NullLiteral, Ast.MiscConstantKind.Null);
+        primitiveType = readTokenKindAsConstant(state, TokenKind.NullLiteral, Ast.PrimitiveTypeConstantKind.Null);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
         IParserStateUtils.applyFastStateBackup(state, stateBackup);
@@ -2255,11 +2258,11 @@ function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
 
 function readIdentifierConstantAsConstant(
     state: IParserState,
-    identifierConstant: Ast.IdentifierConstantKind,
+    constantKind: Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind,
 ): Ast.Constant {
-    const maybeConstant: Ast.Constant | undefined = maybeReadIdentifierConstantAsConstant(state, identifierConstant);
+    const maybeConstant: Ast.Constant | undefined = maybeReadIdentifierConstantAsConstant(state, constantKind);
     if (!maybeConstant) {
-        const details: {} = { identifierConstant };
+        const details: {} = { constantKind };
         throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
     }
 
@@ -2268,9 +2271,9 @@ function readIdentifierConstantAsConstant(
 
 function maybeReadIdentifierConstantAsConstant(
     state: IParserState,
-    identifierConstant: Ast.IdentifierConstantKind,
+    constantKind: Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind,
 ): Ast.Constant | undefined {
-    if (IParserStateUtils.isOnIdentifierConstant(state, identifierConstant)) {
+    if (IParserStateUtils.isOnIdentifierConstant(state, constantKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
 
@@ -2279,7 +2282,7 @@ function maybeReadIdentifierConstantAsConstant(
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,
-            constantKind: identifierConstant,
+            constantKind,
         };
         IParserStateUtils.endContext(state, astNode);
         return astNode;

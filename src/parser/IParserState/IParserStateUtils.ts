@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParseError, ParseContext, ParseContextUtils } from "..";
+import { Ast, NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { CommonError } from "../../common";
 import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
 import { ParseSettings } from "../../settings";
@@ -176,7 +176,10 @@ export function isOnTokenKind(
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
-export function isOnIdentifierConstant(state: IParserState, identifierConstant: Ast.IdentifierConstantKind): boolean {
+export function isOnIdentifierConstant(
+    state: IParserState,
+    constantKind: Ast.PrimitiveTypeConstantKind | Ast.IdentifierConstantKind,
+): boolean {
     if (isOnTokenKind(state, TokenKind.Identifier)) {
         const currentToken: Token = state.lexerSnapshot.tokens[state.tokenIndex];
         if (currentToken === undefined || currentToken.data === undefined) {
@@ -185,7 +188,7 @@ export function isOnIdentifierConstant(state: IParserState, identifierConstant: 
         }
 
         const data: string = currentToken.data;
-        return data === identifierConstant;
+        return data === constantKind;
     } else {
         return false;
     }

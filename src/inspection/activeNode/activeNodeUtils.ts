@@ -201,7 +201,7 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
             case Ast.KeywordConstantKind.Try:
             case Ast.KeywordConstantKind.Type:
 
-            case Ast.MiscConstantKind.Null:
+            case Ast.PrimitiveTypeConstantKind.Null:
                 return true;
 
             default:
