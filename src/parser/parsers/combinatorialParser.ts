@@ -195,7 +195,7 @@ function readBinOpExpression(
     // operators/operatorConstants are of length N
     // expressions are of length N + 1
     let operators: Ast.TBinOpExpressionOperator[] = [];
-    let operatorConstants: Ast.Constant[] = [];
+    let operatorConstants: Ast.Constant<Ast.TBinOpExpressionOperator>[] = [];
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
         parser.readUnaryExpression(state, parser),
     ];
@@ -206,7 +206,9 @@ function readBinOpExpression(
     while (maybeOperator !== undefined) {
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
-        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind!, maybeOperator));
+        operatorConstants.push(
+            readTokenKindAsConstant<Ast.TBinOpExpressionOperator>(state, state.maybeCurrentTokenKind!, maybeOperator),
+        );
 
         switch (operator) {
             case Ast.KeywordConstantKind.As:
@@ -249,7 +251,8 @@ function readBinOpExpression(
         const left: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
-        const operatorConstant: TypeUtils.StripReadonly<Ast.Constant> = operatorConstants[minPrecedenceIndex];
+        const operatorConstant: TypeUtils.StripReadonly<Ast.Constant<Ast.TBinOpExpressionOperator>> =
+            operatorConstants[minPrecedenceIndex];
         const right: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex + 1];
 
