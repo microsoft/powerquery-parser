@@ -195,7 +195,7 @@ function readBinOpExpression(
     // operators/operatorConstants are of length N
     // expressions are of length N + 1
     let operators: Ast.TBinOpExpressionOperator[] = [];
-    let operatorConstants: Ast.Constant<Ast.TBinOpExpressionOperator>[] = [];
+    let operatorConstants: Ast.IConstant<Ast.TBinOpExpressionOperator>[] = [];
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
         parser.readUnaryExpression(state, parser),
     ];
@@ -251,7 +251,7 @@ function readBinOpExpression(
         const left: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
-        const operatorConstant: TypeUtils.StripReadonly<Ast.Constant<Ast.TBinOpExpressionOperator>> =
+        const operatorConstant: TypeUtils.StripReadonly<Ast.IConstant<Ast.TBinOpExpressionOperator>> =
             operatorConstants[minPrecedenceIndex];
         const right: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex + 1];

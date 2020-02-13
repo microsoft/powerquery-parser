@@ -35,7 +35,7 @@ export function readTokenKindAsConstant<T>(
     state: IParserState,
     tokenKind: TokenKind,
     constantKind: T & Ast.TConstantKind,
-): Ast.TConstant & Ast.Constant<T & Ast.TConstantKind> {
+): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> {
     IParserStateUtils.startContext(state, Ast.NodeKind.Constant);
 
     const maybeErr: ParseError.ExpectedTokenKindError | undefined = IParserStateUtils.testIsOnTokenKind(
@@ -55,7 +55,7 @@ export function readTokenKindAsConstant<T>(
         throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
     }
 
-    const astNode: Ast.TConstant & Ast.Constant<T & Ast.TConstantKind> = {
+    const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: Ast.NodeKind.Constant,
         isLeaf: true,
@@ -70,7 +70,7 @@ export function maybeReadTokenKindAsConstant<T>(
     state: IParserState,
     tokenKind: TokenKind,
     constantKind: T & Ast.TConstantKind,
-): Ast.TConstant & Ast.Constant<T & Ast.TConstantKind> | undefined {
+): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> | undefined {
     if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
@@ -84,7 +84,7 @@ export function maybeReadTokenKindAsConstant<T>(
             throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
         }
 
-        const astNode: Ast.TConstant & Ast.Constant<T & Ast.TConstantKind> = {
+        const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,
