@@ -266,7 +266,7 @@ function positionAstSearch(
 
     // Might need to shift.
     if (maybeCurrentOnOrBefore !== undefined && maybeCurrentOnOrBefore.kind === Ast.NodeKind.Constant) {
-        const currentOnOrBefore: Ast.Constant = maybeCurrentOnOrBefore;
+        const currentOnOrBefore: Ast.TConstant = maybeCurrentOnOrBefore;
 
         // Requires a shift into an empty ArrayWrapper.
         if (

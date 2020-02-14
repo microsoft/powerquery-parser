@@ -274,7 +274,8 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
 
             const identifierExprAstNode: Ast.IdentifierExpression = identifierExpr.node;
             const identifier: Ast.Identifier = identifierExprAstNode.identifier;
-            const maybeInclusiveConstant: Ast.Constant | undefined = identifierExprAstNode.maybeInclusiveConstant;
+            const maybeInclusiveConstant: Ast.IConstant<Ast.MiscConstantKind.AtSign> | undefined =
+                identifierExprAstNode.maybeInclusiveConstant;
 
             key =
                 maybeInclusiveConstant !== undefined
@@ -295,7 +296,9 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
                 [Ast.NodeKind.Constant],
             );
             if (maybeInclusiveConstant !== undefined) {
-                const inclusiveConstant: Ast.Constant = maybeInclusiveConstant.node as Ast.Constant;
+                const inclusiveConstant: Ast.IConstant<
+                    Ast.MiscConstantKind.AtSign
+                > = maybeInclusiveConstant.node as Ast.IConstant<Ast.MiscConstantKind.AtSign>;
                 // Adds the '@' prefix.
                 key = inclusiveConstant.constantKind;
             }

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { Ast, ParseError } from "..";
 import { CommonError, isNever, Result, ResultUtils } from "../../common";
 import { Token, TokenKind } from "../../lexer";
@@ -28,11 +31,11 @@ export function readToken(state: IParserState): string {
     return data;
 }
 
-export function readTokenKindAsConstant(
+export function readTokenKindAsConstant<T>(
     state: IParserState,
     tokenKind: TokenKind,
-    constantKind: Ast.TConstantKind,
-): Ast.Constant {
+    constantKind: T & Ast.TConstantKind,
+): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> {
     IParserStateUtils.startContext(state, Ast.NodeKind.Constant);
 
     const maybeErr: ParseError.ExpectedTokenKindError | undefined = IParserStateUtils.testIsOnTokenKind(
@@ -52,7 +55,7 @@ export function readTokenKindAsConstant(
         throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
     }
 
-    const astNode: Ast.Constant = {
+    const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: Ast.NodeKind.Constant,
         isLeaf: true,
@@ -63,11 +66,11 @@ export function readTokenKindAsConstant(
     return astNode;
 }
 
-export function maybeReadTokenKindAsConstant(
+export function maybeReadTokenKindAsConstant<T>(
     state: IParserState,
     tokenKind: TokenKind,
-    constantKind: Ast.TConstantKind,
-): Ast.Constant | undefined {
+    constantKind: T & Ast.TConstantKind,
+): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> | undefined {
     if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
@@ -81,7 +84,7 @@ export function maybeReadTokenKindAsConstant(
             throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
         }
 
-        const astNode: Ast.Constant = {
+        const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,
@@ -111,7 +114,7 @@ export function readBracketDisambiguation(
     const disambiguation: BracketDisambiguation = triedDisambiguation.value;
     if (allowedVariants.indexOf(disambiguation) === -1) {
         throw new CommonError.InvariantError(
-            `grammer doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
+            `grammar doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
         );
     }
 
