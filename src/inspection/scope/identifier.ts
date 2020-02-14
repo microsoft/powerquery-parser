@@ -53,7 +53,7 @@ export interface ParameterScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Parameter;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
-    readonly maybeType: Ast.TConstantKind | undefined;
+    readonly maybeType: Ast.PrimitiveTypeConstantKind | undefined;
 }
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
