@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.1.31",
+    "version": "0.1.36",
     "description": "A parser for the Power Query/M formula language.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -37,15 +37,18 @@
         "lib/index.d.ts",
         "lib/index.js",
         "lib/index.js.map",
-        "lib/jobs.d.ts",
-        "lib/jobs.js",
-        "lib/jobs.js.map"
+        "lib/settings.d.ts",
+        "lib/settings.js",
+        "lib/settings.js.map",
+        "lib/tasks.d.ts",
+        "lib/tasks.js",
+        "lib/tasks.js.map"
     ],
     "scripts": {
         "build": "node_modules\\.bin\\tsc",
         "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/**/*.ts",
         "check": "node_modules\\.bin\\prettier --config \".prettierrc\" --list-different src\\**\\*.ts",
-        "preparePublish": "git clean -xdf && npm install && npm run check && npm run build && npm run test"
+        "prepublishOnly": "git clean -xdf && npm install && npm run check && npm run build && npm run test"
     },
     "repository": {
         "type": "git",

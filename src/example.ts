@@ -4,10 +4,11 @@
 /* tslint:disable:no-console */
 
 import { Inspection } from ".";
-import { Option, ResultUtils } from "./common";
-import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./jobs";
+import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { ParseError, Parser } from "./parser";
+import { ParseError } from "./parser";
+import { DefaultSettings } from "./settings";
+import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./tasks";
 
 parseText(`if true then 1 else 2`);
 
@@ -15,7 +16,7 @@ parseText(`if true then 1 else 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
+    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
@@ -44,13 +45,13 @@ function lexText(text: string): void {
     // or Lexer.maybeErrorLineMap to quickly get all lines with errors.
     // Note: At this point all errors are isolated to a single line.
     //       Checks for multiline errors, such as an unterminated string, have not been processed.
-    let state: Lexer.State = Lexer.stateFrom(text);
+    let state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
 
     // The lexer state might have an error.
     // To be sure either use the typeguard Lexer.isErrorState,
     // or Lexer.maybeErrorLineMap to get an option containing a map of all lines with errors.
-    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(state);
-    if (maybeErrorLineMap) {
+    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
+    if (maybeErrorLineMap !== undefined) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
 
         for (const [lineNumber, errorLine] of errorLineMap.entries()) {
@@ -101,7 +102,7 @@ function lexText(text: string): void {
 function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: TriedLexParseInspection = tryLexParseInspection(text, Parser.CombinatorialParser, position);
+    const triedInspection: TriedLexParseInspection = tryLexParseInspection(DefaultSettings, text, position);
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;

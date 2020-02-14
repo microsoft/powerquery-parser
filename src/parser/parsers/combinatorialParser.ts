@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, AstUtils, NodeIdMap, ParserContext } from "..";
-import { ArrayUtils, CommonError, isNever, Option, TypeUtils } from "../../common";
+import { Naive } from ".";
+import { Ast, AstUtils, NodeIdMap, ParseContextUtils } from "..";
+import { ArrayUtils, CommonError, isNever, TypeUtils } from "../../common";
 import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
-
-import * as Naive from "./naive";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while
@@ -196,22 +195,24 @@ function readBinOpExpression(
     // operators/operatorConstants are of length N
     // expressions are of length N + 1
     let operators: Ast.TBinOpExpressionOperator[] = [];
-    let operatorConstants: Ast.Constant[] = [];
+    let operatorConstants: Ast.IConstant<Ast.TBinOpExpressionOperator>[] = [];
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator: Option<Ast.TBinOpExpressionOperator> = AstUtils.maybeBinOpExpressionOperatorFrom(
+    let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorKindFrom(
         state.maybeCurrentTokenKind,
     );
     while (maybeOperator !== undefined) {
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
-        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind!));
+        operatorConstants.push(
+            readTokenKindAsConstant<Ast.TBinOpExpressionOperator>(state, state.maybeCurrentTokenKind!, maybeOperator),
+        );
 
         switch (operator) {
-            case Ast.ConstantKind.As:
-            case Ast.ConstantKind.Is:
+            case Ast.KeywordConstantKind.As:
+            case Ast.KeywordConstantKind.Is:
                 expressions.push(parser.readNullablePrimitiveType(state, parser));
                 break;
 
@@ -220,7 +221,7 @@ function readBinOpExpression(
                 break;
         }
 
-        maybeOperator = AstUtils.maybeBinOpExpressionOperatorFrom(state.maybeCurrentTokenKind);
+        maybeOperator = AstUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
     }
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
@@ -239,18 +240,19 @@ function readBinOpExpression(
         let minPrecedence: number = Number.MAX_SAFE_INTEGER;
 
         for (let index: number = 0; index < operators.length; index += 1) {
-            const currentPrecedence: number = AstUtils.maybeBinOpExpressionOperatorPrecedence(operators[index]);
+            const currentPrecedence: number = AstUtils.binOpExpressionOperatorPrecedence(operators[index]);
             if (minPrecedence > currentPrecedence) {
                 minPrecedence = currentPrecedence;
                 minPrecedenceIndex = index;
             }
         }
 
-        const newBinOpExpressionId: number = ParserContext.nextId(state.contextState);
+        const newBinOpExpressionId: number = ParseContextUtils.nextId(state.contextState);
         const left: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
-        const operatorConstant: TypeUtils.StripReadonly<Ast.Constant> = operatorConstants[minPrecedenceIndex];
+        const operatorConstant: TypeUtils.StripReadonly<Ast.IConstant<Ast.TBinOpExpressionOperator>> =
+            operatorConstants[minPrecedenceIndex];
         const right: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
             expressions[minPrecedenceIndex + 1];
 
@@ -324,34 +326,34 @@ function readBinOpExpression(
 
 function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
     switch (operator) {
-        case Ast.ConstantKind.Meta:
+        case Ast.KeywordConstantKind.Meta:
             return Ast.NodeKind.MetadataExpression;
 
-        case Ast.ArithmeticOperator.Multiplication:
-        case Ast.ArithmeticOperator.Division:
-        case Ast.ArithmeticOperator.Addition:
-        case Ast.ArithmeticOperator.Subtraction:
-        case Ast.ArithmeticOperator.And:
+        case Ast.ArithmeticOperatorKind.Multiplication:
+        case Ast.ArithmeticOperatorKind.Division:
+        case Ast.ArithmeticOperatorKind.Addition:
+        case Ast.ArithmeticOperatorKind.Subtraction:
+        case Ast.ArithmeticOperatorKind.And:
             return Ast.NodeKind.ArithmeticExpression;
 
-        case Ast.RelationalOperator.GreaterThan:
-        case Ast.RelationalOperator.GreaterThanEqualTo:
-        case Ast.RelationalOperator.LessThan:
-        case Ast.RelationalOperator.LessThanEqualTo:
+        case Ast.RelationalOperatorKind.GreaterThan:
+        case Ast.RelationalOperatorKind.GreaterThanEqualTo:
+        case Ast.RelationalOperatorKind.LessThan:
+        case Ast.RelationalOperatorKind.LessThanEqualTo:
             return Ast.NodeKind.RelationalExpression;
 
-        case Ast.EqualityOperator.EqualTo:
-        case Ast.EqualityOperator.NotEqualTo:
+        case Ast.EqualityOperatorKind.EqualTo:
+        case Ast.EqualityOperatorKind.NotEqualTo:
             return Ast.NodeKind.EqualityExpression;
 
-        case Ast.ConstantKind.As:
+        case Ast.KeywordConstantKind.As:
             return Ast.NodeKind.AsExpression;
 
-        case Ast.ConstantKind.Is:
+        case Ast.KeywordConstantKind.Is:
             return Ast.NodeKind.IsExpression;
 
-        case Ast.LogicalOperator.And:
-        case Ast.LogicalOperator.Or:
+        case Ast.LogicalOperatorKind.And:
+        case Ast.LogicalOperatorKind.Or:
             return Ast.NodeKind.LogicalExpression;
 
         default:
@@ -360,7 +362,7 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
 }
 
 function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
-    let maybePrimaryExpression: Option<Ast.TPrimaryExpression>;
+    let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
 
     // LL(1)
     switch (state.maybeCurrentTokenKind) {

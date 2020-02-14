@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option } from "../../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParserContext } from "../../parser";
+import { CommonError } from "../../common";
+import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
@@ -29,11 +29,11 @@ export function maybeActiveNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Option<ActiveNode> {
+): ActiveNode | undefined {
     const astSearch: AstNodeSearch = positionAstSearch(position, nodeIdMapCollection, leafNodeIds);
-    const maybeContextSearch: Option<ParserContext.Node> = positionContextSearch(astSearch, nodeIdMapCollection);
+    const maybeContextSearch: ParseContext.Node | undefined = positionContextSearch(astSearch, nodeIdMapCollection);
 
-    let maybeLeaf: Option<NodeIdMap.TXorNode>;
+    let maybeLeaf: TXorNode | undefined;
     if (astSearch.maybeShiftedNode !== undefined) {
         maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeShiftedNode);
     } else if (astSearch.maybeNode !== undefined && isAnchorNode(position, astSearch.maybeNode)) {
@@ -49,7 +49,7 @@ export function maybeActiveNode(
     if (maybeLeaf === undefined) {
         return undefined;
     }
-    const leaf: NodeIdMap.TXorNode = maybeLeaf;
+    const leaf: TXorNode = maybeLeaf;
 
     return {
         position,
@@ -58,12 +58,12 @@ export function maybeActiveNode(
     };
 }
 
-export function expectRoot(activeNode: ActiveNode): NodeIdMap.TXorNode {
-    const ancestry: ReadonlyArray<NodeIdMap.TXorNode> = activeNode.ancestry;
+export function expectRoot(activeNode: ActiveNode): TXorNode {
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     return ancestry[ancestry.length - 1];
 }
 
-export function expectLeaf(activeNode: ActiveNode): NodeIdMap.TXorNode {
+export function expectLeaf(activeNode: ActiveNode): TXorNode {
     return activeNode.ancestry[0];
 }
 
@@ -71,9 +71,9 @@ export function maybePreviousXorNode(
     activeNode: ActiveNode,
     ancestorIndex: number,
     n: number = 1,
-    maybeNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
-): Option<NodeIdMap.TXorNode> {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = activeNode.ancestry[ancestorIndex - n];
+    maybeNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode | undefined {
+    const maybeXorNode: TXorNode | undefined = activeNode.ancestry[ancestorIndex - n];
     if (maybeXorNode !== undefined && maybeNodeKinds !== undefined) {
         return maybeNodeKinds.indexOf(maybeXorNode.node.kind) !== -1 ? maybeXorNode : undefined;
     } else {
@@ -81,11 +81,7 @@ export function maybePreviousXorNode(
     }
 }
 
-export function maybeNextXorNode(
-    activeNode: ActiveNode,
-    ancestorIndex: number,
-    n: number = 1,
-): Option<NodeIdMap.TXorNode> {
+export function maybeNextXorNode(activeNode: ActiveNode, ancestorIndex: number, n: number = 1): TXorNode | undefined {
     return activeNode.ancestry[ancestorIndex + n];
 }
 
@@ -93,13 +89,13 @@ export function expectPreviousXorNode(
     activeNode: ActiveNode,
     ancestorIndex: number,
     n: number = 1,
-    maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
-): NodeIdMap.TXorNode {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybePreviousXorNode(activeNode, ancestorIndex, n);
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode {
+    const maybeXorNode: TXorNode | undefined = maybePreviousXorNode(activeNode, ancestorIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError("no previous node");
     }
-    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+    const xorNode: TXorNode = maybeXorNode;
 
     if (maybeAllowedNodeKinds !== undefined) {
         const details: {} = {
@@ -108,7 +104,7 @@ export function expectPreviousXorNode(
             expectedAny: maybeAllowedNodeKinds,
             actual: xorNode.node.kind,
         };
-        const maybeErr: Option<CommonError.InvariantError> = AstUtils.testAnyNodeKind(
+        const maybeErr: CommonError.InvariantError | undefined = AstUtils.testAnyNodeKind(
             xorNode.node.kind,
             maybeAllowedNodeKinds,
             details,
@@ -125,13 +121,13 @@ export function expectNextXorNode(
     activeNode: ActiveNode,
     ancestorIndex: number,
     n: number = 1,
-    maybeAllowedNodeKinds: Option<ReadonlyArray<Ast.NodeKind>> = undefined,
-): NodeIdMap.TXorNode {
-    const maybeXorNode: Option<NodeIdMap.TXorNode> = maybeNextXorNode(activeNode, ancestorIndex, n);
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode {
+    const maybeXorNode: TXorNode | undefined = maybeNextXorNode(activeNode, ancestorIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError("no next node");
     }
-    const xorNode: NodeIdMap.TXorNode = maybeXorNode;
+    const xorNode: TXorNode = maybeXorNode;
 
     if (maybeAllowedNodeKinds !== undefined) {
         const details: {} = {
@@ -140,7 +136,7 @@ export function expectNextXorNode(
             expectedAny: maybeAllowedNodeKinds,
             actual: xorNode.node.kind,
         };
-        const maybeErr: Option<CommonError.InvariantError> = AstUtils.testAnyNodeKind(
+        const maybeErr: CommonError.InvariantError | undefined = AstUtils.testAnyNodeKind(
             xorNode.node.kind,
             maybeAllowedNodeKinds,
             details,
@@ -154,24 +150,24 @@ export function expectNextXorNode(
 }
 
 interface AstNodeSearch {
-    readonly maybeNode: Option<Ast.TNode>;
-    readonly maybeShiftedNode: Option<Ast.TNode>;
+    readonly maybeNode: Ast.TNode | undefined;
+    readonly maybeShiftedNode: Ast.TNode | undefined;
 }
 
 const DrilldownConstantKind: ReadonlyArray<string> = [
-    Ast.ConstantKind.LeftBrace,
-    Ast.ConstantKind.LeftBracket,
-    Ast.ConstantKind.LeftParenthesis,
+    Ast.WrapperConstantKind.LeftBrace,
+    Ast.WrapperConstantKind.LeftBracket,
+    Ast.WrapperConstantKind.LeftParenthesis,
 ];
 
 const ShiftRightConstantKinds: ReadonlyArray<string> = [
-    Ast.ConstantKind.Comma,
-    Ast.ConstantKind.Equal,
-    Ast.ConstantKind.FatArrow,
-    Ast.ConstantKind.RightBrace,
-    Ast.ConstantKind.RightBracket,
-    Ast.ConstantKind.RightParenthesis,
-    Ast.ConstantKind.Semicolon,
+    Ast.MiscConstantKind.Comma,
+    Ast.MiscConstantKind.Equal,
+    Ast.MiscConstantKind.FatArrow,
+    Ast.WrapperConstantKind.RightBrace,
+    Ast.WrapperConstantKind.RightBracket,
+    Ast.WrapperConstantKind.RightParenthesis,
+    Ast.MiscConstantKind.Semicolon,
     ...DrilldownConstantKind,
 ];
 
@@ -188,23 +184,24 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
     ) {
         return true;
     } else if (astNode.kind === Ast.NodeKind.Constant) {
-        switch (astNode.literal) {
-            case Ast.ConstantKind.As:
-            case Ast.ConstantKind.Each:
-            case Ast.ConstantKind.Else:
-            case Ast.ConstantKind.Error:
-            case Ast.ConstantKind.If:
-            case Ast.ConstantKind.In:
-            case Ast.ConstantKind.Is:
-            case Ast.ConstantKind.Section:
-            case Ast.ConstantKind.Shared:
-            case Ast.ConstantKind.Let:
-            case Ast.ConstantKind.Meta:
-            case Ast.ConstantKind.Null:
-            case Ast.ConstantKind.Otherwise:
-            case Ast.ConstantKind.Then:
-            case Ast.ConstantKind.Try:
-            case Ast.ConstantKind.Type:
+        switch (astNode.constantKind) {
+            case Ast.KeywordConstantKind.As:
+            case Ast.KeywordConstantKind.Each:
+            case Ast.KeywordConstantKind.Else:
+            case Ast.KeywordConstantKind.Error:
+            case Ast.KeywordConstantKind.If:
+            case Ast.KeywordConstantKind.In:
+            case Ast.KeywordConstantKind.Is:
+            case Ast.KeywordConstantKind.Section:
+            case Ast.KeywordConstantKind.Shared:
+            case Ast.KeywordConstantKind.Let:
+            case Ast.KeywordConstantKind.Meta:
+            case Ast.KeywordConstantKind.Otherwise:
+            case Ast.KeywordConstantKind.Then:
+            case Ast.KeywordConstantKind.Try:
+            case Ast.KeywordConstantKind.Type:
+
+            case Ast.PrimitiveTypeConstantKind.Null:
                 return true;
 
             default:
@@ -221,9 +218,9 @@ function positionAstSearch(
     leafNodeIds: ReadonlyArray<number>,
 ): AstNodeSearch {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    let maybeCurrentOnOrBefore: Option<Ast.TNode>;
-    let maybeCurrentAfter: Option<Ast.TNode>;
-    let maybeShiftedNode: Option<Ast.TNode>;
+    let maybeCurrentOnOrBefore: Ast.TNode | undefined;
+    let maybeCurrentAfter: Ast.TNode | undefined;
+    let maybeShiftedNode: Ast.TNode | undefined;
 
     // Find:
     //  the closest leaf to the left or on position.
@@ -234,11 +231,12 @@ function positionAstSearch(
         let isBoundIncluded: boolean;
         if (
             // let x|=1
-            (candidate.kind === Ast.NodeKind.Constant && ShiftRightConstantKinds.indexOf(candidate.literal) !== -1) ||
+            (candidate.kind === Ast.NodeKind.Constant &&
+                ShiftRightConstantKinds.indexOf(candidate.constantKind) !== -1) ||
             // let x=|1
             (maybeCurrentOnOrBefore !== undefined &&
                 maybeCurrentOnOrBefore.kind === Ast.NodeKind.Constant &&
-                ShiftRightConstantKinds.indexOf(maybeCurrentOnOrBefore.literal) !== -1)
+                ShiftRightConstantKinds.indexOf(maybeCurrentOnOrBefore.constantKind) !== -1)
         ) {
             isBoundIncluded = false;
         } else {
@@ -268,17 +266,14 @@ function positionAstSearch(
 
     // Might need to shift.
     if (maybeCurrentOnOrBefore !== undefined && maybeCurrentOnOrBefore.kind === Ast.NodeKind.Constant) {
-        const currentOnOrBefore: Ast.Constant = maybeCurrentOnOrBefore;
+        const currentOnOrBefore: Ast.TConstant = maybeCurrentOnOrBefore;
 
         // Requires a shift into an empty ArrayWrapper.
         if (
-            DrilldownConstantKind.indexOf(maybeCurrentOnOrBefore.literal) !== -1 &&
+            DrilldownConstantKind.indexOf(maybeCurrentOnOrBefore.constantKind) !== -1 &&
             maybeCurrentAfter !== undefined &&
             maybeCurrentAfter.kind === Ast.NodeKind.Constant &&
-            AstUtils.isPairedConstant(
-                maybeCurrentOnOrBefore.literal as Ast.ConstantKind,
-                maybeCurrentAfter.literal as Ast.ConstantKind,
-            )
+            AstUtils.isPairedWrapperConstantKinds(maybeCurrentOnOrBefore.constantKind, maybeCurrentAfter.constantKind)
         ) {
             const parent: Ast.TNode = NodeIdMapUtils.expectParentAstNode(nodeIdMapCollection, currentOnOrBefore.id, [
                 Ast.NodeKind.RecordExpression,
@@ -296,7 +291,7 @@ function positionAstSearch(
             maybeShiftedNode = arrayWrapper;
         }
         // Requires a shift to the right.
-        else if (ShiftRightConstantKinds.indexOf(currentOnOrBefore.literal) !== -1) {
+        else if (ShiftRightConstantKinds.indexOf(currentOnOrBefore.constantKind) !== -1) {
             maybeShiftedNode = maybeCurrentAfter;
         }
         // No shifting.
@@ -316,13 +311,13 @@ function positionAstSearch(
 function positionContextSearch(
     astNodeSearch: AstNodeSearch,
     nodeIdMapCollection: NodeIdMap.Collection,
-): Option<ParserContext.Node> {
+): ParseContext.Node | undefined {
     if (astNodeSearch.maybeNode === undefined) {
         return undefined;
     }
     const tokenIndexLowBound: number = astNodeSearch.maybeNode.tokenRange.tokenIndexStart;
 
-    let maybeCurrent: Option<ParserContext.Node> = undefined;
+    let maybeCurrent: ParseContext.Node | undefined = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.maybeTokenStart) {
             if (candidate.tokenIndexStart < tokenIndexLowBound) {
@@ -341,17 +336,17 @@ function positionContextSearch(
 function maybeIdentifierUnderPosition(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    leaf: NodeIdMap.TXorNode,
-): Option<Ast.Identifier | Ast.GeneralizedIdentifier> {
-    if (leaf.kind !== NodeIdMap.XorNodeKind.Ast) {
+    leaf: TXorNode,
+): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
+    if (leaf.kind !== XorNodeKind.Ast) {
         return undefined;
     }
 
     let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.literal === `@`) {
-        const maybeParentId: Option<number> = nodeIdMapCollection.parentIdById.get(leaf.node.id);
+    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Ast.MiscConstantKind.AtSign) {
+        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.node.id);
         if (maybeParentId === undefined) {
             return undefined;
         }

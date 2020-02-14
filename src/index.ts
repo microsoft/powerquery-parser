@@ -3,8 +3,10 @@
 
 import * as Inspection from "./inspection";
 
-export * from "./common";
-export * from "./jobs";
-export * from "./lexer";
-export * from "./parser";
 export { Inspection };
+export * from "./common";
+export * from "./lexer";
+export * from "./localization";
+export * from "./parser";
+export * from "./settings";
+export * from "./tasks";

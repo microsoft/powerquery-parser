@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, AstUtils, NodeIdMap, ParseError, ParserContext } from "..";
-import { CommonError, isNever, Option, Result, ResultUtils, TypeUtils } from "../../common";
+import { Ast, AstUtils, NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
+import { CommonError, isNever, Result, ResultUtils, TypeUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
-import { IParserState } from "../IParserState";
+import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
-
-import * as IParserStateUtils from "../IParserState/IParserStateUtils";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -21,11 +19,11 @@ type TriedReadPrimitiveType = Result<
     ParseError.ExpectedAnyTokenKindError | ParseError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
-interface WrappedRead<Kind, Content> extends Ast.IWrapped<Kind, Content> {
-    readonly maybeOptionalConstant: Option<Ast.Constant>;
+interface WrappedRead<Kind, Open, Content, Close> extends Ast.IWrapped<Kind, Open, Content, Close> {
+    readonly maybeOptionalConstant: Ast.IConstant<Ast.MiscConstantKind.QuestionMark> | undefined;
 }
 
-const InvalidGeneralizedIdentifierTokenKinds: ReadonlyArray<TokenKind> = [
+const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
     TokenKind.Comma,
     TokenKind.Equal,
     TokenKind.RightBracket,
@@ -35,7 +33,7 @@ const InvalidGeneralizedIdentifierTokenKinds: ReadonlyArray<TokenKind> = [
 // ---------- // 12.1.6 Identifiers ----------
 // -------------------------------------------
 
-export function readIdentifier<T>(state: T & IParserState, _parser: IParser<T & IParserState>): Ast.Identifier {
+export function readIdentifier(state: IParserState, _parser: IParser<IParserState>): Ast.Identifier {
     const nodeKind: Ast.NodeKind.Identifier = Ast.NodeKind.Identifier;
     IParserStateUtils.startContext(state, nodeKind);
 
@@ -52,9 +50,9 @@ export function readIdentifier<T>(state: T & IParserState, _parser: IParser<T & 
 }
 
 // This behavior matches the C# parser and not the language specification.
-export function readGeneralizedIdentifier<T>(
-    state: T & IParserState,
-    _parser: IParser<T & IParserState>,
+export function readGeneralizedIdentifier(
+    state: IParserState,
+    _parser: IParser<IParserState>,
 ): Ast.GeneralizedIdentifier {
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
     IParserStateUtils.startContext(state, nodeKind);
@@ -66,7 +64,7 @@ export function readGeneralizedIdentifier<T>(
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
     while (
         state.maybeCurrentTokenKind &&
-        InvalidGeneralizedIdentifierTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
+        GeneralizedIdentifierTerminatorTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1
     ) {
         readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
@@ -74,6 +72,7 @@ export function readGeneralizedIdentifier<T>(
 
     if (tokenRangeStartIndex === tokenRangeEndIndex) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
+            state.localizationTemplates,
             IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
         );
     }
@@ -94,7 +93,7 @@ export function readGeneralizedIdentifier<T>(
     return astNode;
 }
 
-export function readKeyword<T>(state: T & IParserState, _parser: IParser<T & IParserState>): Ast.IdentifierExpression {
+export function readKeyword(state: IParserState, _parser: IParser<IParserState>): Ast.IdentifierExpression {
     const identifierExpressionNodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
     IParserStateUtils.startContext(state, identifierExpressionNodeKind);
 
@@ -128,7 +127,7 @@ export function readKeyword<T>(state: T & IParserState, _parser: IParser<T & IPa
 // ---------- 12.2.1 Documents ----------
 // --------------------------------------
 
-export function readDocument<T>(state: T & IParserState, parser: IParser<T & IParserState>): TriedParse {
+export function readDocument(state: IParserState, parser: IParser<IParserState>): TriedParse {
     let triedReadDocument: Result<Ast.TDocument, Error>;
 
     // Try parsing as an Expression document first.
@@ -136,7 +135,7 @@ export function readDocument<T>(state: T & IParserState, parser: IParser<T & IPa
     // If both fail then return the error which parsed more tokens.
     try {
         triedReadDocument = ResultUtils.okFactory(parser.readExpression(state, parser));
-        const maybeErr: Option<ParseError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
+        const maybeErr: ParseError.UnusedTokensRemainError | undefined = IParserStateUtils.testNoMoreTokens(state);
         if (maybeErr) {
             throw maybeErr;
         }
@@ -144,11 +143,11 @@ export function readDocument<T>(state: T & IParserState, parser: IParser<T & IPa
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
         const expressionErrorStateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
-        const expressionErrorContextState: ParserContext.State = state.contextState;
+        const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
         state.tokenIndex = 0;
-        state.contextState = ParserContext.newState();
+        state.contextState = ParseContextUtils.newState();
         state.maybeCurrentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {
@@ -158,7 +157,7 @@ export function readDocument<T>(state: T & IParserState, parser: IParser<T & IPa
 
         try {
             triedReadDocument = ResultUtils.okFactory(readSectionDocument(state, parser));
-            const maybeErr: Option<ParseError.UnusedTokensRemainError> = IParserStateUtils.testNoMoreTokens(state);
+            const maybeErr: ParseError.UnusedTokensRemainError | undefined = IParserStateUtils.testNoMoreTokens(state);
             if (maybeErr) {
                 throw maybeErr;
             }
@@ -182,7 +181,7 @@ export function readDocument<T>(state: T & IParserState, parser: IParser<T & IPa
         if (ParseError.isTInnerParseError(currentError)) {
             convertedError = new ParseError.ParseError(currentError, state.contextState);
         } else {
-            convertedError = CommonError.ensureCommonError(currentError);
+            convertedError = CommonError.ensureCommonError(state.localizationTemplates, currentError);
         }
 
         return ResultUtils.errFactory(convertedError);
@@ -197,7 +196,7 @@ export function readDocument<T>(state: T & IParserState, parser: IParser<T & IPa
         );
     }
 
-    const contextState: ParserContext.State = state.contextState;
+    const contextState: ParseContext.State = state.contextState;
     return ResultUtils.okFactory({
         ast: document,
         nodeIdMapCollection: contextState.nodeIdMapCollection,
@@ -209,21 +208,29 @@ export function readDocument<T>(state: T & IParserState, parser: IParser<T & IPa
 // ---------- 12.2.2 Section Documents ----------
 // ----------------------------------------------
 
-export function readSectionDocument<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.Section {
+export function readSectionDocument(state: IParserState, parser: IParser<IParserState>): Ast.Section {
     const nodeKind: Ast.NodeKind.Section = Ast.NodeKind.Section;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state, parser);
-    const sectionConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordSection);
+    const maybeLiteralAttributes: Ast.RecordLiteral | undefined = maybeReadLiteralAttributes(state, parser);
+    const sectionConstant: Ast.IConstant<Ast.KeywordConstantKind.Section> = readTokenKindAsConstant(
+        state,
+        TokenKind.KeywordSection,
+        Ast.KeywordConstantKind.Section,
+    );
 
-    let maybeName: Option<Ast.Identifier>;
+    let maybeName: Ast.Identifier | undefined;
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.Identifier)) {
         maybeName = parser.readIdentifier(state, parser);
     } else {
         IParserStateUtils.incrementAttributeCounter(state);
     }
 
-    const semicolonConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Semicolon);
+    const semicolonConstant: Ast.IConstant<Ast.MiscConstantKind.Semicolon> = readTokenKindAsConstant(
+        state,
+        TokenKind.Semicolon,
+        Ast.MiscConstantKind.Semicolon,
+    );
     const sectionMembers: Ast.IArrayWrapper<Ast.SectionMember> = parser.readSectionMembers(state, parser);
 
     const astNode: Ast.Section = {
@@ -240,9 +247,9 @@ export function readSectionDocument<T>(state: T & IParserState, parser: IParser<
     return astNode;
 }
 
-export function readSectionMembers<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readSectionMembers(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.IArrayWrapper<Ast.SectionMember> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, nodeKind);
@@ -263,14 +270,22 @@ export function readSectionMembers<T>(
     return astNode;
 }
 
-export function readSectionMember<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.SectionMember {
+export function readSectionMember(state: IParserState, parser: IParser<IParserState>): Ast.SectionMember {
     const nodeKind: Ast.NodeKind.SectionMember = Ast.NodeKind.SectionMember;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const maybeLiteralAttributes: Option<Ast.RecordLiteral> = maybeReadLiteralAttributes(state, parser);
-    const maybeSharedConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordShared);
+    const maybeLiteralAttributes: Ast.RecordLiteral | undefined = maybeReadLiteralAttributes(state, parser);
+    const maybeSharedConstant: Ast.IConstant<Ast.KeywordConstantKind.Shared> | undefined = maybeReadTokenKindAsConstant(
+        state,
+        TokenKind.KeywordShared,
+        Ast.KeywordConstantKind.Shared,
+    );
     const namePairedExpression: Ast.IdentifierPairedExpression = parser.readIdentifierPairedExpression(state, parser);
-    const semicolonConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Semicolon);
+    const semicolonConstant: Ast.IConstant<Ast.MiscConstantKind.Semicolon> = readTokenKindAsConstant(
+        state,
+        TokenKind.Semicolon,
+        Ast.MiscConstantKind.Semicolon,
+    );
 
     const astNode: Ast.SectionMember = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -289,7 +304,7 @@ export function readSectionMember<T>(state: T & IParserState, parser: IParser<T 
 // ---------- 12.2.3.1 Expressions ----------
 // ------------------------------------------
 
-export function readExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TExpression {
+export function readExpression(state: IParserState, parser: IParser<IParserState>): Ast.TExpression {
     switch (state.maybeCurrentTokenKind) {
         case TokenKind.KeywordEach:
             return parser.readEachExpression(state, parser);
@@ -336,20 +351,17 @@ export function readExpression<T>(state: T & IParserState, parser: IParser<T & I
 // ---------- 12.2.3.2 Logical expressions ----------
 // --------------------------------------------------
 
-export function readLogicalExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.TLogicalExpression {
+export function readLogicalExpression(state: IParserState, parser: IParser<IParserState>): Ast.TLogicalExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.LogicalExpression,
         Ast.TLogicalExpression,
-        Ast.LogicalOperator,
+        Ast.LogicalOperatorKind,
         Ast.TLogicalExpression
     >(
         state,
         Ast.NodeKind.LogicalExpression,
         () => parser.readIsExpression(state, parser),
-        maybeCurrentTokenKind => AstUtils.maybeLogicalOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeLogicalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readIsExpression(state, parser),
     );
 }
@@ -358,31 +370,32 @@ export function readLogicalExpression<T>(
 // ---------- 12.2.3.3 Is expression ----------
 // --------------------------------------------
 
-export function readIsExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TIsExpression {
+export function readIsExpression(state: IParserState, parser: IParser<IParserState>): Ast.TIsExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.IsExpression,
         Ast.TAsExpression,
-        Ast.ConstantKind.Is,
+        Ast.KeywordConstantKind.Is,
         Ast.TNullablePrimitiveType
     >(
         state,
         Ast.NodeKind.IsExpression,
         () => parser.readAsExpression(state, parser),
-        maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordIs ? Ast.ConstantKind.Is : undefined),
+        maybeCurrentTokenKind =>
+            maybeCurrentTokenKind === TokenKind.KeywordIs ? Ast.KeywordConstantKind.Is : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
 }
 
 // sub-item of 12.2.3.3 Is expression
-export function readNullablePrimitiveType<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readNullablePrimitiveType(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.TNullablePrimitiveType {
-    if (IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
-        return readPairedConstant<T, Ast.NodeKind.NullablePrimitiveType, Ast.PrimitiveType>(
+    if (IParserStateUtils.isOnConstantKind(state, Ast.IdentifierConstantKind.Nullable)) {
+        return readPairedConstant(
             state,
             Ast.NodeKind.NullablePrimitiveType,
-            () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
+            () => readConstantKind(state, Ast.IdentifierConstantKind.Nullable),
             () => parser.readPrimitiveType(state, parser),
         );
     } else {
@@ -394,17 +407,18 @@ export function readNullablePrimitiveType<T>(
 // ---------- 12.2.3.4 As expression ----------
 // --------------------------------------------
 
-export function readAsExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TAsExpression {
+export function readAsExpression(state: IParserState, parser: IParser<IParserState>): Ast.TAsExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.AsExpression,
         Ast.TEqualityExpression,
-        Ast.ConstantKind.As,
+        Ast.KeywordConstantKind.As,
         Ast.TNullablePrimitiveType
     >(
         state,
         Ast.NodeKind.AsExpression,
         () => parser.readEqualityExpression(state, parser),
-        maybeCurrentTokenKind => (maybeCurrentTokenKind === TokenKind.KeywordAs ? Ast.ConstantKind.As : undefined),
+        maybeCurrentTokenKind =>
+            maybeCurrentTokenKind === TokenKind.KeywordAs ? Ast.KeywordConstantKind.As : undefined,
         () => parser.readNullablePrimitiveType(state, parser),
     );
 }
@@ -413,20 +427,17 @@ export function readAsExpression<T>(state: T & IParserState, parser: IParser<T &
 // ---------- 12.2.3.5 Equality expression ----------
 // --------------------------------------------------
 
-export function readEqualityExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.TEqualityExpression {
+export function readEqualityExpression(state: IParserState, parser: IParser<IParserState>): Ast.TEqualityExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.EqualityExpression,
         Ast.TEqualityExpression,
-        Ast.EqualityOperator,
+        Ast.EqualityOperatorKind,
         Ast.TEqualityExpression
     >(
         state,
         Ast.NodeKind.EqualityExpression,
         () => parser.readRelationalExpression(state, parser),
-        maybeCurrentTokenKind => AstUtils.maybeEqualityOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeEqualityOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readRelationalExpression(state, parser),
     );
 }
@@ -435,20 +446,20 @@ export function readEqualityExpression<T>(
 // ---------- 12.2.3.6 Relational expression ----------
 // ----------------------------------------------------
 
-export function readRelationalExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readRelationalExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.TRelationalExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.RelationalExpression,
         Ast.TArithmeticExpression,
-        Ast.RelationalOperator,
+        Ast.RelationalOperatorKind,
         Ast.TArithmeticExpression
     >(
         state,
         Ast.NodeKind.RelationalExpression,
         () => parser.readArithmeticExpression(state, parser),
-        maybeCurrentTokenKind => AstUtils.maybeRelationalOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeRelationalOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readArithmeticExpression(state, parser),
     );
 }
@@ -457,20 +468,20 @@ export function readRelationalExpression<T>(
 // ---------- 12.2.3.7 Arithmetic expressions ----------
 // -----------------------------------------------------
 
-export function readArithmeticExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readArithmeticExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.TArithmeticExpression {
     return recursiveReadBinOpExpression<
         Ast.NodeKind.ArithmeticExpression,
         Ast.TMetadataExpression,
-        Ast.ArithmeticOperator,
+        Ast.ArithmeticOperatorKind,
         Ast.TMetadataExpression
     >(
         state,
         Ast.NodeKind.ArithmeticExpression,
         () => parser.readMetadataExpression(state, parser),
-        maybeCurrentTokenKind => AstUtils.maybeArithmeticOperatorFrom(maybeCurrentTokenKind),
+        maybeCurrentTokenKind => AstUtils.maybeArithmeticOperatorKindFrom(maybeCurrentTokenKind),
         () => parser.readMetadataExpression(state, parser),
     );
 }
@@ -479,18 +490,19 @@ export function readArithmeticExpression<T>(
 // ---------- 12.2.3.8 Metadata expression ----------
 // --------------------------------------------------
 
-export function readMetadataExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.TMetadataExpression {
+export function readMetadataExpression(state: IParserState, parser: IParser<IParserState>): Ast.TMetadataExpression {
     const nodeKind: Ast.NodeKind.MetadataExpression = Ast.NodeKind.MetadataExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
     const left: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
-    const maybeMetaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.KeywordMeta);
+    const maybeMetaConstant: Ast.IConstant<Ast.KeywordConstantKind.Meta> | undefined = maybeReadTokenKindAsConstant(
+        state,
+        TokenKind.KeywordMeta,
+        Ast.KeywordConstantKind.Meta,
+    );
 
     if (maybeMetaConstant !== undefined) {
-        const operatorConstant: Ast.Constant = maybeMetaConstant;
+        const operatorConstant: Ast.IConstant<Ast.KeywordConstantKind.Meta> = maybeMetaConstant;
         const right: Ast.TUnaryExpression = parser.readUnaryExpression(state, parser);
 
         const astNode: Ast.MetadataExpression = {
@@ -498,7 +510,6 @@ export function readMetadataExpression<T>(
             kind: nodeKind,
             isLeaf: false,
             left,
-            operator: Ast.ConstantKind.Meta,
             operatorConstant,
             right,
         };
@@ -515,11 +526,10 @@ export function readMetadataExpression<T>(
 // ---------- 12.2.3.9 Unary expression ----------
 // -----------------------------------------------
 
-export function readUnaryExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.TUnaryExpression {
-    let maybeOperator: Option<Ast.UnaryOperator> = AstUtils.maybeUnaryOperatorFrom(state.maybeCurrentTokenKind);
+export function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
+    let maybeOperator: Ast.UnaryOperatorKind | undefined = AstUtils.maybeUnaryOperatorKindFrom(
+        state.maybeCurrentTokenKind,
+    );
     if (maybeOperator === undefined) {
         return parser.readTypeExpression(state, parser);
     }
@@ -530,12 +540,12 @@ export function readUnaryExpression<T>(
     const arrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, arrayNodeKind);
 
-    const operatorConstants: Ast.Constant[] = [];
+    const operatorConstants: Ast.IConstant<Ast.UnaryOperatorKind>[] = [];
     while (maybeOperator) {
-        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind));
-        maybeOperator = AstUtils.maybeUnaryOperatorFrom(state.maybeCurrentTokenKind);
+        operatorConstants.push(readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind, maybeOperator));
+        maybeOperator = AstUtils.maybeUnaryOperatorKindFrom(state.maybeCurrentTokenKind);
     }
-    const operators: Ast.IArrayWrapper<Ast.Constant> = {
+    const operators: Ast.IArrayWrapper<Ast.IConstant<Ast.UnaryOperatorKind>> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: arrayNodeKind,
         isLeaf: false,
@@ -560,12 +570,9 @@ export function readUnaryExpression<T>(
 // ---------- 12.2.3.10 Primary expression ----------
 // --------------------------------------------------
 
-export function readPrimaryExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.TPrimaryExpression {
-    let primaryExpression: Option<Ast.TPrimaryExpression>;
-    const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+export function readPrimaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TPrimaryExpression {
+    let primaryExpression: Ast.TPrimaryExpression | undefined;
+    const maybeCurrentTokenKind: TokenKind | undefined = state.maybeCurrentTokenKind;
     const isIdentifierExpressionNext: boolean =
         maybeCurrentTokenKind === TokenKind.AtSign || maybeCurrentTokenKind === TokenKind.Identifier;
 
@@ -617,24 +624,24 @@ export function readPrimaryExpression<T>(
     }
 }
 
-export function readRecursivePrimaryExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readRecursivePrimaryExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
     head: Ast.TPrimaryExpression,
 ): Ast.RecursivePrimaryExpression {
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    // The head of the recursive primary expression is created before the recursive primrary expression,
+    // The head of the recursive primary expression is created before the recursive primary expression,
     // meaning the parent/child mapping for contexts are in reverse order.
     // The clean up for that happens here.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
     }
-    const currentContextNode: ParserContext.Node = state.maybeCurrentContextNode;
+    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
-    const maybeHeadParentId: Option<number> = nodeIdMapCollection.parentIdById.get(head.id);
+    const maybeHeadParentId: number | undefined = nodeIdMapCollection.parentIdById.get(head.id);
     if (maybeHeadParentId !== undefined) {
         const headParentId: number = maybeHeadParentId;
 
@@ -667,7 +674,7 @@ export function readRecursivePrimaryExpression<T>(
 
     // Update start positions for recursive primary expression context
     const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    const mutableContext: TypeUtils.StripReadonly<ParserContext.Node> = currentContextNode;
+    const mutableContext: TypeUtils.StripReadonly<ParseContext.Node> = currentContextNode;
     // UNSAFE MARKER
     //
     // Purpose of code block:
@@ -703,7 +710,7 @@ export function readRecursivePrimaryExpression<T>(
     const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
     let continueReadingValues: boolean = true;
     while (continueReadingValues) {
-        const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+        const maybeCurrentTokenKind: TokenKind | undefined = state.maybeCurrentTokenKind;
 
         if (maybeCurrentTokenKind === TokenKind.LeftParenthesis) {
             recursiveExpressions.push(parser.readInvokeExpression(state, parser));
@@ -743,10 +750,7 @@ export function readRecursivePrimaryExpression<T>(
 // ---------- 12.2.3.11 Literal expression ----------
 // --------------------------------------------------
 
-export function readLiteralExpression<T>(
-    state: T & IParserState,
-    _parser: IParser<T & IParserState>,
-): Ast.LiteralExpression {
+export function readLiteralExpression(state: IParserState, _parser: IParser<IParserState>): Ast.LiteralExpression {
     const nodeKind: Ast.NodeKind.LiteralExpression = Ast.NodeKind.LiteralExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
@@ -759,7 +763,7 @@ export function readLiteralExpression<T>(
         TokenKind.NullLiteral,
         TokenKind.StringLiteral,
     ];
-    const maybeErr: Option<ParseError.ExpectedAnyTokenKindError> = IParserStateUtils.testIsOnAnyTokenKind(
+    const maybeErr: ParseError.ExpectedAnyTokenKindError | undefined = IParserStateUtils.testIsOnAnyTokenKind(
         state,
         expectedTokenKinds,
     );
@@ -767,7 +771,7 @@ export function readLiteralExpression<T>(
         throw maybeErr;
     }
 
-    const maybeLiteralKind: Option<Ast.LiteralKind> = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
+    const maybeLiteralKind: Ast.LiteralKind | undefined = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
     if (maybeLiteralKind === undefined) {
         throw new CommonError.InvariantError(
             `couldn't convert TokenKind=${state.maybeCurrentTokenKind} into LiteralKind`,
@@ -790,14 +794,15 @@ export function readLiteralExpression<T>(
 // ---------- 12.2.3.16 12.2.3.12 Identifier expression ----------
 // ---------------------------------------------------------------
 
-export function readIdentifierExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.IdentifierExpression {
+export function readIdentifierExpression(state: IParserState, parser: IParser<IParserState>): Ast.IdentifierExpression {
     const nodeKind: Ast.NodeKind.IdentifierExpression = Ast.NodeKind.IdentifierExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const maybeInclusiveConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.AtSign);
+    const maybeInclusiveConstant: Ast.IConstant<Ast.MiscConstantKind.AtSign> | undefined = maybeReadTokenKindAsConstant(
+        state,
+        TokenKind.AtSign,
+        Ast.MiscConstantKind.AtSign,
+    );
     const identifier: Ast.Identifier = parser.readIdentifier(state, parser);
 
     const astNode: Ast.IdentifierExpression = {
@@ -815,16 +820,16 @@ export function readIdentifierExpression<T>(
 // ---------- 12.2.3.14 Parenthesized expression ----------
 // --------------------------------------------------------
 
-export function readParenthesizedExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readParenthesizedExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.ParenthesizedExpression {
-    return readWrapped<T, Ast.NodeKind.ParenthesizedExpression, Ast.TExpression>(
+    return readWrapped(
         state,
         Ast.NodeKind.ParenthesizedExpression,
-        () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis),
+        () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis, Ast.WrapperConstantKind.LeftParenthesis),
         () => parser.readExpression(state, parser),
-        () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
+        () => readTokenKindAsConstant(state, TokenKind.RightParenthesis, Ast.WrapperConstantKind.RightParenthesis),
         false,
     );
 }
@@ -833,14 +838,18 @@ export function readParenthesizedExpression<T>(
 // ---------- 12.2.3.15 Not-implemented expression ----------
 // ----------------------------------------------------------
 
-export function readNotImplementedExpression<T>(
-    state: T & IParserState,
-    _parser: IParser<T & IParserState>,
+export function readNotImplementedExpression(
+    state: IParserState,
+    _parser: IParser<IParserState>,
 ): Ast.NotImplementedExpression {
     const nodeKind: Ast.NodeKind.NotImplementedExpression = Ast.NodeKind.NotImplementedExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const ellipsisConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Ellipsis);
+    const ellipsisConstant: Ast.IConstant<Ast.MiscConstantKind.Ellipsis> = readTokenKindAsConstant(
+        state,
+        TokenKind.Ellipsis,
+        Ast.MiscConstantKind.Ellipsis,
+    );
 
     const astNode: Ast.NotImplementedExpression = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -856,23 +865,22 @@ export function readNotImplementedExpression<T>(
 // ---------- 12.2.3.16 Invoke expression ----------
 // -------------------------------------------------
 
-export function readInvokeExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.InvokeExpression {
+export function readInvokeExpression(state: IParserState, parser: IParser<IParserState>): Ast.InvokeExpression {
     const continueReadingValues: boolean = !IParserStateUtils.isNextTokenKind(state, TokenKind.RightParenthesis);
-    return readWrapped<T, Ast.NodeKind.InvokeExpression, Ast.ICsvArray<Ast.TExpression>>(
+    return readWrapped(
         state,
         Ast.NodeKind.InvokeExpression,
-        () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis),
+        () => readTokenKindAsConstant(state, TokenKind.LeftParenthesis, Ast.WrapperConstantKind.LeftParenthesis),
         () =>
-            readCsvArray(
+            // The type inference in VSCode considers the lambda below a type error, but it compiles just fine.
+            // I'm adding an explicit type to stop it from (incorrectly) saying it's an error.
+            readCsvArray<Ast.TExpression>(
                 state,
                 () => parser.readExpression(state, parser),
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForParenthesis,
             ),
-        () => readTokenKindAsConstant(state, TokenKind.RightParenthesis),
+        () => readTokenKindAsConstant(state, TokenKind.RightParenthesis, Ast.WrapperConstantKind.RightParenthesis),
         false,
     );
 }
@@ -881,12 +889,12 @@ export function readInvokeExpression<T>(
 // ---------- 12.2.3.17 List expression ----------
 // -----------------------------------------------
 
-export function readListExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.ListExpression {
+export function readListExpression(state: IParserState, parser: IParser<IParserState>): Ast.ListExpression {
     const continueReadingValues: boolean = !IParserStateUtils.isNextTokenKind(state, TokenKind.RightBrace);
-    return readWrapped<T, Ast.NodeKind.ListExpression, Ast.ICsvArray<Ast.TListItem>>(
+    return readWrapped(
         state,
         Ast.NodeKind.ListExpression,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
         () =>
             readCsvArray(
                 state,
@@ -894,18 +902,22 @@ export function readListExpression<T>(state: T & IParserState, parser: IParser<T
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBrace,
             ),
-        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace, Ast.WrapperConstantKind.RightBrace),
         false,
     );
 }
 
-export function readListItem<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TListItem {
+export function readListItem(state: IParserState, parser: IParser<IParserState>): Ast.TListItem {
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
     const left: Ast.TExpression = parser.readExpression(state, parser);
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.DotDot)) {
-        const rangeConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.DotDot);
+        const rangeConstant: Ast.IConstant<Ast.MiscConstantKind.DotDot> = readTokenKindAsConstant(
+            state,
+            TokenKind.DotDot,
+            Ast.MiscConstantKind.DotDot,
+        );
         const right: Ast.TExpression = parser.readExpression(state, parser);
         const astNode: Ast.RangeExpression = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -924,19 +936,16 @@ export function readListItem<T>(state: T & IParserState, parser: IParser<T & IPa
     }
 }
 
-// -----------------------------------------------------------
-// ---------- 12.2.3.18 12.2.3.18 Record expression ----------
-// -----------------------------------------------------------
+// -------------------------------------------------
+// ---------- 12.2.3.18 Record expression ----------
+// -------------------------------------------------
 
-export function readRecordExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.RecordExpression {
+export function readRecordExpression(state: IParserState, parser: IParser<IParserState>): Ast.RecordExpression {
     const continueReadingValues: boolean = !IParserStateUtils.isNextTokenKind(state, TokenKind.RightBracket);
-    return readWrapped<T, Ast.NodeKind.RecordExpression, Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>>(
+    return readWrapped(
         state,
         Ast.NodeKind.RecordExpression,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket, Ast.WrapperConstantKind.LeftBracket),
         () =>
             parser.readGeneralizedIdentifierPairedExpressions(
                 state,
@@ -944,7 +953,7 @@ export function readRecordExpression<T>(
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBracket,
             ),
-        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket, Ast.WrapperConstantKind.RightBracket),
         false,
     );
 }
@@ -953,16 +962,13 @@ export function readRecordExpression<T>(
 // ---------- 12.2.3.19 Item access expression ----------
 // ------------------------------------------------------
 
-export function readItemAccessExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.ItemAccessExpression {
-    return readWrapped<T, Ast.NodeKind.ItemAccessExpression, Ast.TExpression>(
+export function readItemAccessExpression(state: IParserState, parser: IParser<IParserState>): Ast.ItemAccessExpression {
+    return readWrapped(
         state,
         Ast.NodeKind.ItemAccessExpression,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
         () => parser.readExpression(state, parser),
-        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace, Ast.WrapperConstantKind.RightBrace),
         true,
     );
 }
@@ -971,18 +977,15 @@ export function readItemAccessExpression<T>(
 // ---------- 12.2.3.20 Field access expression ----------
 // -------------------------------------------------------
 
-export function readFieldSelection<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.FieldSelector {
+export function readFieldSelection(state: IParserState, parser: IParser<IParserState>): Ast.FieldSelector {
     return readFieldSelector(state, parser, true);
 }
 
-export function readFieldProjection<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.FieldProjection {
-    return readWrapped<T, Ast.NodeKind.FieldProjection, Ast.ICsvArray<Ast.FieldSelector>>(
+export function readFieldProjection(state: IParserState, parser: IParser<IParserState>): Ast.FieldProjection {
+    return readWrapped(
         state,
         Ast.NodeKind.FieldProjection,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket, Ast.WrapperConstantKind.LeftBracket),
         () =>
             readCsvArray(
                 state,
@@ -990,22 +993,22 @@ export function readFieldProjection<T>(
                 true,
                 testCsvContinuationDanglingCommaForBracket,
             ),
-        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket, Ast.WrapperConstantKind.RightBracket),
         true,
     );
 }
 
-export function readFieldSelector<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readFieldSelector(
+    state: IParserState,
+    parser: IParser<IParserState>,
     allowOptional: boolean,
 ): Ast.FieldSelector {
-    return readWrapped<T, Ast.NodeKind.FieldSelector, Ast.GeneralizedIdentifier>(
+    return readWrapped(
         state,
         Ast.NodeKind.FieldSelector,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket, Ast.WrapperConstantKind.LeftBracket),
         () => parser.readGeneralizedIdentifier(state, parser),
-        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket, Ast.WrapperConstantKind.RightBracket),
         allowOptional,
     );
 }
@@ -1014,19 +1017,23 @@ export function readFieldSelector<T>(
 // ---------- 12.2.3.21 Function expression ----------
 // ---------------------------------------------------
 
-export function readFunctionExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.FunctionExpression {
+export function readFunctionExpression(state: IParserState, parser: IParser<IParserState>): Ast.FunctionExpression {
     const nodeKind: Ast.NodeKind.FunctionExpression = Ast.NodeKind.FunctionExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const parameters: Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>> = parser.readParameterList(state, parser);
-    const maybeFunctionReturnType: Option<Ast.AsNullablePrimitiveType> = maybeReadAsNullablePrimitiveType(
+    const parameters: Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> = parser.readParameterList(
         state,
         parser,
     );
-    const fatArrowConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.FatArrow);
+    const maybeFunctionReturnType: Ast.AsNullablePrimitiveType | undefined = maybeReadAsNullablePrimitiveType(
+        state,
+        parser,
+    );
+    const fatArrowConstant: Ast.IConstant<Ast.MiscConstantKind.FatArrow> = readTokenKindAsConstant(
+        state,
+        TokenKind.FatArrow,
+        Ast.MiscConstantKind.FatArrow,
+    );
     const expression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.FunctionExpression = {
@@ -1042,31 +1049,31 @@ export function readFunctionExpression<T>(
     return astNode;
 }
 
-export function readParameterList<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Ast.IParameterList<Option<Ast.AsNullablePrimitiveType>> {
+export function readParameterList(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined> {
     return genericReadParameterList(state, parser, () => maybeReadAsNullablePrimitiveType(state, parser));
 }
 
-function maybeReadAsNullablePrimitiveType<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Option<Ast.AsNullablePrimitiveType> {
-    return maybeReadPairedConstant<T, Ast.NodeKind.AsNullablePrimitiveType, Ast.TNullablePrimitiveType>(
+function maybeReadAsNullablePrimitiveType(
+    state: IParserState,
+    parser: IParser<IParserState>,
+): Ast.AsNullablePrimitiveType | undefined {
+    return maybeReadPairedConstant(
         state,
         Ast.NodeKind.AsNullablePrimitiveType,
         () => IParserStateUtils.isOnTokenKind(state, TokenKind.KeywordAs),
-        () => readTokenKindAsConstant(state, TokenKind.KeywordAs),
+        () => readTokenKindAsConstant(state, TokenKind.KeywordAs, Ast.KeywordConstantKind.As),
         () => parser.readNullablePrimitiveType(state, parser),
     );
 }
 
-export function readAsType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.AsType {
-    return readPairedConstant<T, Ast.NodeKind.AsType, Ast.TType>(
+export function readAsType(state: IParserState, parser: IParser<IParserState>): Ast.AsType {
+    return readPairedConstant(
         state,
         Ast.NodeKind.AsType,
-        () => readTokenKindAsConstant(state, TokenKind.KeywordAs),
+        () => readTokenKindAsConstant(state, TokenKind.KeywordAs, Ast.KeywordConstantKind.As),
         () => parser.readType(state, parser),
     );
 }
@@ -1075,11 +1082,11 @@ export function readAsType<T>(state: T & IParserState, parser: IParser<T & IPars
 // ---------- 12.2.3.22 Each expression ----------
 // -----------------------------------------------
 
-export function readEachExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.EachExpression {
-    return readPairedConstant<T, Ast.NodeKind.EachExpression, Ast.TExpression>(
+export function readEachExpression(state: IParserState, parser: IParser<IParserState>): Ast.EachExpression {
+    return readPairedConstant(
         state,
         Ast.NodeKind.EachExpression,
-        () => readTokenKindAsConstant(state, TokenKind.KeywordEach),
+        () => readTokenKindAsConstant(state, TokenKind.KeywordEach, Ast.KeywordConstantKind.Each),
         () => parser.readExpression(state, parser),
     );
 }
@@ -1088,11 +1095,15 @@ export function readEachExpression<T>(state: T & IParserState, parser: IParser<T
 // ---------- 12.2.3.23 Let expression ----------
 // ----------------------------------------------
 
-export function readLetExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.LetExpression {
+export function readLetExpression(state: IParserState, parser: IParser<IParserState>): Ast.LetExpression {
     const nodeKind: Ast.NodeKind.LetExpression = Ast.NodeKind.LetExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const letConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordLet);
+    const letConstant: Ast.IConstant<Ast.KeywordConstantKind.Let> = readTokenKindAsConstant(
+        state,
+        TokenKind.KeywordLet,
+        Ast.KeywordConstantKind.Let,
+    );
     const identifierExpressionPairedExpressions: Ast.ICsvArray<
         Ast.IdentifierPairedExpression
     > = parser.readIdentifierPairedExpressions(
@@ -1101,7 +1112,11 @@ export function readLetExpression<T>(state: T & IParserState, parser: IParser<T 
         !IParserStateUtils.isNextTokenKind(state, TokenKind.KeywordIn),
         IParserStateUtils.testCsvContinuationLetExpression,
     );
-    const inConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIn);
+    const inConstant: Ast.IConstant<Ast.KeywordConstantKind.In> = readTokenKindAsConstant(
+        state,
+        TokenKind.KeywordIn,
+        Ast.KeywordConstantKind.In,
+    );
     const expression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.LetExpression = {
@@ -1121,17 +1136,29 @@ export function readLetExpression<T>(state: T & IParserState, parser: IParser<T 
 // ---------- 12.2.3.24 If expression ----------
 // ---------------------------------------------
 
-export function readIfExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.IfExpression {
+export function readIfExpression(state: IParserState, parser: IParser<IParserState>): Ast.IfExpression {
     const nodeKind: Ast.NodeKind.IfExpression = Ast.NodeKind.IfExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const ifConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordIf);
+    const ifConstant: Ast.IConstant<Ast.KeywordConstantKind.If> = readTokenKindAsConstant(
+        state,
+        TokenKind.KeywordIf,
+        Ast.KeywordConstantKind.If,
+    );
     const condition: Ast.TExpression = parser.readExpression(state, parser);
 
-    const thenConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordThen);
+    const thenConstant: Ast.IConstant<Ast.KeywordConstantKind.Then> = readTokenKindAsConstant(
+        state,
+        TokenKind.KeywordThen,
+        Ast.KeywordConstantKind.Then,
+    );
     const trueExpression: Ast.TExpression = parser.readExpression(state, parser);
 
-    const elseConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordElse);
+    const elseConstant: Ast.IConstant<Ast.KeywordConstantKind.Else> = readTokenKindAsConstant(
+        state,
+        TokenKind.KeywordElse,
+        Ast.KeywordConstantKind.Else,
+    );
     const falseExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.IfExpression = {
@@ -1153,12 +1180,12 @@ export function readIfExpression<T>(state: T & IParserState, parser: IParser<T &
 // ---------- 12.2.3.25 Type expression ----------
 // -----------------------------------------------
 
-export function readTypeExpression<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TTypeExpression {
+export function readTypeExpression(state: IParserState, parser: IParser<IParserState>): Ast.TTypeExpression {
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.KeywordType)) {
-        return readPairedConstant<T, Ast.NodeKind.TypePrimaryType, Ast.TPrimaryType>(
+        return readPairedConstant(
             state,
             Ast.NodeKind.TypePrimaryType,
-            () => readTokenKindAsConstant(state, TokenKind.KeywordType),
+            () => readTokenKindAsConstant(state, TokenKind.KeywordType, Ast.KeywordConstantKind.Type),
             () => parser.readPrimaryType(state, parser),
         );
     } else {
@@ -1166,7 +1193,7 @@ export function readTypeExpression<T>(state: T & IParserState, parser: IParser<T
     }
 }
 
-export function readType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TType {
+export function readType(state: IParserState, parser: IParser<IParserState>): Ast.TType {
     const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
 
     if (ResultUtils.isOk(triedReadPrimaryType)) {
@@ -1176,7 +1203,7 @@ export function readType<T>(state: T & IParserState, parser: IParser<T & IParser
     }
 }
 
-export function readPrimaryType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TPrimaryType {
+export function readPrimaryType(state: IParserState, parser: IParser<IParserState>): Ast.TPrimaryType {
     const triedReadPrimaryType: TriedReadPrimaryType = tryReadPrimaryType(state, parser);
 
     if (ResultUtils.isOk(triedReadPrimaryType)) {
@@ -1186,7 +1213,7 @@ export function readPrimaryType<T>(state: T & IParserState, parser: IParser<T & 
     }
 }
 
-export function readRecordType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.RecordType {
+export function readRecordType(state: IParserState, parser: IParser<IParserState>): Ast.RecordType {
     const nodeKind: Ast.NodeKind.RecordType = Ast.NodeKind.RecordType;
     IParserStateUtils.startContext(state, nodeKind);
 
@@ -1207,12 +1234,15 @@ export function readRecordType<T>(state: T & IParserState, parser: IParser<T & I
     return astNode;
 }
 
-export function readTableType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TableType {
+export function readTableType(state: IParserState, parser: IParser<IParserState>): Ast.TableType {
     const nodeKind: Ast.NodeKind.TableType = Ast.NodeKind.TableType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const tableConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Table);
-    const maybeCurrentTokenKind: Option<TokenKind> = state.maybeCurrentTokenKind;
+    const tableConstant: Ast.IConstant<Ast.PrimitiveTypeConstantKind.Table> = readConstantKind(
+        state,
+        Ast.PrimitiveTypeConstantKind.Table,
+    );
+    const maybeCurrentTokenKind: TokenKind | undefined = state.maybeCurrentTokenKind;
     const isPrimaryExpressionExpected: boolean =
         maybeCurrentTokenKind === TokenKind.AtSign ||
         maybeCurrentTokenKind === TokenKind.Identifier ||
@@ -1240,21 +1270,25 @@ export function readFieldSpecificationList(
     state: IParserState,
     parser: IParser<IParserState>,
     allowOpenMarker: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+    testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
 ): Ast.FieldSpecificationList {
     const nodeKind: Ast.NodeKind.FieldSpecificationList = Ast.NodeKind.FieldSpecificationList;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const leftBracketConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.LeftBracket);
+    const leftBracketConstant: Ast.IConstant<Ast.WrapperConstantKind.LeftBracket> = readTokenKindAsConstant(
+        state,
+        TokenKind.LeftBracket,
+        Ast.WrapperConstantKind.LeftBracket,
+    );
     const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
     let continueReadingValues: boolean = true;
-    let maybeOpenRecordMarkerConstant: Option<Ast.Constant> = undefined;
+    let maybeOpenRecordMarkerConstant: Ast.IConstant<Ast.MiscConstantKind.Ellipsis> | undefined = undefined;
 
     const fieldArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, fieldArrayNodeKind);
 
     while (continueReadingValues) {
-        const maybeErr: Option<ParseError.TInnerParseError> = testPostCommaError(state);
+        const maybeErr: ParseError.TInnerParseError | undefined = testPostCommaError(state);
         if (maybeErr) {
             throw maybeErr;
         }
@@ -1264,7 +1298,11 @@ export function readFieldSpecificationList(
                 if (maybeOpenRecordMarkerConstant) {
                     throw fieldSpecificationListReadError(state, false);
                 } else {
-                    maybeOpenRecordMarkerConstant = readTokenKindAsConstant(state, TokenKind.Ellipsis);
+                    maybeOpenRecordMarkerConstant = readTokenKindAsConstant(
+                        state,
+                        TokenKind.Ellipsis,
+                        Ast.MiscConstantKind.Ellipsis,
+                    );
                     continueReadingValues = false;
                 }
             } else {
@@ -1277,19 +1315,20 @@ export function readFieldSpecificationList(
             const fieldSpecificationNodeKind: Ast.NodeKind.FieldSpecification = Ast.NodeKind.FieldSpecification;
             IParserStateUtils.startContext(state, fieldSpecificationNodeKind);
 
-            const maybeOptionalConstant: Option<Ast.Constant> = maybeReadIdentifierConstantAsConstant(
-                state,
-                Ast.IdentifierConstant.Optional,
-            );
+            const maybeOptionalConstant:
+                | Ast.IConstant<Ast.IdentifierConstantKind.Optional>
+                | undefined = maybeReadConstantKind(state, Ast.IdentifierConstantKind.Optional);
 
             const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
 
-            const maybeFieldTypeSpeification: Option<Ast.FieldTypeSpecification> = maybeReadFieldTypeSpecification(
+            const maybeFieldTypeSpecification: Ast.FieldTypeSpecification | undefined = maybeReadFieldTypeSpecification(
                 state,
                 parser,
             );
 
-            const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
+            const maybeCommaConstant:
+                | Ast.IConstant<Ast.MiscConstantKind.Comma>
+                | undefined = maybeReadTokenKindAsConstant(state, TokenKind.Comma, Ast.MiscConstantKind.Comma);
             continueReadingValues = maybeCommaConstant !== undefined;
 
             const field: Ast.FieldSpecification = {
@@ -1298,7 +1337,7 @@ export function readFieldSpecificationList(
                 isLeaf: false,
                 maybeOptionalConstant,
                 name,
-                maybeFieldTypeSpeification,
+                maybeFieldTypeSpecification,
             };
             IParserStateUtils.endContext(state, field);
 
@@ -1324,7 +1363,11 @@ export function readFieldSpecificationList(
     };
     IParserStateUtils.endContext(state, fieldArray);
 
-    const rightBracketConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.RightBracket);
+    const rightBracketConstant: Ast.IConstant<Ast.WrapperConstantKind.RightBracket> = readTokenKindAsConstant(
+        state,
+        TokenKind.RightBracket,
+        Ast.WrapperConstantKind.RightBracket,
+    );
 
     const astNode: Ast.FieldSpecificationList = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1342,11 +1385,15 @@ export function readFieldSpecificationList(
 function maybeReadFieldTypeSpecification(
     state: IParserState,
     parser: IParser<IParserState>,
-): Option<Ast.FieldTypeSpecification> {
+): Ast.FieldTypeSpecification | undefined {
     const nodeKind: Ast.NodeKind.FieldTypeSpecification = Ast.NodeKind.FieldTypeSpecification;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const maybeEqualConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Equal);
+    const maybeEqualConstant: Ast.IConstant<Ast.MiscConstantKind.Equal> | undefined = maybeReadTokenKindAsConstant(
+        state,
+        TokenKind.Equal,
+        Ast.MiscConstantKind.Equal,
+    );
     if (maybeEqualConstant) {
         const fieldType: Ast.TType = parser.readType(state, parser);
 
@@ -1366,7 +1413,7 @@ function maybeReadFieldTypeSpecification(
     }
 }
 
-function fieldSpecificationListReadError(state: IParserState, allowOpenMarker: boolean): Option<Error> {
+function fieldSpecificationListReadError(state: IParserState, allowOpenMarker: boolean): Error | undefined {
     if (allowOpenMarker) {
         const expectedTokenKinds: ReadonlyArray<TokenKind> = [TokenKind.Identifier, TokenKind.Ellipsis];
         return IParserStateUtils.testIsOnAnyTokenKind(state, expectedTokenKinds);
@@ -1375,22 +1422,25 @@ function fieldSpecificationListReadError(state: IParserState, allowOpenMarker: b
     }
 }
 
-export function readListType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.ListType {
-    return readWrapped<T, Ast.NodeKind.ListType, Ast.TType>(
+export function readListType(state: IParserState, parser: IParser<IParserState>): Ast.ListType {
+    return readWrapped(
         state,
         Ast.NodeKind.ListType,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
         () => parser.readType(state, parser),
-        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace, Ast.WrapperConstantKind.RightBrace),
         false,
     );
 }
 
-export function readFunctionType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.FunctionType {
+export function readFunctionType(state: IParserState, parser: IParser<IParserState>): Ast.FunctionType {
     const nodeKind: Ast.NodeKind.FunctionType = Ast.NodeKind.FunctionType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const functionConstant: Ast.Constant = readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Function);
+    const functionConstant: Ast.IConstant<Ast.PrimitiveTypeConstantKind.Function> = readConstantKind(
+        state,
+        Ast.PrimitiveTypeConstantKind.Function,
+    );
     const parameters: Ast.IParameterList<Ast.AsType> = parser.readParameterSpecificationList(state, parser);
     const functionReturnType: Ast.AsType = parser.readAsType(state, parser);
 
@@ -1406,15 +1456,15 @@ export function readFunctionType<T>(state: T & IParserState, parser: IParser<T &
     return astNode;
 }
 
-function tryReadPrimaryType<T>(state: T & IParserState, parser: IParser<T & IParserState>): TriedReadPrimaryType {
+function tryReadPrimaryType(state: IParserState, parser: IParser<IParserState>): TriedReadPrimaryType {
     const isTableTypeNext: boolean =
-        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Table) &&
+        IParserStateUtils.isOnConstantKind(state, Ast.PrimitiveTypeConstantKind.Table) &&
         (IParserStateUtils.isNextTokenKind(state, TokenKind.LeftBracket) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.LeftParenthesis) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.AtSign) ||
             IParserStateUtils.isNextTokenKind(state, TokenKind.Identifier));
     const isFunctionTypeNext: boolean =
-        IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Function) &&
+        IParserStateUtils.isOnConstantKind(state, Ast.PrimitiveTypeConstantKind.Function) &&
         IParserStateUtils.isNextTokenKind(state, TokenKind.LeftParenthesis);
 
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
@@ -1425,7 +1475,7 @@ function tryReadPrimaryType<T>(state: T & IParserState, parser: IParser<T & IPar
         return ResultUtils.okFactory(parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
         return ResultUtils.okFactory(parser.readFunctionType(state, parser));
-    } else if (IParserStateUtils.isOnIdentifierConstant(state, Ast.IdentifierConstant.Nullable)) {
+    } else if (IParserStateUtils.isOnConstantKind(state, Ast.IdentifierConstantKind.Nullable)) {
         return ResultUtils.okFactory(parser.readNullableType(state, parser));
     } else {
         const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
@@ -1438,18 +1488,18 @@ function tryReadPrimaryType<T>(state: T & IParserState, parser: IParser<T & IPar
     }
 }
 
-export function readParameterSpecificationList<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readParameterSpecificationList(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.IParameterList<Ast.AsType> {
     return genericReadParameterList(state, parser, () => parser.readAsType(state, parser));
 }
 
-export function readNullableType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.NullableType {
-    return readPairedConstant<T, Ast.NodeKind.NullableType, Ast.TType>(
+export function readNullableType(state: IParserState, parser: IParser<IParserState>): Ast.NullableType {
+    return readPairedConstant(
         state,
         Ast.NodeKind.NullableType,
-        () => readIdentifierConstantAsConstant(state, Ast.IdentifierConstant.Nullable),
+        () => readConstantKind(state, Ast.IdentifierConstantKind.Nullable),
         () => parser.readType(state, parser),
     );
 }
@@ -1458,14 +1508,14 @@ export function readNullableType<T>(state: T & IParserState, parser: IParser<T &
 // ---------- 12.2.3.26 Error raising expression ----------
 // --------------------------------------------------------
 
-export function readErrorRaisingExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readErrorRaisingExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.ErrorRaisingExpression {
-    return readPairedConstant<T, Ast.NodeKind.ErrorRaisingExpression, Ast.TExpression>(
+    return readPairedConstant(
         state,
         Ast.NodeKind.ErrorRaisingExpression,
-        () => readTokenKindAsConstant(state, TokenKind.KeywordError),
+        () => readTokenKindAsConstant(state, TokenKind.KeywordError, Ast.KeywordConstantKind.Error),
         () => parser.readExpression(state, parser),
     );
 }
@@ -1474,26 +1524,26 @@ export function readErrorRaisingExpression<T>(
 // ---------- 12.2.3.27 Error handling expression ----------
 // ---------------------------------------------------------
 
-export function readErrorHandlingExpression<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
+export function readErrorHandlingExpression(
+    state: IParserState,
+    parser: IParser<IParserState>,
 ): Ast.ErrorHandlingExpression {
     const nodeKind: Ast.NodeKind.ErrorHandlingExpression = Ast.NodeKind.ErrorHandlingExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const tryConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.KeywordTry);
+    const tryConstant: Ast.IConstant<Ast.KeywordConstantKind.Try> = readTokenKindAsConstant(
+        state,
+        TokenKind.KeywordTry,
+        Ast.KeywordConstantKind.Try,
+    );
     const protectedExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const otherwiseExpressionNodeKind: Ast.NodeKind.OtherwiseExpression = Ast.NodeKind.OtherwiseExpression;
-    const maybeOtherwiseExpression: Option<Ast.OtherwiseExpression> = maybeReadPairedConstant<
-        T,
-        Ast.NodeKind.OtherwiseExpression,
-        Ast.TExpression
-    >(
+    const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = maybeReadPairedConstant(
         state,
         otherwiseExpressionNodeKind,
         () => IParserStateUtils.isOnTokenKind(state, TokenKind.KeywordOtherwise),
-        () => readTokenKindAsConstant(state, TokenKind.KeywordOtherwise),
+        () => readTokenKindAsConstant(state, TokenKind.KeywordOtherwise, Ast.KeywordConstantKind.Otherwise),
         () => parser.readExpression(state, parser),
     );
 
@@ -1513,15 +1563,17 @@ export function readErrorHandlingExpression<T>(
 // ---------- 12.2.4 Literal Attributes ----------
 // -----------------------------------------------
 
-export function readRecordLiteral<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.RecordLiteral {
+export function readRecordLiteral(state: IParserState, parser: IParser<IParserState>): Ast.RecordLiteral {
     const continueReadingValues: boolean = !IParserStateUtils.isNextTokenKind(state, TokenKind.RightBracket);
     const wrappedRead: Ast.IWrapped<
         Ast.NodeKind.RecordLiteral,
-        Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>
-    > = readWrapped<T, Ast.NodeKind.RecordLiteral, Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>>(
+        Ast.WrapperConstantKind.LeftBracket,
+        Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>,
+        Ast.WrapperConstantKind.RightBracket
+    > = readWrapped(
         state,
         Ast.NodeKind.RecordLiteral,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBracket),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBracket, Ast.WrapperConstantKind.LeftBracket),
         () =>
             parser.readFieldNamePairedAnyLiterals(
                 state,
@@ -1529,7 +1581,7 @@ export function readRecordLiteral<T>(state: T & IParserState, parser: IParser<T 
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBracket,
             ),
-        () => readTokenKindAsConstant(state, TokenKind.RightBracket),
+        () => readTokenKindAsConstant(state, TokenKind.RightBracket, Ast.WrapperConstantKind.RightBracket),
         false,
     );
     return {
@@ -1542,7 +1594,7 @@ export function readFieldNamePairedAnyLiterals(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+    testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral> {
     return readCsvArray(
         state,
@@ -1562,16 +1614,17 @@ export function readFieldNamePairedAnyLiterals(
     );
 }
 
-export function readListLiteral<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.ListLiteral {
+export function readListLiteral(state: IParserState, parser: IParser<IParserState>): Ast.ListLiteral {
     const continueReadingValues: boolean = !IParserStateUtils.isNextTokenKind(state, TokenKind.RightBrace);
-    const wrappedRead: Ast.IWrapped<Ast.NodeKind.ListLiteral, Ast.ICsvArray<Ast.TAnyLiteral>> = readWrapped<
-        T,
+    const wrappedRead: Ast.IWrapped<
         Ast.NodeKind.ListLiteral,
-        Ast.ICsvArray<Ast.TAnyLiteral>
-    >(
+        Ast.WrapperConstantKind.LeftBrace,
+        Ast.ICsvArray<Ast.TAnyLiteral>,
+        Ast.WrapperConstantKind.RightBrace
+    > = readWrapped(
         state,
         Ast.NodeKind.ListLiteral,
-        () => readTokenKindAsConstant(state, TokenKind.LeftBrace),
+        () => readTokenKindAsConstant(state, TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
         () =>
             readCsvArray(
                 state,
@@ -1579,7 +1632,7 @@ export function readListLiteral<T>(state: T & IParserState, parser: IParser<T & 
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForBrace,
             ),
-        () => readTokenKindAsConstant(state, TokenKind.RightBrace),
+        () => readTokenKindAsConstant(state, TokenKind.RightBrace, Ast.WrapperConstantKind.RightBrace),
         false,
     );
     return {
@@ -1588,7 +1641,7 @@ export function readListLiteral<T>(state: T & IParserState, parser: IParser<T & 
     };
 }
 
-export function readAnyLiteral<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.TAnyLiteral {
+export function readAnyLiteral(state: IParserState, parser: IParser<IParserState>): Ast.TAnyLiteral {
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
         return parser.readRecordLiteral(state, parser);
     } else if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBrace)) {
@@ -1598,7 +1651,7 @@ export function readAnyLiteral<T>(state: T & IParserState, parser: IParser<T & I
     }
 }
 
-export function readPrimitiveType<T>(state: T & IParserState, parser: IParser<T & IParserState>): Ast.PrimitiveType {
+export function readPrimitiveType(state: IParserState, parser: IParser<IParserState>): Ast.PrimitiveType {
     const triedReadPrimitiveType: TriedReadPrimitiveType = tryReadPrimitiveType(state, parser);
     if (ResultUtils.isOk(triedReadPrimitiveType)) {
         return triedReadPrimitiveType.value;
@@ -1607,7 +1660,7 @@ export function readPrimitiveType<T>(state: T & IParserState, parser: IParser<T 
     }
 }
 
-function tryReadPrimitiveType<T>(state: T & IParserState, _parser: IParser<T & IParserState>): TriedReadPrimitiveType {
+function tryReadPrimitiveType(state: IParserState, _parser: IParser<IParserState>): TriedReadPrimitiveType {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
     IParserStateUtils.startContext(state, nodeKind);
 
@@ -1617,7 +1670,7 @@ function tryReadPrimitiveType<T>(state: T & IParserState, _parser: IParser<T & I
         TokenKind.KeywordType,
         TokenKind.NullLiteral,
     ];
-    const maybeErr: Option<ParseError.ExpectedAnyTokenKindError> = IParserStateUtils.testIsOnAnyTokenKind(
+    const maybeErr: ParseError.ExpectedAnyTokenKindError | undefined = IParserStateUtils.testIsOnAnyTokenKind(
         state,
         expectedTokenKinds,
     );
@@ -1626,28 +1679,28 @@ function tryReadPrimitiveType<T>(state: T & IParserState, _parser: IParser<T & I
         return ResultUtils.errFactory(error);
     }
 
-    let primitiveType: Ast.Constant;
+    let primitiveType: Ast.IConstant<Ast.PrimitiveTypeConstantKind>;
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.Identifier)) {
         const currentTokenData: string = state.lexerSnapshot.tokens[state.tokenIndex].data;
         switch (currentTokenData) {
-            case Ast.IdentifierConstant.Action:
-            case Ast.IdentifierConstant.Any:
-            case Ast.IdentifierConstant.AnyNonNull:
-            case Ast.IdentifierConstant.Binary:
-            case Ast.IdentifierConstant.Date:
-            case Ast.IdentifierConstant.DateTime:
-            case Ast.IdentifierConstant.DateTimeZone:
-            case Ast.IdentifierConstant.Duration:
-            case Ast.IdentifierConstant.Function:
-            case Ast.IdentifierConstant.List:
-            case Ast.IdentifierConstant.Logical:
-            case Ast.IdentifierConstant.None:
-            case Ast.IdentifierConstant.Number:
-            case Ast.IdentifierConstant.Record:
-            case Ast.IdentifierConstant.Table:
-            case Ast.IdentifierConstant.Text:
-            case Ast.IdentifierConstant.Time:
-                primitiveType = readIdentifierConstantAsConstant(state, currentTokenData);
+            case Ast.PrimitiveTypeConstantKind.Action:
+            case Ast.PrimitiveTypeConstantKind.Any:
+            case Ast.PrimitiveTypeConstantKind.AnyNonNull:
+            case Ast.PrimitiveTypeConstantKind.Binary:
+            case Ast.PrimitiveTypeConstantKind.Date:
+            case Ast.PrimitiveTypeConstantKind.DateTime:
+            case Ast.PrimitiveTypeConstantKind.DateTimeZone:
+            case Ast.PrimitiveTypeConstantKind.Duration:
+            case Ast.PrimitiveTypeConstantKind.Function:
+            case Ast.PrimitiveTypeConstantKind.List:
+            case Ast.PrimitiveTypeConstantKind.Logical:
+            case Ast.PrimitiveTypeConstantKind.None:
+            case Ast.PrimitiveTypeConstantKind.Number:
+            case Ast.PrimitiveTypeConstantKind.Record:
+            case Ast.PrimitiveTypeConstantKind.Table:
+            case Ast.PrimitiveTypeConstantKind.Text:
+            case Ast.PrimitiveTypeConstantKind.Time:
+                primitiveType = readConstantKind(state, currentTokenData);
                 break;
 
             default:
@@ -1655,15 +1708,16 @@ function tryReadPrimitiveType<T>(state: T & IParserState, _parser: IParser<T & I
                 IParserStateUtils.applyFastStateBackup(state, stateBackup);
                 return ResultUtils.errFactory(
                     new ParseError.InvalidPrimitiveTypeError(
+                        state.localizationTemplates,
                         token,
                         state.lexerSnapshot.graphemePositionStartFrom(token),
                     ),
                 );
         }
     } else if (IParserStateUtils.isOnTokenKind(state, TokenKind.KeywordType)) {
-        primitiveType = readTokenKindAsConstant(state, TokenKind.KeywordType);
+        primitiveType = readTokenKindAsConstant(state, TokenKind.KeywordType, Ast.PrimitiveTypeConstantKind.Type);
     } else if (IParserStateUtils.isOnTokenKind(state, TokenKind.NullLiteral)) {
-        primitiveType = readTokenKindAsConstant(state, TokenKind.NullLiteral);
+        primitiveType = readTokenKindAsConstant(state, TokenKind.NullLiteral, Ast.PrimitiveTypeConstantKind.Null);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
         IParserStateUtils.applyFastStateBackup(state, stateBackup);
@@ -1807,7 +1861,7 @@ export function readIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+    testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
 ): Ast.ICsvArray<Ast.IdentifierPairedExpression> {
     return readCsvArray(
         state,
@@ -1821,7 +1875,7 @@ export function readGeneralizedIdentifierPairedExpressions(
     state: IParserState,
     parser: IParser<IParserState>,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+    testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
 ): Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> {
     return readCsvArray(
         state,
@@ -1872,20 +1926,25 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
     state: IParserState,
     nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
     leftReader: () => Left,
-    maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
+    maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
 ): Left | Ast.IBinOpExpression<Kind, Left, Operator, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const left: Left = leftReader();
 
     // If no operator, return Left
-    const maybeOperator: Option<Operator> = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    const maybeOperator: (Operator & Ast.TBinOpExpressionOperator) | undefined = maybeOperatorFrom(
+        state.maybeCurrentTokenKind,
+    );
     if (maybeOperator === undefined) {
         IParserStateUtils.deleteContext(state, undefined);
         return left;
     }
-    const operator: Operator = maybeOperator;
-    const operatorConstant: Ast.Constant = readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind);
+    const operatorConstant: Ast.TConstant & Ast.IConstant<Operator & Ast.TConstantKind> = readTokenKindAsConstant(
+        state,
+        state.maybeCurrentTokenKind!,
+        maybeOperator,
+    );
     const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,
@@ -1897,7 +1956,6 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
         kind: nodeKind,
         isLeaf: false,
         left,
-        operator,
         operatorConstant,
         right,
     };
@@ -1912,19 +1970,24 @@ function recursiveReadBinOpExpression<Kind, Left, Operator, Right>(
 function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
     state: IParserState,
     nodeKind: Kind & Ast.TBinOpExpressionNodeKind,
-    maybeOperatorFrom: (tokenKind: Option<TokenKind>) => Option<Operator>,
+    maybeOperatorFrom: (tokenKind: TokenKind | undefined) => (Operator & Ast.TBinOpExpressionOperator) | undefined,
     rightReader: () => Right,
 ): Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> {
     IParserStateUtils.startContext(state, nodeKind);
     const rightAsLeft: Right = rightReader();
 
-    const maybeOperator: Option<Operator> = maybeOperatorFrom(state.maybeCurrentTokenKind);
+    const maybeOperator: (Operator & Ast.TBinOpExpressionOperator) | undefined = maybeOperatorFrom(
+        state.maybeCurrentTokenKind,
+    );
     if (maybeOperator === undefined) {
         IParserStateUtils.deleteContext(state, undefined);
         return rightAsLeft;
     }
-    const operator: Operator = maybeOperator;
-    const operatorConstant: Ast.Constant = readTokenKindAsConstant(state, state.maybeCurrentTokenKind as TokenKind);
+    const operatorConstant: Ast.TConstant & Ast.IConstant<Operator & Ast.TConstantKind> = readTokenKindAsConstant(
+        state,
+        state.maybeCurrentTokenKind!,
+        maybeOperator,
+    );
     const right: Right | Ast.IBinOpExpression<Kind, Right, Operator, Right> = recursiveReadBinOpExpressionHelper<
         Kind,
         Operator,
@@ -1936,7 +1999,6 @@ function recursiveReadBinOpExpressionHelper<Kind, Operator, Right>(
         kind: nodeKind,
         isLeaf: false,
         left: rightAsLeft,
-        operator,
         operatorConstant,
         right,
     };
@@ -1949,7 +2011,7 @@ function readCsvArray<T>(
     state: IParserState,
     valueReader: () => T & Ast.TCsvType,
     continueReadingValues: boolean,
-    testPostCommaError: (state: IParserState) => Option<ParseError.TInnerParseError>,
+    testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
 ): Ast.TCsvArray & Ast.ICsvArray<T & Ast.TCsvType> {
     const nodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, nodeKind);
@@ -1960,13 +2022,17 @@ function readCsvArray<T>(
         const csvNodeKind: Ast.NodeKind.Csv = Ast.NodeKind.Csv;
         IParserStateUtils.startContext(state, csvNodeKind);
 
-        const maybeErr: Option<ParseError.TInnerParseError> = testPostCommaError(state);
+        const maybeErr: ParseError.TInnerParseError | undefined = testPostCommaError(state);
         if (maybeErr) {
             throw maybeErr;
         }
 
         const node: T & Ast.TCsvType = valueReader();
-        const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
+        const maybeCommaConstant: Ast.IConstant<Ast.MiscConstantKind.Comma> | undefined = maybeReadTokenKindAsConstant(
+            state,
+            TokenKind.Comma,
+            Ast.MiscConstantKind.Comma,
+        );
 
         const element: Ast.TCsv & Ast.ICsv<T & Ast.TCsvType> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -2000,7 +2066,11 @@ function readKeyValuePair<Kind, Key, Value>(
     IParserStateUtils.startContext(state, nodeKind);
 
     const key: Key = keyReader();
-    const equalConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.Equal);
+    const equalConstant: Ast.IConstant<Ast.MiscConstantKind.Equal> = readTokenKindAsConstant(
+        state,
+        TokenKind.Equal,
+        Ast.MiscConstantKind.Equal,
+    );
     const value: Value = valueReader();
 
     const keyValuePair: Ast.IKeyValuePair<Kind, Key, Value> = {
@@ -2015,18 +2085,18 @@ function readKeyValuePair<Kind, Key, Value>(
     return keyValuePair;
 }
 
-function readPairedConstant<T, Kind, Paired>(
-    state: T & IParserState,
+function readPairedConstant<Kind, ConstantKind, Paired>(
+    state: IParserState,
     nodeKind: Kind & Ast.TPairedConstantNodeKind,
-    constantReader: () => Ast.Constant,
+    constantReader: () => Ast.TConstant & Ast.IConstant<Ast.TConstantKind & ConstantKind>,
     pairedReader: () => Paired,
-): Ast.IPairedConstant<Kind, Paired> {
+): Ast.IPairedConstant<Kind, ConstantKind, Paired> {
     IParserStateUtils.startContext(state, nodeKind);
 
-    const constant: Ast.Constant = constantReader();
+    const constant: Ast.TConstant & Ast.IConstant<Ast.TConstantKind & ConstantKind> = constantReader();
     const paired: Paired = pairedReader();
 
-    const pairedConstant: Ast.IPairedConstant<Kind, Paired> = {
+    const pairedConstant: Ast.IPairedConstant<Kind, ConstantKind, Paired> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
@@ -2039,54 +2109,58 @@ function readPairedConstant<T, Kind, Paired>(
     return pairedConstant;
 }
 
-function maybeReadPairedConstant<T, Kind, Paired>(
-    state: T & IParserState,
+function maybeReadPairedConstant<Kind, ConstantKind, Paired>(
+    state: IParserState,
     nodeKind: Kind & Ast.TPairedConstantNodeKind,
     condition: () => boolean,
-    constantReader: () => Ast.Constant,
+    constantReader: () => Ast.TConstant & Ast.IConstant<Ast.TConstantKind & ConstantKind>,
     pairedReader: () => Paired,
-): Option<Ast.IPairedConstant<Kind, Paired>> {
+): Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined {
     if (condition()) {
-        return readPairedConstant<T, Kind, Paired>(state, nodeKind, constantReader, pairedReader);
+        return readPairedConstant<Kind, ConstantKind, Paired>(state, nodeKind, constantReader, pairedReader);
     } else {
         IParserStateUtils.incrementAttributeCounter(state);
         return undefined;
     }
 }
 
-function genericReadParameterList<S, T>(
-    state: S & IParserState,
-    parser: IParser<S & IParserState>,
+function genericReadParameterList<T>(
+    state: IParserState,
+    parser: IParser<IParserState>,
     typeReader: () => T & Ast.TParameterType,
 ): Ast.IParameterList<T> {
     const nodeKind: Ast.NodeKind.ParameterList = Ast.NodeKind.ParameterList;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const leftParenthesisConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.LeftParenthesis);
+    const leftParenthesisConstant: Ast.IConstant<Ast.WrapperConstantKind.LeftParenthesis> = readTokenKindAsConstant(
+        state,
+        TokenKind.LeftParenthesis,
+        Ast.WrapperConstantKind.LeftParenthesis,
+    );
     let continueReadingValues: boolean = !IParserStateUtils.isOnTokenKind(state, TokenKind.RightParenthesis);
     let reachedOptionalParameter: boolean = false;
 
-    const paramaterArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
-    IParserStateUtils.startContext(state, paramaterArrayNodeKind);
+    const paramterArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
+    IParserStateUtils.startContext(state, paramterArrayNodeKind);
 
     const parameters: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>>[] = [];
     while (continueReadingValues) {
         IParserStateUtils.startContext(state, Ast.NodeKind.Csv);
         IParserStateUtils.startContext(state, Ast.NodeKind.Parameter);
 
-        const maybeErr: Option<ParseError.TInnerParseError> = testCsvContinuationDanglingCommaForParenthesis(state);
+        const maybeErr: ParseError.TInnerParseError | undefined = testCsvContinuationDanglingCommaForParenthesis(state);
         if (maybeErr) {
             throw maybeErr;
         }
 
-        const maybeOptionalConstant: Option<Ast.Constant> = maybeReadIdentifierConstantAsConstant(
-            state,
-            Ast.IdentifierConstant.Optional,
-        );
+        const maybeOptionalConstant:
+            | Ast.IConstant<Ast.IdentifierConstantKind.Optional>
+            | undefined = maybeReadConstantKind(state, Ast.IdentifierConstantKind.Optional);
 
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token = IParserStateUtils.expectTokenAt(state, state.tokenIndex);
             throw new ParseError.RequiredParameterAfterOptionalParameterError(
+                state.localizationTemplates,
                 token,
                 state.lexerSnapshot.graphemePositionStartFrom(token),
             );
@@ -2107,7 +2181,11 @@ function genericReadParameterList<S, T>(
         };
         IParserStateUtils.endContext(state, parameter);
 
-        const maybeCommaConstant: Option<Ast.Constant> = maybeReadTokenKindAsConstant(state, TokenKind.Comma);
+        const maybeCommaConstant: Ast.IConstant<Ast.MiscConstantKind.Comma> | undefined = maybeReadTokenKindAsConstant(
+            state,
+            TokenKind.Comma,
+            Ast.MiscConstantKind.Comma,
+        );
         continueReadingValues = maybeCommaConstant !== undefined;
 
         const csv: Ast.ICsv<Ast.IParameter<T & Ast.TParameterType>> = {
@@ -2124,13 +2202,17 @@ function genericReadParameterList<S, T>(
 
     const parameterArray: Ast.ICsvArray<Ast.IParameter<T & Ast.TParameterType>> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
-        kind: paramaterArrayNodeKind,
+        kind: paramterArrayNodeKind,
         elements: parameters,
         isLeaf: false,
     };
     IParserStateUtils.endContext(state, parameterArray);
 
-    const rightParenthesisConstant: Ast.Constant = readTokenKindAsConstant(state, TokenKind.RightParenthesis);
+    const rightParenthesisConstant: Ast.IConstant<Ast.WrapperConstantKind.RightParenthesis> = readTokenKindAsConstant(
+        state,
+        TokenKind.RightParenthesis,
+        Ast.WrapperConstantKind.RightParenthesis,
+    );
 
     const astNode: Ast.IParameterList<T & Ast.TParameterType> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -2144,26 +2226,30 @@ function genericReadParameterList<S, T>(
     return astNode;
 }
 
-function readWrapped<T, Kind, Content>(
-    state: T & IParserState,
+function readWrapped<Kind, Open, Content, Close>(
+    state: IParserState,
     nodeKind: Kind & Ast.TWrappedNodeKind,
-    openConstantReader: () => Ast.Constant,
+    openConstantReader: () => Ast.IConstant<Open>,
     contentReader: () => Content,
-    closeConstantReader: () => Ast.Constant,
+    closeConstantReader: () => Ast.IConstant<Close>,
     allowOptionalConstant: boolean,
-): WrappedRead<Kind, Content> {
+): WrappedRead<Kind, Open, Content, Close> {
     IParserStateUtils.startContext(state, nodeKind);
 
-    const openWrapperConstant: Ast.Constant = openConstantReader();
+    const openWrapperConstant: Ast.IConstant<Open> = openConstantReader();
     const content: Content = contentReader();
-    const closeWrapperConstant: Ast.Constant = closeConstantReader();
+    const closeWrapperConstant: Ast.IConstant<Close> = closeConstantReader();
 
-    let maybeOptionalConstant: Option<Ast.Constant>;
+    let maybeOptionalConstant: Ast.IConstant<Ast.MiscConstantKind.QuestionMark> | undefined;
     if (allowOptionalConstant) {
-        maybeOptionalConstant = maybeReadTokenKindAsConstant(state, TokenKind.QuestionMark);
+        maybeOptionalConstant = maybeReadTokenKindAsConstant(
+            state,
+            TokenKind.QuestionMark,
+            Ast.MiscConstantKind.QuestionMark,
+        );
     }
 
-    const wrapped: WrappedRead<Kind, Content> = {
+    const wrapped: WrappedRead<Kind, Open, Content, Close> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
@@ -2181,7 +2267,10 @@ function readWrapped<T, Kind, Content>(
 // -------------------------------------------------------
 
 function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
-    const maybeErr: Option<ParseError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(state, tokenKind);
+    const maybeErr: ParseError.ExpectedTokenKindError | undefined = IParserStateUtils.testIsOnTokenKind(
+        state,
+        tokenKind,
+    );
     if (maybeErr) {
         throw maybeErr;
     }
@@ -2189,41 +2278,33 @@ function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
     return readToken(state);
 }
 
-function readIdentifierConstantAsConstant(
+function readConstantKind<T>(
     state: IParserState,
-    identifierConstant: Ast.IdentifierConstant,
-): Ast.Constant {
-    const maybeConstant: Option<Ast.Constant> = maybeReadIdentifierConstantAsConstant(state, identifierConstant);
+    constantKind: T & Ast.TConstantKind,
+): Ast.TConstant & Ast.IConstant<T> {
+    const maybeConstant: Ast.TConstant & Ast.IConstant<T> | undefined = maybeReadConstantKind(state, constantKind);
     if (!maybeConstant) {
-        const details: {} = { identifierConstant };
-        throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
+        const details: {} = { constantKind };
+        throw new CommonError.InvariantError(`couldn't convert constantKind`, details);
     }
 
     return maybeConstant;
 }
 
-function maybeReadIdentifierConstantAsConstant(
+function maybeReadConstantKind<T>(
     state: IParserState,
-    identifierConstant: Ast.IdentifierConstant,
-): Option<Ast.Constant> {
-    if (IParserStateUtils.isOnIdentifierConstant(state, identifierConstant)) {
+    constantKind: T & Ast.TConstantKind,
+): (Ast.TConstant & Ast.IConstant<T>) | undefined {
+    if (IParserStateUtils.isOnConstantKind(state, constantKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
 
-        const maybeConstantKind: Option<Ast.ConstantKind> = AstUtils.maybeConstantKindFromIdentifieConstant(
-            identifierConstant,
-        );
-        if (!maybeConstantKind) {
-            const details: {} = { identifierConstant };
-            throw new CommonError.InvariantError(`couldn't convert IdentifierConstant into ConstantKind`, details);
-        }
-
         readToken(state);
-        const astNode: Ast.Constant = {
+        const astNode: Ast.TConstant & Ast.IConstant<T> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,
-            literal: maybeConstantKind,
+            constantKind,
         };
         IParserStateUtils.endContext(state, astNode);
         return astNode;
@@ -2233,10 +2314,7 @@ function maybeReadIdentifierConstantAsConstant(
     }
 }
 
-function maybeReadLiteralAttributes<T>(
-    state: T & IParserState,
-    parser: IParser<T & IParserState>,
-): Option<Ast.RecordLiteral> {
+function maybeReadLiteralAttributes(state: IParserState, parser: IParser<IParserState>): Ast.RecordLiteral | undefined {
     if (IParserStateUtils.isOnTokenKind(state, TokenKind.LeftBracket)) {
         return parser.readRecordLiteral(state, parser);
     } else {
@@ -2251,18 +2329,18 @@ function maybeReadLiteralAttributes<T>(
 
 function testCsvContinuationDanglingCommaForBrace(
     state: IParserState,
-): Option<ParseError.ExpectedCsvContinuationError> {
+): ParseError.ExpectedCsvContinuationError | undefined {
     return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBrace);
 }
 
 function testCsvContinuationDanglingCommaForBracket(
     state: IParserState,
-): Option<ParseError.ExpectedCsvContinuationError> {
+): ParseError.ExpectedCsvContinuationError | undefined {
     return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightBracket);
 }
 
 function testCsvContinuationDanglingCommaForParenthesis(
     state: IParserState,
-): Option<ParseError.ExpectedCsvContinuationError> {
+): ParseError.ExpectedCsvContinuationError | undefined {
     return IParserStateUtils.testCsvContinuationDanglingComma(state, TokenKind.RightParenthesis);
 }

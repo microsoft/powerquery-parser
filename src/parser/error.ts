@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParserContext } from ".";
-import { CommonError, Option, StringUtils } from "../common";
+import { ParseContext } from ".";
+import { CommonError, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
-
-import * as Localization from "../localization/error";
+import { ILocalizationTemplates, Localization } from "../localization";
 
 export type TParseError = CommonError.CommonError | ParseError;
 
@@ -16,77 +15,109 @@ export type TInnerParseError =
     | ExpectedTokenKindError
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
-    | UnexpectedEndOfTokensError
     | UnterminatedBracketError
     | UnterminatedParenthesesError
     | UnusedTokensRemainError;
 
+export const enum CsvContinuationKind {
+    DanglingComma = "DanglingComma",
+    LetExpression = "LetExpression",
+}
+
+export const enum UnterminatedKind {
+    Bracket = "Bracket",
+    Parenthesis = "Parenthesis",
+}
+
 export class ParseError extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly context: ParserContext.State) {
+    constructor(readonly innerError: TInnerParseError, readonly context: ParseContext.State) {
         super(innerError.message);
     }
 }
 
 export class ExpectedCsvContinuationError extends Error {
-    constructor(readonly message: string, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
-        super(message);
+    constructor(
+        templates: ILocalizationTemplates,
+        readonly kind: CsvContinuationKind,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+    ) {
+        super(Localization.error_parse_csvContinuation(templates, kind));
     }
 }
 
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
-        readonly expectedAnyTokenKind: ReadonlyArray<TokenKind>,
-        readonly maybeFoundToken: Option<TokenWithColumnNumber>,
+        templates: ILocalizationTemplates,
+        readonly expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
-        super(Localization.parserExpectedAnyTokenKind(expectedAnyTokenKind, maybeFoundToken));
+        super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKinds, maybeFoundToken));
     }
 }
 
 export class ExpectedTokenKindError extends Error {
-    constructor(readonly expectedTokenKind: TokenKind, readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
-        super(Localization.parserExpectedTokenKind(expectedTokenKind, maybeFoundToken));
+    constructor(
+        templates: ILocalizationTemplates,
+        readonly expectedTokenKind: TokenKind,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+    ) {
+        super(Localization.error_parse_expectTokenKind(templates, expectedTokenKind, maybeFoundToken));
     }
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
-    constructor(readonly maybeFoundToken: Option<TokenWithColumnNumber>) {
-        super(Localization.parserExpectedGeneralizedIdentifier(maybeFoundToken));
+    constructor(templates: ILocalizationTemplates, readonly maybeFoundToken: TokenWithColumnNumber | undefined) {
+        super(Localization.error_parse_expectGeneralizedIdentifier(templates, maybeFoundToken));
     }
 }
 
 export class InvalidPrimitiveTypeError extends Error {
-    constructor(readonly token: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserInvalidPrimitiveType(token, positionStart));
+    constructor(
+        templates: ILocalizationTemplates,
+        readonly token: Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+    ) {
+        super(Localization.error_parse_invalidPrimitiveType(templates, token));
     }
 }
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
-    constructor(readonly missingOptionalToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserRequiredParameterAfterOptionalParameter(positionStart));
-    }
-}
-
-export class UnexpectedEndOfTokensError extends Error {
-    constructor(readonly topOfTokenRangeStack: Ast.NodeKind) {
-        super(Localization.parserUnexpectedEndOfTokens(topOfTokenRangeStack));
+    constructor(
+        templates: ILocalizationTemplates,
+        readonly missingOptionalToken: Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+    ) {
+        super(Localization.error_parse_requiredParameterAfterOptional(templates));
     }
 }
 
 export class UnterminatedBracketError extends Error {
-    constructor(readonly openBracketToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserUnterminatedBracket(positionStart));
+    constructor(
+        templates: ILocalizationTemplates,
+        readonly openBracketToken: Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+    ) {
+        super(Localization.error_parse_unterminated_bracket(templates));
     }
 }
 
 export class UnterminatedParenthesesError extends Error {
-    constructor(readonly openParenthesesToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserUnterminatedParentheses(positionStart));
+    constructor(
+        templates: ILocalizationTemplates,
+        readonly openParenthesesToken: Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+    ) {
+        super(Localization.error_parse_unterminated_parenthesis(templates));
     }
 }
 
 export class UnusedTokensRemainError extends Error {
-    constructor(readonly firstUnusedToken: Token, readonly positionStart: StringUtils.GraphemePosition) {
-        super(Localization.parserUnusedTokensRemain(positionStart));
+    constructor(
+        templates: ILocalizationTemplates,
+        readonly firstUnusedToken: Token,
+        readonly positionStart: StringUtils.GraphemePosition,
+    ) {
+        super(Localization.error_parse_unusedTokens(templates));
     }
 }
 
@@ -107,14 +138,13 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
         x instanceof ExpectedTokenKindError ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||
-        x instanceof UnexpectedEndOfTokensError ||
         x instanceof UnterminatedBracketError ||
         x instanceof UnterminatedParenthesesError ||
         x instanceof UnusedTokensRemainError
     );
 }
 
-export function maybeTokenFrom(err: TInnerParseError): Option<Token> {
+export function maybeTokenFrom(err: TInnerParseError): Token | undefined {
     if (
         (err instanceof ExpectedAnyTokenKindError ||
             err instanceof ExpectedCsvContinuationError ||

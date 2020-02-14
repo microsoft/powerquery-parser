@@ -3,10 +3,17 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../..";
-import { Option, ResultUtils } from "../../common";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../../parser";
+import { Inspection } from "..";
+import { ResultUtils } from "../common";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
+import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../parser";
+import { DefaultSettings } from "../settings";
+import { LexParseOk, TriedLexParse, tryLexParse } from "../tasks";
+
+export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
+    const actual: Y = actualFactoryFn(partial);
+    expect(actual).deep.equal(expected);
+}
 
 // Only works with single line expressions
 export function expectTextWithPosition(text: string): [string, Inspection.Position] {
@@ -25,17 +32,26 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 
 export function expectParseOkInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
     const parseOk: ParseOk = expectParseOk(text);
-    return Inspection.tryFrom(position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
+    return Inspection.tryFrom(DefaultSettings, position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
 }
 
 export function expectParseErrInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
     const parseError: ParseError.ParseError = expectParseErr(text);
     return Inspection.tryFrom(
+        DefaultSettings,
         position,
         parseError.context.nodeIdMapCollection,
         parseError.context.leafNodeIds,
         parseError,
     );
+}
+
+export function expectLexParseOk(text: string): LexParseOk {
+    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
+    if (!ResultUtils.isOk(triedLexParse)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
+    }
+    return triedLexParse.value;
 }
 
 export function expectParseErr(text: string): ParseError.ParseError {
@@ -60,8 +76,8 @@ export function expectParseOk(text: string): ParseOk {
 }
 
 function expectTriedParse(text: string): TriedParse {
-    const lexerState: Lexer.State = Lexer.stateFrom(text);
-    const maybeErrorLineMap: Option<Lexer.ErrorLineMap> = Lexer.maybeErrorLineMap(lexerState);
+    const lexerState: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
+    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {
         throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
     }
@@ -72,6 +88,6 @@ function expectTriedParse(text: string): TriedParse {
     }
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    const parserState: IParserState = IParserStateUtils.newState(lexerSnapshot);
-    return Parser.CombinatorialParser.readDocument(parserState, Parser.CombinatorialParser);
+    const parserState: IParserState = IParserStateUtils.newState(DefaultSettings, lexerSnapshot);
+    return Parser.CombinatorialParser.readDocument(parserState, DefaultSettings.parser);
 }

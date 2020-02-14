@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Option, Result, ResultUtils } from "../common";
+import { CommonError, Result, ResultUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
 import { NodeIdMap, ParseError } from "../parser";
+import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
-import { AutocompleteInspected, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
-import { IdentifierInspected, tryFrom as identifierInspectedTryFrom } from "./identifier";
+import { InspectedAutocomplete, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
 import { Position } from "./position";
+import { InspectedScope, tryInspectScope } from "./scope";
 
 // Inspection is designed to run sub-inspections,
 // eg. one inspection for scope and one for keywords.
@@ -16,33 +17,36 @@ import { Position } from "./position";
 // If all sub-inspections succeed, return the union of all successful traversals.
 
 export interface InspectedCommon {
-    readonly maybeActiveNode: Option<ActiveNode>;
+    readonly maybeActiveNode: ActiveNode | undefined;
 }
-export type Inspected = InspectedCommon & IdentifierInspected & AutocompleteInspected;
+export type Inspected = InspectedCommon & InspectedScope & InspectedAutocomplete;
 export type TriedInspection = Result<Inspected, CommonError.CommonError>;
 
 export function tryFrom(
+    settings: InspectionSettings,
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    maybeParseError: Option<ParseError.ParseError>,
+    maybeParseError: ParseError.ParseError | undefined,
 ): TriedInspection {
-    const maybeActiveNode: Option<ActiveNode> = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
         leafNodeIds,
     );
 
-    const triedInspectedIdentifier: TriedTraverse<IdentifierInspected> = identifierInspectedTryFrom(
+    const triedInspectedScope: TriedTraverse<InspectedScope> = tryInspectScope(
+        settings,
         maybeActiveNode,
         nodeIdMapCollection,
         leafNodeIds,
     );
-    if (ResultUtils.isErr(triedInspectedIdentifier)) {
-        return triedInspectedIdentifier;
+    if (ResultUtils.isErr(triedInspectedScope)) {
+        return triedInspectedScope;
     }
 
-    const triedInspectedKeyword: TriedTraverse<AutocompleteInspected> = autocompleteInspectedTryFrom(
+    const triedInspectedKeyword: TriedTraverse<InspectedAutocomplete> = autocompleteInspectedTryFrom(
+        settings,
         maybeActiveNode,
         nodeIdMapCollection,
         maybeParseError,
@@ -53,7 +57,7 @@ export function tryFrom(
 
     return ResultUtils.okFactory({
         maybeActiveNode,
-        ...triedInspectedIdentifier.value,
+        ...triedInspectedScope.value,
         ...triedInspectedKeyword.value,
     });
 }

@@ -3,31 +3,28 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Option, ResultUtils, Traverse } from "../../common";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../../jobs";
-import { Ast, Parser } from "../../parser";
+import { ResultUtils, Traverse } from "../../common";
+import { DefaultTemplates } from "../../localization";
+import { Ast } from "../../parser";
+import { LexParseOk } from "../../tasks";
+import { expectLexParseOk } from "../common";
 
-type AbridgedNode = [Ast.NodeKind, Option<number>];
+type AbridgedNode = [Ast.NodeKind, number | undefined];
 
 interface CollectAbridgeNodeState extends Traverse.IState<AbridgedNode[]> {}
 
-interface NthNodeOfKindState extends Traverse.IState<Option<Ast.TNode>> {
+interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
     readonly nodeKind: Ast.NodeKind;
     readonly nthRequired: number;
     nthCounter: number;
 }
 
-function expectLexParseOk(text: string): LexParseOk {
-    const triedLexParse: TriedLexParse = tryLexParse(text, Parser.CombinatorialParser);
-    if (!ResultUtils.isOk(triedLexParse)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
-    }
-    return triedLexParse.value;
-}
-
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     const lexParseOk: LexParseOk = expectLexParseOk(text);
-    const state: CollectAbridgeNodeState = { result: [] };
+    const state: CollectAbridgeNodeState = {
+        localizationTemplates: DefaultTemplates,
+        result: [],
+    };
 
     const triedTraverse: Traverse.TriedTraverse<AbridgedNode[]> = Traverse.tryTraverseAst<
         CollectAbridgeNodeState,
@@ -52,15 +49,16 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
     const lexParseOk: LexParseOk = expectLexParseOk(text);
     const state: NthNodeOfKindState = {
+        localizationTemplates: DefaultTemplates,
         result: undefined,
         nodeKind,
         nthCounter: 0,
         nthRequired,
     };
 
-    const triedTraverse: Traverse.TriedTraverse<Option<Ast.TNode>> = Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<Ast.TNode | undefined> = Traverse.tryTraverseAst<
         NthNodeOfKindState,
-        Option<Ast.TNode>
+        Ast.TNode | undefined
     >(
         state,
         lexParseOk.nodeIdMapCollection,
@@ -74,7 +72,7 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
     if (!ResultUtils.isOk(triedTraverse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedTraverse): ${triedTraverse.error.message}`);
     }
-    const maybeAstNode: Option<Ast.TNode> = triedTraverse.value;
+    const maybeAstNode: Ast.TNode | undefined = triedTraverse.value;
     if (!(maybeAstNode !== undefined)) {
         throw new Error(`AssertFailed: maybeAstNode !== undefined`);
     }
@@ -117,8 +115,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.And);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.And);
         });
 
         it(`1 * 2`, () => {
@@ -131,8 +129,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Multiplication);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Multiplication);
         });
 
         it(`1 / 2`, () => {
@@ -145,8 +143,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Division);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Division);
         });
 
         it(`1 + 2`, () => {
@@ -159,8 +157,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Addition);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Addition);
         });
 
         it(`1 - 2`, () => {
@@ -173,8 +171,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.ArithmeticOperator.Subtraction);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Subtraction);
         });
 
         it(`1 + 2 + 3 + 4`, () => {
@@ -260,8 +258,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.EqualityOperator.EqualTo);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.EqualityOperatorKind.EqualTo);
         });
 
         it(`1 <> 2`, () => {
@@ -274,8 +272,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.EqualityOperator.NotEqualTo);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.EqualityOperatorKind.NotEqualTo);
         });
     });
 
@@ -496,7 +494,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Csv, 0],
                 [Ast.NodeKind.FieldSpecification, 0],
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
@@ -1305,7 +1303,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Csv, 0],
                 [Ast.NodeKind.FieldSpecification, 0],
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 3],
+                [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
@@ -1326,8 +1324,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.RelationalOperator.GreaterThan);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.GreaterThan);
         });
 
         it(`1 >= 2`, () => {
@@ -1340,8 +1338,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.RelationalOperator.GreaterThanEqualTo);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.GreaterThanEqualTo);
         });
 
         it(`1 < 2`, () => {
@@ -1354,8 +1352,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.RelationalOperator.LessThan);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.LessThan);
         });
 
         it(`1 <= 2`, () => {
@@ -1368,8 +1366,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.RelationalOperator.LessThanEqualTo);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.LessThanEqualTo);
         });
     });
 
@@ -1560,8 +1558,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Negative);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Negative);
         });
 
         it(`not 1`, () => {
@@ -1574,8 +1572,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Not);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Not);
         });
 
         it(`+1`, () => {
@@ -1588,8 +1586,8 @@ describe("Parser.AbridgedNode", () => {
             ];
             expectAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.Constant = expectNthNodeOfKind<Ast.Constant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.literal).to.equal(Ast.UnaryOperator.Positive);
+            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Positive);
         });
     });
 });

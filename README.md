@@ -6,13 +6,13 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 ## How to use
 
-The most common way to consume the project is to interact with the helper functions found in [src/jobs.ts](src/jobs.ts). There are all-in-one functions, such as `tryLexParseInspection`, which does a full pass on a given document. There are also incremental functions, such as `tryLex` and `tryParse`, which perform one step at a time. Minimal code samples can be found in [example.ts](src/example.ts).
+The most common way to consume the project is to interact with the helper functions found in [src/tasks.ts](src/tasks.ts). There are all-in-one functions, such as `tryLexParseInspection`, which does a full pass on a given document. There are also incremental functions, such as `tryLex` and `tryParse`, which perform one step at a time. Minimal code samples can be found in [example.ts](src/example.ts).
 
 ## Things to note
 
 ### Parser
 
-The parser is a rather naive recursive descent parser with limited backtracking. It mostly follows [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md)
+The parser started off as a naive recursive descent parser with limited backtracking. It mostly followed the [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md). A combinatorial parser has since been added which uses the naive parser as its base.
 
 ### Style
 

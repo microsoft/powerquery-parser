@@ -4,7 +4,6 @@
 import * as InspectionUtils from "./inspectionUtils";
 
 export { InspectionUtils };
-export { IdentifierInspected, InspectedInvokeExpression, InvokeExpressionArgs } from "./identifier";
 export * from "./inspection";
 export * from "./position";
-export * from "./positionIdentifier";
+export * from "./scope";

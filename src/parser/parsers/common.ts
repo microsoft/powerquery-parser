@@ -1,5 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { Ast, ParseError } from "..";
-import { CommonError, isNever, Option, Result, ResultUtils } from "../../common";
+import { CommonError, isNever, Result, ResultUtils } from "../../common";
 import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -28,37 +31,64 @@ export function readToken(state: IParserState): string {
     return data;
 }
 
-export function readTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Ast.Constant {
+export function readTokenKindAsConstant<T>(
+    state: IParserState,
+    tokenKind: TokenKind,
+    constantKind: T & Ast.TConstantKind,
+): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> {
     IParserStateUtils.startContext(state, Ast.NodeKind.Constant);
 
-    const maybeErr: Option<ParseError.ExpectedTokenKindError> = IParserStateUtils.testIsOnTokenKind(state, tokenKind);
-    if (maybeErr) {
+    const maybeErr: ParseError.ExpectedTokenKindError | undefined = IParserStateUtils.testIsOnTokenKind(
+        state,
+        tokenKind,
+    );
+    if (maybeErr !== undefined) {
         throw maybeErr;
     }
 
-    const literal: string = readToken(state);
-    const astNode: Ast.Constant = {
+    const tokenData: string = readToken(state);
+    if (tokenData !== constantKind) {
+        const details: {} = {
+            tokenData,
+            constantKind,
+        };
+        throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
+    }
+
+    const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: Ast.NodeKind.Constant,
         isLeaf: true,
-        literal,
+        constantKind,
     };
     IParserStateUtils.endContext(state, astNode);
 
     return astNode;
 }
 
-export function maybeReadTokenKindAsConstant(state: IParserState, tokenKind: TokenKind): Option<Ast.Constant> {
+export function maybeReadTokenKindAsConstant<T>(
+    state: IParserState,
+    tokenKind: TokenKind,
+    constantKind: T & Ast.TConstantKind,
+): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> | undefined {
     if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
 
-        const literal: string = readToken(state);
-        const astNode: Ast.Constant = {
+        const tokenData: string = readToken(state);
+        if (tokenData !== constantKind) {
+            const details: {} = {
+                tokenData,
+                constantKind,
+            };
+            throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
+        }
+
+        const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,
-            literal,
+            constantKind,
         };
         IParserStateUtils.endContext(state, astNode);
 
@@ -84,7 +114,7 @@ export function readBracketDisambiguation<T>(
     const disambiguation: BracketDisambiguation = triedDisambiguation.value;
     if (allowedVariants.indexOf(disambiguation) === -1) {
         throw new CommonError.InvariantError(
-            `grammer doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
+            `grammar doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
         );
     }
 

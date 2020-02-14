@@ -8,7 +8,7 @@ import { ResultUtils } from "../../common";
 import { Inspected } from "../../inspection";
 import { KeywordKind, TExpressionKeywords } from "../../lexer";
 import { Ast } from "../../parser";
-import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "./common";
+import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../common";
 
 type AbridgedInspection = Inspected["autocompleteKeywords"];
 
@@ -22,7 +22,7 @@ function expectNodesEqual(triedInspection: Inspection.TriedInspection, expected:
     expect(actual).deep.equal(expected);
 }
 
-describe(`qweasdzxc Inspection`, () => {
+describe(`Inspection`, () => {
     describe(`Autocomplete`, () => {
         describe("partial keyword", () => {
             it("a|", () => {
