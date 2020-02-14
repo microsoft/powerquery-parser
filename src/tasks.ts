@@ -5,16 +5,7 @@ import { Inspection } from ".";
 import { CommonError, Result, ResultUtils } from "./common";
 import { Inspected, TriedInspection } from "./inspection";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import {
-    IParser,
-    IParserState,
-    IParserStateUtils,
-    NodeIdMap,
-    ParseContext,
-    ParseError,
-    ParseOk,
-    TriedParse,
-} from "./parser";
+import { IParser, IParserState, NodeIdMap, ParseContext, ParseError, ParseOk, TriedParse } from "./parser";
 import { InspectionSettings, LexSettings, ParseSettings, Settings } from "./settings";
 
 export type TriedLexParse = Result<LexParseOk, LexError.TLexError | ParseError.TParseError>;
@@ -42,9 +33,9 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse(settings: ParseSettings, lexerSnapshot: LexerSnapshot): TriedParse {
-    const parser: IParser<IParserState> = settings.parser;
-    const parserState: IParserState = IParserStateUtils.newState(settings, lexerSnapshot);
+export function tryParse<T>(settings: ParseSettings<T>, lexerSnapshot: LexerSnapshot): TriedParse {
+    const parser: IParser<T & IParserState> = settings.parser;
+    const parserState: T & IParserState = settings.newParserState(settings, lexerSnapshot);
     return parser.readDocument(parserState, parser);
 }
 
@@ -80,7 +71,7 @@ export function tryInspection(
     return Inspection.tryFrom(settings, position, nodeIdMapCollection, leafNodeIds, maybeParseError);
 }
 
-export function tryLexParse(settings: LexSettings & ParseSettings, text: string): TriedLexParse {
+export function tryLexParse<T>(settings: LexSettings & ParseSettings<T>, text: string): TriedLexParse {
     const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
@@ -98,8 +89,8 @@ export function tryLexParse(settings: LexSettings & ParseSettings, text: string)
     }
 }
 
-export function tryLexParseInspection(
-    settings: Settings,
+export function tryLexParseInspection<T>(
+    settings: Settings<T>,
     text: string,
     position: Inspection.Position,
 ): TriedLexParseInspection {

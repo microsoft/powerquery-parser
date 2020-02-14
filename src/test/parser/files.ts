@@ -6,7 +6,6 @@ import { DefaultSettings, Settings } from "../../settings";
 import { TriedLexParse, tryLexParse } from "../../tasks";
 
 import * as path from "path";
-import { CombinatorialBenchmarkParser } from "./benchmarkParser";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -55,7 +54,7 @@ function testNameFromFilePath(filePath: string): string {
     return filePath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles(settings: Settings, parserName: string): void {
+function parseAllFiles<T>(settings: Settings<T>, parserName: string): void {
     describe(`use ${parserName} on files directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "files");
 
@@ -78,11 +77,10 @@ function parseAllFiles(settings: Settings, parserName: string): void {
 const parsers: ReadonlyArray<[string, IParser<IParserState>]> = [
     ["CombinatorialParser", Parser.CombinatorialParser],
     ["RecursiveDescentParser", Parser.RecursiveDescentParser],
-    ["CombinatorialParser", CombinatorialBenchmarkParser],
 ];
 
 for (const [parserName, parser] of parsers) {
-    const settings: Settings = {
+    const settings: Settings<IParserState> = {
         ...DefaultSettings,
         parser,
     };
