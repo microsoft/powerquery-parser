@@ -934,9 +934,9 @@ export function readListItem(state: IParserState, parser: IParser<IParserState>)
     }
 }
 
-// -----------------------------------------------------------
-// ---------- 12.2.3.18 12.2.3.18 Record expression ----------
-// -----------------------------------------------------------
+// -------------------------------------------------
+// ---------- 12.2.3.18 Record expression ----------
+// -------------------------------------------------
 
 export function readRecordExpression(state: IParserState, parser: IParser<IParserState>): Ast.RecordExpression {
     const continueReadingValues: boolean = !IParserStateUtils.isNextTokenKind(state, TokenKind.RightBracket);
