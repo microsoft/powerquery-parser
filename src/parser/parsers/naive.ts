@@ -896,7 +896,7 @@ export function readListExpression(state: IParserState, parser: IParser<IParserS
         Ast.NodeKind.ListExpression,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
         () =>
-            readCsvArray(
+            readCsvArray<Ast.TListItem>(
                 state,
                 () => parser.readListItem(state, parser),
                 continueReadingValues,
@@ -1626,7 +1626,7 @@ export function readListLiteral(state: IParserState, parser: IParser<IParserStat
         Ast.NodeKind.ListLiteral,
         () => readTokenKindAsConstant(state, TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
         () =>
-            readCsvArray(
+            readCsvArray<Ast.TAnyLiteral>(
                 state,
                 () => parser.readAnyLiteral(state, parser),
                 continueReadingValues,

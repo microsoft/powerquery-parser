@@ -6,6 +6,7 @@ import { DefaultSettings, Settings } from "../../settings";
 import { TriedLexParse, tryLexParse } from "../../tasks";
 
 import * as path from "path";
+import { CombinatorialBenchmarkParser } from "./benchmarkParser";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -77,6 +78,7 @@ function parseAllFiles(settings: Settings, parserName: string): void {
 const parsers: ReadonlyArray<[string, IParser<IParserState>]> = [
     ["CombinatorialParser", Parser.CombinatorialParser],
     ["RecursiveDescentParser", Parser.RecursiveDescentParser],
+    ["CombinatorialParser", CombinatorialBenchmarkParser],
 ];
 
 for (const [parserName, parser] of parsers) {
