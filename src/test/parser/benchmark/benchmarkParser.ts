@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { LexerSnapshot, TokenPosition } from "../../lexer";
-import { IParser } from "../../parser/IParser";
-import { IParserState, IParserStateUtils } from "../../parser/IParserState";
-import { ParseSettings } from "../../settings";
+import { LexerSnapshot, TokenPosition } from "../../../lexer";
+import { IParser } from "../../../parser/IParser";
+import { IParserState, IParserStateUtils } from "../../../parser/IParserState";
+import { ParseSettings } from "../../../settings";
 
 export interface BenchmarkState extends IParserState {
     readonly baseParser: IParser<IParserState>;

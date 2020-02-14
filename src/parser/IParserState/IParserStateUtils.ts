@@ -18,7 +18,7 @@ export interface FastStateBackup {
 // ---------- State ----------
 // ---------------------------
 
-export function newState<T>(settings: ParseSettings<T>, lexerSnapshot: LexerSnapshot): IParserState {
+export function newState<T>(settings: ParseSettings<T & IParserState>, lexerSnapshot: LexerSnapshot): IParserState {
     const maybeCurrentToken: Token | undefined = lexerSnapshot.tokens[0];
 
     return {
