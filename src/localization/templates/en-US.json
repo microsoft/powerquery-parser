@@ -1,12 +1,12 @@
 {
     "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
-    "_error_common_invariantError_1_details.comment": "A fatal error, such as division by 0. Not intended to be user facing. {Locked=\"{invariantBroken, details}\"}",
+    "_error_common_invariantError_1_details.comment": "A fatal error, such as division by 0. Not intended to be user facing.",
 
     "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
-    "_error_common_invariantError_2_noDetails.comment": "A fatal error, such as division by 0. Not intended to be user facing. {Locked=\"invariantBroken\"}",
+    "_error_common_invariantError_2_noDetails.comment": "A fatal error, such as division by 0. Not intended to be user facing.",
 
     "error_common_unknown": "An unknown error was encountered, innerError: {innerError}",
-    "_error_common_unknown.comment": "A fatal error from unknown causes. Possibly user facing. {Locked=\"innerError\"}",
+    "_error_common_unknown.comment": "A fatal error from unknown causes. Possibly user facing.",
 
     "error_lex_badLineNumber_1_greaterThanNumLines": "lineNumber is greater than or equal to the number of lines",
     "_error_lex_badLineNumber_1_greaterThanNumLines.comment": "A low level error caused by a library consumer providing a bad number range. Not intended to be user facing",
@@ -54,7 +54,7 @@
     "_error_lex_expectedKind_3_numeric.comment": "The lexer expected a hex literal ('foo') but failed to find one. Intended to be user facing.",
 
     "error_lex_lineMap": "Error on line(s): {lineNumbers}",
-    "_error_lex_lineMap.comment": "A comma separated set of line numbers containing errors. Possibly user facing. {Locked=\"lineNumbers\"}",
+    "_error_lex_lineMap.comment": "A comma separated set of line numbers containing errors. Possibly user facing.",
 
     "error_lex_unexpectedRead": "Unexpected read during tokenization",
     "_error_lex_unexpectedRead.comment": "A generic lex error. Possibly user facing.",
@@ -75,10 +75,10 @@
     "_error_parse_csvContinuation_2_letExpression.comment": "A common parser error caused by a trailing comma, eg. 'let x = 1, in x'. Expected to be user facing.",
 
     "error_parse_expectAnyTokenKind_1_other": "Expected to find one of the following, but a {foundTokenKind} was found instead: {expectedAnyTokenKinds}",
-    "_error_parse_expectAnyTokenKind_1_other.comment": "A common parser error where expectedAnyTokenKinds is a csv collection of localized tokenKind strings and foundTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{foundTokenKind, expectedAnyTokenKinds}\"}",
+    "_error_parse_expectAnyTokenKind_1_other.comment": "A common parser error where expectedAnyTokenKinds is a csv collection of localized tokenKind strings and foundTokenKind is a localized tokenKind string. Expected to be user facing.",
 
     "error_parse_expectAnyTokenKind_2_endOfStream": "Expected to find one of the following, but the end-of-stream was reached instead: {expectedAnyTokenKinds}",
-    "_error_parse_expectAnyTokenKind_2_endOfStream.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{expectedAnyTokenKinds}\"}",
+    "_error_parse_expectAnyTokenKind_2_endOfStream.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing.",
 
     "error_parse_expectGeneralizedIdentifier_1_other": "Expected to find a generalized identifier",
     "_error_parse_expectGeneralizedIdentifier_1_other.comment": "A common parser error. Expected to be user facing.",
@@ -87,16 +87,16 @@
     "_error_parse_expectGeneralizedIdentifier_2_endOfStream.comment": "A common parser error. Expected to be user facing.",
 
     "error_parse_expectTokenKind_1_other": "Expected to find a {expectedTokenKind}, but a {foundTokenKind} was found instead",
-    "_error_parse_expectTokenKind_1_other.comment": "A common parser error where expectedTokenKind and foundTokenKind are a localized tokenKind string. Expected to be user facing. {Locked=\"{expectedTokenKind, foundTokenKind}\"}",
+    "_error_parse_expectTokenKind_1_other.comment": "A common parser error where expectedTokenKind and foundTokenKind are a localized tokenKind string. Expected to be user facing.",
 
     "error_parse_expectTokenKind_2_endOfStream": "Expected to find a {expectedTokenKind}, but the end-of-stream was reached instead",
-    "_error_parse_expectTokenKind_2_endOfStream.comment": "A common parser error where expectedTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{expectedTokenKind}\"}",
+    "_error_parse_expectTokenKind_2_endOfStream.comment": "A common parser error where expectedTokenKind is a localized tokenKind string. Expected to be user facing.",
 
     "error_parse_invalidPrimitiveType": "Expected to find a primitive literal, but a {foundTokenKind} was found instead",
-    "_error_parse_invalidPrimitiveType.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing. {Locked=\"{foundTokenKind}\"}",
+    "_error_parse_invalidPrimitiveType.comment": "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing.",
 
     "error_parse_requiredParameterAfterOptional": "You cannot have a non-optional parameter after an optional parameter",
-    "_error_parse_requiredParameterAfterOptional.comment": "Optional parameters must come after non-optional parameters, eg. ('(optional x, y) => x + y') causes an error. Expected to be user facing. {Locked=\"{foundTokenKind}\"}",
+    "_error_parse_requiredParameterAfterOptional.comment": "Optional parameters must come after non-optional parameters, eg. ('(optional x, y) => x + y') causes an error. Expected to be user facing.",
 
     "error_parse_unterminated_bracket": "Unterminated bracket",
     "_error_parse_unterminated_bracket.comment": "A common parser where it could not disambiguate a bracket. Expected to be user facing.",
