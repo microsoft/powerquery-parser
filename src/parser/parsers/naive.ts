@@ -201,6 +201,7 @@ export function readDocument<S>(state: S & IParserState, parser: IParser<S & IPa
         ast: document,
         nodeIdMapCollection: contextState.nodeIdMapCollection,
         leafNodeIds: contextState.leafNodeIds,
+        state,
     });
 }
 

@@ -335,3 +335,4 @@ tsconfig.tsbuildinfo
 *.tgz
 
 src/localization/templates.json
+src/test/files/benchmarkResources/logs/

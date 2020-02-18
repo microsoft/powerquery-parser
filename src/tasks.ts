@@ -8,19 +8,19 @@ import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { IParser, IParserState, NodeIdMap, ParseContext, ParseError, ParseOk, TriedParse } from "./parser";
 import { InspectionSettings, LexSettings, ParseSettings, Settings } from "./settings";
 
-export type TriedLexParse<T> = Result<LexParseOk, LexError.TLexError | ParseError.TParseError<T>>;
+export type TriedLexParse<S> = Result<LexParseOk<S>, LexError.TLexError | ParseError.TParseError<S>>;
 
-export type TriedLexParseInspection<T> = Result<
-    LexParseInspectionOk<T>,
-    LexError.TLexError | ParseError.TParseError<T>
+export type TriedLexParseInspection<S> = Result<
+    LexParseInspectionOk<S>,
+    LexError.TLexError | ParseError.TParseError<S>
 >;
 
-export interface LexParseOk extends ParseOk {
+export interface LexParseOk<S> extends ParseOk<S> {
     readonly lexerSnapshot: LexerSnapshot;
 }
 
-export interface LexParseInspectionOk<T> extends Inspected {
-    readonly triedParse: TriedParse<T>;
+export interface LexParseInspectionOk<S> extends Inspected {
+    readonly triedParse: TriedParse<S>;
 }
 
 export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot {
@@ -36,20 +36,20 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse<T>(settings: ParseSettings<T>, lexerSnapshot: LexerSnapshot): TriedParse<T> {
-    const parser: IParser<T & IParserState> = settings.parser;
-    const parserState: T & IParserState = settings.newParserState(settings, lexerSnapshot);
+export function tryParse<S>(settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot): TriedParse<S> {
+    const parser: IParser<S & IParserState> = settings.parser;
+    const parserState: S & IParserState = settings.newParserState(settings, lexerSnapshot);
     return parser.readDocument(parserState, parser);
 }
 
-export function tryInspection<T>(
+export function tryInspection<S>(
     settings: InspectionSettings,
-    triedParse: TriedParse<T>,
+    triedParse: TriedParse<S>,
     position: Inspection.Position,
 ): TriedInspection {
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
-    let maybeParseError: ParseError.ParseError<T> | undefined;
+    let maybeParseError: ParseError.ParseError<S> | undefined;
 
     if (ResultUtils.isErr(triedParse)) {
         if (triedParse.error instanceof CommonError.CommonError) {
@@ -66,7 +66,7 @@ export function tryInspection<T>(
         leafNodeIds = context.leafNodeIds;
         nodeIdMapCollection = context.nodeIdMapCollection;
     } else {
-        const parseOk: ParseOk = triedParse.value;
+        const parseOk: ParseOk<S> = triedParse.value;
         leafNodeIds = parseOk.leafNodeIds;
         nodeIdMapCollection = parseOk.nodeIdMapCollection;
     }
@@ -74,14 +74,14 @@ export function tryInspection<T>(
     return Inspection.tryFrom(settings, position, nodeIdMapCollection, leafNodeIds, maybeParseError);
 }
 
-export function tryLexParse<T>(settings: LexSettings & ParseSettings<T>, text: string): TriedLexParse<T> {
+export function tryLexParse<S>(settings: LexSettings & ParseSettings<S>, text: string): TriedLexParse<S> {
     const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
     const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
 
-    const triedParse: TriedParse<T> = tryParse(settings, lexerSnapshot);
+    const triedParse: TriedParse<S> = tryParse(settings, lexerSnapshot);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,
@@ -92,21 +92,24 @@ export function tryLexParse<T>(settings: LexSettings & ParseSettings<T>, text: s
     }
 }
 
-export function tryLexParseInspection<T>(
-    settings: Settings<T>,
+export function tryLexParseInspection<S>(
+    settings: Settings<S & IParserState>,
     text: string,
     position: Inspection.Position,
-): TriedLexParseInspection<T> {
-    const triedLexParse: TriedLexParse<T> = tryLexParse(settings, text);
+): TriedLexParseInspection<S> {
+    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
     if (ResultUtils.isErr(triedLexParse) && triedLexParse.error instanceof LexError.LexError) {
         return triedLexParse;
     }
 
     // The if statement above should remove LexError from the error type in Result<T, E>
     const casted: Result<
-        LexParseOk,
-        ParseError.TParseError<T> | Exclude<LexError.TLexError, LexError.LexError>
-    > = triedLexParse as Result<LexParseOk, ParseError.TParseError<T> | Exclude<LexError.TLexError, LexError.LexError>>;
+        LexParseOk<S>,
+        ParseError.TParseError<S> | Exclude<LexError.TLexError, LexError.LexError>
+    > = triedLexParse as Result<
+        LexParseOk<S>,
+        ParseError.TParseError<S> | Exclude<LexError.TLexError, LexError.LexError>
+    >;
     const triedInspection: TriedInspection = tryInspection(settings, casted, position);
 
     if (ResultUtils.isErr(triedInspection)) {

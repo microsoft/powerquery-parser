@@ -1,7 +1,7 @@
-import { readdirSync, readFileSync, statSync } from "fs";
 import "mocha";
 import { LexSettings, ParseSettings } from "../settings";
 
+import * as fs from "fs";
 import * as path from "path";
 import * as Tasks from "../tasks";
 
@@ -20,22 +20,42 @@ export function getPowerQueryFilesRecursively(rootDirectory: string): ReadonlyAr
     return files.map(str => str.toString());
 }
 
-export function fileContents(filePath: string): string {
-    const contents: string = readFileSync(filePath, "utf8");
+export function readContents(filePath: string): string {
+    // tslint:disable-next-line: non-literal-fs-path
+    const contents: string = fs.readFileSync(filePath, "utf8");
     return contents.replace(/^\uFEFF/, "");
 }
 
-export function tryLexParse<T>(settings: LexSettings & ParseSettings<T>, filePath: string): Tasks.TriedLexParse<T> {
-    const contents: string = fileContents(filePath);
+export function writeContents(filePath: string, contents: string): void {
+    const dirPath: string = path.dirname(filePath);
+
+    // tslint:disable-next-line: non-literal-fs-path
+    if (!fs.existsSync(dirPath)) {
+        // tslint:disable-next-line: non-literal-fs-path
+        fs.mkdirSync(path.dirname(dirPath), { recursive: true });
+    }
+
+    // tslint:disable-next-line: non-literal-fs-path
+    fs.writeFile(filePath, contents, { encoding: "utf8" }, (err: NodeJS.ErrnoException | null) => {
+        if (err !== null) {
+            throw err;
+        }
+    });
+}
+
+export function tryLexParse<S>(settings: LexSettings & ParseSettings<S>, filePath: string): Tasks.TriedLexParse<S> {
+    const contents: string = readContents(filePath);
     return Tasks.tryLexParse(settings, contents);
 }
 
 function isDirectory(maybePath: string): boolean {
-    return statSync(maybePath).isDirectory();
+    // tslint:disable-next-line: non-literal-fs-path
+    return fs.statSync(maybePath).isDirectory();
 }
 
 function isFile(filePath: string): boolean {
-    return statSync(filePath).isFile();
+    // tslint:disable-next-line: non-literal-fs-path
+    return fs.statSync(filePath).isFile();
 }
 
 function isPowerQueryFile(filePath: string): boolean {
@@ -47,13 +67,17 @@ function isPowerQueryExtension(extension: string): boolean {
 }
 
 function getDirectoryPaths(rootDirectory: string): ReadonlyArray<string> {
-    return readdirSync(rootDirectory)
+    // tslint:disable-next-line: non-literal-fs-path
+    return fs
+        .readdirSync(rootDirectory)
         .map(name => path.join(rootDirectory, name))
         .filter(isDirectory);
 }
 
 function getPowerQueryFilePaths(filePath: string): ReadonlyArray<string> {
-    return readdirSync(filePath)
+    // tslint:disable-next-line: non-literal-fs-path
+    return fs
+        .readdirSync(filePath)
         .map(name => path.join(filePath, name))
         .filter(isPowerQueryFile);
 }

@@ -4,7 +4,7 @@
 import { Ast, IParserState, NodeIdMap, ParseError } from ".";
 import { Result } from "../common";
 
-export type TriedParse<S> = Result<ParseOk, ParseError.TParseError<S>>;
+export type TriedParse<S> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
 export const enum ParenthesisDisambiguation {
     FunctionExpression = "FunctionExpression",
@@ -17,10 +17,11 @@ export const enum BracketDisambiguation {
     Record = "Record",
 }
 
-export interface ParseOk {
+export interface ParseOk<S> {
     readonly ast: Ast.TDocument;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
+    readonly state: S & IParserState;
 }
 
 export interface IParser<State> {

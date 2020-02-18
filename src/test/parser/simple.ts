@@ -5,7 +5,8 @@ import { expect } from "chai";
 import "mocha";
 import { ResultUtils, Traverse } from "../../common";
 import { DefaultTemplates } from "../../localization";
-import { Ast } from "../../parser";
+import { Ast, IParserState } from "../../parser";
+import { DefaultSettings } from "../../settings";
 import { LexParseOk } from "../../tasks";
 import { expectLexParseOk } from "../common";
 
@@ -20,7 +21,7 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: LexParseOk = expectLexParseOk(text);
+    const lexParseOk: LexParseOk<IParserState> = expectLexParseOk(DefaultSettings, text);
     const state: CollectAbridgeNodeState = {
         localizationTemplates: DefaultTemplates,
         result: [],
@@ -47,7 +48,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 }
 
 function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
-    const lexParseOk: LexParseOk = expectLexParseOk(text);
+    const lexParseOk: LexParseOk<IParserState> = expectLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         localizationTemplates: DefaultTemplates,
         result: undefined,

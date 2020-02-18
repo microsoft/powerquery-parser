@@ -19,6 +19,21 @@ const parsers: ReadonlyArray<[ParseSettings<BenchmarkState>, string]> = [
     [createBenchmarkParseSettings(createRecurisveDescentBenchmarkState), "RecursiveDescentParser"],
 ];
 
+const headers: ReadonlyArray<string> = [
+    "fileName",
+    "id",
+    "fnName",
+    "lineNumberStart",
+    "lineCodeUnitStart",
+    "codeUnitStart",
+    "lineNumberEnd",
+    "lineCodeUnitEnd",
+    "codeUnitEnd",
+    "timeStart",
+    "timeEnd",
+    "timeDuration",
+];
+
 for (const [settings, parserName] of parsers) {
     parseAllFiles(settings, parserName);
 }
@@ -60,22 +75,37 @@ function createBenchmarkParseSettings(
     };
 }
 
-function testNameFromFilePath(filePath: string): string {
-    return filePath.replace(path.dirname(__filename), ".");
-}
-
 function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): void {
     describe(`Benchmark ${parserName} on benchmarkResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "benchmarkResources");
 
         for (const filePath of FileUtils.getPowerQueryFilesRecursively(fileDirectory)) {
-            const testName: string = testNameFromFilePath(filePath);
+            const fileName: string = path.basename(filePath);
 
-            it(testName, () => {
+            it(fileName, () => {
                 const triedLexParse: TriedLexParse<BenchmarkState> = FileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }
+
+                let csvContent: string = `${headers.join(",")}\n`;
+                for (const fnTimestamp of triedLexParse.value.state.functionTimestamps.values()) {
+                    csvContent += `${fileName}`;
+                    csvContent += `,${fnTimestamp.id}`;
+                    csvContent += `,${fnTimestamp.fnName}`;
+                    csvContent += `,${fnTimestamp.lineNumberStart}`;
+                    csvContent += `,${fnTimestamp.lineCodeUnitStart}`;
+                    csvContent += `,${fnTimestamp.codeUnitStart}`;
+                    csvContent += `,${fnTimestamp.lineNumberEnd}`;
+                    csvContent += `,${fnTimestamp.lineCodeUnitEnd}`;
+                    csvContent += `,${fnTimestamp.codeUnitEnd}`;
+                    csvContent += `,${fnTimestamp.timeStart}`;
+                    csvContent += `,${fnTimestamp.timeEnd}`;
+                    csvContent += `,${fnTimestamp.timeDuration}\n`;
+                }
+
+                const logFilePath: string = path.join(fileDirectory, "logs", `${fileName}.perf`);
+                FileUtils.writeContents(logFilePath, csvContent);
             });
         }
     });
