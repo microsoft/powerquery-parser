@@ -6,8 +6,8 @@ import "mocha";
 import { Inspection } from "..";
 import { ResultUtils } from "../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
-import { IParserState, IParserStateUtils, ParseError, ParseOk, Parser, TriedParse } from "../parser";
-import { DefaultSettings } from "../settings";
+import { IParserState, ParseError, ParseOk, TriedParse } from "../parser";
+import { DefaultSettings, LexSettings, ParseSettings } from "../settings";
 import { LexParseOk, TriedLexParse, tryLexParse } from "../tasks";
 
 export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
@@ -30,13 +30,21 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
     return [text.replace("|", ""), position];
 }
 
-export function expectParseOkInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
-    const parseOk: ParseOk = expectParseOk(text);
+export function expectParseOkInspection<T>(
+    settings: LexSettings & ParseSettings<T & IParserState>,
+    text: string,
+    position: Inspection.Position,
+): Inspection.TriedInspection {
+    const parseOk: ParseOk = expectParseOk(settings, text);
     return Inspection.tryFrom(DefaultSettings, position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
 }
 
-export function expectParseErrInspection(text: string, position: Inspection.Position): Inspection.TriedInspection {
-    const parseError: ParseError.ParseError = expectParseErr(text);
+export function expectParseErrInspection<T>(
+    settings: LexSettings & ParseSettings<T & IParserState>,
+    text: string,
+    position: Inspection.Position,
+): Inspection.TriedInspection {
+    const parseError: ParseError.ParseError = expectParseErr(settings, text);
     return Inspection.tryFrom(
         DefaultSettings,
         position,
@@ -54,8 +62,11 @@ export function expectLexParseOk(text: string): LexParseOk {
     return triedLexParse.value;
 }
 
-export function expectParseErr(text: string): ParseError.ParseError {
-    const triedParse: TriedParse = expectTriedParse(text);
+export function expectParseErr<T>(
+    settings: LexSettings & ParseSettings<T & IParserState>,
+    text: string,
+): ParseError.ParseError {
+    const triedParse: TriedParse = expectTriedParse(settings, text);
     if (!ResultUtils.isErr(triedParse)) {
         throw new Error(`AssertFailed: ResultUtils.Err(triedParse)`);
     }
@@ -67,16 +78,18 @@ export function expectParseErr(text: string): ParseError.ParseError {
     return triedParse.error;
 }
 
-export function expectParseOk(text: string): ParseOk {
-    const triedParse: TriedParse = expectTriedParse(text);
+export function expectParseOk<T>(settings: LexSettings & ParseSettings<T & IParserState>, text: string): ParseOk {
+    const triedParse: TriedParse = expectTriedParse(settings, text);
     if (!ResultUtils.isOk(triedParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedParse): ${triedParse.error.message}`);
     }
     return triedParse.value;
 }
 
-function expectTriedParse(text: string): TriedParse {
-    const lexerState: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
+// I only care about errors coming from the parse stage.
+// If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
+function expectTriedParse<T>(settings: LexSettings & ParseSettings<T & IParserState>, text: string): TriedParse {
+    const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {
         throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
@@ -88,6 +101,6 @@ function expectTriedParse(text: string): TriedParse {
     }
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    const parserState: IParserState = IParserStateUtils.newState(DefaultSettings, lexerSnapshot);
-    return Parser.CombinatorialParser.readDocument(parserState, DefaultSettings.parser);
+    const parserState: T & IParserState = settings.newParserState(settings, lexerSnapshot);
+    return settings.parser.readDocument(parserState, settings.parser);
 }

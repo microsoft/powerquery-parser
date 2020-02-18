@@ -30,7 +30,7 @@ export interface IParser<State> {
     readonly readKeyword: (state: State, parser: IParser<State>) => Ast.IdentifierExpression;
 
     // 12.2.1 Documents
-    readonly readDocument: (state: State, parser: IParser<State>) => TriedParse;
+    readonly readDocument: (state: State, parser: IParser<State & IParserState>) => TriedParse;
 
     // 12.2.2 Section Documents
     readonly readSectionDocument: (state: State, parser: IParser<State>) => Ast.Section;
