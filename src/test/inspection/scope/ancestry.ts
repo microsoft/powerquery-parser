@@ -6,6 +6,7 @@ import { Inspection } from "../../..";
 import { isNever, ResultUtils } from "../../../common";
 import { Token } from "../../../lexer";
 import { Ast, TXorNode, XorNodeKind } from "../../../parser";
+import { DefaultSettings } from "../../../settings";
 import {
     expectDeepEqual,
     expectParseErrInspection,
@@ -60,7 +61,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
         it(`|[foo = bar]`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar]`);
             const expected: ReadonlyArray<AbridgedTravelPathNode> = [];
-            expectDeepEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseOkInspection(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`[foo| = bar]`, () => {
@@ -92,7 +93,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectDeepEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseOkInspection(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`[foo = bar|]`, () => {
@@ -129,7 +130,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectDeepEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseOkInspection(DefaultSettings, text, position), expected, actualFactoryFn);
         });
     });
 
@@ -137,7 +138,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
         it(`|[foo = bar`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[foo = bar`);
             const expected: ReadonlyArray<AbridgedTravelPathNode> = [];
-            expectDeepEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseErrInspection(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`[foo| = bar`, () => {
@@ -174,7 +175,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectDeepEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseErrInspection(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`[foo = bar|`, () => {
@@ -216,7 +217,7 @@ describe(`Inspection - Scope - Ancestry`, () => {
                     maybePositionStartCodeUnit: 0,
                 },
             ];
-            expectDeepEqual(expectParseErrInspection(text, position), expected, actualFactoryFn);
+            expectDeepEqual(expectParseErrInspection(DefaultSettings, text, position), expected, actualFactoryFn);
         });
     });
 });

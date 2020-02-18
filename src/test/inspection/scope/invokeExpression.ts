@@ -63,9 +63,10 @@ describe(`Inspection - InvokeExpression`, () => {
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression!;
+
         const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
-        expect(inspected.maybeInvokeExpression.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
-        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression;
+        expect(inspectedInvokeExpr.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
 
         expect(inspectedInvokeExpr.maybeName).to.equal("Foo");
     });
@@ -78,9 +79,10 @@ describe(`Inspection - InvokeExpression`, () => {
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 2);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression!;
+
         const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
-        expect(inspected.maybeInvokeExpression.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
-        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression;
+        expect(inspectedInvokeExpr.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
 
         expect(inspectedInvokeExpr.maybeName).to.equal("Foo");
     });
@@ -93,9 +95,10 @@ describe(`Inspection - InvokeExpression`, () => {
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression!;
+
         const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
-        expect(inspected.maybeInvokeExpression.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
-        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression;
+        expect(inspectedInvokeExpr.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
 
         expect(inspectedInvokeExpr.maybeArguments).not.equal(undefined, "should be truthy");
         const args: Inspection.InvokeExpressionArgs = inspectedInvokeExpr.maybeArguments!;
@@ -105,13 +108,16 @@ describe(`Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a|,)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|,)");
-        const inspected: Inspection.Inspected = expectInspected(expectParseErrInspection(text, position));
+        const inspected: Inspection.Inspected = expectInspected(
+            expectParseErrInspection(DefaultSettings, text, position),
+        );
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression!;
+
         const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
-        expect(inspected.maybeInvokeExpression.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
-        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression;
+        expect(inspectedInvokeExpr.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
 
         expect(inspectedInvokeExpr.maybeArguments).not.equal(undefined, "should be truthy");
         const args: Inspection.InvokeExpressionArgs = inspectedInvokeExpr.maybeArguments!;
@@ -121,13 +127,16 @@ describe(`Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a,|)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a,|)");
-        const inspected: Inspection.Inspected = expectInspected(expectParseErrInspection(text, position));
+        const inspected: Inspection.Inspected = expectInspected(
+            expectParseErrInspection(DefaultSettings, text, position),
+        );
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
+        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression!;
+
         const firstInvokeExprNode: TXorNode = expectNthOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
-        expect(inspected.maybeInvokeExpression.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
-        const inspectedInvokeExpr: Inspection.InvokeExpression = inspected.maybeInvokeExpression;
+        expect(inspectedInvokeExpr.xorNode.node.id).to.equal(firstInvokeExprNode.node.id);
 
         expect(inspectedInvokeExpr.maybeArguments).not.equal(undefined, "should be truthy");
         const args: Inspection.InvokeExpressionArgs = inspectedInvokeExpr.maybeArguments!;
