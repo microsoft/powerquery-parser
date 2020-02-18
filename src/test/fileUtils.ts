@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import "mocha";
-import * as path from "path";
 import { LexSettings, ParseSettings } from "../settings";
-import { TriedLexParse } from "../tasks";
+
+import * as path from "path";
+import * as Tasks from "../tasks";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -24,9 +25,9 @@ export function fileContents(filePath: string): string {
     return contents.replace(/^\uFEFF/, "");
 }
 
-export function tryLexParse<T>(settings: LexSettings & ParseSettings<T>, filePath: string): TriedLexParse {
+export function tryLexParse<T>(settings: LexSettings & ParseSettings<T>, filePath: string): Tasks.TriedLexParse<T> {
     const contents: string = fileContents(filePath);
-    return tryLexParse(settings, contents);
+    return Tasks.tryLexParse(settings, contents);
 }
 
 function isDirectory(maybePath: string): boolean {

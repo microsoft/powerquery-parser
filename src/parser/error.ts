@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseContext } from ".";
 import { CommonError, StringUtils } from "../common";
 import { Token, TokenKind } from "../lexer/token";
 import { ILocalizationTemplates, Localization } from "../localization";
+import { IParserState } from "./IParserState";
 
-export type TParseError = CommonError.CommonError | ParseError;
+export type TParseError<T> = CommonError.CommonError | ParseError<T>;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
@@ -29,8 +29,8 @@ export const enum UnterminatedKind {
     Parenthesis = "Parenthesis",
 }
 
-export class ParseError extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly context: ParseContext.State) {
+export class ParseError<T> extends Error {
+    constructor(readonly innerError: TInnerParseError, readonly state: T & IParserState) {
         super(innerError.message);
     }
 }
@@ -126,7 +126,7 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-export function isTParseError(x: any): x is TParseError {
+export function isTParseError<T>(x: any): x is TParseError<T> {
     return x instanceof ParseError || x instanceof CommonError.CommonError;
 }
 

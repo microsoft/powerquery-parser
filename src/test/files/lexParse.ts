@@ -7,16 +7,19 @@ import { TriedLexParse } from "../../tasks";
 import * as path from "path";
 import * as FileUtils from "../fileUtils";
 
-const parsers: ReadonlyArray<[string, IParser<IParserState>]> = [
-    ["CombinatorialParser", Parser.CombinatorialParser],
-    ["RecursiveDescentParser", Parser.RecursiveDescentParser],
+const parsers: ReadonlyArray<[Settings<IParserState>, string]> = [
+    [createSettings(Parser.CombinatorialParser), "CombinatorialParser"],
+    [createSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
-for (const [parserName, parser] of parsers) {
-    const settings: Settings<IParserState> = {
+function createSettings(parser: IParser<IParserState>): Settings<IParserState> {
+    return {
         ...DefaultSettings,
         parser,
     };
+}
+
+for (const [settings, parserName] of parsers) {
     parseAllFiles(settings, parserName);
 }
 
@@ -25,14 +28,14 @@ function testNameFromFilePath(filePath: string): string {
 }
 
 function parseAllFiles<T>(settings: Settings<T>, parserName: string): void {
-    describe(`use ${parserName} on files directory`, () => {
+    describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 
         for (const filePath of FileUtils.getPowerQueryFilesRecursively(fileDirectory)) {
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: TriedLexParse = FileUtils.tryLexParse(settings, filePath);
+                const triedLexParse: TriedLexParse<T> = FileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { LexerSnapshot, TokenPosition } from "../../lexer";
-import { IParser } from "../../parser/IParser";
+import { IParser, TriedParse } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
 import { ParseSettings } from "../../settings";
 
@@ -37,8 +37,9 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readKeyword),
 
     // 12.2.1 Documents
-    readDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
-        traceFunction(state, parser, state.baseParser.readDocument),
+    readDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
+        return traceFunction(state, parser, state.baseParser.readDocument) as TriedParse<BenchmarkState>;
+    },
 
     // 12.2.2 Section Documents
     readSectionDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>

@@ -22,12 +22,12 @@ export interface InspectedCommon {
 export type Inspected = InspectedCommon & InspectedScope & InspectedAutocomplete;
 export type TriedInspection = Result<Inspected, CommonError.CommonError>;
 
-export function tryFrom(
+export function tryFrom<T>(
     settings: InspectionSettings,
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    maybeParseError: ParseError.ParseError | undefined,
+    maybeParseError: ParseError.ParseError<T> | undefined,
 ): TriedInspection {
     const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         position,

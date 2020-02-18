@@ -3,13 +3,13 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ParseError } from "../../parser";
+import { IParserState, ParseError } from "../../parser";
 import { TokenWithColumnNumber } from "../../parser/error";
 import { DefaultSettings } from "../../settings";
 import { expectParseErr } from "../common";
 
 function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const error: ParseError.ParseError = expectParseErr(DefaultSettings, text);
+    const error: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
     const innerError: ParseError.TInnerParseError = error.innerError;
 
     if (!(innerError instanceof ParseError.ExpectedTokenKindError)) {
