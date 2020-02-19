@@ -34,7 +34,7 @@ function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.
     );
 }
 
-function expectNthOfNodeKind<T>(inspected: Inspection.Inspected, nodeKind: Ast.NodeKind, nth: number): T & TXorNode {
+function expectNthOfNodeKind<X>(inspected: Inspection.Inspected, nodeKind: Ast.NodeKind, nth: number): X & TXorNode {
     if (nth <= 0) {
         throw new Error("nth must be > 0");
     } else if (inspected.maybeActiveNode === undefined) {
@@ -46,7 +46,7 @@ function expectNthOfNodeKind<T>(inspected: Inspection.Inspected, nodeKind: Ast.N
         if (xorNode.node.kind === nodeKind) {
             nthFound += 1;
             if (nth === nthFound) {
-                return (xorNode as unknown) as T & TXorNode;
+                return (xorNode as unknown) as X & TXorNode;
             }
         }
     }

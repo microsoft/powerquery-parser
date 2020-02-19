@@ -184,9 +184,9 @@ function readMetadataExpression(state: IParserState, parser: IParser<IParserStat
     return (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.TMetadataExpression;
 }
 
-function readBinOpExpression(
-    state: IParserState,
-    parser: IParser<IParserState>,
+function readBinOpExpression<S>(
+    state: S & IParserState,
+    parser: IParser<S & IParserState>,
     nodeKind: Ast.NodeKind,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     IParserStateUtils.startContext(state, nodeKind);
@@ -207,7 +207,11 @@ function readBinOpExpression(
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(
-            readTokenKindAsConstant<Ast.TBinOpExpressionOperator>(state, state.maybeCurrentTokenKind!, maybeOperator),
+            readTokenKindAsConstant<S, Ast.TBinOpExpressionOperator>(
+                state,
+                state.maybeCurrentTokenKind!,
+                maybeOperator,
+            ),
         );
 
         switch (operator) {

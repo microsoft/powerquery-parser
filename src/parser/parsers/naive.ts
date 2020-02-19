@@ -2325,11 +2325,11 @@ function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
     return readToken(state);
 }
 
-function readConstantKind<S, T>(
+function readConstantKind<S, C>(
     state: S & IParserState,
-    constantKind: T & Ast.TConstantKind,
-): Ast.TConstant & Ast.IConstant<T> {
-    const maybeConstant: Ast.TConstant & Ast.IConstant<T> | undefined = maybeReadConstantKind(state, constantKind);
+    constantKind: C & Ast.TConstantKind,
+): Ast.TConstant & Ast.IConstant<C> {
+    const maybeConstant: Ast.TConstant & Ast.IConstant<C> | undefined = maybeReadConstantKind(state, constantKind);
     if (!maybeConstant) {
         const details: {} = { constantKind };
         throw new CommonError.InvariantError(`couldn't convert constantKind`, details);
@@ -2338,16 +2338,16 @@ function readConstantKind<S, T>(
     return maybeConstant;
 }
 
-function maybeReadConstantKind<S, T>(
+function maybeReadConstantKind<S, C>(
     state: S & IParserState,
-    constantKind: T & Ast.TConstantKind,
-): (Ast.TConstant & Ast.IConstant<T>) | undefined {
+    constantKind: C & Ast.TConstantKind,
+): (Ast.TConstant & Ast.IConstant<C>) | undefined {
     if (IParserStateUtils.isOnConstantKind(state, constantKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);
 
         readToken(state);
-        const astNode: Ast.TConstant & Ast.IConstant<T> = {
+        const astNode: Ast.TConstant & Ast.IConstant<C> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
             isLeaf: true,

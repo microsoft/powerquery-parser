@@ -47,7 +47,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     return triedTraverse.value;
 }
 
-function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
+function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
     const lexParseOk: LexParseOk<IParserState> = expectLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         localizationTemplates: DefaultTemplates,
@@ -79,7 +79,7 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
     }
     const astNode: Ast.TNode = maybeAstNode;
 
-    return astNode as T & Ast.TNode;
+    return astNode as N & Ast.TNode;
 }
 
 function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Ast.TNode): void {

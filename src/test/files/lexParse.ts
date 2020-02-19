@@ -27,7 +27,7 @@ function testNameFromFilePath(filePath: string): string {
     return filePath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles<T>(settings: Settings<T>, parserName: string): void {
+function parseAllFiles<S>(settings: Settings<S>, parserName: string): void {
     describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 
@@ -35,7 +35,7 @@ function parseAllFiles<T>(settings: Settings<T>, parserName: string): void {
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: TriedLexParse<T> = FileUtils.tryLexParse(settings, filePath);
+                const triedLexParse: TriedLexParse<S> = FileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }
