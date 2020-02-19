@@ -6,7 +6,7 @@ import { Token, TokenKind } from "../lexer/token";
 import { ILocalizationTemplates, Localization } from "../localization";
 import { IParserState } from "./IParserState";
 
-export type TParseError<T> = CommonError.CommonError | ParseError<T>;
+export type TParseError<S> = CommonError.CommonError | ParseError<S>;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
@@ -29,8 +29,8 @@ export const enum UnterminatedKind {
     Parenthesis = "Parenthesis",
 }
 
-export class ParseError<T> extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly state: T & IParserState) {
+export class ParseError<S> extends Error {
+    constructor(readonly innerError: TInnerParseError, readonly state: S & IParserState) {
         super(innerError.message);
     }
 }
@@ -126,7 +126,7 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-export function isTParseError<T>(x: any): x is TParseError<T> {
+export function isTParseError<S>(x: any): x is TParseError<S> {
     return x instanceof ParseError || x instanceof CommonError.CommonError;
 }
 
