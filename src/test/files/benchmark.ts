@@ -104,7 +104,7 @@ function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): 
                     csvContent += `,${fnTimestamp.timeDuration}\n`;
                 }
 
-                const logFilePath: string = path.join(fileDirectory, "logs", `${fileName}.perf`);
+                const logFilePath: string = path.join(fileDirectory, "logs", `${fileName}.${parserName}.perf`);
                 FileUtils.writeContents(logFilePath, csvContent);
             });
         }

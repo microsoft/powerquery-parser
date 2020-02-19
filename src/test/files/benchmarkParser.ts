@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable-next-line: no-require-imports
+import performanceNow = require("performance-now");
+
 import { LexerSnapshot, TokenPosition } from "../../lexer";
+import { Ast } from "../../parser";
 import { IParser, TriedParse } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
 import { ParseSettings } from "../../settings";
-import { Ast } from "../../parser";
 
 export interface BenchmarkState extends IParserState {
     readonly baseParser: IParser<IParserState>;
@@ -294,6 +297,17 @@ export function newBenchmarkState<T>(
     };
 }
 
+function traceFunction<T>(
+    benchmarkState: BenchmarkState,
+    benchmarkParser: IParser<BenchmarkState>,
+    fn: (state: IParserState, parser: IParser<IParserState>) => T,
+): T {
+    const fnCallId: number = functionEntry(benchmarkState, fn);
+    const result: T = fn(benchmarkState, (benchmarkParser as unknown) as IParser<IParserState>);
+    functionExit(benchmarkState, fnCallId);
+    return result;
+}
+
 function functionEntry<T, S>(state: BenchmarkState, fn: (state: S, parser: IParser<S>) => T): number {
     const tokenPosition: TokenPosition = state.maybeCurrentToken!.positionStart;
     const id: number = state.functionTimestampCounter;
@@ -308,7 +322,7 @@ function functionEntry<T, S>(state: BenchmarkState, fn: (state: S, parser: IPars
         lineNumberEnd: undefined,
         lineCodeUnitEnd: undefined,
         codeUnitEnd: undefined,
-        timeStart: new Date().getTime(),
+        timeStart: performanceNow(),
         timeEnd: undefined,
         timeDuration: undefined,
     };
@@ -320,7 +334,7 @@ function functionEntry<T, S>(state: BenchmarkState, fn: (state: S, parser: IPars
 function functionExit(state: BenchmarkState, id: number): void {
     const tokenPosition: TokenPosition = state.maybeCurrentToken!.positionStart;
     const fnTimestamp: FunctionTimestamp = state.functionTimestamps.get(id)!;
-    const finish: number = new Date().getTime();
+    const finish: number = performanceNow();
     const duration: number = finish - fnTimestamp.timeStart;
 
     fnTimestamp.timeEnd = finish;
@@ -328,15 +342,4 @@ function functionExit(state: BenchmarkState, id: number): void {
     fnTimestamp.lineNumberEnd = tokenPosition.lineNumber;
     fnTimestamp.lineCodeUnitEnd = tokenPosition.lineCodeUnit;
     fnTimestamp.codeUnitEnd = tokenPosition.codeUnit;
-}
-
-function traceFunction<T>(
-    benchmarkState: BenchmarkState,
-    benchmarkParser: IParser<BenchmarkState>,
-    fn: (state: IParserState, parser: IParser<IParserState>) => T,
-): T {
-    const fnCallId: number = functionEntry(benchmarkState, fn);
-    const result: T = fn(benchmarkState, (benchmarkParser as unknown) as IParser<IParserState>);
-    functionExit(benchmarkState, fnCallId);
-    return result;
 }
