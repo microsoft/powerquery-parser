@@ -199,14 +199,7 @@ export function primitiveTypeConstantKindFrom(
 ): Ast.PrimitiveTypeConstantKind {
     switch (node.kind) {
         case Ast.NodeKind.AsNullablePrimitiveType:
-            switch (node.paired.kind) {
-                case Ast.NodeKind.NullablePrimitiveType:
-                    return node.paired.paired.primitiveType.constantKind;
-                case Ast.NodeKind.PrimitiveType:
-                    return node.paired.primitiveType.constantKind;
-                default:
-                    throw isNever(node.paired);
-            }
+            return primitiveTypeConstantKindFrom(node.paired);
 
         case Ast.NodeKind.NullablePrimitiveType:
             return node.paired.primitiveType.constantKind;
