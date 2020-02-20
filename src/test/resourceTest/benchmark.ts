@@ -18,11 +18,12 @@ import * as path from "path";
 import * as FileUtils from "../fileUtils";
 
 interface FileSummary {
+    readonly parserName: string;
     readonly fileName: string;
     readonly numberOfRuns: number;
-    readonly allRunsTimeStart: number;
-    readonly allRunsTimeEnd: number;
-    readonly allRunsTimeDuration: number;
+    readonly allRunsStart: number;
+    readonly allRunsEnd: number;
+    readonly allRunsDuration: number;
     readonly singleRunDurationMin: number;
     readonly singleRunDurationMax: number;
 }
@@ -33,35 +34,15 @@ const Parsers: ReadonlyArray<[ParseSettings<BenchmarkState>, string]> = [
 ];
 
 const NumberOfRunsPerFile: number = 100;
+const ReportFileName: string = `Report.perf`;
+const ResourceDirectory: string = path.join(path.dirname(__filename), "benchmarkResources");
 
-const RunHeaders: ReadonlyArray<string> = [
-    "fileName",
-    "id",
-    "fnName",
-    "lineNumberStart",
-    "lineCodeUnitStart",
-    "codeUnitStart",
-    "lineNumberEnd",
-    "lineCodeUnitEnd",
-    "codeUnitEnd",
-    "timeStart",
-    "timeEnd",
-    "timeDuration",
-];
-
-const ReportHeaders: ReadonlyArray<string> = [
-    "fileName",
-    "numRuns",
-    "timeStart",
-    "timeEnd",
-    "timeDuration",
-    "timeDurationMin",
-    "timeDurationMax",
-];
-
+const allSummaries: FileSummary[] = [];
 for (const [settings, parserName] of Parsers) {
-    parseAllFiles(settings, parserName);
+    allSummaries.push(...parseAllFiles(settings, parserName));
 }
+
+writeReport(ResourceDirectory, allSummaries);
 
 function createRecurisveDescentBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
@@ -100,17 +81,16 @@ function createBenchmarkParseSettings(
     };
 }
 
-function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): void {
-    const resourceDirectory: string = path.join(path.dirname(__filename), "benchmarkResources");
-    const summaries: FileSummary[] = [];
+function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): ReadonlyArray<FileSummary> {
+    const parserSummaries: FileSummary[] = [];
 
-    for (const filePath of FileUtils.getPowerQueryFilesRecursively(resourceDirectory)) {
+    for (const filePath of FileUtils.getPowerQueryFilesRecursively(ResourceDirectory)) {
         // tslint:disable-next-line: no-console
         console.log(`Starting ${parserName} test on ${filePath}`);
         const fileName: string = path.basename(filePath);
 
         const timings: Map<number, FunctionTimestamp>[] = [];
-        const allRunsTimeStart: number = performanceNow();
+        const allRunsStart: number = performanceNow();
 
         for (let index: number = 0; index < NumberOfRunsPerFile; index += 1) {
             if (index % 10 === 0) {
@@ -142,40 +122,53 @@ function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): 
             }
         }
 
-        const allRunsTimeEnd: number = performanceNow();
-        summaries.push({
+        const allRunsEnd: number = performanceNow();
+        parserSummaries.push({
+            parserName,
             fileName,
             numberOfRuns: NumberOfRunsPerFile,
-            allRunsTimeStart,
-            allRunsTimeEnd,
-            allRunsTimeDuration: allRunsTimeEnd - allRunsTimeStart,
+            allRunsStart,
+            allRunsEnd,
+            allRunsDuration: allRunsEnd - allRunsStart,
             singleRunDurationMin,
             singleRunDurationMax,
         });
 
         for (let index: number = 0; index < NumberOfRunsPerFile; index += 1) {
             const perfFileName: string = `${fileName}_${parserName}_${index}.perf`;
-            writeSingleRunTimestamps(resourceDirectory, perfFileName, timings[index]);
+            writeSingleRunTimestamps(ResourceDirectory, perfFileName, timings[index]);
         }
-
-        const reportFileName: string = `${fileName}_${parserName}.perf`;
-        writeReport(resourceDirectory, reportFileName, summaries);
     }
+
+    return parserSummaries;
 }
 
-function writeReport(resourceDirectory: string, reportFileName: string, summaries: ReadonlyArray<FileSummary>): void {
-    let csvContent: string = `${ReportHeaders.join(",")}\n`;
+function writeReport(resourceDirectory: string, summaries: ReadonlyArray<FileSummary>): void {
+    const reportHeaders: ReadonlyArray<string> = [
+        "parserName",
+        "fileName",
+        "numRuns",
+        "allRunsStart",
+        "allRunsEnd",
+        "allRunsDuration",
+        "singleRunDurationMin",
+        "singleRunDurationMax",
+    ];
+
+    let csvContent: string = `${reportHeaders.join(",")}\n`;
     for (const summary of summaries) {
-        csvContent += `${summary.fileName}`;
+        csvContent += `${summary.parserName}`;
+        csvContent += `,${summary.fileName}`;
         csvContent += `,${summary.numberOfRuns}`;
-        csvContent += `,${summary.allRunsTimeStart}`;
-        csvContent += `,${summary.allRunsTimeEnd}`;
-        csvContent += `,${summary.allRunsTimeDuration}`;
+        csvContent += `,${summary.allRunsStart}`;
+        csvContent += `,${summary.allRunsEnd}`;
+        csvContent += `,${summary.allRunsDuration}`;
         csvContent += `,${summary.singleRunDurationMin}`;
-        csvContent += `,${summary.singleRunDurationMin}`;
+        csvContent += `,${summary.singleRunDurationMax}`;
+        csvContent += `\n`;
     }
 
-    const logFilePath: string = path.join(resourceDirectory, "logs", reportFileName);
+    const logFilePath: string = path.join(resourceDirectory, "logs", ReportFileName);
     FileUtils.writeContents(logFilePath, csvContent);
 }
 
@@ -184,7 +177,22 @@ function writeSingleRunTimestamps(
     perfFileName: string,
     fnTimestamps: Map<number, FunctionTimestamp>,
 ): void {
-    let csvContent: string = `${RunHeaders.join(",")}\n`;
+    const singleRunHeaders: ReadonlyArray<string> = [
+        "fileName",
+        "id",
+        "fnName",
+        "lineNumberStart",
+        "lineCodeUnitStart",
+        "codeUnitStart",
+        "lineNumberEnd",
+        "lineCodeUnitEnd",
+        "codeUnitEnd",
+        "timeStart",
+        "timeEnd",
+        "timeDuration",
+    ];
+
+    let csvContent: string = `${singleRunHeaders.join(",")}\n`;
     for (const fnTimestamp of fnTimestamps.values()) {
         csvContent += `${perfFileName}`;
         csvContent += `,${fnTimestamp.id}`;
@@ -197,7 +205,8 @@ function writeSingleRunTimestamps(
         csvContent += `,${fnTimestamp.codeUnitEnd}`;
         csvContent += `,${fnTimestamp.timeStart}`;
         csvContent += `,${fnTimestamp.timeEnd}`;
-        csvContent += `,${fnTimestamp.timeDuration}\n`;
+        csvContent += `,${fnTimestamp.timeDuration}`;
+        csvContent += `\n`;
     }
 
     const logFilePath: string = path.join(resourceDirectory, "logs", perfFileName);
