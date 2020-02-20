@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Ast, NodeIdMap } from "../../parser";
-import { DefaultSettings } from "../../settings";
-import { LexParseOk } from "../../tasks";
-import { expectDeepEqual, expectLexParseOk } from "../common";
+import { Ast, NodeIdMap } from "../../../parser";
+import { DefaultSettings } from "../../../settings";
+import { LexParseOk } from "../../../tasks";
+import { expectDeepEqual, expectLexParseOk } from "../../common";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;

@@ -32,7 +32,7 @@ export function writeContents(filePath: string, contents: string): void {
     // tslint:disable-next-line: non-literal-fs-path
     if (!fs.existsSync(dirPath)) {
         // tslint:disable-next-line: non-literal-fs-path
-        fs.mkdirSync(path.dirname(dirPath), { recursive: true });
+        fs.mkdirSync(dirPath, { recursive: true });
     }
 
     // tslint:disable-next-line: non-literal-fs-path
@@ -68,16 +68,22 @@ function isPowerQueryExtension(extension: string): boolean {
 
 function getDirectoryPaths(rootDirectory: string): ReadonlyArray<string> {
     // tslint:disable-next-line: non-literal-fs-path
-    return fs
-        .readdirSync(rootDirectory)
-        .map(name => path.join(rootDirectory, name))
-        .filter(isDirectory);
+    return (
+        fs
+            // tslint:disable-next-line: non-literal-fs-path
+            .readdirSync(rootDirectory)
+            .map(name => path.join(rootDirectory, name))
+            .filter(isDirectory)
+    );
 }
 
 function getPowerQueryFilePaths(filePath: string): ReadonlyArray<string> {
     // tslint:disable-next-line: non-literal-fs-path
-    return fs
-        .readdirSync(filePath)
-        .map(name => path.join(filePath, name))
-        .filter(isPowerQueryFile);
+    return (
+        fs
+            // tslint:disable-next-line: non-literal-fs-path
+            .readdirSync(filePath)
+            .map(name => path.join(filePath, name))
+            .filter(isPowerQueryFile)
+    );
 }

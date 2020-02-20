@@ -3,12 +3,12 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils, Traverse } from "../../common";
-import { DefaultTemplates } from "../../localization";
-import { Ast, IParserState } from "../../parser";
-import { DefaultSettings } from "../../settings";
-import { LexParseOk } from "../../tasks";
-import { expectLexParseOk } from "../common";
+import { ResultUtils, Traverse } from "../../../common";
+import { DefaultTemplates } from "../../../localization";
+import { Ast, IParserState } from "../../../parser";
+import { DefaultSettings } from "../../../settings";
+import { LexParseOk } from "../../../tasks";
+import { expectLexParseOk } from "../../common";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 

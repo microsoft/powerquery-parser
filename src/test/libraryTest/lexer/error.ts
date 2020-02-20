@@ -3,9 +3,9 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../common";
-import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { DefaultSettings } from "../../settings";
+import { ResultUtils } from "../../../common";
+import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
+import { DefaultSettings } from "../../../settings";
 
 function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);

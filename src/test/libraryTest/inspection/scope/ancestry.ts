@@ -2,17 +2,17 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Inspection } from "../../..";
-import { isNever, ResultUtils } from "../../../common";
-import { Token } from "../../../lexer";
-import { Ast, TXorNode, XorNodeKind } from "../../../parser";
-import { DefaultSettings } from "../../../settings";
+import { Inspection } from "../../../..";
+import { isNever, ResultUtils } from "../../../../common";
+import { Token } from "../../../../lexer";
+import { Ast, TXorNode, XorNodeKind } from "../../../../parser";
+import { DefaultSettings } from "../../../../settings";
 import {
     expectDeepEqual,
     expectParseErrInspection,
     expectParseOkInspection,
     expectTextWithPosition,
-} from "../../common";
+} from "../../../common";
 
 interface AbridgedTravelPathNode {
     readonly id: number;

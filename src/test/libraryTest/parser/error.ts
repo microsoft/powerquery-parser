@@ -3,10 +3,10 @@
 
 import { expect } from "chai";
 import "mocha";
-import { DefaultTemplates, Localization } from "../../localization";
-import { ParseError } from "../../parser";
-import { DefaultSettings } from "../../settings";
-import { expectParseErr } from "../common";
+import { DefaultTemplates, Localization } from "../../../localization";
+import { ParseError } from "../../../parser";
+import { DefaultSettings } from "../../../settings";
+import { expectParseErr } from "../../common";
 
 function expectCsvContinuationError(text: string): ParseError.ExpectedCsvContinuationError {
     const innerError: ParseError.TInnerParseError = expectParseErr(DefaultSettings, text).innerError;

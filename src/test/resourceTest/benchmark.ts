@@ -101,17 +101,22 @@ function createBenchmarkParseSettings(
 }
 
 function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): void {
-    throw new Error()
     const resourceDirectory: string = path.join(path.dirname(__filename), "benchmarkResources");
     const summaries: FileSummary[] = [];
 
     for (const filePath of FileUtils.getPowerQueryFilesRecursively(resourceDirectory)) {
+        // tslint:disable-next-line: no-console
+        console.log(`Starting ${parserName} test on ${filePath}`);
         const fileName: string = path.basename(filePath);
 
         const timings: Map<number, FunctionTimestamp>[] = [];
         const allRunsTimeStart: number = performanceNow();
 
         for (let index: number = 0; index < NumberOfRunsPerFile; index += 1) {
+            if (index % 10 === 0) {
+                // tslint:disable-next-line: no-console
+                console.log(`\tRun ${index} of ${NumberOfRunsPerFile}`);
+            }
             const triedLexParse: TriedLexParse<BenchmarkState> = FileUtils.tryLexParse(settings, filePath);
             if (!ResultUtils.isOk(triedLexParse)) {
                 throw triedLexParse.error;
@@ -121,6 +126,9 @@ function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): 
 
         let singleRunDurationMin: number = Number.MAX_SAFE_INTEGER;
         let singleRunDurationMax: number = Number.MIN_SAFE_INTEGER;
+
+        // tslint:disable-next-line: no-console
+        console.log(`Parsing results for ${parserName} test on ${filePath}`);
         for (const fnTimestamps of timings) {
             for (const entry of fnTimestamps.values()) {
                 // When it switches from reading an expression document to a section documents
@@ -150,7 +158,7 @@ function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): 
             writeSingleRunTimestamps(resourceDirectory, perfFileName, timings[index]);
         }
 
-        const reportFileName: string = `${fileName}_${parserName}`;
+        const reportFileName: string = `${fileName}_${parserName}.perf`;
         writeReport(resourceDirectory, reportFileName, summaries);
     }
 }

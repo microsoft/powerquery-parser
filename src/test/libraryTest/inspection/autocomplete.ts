@@ -3,13 +3,13 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../..";
-import { ResultUtils } from "../../common";
-import { Inspected } from "../../inspection";
-import { KeywordKind, TExpressionKeywords } from "../../lexer";
-import { Ast } from "../../parser";
-import { DefaultSettings } from "../../settings";
-import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../common";
+import { Inspection } from "../../..";
+import { ResultUtils } from "../../../common";
+import { Inspected } from "../../../inspection";
+import { KeywordKind, TExpressionKeywords } from "../../../lexer";
+import { Ast } from "../../../parser";
+import { DefaultSettings } from "../../../settings";
+import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../../common";
 
 type AbridgedInspection = Inspected["autocompleteKeywords"];
 

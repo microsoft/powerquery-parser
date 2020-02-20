@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer, LineToken } from "../../lexer";
-import { DefaultTemplates } from "../../localization";
+import { Lexer, LineToken } from "../../../lexer";
+import { DefaultTemplates } from "../../../localization";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}

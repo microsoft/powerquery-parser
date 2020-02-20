@@ -334,5 +334,5 @@ test-results.xml
 tsconfig.tsbuildinfo
 *.tgz
 
-src/localization/templates.json
-src/test/files/benchmarkResources/logs/
+# Files created by `npm run resourceTest'.
+src/test/resourceTest/benchmarkResources/logs/*.perf

@@ -3,10 +3,10 @@
 
 import { expect } from "chai";
 import "mocha";
-import { IParserState, ParseError } from "../../parser";
-import { TokenWithColumnNumber } from "../../parser/error";
-import { DefaultSettings } from "../../settings";
-import { expectParseErr } from "../common";
+import { IParserState, ParseError } from "../../../parser";
+import { TokenWithColumnNumber } from "../../../parser/error";
+import { DefaultSettings } from "../../../settings";
+import { expectParseErr } from "../../common";
 
 function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
     const error: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);

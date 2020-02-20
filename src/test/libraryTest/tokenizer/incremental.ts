@@ -3,10 +3,10 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../common";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { TriedLexerUpdate } from "../../lexer/lexer";
-import { DefaultSettings } from "../../settings";
+import { ResultUtils } from "../../../common";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
+import { TriedLexerUpdate } from "../../../lexer/lexer";
+import { DefaultSettings } from "../../../settings";
 import { ILineTokens, IState, IToken, Tokenizer } from "./common";
 
 const tokenizer: Tokenizer = new Tokenizer("\n");

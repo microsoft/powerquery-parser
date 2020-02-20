@@ -3,11 +3,11 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../..";
-import { ResultKind } from "../../../common";
-import { Ast, TXorNode } from "../../../parser";
-import { DefaultSettings } from "../../../settings";
-import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../../common";
+import { Inspection } from "../../../..";
+import { ResultKind } from "../../../../common";
+import { Ast, TXorNode } from "../../../../parser";
+import { DefaultSettings } from "../../../../settings";
+import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../../../common";
 
 function expectInspected(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
     if (!(triedInspection.kind === ResultKind.Ok)) {

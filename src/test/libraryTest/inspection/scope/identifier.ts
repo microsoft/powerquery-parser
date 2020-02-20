@@ -2,17 +2,17 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Inspection } from "../../..";
-import { ResultUtils } from "../../../common";
-import { ScopeItemKind } from "../../../inspection";
-import { Ast } from "../../../parser";
-import { DefaultSettings } from "../../../settings";
+import { Inspection } from "../../../..";
+import { ResultUtils } from "../../../../common";
+import { ScopeItemKind } from "../../../../inspection";
+import { Ast } from "../../../../parser";
+import { DefaultSettings } from "../../../../settings";
 import {
     expectDeepEqual,
     expectParseErrInspection,
     expectParseOkInspection,
     expectTextWithPosition,
-} from "../../common";
+} from "../../../common";
 
 type AbridgedScope = ReadonlyArray<AbridgedScopeItem>;
 
