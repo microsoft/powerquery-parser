@@ -194,6 +194,24 @@ export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast
     }
 }
 
+export function primitiveTypeConstantKindFrom(
+    node: Ast.AsNullablePrimitiveType | Ast.NullablePrimitiveType | Ast.PrimitiveType,
+): Ast.PrimitiveTypeConstantKind {
+    switch (node.kind) {
+        case Ast.NodeKind.AsNullablePrimitiveType:
+            return primitiveTypeConstantKindFrom(node.paired);
+
+        case Ast.NodeKind.NullablePrimitiveType:
+            return node.paired.primitiveType.constantKind;
+
+        case Ast.NodeKind.PrimitiveType:
+            return node.primitiveType.constantKind;
+
+        default:
+            throw isNever(node);
+    }
+}
+
 export function isPrimitiveTypeConstantKind(
     maybePrimitiveTypeConstantKind: string,
 ): maybePrimitiveTypeConstantKind is Ast.PrimitiveTypeConstantKind {
