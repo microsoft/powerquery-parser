@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { expect } from "chai";
-import { ResultUtils } from "../../common";
-import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../lexer";
-import { DefaultSettings } from "../../settings";
+import { ResultUtils } from "../../../common";
+import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../../lexer";
+import { DefaultSettings } from "../../../settings";
 
 export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
 

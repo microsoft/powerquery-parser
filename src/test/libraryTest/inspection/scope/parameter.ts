@@ -2,11 +2,12 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Inspection } from "../../..";
-import { ResultUtils } from "../../../common";
-import { ScopeItemKind } from "../../../inspection";
-import { Ast } from "../../../parser";
-import { expectDeepEqual, expectParseOkInspection, expectTextWithPosition } from "../../common";
+import { Inspection } from "../../../..";
+import { ResultUtils } from "../../../../common";
+import { ScopeItemKind } from "../../../../inspection";
+import { Ast } from "../../../../parser";
+import { DefaultSettings } from "../../../../settings";
+import { expectDeepEqual, expectParseOkInspection, expectTextWithPosition } from "../../../common";
 
 type AbridgedScope = ReadonlyArray<AbridgedParameterItem | undefined>;
 
@@ -75,6 +76,6 @@ describe(`Inspection - Scope - Parameter`, () => {
                 maybeType: Ast.PrimitiveTypeConstantKind.Table,
             },
         ];
-        expectDeepEqual(expectParseOkInspection(text, position), expected, actualFactoryFn);
+        expectDeepEqual(expectParseOkInspection(DefaultSettings, text, position), expected, actualFactoryFn);
     });
 });

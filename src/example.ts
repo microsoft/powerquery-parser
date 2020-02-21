@@ -6,7 +6,7 @@
 import { Inspection } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { ParseError } from "./parser";
+import { IParserState, ParseError } from "./parser";
 import { DefaultSettings } from "./settings";
 import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./tasks";
 
@@ -16,7 +16,7 @@ parseText(`if true then 1 else 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
+    const triedLexParse: TriedLexParse<IParserState> = tryLexParse(DefaultSettings, text);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
@@ -30,7 +30,7 @@ function parseText(text: string): void {
         // If the error occured during parsing, then log the jsonified parsing context,
         // which is what was parsed up until the error was thrown.
         if (triedLexParse.error instanceof ParseError.ParseError) {
-            console.log(JSON.stringify(triedLexParse.error.context, undefined, 4));
+            console.log(JSON.stringify(triedLexParse.error.state.contextState, undefined, 4));
         }
     }
 }
@@ -102,7 +102,11 @@ function lexText(text: string): void {
 function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: TriedLexParseInspection = tryLexParseInspection(DefaultSettings, text, position);
+    const triedInspection: TriedLexParseInspection<IParserState> = tryLexParseInspection(
+        DefaultSettings,
+        text,
+        position,
+    );
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;

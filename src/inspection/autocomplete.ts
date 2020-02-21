@@ -15,11 +15,11 @@ export interface InspectedAutocomplete {
 
 export type TriedAutocomplete = Result<InspectedAutocomplete, CommonError.CommonError>;
 
-export function tryFrom(
+export function tryFrom<S>(
     settings: InspectionSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseError: ParseError.ParseError | undefined,
+    maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
         return ResultUtils.okFactory({

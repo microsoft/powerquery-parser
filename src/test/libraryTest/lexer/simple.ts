@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Keywords, TokenKind } from "../../lexer";
+import { Keywords, TokenKind } from "../../../lexer";
 import { expectSnapshotAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {

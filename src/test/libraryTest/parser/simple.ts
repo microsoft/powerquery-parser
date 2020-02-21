@@ -3,11 +3,12 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils, Traverse } from "../../common";
-import { DefaultTemplates } from "../../localization";
-import { Ast } from "../../parser";
-import { LexParseOk } from "../../tasks";
-import { expectLexParseOk } from "../common";
+import { ResultUtils, Traverse } from "../../../common";
+import { DefaultTemplates } from "../../../localization";
+import { Ast, IParserState } from "../../../parser";
+import { DefaultSettings } from "../../../settings";
+import { LexParseOk } from "../../../tasks";
+import { expectLexParseOk } from "../../common";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 
@@ -20,7 +21,7 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: LexParseOk = expectLexParseOk(text);
+    const lexParseOk: LexParseOk<IParserState> = expectLexParseOk(DefaultSettings, text);
     const state: CollectAbridgeNodeState = {
         localizationTemplates: DefaultTemplates,
         result: [],
@@ -46,8 +47,8 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     return triedTraverse.value;
 }
 
-function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): T & Ast.TNode {
-    const lexParseOk: LexParseOk = expectLexParseOk(text);
+function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
+    const lexParseOk: LexParseOk<IParserState> = expectLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         localizationTemplates: DefaultTemplates,
         result: undefined,
@@ -78,7 +79,7 @@ function expectNthNodeOfKind<T>(text: string, nodeKind: Ast.NodeKind, nthRequire
     }
     const astNode: Ast.TNode = maybeAstNode;
 
-    return astNode as T & Ast.TNode;
+    return astNode as N & Ast.TNode;
 }
 
 function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Ast.TNode): void {

@@ -7,7 +7,7 @@ import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 
-export function readToken(state: IParserState): string {
+export function readToken<S>(state: S & IParserState): string {
     const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
 
     if (state.tokenIndex >= tokens.length) {
@@ -31,8 +31,8 @@ export function readToken(state: IParserState): string {
     return data;
 }
 
-export function readTokenKindAsConstant<T>(
-    state: IParserState,
+export function readTokenKindAsConstant<S, T>(
+    state: S & IParserState,
     tokenKind: TokenKind,
     constantKind: T & Ast.TConstantKind,
 ): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> {
@@ -66,8 +66,8 @@ export function readTokenKindAsConstant<T>(
     return astNode;
 }
 
-export function maybeReadTokenKindAsConstant<T>(
-    state: IParserState,
+export function maybeReadTokenKindAsConstant<S, T>(
+    state: S & IParserState,
     tokenKind: TokenKind,
     constantKind: T & Ast.TConstantKind,
 ): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> | undefined {
@@ -99,9 +99,9 @@ export function maybeReadTokenKindAsConstant<T>(
     }
 }
 
-export function readBracketDisambiguation(
-    state: IParserState,
-    parser: IParser<IParserState>,
+export function readBracketDisambiguation<S>(
+    state: S & IParserState,
+    parser: IParser<S & IParserState>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
     const triedDisambiguation: Result<

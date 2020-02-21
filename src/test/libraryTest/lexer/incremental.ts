@@ -3,9 +3,9 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../common";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
-import { TriedLexerUpdate } from "../../lexer/lexer";
+import { ResultUtils } from "../../../common";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
+import { TriedLexerUpdate } from "../../../lexer/lexer";
 import { expectLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
