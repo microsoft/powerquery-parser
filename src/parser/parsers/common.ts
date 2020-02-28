@@ -70,7 +70,7 @@ export function maybeReadTokenKindAsConstant<S, T>(
     state: S & IParserState,
     tokenKind: TokenKind,
     constantKind: T & Ast.TConstantKind,
-): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> | undefined {
+): (Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind>) | undefined {
     if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
         const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
         IParserStateUtils.startContext(state, nodeKind);

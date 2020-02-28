@@ -289,21 +289,25 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
             const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
             // Add the optional inclusive constant `@` if it was parsed.
-            const maybeInclusiveConstant: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            const maybeInclusiveConstant:
+                | TXorNode
+                | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 identifierExpr.node.id,
                 0,
                 [Ast.NodeKind.Constant],
             );
             if (maybeInclusiveConstant !== undefined) {
-                const inclusiveConstant: Ast.IConstant<
+                const inclusiveConstant: Ast.IConstant<Ast.MiscConstantKind.AtSign> = maybeInclusiveConstant.node as Ast.IConstant<
                     Ast.MiscConstantKind.AtSign
-                > = maybeInclusiveConstant.node as Ast.IConstant<Ast.MiscConstantKind.AtSign>;
+                >;
                 // Adds the '@' prefix.
                 key = inclusiveConstant.constantKind;
             }
 
-            const maybeIdentifier: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            const maybeIdentifier:
+                | TXorNode
+                | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 identifierExpr.node.id,
                 1,
@@ -461,7 +465,9 @@ function inspectSectionMember(state: IdentifierState, sectionMember: TXorNode): 
             continue;
         }
 
-        const maybeKeyValuePair: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeKeyValuePair:
+            | TXorNode
+            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             iterSectionMember.node.id,
             2,

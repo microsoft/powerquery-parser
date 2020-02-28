@@ -216,7 +216,11 @@ const AutocompleteConstantMap: Map<string, KeywordKind> = new Map<string, Keywor
 const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
     string,
     ReadonlyArray<KeywordKind>
->([["a", [KeywordKind.And, KeywordKind.As]], ["o", [KeywordKind.Or]], ["m", [KeywordKind.Meta]]]);
+>([
+    ["a", [KeywordKind.And, KeywordKind.As]],
+    ["o", [KeywordKind.Or]],
+    ["m", [KeywordKind.Meta]],
+]);
 
 function updateWithParseErrorToken(
     inspected: ReadonlyArray<KeywordKind>,
@@ -379,12 +383,11 @@ function autocompleteSectionMember(
     // SectionMember.namePairedExpression
     if (child.node.maybeAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
-        const maybeSharedConstant: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            parent.node.id,
-            1,
-            [Ast.NodeKind.Constant],
-        );
+        const maybeSharedConstant:
+            | TXorNode
+            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, parent.node.id, 1, [
+            Ast.NodeKind.Constant,
+        ]);
 
         // 'shared' was parsed so we can exit.
         if (maybeSharedConstant !== undefined) {

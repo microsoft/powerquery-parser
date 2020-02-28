@@ -202,13 +202,19 @@ describe(`Lexer.Simple.Whitespace`, () => {
 
     it(`spaces`, () => {
         const text: string = ` a b `;
-        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`], [TokenKind.Identifier, `b`]];
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `b`],
+        ];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`tabs`, () => {
         const text: string = `\ta\tb\t`;
-        const expected: ReadonlyArray<[TokenKind, string]> = [[TokenKind.Identifier, `a`], [TokenKind.Identifier, `b`]];
+        const expected: ReadonlyArray<[TokenKind, string]> = [
+            [TokenKind.Identifier, `a`],
+            [TokenKind.Identifier, `b`],
+        ];
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
