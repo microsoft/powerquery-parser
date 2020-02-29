@@ -9,6 +9,9 @@ for entry in os.scandir(LOCALIZATION_DROP_DIR):
         continue
 
     localization_code = os.path.basename(entry.path)
+    if localization_code == "qps-ploc":
+        continue
+
     localization_src = os.path.join(
         LOCALIZATION_DROP_DIR,
         localization_code,
