@@ -178,10 +178,7 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
 
     if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
         return true;
-    } else if (
-        astNode.kind === Ast.NodeKind.LiteralExpression &&
-        (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric)
-    ) {
+    } else if (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric) {
         return true;
     } else if (astNode.kind === Ast.NodeKind.Constant) {
         switch (astNode.constantKind) {

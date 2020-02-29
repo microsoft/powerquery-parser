@@ -1147,9 +1147,7 @@ export function readLetExpression<S>(state: S & IParserState, parser: IParser<S 
         TokenKind.KeywordLet,
         Ast.KeywordConstantKind.Let,
     );
-    const identifierExpressionPairedExpressions: Ast.ICsvArray<
-        Ast.IdentifierPairedExpression
-    > = parser.readIdentifierPairedExpressions(
+    const identifierExpressionPairedExpressions: Ast.ICsvArray<Ast.IdentifierPairedExpression> = parser.readIdentifierPairedExpressions(
         state,
         parser,
         !IParserStateUtils.isNextTokenKind(state, TokenKind.KeywordIn),
@@ -2329,7 +2327,7 @@ function readConstantKind<S, C>(
     state: S & IParserState,
     constantKind: C & Ast.TConstantKind,
 ): Ast.TConstant & Ast.IConstant<C> {
-    const maybeConstant: Ast.TConstant & Ast.IConstant<C> | undefined = maybeReadConstantKind(state, constantKind);
+    const maybeConstant: (Ast.TConstant & Ast.IConstant<C>) | undefined = maybeReadConstantKind(state, constantKind);
     if (!maybeConstant) {
         const details: {} = { constantKind };
         throw new CommonError.InvariantError(`couldn't convert constantKind`, details);
