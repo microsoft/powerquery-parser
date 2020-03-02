@@ -30,7 +30,7 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
     return [text.replace("|", ""), position];
 }
 
-export function expectParseOkInspection<S>(
+export function expectParseOkInspection<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Inspection.Position,
@@ -39,7 +39,7 @@ export function expectParseOkInspection<S>(
     return Inspection.tryFrom(DefaultSettings, position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
 }
 
-export function expectParseErrInspection<S>(
+export function expectParseErrInspection<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Inspection.Position,
@@ -54,7 +54,7 @@ export function expectParseErrInspection<S>(
     );
 }
 
-export function expectLexParseOk<S>(
+export function expectLexParseOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
 ): LexParseOk<S> {
@@ -65,7 +65,7 @@ export function expectLexParseOk<S>(
     return triedLexParse.value;
 }
 
-export function expectParseErr<S>(
+export function expectParseErr<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
 ): ParseError.ParseError<S> {
@@ -81,7 +81,10 @@ export function expectParseErr<S>(
     return triedParse.error;
 }
 
-export function expectParseOk<S>(settings: LexSettings & ParseSettings<S & IParserState>, text: string): ParseOk<S> {
+export function expectParseOk<S = IParserState>(
+    settings: LexSettings & ParseSettings<S & IParserState>,
+    text: string,
+): ParseOk<S> {
     const triedParse: TriedParse<S> = expectTriedParse(settings, text);
     if (!ResultUtils.isOk(triedParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedParse): ${triedParse.error.message}`);
@@ -91,7 +94,10 @@ export function expectParseOk<S>(settings: LexSettings & ParseSettings<S & IPars
 
 // I only care about errors coming from the parse stage.
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
-function expectTriedParse<S>(settings: LexSettings & ParseSettings<S & IParserState>, text: string): TriedParse<S> {
+function expectTriedParse<S = IParserState>(
+    settings: LexSettings & ParseSettings<S & IParserState>,
+    text: string,
+): TriedParse<S> {
     const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {

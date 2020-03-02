@@ -184,7 +184,7 @@ function readMetadataExpression(state: IParserState, parser: IParser<IParserStat
     return (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.TMetadataExpression;
 }
 
-function readBinOpExpression<S>(
+function readBinOpExpression<S = IParserState>(
     state: S & IParserState,
     parser: IParser<S & IParserState>,
     nodeKind: Ast.NodeKind,

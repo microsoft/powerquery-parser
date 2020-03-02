@@ -29,7 +29,7 @@ export const enum UnterminatedKind {
     Parenthesis = "Parenthesis",
 }
 
-export class ParseError<S> extends Error {
+export class ParseError<S = IParserState> extends Error {
     constructor(readonly innerError: TInnerParseError, readonly state: S & IParserState) {
         super(innerError.message);
     }
@@ -126,7 +126,7 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-export function isTParseError<S>(x: any): x is TParseError<S> {
+export function isTParseError<S = IParserState>(x: any): x is TParseError<S> {
     return x instanceof ParseError || x instanceof CommonError.CommonError;
 }
 

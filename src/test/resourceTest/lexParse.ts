@@ -1,18 +1,18 @@
 import "mocha";
 import { ResultUtils } from "../../common";
-import { IParser, IParserState, Parser } from "../../parser";
+import { IParser, Parser } from "../../parser";
 import { DefaultSettings, Settings } from "../../settings";
 import { TriedLexParse } from "../../tasks";
 
 import * as path from "path";
 import * as FileUtils from "../fileUtils";
 
-const parsers: ReadonlyArray<[Settings<IParserState>, string]> = [
+const parsers: ReadonlyArray<[Settings, string]> = [
     [createSettings(Parser.CombinatorialParser), "CombinatorialParser"],
     [createSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
-function createSettings(parser: IParser<IParserState>): Settings<IParserState> {
+function createSettings(parser: IParser): Settings {
     return {
         ...DefaultSettings,
         parser,
