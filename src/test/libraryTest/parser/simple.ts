@@ -1122,6 +1122,12 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
         });
 
+        it(`#infinity`, () => {
+            const text: string = `#infinity`;
+            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            expectAbridgeNodes(text, expected);
+        });
+
         it(`""`, () => {
             const text: string = `""`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];

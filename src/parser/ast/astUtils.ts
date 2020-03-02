@@ -176,6 +176,7 @@ export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast
     switch (maybeTokenKind) {
         case TokenKind.HexLiteral:
         case TokenKind.KeywordHashNan:
+        case TokenKind.KeywordHashInfinity:
         case TokenKind.NumericLiteral:
             return Ast.LiteralKind.Numeric;
 

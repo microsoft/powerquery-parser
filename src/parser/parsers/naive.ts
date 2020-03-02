@@ -782,6 +782,7 @@ export function readLiteralExpression<S>(
     const expectedTokenKinds: ReadonlyArray<TokenKind> = [
         TokenKind.HexLiteral,
         TokenKind.KeywordFalse,
+        TokenKind.KeywordHashInfinity,
         TokenKind.KeywordHashNan,
         TokenKind.KeywordTrue,
         TokenKind.NumericLiteral,
