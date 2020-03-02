@@ -3,7 +3,7 @@
 
 import { CommonError, Result, ResultUtils } from "../common";
 import { TriedTraverse } from "../common/traversal";
-import { NodeIdMap, ParseError } from "../parser";
+import { IParserState, NodeIdMap, ParseError } from "../parser";
 import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { InspectedAutocomplete, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
@@ -22,7 +22,7 @@ export interface InspectedCommon {
 export type Inspected = InspectedCommon & InspectedScope & InspectedAutocomplete;
 export type TriedInspection = Result<Inspected, CommonError.CommonError>;
 
-export function tryFrom<S>(
+export function tryFrom<S = IParserState>(
     settings: InspectionSettings,
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,

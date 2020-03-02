@@ -7,7 +7,7 @@ import { Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 
-export function readToken<S>(state: S & IParserState): string {
+export function readToken<S = IParserState>(state: S & IParserState): string {
     const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
 
     if (state.tokenIndex >= tokens.length) {
@@ -99,7 +99,7 @@ export function maybeReadTokenKindAsConstant<S, T>(
     }
 }
 
-export function readBracketDisambiguation<S>(
+export function readBracketDisambiguation<S = IParserState>(
     state: S & IParserState,
     parser: IParser<S & IParserState>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,

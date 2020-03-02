@@ -284,7 +284,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readGeneralizedIdentifierPairedExpression),
 };
 
-export function newBenchmarkState<S>(
+export function newBenchmarkState<S = IParserState>(
     parseSettings: ParseSettings<S & IParserState>,
     lexerSnapshot: LexerSnapshot,
     baseParser: IParser<IParserState>,

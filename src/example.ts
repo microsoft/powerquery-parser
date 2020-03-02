@@ -16,7 +16,7 @@ parseText(`if true then 1 else 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: TriedLexParse<IParserState> = tryLexParse(DefaultSettings, text);
+    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
