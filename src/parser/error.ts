@@ -29,7 +29,7 @@ export const enum UnterminatedKind {
     Parenthesis = "Parenthesis",
 }
 
-export class ParseError<S> extends Error {
+export class ParseError<S = IParserState> extends Error {
     constructor(readonly innerError: TInnerParseError, readonly state: S & IParserState) {
         super(innerError.message);
     }

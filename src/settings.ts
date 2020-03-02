@@ -22,9 +22,9 @@ export interface InspectionSettings extends CommonSettings {}
 
 export type Settings<S = IParserState> = LexSettings & ParseSettings<S> & InspectionSettings;
 
-export const DefaultSettings: Settings<IParserState> = {
+export const DefaultSettings: Settings = {
     parser: Parser.CombinatorialParser,
-    newParserState: (parseSettings: ParseSettings<IParserState>, lexerSnapshot: LexerSnapshot) =>
+    newParserState: (parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot) =>
         IParserStateUtils.newState(parseSettings, lexerSnapshot),
     localizationTemplates: DefaultTemplates,
 };

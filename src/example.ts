@@ -6,7 +6,7 @@
 import { Inspection } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { IParserState, ParseError } from "./parser";
+import { ParseError } from "./parser";
 import { DefaultSettings } from "./settings";
 import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./tasks";
 
@@ -102,11 +102,7 @@ function lexText(text: string): void {
 function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: TriedLexParseInspection<IParserState> = tryLexParseInspection(
-        DefaultSettings,
-        text,
-        position,
-    );
+    const triedInspection: TriedLexParseInspection = tryLexParseInspection(DefaultSettings, text, position);
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;
