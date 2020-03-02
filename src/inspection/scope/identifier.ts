@@ -51,6 +51,7 @@ export interface EachScopeItem extends IScopeItem {
 
 export interface ParameterScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Parameter;
+    readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
     readonly maybeType: Ast.TConstantKind | undefined;
@@ -213,6 +214,7 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
 
         mightUpdateScope(state, scopeKey, {
             kind: ScopeItemKind.Parameter,
+            name: parameterName,
             isOptional: parameterCsv.node.maybeOptionalConstant === undefined,
             isNullable,
             maybeType,
