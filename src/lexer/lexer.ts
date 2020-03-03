@@ -18,13 +18,19 @@ import { LexSettings } from "../settings";
 import { KeywordKind } from "./keywords";
 import { LineToken, LineTokenKind } from "./token";
 
-// The lexer
-//  * Takes a mostly functional approach, plus a few throws to propagate errors.
-//  * Splits up text on line terminators, allowing lexing on a per-line basis.
-
 // Call Lexer.stateFrom to instantiate a new State instance.
 // Lexer functions will return a new state object.
 // Call LexerSnapshot.tryFrom to perform a final validation pass before freezing the State.
+
+// The lexer is mostly functional in nature,
+// with a few throws to make error propegation to prevent a bunch of checks against a Result.
+//
+// To accomodate being consumed by a VSCode extension the lexer is designed to be line aware.
+// Users who don't care about line awareness can simply call Lexer.stateFrom and pass in a multiline blob.
+//
+// The lexer will split it on any valid M newline character.
+// Users who want incremental control can instantiate a lexer in the same way,
+// then call either appendLine/tryDeleteLine/tryUpdateLine/tryUpdateRange.
 
 export type TriedLexerUpdate = Result<State, LexError.LexError>;
 
