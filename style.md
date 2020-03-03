@@ -9,9 +9,9 @@
 
 ## Exports
 
+* naive.ts, ast.ts, and naive.ts are excluded from the following rules
 * Always put exports before non-exports
 * Always order exports in the following order: types, enums, classes, interfaces, constants, functions
-  * naive.ts and ast.ts is excluded from this rule
 
 ## If statements
 
