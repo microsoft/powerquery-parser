@@ -7,7 +7,6 @@ import { ArrayUtils, CommonError, isNever, TypeUtils } from "../../common";
 import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while
@@ -80,7 +79,7 @@ function readBinOpExpression<S = IParserState>(
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(
-            readTokenKindAsConstant<S, Ast.TBinOpExpressionOperator>(
+            Naive.readTokenKindAsConstant<S, Ast.TBinOpExpressionOperator>(
                 state,
                 state.maybeCurrentTokenKind!,
                 maybeOperator,
@@ -254,7 +253,7 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
             break;
 
         case TokenKind.LeftBracket:
-            maybePrimaryExpression = readBracketDisambiguation(state, parser, [
+            maybePrimaryExpression = Naive.readBracketDisambiguation(state, parser, [
                 BracketDisambiguation.FieldProjection,
                 BracketDisambiguation.FieldSelection,
                 BracketDisambiguation.Record,
