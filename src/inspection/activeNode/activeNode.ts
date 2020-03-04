@@ -4,7 +4,7 @@
 import { Ast, TXorNode } from "../../parser";
 import { Position } from "../position";
 
-// An ActiveNode represents the context a text editor user expects their cursor to be in.
+// An ActiveNode represents the context a user in a text editor expects their cursor to be in.
 // Examples:
 //  'let x =|' -> The context is the assignment portion of a key-value pair.
 //  'foo(12|' -> The context is the numeric literal.
@@ -15,7 +15,6 @@ export interface ActiveNode {
     // A full parental ancestry of the root.
     // [root, parent of root, parent of parent of root, ...].
     readonly ancestry: ReadonlyArray<TXorNode>;
-    // A cache of an evaluation that otherwise would need to be re-evaluated.
-    // If ActiveNode's leaf is an identifier then store the indirection to it as an Ast node.
+    // A conditional indirection to the root if it's some sort of identifier Ast.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }

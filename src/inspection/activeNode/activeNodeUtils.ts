@@ -6,25 +6,22 @@ import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNo
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
-// Read ActiveNode's comments before this.
-//
-// Searches all leaf Ast.TNodes and Context nodes to find the "active" node.
-// ' 1 + ' -> the second operand, a Context node, in an ArithmeticExpression.
+// Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
+// ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
 // 'let x=|1 in x' -> the value part of the key-value-pair.
 // 'foo(|)' -> the zero length ArrayWrapper of an InvokeExpression
 //
-// First, When the position is on a constant the selected Ast.TNode might have to be shifted one to the right.
+// The naive approach is to find the closest Ast or Context node either to the left of or ends on the cursor.
+// This approach breaks under several edge cases.
+//
+// Take a look at the ArithmeticExpression example above,
+// it doesn't make sense for the ActiveNode to be the '+' constant.
+// When the position is on a constant the selected Ast.TNode might need to be shifted one to the right.
 // This happens with atomic constants such as '+', '=>', '[', '(' etc.
 // However if you shifted right on '(' for 'foo(|)' then the ActiveNode would be ')' instead of the ArrayWrapper.
 //
-// Second, parser errors also need to be taken care of.
-// '1+|' is an error and the latest leaf is '+',
-// but the ActiveNode should be the second operand in the ArithmeticExpression.
-//
-// Third, sometimes we don't want to shift at all.
+// Sometimes we don't want to shift at all.
 // Nodes that prevent shifting are called anchor nodes.
-// 'if x t|' shouldn't shift to the Constant for 'then', instead the ActiveNode should select 't'.
-// 'let x = 1|' shouldn't shift to the Constant for 'in', instead the ActiveNode should select '1'.
 export function maybeActiveNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,

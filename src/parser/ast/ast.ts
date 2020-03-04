@@ -107,7 +107,7 @@ export type TAuxiliaryNodes =
 
 export type TArrayWrapper =
     | IArrayWrapper<AsNullablePrimitiveType>
-    | IArrayWrapper<TConstant>
+    | IArrayWrapper<IConstant<UnaryOperatorKind>>
     | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
     | IArrayWrapper<TRecursivePrimaryExpression>

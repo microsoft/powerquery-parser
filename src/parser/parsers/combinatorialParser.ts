@@ -7,7 +7,6 @@ import { ArrayUtils, CommonError, isNever, TypeUtils } from "../../common";
 import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while
@@ -16,173 +15,46 @@ import { readBracketDisambiguation, readTokenKindAsConstant } from "./common";
 // 1)
 // The reading of binary expressions (expressions linked by TBinOpExpressionOperator) has been flattened.
 // A TUnaryExpression read first, then while a TBinOpExpressionOperator is next it will read the operator
-// constant and then the right hand of the TBinOpExpression. All expressions erad will be placed in a flat list.
+// constant and then the right hand of the TBinOpExpression. All expressions read will be placed in a flat list.
 // Once no more expressions can be read the flat list will be shaped into a proper Ast.
 // This eliminates several no-op functions calls on the call stack when reading a bare TUnaryExpression (eg. `1`).
 //
 // 2)
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export let CombinatorialParser: IParser<IParserState> = {
-    // 12.1.6 Identifiers
-    readIdentifier: Naive.readIdentifier,
-    readGeneralizedIdentifier: Naive.readGeneralizedIdentifier,
-    readKeyword: Naive.readKeyword,
-
-    // 12.2.1 Documents
-    readDocument: Naive.readDocument,
-
-    // 12.2.2 Section Documents
-    readSectionDocument: Naive.readSectionDocument,
-    readSectionMembers: Naive.readSectionMembers,
-    readSectionMember: Naive.readSectionMember,
-
-    // 12.2.3.1 Expressions
-    readExpression: Naive.readExpression,
+    ...Naive,
 
     // 12.2.3.2 Logical expressions
-    readLogicalExpression,
+    readLogicalExpression: (state: IParserState, parser: IParser<IParserState>) =>
+        (readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as unknown) as Ast.LogicalExpression,
 
     // 12.2.3.3 Is expression
-    readIsExpression,
-    readNullablePrimitiveType: Naive.readNullablePrimitiveType,
+    readIsExpression: (state: IParserState, parser: IParser<IParserState>) =>
+        (readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as unknown) as Ast.IsExpression,
 
     // 12.2.3.4 As expression
-    readAsExpression,
+    readAsExpression: (state: IParserState, parser: IParser<IParserState>) =>
+        (readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as unknown) as Ast.AsExpression,
 
     // 12.2.3.5 Equality expression
-    readEqualityExpression,
+    readEqualityExpression: (state: IParserState, parser: IParser<IParserState>) =>
+        (readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as unknown) as Ast.EqualityExpression,
 
     // 12.2.3.6 Relational expression
-    readRelationalExpression,
+    readRelationalExpression: (state: IParserState, parser: IParser<IParserState>) =>
+        (readBinOpExpression(state, parser, Ast.NodeKind.RelationalExpression) as unknown) as Ast.RelationalExpression,
 
     // 12.2.3.7 Arithmetic expressions
-    readArithmeticExpression,
+    readArithmeticExpression: (state: IParserState, parser: IParser<IParserState>) =>
+        (readBinOpExpression(state, parser, Ast.NodeKind.ArithmeticExpression) as unknown) as Ast.ArithmeticExpression,
 
     // 12.2.3.8 Metadata expression
-    readMetadataExpression,
+    readMetadataExpression: (state: IParserState, parser: IParser<IParserState>) =>
+        (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.MetadataExpression,
 
     // 12.2.3.9 Unary expression
     readUnaryExpression,
-
-    // 12.2.3.10 Primary expression
-    readPrimaryExpression: Naive.readPrimaryExpression,
-    readRecursivePrimaryExpression: Naive.readRecursivePrimaryExpression,
-
-    // 12.2.3.11 Literal expression
-    readLiteralExpression: Naive.readLiteralExpression,
-
-    // 12.2.3.12 Identifier expression
-    readIdentifierExpression: Naive.readIdentifierExpression,
-
-    // 12.2.3.14 Parenthesized expression
-    readParenthesizedExpression: Naive.readParenthesizedExpression,
-
-    // 12.2.3.15 Not-implemented expression
-    readNotImplementedExpression: Naive.readNotImplementedExpression,
-
-    // 12.2.3.16 Invoke expression
-    readInvokeExpression: Naive.readInvokeExpression,
-
-    // 12.2.3.17 List expression
-    readListExpression: Naive.readListExpression,
-    readListItem: Naive.readListItem,
-
-    // 12.2.3.18 Record expression
-    readRecordExpression: Naive.readRecordExpression,
-
-    // 12.2.3.19 Item access expression
-    readItemAccessExpression: Naive.readItemAccessExpression,
-
-    // 12.2.3.20 Field access expression
-    readFieldSelection: Naive.readFieldSelection,
-    readFieldProjection: Naive.readFieldProjection,
-    readFieldSelector: Naive.readFieldSelector,
-
-    // 12.2.3.21 Function expression
-    readFunctionExpression: Naive.readFunctionExpression,
-    readParameterList: Naive.readParameterList,
-    readAsType: Naive.readAsType,
-
-    // 12.2.3.22 Each expression
-    readEachExpression: Naive.readEachExpression,
-
-    // 12.2.3.23 Let expression
-    readLetExpression: Naive.readLetExpression,
-
-    // 12.2.3.24 If expression
-    readIfExpression: Naive.readIfExpression,
-
-    // 12.2.3.25 Type expression
-    readTypeExpression: Naive.readTypeExpression,
-    readType: Naive.readType,
-    readPrimaryType: Naive.readPrimaryType,
-    readRecordType: Naive.readRecordType,
-    readTableType: Naive.readTableType,
-    readFieldSpecificationList: Naive.readFieldSpecificationList,
-    readListType: Naive.readListType,
-    readFunctionType: Naive.readFunctionType,
-    readParameterSpecificationList: Naive.readParameterSpecificationList,
-    readNullableType: Naive.readNullableType,
-
-    // 12.2.3.26 Error raising expression
-    readErrorRaisingExpression: Naive.readErrorRaisingExpression,
-
-    // 12.2.3.27 Error handling expression
-    readErrorHandlingExpression: Naive.readErrorHandlingExpression,
-
-    // 12.2.4 Literal Attributes
-    readRecordLiteral: Naive.readRecordLiteral,
-    readFieldNamePairedAnyLiterals: Naive.readFieldNamePairedAnyLiterals,
-    readListLiteral: Naive.readListLiteral,
-    readAnyLiteral: Naive.readAnyLiteral,
-    readPrimitiveType: Naive.readPrimitiveType,
-
-    // Disambiguation
-    disambiguateBracket: Naive.disambiguateBracket,
-    disambiguateParenthesis: Naive.disambiguateParenthesis,
-
-    // key-value pairs
-    readIdentifierPairedExpressions: Naive.readIdentifierPairedExpressions,
-    readIdentifierPairedExpression: Naive.readIdentifierPairedExpression,
-    readGeneralizedIdentifierPairedExpressions: Naive.readGeneralizedIdentifierPairedExpressions,
-    readGeneralizedIdentifierPairedExpression: Naive.readGeneralizedIdentifierPairedExpression,
 };
-
-function readLogicalExpression(state: IParserState, parser: IParser<IParserState>): Ast.LogicalExpression {
-    return (readBinOpExpression(state, parser, Ast.NodeKind.LogicalExpression) as unknown) as Ast.LogicalExpression;
-}
-
-function readIsExpression(state: IParserState, parser: IParser<IParserState>): Ast.IsExpression {
-    return (readBinOpExpression(state, parser, Ast.NodeKind.IsExpression) as unknown) as Ast.IsExpression;
-}
-
-function readAsExpression(state: IParserState, parser: IParser<IParserState>): Ast.AsExpression {
-    return (readBinOpExpression(state, parser, Ast.NodeKind.AsExpression) as unknown) as Ast.AsExpression;
-}
-
-function readEqualityExpression(state: IParserState, parser: IParser<IParserState>): Ast.EqualityExpression {
-    return (readBinOpExpression(state, parser, Ast.NodeKind.EqualityExpression) as unknown) as Ast.EqualityExpression;
-}
-
-function readRelationalExpression(state: IParserState, parser: IParser<IParserState>): Ast.RelationalExpression {
-    return (readBinOpExpression(
-        state,
-        parser,
-        Ast.NodeKind.RelationalExpression,
-    ) as unknown) as Ast.RelationalExpression;
-}
-
-function readArithmeticExpression(state: IParserState, parser: IParser<IParserState>): Ast.TArithmeticExpression {
-    return (readBinOpExpression(
-        state,
-        parser,
-        Ast.NodeKind.ArithmeticExpression,
-    ) as unknown) as Ast.TArithmeticExpression;
-}
-
-function readMetadataExpression(state: IParserState, parser: IParser<IParserState>): Ast.TMetadataExpression {
-    return (readBinOpExpression(state, parser, Ast.NodeKind.MetadataExpression) as unknown) as Ast.TMetadataExpression;
-}
 
 function readBinOpExpression<S = IParserState>(
     state: S & IParserState,
@@ -207,7 +79,7 @@ function readBinOpExpression<S = IParserState>(
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(
-            readTokenKindAsConstant<S, Ast.TBinOpExpressionOperator>(
+            Naive.readTokenKindAsConstant<S, Ast.TBinOpExpressionOperator>(
                 state,
                 state.maybeCurrentTokenKind!,
                 maybeOperator,
@@ -381,7 +253,7 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
             break;
 
         case TokenKind.LeftBracket:
-            maybePrimaryExpression = readBracketDisambiguation(state, parser, [
+            maybePrimaryExpression = Naive.readBracketDisambiguation(state, parser, [
                 BracketDisambiguation.FieldProjection,
                 BracketDisambiguation.FieldSelection,
                 BracketDisambiguation.Record,

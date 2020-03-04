@@ -7,7 +7,6 @@ import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapUtils } from "../nodeIdMap";
-import { maybeReadTokenKindAsConstant, readBracketDisambiguation, readToken, readTokenKindAsConstant } from "./common";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -2389,9 +2388,101 @@ function readWrapped<S, Kind, Open, Content, Close>(
     return wrapped;
 }
 
-// -------------------------------------------------------
-// ---------- Helper functions (read functions) ----------
-// -------------------------------------------------------
+// ---------------------------------------------
+// ---------- Helper functions (read) ----------
+// ---------------------------------------------
+
+export function readToken<S = IParserState>(state: S & IParserState): string {
+    const tokens: ReadonlyArray<Token> = state.lexerSnapshot.tokens;
+
+    if (state.tokenIndex >= tokens.length) {
+        const details: {} = {
+            tokenIndex: state.tokenIndex,
+            "tokens.length": tokens.length,
+        };
+        throw new CommonError.InvariantError("index beyond tokens.length", details);
+    }
+
+    const data: string = tokens[state.tokenIndex].data;
+    state.tokenIndex += 1;
+
+    if (state.tokenIndex === tokens.length) {
+        state.maybeCurrentTokenKind = undefined;
+    } else {
+        state.maybeCurrentToken = tokens[state.tokenIndex];
+        state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+    }
+
+    return data;
+}
+
+export function readTokenKindAsConstant<S, T>(
+    state: S & IParserState,
+    tokenKind: TokenKind,
+    constantKind: T & Ast.TConstantKind,
+): Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> {
+    IParserStateUtils.startContext(state, Ast.NodeKind.Constant);
+
+    const maybeErr: ParseError.ExpectedTokenKindError | undefined = IParserStateUtils.testIsOnTokenKind(
+        state,
+        tokenKind,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const tokenData: string = readToken(state);
+    if (tokenData !== constantKind) {
+        const details: {} = {
+            tokenData,
+            constantKind,
+        };
+        throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
+    }
+
+    const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
+        ...IParserStateUtils.expectContextNodeMetadata(state),
+        kind: Ast.NodeKind.Constant,
+        isLeaf: true,
+        constantKind,
+    };
+    IParserStateUtils.endContext(state, astNode);
+
+    return astNode;
+}
+
+export function maybeReadTokenKindAsConstant<S, T>(
+    state: S & IParserState,
+    tokenKind: TokenKind,
+    constantKind: T & Ast.TConstantKind,
+): (Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind>) | undefined {
+    if (IParserStateUtils.isOnTokenKind(state, tokenKind)) {
+        const nodeKind: Ast.NodeKind.Constant = Ast.NodeKind.Constant;
+        IParserStateUtils.startContext(state, nodeKind);
+
+        const tokenData: string = readToken(state);
+        if (tokenData !== constantKind) {
+            const details: {} = {
+                tokenData,
+                constantKind,
+            };
+            throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
+        }
+
+        const astNode: Ast.TConstant & Ast.IConstant<T & Ast.TConstantKind> = {
+            ...IParserStateUtils.expectContextNodeMetadata(state),
+            kind: nodeKind,
+            isLeaf: true,
+            constantKind,
+        };
+        IParserStateUtils.endContext(state, astNode);
+
+        return astNode;
+    } else {
+        IParserStateUtils.incrementAttributeCounter(state);
+        return undefined;
+    }
+}
 
 function readTokenKind(state: IParserState, tokenKind: TokenKind): string {
     const maybeErr: ParseError.ExpectedTokenKindError | undefined = IParserStateUtils.testIsOnTokenKind(
@@ -2450,6 +2541,44 @@ function maybeReadLiteralAttributes<S = IParserState>(
     } else {
         IParserStateUtils.incrementAttributeCounter(state);
         return undefined;
+    }
+}
+
+// -------------------------------------------------------
+// ---------- Helper functions (disambiguation) ----------
+// -------------------------------------------------------
+
+export function readBracketDisambiguation<S = IParserState>(
+    state: S & IParserState,
+    parser: IParser<S & IParserState>,
+    allowedVariants: ReadonlyArray<BracketDisambiguation>,
+): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
+    const triedDisambiguation: Result<
+        BracketDisambiguation,
+        ParseError.UnterminatedBracketError
+    > = parser.disambiguateBracket(state, parser);
+    if (ResultUtils.isErr(triedDisambiguation)) {
+        throw triedDisambiguation.error;
+    }
+    const disambiguation: BracketDisambiguation = triedDisambiguation.value;
+    if (allowedVariants.indexOf(disambiguation) === -1) {
+        throw new CommonError.InvariantError(
+            `grammar doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
+        );
+    }
+
+    switch (disambiguation) {
+        case BracketDisambiguation.FieldProjection:
+            return parser.readFieldProjection(state, parser);
+
+        case BracketDisambiguation.FieldSelection:
+            return parser.readFieldSelection(state, parser);
+
+        case BracketDisambiguation.Record:
+            return parser.readRecordExpression(state, parser);
+
+        default:
+            throw isNever(disambiguation);
     }
 }
 

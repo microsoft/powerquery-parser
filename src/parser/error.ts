@@ -6,7 +6,7 @@ import { Token, TokenKind } from "../lexer/token";
 import { ILocalizationTemplates, Localization } from "../localization";
 import { IParserState } from "./IParserState";
 
-export type TParseError<S> = CommonError.CommonError | ParseError<S>;
+export type TParseError<S = IParserState> = CommonError.CommonError | ParseError<S>;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
