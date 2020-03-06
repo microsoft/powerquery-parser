@@ -4,17 +4,9 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../../..";
-import { ResultKind } from "../../../../common";
 import { Ast, TXorNode } from "../../../../parser";
 import { DefaultSettings } from "../../../../settings";
-import { expectParseErrInspection, expectParseOkInspection, expectTextWithPosition } from "../../../common";
-
-function expectInspected(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
-    if (!(triedInspection.kind === ResultKind.Ok)) {
-        throw new Error(`AssertFailed: triedInspection.kind === ResultKind.Ok: ${triedInspection.error.message}`);
-    }
-    return triedInspection.value;
-}
+import { expectParseErrInspectionOk, expectParseOkInspectionOk, expectTextWithPosition } from "../../../common";
 
 function expectNumOfNodeKind(inspected: Inspection.Inspected, expectedKind: Ast.NodeKind, expectedNum: number): void {
     let actualNum: number;
@@ -57,9 +49,7 @@ function expectNthOfNodeKind<X>(inspected: Inspection.Inspected, nodeKind: Ast.N
 describe(`Inspection - InvokeExpression`, () => {
     it("single invoke expression, no parameters", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(|)");
-        const inspected: Inspection.Inspected = expectInspected(
-            expectParseOkInspection(DefaultSettings, text, position),
-        );
+        const inspected: Inspection.Inspected = expectParseOkInspectionOk(DefaultSettings, text, position);
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
@@ -73,9 +63,7 @@ describe(`Inspection - InvokeExpression`, () => {
 
     it("multiple invoke expression, no parameters", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Bar(Foo(|))");
-        const inspected: Inspection.Inspected = expectInspected(
-            expectParseOkInspection(DefaultSettings, text, position),
-        );
+        const inspected: Inspection.Inspected = expectParseOkInspectionOk(DefaultSettings, text, position);
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 2);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
@@ -89,9 +77,7 @@ describe(`Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a|)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|)");
-        const inspected: Inspection.Inspected = expectInspected(
-            expectParseOkInspection(DefaultSettings, text, position),
-        );
+        const inspected: Inspection.Inspected = expectParseOkInspectionOk(DefaultSettings, text, position);
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
@@ -108,9 +94,7 @@ describe(`Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a|,)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|,)");
-        const inspected: Inspection.Inspected = expectInspected(
-            expectParseErrInspection(DefaultSettings, text, position),
-        );
+        const inspected: Inspection.Inspected = expectParseErrInspectionOk(DefaultSettings, text, position);
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");
@@ -127,9 +111,7 @@ describe(`Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a,|)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a,|)");
-        const inspected: Inspection.Inspected = expectInspected(
-            expectParseErrInspection(DefaultSettings, text, position),
-        );
+        const inspected: Inspection.Inspected = expectParseErrInspectionOk(DefaultSettings, text, position);
         expectNumOfNodeKind(inspected, Ast.NodeKind.InvokeExpression, 1);
 
         expect(inspected.maybeInvokeExpression).not.equal(undefined, "at least one InvokeExpression was found");

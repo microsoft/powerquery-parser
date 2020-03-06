@@ -1,61 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ScopeItemKind, TScopeItem } from ".";
 import { InspectionUtils } from "..";
 import { CommonError, isNever, Result, ResultKind } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
-
-export type TScopeItem =
-    | EachScopeItem
-    | KeyValuePairScopeItem
-    | ParameterScopeItem
-    | SectionMemberScopeItem
-    | UndefinedScopeItem;
-
-export const enum ScopeItemKind {
-    KeyValuePair = "KeyValuePair",
-    Undefined = "Undefined",
-    Each = "Each",
-    Parameter = "Parameter",
-    SectionMember = "SectionMember",
-}
-
-export interface IScopeItem {
-    readonly kind: ScopeItemKind;
-}
-
-export interface KeyValuePairScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.KeyValuePair;
-    readonly key: Ast.Identifier | Ast.GeneralizedIdentifier;
-    readonly maybeValue: TXorNode | undefined;
-}
-
-export interface SectionMemberScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.SectionMember;
-    readonly key: Ast.Identifier;
-    readonly maybeValue: TXorNode | undefined;
-}
-
-export interface UndefinedScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.Undefined;
-    readonly xorNode: TXorNode;
-}
-
-export interface EachScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.Each;
-    readonly each: TXorNode;
-}
-
-export interface ParameterScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.Parameter;
-    readonly name: Ast.Identifier;
-    readonly isOptional: boolean;
-    readonly isNullable: boolean;
-    readonly maybeType: Ast.TConstantKind | undefined;
-}
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface InspectedIdentifier {
@@ -291,25 +243,21 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
             const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
             // Add the optional inclusive constant `@` if it was parsed.
-            const maybeInclusiveConstant:
-                | TXorNode
-                | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            const maybeInclusiveConstant: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 identifierExpr.node.id,
                 0,
                 [Ast.NodeKind.Constant],
             );
             if (maybeInclusiveConstant !== undefined) {
-                const inclusiveConstant: Ast.IConstant<Ast.MiscConstantKind.AtSign> = maybeInclusiveConstant.node as Ast.IConstant<
+                const inclusiveConstant: Ast.IConstant<
                     Ast.MiscConstantKind.AtSign
-                >;
+                > = maybeInclusiveConstant.node as Ast.IConstant<Ast.MiscConstantKind.AtSign>;
                 // Adds the '@' prefix.
                 key = inclusiveConstant.constantKind;
             }
 
-            const maybeIdentifier:
-                | TXorNode
-                | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            const maybeIdentifier: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 identifierExpr.node.id,
                 1,
@@ -467,9 +415,7 @@ function inspectSectionMember(state: IdentifierState, sectionMember: TXorNode): 
             continue;
         }
 
-        const maybeKeyValuePair:
-            | TXorNode
-            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeKeyValuePair: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             iterSectionMember.node.id,
             2,

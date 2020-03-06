@@ -30,16 +30,39 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
     return [text.replace("|", ""), position];
 }
 
-export function expectParseOkInspection<S = IParserState>(
+export function expectParseOkInspectionOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Inspection.Position,
-): Inspection.TriedInspection {
+): Inspection.Inspected {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    return Inspection.tryFrom(DefaultSettings, position, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, undefined);
+    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
+        DefaultSettings,
+        position,
+        parseOk.nodeIdMapCollection,
+        parseOk.leafNodeIds,
+        undefined,
+    );
+    return expectInspectionOk(triedInspection);
 }
 
-export function expectParseErrInspection<S = IParserState>(
+export function expectParseErrInspectionOk<S = IParserState>(
+    settings: LexSettings & ParseSettings<S & IParserState>,
+    text: string,
+    position: Inspection.Position,
+): Inspection.Inspected {
+    const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
+    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
+        DefaultSettings,
+        position,
+        parseError.state.contextState.nodeIdMapCollection,
+        parseError.state.contextState.leafNodeIds,
+        parseError,
+    );
+    return expectInspectionOk(triedInspection);
+}
+
+export function expectParseErrInspectionErr<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Inspection.Position,
@@ -112,4 +135,11 @@ function expectTriedParse<S = IParserState>(
 
     const parserState: S & IParserState = settings.newParserState(settings, lexerSnapshot);
     return settings.parser.readDocument(parserState, settings.parser);
+}
+
+export function expectInspectionOk(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
+    if (!ResultUtils.isOk(triedInspection)) {
+        throw new Error("AssertFailed: ResultUtils.isOk(triedInspect)");
+    }
+    return triedInspection.value;
 }
