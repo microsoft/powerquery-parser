@@ -3,11 +3,10 @@
 
 import "mocha";
 import { Inspection } from "../../../..";
-import { ResultUtils } from "../../../../common";
 import { ScopeItemKind } from "../../../../inspection";
 import { Ast } from "../../../../parser";
 import { DefaultSettings } from "../../../../settings";
-import { expectDeepEqual, expectParseOkInspection, expectTextWithPosition } from "../../../common";
+import { expectDeepEqual, expectParseOkInspectionOk, expectTextWithPosition } from "../../../common";
 
 type AbridgedScope = ReadonlyArray<AbridgedParameterItem | undefined>;
 
@@ -18,13 +17,9 @@ interface AbridgedParameterItem {
     readonly maybeType: Ast.TConstantKind | undefined;
 }
 
-function actualFactoryFn(triedInspection: Inspection.TriedInspection): AbridgedScope {
-    if (!ResultUtils.isOk(triedInspection)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspection): ${triedInspection.error.message}`);
-    }
-    const inspected: Inspection.Inspected = triedInspection.value;
-
+function actualFactoryFn(inspected: Inspection.Inspected): AbridgedScope {
     const abridgedScopeItems: AbridgedParameterItem[] = [];
+
     for (const [key, scopeItem] of inspected.scope.entries()) {
         if (scopeItem.kind === ScopeItemKind.Parameter) {
             abridgedScopeItems.push({
@@ -76,6 +71,6 @@ describe(`Inspection - Scope - Parameter`, () => {
                 maybeType: Ast.PrimitiveTypeConstantKind.Table,
             },
         ];
-        expectDeepEqual(expectParseOkInspection(DefaultSettings, text, position), expected, actualFactoryFn);
+        expectDeepEqual(expectParseOkInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
     });
 });
