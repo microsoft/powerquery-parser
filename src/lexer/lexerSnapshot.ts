@@ -120,7 +120,7 @@ export class LexerSnapshot {
                     break;
                 }
 
-                case LineTokenKind.StringLiteralStart: {
+                case LineTokenKind.TextLiteralStart: {
                     const concatenatedTokenRead: ConcatenatedTokenRead = readStringLiteral(
                         localizationTemplates,
                         flattenedLines,
@@ -273,7 +273,7 @@ function readStringLiteral(
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
-        LineTokenKind.StringLiteralContent,
+        LineTokenKind.TextLiteralContent,
     );
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
@@ -282,7 +282,7 @@ function readStringLiteral(
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.String,
         );
-    } else if (maybeTokenEnd.kind !== LineTokenKind.StringLiteralEnd) {
+    } else if (maybeTokenEnd.kind !== LineTokenKind.TextLiteralEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
         const message: string = "once a multiline token starts it should either reach a paired end token, or eof";
         throw new CommonError.InvariantError(message, details);

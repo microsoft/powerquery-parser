@@ -71,8 +71,8 @@ describe(`Lexer`, () => {
             it(`"\\n"`, () => {
                 const text: string = `"${LINE_TERMINATOR}"`;
                 const expected: AbridgedLineTokens = [
-                    [LineTokenKind.StringLiteralStart, `"`],
-                    [LineTokenKind.StringLiteralEnd, `"`],
+                    [LineTokenKind.TextLiteralStart, `"`],
+                    [LineTokenKind.TextLiteralEnd, `"`],
                 ];
                 expectLineTokenMatch(text, expected, true);
             });
@@ -80,9 +80,9 @@ describe(`Lexer`, () => {
             it(`"\\nfoobar\\n"`, () => {
                 const text: string = `"${LINE_TERMINATOR}foobar${LINE_TERMINATOR}"`;
                 const expected: AbridgedLineTokens = [
-                    [LineTokenKind.StringLiteralStart, `"`],
-                    [LineTokenKind.StringLiteralContent, `foobar`],
-                    [LineTokenKind.StringLiteralEnd, `"`],
+                    [LineTokenKind.TextLiteralStart, `"`],
+                    [LineTokenKind.TextLiteralContent, `foobar`],
+                    [LineTokenKind.TextLiteralEnd, `"`],
                 ];
                 expectLineTokenMatch(text, expected, true);
             });

@@ -657,7 +657,7 @@ function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number
 function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const read: LineModeAlteringRead = tokenizeStringLiteralContentOrEnd(line, currentPosition);
     switch (read.token.kind) {
-        case LineTokenKind.StringLiteralContent:
+        case LineTokenKind.TextLiteralContent:
             return {
                 lineMode: LineMode.QuotedIdentifier,
                 token: {
@@ -666,7 +666,7 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
                 },
             };
 
-        case LineTokenKind.StringLiteralEnd:
+        case LineTokenKind.TextLiteralEnd:
             return {
                 lineMode: LineMode.Default,
                 token: {
@@ -691,13 +691,13 @@ function tokenizeStringLiteralContentOrEnd(line: TLine, currentPosition: number)
 
     if (maybePositionEnd === undefined) {
         return {
-            token: readRestOfLine(LineTokenKind.StringLiteralContent, text, currentPosition),
+            token: readRestOfLine(LineTokenKind.TextLiteralContent, text, currentPosition),
             lineMode: LineMode.String,
         };
     } else {
         const positionEnd: number = maybePositionEnd + 1;
         return {
-            token: readTokenFrom(LineTokenKind.StringLiteralEnd, text, currentPosition, positionEnd),
+            token: readTokenFrom(LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
         };
     }
@@ -868,7 +868,7 @@ function readOrStartStringLiteral(text: string, currentPosition: number): LineMo
         };
     } else {
         return {
-            token: readRestOfLine(LineTokenKind.StringLiteralStart, text, currentPosition),
+            token: readRestOfLine(LineTokenKind.TextLiteralStart, text, currentPosition),
             lineMode: LineMode.String,
         };
     }
