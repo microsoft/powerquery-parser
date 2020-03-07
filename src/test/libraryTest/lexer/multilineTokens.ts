@@ -61,10 +61,10 @@ describe(`Lexer`, () => {
             });
         });
 
-        describe(`StringLiteral`, () => {
+        describe(`TextLiteral`, () => {
             it(`""`, () => {
                 const text: string = `""`;
-                const expected: AbridgedLineTokens = [[LineTokenKind.StringLiteral, `""`]];
+                const expected: AbridgedLineTokens = [[LineTokenKind.TextLiteral, `""`]];
                 expectLineTokenMatch(text, expected, true);
             });
 
@@ -163,7 +163,7 @@ describe(`Lexer`, () => {
             });
         });
 
-        describe(`StringLiteral`, () => {
+        describe(`TextLiteral`, () => {
             it(`"X"`, () => {
                 const text: string = `"X"`;
                 const expected: AbridgedTokens = [[TokenKind.TextLiteral, `"X"`]];
@@ -172,9 +172,7 @@ describe(`Lexer`, () => {
 
             it(`"X\\nX\\nX"`, () => {
                 const text: string = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
-                const expected: AbridgedTokens = [
-                    [TokenKind.TextLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
-                ];
+                const expected: AbridgedTokens = [[TokenKind.TextLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`]];
                 expectSnapshotAbridgedTokens(text, expected, true);
             });
 

@@ -7,9 +7,9 @@ export const enum LineTokenKindAdditions {
     MultilineCommentContent = "MultilineCommentContent",
     MultilineCommentEnd = "MultilineCommentEnd",
     MultilineCommentStart = "MultilineCommentStart",
-    TextLiteralContent = "StringContent",
-    TextLiteralEnd = "StringLiteralEnd",
-    TextLiteralStart = "StringLiteralStart",
+    TextLiteralContent = "TextContent",
+    TextLiteralEnd = "TextLiteralEnd",
+    TextLiteralStart = "TextLiteralStart",
     QuotedIdentifierContent = "QuotedIdentifierContent",
     QuotedIdentifierEnd = "QuotedIdentifierEnd",
     QuotedIdentifierStart = "QuotedIdentifierStart",
@@ -76,7 +76,7 @@ export const enum TokenKind {
     RightBracket = "RightBracket",
     RightParenthesis = "RightParenthesis",
     Semicolon = "Semicolon",
-    TextLiteral = "StringLiteral",
+    TextLiteral = "TextLiteral",
 }
 
 export const enum LineTokenKind {
@@ -140,7 +140,7 @@ export const enum LineTokenKind {
     RightBracket = TokenKind.RightBracket,
     RightParenthesis = TokenKind.RightParenthesis,
     Semicolon = TokenKind.Semicolon,
-    StringLiteral = TokenKind.TextLiteral,
+    TextLiteral = TokenKind.TextLiteral,
 
     LineComment = LineTokenKindAdditions.LineComment,
     MultilineComment = LineTokenKindAdditions.MultilineComment,

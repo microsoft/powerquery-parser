@@ -44,7 +44,7 @@ export const enum ExpectedKind {
 export const enum UnterminatedMultilineTokenKind {
     MultilineComment = "MultilineComment",
     QuotedIdentifier = "QuotedIdentifier",
-    String = "String",
+    Text = "String",
 }
 
 export class LexError extends Error {

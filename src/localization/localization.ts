@@ -290,7 +290,7 @@ export const Localization: ILocalization = {
             case LexError.UnterminatedMultilineTokenKind.QuotedIdentifier:
                 return templates.error_lex_unterminatedMultilineToken_2_quotedIdentifier;
 
-            case LexError.UnterminatedMultilineTokenKind.String:
+            case LexError.UnterminatedMultilineTokenKind.Text:
                 return templates.error_lex_unterminatedMultilineToken_3_string;
 
             default:

@@ -121,7 +121,7 @@ export class LexerSnapshot {
                 }
 
                 case LineTokenKind.TextLiteralStart: {
-                    const concatenatedTokenRead: ConcatenatedTokenRead = readStringLiteral(
+                    const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
                         localizationTemplates,
                         flattenedLines,
                         flatToken,
@@ -265,7 +265,7 @@ function readQuotedIdentifier(
     }
 }
 
-function readStringLiteral(
+function readTextLiteral(
     localizationTemplates: ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
@@ -280,7 +280,7 @@ function readStringLiteral(
         throw new LexError.UnterminatedMultilineTokenError(
             localizationTemplates,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
-            LexError.UnterminatedMultilineTokenKind.String,
+            LexError.UnterminatedMultilineTokenKind.Text,
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.TextLiteralEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };

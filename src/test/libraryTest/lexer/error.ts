@@ -217,8 +217,8 @@ describe(`Lexer.Error`, () => {
             expectUnterminatedMultilineTokenKind(`/*`, LexError.UnterminatedMultilineTokenKind.MultilineComment);
         });
 
-        it(`${LexError.UnterminatedMultilineTokenKind.String}`, () => {
-            expectUnterminatedMultilineTokenKind(`"`, LexError.UnterminatedMultilineTokenKind.String);
+        it(`${LexError.UnterminatedMultilineTokenKind.Text}`, () => {
+            expectUnterminatedMultilineTokenKind(`"`, LexError.UnterminatedMultilineTokenKind.Text);
         });
 
         it(`${LexError.UnterminatedMultilineTokenKind.QuotedIdentifier}`, () => {
