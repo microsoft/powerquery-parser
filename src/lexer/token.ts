@@ -76,7 +76,7 @@ export const enum TokenKind {
     RightBracket = "RightBracket",
     RightParenthesis = "RightParenthesis",
     Semicolon = "Semicolon",
-    StringLiteral = "StringLiteral",
+    TextLiteral = "StringLiteral",
 }
 
 export const enum LineTokenKind {
@@ -140,7 +140,7 @@ export const enum LineTokenKind {
     RightBracket = TokenKind.RightBracket,
     RightParenthesis = TokenKind.RightParenthesis,
     Semicolon = TokenKind.Semicolon,
-    StringLiteral = TokenKind.StringLiteral,
+    StringLiteral = TokenKind.TextLiteral,
 
     LineComment = LineTokenKindAdditions.LineComment,
     MultilineComment = LineTokenKindAdditions.MultilineComment,

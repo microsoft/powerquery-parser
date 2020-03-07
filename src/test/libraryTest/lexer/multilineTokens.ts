@@ -166,14 +166,14 @@ describe(`Lexer`, () => {
         describe(`StringLiteral`, () => {
             it(`"X"`, () => {
                 const text: string = `"X"`;
-                const expected: AbridgedTokens = [[TokenKind.StringLiteral, `"X"`]];
+                const expected: AbridgedTokens = [[TokenKind.TextLiteral, `"X"`]];
                 expectSnapshotAbridgedTokens(text, expected, true);
             });
 
             it(`"X\\nX\\nX"`, () => {
                 const text: string = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
                 const expected: AbridgedTokens = [
-                    [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
+                    [TokenKind.TextLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                 ];
                 expectSnapshotAbridgedTokens(text, expected, true);
             });
@@ -182,7 +182,7 @@ describe(`Lexer`, () => {
                 const text: string = `abc "X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`;
                 const expected: AbridgedTokens = [
                     [TokenKind.Identifier, `abc`],
-                    [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
+                    [TokenKind.TextLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                 ];
                 expectSnapshotAbridgedTokens(text, expected, true);
             });
@@ -190,7 +190,7 @@ describe(`Lexer`, () => {
             it(`"X\\nX\\nX" abc`, () => {
                 const text: string = `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X" abc`;
                 const expected: AbridgedTokens = [
-                    [TokenKind.StringLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
+                    [TokenKind.TextLiteral, `"X${LINE_TERMINATOR}X${LINE_TERMINATOR}X"`],
                     [TokenKind.Identifier, `abc`],
                 ];
                 expectSnapshotAbridgedTokens(text, expected, true);

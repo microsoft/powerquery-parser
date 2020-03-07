@@ -186,8 +186,8 @@ type
 """"
 `;
         const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.StringLiteral, `""`],
-            [TokenKind.StringLiteral, `""""`],
+            [TokenKind.TextLiteral, `""`],
+            [TokenKind.TextLiteral, `""""`],
         ];
         expectSnapshotAbridgedTokens(text, expected, true);
     });

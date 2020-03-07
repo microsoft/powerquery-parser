@@ -173,7 +173,7 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
             return localizationTemplates.tokenKind_rightParenthesis;
         case TokenKind.Semicolon:
             return localizationTemplates.tokenKind_semicolon;
-        case TokenKind.StringLiteral:
+        case TokenKind.TextLiteral:
             return localizationTemplates.tokenKind_stringLiteral;
 
         default:

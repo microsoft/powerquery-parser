@@ -293,7 +293,7 @@ function readStringLiteral(
 
         return {
             token: {
-                kind: TokenKind.StringLiteral,
+                kind: TokenKind.TextLiteral,
                 data: flattenedLines.text.substring(positionStart.codeUnit, positionEnd.codeUnit),
                 positionStart,
                 positionEnd,
