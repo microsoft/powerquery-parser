@@ -4,7 +4,7 @@
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind, IParserState } from "../parser";
 import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -15,11 +15,11 @@ export interface InspectedAutocomplete {
 
 export type TriedAutocomplete = Result<InspectedAutocomplete, CommonError.CommonError>;
 
-export function tryFrom(
+export function tryFrom<S = IParserState>(
     settings: InspectionSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseError: ParseError.ParseError | undefined,
+    maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
         return ResultUtils.okFactory({
@@ -216,7 +216,11 @@ const AutocompleteConstantMap: Map<string, KeywordKind> = new Map<string, Keywor
 const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<KeywordKind>> = new Map<
     string,
     ReadonlyArray<KeywordKind>
->([["a", [KeywordKind.And, KeywordKind.As]], ["o", [KeywordKind.Or]], ["m", [KeywordKind.Meta]]]);
+>([
+    ["a", [KeywordKind.And, KeywordKind.As]],
+    ["o", [KeywordKind.Or]],
+    ["m", [KeywordKind.Meta]],
+]);
 
 function updateWithParseErrorToken(
     inspected: ReadonlyArray<KeywordKind>,
@@ -379,12 +383,11 @@ function autocompleteSectionMember(
     // SectionMember.namePairedExpression
     if (child.node.maybeAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
-        const maybeSharedConstant: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            parent.node.id,
-            1,
-            [Ast.NodeKind.Constant],
-        );
+        const maybeSharedConstant:
+            | TXorNode
+            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, parent.node.id, 1, [
+            Ast.NodeKind.Constant,
+        ]);
 
         // 'shared' was parsed so we can exit.
         if (maybeSharedConstant !== undefined) {

@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Mocha Tests",
+      "name": "Debug Library Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
         "--debug",
@@ -16,7 +16,24 @@
         "999999",
         "-r",
         "ts-node/register",
-        "${workspaceFolder}/src/test/**/*.ts"
+        "${workspaceFolder}/src/test/libraryTest/**/*.ts"
+      ],
+      "preLaunchTask": "build",
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Resource Tests",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--debug",
+        "--colors",
+        "--timeout",
+        "999999",
+        "-r",
+        "ts-node/register",
+        "${workspaceFolder}/src/test/resourceTest/**/*.ts"
       ],
       "preLaunchTask": "build",
       "internalConsoleOptions": "openOnSessionStart"

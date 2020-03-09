@@ -419,8 +419,8 @@ export function expectXorChildren(nodeIdMapCollection: Collection, parentId: num
 }
 
 // There are a few assumed invariants about children:
-//  * Children are read left to right.
-//  * Children are placed in childIdsById in the order they were read.
+//  * Children were read left to right.
+//  * Children were placed in childIdsById in the order they were read.
 //  * Therefore the right-most child is the most recently read which also appears last in the document.
 export function maybeRightMostLeaf(
     nodeIdMapCollection: Collection,

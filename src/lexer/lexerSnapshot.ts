@@ -7,6 +7,14 @@ import { ILocalizationTemplates } from "../localization";
 import { CommentKind, LineComment, MultilineComment, TComment } from "./comment";
 import { IToken, LineTokenKind, Token, TokenKind, TokenPosition } from "./token";
 
+// The lexer is a multiline aware lexer.
+// That in part means multiline tokens are split up into <begin>, <content>, and <end> components.
+// The LexerSnapshot takes those multiline tokens and condenses them into a <begin, content, end> token,
+// along with throwing any multiline errors (eg. a <begin> but not <end>).
+//
+// One area for future optimization is to remove this all together by improving the naive parser logic.
+// It would mostly be a memory + code size improvement. The CPU cost is currently relatively minimal.
+
 export type TriedLexerSnapshot = Result<LexerSnapshot, LexError.TLexError>;
 
 export class LexerSnapshot {

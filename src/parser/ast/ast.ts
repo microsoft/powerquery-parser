@@ -107,7 +107,7 @@ export type TAuxiliaryNodes =
 
 export type TArrayWrapper =
     | IArrayWrapper<AsNullablePrimitiveType>
-    | IArrayWrapper<TConstant>
+    | IArrayWrapper<IConstant<UnaryOperatorKind>>
     | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
     | IArrayWrapper<TRecursivePrimaryExpression>
@@ -746,10 +746,10 @@ export type TConstantKind =
     | UnaryOperatorKind
     | WrapperConstantKind;
 
-export interface IConstant<T> extends INode {
+export interface IConstant<C> extends INode {
     readonly kind: NodeKind.Constant;
     readonly isLeaf: true;
-    readonly constantKind: T & TConstantKind;
+    readonly constantKind: C & TConstantKind;
 }
 
 export type TConstant = IConstant<TConstantKind>;
