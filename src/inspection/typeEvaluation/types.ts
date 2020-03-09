@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export const enum ExtendedTypeKind {
+export const enum TypeKind {
     Action = "Action",
     Any = "Any",
     AnyNonNull = "AnyNonNull",
