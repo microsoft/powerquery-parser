@@ -82,12 +82,32 @@ const BinOpExpressionLookup: Map<string, TypeKind> = new Map([
     ...createLookupsForEquality(TypeKind.Logical),
     ...createLookupsForLogical(TypeKind.Logical),
 
-    ...createLookupsForRelational(TypeKind.Logical),
-    ...createLookupsForEquality(TypeKind.Logical),
+    ...createLookupsForRelational(TypeKind.Numeric),
+    ...createLookupsForEquality(TypeKind.Numeric),
+    ...createLookupsForArithmetic(TypeKind.Numeric),
+
+    ...createLookupsForRelational(TypeKind.Time),
+    ...createLookupsForEquality(TypeKind.Time),
+    [binOpExpressionLookupKey(TypeKind.Time, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration), TypeKind.Date],
+    [binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, TypeKind.Time), TypeKind.Date],
+    [binOpExpressionLookupKey(TypeKind.Time, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration), TypeKind.Date],
+    [binOpExpressionLookupKey(TypeKind.Time, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Time), TypeKind.Duration],
+    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.And, TypeKind.Time), TypeKind.DateTime],
+
+    ...createLookupsForRelational(TypeKind.Date),
+    ...createLookupsForEquality(TypeKind.Date),
+    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration), TypeKind.Date],
+    [binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, TypeKind.Date), TypeKind.Date],
+    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration), TypeKind.Date],
+    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Date), TypeKind.Duration],
+    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.And, TypeKind.Time), TypeKind.DateTime],
 ]);
 
 const UnaryExpressionLookup: Map<string, TypeKind> = new Map([
     [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Not, TypeKind.Logical), TypeKind.Logical],
+
+    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Negative, TypeKind.Numeric), TypeKind.Numeric],
+    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Positive, TypeKind.Numeric), TypeKind.Numeric],
 ]);
 
 function binOpExpressionLookupKey(
@@ -115,6 +135,16 @@ function createLookupsForEquality(typeKind: TypeKind): ReadonlyArray<[string, Ty
     return [
         [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.EqualTo, typeKind), typeKind],
         [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.NotEqualTo, typeKind), typeKind],
+    ];
+}
+
+// Note: does not include the "and" operator.
+function createLookupsForArithmetic(typeKind: TypeKind): ReadonlyArray<[string, TypeKind]> {
+    return [
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Division, typeKind), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Multiplication, typeKind), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, typeKind), typeKind],
     ];
 }
 
