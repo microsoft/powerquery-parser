@@ -88,19 +88,60 @@ const BinOpExpressionLookup: Map<string, TypeKind> = new Map([
 
     ...createLookupsForRelational(TypeKind.Time),
     ...createLookupsForEquality(TypeKind.Time),
-    [binOpExpressionLookupKey(TypeKind.Time, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration), TypeKind.Date],
-    [binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, TypeKind.Time), TypeKind.Date],
-    [binOpExpressionLookupKey(TypeKind.Time, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration), TypeKind.Date],
-    [binOpExpressionLookupKey(TypeKind.Time, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Time), TypeKind.Duration],
+    ...createLookupsForClockKind(TypeKind.Time),
     [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.And, TypeKind.Time), TypeKind.DateTime],
 
     ...createLookupsForRelational(TypeKind.Date),
     ...createLookupsForEquality(TypeKind.Date),
-    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration), TypeKind.Date],
-    [binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, TypeKind.Date), TypeKind.Date],
-    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration), TypeKind.Date],
-    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Date), TypeKind.Duration],
+    ...createLookupsForClockKind(TypeKind.Date),
     [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.And, TypeKind.Time), TypeKind.DateTime],
+
+    ...createLookupsForRelational(TypeKind.DateTime),
+    ...createLookupsForEquality(TypeKind.DateTime),
+    ...createLookupsForClockKind(TypeKind.DateTime),
+
+    ...createLookupsForRelational(TypeKind.DateTimeZone),
+    ...createLookupsForEquality(TypeKind.DateTimeZone),
+    ...createLookupsForClockKind(TypeKind.DateTimeZone),
+
+    ...createLookupsForRelational(TypeKind.Duration),
+    ...createLookupsForEquality(TypeKind.Duration),
+    [
+        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration),
+        TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration),
+        TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Multiplication, TypeKind.Numeric),
+        TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(TypeKind.Numeric, Ast.ArithmeticOperatorKind.Multiplication, TypeKind.Duration),
+        TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Division, TypeKind.Numeric),
+        TypeKind.Duration,
+    ],
+
+    ...createLookupsForRelational(TypeKind.Text),
+    ...createLookupsForEquality(TypeKind.Text),
+    [binOpExpressionLookupKey(TypeKind.Text, Ast.ArithmeticOperatorKind.And, TypeKind.Text), TypeKind.Text],
+
+    ...createLookupsForRelational(TypeKind.Binary),
+    ...createLookupsForEquality(TypeKind.Binary),
+
+    ...createLookupsForEquality(TypeKind.List),
+    [binOpExpressionLookupKey(TypeKind.List, Ast.ArithmeticOperatorKind.And, TypeKind.List), TypeKind.List],
+
+    ...createLookupsForEquality(TypeKind.Record),
+    [binOpExpressionLookupKey(TypeKind.Record, Ast.ArithmeticOperatorKind.And, TypeKind.Record), TypeKind.Record],
+
+    ...createLookupsForEquality(TypeKind.Table),
+    [binOpExpressionLookupKey(TypeKind.Table, Ast.ArithmeticOperatorKind.And, TypeKind.Table), TypeKind.Table],
 ]);
 
 const UnaryExpressionLookup: Map<string, TypeKind> = new Map([
@@ -152,5 +193,16 @@ function createLookupsForLogical(typeKind: TypeKind): ReadonlyArray<[string, Typ
     return [
         [binOpExpressionLookupKey(typeKind, Ast.LogicalOperatorKind.And, typeKind), typeKind],
         [binOpExpressionLookupKey(typeKind, Ast.LogicalOperatorKind.Or, typeKind), typeKind],
+    ];
+}
+
+function createLookupsForClockKind(
+    typeKind: TypeKind.Date | TypeKind.DateTime | TypeKind.DateTimeZone | TypeKind.Time,
+): ReadonlyArray<[string, TypeKind]> {
+    return [
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration), typeKind],
+        [binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, typeKind), TypeKind.Duration],
     ];
 }
