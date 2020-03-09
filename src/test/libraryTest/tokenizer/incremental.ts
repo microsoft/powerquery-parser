@@ -185,7 +185,7 @@ describe("Incremental updates", () => {
         for (let index: number = lineNumber + 1; index < document.lineTokens.length; index += 1) {
             const lineTokens: ReadonlyArray<IToken> = document.lineTokens[index];
             lineTokens.forEach(token => {
-                expect(token.scopes).equals("StringContent", "expecting remaining tokens to be strings");
+                expect(token.scopes).equals("TextContent", "expecting remaining tokens to be strings");
             });
         }
     });
