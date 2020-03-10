@@ -896,10 +896,10 @@ export const enum UnaryOperatorKind {
 }
 
 export const enum LiteralKind {
+    List = "List",
     Logical = "Logical",
     Null = "Null",
     Numeric = "Numeric",
-    Str = "Str",
     Record = "Record",
-    List = "List",
+    Text = "Text",
 }

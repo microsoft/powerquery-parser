@@ -76,7 +76,7 @@ function lexText(text: string): void {
 
     // Once no more changes will occur a LexerSnapshot should be created, which  is an immutable copy that:
     //  * combines multiline tokens together
-    //    (eg. StringLiteralStart + StringLiteralContent + StringLiteralEnd)
+    //    (eg. TextLiteralStart + TextLiteralContent + TextLiteralEnd)
     //  * checks for multiline errors
     //    (eg. unterminated string error)
 

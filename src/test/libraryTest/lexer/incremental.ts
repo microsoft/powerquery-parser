@@ -297,14 +297,14 @@ describe(`Lexer.Incremental`, () => {
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`]],
                     0,
                     `"`,
-                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`]],
+                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
                 );
             });
 
             it(`unterminated string -> identifier`, () => {
                 expectLexerUpdateLine(
                     `"`,
-                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`]],
+                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
                     0,
                     `foobar`,
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]],
@@ -316,7 +316,7 @@ describe(`Lexer.Incremental`, () => {
             it(`first`, () => {
                 expectLexerUpdateLine(
                     `"`,
-                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`]],
+                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
                     0,
                     `foobar`,
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]],
@@ -351,17 +351,17 @@ describe(`Lexer.Incremental`, () => {
         describe(`multiple lines, default mode to string mode`, () => {
             it(`first`, () => {
                 expectLexerUpdateLineAlphaBravoCharlie(`"`, 0, [
-                    [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-                    [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `bravo`],
-                    [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
+                    [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`],
+                    [Lexer.LineKind.Touched, Lexer.LineMode.Text, Lexer.LineMode.Text, `bravo`],
+                    [Lexer.LineKind.Touched, Lexer.LineMode.Text, Lexer.LineMode.Text, `charlie`],
                 ]);
             });
 
             it(`middle`, () => {
                 expectLexerUpdateLineAlphaBravoCharlie(`"`, 1, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
-                    [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
-                    [Lexer.LineKind.Touched, Lexer.LineMode.String, Lexer.LineMode.String, `charlie`],
+                    [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`],
+                    [Lexer.LineKind.Touched, Lexer.LineMode.Text, Lexer.LineMode.Text, `charlie`],
                 ]);
             });
 
@@ -369,7 +369,7 @@ describe(`Lexer.Incremental`, () => {
                 expectLexerUpdateLineAlphaBravoCharlie(`"`, 2, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
-                    [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.String, `"`],
+                    [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`],
                 ]);
             });
         });

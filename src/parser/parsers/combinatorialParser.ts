@@ -274,7 +274,7 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
         case TokenKind.KeywordTrue:
         case TokenKind.NumericLiteral:
         case TokenKind.NullLiteral:
-        case TokenKind.StringLiteral:
+        case TokenKind.TextLiteral:
             return Naive.readLiteralExpression(state, parser);
 
         // TypeExpression

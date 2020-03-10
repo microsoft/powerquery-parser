@@ -10,15 +10,14 @@ const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"
 
 export function getPowerQueryFilesRecursively(rootDirectory: string): ReadonlyArray<string> {
     const dirs: ReadonlyArray<string> = getDirectoryPaths(rootDirectory);
-    let files: ReadonlyArray<String> = dirs
+    let files: ReadonlyArray<string> = dirs
         .map(getPowerQueryFilesRecursively) // go through each directory
         .reduce((a, b) => a.concat(b), []); // map returns a 2d array (array of file arrays) so flatten
 
     // Get files in root folder
     files = files.concat(getPowerQueryFilePaths(rootDirectory));
 
-    // String -> string
-    return files.map(str => str.toString());
+    return files;
 }
 
 export function readContents(filePath: string): string {

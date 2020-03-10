@@ -57,7 +57,7 @@ export const enum LineMode {
     Comment = "Comment",
     Default = "Default",
     QuotedIdentifier = "QuotedIdentifier",
-    String = "String",
+    Text = "Text",
 }
 
 export interface State {
@@ -527,8 +527,8 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
                     readOutcome = tokenizeQuotedIdentifierContentOrEnd(line, currentPosition);
                     break;
 
-                case LineMode.String:
-                    readOutcome = tokenizeStringLiteralContentOrEnd(line, currentPosition);
+                case LineMode.Text:
+                    readOutcome = tokenizeTextLiteralContentOrEnd(line, currentPosition);
                     break;
 
                 default:
@@ -655,9 +655,9 @@ function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number
 
 // read either string literal end or eof
 function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
-    const read: LineModeAlteringRead = tokenizeStringLiteralContentOrEnd(line, currentPosition);
+    const read: LineModeAlteringRead = tokenizeTextLiteralContentOrEnd(line, currentPosition);
     switch (read.token.kind) {
-        case LineTokenKind.StringLiteralContent:
+        case LineTokenKind.TextLiteralContent:
             return {
                 lineMode: LineMode.QuotedIdentifier,
                 token: {
@@ -666,7 +666,7 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
                 },
             };
 
-        case LineTokenKind.StringLiteralEnd:
+        case LineTokenKind.TextLiteralEnd:
             return {
                 lineMode: LineMode.Default,
                 token: {
@@ -678,26 +678,26 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
         default:
             const details: {} = { read };
             throw new CommonError.InvariantError(
-                "tokenizeStringLiteralContentOrEnd returned an unexpected kind",
+                `${tokenizeTextLiteralContentOrEnd.name} returned an unexpected kind`,
                 details,
             );
     }
 }
 
 // read either string literal end or eof
-function tokenizeStringLiteralContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
+function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const text: string = line.text;
-    const maybePositionEnd: number | undefined = maybeIndexOfStringEnd(text, currentPosition);
+    const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition);
 
     if (maybePositionEnd === undefined) {
         return {
-            token: readRestOfLine(LineTokenKind.StringLiteralContent, text, currentPosition),
-            lineMode: LineMode.String,
+            token: readRestOfLine(LineTokenKind.TextLiteralContent, text, currentPosition),
+            lineMode: LineMode.Text,
         };
     } else {
         const positionEnd: number = maybePositionEnd + 1;
         return {
-            token: readTokenFrom(LineTokenKind.StringLiteralEnd, text, currentPosition, positionEnd),
+            token: readTokenFrom(LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
         };
     }
@@ -746,7 +746,7 @@ function tokenizeDefault(
     } else if (chr1 === "}") {
         token = readConstant(LineTokenKind.RightBrace, text, positionStart, 1);
     } else if (chr1 === '"') {
-        const read: LineModeAlteringRead = readOrStartStringLiteral(text, positionStart);
+        const read: LineModeAlteringRead = readOrStartTextLiteral(text, positionStart);
         token = read.token;
         lineMode = read.lineMode;
     } else if (chr1 === "0") {
@@ -858,18 +858,18 @@ function drainWhitespace(text: string, position: number): number {
     return position;
 }
 
-function readOrStartStringLiteral(text: string, currentPosition: number): LineModeAlteringRead {
-    const maybePositionEnd: number | undefined = maybeIndexOfStringEnd(text, currentPosition + 1);
+function readOrStartTextLiteral(text: string, currentPosition: number): LineModeAlteringRead {
+    const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition + 1);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
         return {
-            token: readTokenFrom(LineTokenKind.StringLiteral, text, currentPosition, positionEnd),
+            token: readTokenFrom(LineTokenKind.TextLiteral, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
         };
     } else {
         return {
-            token: readRestOfLine(LineTokenKind.StringLiteralStart, text, currentPosition),
-            lineMode: LineMode.String,
+            token: readRestOfLine(LineTokenKind.TextLiteralStart, text, currentPosition),
+            lineMode: LineMode.Text,
         };
     }
 }
@@ -974,7 +974,7 @@ function maybeReadKeyword(text: string, currentPosition: number): LineToken | un
 }
 
 function readOrStartQuotedIdentifier(text: string, currentPosition: number): LineModeAlteringRead {
-    const maybePositionEnd: number | undefined = maybeIndexOfStringEnd(text, currentPosition + 2);
+    const maybePositionEnd: number | undefined = maybeIndexOfTextEnd(text, currentPosition + 2);
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
 
@@ -1136,7 +1136,7 @@ function maybeKeywordLineTokenKindFrom(data: string): LineTokenKind | undefined 
     }
 }
 
-function maybeIndexOfStringEnd(text: string, positionStart: number): number | undefined {
+function maybeIndexOfTextEnd(text: string, positionStart: number): number | undefined {
     let indexLow: number = positionStart;
     let positionEnd: number = text.indexOf('"', indexLow);
 

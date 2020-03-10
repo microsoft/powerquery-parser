@@ -120,8 +120,8 @@ export class LexerSnapshot {
                     break;
                 }
 
-                case LineTokenKind.StringLiteralStart: {
-                    const concatenatedTokenRead: ConcatenatedTokenRead = readStringLiteral(
+                case LineTokenKind.TextLiteralStart: {
+                    const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
                         localizationTemplates,
                         flattenedLines,
                         flatToken,
@@ -265,7 +265,7 @@ function readQuotedIdentifier(
     }
 }
 
-function readStringLiteral(
+function readTextLiteral(
     localizationTemplates: ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
@@ -273,16 +273,16 @@ function readStringLiteral(
     const collection: FlatLineCollection = collectWhileContent(
         flattenedLines.flatLineTokens,
         tokenStart,
-        LineTokenKind.StringLiteralContent,
+        LineTokenKind.TextLiteralContent,
     );
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
             localizationTemplates,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
-            LexError.UnterminatedMultilineTokenKind.String,
+            LexError.UnterminatedMultilineTokenKind.Text,
         );
-    } else if (maybeTokenEnd.kind !== LineTokenKind.StringLiteralEnd) {
+    } else if (maybeTokenEnd.kind !== LineTokenKind.TextLiteralEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
         const message: string = "once a multiline token starts it should either reach a paired end token, or eof";
         throw new CommonError.InvariantError(message, details);
@@ -293,7 +293,7 @@ function readStringLiteral(
 
         return {
             token: {
-                kind: TokenKind.StringLiteral,
+                kind: TokenKind.TextLiteral,
                 data: flattenedLines.text.substring(positionStart.codeUnit, positionEnd.codeUnit),
                 positionStart,
                 positionEnd,
