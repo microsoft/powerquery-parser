@@ -19,7 +19,7 @@ export function extendedTypeKindFrom(
             return Type.TypeKind.Null;
 
         case Ast.LiteralKind.Numeric:
-            return Type.TypeKind.Numeric;
+            return Type.TypeKind.Number;
 
         case Ast.LiteralKind.Text:
             return Type.TypeKind.Text;
