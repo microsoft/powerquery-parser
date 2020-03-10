@@ -810,7 +810,7 @@ export function readLiteralExpression<S = IParserState>(
         TokenKind.KeywordTrue,
         TokenKind.NumericLiteral,
         TokenKind.NullLiteral,
-        TokenKind.StringLiteral,
+        TokenKind.TextLiteral,
     ];
     const maybeErr: ParseError.ExpectedAnyTokenKindError | undefined = IParserStateUtils.testIsOnAnyTokenKind(
         state,

@@ -7,12 +7,12 @@ export const enum LineTokenKindAdditions {
     MultilineCommentContent = "MultilineCommentContent",
     MultilineCommentEnd = "MultilineCommentEnd",
     MultilineCommentStart = "MultilineCommentStart",
+    TextLiteralContent = "TextContent",
+    TextLiteralEnd = "TextLiteralEnd",
+    TextLiteralStart = "TextLiteralStart",
     QuotedIdentifierContent = "QuotedIdentifierContent",
     QuotedIdentifierEnd = "QuotedIdentifierEnd",
     QuotedIdentifierStart = "QuotedIdentifierStart",
-    StringLiteralContent = "StringContent",
-    StringLiteralEnd = "StringLiteralEnd",
-    StringLiteralStart = "StringLiteralStart",
 }
 
 export const enum TokenKind {
@@ -76,7 +76,7 @@ export const enum TokenKind {
     RightBracket = "RightBracket",
     RightParenthesis = "RightParenthesis",
     Semicolon = "Semicolon",
-    StringLiteral = "StringLiteral",
+    TextLiteral = "TextLiteral",
 }
 
 export const enum LineTokenKind {
@@ -140,19 +140,19 @@ export const enum LineTokenKind {
     RightBracket = TokenKind.RightBracket,
     RightParenthesis = TokenKind.RightParenthesis,
     Semicolon = TokenKind.Semicolon,
-    StringLiteral = TokenKind.StringLiteral,
+    TextLiteral = TokenKind.TextLiteral,
 
     LineComment = LineTokenKindAdditions.LineComment,
     MultilineComment = LineTokenKindAdditions.MultilineComment,
     MultilineCommentContent = LineTokenKindAdditions.MultilineCommentContent,
     MultilineCommentEnd = LineTokenKindAdditions.MultilineCommentEnd,
     MultilineCommentStart = LineTokenKindAdditions.MultilineCommentStart,
+    TextLiteralContent = LineTokenKindAdditions.TextLiteralContent,
+    TextLiteralEnd = LineTokenKindAdditions.TextLiteralEnd,
+    TextLiteralStart = LineTokenKindAdditions.TextLiteralStart,
     QuotedIdentifierContent = LineTokenKindAdditions.QuotedIdentifierContent,
     QuotedIdentifierEnd = LineTokenKindAdditions.QuotedIdentifierEnd,
     QuotedIdentifierStart = LineTokenKindAdditions.QuotedIdentifierStart,
-    StringLiteralContent = LineTokenKindAdditions.StringLiteralContent,
-    StringLiteralEnd = LineTokenKindAdditions.StringLiteralEnd,
-    StringLiteralStart = LineTokenKindAdditions.StringLiteralStart,
 }
 
 export interface IToken<Kind, Position> {

@@ -180,14 +180,14 @@ type
         expectSnapshotAbridgedTokens(text, expected, true);
     });
 
-    it(`StringLiteral`, () => {
+    it(`TextLiteral`, () => {
         const text: string = `
 ""
 """"
 `;
         const expected: ReadonlyArray<[TokenKind, string]> = [
-            [TokenKind.StringLiteral, `""`],
-            [TokenKind.StringLiteral, `""""`],
+            [TokenKind.TextLiteral, `""`],
+            [TokenKind.TextLiteral, `""""`],
         ];
         expectSnapshotAbridgedTokens(text, expected, true);
     });

@@ -187,8 +187,8 @@ export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast
         case TokenKind.NullLiteral:
             return Ast.LiteralKind.Null;
 
-        case TokenKind.StringLiteral:
-            return Ast.LiteralKind.Str;
+        case TokenKind.TextLiteral:
+            return Ast.LiteralKind.Text;
 
         default:
             return undefined;
