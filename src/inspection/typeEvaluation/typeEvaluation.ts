@@ -47,6 +47,20 @@ export function evaluate(
             result = evaluateBinOpExpression(nodeIdMapCollection, xorNode, cache);
             break;
 
+        case Ast.NodeKind.AsExpression: {
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 2);
+            break;
+        }
+
+        case Ast.NodeKind.AsNullablePrimitiveType:
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
+            break;
+
+        // Handled by FunctionExpression
+        case Ast.NodeKind.Constant:
+            result = evaluateConstant(xorNode);
+            break;
+
         default:
             result = unknownFactory();
     }
@@ -59,12 +73,34 @@ function genericFactory(typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind>):
     return { kind: typeKind };
 }
 
+function genericCustomFactory(typeKind: Type.TCustomTypeKind): Type.TType {
+    return {
+        kind: typeKind,
+        isCustom: false,
+    };
+}
+
 function unknownFactory(): Type.TType {
     return { kind: Type.TypeKind.Unknown };
 }
 
-function errorFactory(): Type.TType {
-    return { kind: Type.TypeKind.Error };
+function noneFactory(): Type.TType {
+    return { kind: Type.TypeKind.None };
+}
+
+function evaluateByChildAttributeIndex(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    cache: EvaluationCache,
+    parentXorNode: TXorNode,
+    attributeIndex: number,
+): Type.TType {
+    const maybeXorNode: TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        parentXorNode.node.id,
+        attributeIndex,
+        undefined,
+    );
+    return maybeXorNode !== undefined ? evaluate(nodeIdMapCollection, maybeXorNode, cache) : unknownFactory();
 }
 
 function evaluateBinOpExpression(
@@ -98,7 +134,7 @@ function evaluateBinOpExpression(
     const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
     const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);
     if (maybeResultTypeKind === undefined) {
-        return errorFactory();
+        return noneFactory();
     }
     const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
 
@@ -110,7 +146,7 @@ function evaluateBinOpExpression(
                 rightTypeKind: rightType.kind,
             };
             throw new CommonError.InvariantError(
-                "resultTypeKind should only be a custom TypeKind if both left and right are custom TypeKind",
+                `${evaluateBinOpExpression.name}: resultTypeKind should only be a custom TypeKind if both left and right are custom TypeKind`,
                 details,
             );
         } else if (leftType.kind !== rightType.kind) {
@@ -119,7 +155,7 @@ function evaluateBinOpExpression(
                 rightTypeKind: rightType.kind,
             };
             throw new CommonError.InvariantError(
-                "left and right should only be either two records or two tables",
+                `${evaluateBinOpExpression.name}: left and right should only be either two records or two tables`,
                 details,
             );
         } else {
@@ -127,6 +163,67 @@ function evaluateBinOpExpression(
         }
     } else {
         return { kind: resultTypeKind };
+    }
+}
+
+function evaluateConstant(xorNode: TXorNode): Type.TType {
+    if (xorNode.kind === XorNodeKind.Context) {
+        return unknownFactory();
+    } else if (xorNode.node.kind !== Ast.NodeKind.Constant) {
+        const details: {} = {
+            nodeId: xorNode.node.id,
+            nodeKind: xorNode.node.kind,
+        };
+        throw new CommonError.InvariantError(
+            `${evaluateConstant.name}: expected xorNode to be of NodeKind.Constant`,
+            details,
+        );
+    } else {
+        const constant: Ast.TConstant = xorNode.node;
+
+        switch (constant.constantKind) {
+            case Ast.PrimitiveTypeConstantKind.Action:
+                return genericFactory(Type.TypeKind.Action);
+            case Ast.PrimitiveTypeConstantKind.Any:
+                return genericFactory(Type.TypeKind.Any);
+            case Ast.PrimitiveTypeConstantKind.AnyNonNull:
+                return genericFactory(Type.TypeKind.AnyNonNull);
+            case Ast.PrimitiveTypeConstantKind.Binary:
+                return genericFactory(Type.TypeKind.Binary);
+            case Ast.PrimitiveTypeConstantKind.Date:
+                return genericFactory(Type.TypeKind.Date);
+            case Ast.PrimitiveTypeConstantKind.DateTime:
+                return genericFactory(Type.TypeKind.DateTime);
+            case Ast.PrimitiveTypeConstantKind.DateTimeZone:
+                return genericFactory(Type.TypeKind.DateTimeZone);
+            case Ast.PrimitiveTypeConstantKind.Duration:
+                return genericFactory(Type.TypeKind.Duration);
+            case Ast.PrimitiveTypeConstantKind.Function:
+                return genericFactory(Type.TypeKind.Function);
+            case Ast.PrimitiveTypeConstantKind.List:
+                return genericFactory(Type.TypeKind.List);
+            case Ast.PrimitiveTypeConstantKind.Logical:
+                return genericFactory(Type.TypeKind.Logical);
+            case Ast.PrimitiveTypeConstantKind.None:
+                return genericFactory(Type.TypeKind.None);
+            case Ast.PrimitiveTypeConstantKind.Null:
+                return genericFactory(Type.TypeKind.Null);
+            case Ast.PrimitiveTypeConstantKind.Number:
+                return genericFactory(Type.TypeKind.Number);
+            case Ast.PrimitiveTypeConstantKind.Record:
+                return genericCustomFactory(Type.TypeKind.Record);
+            case Ast.PrimitiveTypeConstantKind.Table:
+                return genericCustomFactory(Type.TypeKind.Table);
+            case Ast.PrimitiveTypeConstantKind.Text:
+                return genericFactory(Type.TypeKind.Text);
+            case Ast.PrimitiveTypeConstantKind.Time:
+                return genericFactory(Type.TypeKind.Time);
+            case Ast.PrimitiveTypeConstantKind.Type:
+                return genericFactory(Type.TypeKind.Type);
+
+            default:
+                return unknownFactory();
+        }
     }
 }
 
@@ -138,9 +235,9 @@ const BinOpExpressionLookup: Map<string, Type.TypeKind> = new Map([
     ...createLookupsForEquality(Type.TypeKind.Logical),
     ...createLookupsForLogical(Type.TypeKind.Logical),
 
-    ...createLookupsForRelational(Type.TypeKind.Numeric),
-    ...createLookupsForEquality(Type.TypeKind.Numeric),
-    ...createLookupsForArithmetic(Type.TypeKind.Numeric),
+    ...createLookupsForRelational(Type.TypeKind.Number),
+    ...createLookupsForEquality(Type.TypeKind.Number),
+    ...createLookupsForArithmetic(Type.TypeKind.Number),
 
     ...createLookupsForRelational(Type.TypeKind.Time),
     ...createLookupsForEquality(Type.TypeKind.Time),
@@ -184,20 +281,20 @@ const BinOpExpressionLookup: Map<string, Type.TypeKind> = new Map([
         binOpExpressionLookupKey(
             Type.TypeKind.Duration,
             Ast.ArithmeticOperatorKind.Multiplication,
-            Type.TypeKind.Numeric,
+            Type.TypeKind.Number,
         ),
         Type.TypeKind.Duration,
     ],
     [
         binOpExpressionLookupKey(
-            Type.TypeKind.Numeric,
+            Type.TypeKind.Number,
             Ast.ArithmeticOperatorKind.Multiplication,
             Type.TypeKind.Duration,
         ),
         Type.TypeKind.Duration,
     ],
     [
-        binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Division, Type.TypeKind.Numeric),
+        binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Division, Type.TypeKind.Number),
         Type.TypeKind.Duration,
     ],
 
@@ -233,8 +330,8 @@ const BinOpExpressionLookup: Map<string, Type.TypeKind> = new Map([
 const UnaryExpressionLookup: Map<string, Type.TypeKind> = new Map([
     [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Not, Type.TypeKind.Logical), Type.TypeKind.Logical],
 
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Negative, Type.TypeKind.Numeric), Type.TypeKind.Numeric],
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Positive, Type.TypeKind.Numeric), Type.TypeKind.Numeric],
+    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Negative, Type.TypeKind.Number), Type.TypeKind.Number],
+    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Positive, Type.TypeKind.Number), Type.TypeKind.Number],
 ]);
 
 function binOpExpressionLookupKey(
