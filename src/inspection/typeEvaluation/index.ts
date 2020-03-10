@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as TypesUtils from "./typesUtils";
+import * as Type from "./type";
+import * as TypeUtils from "./typesUtils";
 
-export { TypesUtils };
+export { TypeUtils, Type };

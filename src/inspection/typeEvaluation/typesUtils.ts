@@ -1,29 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Type } from ".";
 import { isNever } from "../../common";
 import { Ast } from "../../parser";
-import { ExtendedTypeKind } from "./types";
 
-export function extendedTypeKindFrom(literalKind: Ast.LiteralKind): ExtendedTypeKind {
+export function extendedTypeKindFrom(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
         case Ast.LiteralKind.List:
-            return ExtendedTypeKind.List;
+            return Type.TypeKind.List;
 
         case Ast.LiteralKind.Logical:
-            return ExtendedTypeKind.Logical;
+            return Type.TypeKind.Logical;
 
         case Ast.LiteralKind.Null:
-            return ExtendedTypeKind.Null;
+            return Type.TypeKind.Null;
 
         case Ast.LiteralKind.Numeric:
-            return ExtendedTypeKind.Numeric;
+            return Type.TypeKind.Numeric;
 
         case Ast.LiteralKind.Record:
-            return ExtendedTypeKind.Record;
+            return Type.TypeKind.Record;
 
         case Ast.LiteralKind.Str:
-            return ExtendedTypeKind.Str;
+            return Type.TypeKind.Text;
 
         default:
             throw isNever(literalKind);

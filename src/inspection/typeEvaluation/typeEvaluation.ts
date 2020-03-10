@@ -1,30 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TypesUtils } from ".";
+import { Type, TypeUtils } from ".";
 import { CommonError } from "../../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
-import { TypeKind } from "./types";
 
-type EvaluationCache = Map<number, TypeKind>;
+type EvaluationCache = Map<number, Type.TType>;
 
 export function evaluate(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
     cache: EvaluationCache,
-): TypeKind {
-    const maybeCached: TypeKind | undefined = cache.get(xorNode.node.id);
+): Type.TType {
+    const maybeCached: Type.TType | undefined = cache.get(xorNode.node.id);
     if (maybeCached !== undefined) {
         return maybeCached;
     }
 
-    let result: TypeKind;
+    let result: Type.TType;
     switch (xorNode.node.kind) {
         case Ast.NodeKind.LiteralExpression:
             result =
                 xorNode.kind === XorNodeKind.Ast
-                    ? TypesUtils.extendedTypeKindFrom((xorNode.node as Ast.LiteralExpression).literalKind)
-                    : TypeKind.Unknown;
+                    ? TypeUtils.extendedTypeKindFrom((xorNode.node as Ast.LiteralExpression).literalKind)
+                    : Type.TypeKind.Unknown;
             break;
 
         case Ast.NodeKind.ArithmeticExpression:
@@ -35,18 +34,26 @@ export function evaluate(
             break;
 
         default:
-            result = TypeKind.Unknown;
+            result = unknownFactory();
     }
 
     cache.set(xorNode.node.id, result);
     return result;
 }
 
+function unknownFactory(): Type.TType {
+    return { kind: Type.TypeKind.Unknown };
+}
+
+function errorFactory(): Type.TType {
+    return { kind: Type.TypeKind.Error };
+}
+
 function evaluateBinOpExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
     cache: EvaluationCache,
-): TypeKind {
+): Type.TType {
     if (!AstUtils.isTBinOpExpressionKind(xorNode.node.kind)) {
         const details: {} = {
             nodeId: xorNode.node.id,
@@ -59,7 +66,7 @@ function evaluateBinOpExpression(
     const children: ReadonlyArray<TXorNode> = NodeIdMapUtils.expectXorChildren(nodeIdMapCollection, parentId);
 
     if (children.length < 3) {
-        return TypeKind.Unknown;
+        return unknownFactory();
     }
 
     const left: TXorNode = children[0];
@@ -67,103 +74,164 @@ function evaluateBinOpExpression(
         .constantKind;
     const right: TXorNode = children[2];
 
-    const leftTypeKind: TypeKind = evaluate(nodeIdMapCollection, left, cache);
-    const rightTypeKind: TypeKind = evaluate(nodeIdMapCollection, right, cache);
+    const leftType: Type.TType = evaluate(nodeIdMapCollection, left, cache);
+    const rightType: Type.TType = evaluate(nodeIdMapCollection, right, cache);
 
-    const key: string = binOpExpressionLookupKey(leftTypeKind, operatorKind, rightTypeKind);
-    return BinOpExpressionLookup.get(key) || TypeKind.Error;
+    const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
+    const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);
+    if (maybeResultTypeKind === undefined) {
+        return errorFactory();
+    }
+    const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
+
+    if (isCustomTypeKind(resultTypeKind)) {
+        if (!isCustomType(leftType) || !isCustomType(rightType)) {
+            const details: {} = {
+                resultTypeKind,
+                leftTypeKind: leftType.kind,
+                rightTypeKind: rightType.kind,
+            };
+            throw new CommonError.InvariantError(
+                "resultTypeKind should only be a custom TypeKind if both left and right are custom TypeKind",
+                details,
+            );
+        } else if (leftType.kind !== rightType.kind) {
+            const details: {} = {
+                leftTypeKind: leftType.kind,
+                rightTypeKind: rightType.kind,
+            };
+            throw new CommonError.InvariantError(
+                "left and right should only be either two records or two tables",
+                details,
+            );
+        } else {
+            return evaluateBinOpExpressionForCustomType(leftType, rightType);
+        }
+    } else {
+        return { kind: resultTypeKind };
+    }
 }
 
-const BinOpExpressionLookup: Map<string, TypeKind> = new Map([
-    ...createLookupsForRelational(TypeKind.Null),
-    ...createLookupsForEquality(TypeKind.Null),
+const BinOpExpressionLookup: Map<string, Type.TypeKind> = new Map([
+    ...createLookupsForRelational(Type.TypeKind.Null),
+    ...createLookupsForEquality(Type.TypeKind.Null),
 
-    ...createLookupsForRelational(TypeKind.Logical),
-    ...createLookupsForEquality(TypeKind.Logical),
-    ...createLookupsForLogical(TypeKind.Logical),
+    ...createLookupsForRelational(Type.TypeKind.Logical),
+    ...createLookupsForEquality(Type.TypeKind.Logical),
+    ...createLookupsForLogical(Type.TypeKind.Logical),
 
-    ...createLookupsForRelational(TypeKind.Numeric),
-    ...createLookupsForEquality(TypeKind.Numeric),
-    ...createLookupsForArithmetic(TypeKind.Numeric),
+    ...createLookupsForRelational(Type.TypeKind.Numeric),
+    ...createLookupsForEquality(Type.TypeKind.Numeric),
+    ...createLookupsForArithmetic(Type.TypeKind.Numeric),
 
-    ...createLookupsForRelational(TypeKind.Time),
-    ...createLookupsForEquality(TypeKind.Time),
-    ...createLookupsForClockKind(TypeKind.Time),
-    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.And, TypeKind.Time), TypeKind.DateTime],
-
-    ...createLookupsForRelational(TypeKind.Date),
-    ...createLookupsForEquality(TypeKind.Date),
-    ...createLookupsForClockKind(TypeKind.Date),
-    [binOpExpressionLookupKey(TypeKind.Date, Ast.ArithmeticOperatorKind.And, TypeKind.Time), TypeKind.DateTime],
-
-    ...createLookupsForRelational(TypeKind.DateTime),
-    ...createLookupsForEquality(TypeKind.DateTime),
-    ...createLookupsForClockKind(TypeKind.DateTime),
-
-    ...createLookupsForRelational(TypeKind.DateTimeZone),
-    ...createLookupsForEquality(TypeKind.DateTimeZone),
-    ...createLookupsForClockKind(TypeKind.DateTimeZone),
-
-    ...createLookupsForRelational(TypeKind.Duration),
-    ...createLookupsForEquality(TypeKind.Duration),
+    ...createLookupsForRelational(Type.TypeKind.Time),
+    ...createLookupsForEquality(Type.TypeKind.Time),
+    ...createLookupsForClockKind(Type.TypeKind.Time),
     [
-        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration),
-        TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration),
-        TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Multiplication, TypeKind.Numeric),
-        TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(TypeKind.Numeric, Ast.ArithmeticOperatorKind.Multiplication, TypeKind.Duration),
-        TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Division, TypeKind.Numeric),
-        TypeKind.Duration,
+        binOpExpressionLookupKey(Type.TypeKind.Date, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Time),
+        Type.TypeKind.DateTime,
     ],
 
-    ...createLookupsForRelational(TypeKind.Text),
-    ...createLookupsForEquality(TypeKind.Text),
-    [binOpExpressionLookupKey(TypeKind.Text, Ast.ArithmeticOperatorKind.And, TypeKind.Text), TypeKind.Text],
+    ...createLookupsForRelational(Type.TypeKind.Date),
+    ...createLookupsForEquality(Type.TypeKind.Date),
+    ...createLookupsForClockKind(Type.TypeKind.Date),
+    [
+        binOpExpressionLookupKey(Type.TypeKind.Date, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Time),
+        Type.TypeKind.DateTime,
+    ],
 
-    ...createLookupsForRelational(TypeKind.Binary),
-    ...createLookupsForEquality(TypeKind.Binary),
+    ...createLookupsForRelational(Type.TypeKind.DateTime),
+    ...createLookupsForEquality(Type.TypeKind.DateTime),
+    ...createLookupsForClockKind(Type.TypeKind.DateTime),
 
-    ...createLookupsForEquality(TypeKind.List),
-    [binOpExpressionLookupKey(TypeKind.List, Ast.ArithmeticOperatorKind.And, TypeKind.List), TypeKind.List],
+    ...createLookupsForRelational(Type.TypeKind.DateTimeZone),
+    ...createLookupsForEquality(Type.TypeKind.DateTimeZone),
+    ...createLookupsForClockKind(Type.TypeKind.DateTimeZone),
 
-    ...createLookupsForEquality(TypeKind.Record),
-    [binOpExpressionLookupKey(TypeKind.Record, Ast.ArithmeticOperatorKind.And, TypeKind.Record), TypeKind.Record],
+    ...createLookupsForRelational(Type.TypeKind.Duration),
+    ...createLookupsForEquality(Type.TypeKind.Duration),
+    [
+        binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration),
+        Type.TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(
+            Type.TypeKind.Duration,
+            Ast.ArithmeticOperatorKind.Subtraction,
+            Type.TypeKind.Duration,
+        ),
+        Type.TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(
+            Type.TypeKind.Duration,
+            Ast.ArithmeticOperatorKind.Multiplication,
+            Type.TypeKind.Numeric,
+        ),
+        Type.TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(
+            Type.TypeKind.Numeric,
+            Ast.ArithmeticOperatorKind.Multiplication,
+            Type.TypeKind.Duration,
+        ),
+        Type.TypeKind.Duration,
+    ],
+    [
+        binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Division, Type.TypeKind.Numeric),
+        Type.TypeKind.Duration,
+    ],
 
-    ...createLookupsForEquality(TypeKind.Table),
-    [binOpExpressionLookupKey(TypeKind.Table, Ast.ArithmeticOperatorKind.And, TypeKind.Table), TypeKind.Table],
+    ...createLookupsForRelational(Type.TypeKind.Text),
+    ...createLookupsForEquality(Type.TypeKind.Text),
+    [
+        binOpExpressionLookupKey(Type.TypeKind.Text, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Text),
+        Type.TypeKind.Text,
+    ],
+
+    ...createLookupsForRelational(Type.TypeKind.Binary),
+    ...createLookupsForEquality(Type.TypeKind.Binary),
+
+    ...createLookupsForEquality(Type.TypeKind.List),
+    [
+        binOpExpressionLookupKey(Type.TypeKind.List, Ast.ArithmeticOperatorKind.And, Type.TypeKind.List),
+        Type.TypeKind.List,
+    ],
+
+    ...createLookupsForEquality(Type.TypeKind.Record),
+    [
+        binOpExpressionLookupKey(Type.TypeKind.Record, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Record),
+        Type.TypeKind.Record,
+    ],
+
+    ...createLookupsForEquality(Type.TypeKind.Table),
+    [
+        binOpExpressionLookupKey(Type.TypeKind.Table, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Table),
+        Type.TypeKind.Table,
+    ],
 ]);
 
-const UnaryExpressionLookup: Map<string, TypeKind> = new Map([
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Not, TypeKind.Logical), TypeKind.Logical],
+const UnaryExpressionLookup: Map<string, Type.TypeKind> = new Map([
+    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Not, Type.TypeKind.Logical), Type.TypeKind.Logical],
 
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Negative, TypeKind.Numeric), TypeKind.Numeric],
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Positive, TypeKind.Numeric), TypeKind.Numeric],
+    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Negative, Type.TypeKind.Numeric), Type.TypeKind.Numeric],
+    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Positive, Type.TypeKind.Numeric), Type.TypeKind.Numeric],
 ]);
 
 function binOpExpressionLookupKey(
-    leftTypeKind: TypeKind,
+    leftTypeKind: Type.TypeKind,
     operatorKind: Ast.TBinOpExpressionOperator,
-    rightTypeKind: TypeKind,
+    rightTypeKind: Type.TypeKind,
 ): string {
     return `${leftTypeKind},${operatorKind},${rightTypeKind}`;
 }
 
-function unaryOpExpressionLookupKey(operatorKind: Ast.UnaryOperatorKind, typeKind: TypeKind): string {
+function unaryOpExpressionLookupKey(operatorKind: Ast.UnaryOperatorKind, typeKind: Type.TypeKind): string {
     return `${operatorKind},${typeKind}`;
 }
 
-function createLookupsForRelational(typeKind: TypeKind): ReadonlyArray<[string, TypeKind]> {
+function createLookupsForRelational(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThan, typeKind), typeKind],
         [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThanEqualTo, typeKind), typeKind],
@@ -172,7 +240,7 @@ function createLookupsForRelational(typeKind: TypeKind): ReadonlyArray<[string, 
     ];
 }
 
-function createLookupsForEquality(typeKind: TypeKind): ReadonlyArray<[string, TypeKind]> {
+function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.EqualTo, typeKind), typeKind],
         [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.NotEqualTo, typeKind), typeKind],
@@ -180,7 +248,7 @@ function createLookupsForEquality(typeKind: TypeKind): ReadonlyArray<[string, Ty
 }
 
 // Note: does not include the "and" operator.
-function createLookupsForArithmetic(typeKind: TypeKind): ReadonlyArray<[string, TypeKind]> {
+function createLookupsForArithmetic(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
         [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Division, typeKind), typeKind],
@@ -189,7 +257,7 @@ function createLookupsForArithmetic(typeKind: TypeKind): ReadonlyArray<[string, 
     ];
 }
 
-function createLookupsForLogical(typeKind: TypeKind): ReadonlyArray<[string, TypeKind]> {
+function createLookupsForLogical(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [binOpExpressionLookupKey(typeKind, Ast.LogicalOperatorKind.And, typeKind), typeKind],
         [binOpExpressionLookupKey(typeKind, Ast.LogicalOperatorKind.Or, typeKind), typeKind],
@@ -197,12 +265,40 @@ function createLookupsForLogical(typeKind: TypeKind): ReadonlyArray<[string, Typ
 }
 
 function createLookupsForClockKind(
-    typeKind: TypeKind.Date | TypeKind.DateTime | TypeKind.DateTimeZone | TypeKind.Time,
-): ReadonlyArray<[string, TypeKind]> {
+    typeKind: Type.TypeKind.Date | Type.TypeKind.DateTime | Type.TypeKind.DateTimeZone | Type.TypeKind.Time,
+): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, TypeKind.Duration), typeKind],
-        [binOpExpressionLookupKey(TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, TypeKind.Duration), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, typeKind), TypeKind.Duration],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration), typeKind],
+        [binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, Type.TypeKind.Duration), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, typeKind), Type.TypeKind.Duration],
     ];
+}
+
+function evaluateBinOpExpressionForCustomType(
+    leftType: Type.TTableType | Type.TRecordType,
+    rightType: Type.TTableType | Type.TRecordType,
+): Type.TTableType | Type.TRecordType {
+    if (leftType.kind !== rightType.kind) {
+        const details: {} = {
+            leftTypeKind: leftType.kind,
+            rightTypeKind: rightType.kind,
+        };
+        throw new CommonError.InvariantError("left and right should only be either two records or two tables", details);
+    } else if (!leftType.isCustom && !rightType.isCustom) {
+        return {
+            kind: leftType.kind,
+            isCustom: false,
+        };
+    }
+
+    throw new Error();
+}
+
+function isCustomType(pqType: Type.TType): pqType is Type.TRecordType | Type.TTableType {
+    return isCustomTypeKind(pqType.kind);
+}
+
+function isCustomTypeKind(typeKind: Type.TypeKind): typeKind is Type.TypeKind.Record | Type.TypeKind.Table {
+    return typeKind === Type.TypeKind.Record || typeKind === Type.TypeKind.Table;
 }
