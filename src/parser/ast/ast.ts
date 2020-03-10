@@ -350,7 +350,7 @@ export interface LiteralExpression extends INode {
     readonly kind: NodeKind.LiteralExpression;
     readonly isLeaf: true;
     readonly literal: string;
-    readonly literalKind: LiteralKind;
+    readonly literalKind: Exclude<LiteralKind, LiteralKind.Record>;
 }
 
 // -----------------------------------------------------

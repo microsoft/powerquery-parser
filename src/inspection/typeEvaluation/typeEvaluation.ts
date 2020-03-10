@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type, TypeUtils } from ".";
-import { CommonError } from "../../common";
+import { CommonError, isNever } from "../../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 
 type EvaluationCache = Map<number, Type.TType>;
@@ -19,12 +19,26 @@ export function evaluate(
 
     let result: Type.TType;
     switch (xorNode.node.kind) {
-        case Ast.NodeKind.LiteralExpression:
-            result =
-                xorNode.kind === XorNodeKind.Ast
-                    ? TypeUtils.extendedTypeKindFrom((xorNode.node as Ast.LiteralExpression).literalKind)
-                    : Type.TypeKind.Unknown;
+        case Ast.NodeKind.LiteralExpression: {
+            switch (xorNode.kind) {
+                case XorNodeKind.Ast:
+                    // We already checked it's a Ast Literal Expression.
+                    const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
+                    const typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind> = TypeUtils.extendedTypeKindFrom(
+                        literalKind,
+                    );
+                    result = genericFactory(typeKind);
+                    break;
+
+                case XorNodeKind.Context:
+                    result = unknownFactory();
+                    break;
+
+                default:
+                    throw isNever(xorNode);
+            }
             break;
+        }
 
         case Ast.NodeKind.ArithmeticExpression:
         case Ast.NodeKind.EqualityExpression:
@@ -39,6 +53,10 @@ export function evaluate(
 
     cache.set(xorNode.node.id, result);
     return result;
+}
+
+function genericFactory(typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind>): Type.TType {
+    return { kind: typeKind };
 }
 
 function unknownFactory(): Type.TType {

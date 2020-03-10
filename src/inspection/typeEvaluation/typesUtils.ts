@@ -5,7 +5,9 @@ import { Type } from ".";
 import { isNever } from "../../common";
 import { Ast } from "../../parser";
 
-export function extendedTypeKindFrom(literalKind: Ast.LiteralKind): Type.TypeKind {
+export function extendedTypeKindFrom(
+    literalKind: Exclude<Ast.LiteralKind, Ast.LiteralKind.Record>,
+): Exclude<Type.TypeKind, Type.TCustomTypeKind> {
     switch (literalKind) {
         case Ast.LiteralKind.List:
             return Type.TypeKind.List;
@@ -19,10 +21,7 @@ export function extendedTypeKindFrom(literalKind: Ast.LiteralKind): Type.TypeKin
         case Ast.LiteralKind.Numeric:
             return Type.TypeKind.Numeric;
 
-        case Ast.LiteralKind.Record:
-            return Type.TypeKind.Record;
-
-        case Ast.LiteralKind.Str:
+        case Ast.LiteralKind.Text:
             return Type.TypeKind.Text;
 
         default:
