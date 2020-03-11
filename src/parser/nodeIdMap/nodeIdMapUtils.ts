@@ -542,6 +542,19 @@ export function isTFieldAccessExpression(xorNode: TXorNode): boolean {
     return xorNode.node.kind === Ast.NodeKind.FieldSelector || xorNode.node.kind === Ast.NodeKind.FieldProjection;
 }
 
+export function testAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): undefined | CommonError.InvariantError {
+    if (xorNode.node.kind !== expected) {
+        const details: {} = {
+            xorNodeId: xorNode.node.id,
+            expectedNodeKind: expected,
+            actualNodeKind: xorNode.node.kind,
+        };
+        return new CommonError.InvariantError(`${testAstNodeKind.name}: incorrect Ast.NodeKind`, details);
+    } else {
+        return undefined;
+    }
+}
+
 export function expectAncestry(nodeIdMapCollection: Collection, rootId: number): ReadonlyArray<TXorNode> {
     const ancestryIds: number[] = [rootId];
 

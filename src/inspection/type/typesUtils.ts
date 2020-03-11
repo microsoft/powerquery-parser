@@ -98,7 +98,7 @@ export function simplifyNullablePrimitiveType(node: Ast.AsNullablePrimitiveType)
     }
 
     return {
-        pqType: typeKindFromPrimitiveTypeConstantKind(primitiveTypeConstantKind),
+        typeKind: typeKindFromPrimitiveTypeConstantKind(primitiveTypeConstantKind),
         isNullable,
     };
 }

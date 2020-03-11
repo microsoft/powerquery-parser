@@ -85,6 +85,6 @@ export interface FunctionParameter {
 }
 
 export interface SimplifiedNullablePrimitiveType {
-    readonly pqType: TypeKind;
+    readonly typeKind: TypeKind;
     readonly isNullable: boolean;
 }

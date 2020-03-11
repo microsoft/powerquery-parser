@@ -1,12 +1,15 @@
-import { CommonError, isNever } from "../common";
-import { isDefined } from "../common/typeUtils";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
-import { Type, TypeUtils } from "./type";
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+import { Type, TypeUtils } from "..";
+import { CommonError, isNever } from "../../../common";
+import { isDefined } from "../../../common/typeUtils";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
 
 export interface FunctionExpression {
     readonly parameters: ReadonlyArray<FunctionParameter>;
-    readonly isReturnNullale: boolean;
-    readonly maybeReturnType: undefined | Ast.AsNullablePrimitiveType;
+    readonly isReturnNullable: boolean;
+    readonly returnType: Type.TypeKind;
 }
 
 export interface FunctionParameter {
@@ -16,13 +19,19 @@ export interface FunctionParameter {
     readonly maybeType: undefined | Type.TypeKind;
 }
 
-export function examineFunctionExpression(nodeIdMapCollection: NodeIdMap.Collection, fnExpr: TXorNode): void {
-    if (fnExpr.node.kind !== Ast.NodeKind.FunctionExpression) {
-        throw expectedNodeKindError(fnExpr, Ast.NodeKind.FunctionExpression);
+export function inspectFunctionExpression(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    fnExpr: TXorNode,
+): FunctionExpression {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        fnExpr,
+        Ast.NodeKind.FunctionExpression,
+    );
+    if (maybeErr) {
+        throw maybeErr;
     }
 
     const examinedParameters: FunctionParameter[] = [];
-
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
@@ -39,31 +48,30 @@ export function examineFunctionExpression(nodeIdMapCollection: NodeIdMap.Collect
         [Ast.NodeKind.AsNullablePrimitiveType],
     );
 
-    // if (maybeReturnType !== undefined) {
+    let isReturnNullable: boolean;
+    let returnType: Type.TypeKind;
+    if (maybeReturnType !== undefined) {
+        const simplified: Type.SimplifiedNullablePrimitiveType = TypeUtils.simplifyNullablePrimitiveType(
+            maybeReturnType as Ast.AsNullablePrimitiveType,
+        );
+        isReturnNullable = simplified.isNullable;
+        returnType = simplified.typeKind;
+    } else {
+        isReturnNullable = true;
+        returnType = Type.TypeKind.Any;
+    }
 
-    // }
-    // else {
-
-    // }
-}
-
-export function expectedNodeKindError(xorNode: TXorNode, expected: Ast.NodeKind): CommonError.InvariantError {
-    const details: {} = {
-        xorNodeId: xorNode.node.id,
-        expectedNodeKind: expected,
-        actualNodeKind: xorNode.node.kind,
+    return {
+        parameters: examinedParameters,
+        isReturnNullable,
+        returnType,
     };
-    return new CommonError.InvariantError(`${expectedNodeKindError}`, details);
 }
 
 function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    if (fnExpr.node.kind !== Ast.NodeKind.FunctionExpression) {
-        throw expectedNodeKindError(fnExpr, Ast.NodeKind.FunctionExpression);
-    }
-
     let parameters: ReadonlyArray<TXorNode>;
     if (fnExpr.kind === XorNodeKind.Context) {
         const maybeParameterList:
@@ -138,7 +146,7 @@ function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>):
             maybeParameterType,
         );
         isNullable = simplified.isNullable;
-        maybeType = simplified.pqType;
+        maybeType = simplified.typeKind;
     } else {
         isNullable = true;
         maybeType = undefined;
@@ -190,7 +198,7 @@ function examineContextParameter(
         const parameterType: Ast.AsNullablePrimitiveType = maybeParameterType as Ast.AsNullablePrimitiveType;
         const simplified: Type.SimplifiedNullablePrimitiveType = TypeUtils.simplifyNullablePrimitiveType(parameterType);
         isNullable = simplified.isNullable;
-        maybeType = simplified.pqType;
+        maybeType = simplified.typeKind;
     } else {
         isNullable = true;
         maybeType = undefined;
