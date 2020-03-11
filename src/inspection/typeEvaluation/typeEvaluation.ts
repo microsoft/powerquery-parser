@@ -56,9 +56,16 @@ export function evaluate(
             result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
             break;
 
-        // Handled by FunctionExpression
         case Ast.NodeKind.Constant:
             result = evaluateConstant(xorNode);
+            break;
+
+        case Ast.NodeKind.Csv:
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
+            break;
+
+        case Ast.NodeKind.EachExpression:
+            result = genericEachFactory();
             break;
 
         default:
@@ -73,10 +80,24 @@ function genericFactory(typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind>):
     return { kind: typeKind };
 }
 
-function genericCustomFactory(typeKind: Type.TCustomTypeKind): Type.TType {
+function genericRecordFactory(): Type.RecordType {
     return {
-        kind: typeKind,
+        kind: Type.TypeKind.Record,
         isCustom: false,
+    };
+}
+
+function genericTableFactory(): Type.TableType {
+    return {
+        kind: Type.TypeKind.Table,
+        isCustom: false,
+    };
+}
+
+function genericEachFactory(): Type.TFunctionType {
+    return {
+        kind: Type.TypeKind.Function,
+        isEachExpression: true,
     };
 }
 
@@ -138,8 +159,8 @@ function evaluateBinOpExpression(
     }
     const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
 
-    if (isCustomTypeKind(resultTypeKind)) {
-        if (!isCustomType(leftType) || !isCustomType(rightType)) {
+    if (isRecordKindOrTableKind(resultTypeKind)) {
+        if (!isRecordOrTable(leftType) || !isRecordOrTable(rightType)) {
             const details: {} = {
                 resultTypeKind,
                 leftTypeKind: leftType.kind,
@@ -161,8 +182,10 @@ function evaluateBinOpExpression(
         } else {
             return evaluateBinOpExpressionForCustomType(leftType, rightType);
         }
+    } else if (resultTypeKind === Type.TypeKind.Function) {
+        throw new CommonError.InvariantError(`${evaluateBinOpExpression}: this should never be reached`);
     } else {
-        return { kind: resultTypeKind };
+        return genericFactory(resultTypeKind);
     }
 }
 
@@ -199,7 +222,7 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
             case Ast.PrimitiveTypeConstantKind.Duration:
                 return genericFactory(Type.TypeKind.Duration);
             case Ast.PrimitiveTypeConstantKind.Function:
-                return genericFactory(Type.TypeKind.Function);
+                return genericEachFactory();
             case Ast.PrimitiveTypeConstantKind.List:
                 return genericFactory(Type.TypeKind.List);
             case Ast.PrimitiveTypeConstantKind.Logical:
@@ -211,9 +234,9 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
             case Ast.PrimitiveTypeConstantKind.Number:
                 return genericFactory(Type.TypeKind.Number);
             case Ast.PrimitiveTypeConstantKind.Record:
-                return genericCustomFactory(Type.TypeKind.Record);
+                return genericRecordFactory();
             case Ast.PrimitiveTypeConstantKind.Table:
-                return genericCustomFactory(Type.TypeKind.Table);
+                return genericTableFactory();
             case Ast.PrimitiveTypeConstantKind.Text:
                 return genericFactory(Type.TypeKind.Text);
             case Ast.PrimitiveTypeConstantKind.Time:
@@ -410,10 +433,18 @@ function evaluateBinOpExpressionForCustomType(
     throw new Error();
 }
 
-function isCustomType(pqType: Type.TType): pqType is Type.TRecordType | Type.TTableType {
+function isCustomType(pqType: Type.TType): pqType is Type.TCustomType {
     return isCustomTypeKind(pqType.kind);
 }
 
 function isCustomTypeKind(typeKind: Type.TypeKind): typeKind is Type.TypeKind.Record | Type.TypeKind.Table {
+    return typeKind === Type.TypeKind.Record || typeKind === Type.TypeKind.Table || typeKind === Type.TypeKind.Function;
+}
+
+function isRecordOrTable(pqType: Type.TType): pqType is Type.TRecordType | Type.TTableType {
+    return isRecordKindOrTableKind(pqType.kind);
+}
+
+function isRecordKindOrTableKind(typeKind: Type.TypeKind): typeKind is Type.TypeKind.Record | Type.TypeKind.Table {
     return typeKind === Type.TypeKind.Record || typeKind === Type.TypeKind.Table;
 }
