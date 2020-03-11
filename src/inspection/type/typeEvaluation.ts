@@ -24,7 +24,7 @@ export function evaluate(
                 case XorNodeKind.Ast:
                     // We already checked it's a Ast Literal Expression.
                     const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
-                    const typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind> = TypeUtils.extendedTypeKindFrom(
+                    const typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind> = TypeUtils.typeKindFromLiteralKind(
                         literalKind,
                     );
                     result = genericFactory(typeKind);
@@ -64,9 +64,9 @@ export function evaluate(
             result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
             break;
 
-        case Ast.NodeKind.EachExpression:
-            result = genericEachFactory();
-            break;
+        // // TODO
+        // case Ast.NodeKind.EachExpression:
+        //     break;
 
         default:
             result = unknownFactory();
@@ -91,13 +91,6 @@ function genericTableFactory(): Type.TableType {
     return {
         kind: Type.TypeKind.Table,
         isCustom: false,
-    };
-}
-
-function genericEachFactory(): Type.TFunctionType {
-    return {
-        kind: Type.TypeKind.Function,
-        isEachExpression: true,
     };
 }
 
@@ -221,8 +214,10 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
                 return genericFactory(Type.TypeKind.DateTimeZone);
             case Ast.PrimitiveTypeConstantKind.Duration:
                 return genericFactory(Type.TypeKind.Duration);
-            case Ast.PrimitiveTypeConstantKind.Function:
-                return genericEachFactory();
+
+            // case Ast.PrimitiveTypeConstantKind.Function:
+            //     return genericEachFactory();
+
             case Ast.PrimitiveTypeConstantKind.List:
                 return genericFactory(Type.TypeKind.List);
             case Ast.PrimitiveTypeConstantKind.Logical:

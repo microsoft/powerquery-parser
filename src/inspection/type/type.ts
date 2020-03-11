@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Ast } from "../../parser";
+
 export type TType = IType | TCustomType;
 
-export type TCustomType = TFunctionType | TRecordType | TTableType;
-export type TCustomTypeKind = TypeKind.Function | TypeKind.Record | TypeKind.Table;
+export type TCustomType = TRecordType | TTableType;
+export type TCustomTypeKind = TypeKind.Record | TypeKind.Table;
 
-export type TFunctionType = FunctionType | EachFunctionType;
 export type TRecordType = RecordType | CustomRecordType;
 export type TTableType = TableType | CustomTableType;
 
@@ -70,15 +71,20 @@ export interface CustomTableType extends ITable {
     readonly fields: Map<string, undefined | TypeKind>;
 }
 
-export interface IFunctionType {
+export interface FunctionExpressionType {
     readonly kind: TypeKind.Function;
-    readonly isEachExpression: boolean;
+    readonly parameters: ReadonlyArray<FunctionParameter>;
+    readonly maybeReturnType: undefined | TType;
 }
 
-export interface EachFunctionType extends IFunctionType {
-    readonly isEachExpression: true;
+export interface FunctionParameter {
+    readonly name: Ast.Identifier;
+    readonly isOptional: boolean;
+    readonly isNullable: boolean;
+    readonly maybeType: Ast.TConstantKind | undefined;
 }
 
-export interface FunctionType extends IFunctionType {
-    readonly isEachExpression: false;
+export interface SimplifiedNullablePrimitiveType {
+    readonly pqType: TypeKind;
+    readonly isNullable: boolean;
 }
