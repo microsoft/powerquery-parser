@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 export type TType = PrimitiveType | TExtendedType;
-export type TExtendedType = ExtendedRecord | ExtendedTable;
-export type TExtendedTypeKind = TypeKind.Record | TypeKind.Table;
+export type TExtendedType = AnyUnion | DefinedRecord | DefinedTable;
+export type TExtendedTypeKind = TypeKind.Any | TypeKind.Record | TypeKind.Table;
 
 export const enum TypeKind {
     Action = "Action",
@@ -29,6 +29,7 @@ export const enum TypeKind {
 }
 
 export const enum ExtendedTypeKind {
+    AnyUnion = "AnyUnion",
     CustomRecord = "CustomRecord",
     CustomTable = "CustomTable",
 }
@@ -40,27 +41,30 @@ export interface IType {
 }
 
 export interface PrimitiveType extends IType {
-    readonly kind: TypeKind;
     readonly maybeExtendedKind: undefined;
-    readonly isNullable: boolean;
 }
 
 export interface IExtendedType extends IType {
     readonly kind: TExtendedTypeKind;
     readonly maybeExtendedKind: ExtendedTypeKind;
-    readonly isNullable: boolean;
 }
 
-export interface ExtendedRecord extends IExtendedType {
+export interface AnyUnion extends IExtendedType {
+    readonly kind: TypeKind.Any;
+    readonly maybeExtendedKind: ExtendedTypeKind.AnyUnion;
+    readonly unionedTypePairs: ReadonlyArray<TType>;
+}
+
+export interface DefinedRecord extends IExtendedType {
     readonly kind: TypeKind.Record;
     readonly maybeExtendedKind: ExtendedTypeKind.CustomRecord;
-    readonly fields: Map<string, undefined | TypeKind>;
+    readonly fields: Map<string, TypeKind>;
 }
 
-export interface ExtendedTable extends IExtendedType {
+export interface DefinedTable extends IExtendedType {
     readonly kind: TypeKind.Record;
     readonly maybeExtendedKind: ExtendedTypeKind.CustomTable;
-    readonly fields: Map<string, undefined | TypeKind>;
+    readonly fields: Map<string, TypeKind>;
 }
 
 // export interface IExtendedType {
@@ -152,7 +156,7 @@ export interface ExtendedTable extends IExtendedType {
 //     readonly maybeType: Ast.TConstantKind | undefined;
 // }
 
-// export interface SimplifiedNullablePrimitiveType {
-//     readonly typeKind: TypeKind;
-//     readonly isNullable: boolean;
-// }
+export interface SimplifiedNullablePrimitiveType {
+    readonly typeKind: TypeKind;
+    readonly isNullable: boolean;
+}

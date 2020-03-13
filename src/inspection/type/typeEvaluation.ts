@@ -4,7 +4,6 @@
 import { CommonError, isNever } from "../../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { Type, TypeUtils } from "../../type";
-import { stringify } from "querystring";
 
 export type EvaluationCache = Map<number, Type.TType>;
 
@@ -28,7 +27,7 @@ export function evaluate(
                     const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
                         literalKind,
                     );
-                    result = genericFactory(typeKind);
+                    result = genericFactory(typeKind, false);
                     break;
 
                 case XorNodeKind.Context:
@@ -66,7 +65,7 @@ export function evaluate(
             break;
 
         case Ast.NodeKind.EachExpression:
-            result = genericEachFactory(evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1));
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
             break;
 
         default:
@@ -77,11 +76,20 @@ export function evaluate(
     return result;
 }
 
-function genericFactory(typeKind: Type.TypeKind): Type.TType {
+function genericFactory(typeKind: Type.TypeKind, isNullable: boolean): Type.TType {
     return {
         kind: typeKind,
         maybeExtendedKind: undefined,
-        isNullable: false,
+        isNullable,
+    };
+}
+
+function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.AnyUnion {
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+        isNullable: unionedTypePairs.find((ttype: Type.TType) => ttype.isNullable === true) !== undefined,
+        unionedTypePairs,
     };
 }
 
@@ -111,20 +119,21 @@ function genericFactory(typeKind: Type.TypeKind): Type.TType {
 //     };
 // }
 
-function unknownFactory(isNullable: boolean): Type.TType {
+function unknownFactory(): Type.TType {
     return {
         kind: Type.TypeKind.Unknown,
         maybeExtendedKind: undefined,
-        isNullable,
+        isNullable: false,
     };
 }
 
-// function noneFactory(isNullable: boolean): Type.TType {
-//     return {
-//         kind: Type.TypeKind.None,
-//         isNullable,
-//     };
-// }
+function noneFactory(): Type.TType {
+    return {
+        kind: Type.TypeKind.None,
+        maybeExtendedKind: undefined,
+        isNullable: false,
+    };
+}
 
 function evaluateByChildAttributeIndex(
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -164,96 +173,63 @@ function evaluateBinOpExpression(
             : (children[1].node as Ast.IConstant<Ast.TBinOpExpressionOperator>).constantKind;
     const maybeRight: undefined | TXorNode = children[2];
 
-    // '1'
-    if (maybeLeft !== undefined) {
-        if (maybeOperatorKind === undefined) {
-            return evaluate(nodeIdMapCollection, maybeLeft, cache);
-        } else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
-            const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, cache);
-            const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
-
-            const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
-            const maybeAllowedTypeKinds: undefined | ReadonlyArray<Type.TypeKind> = BinOpExpressionPartialLookup.get(
-                partialLookupKey,
-            );
-            if (maybeAllowedTypeKinds === undefined) {
-                return unknownFactory(true);
-            } else if (maybeAllowedTypeKinds.length === 1) {
-                return;
-            }
-        }
-    } else {
-        return unknownFactory(true);
-    }
-
-    // '1 +'
-    if (children.length === 3 && children[2].kind === XorNodeKind.Context) {
-        const leftType: Type.TType = evaluate(nodeIdMapCollection, children[0], cache);
-        const operatorKind: Ast.TBinOpExpressionOperator = (children[1].node as Ast.IConstant<
-            Ast.TBinOpExpressionOperator
-        >).constantKind;
-    }
-
-    // '1'
-    if (children.length === 1) {
-        return evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 0);
-    }
-    // '1 +'
-    else if (children.length === 2) {
-    }
-
-    if (children.length < 3) {
+    // ''
+    if (maybeLeft === undefined) {
         return unknownFactory();
     }
-
-    const left: TXorNode = children[0];
-    const operatorKind: Ast.TBinOpExpressionOperator = (children[1].node as Ast.IConstant<Ast.TBinOpExpressionOperator>)
-        .constantKind;
-    const right: TXorNode = children[2];
-
-    const leftType: Type.TType = evaluate(nodeIdMapCollection, left, cache);
-    const rightType: Type.TType = evaluate(nodeIdMapCollection, right, cache);
-
-    const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
-    const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);
-    if (maybeResultTypeKind === undefined) {
-        return noneFactory();
+    // '1'
+    else if (maybeOperatorKind === undefined) {
+        return evaluate(nodeIdMapCollection, maybeLeft, cache);
     }
-    const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
+    // '1 +'
+    else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
+        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, cache);
+        const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
 
-    if (isRecordKindOrTableKind(resultTypeKind)) {
-        if (!isRecordOrTable(leftType) || !isRecordOrTable(rightType)) {
-            const details: {} = {
-                resultTypeKind,
-                leftTypeKind: leftType.kind,
-                rightTypeKind: rightType.kind,
-            };
-            throw new CommonError.InvariantError(
-                `${evaluateBinOpExpression.name}: resultTypeKind should only be a custom TypeKind if both left and right are custom TypeKind`,
-                details,
-            );
-        } else if (leftType.kind !== rightType.kind) {
-            const details: {} = {
-                leftTypeKind: leftType.kind,
-                rightTypeKind: rightType.kind,
-            };
-            throw new CommonError.InvariantError(
-                `${evaluateBinOpExpression.name}: left and right should only be either two records or two tables`,
-                details,
-            );
+        const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
+        const maybeAllowedTypeKinds: undefined | ReadonlyArray<Type.TypeKind> = BinOpExpressionPartialLookup.get(
+            partialLookupKey,
+        );
+        if (maybeAllowedTypeKinds === undefined) {
+            return noneFactory();
+        } else if (maybeAllowedTypeKinds.length === 1) {
+            return genericFactory(maybeAllowedTypeKinds[0], leftType.isNullable);
         } else {
-            return evaluateBinOpExpressionForCustomType(leftType, rightType);
+            const unionedTypePairs: ReadonlyArray<Type.TType> = maybeAllowedTypeKinds.map((kind: Type.TypeKind) => {
+                return {
+                    kind,
+                    maybeExtendedKind: undefined,
+                    isNullable: true,
+                };
+            });
+            return anyUnionFactory(unionedTypePairs);
         }
-    } else if (resultTypeKind === Type.TypeKind.Function) {
-        throw new CommonError.InvariantError(`${evaluateBinOpExpression}: this should never be reached`);
     } else {
-        return genericFactory(resultTypeKind);
+        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, cache);
+        const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
+        const rightType: Type.TType = evaluate(nodeIdMapCollection, maybeRight, cache);
+
+        const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
+        const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);
+        if (maybeResultTypeKind === undefined) {
+            return noneFactory();
+        }
+        const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
+
+        if (
+            operatorKind === Ast.ArithmeticOperatorKind.And &&
+            (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
+        ) {
+            return evaluateTableOrRecordUnion(leftType, rightType);
+        } else {
+            return genericFactory(resultTypeKind, leftType.isNullable || rightType.isNullable);
+        }
     }
 }
 
 function evaluateConstant(xorNode: TXorNode): Type.TType {
     if (xorNode.kind === XorNodeKind.Context) {
-        return unknownFactory(true);
+        return unknownFactory();
     } else if (xorNode.node.kind !== Ast.NodeKind.Constant) {
         const details: {} = {
             nodeId: xorNode.node.id,
@@ -268,46 +244,46 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
 
         switch (constant.constantKind) {
             case Ast.PrimitiveTypeConstantKind.Action:
-                return genericFactory(Type.TypeKind.Action);
+                return genericFactory(Type.TypeKind.Action, true);
             case Ast.PrimitiveTypeConstantKind.Any:
-                return genericFactory(Type.TypeKind.Any);
+                return genericFactory(Type.TypeKind.Any, true);
             case Ast.PrimitiveTypeConstantKind.AnyNonNull:
-                return genericFactory(Type.TypeKind.AnyNonNull);
+                return genericFactory(Type.TypeKind.AnyNonNull, true);
             case Ast.PrimitiveTypeConstantKind.Binary:
-                return genericFactory(Type.TypeKind.Binary);
+                return genericFactory(Type.TypeKind.Binary, true);
             case Ast.PrimitiveTypeConstantKind.Date:
-                return genericFactory(Type.TypeKind.Date);
+                return genericFactory(Type.TypeKind.Date, true);
             case Ast.PrimitiveTypeConstantKind.DateTime:
-                return genericFactory(Type.TypeKind.DateTime);
+                return genericFactory(Type.TypeKind.DateTime, true);
             case Ast.PrimitiveTypeConstantKind.DateTimeZone:
-                return genericFactory(Type.TypeKind.DateTimeZone);
+                return genericFactory(Type.TypeKind.DateTimeZone, true);
             case Ast.PrimitiveTypeConstantKind.Duration:
-                return genericFactory(Type.TypeKind.Duration);
+                return genericFactory(Type.TypeKind.Duration, true);
             case Ast.PrimitiveTypeConstantKind.Function:
-                return genericFactory(Type.TypeKind.Function);
+                return genericFactory(Type.TypeKind.Function, true);
             case Ast.PrimitiveTypeConstantKind.List:
-                return genericFactory(Type.TypeKind.List);
+                return genericFactory(Type.TypeKind.List, true);
             case Ast.PrimitiveTypeConstantKind.Logical:
-                return genericFactory(Type.TypeKind.Logical);
+                return genericFactory(Type.TypeKind.Logical, true);
             case Ast.PrimitiveTypeConstantKind.None:
-                return genericFactory(Type.TypeKind.None);
+                return genericFactory(Type.TypeKind.None, true);
             case Ast.PrimitiveTypeConstantKind.Null:
-                return genericFactory(Type.TypeKind.Null);
+                return genericFactory(Type.TypeKind.Null, true);
             case Ast.PrimitiveTypeConstantKind.Number:
-                return genericFactory(Type.TypeKind.Number);
+                return genericFactory(Type.TypeKind.Number, true);
             case Ast.PrimitiveTypeConstantKind.Record:
-                return genericFactory(Type.TypeKind.Record);
+                return genericFactory(Type.TypeKind.Record, true);
             case Ast.PrimitiveTypeConstantKind.Table:
-                return genericFactory(Type.TypeKind.Table);
+                return genericFactory(Type.TypeKind.Table, true);
             case Ast.PrimitiveTypeConstantKind.Text:
-                return genericFactory(Type.TypeKind.Text);
+                return genericFactory(Type.TypeKind.Text, true);
             case Ast.PrimitiveTypeConstantKind.Time:
-                return genericFactory(Type.TypeKind.Time);
+                return genericFactory(Type.TypeKind.Time, true);
             case Ast.PrimitiveTypeConstantKind.Type:
-                return genericFactory(Type.TypeKind.Type);
+                return genericFactory(Type.TypeKind.Type, true);
 
             default:
-                return unknownFactory(true);
+                return unknownFactory();
         }
     }
 }
@@ -495,38 +471,29 @@ function createLookupsForClockKind(
     ];
 }
 
-// function evaluateBinOpExpressionForCustomType(
-//     leftType: Type.TTableType | Type.TRecordType,
-//     rightType: Type.TTableType | Type.TRecordType,
-// ): Type.TTableType | Type.TRecordType {
-//     if (leftType.kind !== rightType.kind) {
-//         const details: {} = {
-//             leftTypeKind: leftType.kind,
-//             rightTypeKind: rightType.kind,
-//         };
-//         throw new CommonError.InvariantError("left and right should only be either two records or two tables", details);
-//     } else if (!leftType.isCustom && !rightType.isCustom) {
-//         return {
-//             kind: leftType.kind,
-//             isCustom: false,
-//         };
-//     }
-
-//     throw new Error();
-// }
-
-function isCustomType(pqType: Type.TType): pqType is Type.TExtendedType {
-    return isCustomTypeKind(pqType.kind);
-}
-
-function isCustomTypeKind(typeKind: Type.TypeKind): typeKind is Type.TypeKind.Record | Type.TypeKind.Table {
-    return typeKind === Type.TypeKind.Record || typeKind === Type.TypeKind.Table || typeKind === Type.TypeKind.Function;
-}
-
-function isRecordOrTable(pqType: Type.TType): pqType is Type.TRecordType | Type.TTableType {
-    return isRecordKindOrTableKind(pqType.kind);
-}
-
-function isRecordKindOrTableKind(typeKind: Type.TypeKind): typeKind is Type.TypeKind.Record | Type.TypeKind.Table {
-    return typeKind === Type.TypeKind.Record || typeKind === Type.TypeKind.Table;
+function evaluateTableOrRecordUnion(leftType: Type.TType, rightType: Type.TType): Type.TType {
+    if (leftType.kind !== rightType.kind) {
+        const details: {} = {
+            leftTypeKind: leftType.kind,
+            rightTypeKind: rightType.kind,
+        };
+        throw new CommonError.InvariantError(
+            `evaluateTableOrRecordUnion: expected leftType.kind === rightType.kind`,
+            details,
+        );
+    }
+    // '[] & []'
+    else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
+        return genericFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
+    }
+    // '[key=value] & []'
+    else if (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind === undefined) {
+        return leftType;
+    }
+    // '[] & [key=value]'
+    else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind !== undefined) {
+        return rightType;
+    } else {
+        throw new Error("TODO");
+    }
 }
