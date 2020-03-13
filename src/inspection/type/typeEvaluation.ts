@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type, TypeUtils } from ".";
 import { CommonError, isNever } from "../../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { Type, TypeUtils } from "../../type";
+import { stringify } from "querystring";
 
-type EvaluationCache = Map<number, Type.TType>;
+export type EvaluationCache = Map<number, Type.TType>;
 
 export function evaluate(
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -24,7 +25,7 @@ export function evaluate(
                 case XorNodeKind.Ast:
                     // We already checked it's a Ast Literal Expression.
                     const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
-                    const typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind> = TypeUtils.typeKindFromLiteralKind(
+                    const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
                         literalKind,
                     );
                     result = genericFactory(typeKind);
@@ -64,9 +65,9 @@ export function evaluate(
             result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
             break;
 
-        // // TODO
-        // case Ast.NodeKind.EachExpression:
-        //     break;
+        case Ast.NodeKind.EachExpression:
+            result = genericEachFactory(evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1));
+            break;
 
         default:
             result = unknownFactory();
@@ -76,30 +77,51 @@ export function evaluate(
     return result;
 }
 
-function genericFactory(typeKind: Exclude<Type.TypeKind, Type.TCustomTypeKind>): Type.TType {
-    return { kind: typeKind };
+function genericFactory(typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind>): Type.TType {
+    return {
+        kind: typeKind,
+        isNullable: false,
+    };
 }
 
-function genericRecordFactory(): Type.RecordType {
+function genericEachFactory(subexpression: Type.TType): Type.EachFunctionExpressionType {
+    return {
+        kind: Type.TypeKind.Function,
+        isEach: true,
+        isNullable: false,
+        isReturnNullable: subexpression.isNullable,
+        returnType: subexpression.kind,
+    };
+}
+
+function genericRecordFactory(isNullable: boolean): Type.RecordType {
     return {
         kind: Type.TypeKind.Record,
         isCustom: false,
+        isNullable,
     };
 }
 
-function genericTableFactory(): Type.TableType {
+function genericTableFactory(isNullable: boolean): Type.TableType {
     return {
         kind: Type.TypeKind.Table,
         isCustom: false,
+        isNullable,
     };
 }
 
-function unknownFactory(): Type.TType {
-    return { kind: Type.TypeKind.Unknown };
+function unknownFactory(isNullable: boolean): Type.TType {
+    return {
+        kind: Type.TypeKind.Unknown,
+        isNullable,
+    };
 }
 
-function noneFactory(): Type.TType {
-    return { kind: Type.TypeKind.None };
+function noneFactory(isNullable: boolean): Type.TType {
+    return {
+        kind: Type.TypeKind.None,
+        isNullable,
+    };
 }
 
 function evaluateByChildAttributeIndex(
@@ -132,6 +154,51 @@ function evaluateBinOpExpression(
 
     const parentId: number = xorNode.node.id;
     const children: ReadonlyArray<TXorNode> = NodeIdMapUtils.expectXorChildren(nodeIdMapCollection, parentId);
+
+    const maybeLeft: undefined | TXorNode = children[0];
+    const maybeOperatorKind: undefined | Ast.TBinOpExpressionOperator =
+        children[1] === undefined || children[1].kind === XorNodeKind.Context
+            ? undefined
+            : (children[1].node as Ast.IConstant<Ast.TBinOpExpressionOperator>).constantKind;
+    const maybeRight: undefined | TXorNode = children[2];
+
+    // '1'
+    if (maybeLeft !== undefined) {
+        if (maybeOperatorKind === undefined) {
+            return evaluate(nodeIdMapCollection, maybeLeft, cache);
+        } else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
+            const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, cache);
+            const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
+
+            const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
+            const maybeAllowedTypeKinds: undefined | ReadonlyArray<Type.TypeKind> = BinOpExpressionPartialLookup.get(
+                partialLookupKey,
+            );
+            if (maybeAllowedTypeKinds === undefined) {
+                return unknownFactory(true);
+            } else if (maybeAllowedTypeKinds.length === 1) {
+                return;
+            }
+        }
+    } else {
+        return unknownFactory(true);
+    }
+
+    // '1 +'
+    if (children.length === 3 && children[2].kind === XorNodeKind.Context) {
+        const leftType: Type.TType = evaluate(nodeIdMapCollection, children[0], cache);
+        const operatorKind: Ast.TBinOpExpressionOperator = (children[1].node as Ast.IConstant<
+            Ast.TBinOpExpressionOperator
+        >).constantKind;
+    }
+
+    // '1'
+    if (children.length === 1) {
+        return evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 0);
+    }
+    // '1 +'
+    else if (children.length === 2) {
+    }
 
     if (children.length < 3) {
         return unknownFactory();
@@ -245,7 +312,7 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
     }
 }
 
-const BinOpExpressionLookup: Map<string, Type.TypeKind> = new Map([
+const BinOpExpressionLookup: ReadonlyMap<string, Type.TypeKind> = new Map([
     ...createLookupsForRelational(Type.TypeKind.Null),
     ...createLookupsForEquality(Type.TypeKind.Null),
 
@@ -345,12 +412,32 @@ const BinOpExpressionLookup: Map<string, Type.TypeKind> = new Map([
     ],
 ]);
 
+const binOpExpressionPartialLookup: Map<string, Type.TypeKind[]> = new Map();
+for (const key of BinOpExpressionLookup.keys()) {
+    const lastDeliminatorIndex: number = key.lastIndexOf(",");
+    const partialKey: string = key.slice(0, lastDeliminatorIndex);
+    const potentialNewValue: Type.TypeKind = key.slice(lastDeliminatorIndex + 1) as Type.TypeKind;
+    const values: Type.TypeKind[] = binOpExpressionPartialLookup.get(partialKey) || [];
+
+    if (values.indexOf(potentialNewValue) === -1) {
+        values.push(potentialNewValue);
+    }
+}
+const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeKind>> = binOpExpressionPartialLookup;
+
 const UnaryExpressionLookup: Map<string, Type.TypeKind> = new Map([
     [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Not, Type.TypeKind.Logical), Type.TypeKind.Logical],
 
     [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Negative, Type.TypeKind.Number), Type.TypeKind.Number],
     [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Positive, Type.TypeKind.Number), Type.TypeKind.Number],
 ]);
+
+function binOpExpressionPartialLookupKey(
+    leftTypeKind: Type.TypeKind,
+    operatorKind: Ast.TBinOpExpressionOperator,
+): string {
+    return `${leftTypeKind},${operatorKind}`;
+}
 
 function binOpExpressionLookupKey(
     leftTypeKind: Type.TypeKind,
@@ -428,7 +515,7 @@ function evaluateBinOpExpressionForCustomType(
     throw new Error();
 }
 
-function isCustomType(pqType: Type.TType): pqType is Type.TCustomType {
+function isCustomType(pqType: Type.TType): pqType is Type.TExtendedType {
     return isCustomTypeKind(pqType.kind);
 }
 

@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { isNever } from "../../common";
-import { Ast } from "../../parser";
+import { isNever } from "../common";
+import { Ast } from "../parser";
 
 export function typeKindFromLiteralKind(
     literalKind: Exclude<Ast.LiteralKind, Ast.LiteralKind.Record>,
-): Exclude<Type.TypeKind, Type.TCustomTypeKind> {
+): Exclude<Type.TypeKind, Type.TExtendedTypeKind> {
     switch (literalKind) {
         case Ast.LiteralKind.List:
             return Type.TypeKind.List;

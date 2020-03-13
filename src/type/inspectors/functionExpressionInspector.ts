@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Type, TypeUtils } from "..";
-import { CommonError, isNever } from "../../../common";
-import { isDefined } from "../../../common/typeUtils";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
+import { CommonError, isNever } from "../../common";
+import { isDefined } from "../../common/typeUtils";
+import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 
 export interface FunctionExpression {
     readonly parameters: ReadonlyArray<FunctionParameter>;

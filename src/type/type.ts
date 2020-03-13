@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../parser";
+import { Ast } from "../parser";
 
-export type TType = IType | TCustomType;
+export type TType = TFunctionExpression | IType | TExtendedType;
 
-export type TCustomType = TRecordType | TTableType;
-export type TCustomTypeKind = TypeKind.Record | TypeKind.Table;
+export type TExtendedType = TFunctionExpressionType | TRecordType | TTableType;
+export type TExtendedTypeKind = TypeKind.Record | TypeKind.Table;
 
+export type TFunctionExpressionType = EachFunctionExpressionType | FunctionExpressionType;
 export type TRecordType = RecordType | CustomRecordType;
 export type TTableType = TableType | CustomTableType;
 
@@ -35,11 +36,13 @@ export const enum TypeKind {
 }
 
 export interface IType {
-    readonly kind: Exclude<TypeKind, TCustomTypeKind>;
+    readonly kind: Exclude<TypeKind, TExtendedTypeKind>;
+    readonly isNullable: boolean;
 }
 
 export interface ICustomType {
-    readonly kind: TCustomTypeKind;
+    readonly kind: TExtendedTypeKind;
+    readonly isNullable: boolean;
     readonly isCustom: boolean;
 }
 
@@ -71,11 +74,26 @@ export interface CustomTableType extends ITable {
     readonly fields: Map<string, undefined | TypeKind>;
 }
 
-export interface FunctionExpressionType {
+export interface IFunctionExpression extends IType {
     readonly kind: TypeKind.Function;
-    readonly parameters: ReadonlyArray<FunctionParameter>;
-    readonly maybeReturnType: undefined | TType;
+    readonly isEach: boolean;
+    readonly isReturnNullable: boolean;
+    readonly returnType: TypeKind;
 }
+
+export interface EachFunctionExpressionType extends IFunctionExpression {
+    readonly isEach: true;
+    readonly returnType: TypeKind;
+}
+
+export interface FunctionExpressionType extends IFunctionExpression {
+    readonly isEach: false;
+    readonly parameters: ReadonlyArray<FunctionParameter>;
+}
+
+export type TFunctionExpression = EachFunctionExpressionType | FunctionExpressionType;
+
+// export type FunctionExpressionType = FunctionExpression & IType & { readonly kind: TypeKind.Function };
 
 export interface FunctionParameter {
     readonly name: Ast.Identifier;
