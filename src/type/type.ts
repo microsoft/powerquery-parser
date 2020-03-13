@@ -1,16 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../parser";
-
-export type TType = TFunctionExpression | IType | TExtendedType;
-
-export type TExtendedType = TFunctionExpressionType | TRecordType | TTableType;
+export type TType = PrimitiveType | TExtendedType;
+export type TExtendedType = ExtendedRecord | ExtendedTable;
 export type TExtendedTypeKind = TypeKind.Record | TypeKind.Table;
-
-export type TFunctionExpressionType = EachFunctionExpressionType | FunctionExpressionType;
-export type TRecordType = RecordType | CustomRecordType;
-export type TTableType = TableType | CustomTableType;
 
 export const enum TypeKind {
     Action = "Action",
@@ -35,74 +28,131 @@ export const enum TypeKind {
     Unknown = "Unknown",
 }
 
+export const enum ExtendedTypeKind {
+    CustomRecord = "CustomRecord",
+    CustomTable = "CustomTable",
+}
+
 export interface IType {
-    readonly kind: Exclude<TypeKind, TExtendedTypeKind>;
+    readonly kind: TypeKind;
+    readonly maybeExtendedKind: undefined | ExtendedTypeKind;
     readonly isNullable: boolean;
 }
 
-export interface ICustomType {
+export interface PrimitiveType extends IType {
+    readonly kind: TypeKind;
+    readonly maybeExtendedKind: undefined;
+    readonly isNullable: boolean;
+}
+
+export interface IExtendedType extends IType {
     readonly kind: TExtendedTypeKind;
+    readonly maybeExtendedKind: ExtendedTypeKind;
     readonly isNullable: boolean;
-    readonly isCustom: boolean;
 }
 
-export interface IRecord extends ICustomType {
+export interface ExtendedRecord extends IExtendedType {
     readonly kind: TypeKind.Record;
-    readonly isCustom: boolean;
-}
-
-export interface RecordType extends IRecord {
-    readonly isCustom: false;
-}
-
-export interface CustomRecordType extends IRecord {
-    readonly isCustom: true;
+    readonly maybeExtendedKind: ExtendedTypeKind.CustomRecord;
     readonly fields: Map<string, undefined | TypeKind>;
 }
 
-export interface ITable extends ICustomType {
-    readonly kind: TypeKind.Table;
-    readonly isCustom: boolean;
-}
-
-export interface TableType extends ITable {
-    readonly isCustom: false;
-}
-
-export interface CustomTableType extends ITable {
-    readonly isCustom: true;
+export interface ExtendedTable extends IExtendedType {
+    readonly kind: TypeKind.Record;
+    readonly maybeExtendedKind: ExtendedTypeKind.CustomTable;
     readonly fields: Map<string, undefined | TypeKind>;
 }
 
-export interface IFunctionExpression extends IType {
-    readonly kind: TypeKind.Function;
-    readonly isEach: boolean;
-    readonly isReturnNullable: boolean;
-    readonly returnType: TypeKind;
-}
+// export interface IExtendedType {
+//     readonly kind: TExtendedTypeKind;
+//     readonly maybeExtendedKind: ExtendedTypeKind;
+//     readonly isNullable: boolean;
+// }
 
-export interface EachFunctionExpressionType extends IFunctionExpression {
-    readonly isEach: true;
-    readonly returnType: TypeKind;
-}
+// export interface ExtendedRecord extends IExtendedType {
+//     readonly kind: TExtendedTypeKind;
+//     readonly maybeExtendedKind: ExtendedTypeKind;
+//     readonly isNullable: boolean;
+// }
 
-export interface FunctionExpressionType extends IFunctionExpression {
-    readonly isEach: false;
-    readonly parameters: ReadonlyArray<FunctionParameter>;
-}
+// function isExtendedType<T>(ttype: TType): ttype is TExtendedType {
+//     return ttype.maybeExtendedKind !== undefined;
+// }
 
-export type TFunctionExpression = EachFunctionExpressionType | FunctionExpressionType;
+// function maybeAsExtendedType<T>(ttype: TType, extendedTypeKind: ExtendedTypeKind): undefined | (T & TExtendedType) {
+//     if (!isExtendedType(ttype)) {
+//         return undefined;
+//     }
 
-// export type FunctionExpressionType = FunctionExpression & IType & { readonly kind: TypeKind.Function };
+//     switch (extendedTypeKind) {
+//         case ExtendedTypeKind.Record:
+//             return;
+//     }
+// }
 
-export interface FunctionParameter {
-    readonly name: Ast.Identifier;
-    readonly isOptional: boolean;
-    readonly isNullable: boolean;
-    readonly maybeType: Ast.TConstantKind | undefined;
-}
+// export interface ICustomType {
+//     readonly kind: TExtendedTypeKind;
+//     readonly isNullable: boolean;
+//     readonly isCustom: boolean;
+// }
 
-export interface SimplifiedNullablePrimitiveType {
-    readonly typeKind: TypeKind;
-    readonly isNullable: boolean;
-}
+// export interface IRecord extends ICustomType {
+//     readonly kind: TypeKind.Record;
+//     readonly isCustom: boolean;
+// }
+
+// export interface RecordType extends IRecord {
+//     readonly isCustom: false;
+// }
+
+// export interface CustomRecordType extends IRecord {
+//     readonly isCustom: true;
+//     readonly fields: Map<string, undefined | TypeKind>;
+// }
+
+// export interface ITable extends ICustomType {
+//     readonly kind: TypeKind.Table;
+//     readonly isCustom: boolean;
+// }
+
+// export interface TableType extends ITable {
+//     readonly isCustom: false;
+// }
+
+// export interface CustomTableType extends ITable {
+//     readonly isCustom: true;
+//     readonly fields: Map<string, undefined | TypeKind>;
+// }
+
+// export interface IFunctionExpression extends IType {
+//     readonly kind: TypeKind.Function;
+//     readonly isEach: boolean;
+//     readonly isReturnNullable: boolean;
+//     readonly returnType: TypeKind;
+// }
+
+// export interface EachFunctionExpressionType extends IFunctionExpression {
+//     readonly isEach: true;
+//     readonly returnType: TypeKind;
+// }
+
+// export interface FunctionExpressionType extends IFunctionExpression {
+//     readonly isEach: false;
+//     readonly parameters: ReadonlyArray<FunctionParameter>;
+// }
+
+// export type TFunctionExpression = EachFunctionExpressionType | FunctionExpressionType;
+
+// // export type FunctionExpressionType = FunctionExpression & IType & { readonly kind: TypeKind.Function };
+
+// export interface FunctionParameter {
+//     readonly name: Ast.Identifier;
+//     readonly isOptional: boolean;
+//     readonly isNullable: boolean;
+//     readonly maybeType: Ast.TConstantKind | undefined;
+// }
+
+// export interface SimplifiedNullablePrimitiveType {
+//     readonly typeKind: TypeKind;
+//     readonly isNullable: boolean;
+// }

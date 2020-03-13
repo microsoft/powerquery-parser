@@ -77,52 +77,54 @@ export function evaluate(
     return result;
 }
 
-function genericFactory(typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind>): Type.TType {
+function genericFactory(typeKind: Type.TypeKind): Type.TType {
     return {
         kind: typeKind,
+        maybeExtendedKind: undefined,
         isNullable: false,
     };
 }
 
-function genericEachFactory(subexpression: Type.TType): Type.EachFunctionExpressionType {
-    return {
-        kind: Type.TypeKind.Function,
-        isEach: true,
-        isNullable: false,
-        isReturnNullable: subexpression.isNullable,
-        returnType: subexpression.kind,
-    };
-}
+// function genericEachFactory(subexpression: Type.TType): Type.EachFunctionExpressionType {
+//     return {
+//         kind: Type.TypeKind.Function,
+//         isEach: true,
+//         isNullable: false,
+//         isReturnNullable: subexpression.isNullable,
+//         returnType: subexpression.kind,
+//     };
+// }
 
-function genericRecordFactory(isNullable: boolean): Type.RecordType {
-    return {
-        kind: Type.TypeKind.Record,
-        isCustom: false,
-        isNullable,
-    };
-}
+// function genericRecordFactory(isNullable: boolean): Type.RecordType {
+//     return {
+//         kind: Type.TypeKind.Record,
+//         isCustom: false,
+//         isNullable,
+//     };
+// }
 
-function genericTableFactory(isNullable: boolean): Type.TableType {
-    return {
-        kind: Type.TypeKind.Table,
-        isCustom: false,
-        isNullable,
-    };
-}
+// function genericTableFactory(isNullable: boolean): Type.TableType {
+//     return {
+//         kind: Type.TypeKind.Table,
+//         isCustom: false,
+//         isNullable,
+//     };
+// }
 
 function unknownFactory(isNullable: boolean): Type.TType {
     return {
         kind: Type.TypeKind.Unknown,
+        maybeExtendedKind: undefined,
         isNullable,
     };
 }
 
-function noneFactory(isNullable: boolean): Type.TType {
-    return {
-        kind: Type.TypeKind.None,
-        isNullable,
-    };
-}
+// function noneFactory(isNullable: boolean): Type.TType {
+//     return {
+//         kind: Type.TypeKind.None,
+//         isNullable,
+//     };
+// }
 
 function evaluateByChildAttributeIndex(
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -251,7 +253,7 @@ function evaluateBinOpExpression(
 
 function evaluateConstant(xorNode: TXorNode): Type.TType {
     if (xorNode.kind === XorNodeKind.Context) {
-        return unknownFactory();
+        return unknownFactory(true);
     } else if (xorNode.node.kind !== Ast.NodeKind.Constant) {
         const details: {} = {
             nodeId: xorNode.node.id,
@@ -281,10 +283,8 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
                 return genericFactory(Type.TypeKind.DateTimeZone);
             case Ast.PrimitiveTypeConstantKind.Duration:
                 return genericFactory(Type.TypeKind.Duration);
-
-            // case Ast.PrimitiveTypeConstantKind.Function:
-            //     return genericEachFactory();
-
+            case Ast.PrimitiveTypeConstantKind.Function:
+                return genericFactory(Type.TypeKind.Function);
             case Ast.PrimitiveTypeConstantKind.List:
                 return genericFactory(Type.TypeKind.List);
             case Ast.PrimitiveTypeConstantKind.Logical:
@@ -296,9 +296,9 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
             case Ast.PrimitiveTypeConstantKind.Number:
                 return genericFactory(Type.TypeKind.Number);
             case Ast.PrimitiveTypeConstantKind.Record:
-                return genericRecordFactory();
+                return genericFactory(Type.TypeKind.Record);
             case Ast.PrimitiveTypeConstantKind.Table:
-                return genericTableFactory();
+                return genericFactory(Type.TypeKind.Table);
             case Ast.PrimitiveTypeConstantKind.Text:
                 return genericFactory(Type.TypeKind.Text);
             case Ast.PrimitiveTypeConstantKind.Time:
@@ -307,7 +307,7 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
                 return genericFactory(Type.TypeKind.Type);
 
             default:
-                return unknownFactory();
+                return unknownFactory(true);
         }
     }
 }
@@ -495,25 +495,25 @@ function createLookupsForClockKind(
     ];
 }
 
-function evaluateBinOpExpressionForCustomType(
-    leftType: Type.TTableType | Type.TRecordType,
-    rightType: Type.TTableType | Type.TRecordType,
-): Type.TTableType | Type.TRecordType {
-    if (leftType.kind !== rightType.kind) {
-        const details: {} = {
-            leftTypeKind: leftType.kind,
-            rightTypeKind: rightType.kind,
-        };
-        throw new CommonError.InvariantError("left and right should only be either two records or two tables", details);
-    } else if (!leftType.isCustom && !rightType.isCustom) {
-        return {
-            kind: leftType.kind,
-            isCustom: false,
-        };
-    }
+// function evaluateBinOpExpressionForCustomType(
+//     leftType: Type.TTableType | Type.TRecordType,
+//     rightType: Type.TTableType | Type.TRecordType,
+// ): Type.TTableType | Type.TRecordType {
+//     if (leftType.kind !== rightType.kind) {
+//         const details: {} = {
+//             leftTypeKind: leftType.kind,
+//             rightTypeKind: rightType.kind,
+//         };
+//         throw new CommonError.InvariantError("left and right should only be either two records or two tables", details);
+//     } else if (!leftType.isCustom && !rightType.isCustom) {
+//         return {
+//             kind: leftType.kind,
+//             isCustom: false,
+//         };
+//     }
 
-    throw new Error();
-}
+//     throw new Error();
+// }
 
 function isCustomType(pqType: Type.TType): pqType is Type.TExtendedType {
     return isCustomTypeKind(pqType.kind);
