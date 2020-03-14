@@ -6,7 +6,7 @@ import { CommonError, isNever, Result, ResultUtils, TypeUtils } from "../../comm
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { NodeIdMapUtils } from "../nodeIdMap";
+import { NodeIdMapIter } from "../nodeIdMap";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -691,7 +691,7 @@ export function readRecursivePrimaryExpression<S = IParserState>(
         const headParentId: number = maybeHeadParentId;
 
         // Remove head as a child of its current parent.
-        const parentChildIds: ReadonlyArray<number> = NodeIdMapUtils.expectChildIds(
+        const parentChildIds: ReadonlyArray<number> = NodeIdMapIter.expectChildIds(
             nodeIdMapCollection.childIdsById,
             headParentId,
         );
@@ -820,7 +820,12 @@ export function readLiteralExpression<S = IParserState>(
         throw maybeErr;
     }
 
-    const maybeLiteralKind: Ast.LiteralKind | undefined = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
+    const maybeLiteralKind:
+        | Ast.LiteralKind.Numeric
+        | Ast.LiteralKind.Logical
+        | Ast.LiteralKind.Null
+        | Ast.LiteralKind.Text
+        | undefined = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
     if (maybeLiteralKind === undefined) {
         throw new CommonError.InvariantError(
             `couldn't convert TokenKind=${state.maybeCurrentTokenKind} into LiteralKind`,

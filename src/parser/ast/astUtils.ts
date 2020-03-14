@@ -172,7 +172,9 @@ export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpression
     }
 }
 
-export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast.LiteralKind | undefined {
+export function maybeLiteralKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {
     switch (maybeTokenKind) {
         case TokenKind.HexLiteral:
         case TokenKind.KeywordHashNan:
@@ -290,11 +292,17 @@ export function isPairedWrapperConstantKinds(x: Ast.TConstantKind, y: Ast.TConst
 }
 
 export function testAnyNodeKind(
-    value: Ast.NodeKind,
+    node: Ast.TNode,
     allowedNodeKinds: ReadonlyArray<Ast.NodeKind>,
-    details: {} | undefined = undefined,
 ): CommonError.InvariantError | undefined {
-    return allowedNodeKinds.indexOf(value) === -1
-        ? new CommonError.InvariantError(`NodeKind value is not an allowed NodeKind value`, details)
-        : undefined;
+    if (allowedNodeKinds.indexOf(node.kind) !== -1) {
+        return undefined;
+    }
+
+    const details: {} = {
+        allowedNodeKinds,
+        actualNodeKind: node.kind,
+        actualNodeId: node.id,
+    };
+    return new CommonError.InvariantError(`${testAnyNodeKind.name}: incorrect Ast.NodeKind`, details);
 }

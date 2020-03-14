@@ -58,13 +58,13 @@ export interface AnyUnion extends IExtendedType {
 export interface DefinedRecord extends IExtendedType {
     readonly kind: TypeKind.Record;
     readonly maybeExtendedKind: ExtendedTypeKind.CustomRecord;
-    readonly fields: Map<string, TypeKind>;
+    readonly fields: Map<string, TType>;
 }
 
 export interface DefinedTable extends IExtendedType {
     readonly kind: TypeKind.Record;
     readonly maybeExtendedKind: ExtendedTypeKind.CustomTable;
-    readonly fields: Map<string, TypeKind>;
+    readonly fields: Map<string, TType>;
 }
 
 // export interface IExtendedType {

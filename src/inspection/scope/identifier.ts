@@ -4,7 +4,7 @@
 import { ScopeItemKind, TScopeItem } from ".";
 import { InspectionUtils } from "..";
 import { CommonError, isNever, Result, ResultKind } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, NodeIdMapIter } from "../../parser";
 import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
@@ -316,12 +316,12 @@ function inspectLetExpression(state: IdentifierState, letExpr: TXorNode): void {
         ]);
     }
 
-    for (const keyValuePair of xorNodesOnCsvFromCsvArray(nodeIdMapCollection, csvArray)) {
-        if (maybeAncestorKeyValuePair && maybeAncestorKeyValuePair.node.id === keyValuePair.node.id) {
+    for (const kvp of NodeIdMapIter.letKeyValuePairs(nodeIdMapCollection, csvArray)) {
+        if (maybeAncestorKeyValuePair && maybeAncestorKeyValuePair.node.id === kvp.source.node.id) {
             continue;
         }
 
-        const keyValuePairId: number = keyValuePair.node.id;
+        const keyValuePairId: number = kvp.source.node.id;
         const maybeKey: Ast.Identifier | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePairId,
@@ -348,7 +348,7 @@ function inspectLetExpression(state: IdentifierState, letExpr: TXorNode): void {
 
 // If position is to the right of an equals sign,
 // then add all keys to scope EXCEPT for the one the that position is under.
-function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, _: TXorNode): void {
+function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, record: TXorNode): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     // Only add to scope if you're in the right hand of an assignment.
@@ -356,47 +356,21 @@ function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, _: TXorN
         return;
     }
 
-    const csvArray: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 1, [
-        Ast.NodeKind.ArrayWrapper,
-    ]);
-    const keyValuePair: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 3, [
+    const ancestorKeyValuePair: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 3, [
         Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
     ]);
 
-    for (const csv of xorNodesOnCsvFromCsvArray(nodeIdMapCollection, csvArray)) {
-        const nodeId: number = csv.node.id;
-
-        // If position is under this node then don't add it's key to the scope.
-        if (csv.node.id === keyValuePair.node.id) {
+    for (const kvp of NodeIdMapIter.recordKeyValuePairs(nodeIdMapCollection, record)) {
+        if (kvp.source.node.id === ancestorKeyValuePair.node.id) {
             continue;
         }
 
-        const maybeKey: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            nodeId,
-            0,
-            [Ast.NodeKind.GeneralizedIdentifier],
-        );
-        if (maybeKey === undefined) {
-            continue;
-        }
-        const key: TXorNode = maybeKey;
-        const maybeValue: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            nodeId,
-            2,
-            undefined,
-        );
-
-        if (key.kind === XorNodeKind.Ast) {
-            const keyAstNode: Ast.GeneralizedIdentifier = key.node as Ast.GeneralizedIdentifier;
-            mightUpdateScope(state, keyAstNode.literal, {
-                kind: ScopeItemKind.KeyValuePair,
-                key: keyAstNode,
-                maybeValue,
-            });
-        }
+        mightUpdateScope(state, kvp.keyLiteral, {
+            kind: ScopeItemKind.KeyValuePair,
+            key: kvp.key,
+            maybeValue: kvp.maybeValue,
+        });
     }
 }
 
@@ -409,7 +383,7 @@ function inspectSectionMember(state: IdentifierState, sectionMember: TXorNode): 
     const sectionMemberArray: TXorNode = ActiveNodeUtils.expectNextXorNode(state.activeNode, state.nodeIndex, 1, [
         Ast.NodeKind.ArrayWrapper,
     ]);
-    const sectionMembers: ReadonlyArray<TXorNode> = NodeIdMapUtils.expectXorChildren(
+    const sectionMembers: ReadonlyArray<TXorNode> = NodeIdMapIter.expectXorChildren(
         nodeIdMapCollection,
         sectionMemberArray.node.id,
     );
@@ -485,29 +459,29 @@ function mightUpdateScope(state: IdentifierState, key: string, scopeItem: TScope
     }
 }
 
-// Takes an XorNode TCsvArray and returns collection.elements.map(csv => csv.node),
-// plus extra boilerplate to handle TXorNode.
-function xorNodesOnCsvFromCsvArray(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    csvArray: TXorNode,
-): ReadonlyArray<TXorNode> {
-    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapUtils.expectXorChildren(nodeIdMapCollection, csvArray.node.id);
+// // Takes an XorNode TCsvArray and returns collection.elements.map(csv => csv.node),
+// // plus extra boilerplate to handle TXorNode.
+// function xorNodesOnCsvFromCsvArray(
+//     nodeIdMapCollection: NodeIdMap.Collection,
+//     csvArray: TXorNode,
+// ): ReadonlyArray<TXorNode> {
+//     const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIter.expectXorChildren(nodeIdMapCollection, csvArray.node.id);
 
-    const result: TXorNode[] = [];
-    for (const csv of csvNodes) {
-        const maybeCsvNode: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            csv.node.id,
-            0,
-            undefined,
-        );
-        if (maybeCsvNode === undefined) {
-            break;
-        }
+//     const result: TXorNode[] = [];
+//     for (const csv of csvNodes) {
+//         const maybeCsvNode: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+//             nodeIdMapCollection,
+//             csv.node.id,
+//             0,
+//             undefined,
+//         );
+//         if (maybeCsvNode === undefined) {
+//             break;
+//         }
 
-        const csvNode: TXorNode = maybeCsvNode;
-        result.push(csvNode);
-    }
+//         const csvNode: TXorNode = maybeCsvNode;
+//         result.push(csvNode);
+//     }
 
-    return result;
-}
+//     return result;
+// }

@@ -3,8 +3,7 @@
 
 import { Type, TypeUtils } from "..";
 import { CommonError, isNever } from "../../common";
-import { isDefined } from "../../common/typeUtils";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 
 export interface FunctionExpression {
     readonly parameters: ReadonlyArray<FunctionParameter>;
@@ -72,52 +71,10 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    let parameters: ReadonlyArray<TXorNode>;
-    if (fnExpr.kind === XorNodeKind.Context) {
-        const maybeParameterList:
-            | undefined
-            | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, fnExpr.node.id, 1, [
-            Ast.NodeKind.ParameterList,
-        ]);
-
-        if (maybeParameterList !== undefined) {
-            const maybeCsvArray:
-                | undefined
-                | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-                nodeIdMapCollection,
-                maybeParameterList.node.id,
-                1,
-                [Ast.NodeKind.ArrayWrapper],
-            );
-            if (maybeCsvArray !== undefined) {
-                parameters =
-                    // Grab all csv elements in the array
-                    NodeIdMapUtils.expectXorChildren(nodeIdMapCollection, maybeCsvArray.node.id)
-                        // Grab the value out of the csv (if it exists)
-                        .map((csv: TXorNode) =>
-                            NodeIdMapUtils.maybeXorChildByAttributeIndex(
-                                nodeIdMapCollection,
-                                csv.node.id,
-                                0,
-                                undefined,
-                            ),
-                        )
-                        // Drop those that didn't start parsing their children.
-                        // This should only happen at most once at the last node.
-                        .filter(isDefined);
-            } else {
-                parameters = [];
-            }
-        } else {
-            parameters = [];
-        }
-    } else {
-        parameters = (fnExpr.node as Ast.FunctionExpression).parameters.content.elements.map(
-            (csv: Ast.ICsv<Ast.IParameter<Ast.TParameterType>>) => NodeIdMapUtils.xorNodeFromAst(csv.node),
-        );
-    }
-
-    return parameters;
+    const maybeWrappedContent: undefined | TXorNode = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, fnExpr);
+    return maybeWrappedContent === undefined
+        ? []
+        : NodeIdMapIter.arrayWrapperXorNodes(nodeIdMapCollection, maybeWrappedContent);
 }
 
 function examineParameter(

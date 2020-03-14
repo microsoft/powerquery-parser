@@ -4,7 +4,7 @@
 import { Ast, NodeIdMap, ParseContext } from "../";
 import { CommonError, TypeUtils } from "../../common";
 import { Token } from "../../lexer";
-import { NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+import { NodeIdMapIter, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 
 export function newState(): State {
@@ -253,7 +253,7 @@ function removeOrReplaceChildId(
     maybeReplacementId: number | undefined,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMapUtils.expectChildIds(childIdsById, parentId);
+    const childIds: ReadonlyArray<number> = NodeIdMapIter.expectChildIds(childIdsById, parentId);
     const replacementIndex: number = childIds.indexOf(childId);
     if (replacementIndex === -1) {
         const details: {} = {

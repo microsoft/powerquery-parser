@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, isNever } from "../../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, AstUtils, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { Type, TypeUtils } from "../../type";
 
 export type EvaluationCache = Map<number, Type.TType>;
@@ -93,32 +93,6 @@ function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.AnyU
     };
 }
 
-// function genericEachFactory(subexpression: Type.TType): Type.EachFunctionExpressionType {
-//     return {
-//         kind: Type.TypeKind.Function,
-//         isEach: true,
-//         isNullable: false,
-//         isReturnNullable: subexpression.isNullable,
-//         returnType: subexpression.kind,
-//     };
-// }
-
-// function genericRecordFactory(isNullable: boolean): Type.RecordType {
-//     return {
-//         kind: Type.TypeKind.Record,
-//         isCustom: false,
-//         isNullable,
-//     };
-// }
-
-// function genericTableFactory(isNullable: boolean): Type.TableType {
-//     return {
-//         kind: Type.TypeKind.Table,
-//         isCustom: false,
-//         isNullable,
-//     };
-// }
-
 function unknownFactory(): Type.TType {
     return {
         kind: Type.TypeKind.Unknown,
@@ -164,7 +138,7 @@ function evaluateBinOpExpression(
     }
 
     const parentId: number = xorNode.node.id;
-    const children: ReadonlyArray<TXorNode> = NodeIdMapUtils.expectXorChildren(nodeIdMapCollection, parentId);
+    const children: ReadonlyArray<TXorNode> = NodeIdMapIter.expectXorChildren(nodeIdMapCollection, parentId);
 
     const maybeLeft: undefined | TXorNode = children[0];
     const maybeOperatorKind: undefined | Ast.TBinOpExpressionOperator =

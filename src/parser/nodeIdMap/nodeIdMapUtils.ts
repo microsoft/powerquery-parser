@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Ast, ParseContext } from "..";
-import { CommonError, isNever } from "../../common";
+import { CommonError, isNever, MapUtils } from "../../common";
 import { TokenRange } from "../../lexer";
-import { AstNodeById, ChildIdsById, Collection, ContextNodeById } from "./nodeIdMap";
+import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
 
 export function xorNodeFromAst(node: Ast.TNode): TXorNode {
@@ -41,34 +41,6 @@ export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): T
     }
 
     return undefined;
-}
-
-export function maybeNthSiblingXorNode(
-    nodeIdMapCollection: Collection,
-    rootId: number,
-    offset: number,
-): TXorNode | undefined {
-    const childXorNode: TXorNode = expectXorNode(nodeIdMapCollection, rootId);
-    if (childXorNode.node.maybeAttributeIndex === undefined) {
-        return undefined;
-    }
-
-    const attributeIndex: number = childXorNode.node.maybeAttributeIndex + offset;
-    if (attributeIndex < 0) {
-        return undefined;
-    }
-
-    const parentXorNode: TXorNode = expectParentXorNode(nodeIdMapCollection, rootId, undefined);
-    const childIds: ReadonlyArray<number> = expectChildIds(nodeIdMapCollection.childIdsById, parentXorNode.node.id);
-    if (childIds.length >= attributeIndex) {
-        return undefined;
-    }
-
-    return maybeXorNode(nodeIdMapCollection, childIds[attributeIndex]);
-}
-
-export function maybeNextSiblingXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
-    return maybeNthSiblingXorNode(nodeIdMapCollection, nodeId, 1);
 }
 
 export function maybeParentXorNode(
@@ -137,20 +109,6 @@ export function maybeParentContextNode(
     }
 
     return parent;
-}
-
-export function maybeAstChildren(
-    nodeIdMapCollection: Collection,
-    parentId: number,
-): ReadonlyArray<Ast.TNode> | undefined {
-    const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(parentId);
-    if (maybeChildIds === undefined) {
-        return undefined;
-    }
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
-    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
-    return childIds.map(childId => expectAstNode(astNodeById, childId));
 }
 
 // Both Ast.TNode and ParserContext.Node store an attribute index
@@ -285,11 +243,11 @@ export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeI
 }
 
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
-    return expectInMap<Ast.TNode>(astNodeById, nodeId, "astNodeById");
+    return MapUtils.expectGet(astNodeById, nodeId);
 }
 
 export function expectContextNode(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
-    return expectInMap<ParseContext.Node>(contextNodeById, nodeId, "contextNodeById");
+    return MapUtils.expectGet(contextNodeById, nodeId);
 }
 
 export function expectXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
@@ -388,34 +346,6 @@ export function expectContextChildByAttributeIndex(
     }
 
     return maybeNode;
-}
-
-export function expectXorNodes(
-    nodeIdMapCollection: Collection,
-    nodeIds: ReadonlyArray<number>,
-): ReadonlyArray<TXorNode> {
-    return nodeIds.map(nodeId => expectXorNode(nodeIdMapCollection, nodeId));
-}
-
-export function expectChildIds(childIdsById: ChildIdsById, nodeId: number): ReadonlyArray<number> {
-    return expectInMap<ReadonlyArray<number>>(childIdsById, nodeId, "childIdsById");
-}
-
-export function expectAstChildren(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<Ast.TNode> {
-    const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
-    return expectChildIds(nodeIdMapCollection.childIdsById, parentId).map(childId =>
-        expectAstNode(astNodeById, childId),
-    );
-}
-
-export function expectXorChildren(nodeIdMapCollection: Collection, parentId: number): ReadonlyArray<TXorNode> {
-    const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(parentId);
-    if (maybeChildIds === undefined) {
-        return [];
-    }
-    const childIds: ReadonlyArray<number> = maybeChildIds;
-
-    return expectXorNodes(nodeIdMapCollection, childIds);
 }
 
 // There are a few assumed invariants about children:
@@ -555,17 +485,20 @@ export function testAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): unde
     }
 }
 
-export function expectAncestry(nodeIdMapCollection: Collection, rootId: number): ReadonlyArray<TXorNode> {
-    const ancestryIds: number[] = [rootId];
-
-    let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(rootId);
-    while (maybeParentId) {
-        const parentId: number = maybeParentId;
-        ancestryIds.push(parentId);
-        maybeParentId = nodeIdMapCollection.parentIdById.get(parentId);
+export function testAstAnyNodeKind(
+    xorNode: TXorNode,
+    allowedNodeKinds: ReadonlyArray<Ast.NodeKind>,
+): undefined | CommonError.InvariantError {
+    if (allowedNodeKinds.indexOf(xorNode.node.kind) !== -1) {
+        return undefined;
     }
 
-    return expectXorNodes(nodeIdMapCollection, ancestryIds);
+    const details: {} = {
+        allowedNodeKinds,
+        actualNodeKind: xorNode.node.kind,
+        actualNodeId: xorNode.node.id,
+    };
+    return new CommonError.InvariantError(`${testAstAnyNodeKind.name}: incorrect Ast.NodeKind`, details);
 }
 
 export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {
@@ -601,11 +534,16 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
     }
 }
 
-function expectInMap<T>(map: Map<number, T>, nodeId: number, mapName: string): T {
-    const maybeValue: T | undefined = map.get(nodeId);
-    if (maybeValue === undefined) {
-        const details: {} = { nodeId };
-        throw new CommonError.InvariantError(`nodeId wasn't in ${mapName}`, details);
-    }
-    return maybeValue;
+export function recordKey(nodeIdMapCollection: Collection, xorNode: TXorNode): undefined | Ast.GeneralizedIdentifier {
+    return maybeAstChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
+        Ast.NodeKind.GeneralizedIdentifier,
+    ]) as Ast.GeneralizedIdentifier;
+}
+
+export function maybeWrappedContent(nodeIdMapCollection: Collection, wrapped: TXorNode): undefined | TXorNode {
+    return maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [Ast.NodeKind.ArrayWrapper]);
+}
+
+export function maybeCsvNode(nodeIdMapCollection: Collection, csv: TXorNode): undefined | TXorNode {
+    return maybeXorChildByAttributeIndex(nodeIdMapCollection, csv.node.id, 0, undefined);
 }
