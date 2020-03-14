@@ -4,10 +4,11 @@
 import { ScopeItemKind, TScopeItem } from ".";
 import { InspectionUtils } from "..";
 import { CommonError, isNever, Result, ResultKind } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, NodeIdMapIter } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
+import { Type } from "../../type";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface InspectedIdentifier {

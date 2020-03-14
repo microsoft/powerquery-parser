@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, NodeIdMap, ParseContext } from "../";
-import { CommonError, TypeUtils } from "../../common";
+import { CommonError, TypeScriptUtils } from "../../common";
 import { Token } from "../../lexer";
 import { NodeIdMapIter, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
@@ -109,7 +109,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
             nodeIdMapCollection.maybeRightMostLeaf === undefined ||
             nodeIdMapCollection.maybeRightMostLeaf.tokenRange.tokenIndexStart < astNode.tokenRange.tokenIndexStart
         ) {
-            const unsafeNodeIdMapCollection: TypeUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
+            const unsafeNodeIdMapCollection: TypeScriptUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
             unsafeNodeIdMapCollection.maybeRightMostLeaf = astNode;
         }
     }
@@ -216,7 +216,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
 
         // The child Node inherits the attributeIndex.
         const childXorNode: TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
-        const mutableChildXorNode: TypeUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
+        const mutableChildXorNode: TypeScriptUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
         mutableChildXorNode.maybeAttributeIndex = contextNode.maybeAttributeIndex;
     }
     // Is a leaf node, not root node.

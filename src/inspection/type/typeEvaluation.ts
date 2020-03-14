@@ -178,7 +178,9 @@ function evaluateBinOpExpression(
             });
             return anyUnionFactory(unionedTypePairs);
         }
-    } else {
+    }
+    // '1 + 1'
+    else {
         const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, cache);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
         const rightType: Type.TType = evaluate(nodeIdMapCollection, maybeRight, cache);
@@ -190,6 +192,7 @@ function evaluateBinOpExpression(
         }
         const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
 
+        // '[foo = 1] & [bar = 2]'
         if (
             operatorKind === Ast.ArithmeticOperatorKind.And &&
             (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)

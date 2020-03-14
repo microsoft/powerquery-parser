@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, AstUtils, NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
-import { CommonError, isNever, Result, ResultUtils, TypeUtils } from "../../common";
+import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -719,7 +719,7 @@ export function readRecursivePrimaryExpression<S = IParserState>(
 
     // Update start positions for recursive primary expression context
     const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    const mutableContext: TypeUtils.StripReadonly<ParseContext.Node> = currentContextNode;
+    const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.Node> = currentContextNode;
     // UNSAFE MARKER
     //
     // Purpose of code block:
@@ -735,7 +735,7 @@ export function readRecursivePrimaryExpression<S = IParserState>(
     mutableContext.tokenIndexStart = recursiveTokenIndexStart;
 
     // Update attribute index for the head Ast.TNode
-    const mutableHead: TypeUtils.StripReadonly<Ast.TPrimaryExpression> = head;
+    const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
     // UNSAFE MARKER
     //
     // Purpose of code block:
