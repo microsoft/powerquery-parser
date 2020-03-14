@@ -212,7 +212,7 @@ export function keyValuePairs(
             nodeIdMapCollection,
             keyValuePair.node.id,
             0,
-            [Ast.NodeKind.GeneralizedIdentifier],
+            [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier],
         );
         if (maybeKey === undefined) {
             break;

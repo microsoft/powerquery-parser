@@ -475,9 +475,9 @@ export function isTFieldAccessExpression(xorNode: TXorNode): boolean {
 export function testAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): undefined | CommonError.InvariantError {
     if (xorNode.node.kind !== expected) {
         const details: {} = {
-            xorNodeId: xorNode.node.id,
             expectedNodeKind: expected,
-            actualNodeKind: xorNode.node.kind,
+            actualAstNodeKind: xorNode.node.kind,
+            xorNodeId: xorNode.node.id,
         };
         return new CommonError.InvariantError(`${testAstNodeKind.name}: incorrect Ast.NodeKind`, details);
     } else {
@@ -495,8 +495,8 @@ export function testAstAnyNodeKind(
 
     const details: {} = {
         allowedNodeKinds,
-        actualNodeKind: xorNode.node.kind,
-        actualNodeId: xorNode.node.id,
+        actualAstNodeKind: xorNode.node.kind,
+        actualXorNodeId: xorNode.node.id,
     };
     return new CommonError.InvariantError(`${testAstAnyNodeKind.name}: incorrect Ast.NodeKind`, details);
 }

@@ -299,24 +299,17 @@ function inspectLetExpression(state: IdentifierState, letExpr: TXorNode): void {
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    let csvArray: TXorNode;
     let maybeAncestorKeyValuePair: TXorNode | undefined;
     // If ancestor is an expression
     if (maybePreviousAttributeIndex === 3) {
-        csvArray = NodeIdMapUtils.expectXorChildByAttributeIndex(nodeIdMapCollection, letExpr.node.id, 1, [
-            Ast.NodeKind.ArrayWrapper,
-        ]);
         maybeAncestorKeyValuePair = undefined;
     } else {
-        csvArray = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 1, [
-            Ast.NodeKind.ArrayWrapper,
-        ]);
         maybeAncestorKeyValuePair = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 3, [
             Ast.NodeKind.IdentifierPairedExpression,
         ]);
     }
 
-    for (const kvp of NodeIdMapIter.letKeyValuePairs(nodeIdMapCollection, csvArray)) {
+    for (const kvp of NodeIdMapIter.letKeyValuePairs(nodeIdMapCollection, letExpr)) {
         if (maybeAncestorKeyValuePair && maybeAncestorKeyValuePair.node.id === kvp.source.node.id) {
             continue;
         }
@@ -458,30 +451,3 @@ function mightUpdateScope(state: IdentifierState, key: string, scopeItem: TScope
         unsafeScope.set(key, scopeItem);
     }
 }
-
-// // Takes an XorNode TCsvArray and returns collection.elements.map(csv => csv.node),
-// // plus extra boilerplate to handle TXorNode.
-// function xorNodesOnCsvFromCsvArray(
-//     nodeIdMapCollection: NodeIdMap.Collection,
-//     csvArray: TXorNode,
-// ): ReadonlyArray<TXorNode> {
-//     const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIter.expectXorChildren(nodeIdMapCollection, csvArray.node.id);
-
-//     const result: TXorNode[] = [];
-//     for (const csv of csvNodes) {
-//         const maybeCsvNode: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-//             nodeIdMapCollection,
-//             csv.node.id,
-//             0,
-//             undefined,
-//         );
-//         if (maybeCsvNode === undefined) {
-//             break;
-//         }
-
-//         const csvNode: TXorNode = maybeCsvNode;
-//         result.push(csvNode);
-//     }
-
-//     return result;
-// }
