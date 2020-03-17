@@ -8,7 +8,7 @@ import { Ast, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } 
 import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
-import { Type } from "../../type";
+import { Type, TypeUtils, TypeInspector } from "../../type";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface InspectedIdentifier {
@@ -121,6 +121,21 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
     if (fnExpr.node.kind !== Ast.NodeKind.FunctionExpression) {
         throw expectedNodeKindError(fnExpr, Ast.NodeKind.FunctionExpression);
     }
+
+    const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
+        state.nodeIdMapCollection,
+        fnExpr,
+    );
+
+    // inspectedFnExpr.parameters.map((parameter: TypeInspector.InspectedFunctionParameter) => {
+    //     mightUpdateScope(state, parameter.name.literal, {
+    //         kind: ScopeItemKind.Parameter,
+    //         name: parameter.name,
+    //         isOptional: parameter.,
+    //         isNullable,
+    //         maybeType,
+    //     });
+    // });
 
     const previous: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex);
     if (previous.node.maybeAttributeIndex !== 3) {

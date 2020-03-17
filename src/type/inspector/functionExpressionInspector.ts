@@ -5,13 +5,13 @@ import { Type, TypeUtils } from "..";
 import { CommonError, isNever } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 
-export interface FunctionExpression {
-    readonly parameters: ReadonlyArray<FunctionParameter>;
+export interface InspectedFunctionExpression {
+    readonly parameters: ReadonlyArray<InspectedFunctionParameter>;
     readonly isReturnNullable: boolean;
     readonly returnType: Type.TypeKind;
 }
 
-export interface FunctionParameter {
+export interface InspectedFunctionParameter {
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
@@ -21,7 +21,7 @@ export interface FunctionParameter {
 export function inspectFunctionExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
-): FunctionExpression {
+): InspectedFunctionExpression {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         fnExpr,
         Ast.NodeKind.FunctionExpression,
@@ -30,11 +30,14 @@ export function inspectFunctionExpression(
         throw maybeErr;
     }
 
-    const examinedParameters: FunctionParameter[] = [];
+    const examinedParameters: InspectedFunctionParameter[] = [];
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const maybeExaminable: undefined | FunctionParameter = examineParameter(nodeIdMapCollection, parameter);
+        const maybeExaminable: undefined | InspectedFunctionParameter = examineParameter(
+            nodeIdMapCollection,
+            parameter,
+        );
         if (maybeExaminable !== undefined) {
             examinedParameters.push(maybeExaminable);
         }
@@ -80,7 +83,7 @@ function functionParameterXorNodes(
 function examineParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: TXorNode,
-): undefined | FunctionParameter {
+): undefined | InspectedFunctionParameter {
     switch (parameter.kind) {
         case XorNodeKind.Ast:
             return examineAstParameter(parameter.node as Ast.IParameter<Ast.AsNullablePrimitiveType>);
@@ -93,7 +96,7 @@ function examineParameter(
     }
 }
 
-function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>): FunctionParameter {
+function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>): InspectedFunctionParameter {
     let isNullable: boolean;
     let maybeType: undefined | Type.TypeKind;
 
@@ -120,7 +123,7 @@ function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>):
 function examineContextParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: ParseContext.Node,
-): undefined | FunctionParameter {
+): undefined | InspectedFunctionParameter {
     let name: Ast.Identifier;
     let isOptional: boolean;
     let isNullable: boolean;

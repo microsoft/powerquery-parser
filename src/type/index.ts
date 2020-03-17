@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as Inspectors from "./inspectors";
+import * as TypeInspector from "./inspector";
 import * as Type from "./type";
 import * as TypeUtils from "./typesUtils";
 
-export { Inspectors, TypeUtils, Type };
+export { TypeInspector, Type, TypeUtils };
