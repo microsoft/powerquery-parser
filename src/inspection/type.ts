@@ -258,43 +258,43 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
 
         switch (constant.constantKind) {
             case Ast.PrimitiveTypeConstantKind.Action:
-                return genericFactory(Type.TypeKind.Action, true);
+                return genericFactory(Type.TypeKind.Action, false);
             case Ast.PrimitiveTypeConstantKind.Any:
                 return genericFactory(Type.TypeKind.Any, true);
             case Ast.PrimitiveTypeConstantKind.AnyNonNull:
-                return genericFactory(Type.TypeKind.AnyNonNull, true);
+                return genericFactory(Type.TypeKind.AnyNonNull, false);
             case Ast.PrimitiveTypeConstantKind.Binary:
-                return genericFactory(Type.TypeKind.Binary, true);
+                return genericFactory(Type.TypeKind.Binary, false);
             case Ast.PrimitiveTypeConstantKind.Date:
-                return genericFactory(Type.TypeKind.Date, true);
+                return genericFactory(Type.TypeKind.Date, false);
             case Ast.PrimitiveTypeConstantKind.DateTime:
-                return genericFactory(Type.TypeKind.DateTime, true);
+                return genericFactory(Type.TypeKind.DateTime, false);
             case Ast.PrimitiveTypeConstantKind.DateTimeZone:
-                return genericFactory(Type.TypeKind.DateTimeZone, true);
+                return genericFactory(Type.TypeKind.DateTimeZone, false);
             case Ast.PrimitiveTypeConstantKind.Duration:
-                return genericFactory(Type.TypeKind.Duration, true);
+                return genericFactory(Type.TypeKind.Duration, false);
             case Ast.PrimitiveTypeConstantKind.Function:
-                return genericFactory(Type.TypeKind.Function, true);
+                return genericFactory(Type.TypeKind.Function, false);
             case Ast.PrimitiveTypeConstantKind.List:
-                return genericFactory(Type.TypeKind.List, true);
+                return genericFactory(Type.TypeKind.List, false);
             case Ast.PrimitiveTypeConstantKind.Logical:
-                return genericFactory(Type.TypeKind.Logical, true);
+                return genericFactory(Type.TypeKind.Logical, false);
             case Ast.PrimitiveTypeConstantKind.None:
-                return genericFactory(Type.TypeKind.None, true);
+                return genericFactory(Type.TypeKind.None, false);
             case Ast.PrimitiveTypeConstantKind.Null:
                 return genericFactory(Type.TypeKind.Null, true);
             case Ast.PrimitiveTypeConstantKind.Number:
-                return genericFactory(Type.TypeKind.Number, true);
+                return genericFactory(Type.TypeKind.Number, false);
             case Ast.PrimitiveTypeConstantKind.Record:
-                return genericFactory(Type.TypeKind.Record, true);
+                return genericFactory(Type.TypeKind.Record, false);
             case Ast.PrimitiveTypeConstantKind.Table:
-                return genericFactory(Type.TypeKind.Table, true);
+                return genericFactory(Type.TypeKind.Table, false);
             case Ast.PrimitiveTypeConstantKind.Text:
-                return genericFactory(Type.TypeKind.Text, true);
+                return genericFactory(Type.TypeKind.Text, false);
             case Ast.PrimitiveTypeConstantKind.Time:
-                return genericFactory(Type.TypeKind.Time, true);
+                return genericFactory(Type.TypeKind.Time, false);
             case Ast.PrimitiveTypeConstantKind.Type:
-                return genericFactory(Type.TypeKind.Type, true);
+                return genericFactory(Type.TypeKind.Type, false);
 
             default:
                 return unknownFactory();
