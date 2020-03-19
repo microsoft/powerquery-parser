@@ -4,7 +4,7 @@
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind, IParserState } from "../parser";
+import { Ast, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
 import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -15,7 +15,7 @@ export interface InspectedAutocomplete {
 
 export type TriedAutocomplete = Result<InspectedAutocomplete, CommonError.CommonError>;
 
-export function tryFrom<S = IParserState>(
+export function tryInspectAutocomplete<S = IParserState>(
     settings: InspectionSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,

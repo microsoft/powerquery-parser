@@ -10,16 +10,18 @@ import { InspectedInvokeExpression, inspectInvokeExpression } from "./invokeExpr
 
 export type InspectedScope = InspectedIdentifier & InspectedInvokeExpression;
 
+export type TriedInspectScope = Result<InspectedScope, CommonError.CommonError>;
+
 export function tryInspectScope(
     settings: InspectionSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-): Result<InspectedScope, CommonError.CommonError> {
+): TriedInspectScope {
     if (maybeActiveNode === undefined) {
         return {
             kind: ResultKind.Ok,
-            value: DefaultIdentifierInspection,
+            value: emptyScopeFactory(),
         };
     }
     const activeNode: ActiveNode = maybeActiveNode;
@@ -52,7 +54,9 @@ export function tryInspectScope(
     }
 }
 
-const DefaultIdentifierInspection: InspectedScope = {
-    scope: new Map(),
-    maybeInvokeExpression: undefined,
-};
+function emptyScopeFactory(): InspectedScope {
+    return {
+        scope: new Map(),
+        maybeInvokeExpression: undefined,
+    };
+}

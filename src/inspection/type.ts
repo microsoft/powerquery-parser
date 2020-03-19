@@ -1,18 +1,55 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever } from "../../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
-import { Type, TypeUtils } from "../../type";
+import { CommonError, isNever, Result, ResultKind } from "../common";
+import { Ast, AstUtils, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
+import { Type, TypeUtils } from "../type";
+import { ActiveNode } from "./activeNode";
 
-export type EvaluationCache = Map<number, Type.TType>;
+export type ScopeTypeMap = Map<number, Type.TType>;
 
-export function evaluate(
+export interface InspectedType {
+    readonly scopeTypeMap: ScopeTypeMap;
+}
+
+export type TriedType = Result<InspectedType, CommonError.CommonError>;
+
+export function tryInspectScopeType(
+    maybeActiveNode: ActiveNode | undefined,
+    nodeIdMapCollection: NodeIdMap.Collection,
+): Result<InspectedType, CommonError.CommonError> {
+    if (maybeActiveNode === undefined) {
+        return {
+            kind: ResultKind.Ok,
+            value: emptyScopeFactory(),
+        };
+    }
+    const activeNode: ActiveNode = maybeActiveNode;
+    const scopeTypeMap: ScopeTypeMap = new Map();
+
+    const root: TXorNode = activeNode.ancestry[0];
+    evaluate(nodeIdMapCollection, root, scopeTypeMap);
+
+    return {
+        kind: ResultKind.Ok,
+        value: {
+            scopeTypeMap,
+        },
+    };
+}
+
+function emptyScopeFactory(): InspectedType {
+    return {
+        scopeTypeMap: new Map(),
+    };
+}
+
+function evaluate(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-    cache: EvaluationCache,
+    scopeTypeMap: ScopeTypeMap,
 ): Type.TType {
-    const maybeCached: Type.TType | undefined = cache.get(xorNode.node.id);
+    const maybeCached: Type.TType | undefined = scopeTypeMap.get(xorNode.node.id);
     if (maybeCached !== undefined) {
         return maybeCached;
     }
@@ -44,16 +81,16 @@ export function evaluate(
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
-            result = evaluateBinOpExpression(nodeIdMapCollection, xorNode, cache);
+            result = evaluateBinOpExpression(nodeIdMapCollection, xorNode, scopeTypeMap);
             break;
 
         case Ast.NodeKind.AsExpression: {
-            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 2);
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 2);
             break;
         }
 
         case Ast.NodeKind.AsNullablePrimitiveType:
-            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
             break;
 
         case Ast.NodeKind.Constant:
@@ -61,18 +98,18 @@ export function evaluate(
             break;
 
         case Ast.NodeKind.Csv:
-            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
             break;
 
         case Ast.NodeKind.EachExpression:
-            result = evaluateByChildAttributeIndex(nodeIdMapCollection, cache, xorNode, 1);
+            result = evaluateByChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
             break;
 
         default:
             result = unknownFactory();
     }
 
-    cache.set(xorNode.node.id, result);
+    scopeTypeMap.set(xorNode.node.id, result);
     return result;
 }
 
@@ -111,7 +148,7 @@ function noneFactory(): Type.TType {
 
 function evaluateByChildAttributeIndex(
     nodeIdMapCollection: NodeIdMap.Collection,
-    cache: EvaluationCache,
+    scopeTypeMap: ScopeTypeMap,
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
@@ -121,13 +158,13 @@ function evaluateByChildAttributeIndex(
         attributeIndex,
         undefined,
     );
-    return maybeXorNode !== undefined ? evaluate(nodeIdMapCollection, maybeXorNode, cache) : unknownFactory();
+    return maybeXorNode !== undefined ? evaluate(nodeIdMapCollection, maybeXorNode, scopeTypeMap) : unknownFactory();
 }
 
 function evaluateBinOpExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-    cache: EvaluationCache,
+    scopeTypeMap: ScopeTypeMap,
 ): Type.TType {
     if (!AstUtils.isTBinOpExpressionKind(xorNode.node.kind)) {
         const details: {} = {
@@ -153,11 +190,11 @@ function evaluateBinOpExpression(
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        return evaluate(nodeIdMapCollection, maybeLeft, cache);
+        return evaluate(nodeIdMapCollection, maybeLeft, scopeTypeMap);
     }
     // '1 +'
     else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
-        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, cache);
+        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, scopeTypeMap);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
 
         const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
@@ -181,9 +218,9 @@ function evaluateBinOpExpression(
     }
     // '1 + 1'
     else {
-        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, cache);
+        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, scopeTypeMap);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: Type.TType = evaluate(nodeIdMapCollection, maybeRight, cache);
+        const rightType: Type.TType = evaluate(nodeIdMapCollection, maybeRight, scopeTypeMap);
 
         const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);
