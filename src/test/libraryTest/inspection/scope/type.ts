@@ -24,9 +24,7 @@ function actualFactoryFn(inspected: Inspection.Inspected): AbridgedScopeType {
                 ...type,
             };
         })
-        .sort((left, right) => {
-            return left.key < right.key ? -1 : 0;
-        });
+        .sort();
 }
 
 function expectExpressionType(expression: string, kind: Type.TypeKind, isNullable: boolean): void {
