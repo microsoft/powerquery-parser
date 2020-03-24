@@ -3,8 +3,10 @@
 
 import { CommonError, isNever, Result, ResultKind } from "../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
+import { InspectionSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
 import { ActiveNode } from "./activeNode";
+import { InspectedScope, ScopeItemKind, TScopeItem } from "./scope";
 
 export type ScopeTypeMap = Map<number, Type.TType>;
 
@@ -15,20 +17,22 @@ export interface InspectedType {
 export type TriedType = Result<InspectedType, CommonError.CommonError>;
 
 export function tryInspectScopeType(
-    maybeActiveNode: ActiveNode | undefined,
+    settings: InspectionSettings,
+    inspectedScope: InspectedScope,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Result<InspectedType, CommonError.CommonError> {
-    if (maybeActiveNode === undefined) {
-        return {
-            kind: ResultKind.Ok,
-            value: emptyScopeFactory(),
-        };
-    }
-    const activeNode: ActiveNode = maybeActiveNode;
     const scopeTypeMap: ScopeTypeMap = new Map();
 
-    const root: TXorNode = activeNode.ancestry[0];
-    evaluate(nodeIdMapCollection, root, scopeTypeMap);
+    try {
+        for (const node of [...inspectedScope.scope.values()]) {
+            evaluateScopeItem(nodeIdMapCollection, node, scopeTypeMap);
+        }
+    } catch (err) {
+        return {
+            kind: ResultKind.Err,
+            error: CommonError.ensureCommonError(settings.localizationTemplates, err),
+        };
+    }
 
     return {
         kind: ResultKind.Ok,
@@ -38,16 +42,46 @@ export function tryInspectScopeType(
     };
 }
 
-function emptyScopeFactory(): InspectedType {
-    return {
-        scopeTypeMap: new Map(),
-    };
+function evaluateScopeItem(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    scopeItem: TScopeItem,
+    scopeTypeMap: ScopeTypeMap,
+): Type.TType {
+    switch (scopeItem.kind) {
+        case ScopeItemKind.Each:
+            return evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.each);
+
+        case ScopeItemKind.KeyValuePair:
+            return scopeItem.maybeValue === undefined
+                ? anyFactory()
+                : evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
+
+        case ScopeItemKind.Parameter:
+            return scopeItem.maybeType === undefined
+                ? anyFactory()
+                : {
+                      kind: TypeUtils.typeKindFromPrimitiveTypeConstantKind(scopeItem.maybeType),
+                      maybeExtendedKind: undefined,
+                      isNullable: scopeItem.isNullable,
+                  };
+
+        case ScopeItemKind.SectionMember:
+            return scopeItem.maybeValue === undefined
+                ? anyFactory()
+                : evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
+
+        case ScopeItemKind.Undefined:
+            return unknownFactory();
+
+        default:
+            throw isNever(scopeItem);
+    }
 }
 
-function evaluate(
+function evaluateXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
-    xorNode: TXorNode,
     scopeTypeMap: ScopeTypeMap,
+    xorNode: TXorNode,
 ): Type.TType {
     const maybeCached: Type.TType | undefined = scopeTypeMap.get(xorNode.node.id);
     if (maybeCached !== undefined) {
@@ -121,6 +155,14 @@ function genericFactory(typeKind: Type.TypeKind, isNullable: boolean): Type.TTyp
     };
 }
 
+function anyFactory(): Type.TType {
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: undefined,
+        isNullable: true,
+    };
+}
+
 function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.AnyUnion {
     return {
         kind: Type.TypeKind.Any,
@@ -158,7 +200,9 @@ function evaluateByChildAttributeIndex(
         attributeIndex,
         undefined,
     );
-    return maybeXorNode !== undefined ? evaluate(nodeIdMapCollection, maybeXorNode, scopeTypeMap) : unknownFactory();
+    return maybeXorNode !== undefined
+        ? evaluateXorNode(nodeIdMapCollection, scopeTypeMap, maybeXorNode)
+        : unknownFactory();
 }
 
 function evaluateBinOpExpression(
@@ -190,11 +234,11 @@ function evaluateBinOpExpression(
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        return evaluate(nodeIdMapCollection, maybeLeft, scopeTypeMap);
+        return evaluateXorNode(nodeIdMapCollection, scopeTypeMap, maybeLeft);
     }
     // '1 +'
     else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
-        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, scopeTypeMap);
+        const leftType: Type.TType = evaluateXorNode(nodeIdMapCollection, scopeTypeMap, maybeLeft);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
 
         const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
@@ -218,9 +262,9 @@ function evaluateBinOpExpression(
     }
     // '1 + 1'
     else {
-        const leftType: Type.TType = evaluate(nodeIdMapCollection, maybeLeft, scopeTypeMap);
+        const leftType: Type.TType = evaluateXorNode(nodeIdMapCollection, scopeTypeMap, maybeLeft);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: Type.TType = evaluate(nodeIdMapCollection, maybeRight, scopeTypeMap);
+        const rightType: Type.TType = evaluateXorNode(nodeIdMapCollection, scopeTypeMap, maybeRight);
 
         const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);

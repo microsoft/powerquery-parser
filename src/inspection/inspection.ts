@@ -46,7 +46,11 @@ export function tryFrom<S = IParserState>(
         return triedInspectScope;
     }
 
-    const triedInspectType: TriedInspectType = tryInspectScopeType(maybeActiveNode, nodeIdMapCollection);
+    const triedInspectType: TriedInspectType = tryInspectScopeType(
+        settings,
+        triedInspectScope.value,
+        nodeIdMapCollection,
+    );
     if (ResultUtils.isErr(triedInspectType)) {
         return triedInspectType;
     }
