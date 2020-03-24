@@ -5,10 +5,9 @@ import { CommonError, isNever, Result, ResultKind } from "../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { InspectionSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
-import { ActiveNode } from "./activeNode";
 import { InspectedScope, ScopeItemKind, TScopeItem } from "./scope";
 
-export type ScopeTypeMap = Map<number, Type.TType>;
+export type ScopeTypeMap = Map<string, Type.TType>;
 
 export interface InspectedType {
     readonly scopeTypeMap: ScopeTypeMap;
@@ -21,11 +20,14 @@ export function tryInspectScopeType(
     inspectedScope: InspectedScope,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Result<InspectedType, CommonError.CommonError> {
+    // The return object. Only stores [scope key, TType] pairs.
     const scopeTypeMap: ScopeTypeMap = new Map();
+    // A temporary working set. Stores all [nodeId, TType] pairs evaluated.
+    const scopeTypeCacheMap: ScopeTypeCacheMap = new Map();
 
     try {
-        for (const node of [...inspectedScope.scope.values()]) {
-            evaluateScopeItem(nodeIdMapCollection, node, scopeTypeMap);
+        for (const [key, node] of [...inspectedScope.scope.entries()]) {
+            scopeTypeMap.set(key, evaluateScopeItem(nodeIdMapCollection, node, scopeTypeCacheMap));
         }
     } catch (err) {
         return {
@@ -42,10 +44,12 @@ export function tryInspectScopeType(
     };
 }
 
+type ScopeTypeCacheMap = Map<number, Type.TType>;
+
 function evaluateScopeItem(
     nodeIdMapCollection: NodeIdMap.Collection,
     scopeItem: TScopeItem,
-    scopeTypeMap: ScopeTypeMap,
+    scopeTypeMap: ScopeTypeCacheMap,
 ): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
@@ -80,7 +84,7 @@ function evaluateScopeItem(
 
 function evaluateXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
-    scopeTypeMap: ScopeTypeMap,
+    scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
     const maybeCached: Type.TType | undefined = scopeTypeMap.get(xorNode.node.id);
@@ -98,7 +102,7 @@ function evaluateXorNode(
                     const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
                         literalKind,
                     );
-                    result = genericFactory(typeKind, false);
+                    result = genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
                     break;
 
                 case XorNodeKind.Context:
@@ -190,7 +194,7 @@ function noneFactory(): Type.TType {
 
 function evaluateByChildAttributeIndex(
     nodeIdMapCollection: NodeIdMap.Collection,
-    scopeTypeMap: ScopeTypeMap,
+    scopeTypeMap: ScopeTypeCacheMap,
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
@@ -208,7 +212,7 @@ function evaluateByChildAttributeIndex(
 function evaluateBinOpExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-    scopeTypeMap: ScopeTypeMap,
+    scopeTypeMap: ScopeTypeCacheMap,
 ): Type.TType {
     if (!AstUtils.isTBinOpExpressionKind(xorNode.node.kind)) {
         const details: {} = {
