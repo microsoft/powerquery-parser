@@ -74,7 +74,20 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeWrappedContent: undefined | TXorNode = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, fnExpr);
+    const maybeParameterList: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        fnExpr.node.id,
+        0,
+        [Ast.NodeKind.ParameterList],
+    );
+    if (maybeParameterList === undefined) {
+        return [];
+    }
+    const maybeWrappedContent: undefined | TXorNode = NodeIdMapUtils.maybeWrappedContent(
+        nodeIdMapCollection,
+        maybeParameterList,
+    );
+
     return maybeWrappedContent === undefined
         ? []
         : NodeIdMapIter.arrayWrapperXorNodes(nodeIdMapCollection, maybeWrappedContent);

@@ -8,6 +8,7 @@ import { Ast, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } 
 import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
+import { TypeInspector, TypeUtils } from "../../type";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface InspectedIdentifier {
@@ -121,67 +122,29 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
         throw expectedNodeKindError(fnExpr, Ast.NodeKind.FunctionExpression);
     }
 
-    // inspectedFnExpr.parameters.map((parameter: TypeInspector.InspectedFunctionParameter) => {
-    //     mightUpdateScope(state, parameter.name.literal, {
-    //         kind: ScopeItemKind.Parameter,
-    //         name: parameter.name,
-    //         isOptional: parameter.,
-    //         isNullable,
-    //         maybeType,
-    //     });
-    // });
-
+    // We only care about parameters if we're to the right of the '=>'
     const previous: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex);
     if (previous.node.maybeAttributeIndex !== 3) {
         return;
     }
 
-    // It's safe to expect an Ast.
-    // All attributes would've had to been fully parsed before the expression body context was created,
-    // and the previous check ensures that a TXorNode (either context or Ast) exists for the expression body.
-    const parameters: Ast.IParameterList<
-        Ast.AsNullablePrimitiveType | undefined
-    > = NodeIdMapUtils.expectAstChildByAttributeIndex(state.nodeIdMapCollection, fnExpr.node.id, 0, [
-        Ast.NodeKind.ParameterList,
-    ]) as Ast.IParameterList<Ast.AsNullablePrimitiveType | undefined>;
+    const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
+        state.nodeIdMapCollection,
+        fnExpr,
+    );
 
-    for (const parameterCsv of parameters.content.elements) {
-        const parameterName: Ast.Identifier = parameterCsv.node.name;
-        const scopeKey: string = parameterName.literal;
-
-        let maybeType: Ast.PrimitiveTypeConstantKind | undefined;
-        let isNullable: boolean;
-        const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = parameterCsv.node.maybeParameterType;
-        if (maybeParameterType !== undefined) {
-            const asConstant: Ast.TNullablePrimitiveType = maybeParameterType.paired;
-
-            switch (asConstant.kind) {
-                case Ast.NodeKind.NullablePrimitiveType:
-                    maybeType = asConstant.paired.primitiveType.constantKind;
-                    isNullable = true;
-                    break;
-
-                case Ast.NodeKind.PrimitiveType:
-                    maybeType = asConstant.primitiveType.constantKind;
-                    isNullable = false;
-                    break;
-
-                default:
-                    throw isNever(asConstant);
-            }
-        } else {
-            maybeType = undefined;
-            isNullable = true;
-        }
-
-        mightUpdateScope(state, scopeKey, {
+    inspectedFnExpr.parameters.map((parameter: TypeInspector.InspectedFunctionParameter) => {
+        mightUpdateScope(state, parameter.name.literal, {
             kind: ScopeItemKind.Parameter,
-            name: parameterName,
-            isOptional: parameterCsv.node.maybeOptionalConstant === undefined,
-            isNullable,
-            maybeType,
+            name: parameter.name,
+            isOptional: parameter.isOptional,
+            isNullable: parameter.isNullable,
+            maybeType:
+                parameter.maybeType !== undefined
+                    ? TypeUtils.maybePrimitiveTypeConstantKindFromTypeKind(parameter.maybeType)
+                    : undefined,
         });
-    }
+    });
 }
 
 function inspectIdentifier(state: IdentifierState, identifier: TXorNode, isRoot: boolean): void {

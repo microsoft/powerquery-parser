@@ -195,9 +195,11 @@ export function letKeyValuePairs(
         throw maybeErr;
     }
 
-    const maybeArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeWrappedContent(
+    const maybeArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
-        letExpression,
+        letExpression.node.id,
+        1,
+        [Ast.NodeKind.ArrayWrapper],
     );
     return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }

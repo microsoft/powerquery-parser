@@ -29,6 +29,55 @@ export function typeKindFromLiteralKind(
     }
 }
 
+export function maybePrimitiveTypeConstantKindFromTypeKind(
+    typeKind: Type.TypeKind,
+): undefined | Ast.PrimitiveTypeConstantKind {
+    switch (typeKind) {
+        case Type.TypeKind.Action:
+            return Ast.PrimitiveTypeConstantKind.Action;
+        case Type.TypeKind.Any:
+            return Ast.PrimitiveTypeConstantKind.Any;
+        case Type.TypeKind.AnyNonNull:
+            return Ast.PrimitiveTypeConstantKind.AnyNonNull;
+        case Type.TypeKind.Binary:
+            return Ast.PrimitiveTypeConstantKind.Binary;
+        case Type.TypeKind.Date:
+            return Ast.PrimitiveTypeConstantKind.Date;
+        case Type.TypeKind.DateTime:
+            return Ast.PrimitiveTypeConstantKind.DateTime;
+        case Type.TypeKind.DateTimeZone:
+            return Ast.PrimitiveTypeConstantKind.DateTimeZone;
+        case Type.TypeKind.Duration:
+            return Ast.PrimitiveTypeConstantKind.Duration;
+        case Type.TypeKind.Function:
+            return Ast.PrimitiveTypeConstantKind.Function;
+        case Type.TypeKind.List:
+            return Ast.PrimitiveTypeConstantKind.List;
+        case Type.TypeKind.Logical:
+            return Ast.PrimitiveTypeConstantKind.Logical;
+        case Type.TypeKind.None:
+            return Ast.PrimitiveTypeConstantKind.None;
+        case Type.TypeKind.Null:
+            return Ast.PrimitiveTypeConstantKind.Null;
+        case Type.TypeKind.Number:
+            return Ast.PrimitiveTypeConstantKind.Number;
+        case Type.TypeKind.Record:
+            return Ast.PrimitiveTypeConstantKind.Record;
+        case Type.TypeKind.Table:
+            return Ast.PrimitiveTypeConstantKind.Table;
+        case Type.TypeKind.Text:
+            return Ast.PrimitiveTypeConstantKind.Text;
+        case Type.TypeKind.Time:
+            return Ast.PrimitiveTypeConstantKind.Time;
+        case Type.TypeKind.Type:
+            return Ast.PrimitiveTypeConstantKind.Type;
+        case Type.TypeKind.Unknown:
+            return undefined;
+        default:
+            throw isNever(typeKind);
+    }
+}
+
 export function typeKindFromPrimitiveTypeConstantKind(
     primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind,
 ): Type.TypeKind {
