@@ -59,11 +59,11 @@ describe(`Inspection - Scope - Type`, () => {
         });
 
         it(`{}`, () => {
-            expectExpressionType("{}", Type.TypeKind.List, true);
+            expectExpressionType("{}", Type.TypeKind.List, false);
         });
 
         it(`[]`, () => {
-            expectExpressionType("[]", Type.TypeKind.Record, true);
+            expectExpressionType("[]", Type.TypeKind.Record, false);
         });
     });
 

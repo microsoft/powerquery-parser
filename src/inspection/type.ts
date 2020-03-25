@@ -143,6 +143,14 @@ function evaluateXorNode(
             result = evaluateByChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
             break;
 
+        case Ast.NodeKind.ListExpression:
+            result = genericFactory(Type.TypeKind.List, false);
+            break;
+
+        case Ast.NodeKind.RecordExpression:
+            result = genericFactory(Type.TypeKind.Record, false);
+            break;
+
         default:
             result = unknownFactory();
     }
