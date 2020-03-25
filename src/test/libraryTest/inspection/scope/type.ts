@@ -45,14 +45,25 @@ describe(`Inspection - Scope - Type`, () => {
         it(`true`, () => {
             expectExpressionType("true", Type.TypeKind.Logical, false);
         });
+
         it(`false`, () => {
             expectExpressionType("false", Type.TypeKind.Logical, false);
         });
+
         it(`1`, () => {
             expectExpressionType("1", Type.TypeKind.Number, false);
         });
+
         it(`null`, () => {
             expectExpressionType("null", Type.TypeKind.Null, true);
+        });
+
+        it(`{}`, () => {
+            expectExpressionType("{}", Type.TypeKind.List, true);
+        });
+
+        it(`[]`, () => {
+            expectExpressionType("[]", Type.TypeKind.Record, true);
         });
     });
 
