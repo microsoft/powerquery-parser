@@ -119,7 +119,7 @@ function evaluateXorNode(
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
-            result = evaluateBinOpExpression(nodeIdMapCollection, xorNode, scopeTypeMap);
+            result = evaluateBinOpExpression(nodeIdMapCollection, scopeTypeMap, xorNode);
             break;
 
         case Ast.NodeKind.AsExpression: {
@@ -149,6 +149,10 @@ function evaluateXorNode(
 
         case Ast.NodeKind.RecordExpression:
             result = genericFactory(Type.TypeKind.Record, false);
+            break;
+
+        case Ast.NodeKind.UnaryExpression:
+            result = evaluateUnaryExpression(nodeIdMapCollection, scopeTypeMap, xorNode);
             break;
 
         default:
@@ -219,8 +223,8 @@ function evaluateByChildAttributeIndex(
 
 function evaluateBinOpExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
-    xorNode: TXorNode,
     scopeTypeMap: ScopeTypeCacheMap,
+    xorNode: TXorNode,
 ): Type.TType {
     if (!AstUtils.isTBinOpExpressionKind(xorNode.node.kind)) {
         const details: {} = {
@@ -358,6 +362,63 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
     }
 }
 
+function evaluateUnaryExpression(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    scopeTypeMap: ScopeTypeCacheMap,
+    xorNode: TXorNode,
+): Type.TType {
+    if (xorNode.node.kind !== Ast.NodeKind.UnaryExpression) {
+        const details: {} = {
+            actualNodeKind: xorNode.node.kind,
+            expectedNodeKind: Ast.NodeKind.UnaryExpression,
+        };
+        throw new CommonError.InvariantError(`expected Ast.NodeKind.UnaryExpression`, details);
+    }
+
+    const maybeOperatorsWrapper:
+        | undefined
+        | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
+        Ast.NodeKind.ArrayWrapper,
+    ]);
+    if (maybeOperatorsWrapper === undefined) {
+        return unknownFactory();
+    }
+
+    const maybeExpression: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        undefined,
+    );
+    if (maybeExpression === undefined) {
+        return unknownFactory();
+    }
+
+    // Only certain operators are allowed depending on the type.
+    // Unlike BinOpExpression, it's easier to implement the check without a lookup table.
+    let expectedUnaryOperatorKinds: ReadonlyArray<Ast.UnaryOperatorKind>;
+    const expressionType: Type.TType = evaluateXorNode(nodeIdMapCollection, scopeTypeMap, maybeExpression);
+    if (expressionType.kind === Type.TypeKind.Number) {
+        expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Positive, Ast.UnaryOperatorKind.Negative];
+    } else if (expressionType.kind === Type.TypeKind.Logical) {
+        expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Not];
+    } else {
+        return noneFactory();
+    }
+
+    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIter.maybeAstChildren(
+        nodeIdMapCollection,
+        maybeOperatorsWrapper.node.id,
+    ) as ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>>;
+    for (const operator of operators) {
+        if (expectedUnaryOperatorKinds.indexOf(operator.constantKind) === -1) {
+            return noneFactory();
+        }
+    }
+
+    return expressionType;
+}
+
 const BinOpExpressionLookup: ReadonlyMap<string, Type.TypeKind> = new Map([
     ...createLookupsForRelational(Type.TypeKind.Null),
     ...createLookupsForEquality(Type.TypeKind.Null),
@@ -458,25 +519,45 @@ const BinOpExpressionLookup: ReadonlyMap<string, Type.TypeKind> = new Map([
     ],
 ]);
 
-const binOpExpressionPartialLookup: Map<string, Type.TypeKind[]> = new Map();
-for (const key of BinOpExpressionLookup.keys()) {
-    const lastDeliminatorIndex: number = key.lastIndexOf(",");
-    const partialKey: string = key.slice(0, lastDeliminatorIndex);
-    const potentialNewValue: Type.TypeKind = key.slice(lastDeliminatorIndex + 1) as Type.TypeKind;
-    const values: Type.TypeKind[] = binOpExpressionPartialLookup.get(partialKey) || [];
+// Creates a lookup of what types are accepted in a BinOpExpression which hasn't parsed its second operand.
+// Eg. '1 + ' and 'true and '
+//
+// Created by processing BinOpExpressionLookup's keys, which are in the form of:
+// <first operand> , <operator> , <second operand>
+// The partial lookup key is the first two components (first operand, operator),
+// and the value is the set of (second operand).
+const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeKind>> = new Map(
+    // Grab the keys
+    [...BinOpExpressionLookup.keys()]
+        .reduce(
+            (
+                binaryExpressionPartialLookup: Map<string, ReadonlyArray<Type.TypeKind>>,
+                key: string,
+                _currentIndex,
+                _array,
+            ): Map<string, ReadonlyArray<Type.TypeKind>> => {
+                const lastDeliminatorIndex: number = key.lastIndexOf(",");
+                // Grab '<first operand> , <operator>'.
+                const partialKey: string = key.slice(0, lastDeliminatorIndex);
+                // Grab '<second operand>'.
+                const potentialNewValue: Type.TypeKind = key.slice(lastDeliminatorIndex + 1) as Type.TypeKind;
 
-    if (values.indexOf(potentialNewValue) === -1) {
-        values.push(potentialNewValue);
-    }
-}
-const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeKind>> = binOpExpressionPartialLookup;
+                // Add the potentialNewValue if it's a new type.
+                const maybeValues: undefined | ReadonlyArray<Type.TypeKind> = binaryExpressionPartialLookup.get(
+                    partialKey,
+                );
+                if (maybeValues === undefined) {
+                    binaryExpressionPartialLookup.set(partialKey, [potentialNewValue]);
+                } else if (maybeValues.indexOf(potentialNewValue) !== -1) {
+                    binaryExpressionPartialLookup.set(partialKey, [...maybeValues, potentialNewValue]);
+                }
 
-const UnaryExpressionLookup: Map<string, Type.TypeKind> = new Map([
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Not, Type.TypeKind.Logical), Type.TypeKind.Logical],
-
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Negative, Type.TypeKind.Number), Type.TypeKind.Number],
-    [unaryOpExpressionLookupKey(Ast.UnaryOperatorKind.Positive, Type.TypeKind.Number), Type.TypeKind.Number],
-]);
+                return binaryExpressionPartialLookup;
+            },
+            new Map(),
+        )
+        .entries(),
+);
 
 function binOpExpressionPartialLookupKey(
     leftTypeKind: Type.TypeKind,
@@ -491,10 +572,6 @@ function binOpExpressionLookupKey(
     rightTypeKind: Type.TypeKind,
 ): string {
     return `${leftTypeKind},${operatorKind},${rightTypeKind}`;
-}
-
-function unaryOpExpressionLookupKey(operatorKind: Ast.UnaryOperatorKind, typeKind: Type.TypeKind): string {
-    return `${operatorKind},${typeKind}`;
 }
 
 function createLookupsForRelational(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {

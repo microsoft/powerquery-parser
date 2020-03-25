@@ -84,4 +84,30 @@ describe(`Inspection - Scope - Type`, () => {
             expectExpressionType(`true + 1`, Type.TypeKind.None, false);
         });
     });
+
+    describe("abc1232 UnaryExpression", () => {
+        it(`+1`, () => {
+            expectExpressionType(`+1`, Type.TypeKind.Number, false);
+        });
+
+        it(`-1`, () => {
+            expectExpressionType(`-1`, Type.TypeKind.Number, false);
+        });
+
+        it(`not true`, () => {
+            expectExpressionType(`not true`, Type.TypeKind.Logical, false);
+        });
+
+        it(`not false`, () => {
+            expectExpressionType(`not false`, Type.TypeKind.Logical, false);
+        });
+
+        it(`not 1`, () => {
+            expectExpressionType(`not 1`, Type.TypeKind.None, false);
+        });
+
+        it(`+true`, () => {
+            expectExpressionType(`+true`, Type.TypeKind.None, false);
+        });
+    });
 });
