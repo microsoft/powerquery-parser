@@ -49,5 +49,5 @@ export interface ParameterScopeItem extends IScopeItem {
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
-    readonly maybeType: Ast.TConstantKind | undefined;
+    readonly maybeType: Ast.PrimitiveTypeConstantKind | undefined;
 }

@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Ast, NodeIdMap, ParseContext } from "../";
-import { CommonError, TypeUtils } from "../../common";
+import { CommonError, TypeScriptUtils } from "../../common";
 import { Token } from "../../lexer";
-import { NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 
 export function newState(): State {
@@ -109,7 +109,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
             nodeIdMapCollection.maybeRightMostLeaf === undefined ||
             nodeIdMapCollection.maybeRightMostLeaf.tokenRange.tokenIndexStart < astNode.tokenRange.tokenIndexStart
         ) {
-            const unsafeNodeIdMapCollection: TypeUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
+            const unsafeNodeIdMapCollection: TypeScriptUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
             unsafeNodeIdMapCollection.maybeRightMostLeaf = astNode;
         }
     }
@@ -216,7 +216,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
 
         // The child Node inherits the attributeIndex.
         const childXorNode: TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
-        const mutableChildXorNode: TypeUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
+        const mutableChildXorNode: TypeScriptUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
         mutableChildXorNode.maybeAttributeIndex = contextNode.maybeAttributeIndex;
     }
     // Is a leaf node, not root node.
@@ -253,7 +253,7 @@ function removeOrReplaceChildId(
     maybeReplacementId: number | undefined,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMapUtils.expectChildIds(childIdsById, parentId);
+    const childIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(childIdsById, parentId);
     const replacementIndex: number = childIds.indexOf(childId);
     if (replacementIndex === -1) {
         const details: {} = {

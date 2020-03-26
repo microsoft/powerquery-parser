@@ -172,7 +172,9 @@ export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpression
     }
 }
 
-export function maybeLiteralKindFrom(maybeTokenKind: TokenKind | undefined): Ast.LiteralKind | undefined {
+export function maybeLiteralKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {
     switch (maybeTokenKind) {
         case TokenKind.HexLiteral:
         case TokenKind.KeywordHashNan:
@@ -257,6 +259,22 @@ export function isTBinOpExpression(node: Ast.TNode): node is Ast.TBinOpExpressio
     }
 }
 
+export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.TBinOpExpressionNodeKind {
+    switch (nodeKind) {
+        case Ast.NodeKind.ArithmeticExpression:
+        case Ast.NodeKind.AsExpression:
+        case Ast.NodeKind.EqualityExpression:
+        case Ast.NodeKind.IsExpression:
+        case Ast.NodeKind.LogicalExpression:
+        case Ast.NodeKind.MetadataExpression:
+        case Ast.NodeKind.RelationalExpression:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 export function isPairedWrapperConstantKinds(x: Ast.TConstantKind, y: Ast.TConstantKind): boolean {
     if (x.length !== 1 || y.length !== 1) {
         return false;
@@ -274,11 +292,17 @@ export function isPairedWrapperConstantKinds(x: Ast.TConstantKind, y: Ast.TConst
 }
 
 export function testAnyNodeKind(
-    value: Ast.NodeKind,
+    node: Ast.TNode,
     allowedNodeKinds: ReadonlyArray<Ast.NodeKind>,
-    details: {} | undefined = undefined,
 ): CommonError.InvariantError | undefined {
-    return allowedNodeKinds.indexOf(value) === -1
-        ? new CommonError.InvariantError(`NodeKind value is not an allowed NodeKind value`, details)
-        : undefined;
+    if (allowedNodeKinds.indexOf(node.kind) !== -1) {
+        return undefined;
+    }
+
+    const details: {} = {
+        allowedNodeKinds,
+        actualNodeKind: node.kind,
+        actualNodeId: node.id,
+    };
+    return new CommonError.InvariantError(`${testAnyNodeKind.name}: incorrect Ast.NodeKind`, details);
 }

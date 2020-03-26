@@ -2,13 +2,14 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result, ResultUtils } from "../common";
-import { TriedTraverse } from "../common/traversal";
 import { IParserState, NodeIdMap, ParseError } from "../parser";
 import { InspectionSettings } from "../settings";
+import { tryInspectAutocomplete, tryInspectScope, tryInspectScopeType } from "./";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
-import { InspectedAutocomplete, tryFrom as autocompleteInspectedTryFrom } from "./autocomplete";
+import { InspectedAutocomplete, TriedAutocomplete as TriedInspectAutocomplete } from "./autocomplete";
 import { Position } from "./position";
-import { InspectedScope, tryInspectScope } from "./scope";
+import { InspectedScope, TriedInspectScope } from "./scope";
+import { InspectedType, TriedType as TriedInspectType } from "./type";
 
 // Inspection is designed to run sub-inspections,
 // eg. one inspection for scope and one for keywords.
@@ -19,7 +20,7 @@ import { InspectedScope, tryInspectScope } from "./scope";
 export interface InspectedCommon {
     readonly maybeActiveNode: ActiveNode | undefined;
 }
-export type Inspected = InspectedCommon & InspectedScope & InspectedAutocomplete;
+export type Inspected = InspectedCommon & InspectedScope & InspectedAutocomplete & InspectedType;
 export type TriedInspection = Result<Inspected, CommonError.CommonError>;
 
 export function tryFrom<S = IParserState>(
@@ -35,29 +36,39 @@ export function tryFrom<S = IParserState>(
         leafNodeIds,
     );
 
-    const triedInspectedScope: TriedTraverse<InspectedScope> = tryInspectScope(
+    const triedInspectScope: TriedInspectScope = tryInspectScope(
         settings,
         maybeActiveNode,
         nodeIdMapCollection,
         leafNodeIds,
     );
-    if (ResultUtils.isErr(triedInspectedScope)) {
-        return triedInspectedScope;
+    if (ResultUtils.isErr(triedInspectScope)) {
+        return triedInspectScope;
     }
 
-    const triedInspectedKeyword: TriedTraverse<InspectedAutocomplete> = autocompleteInspectedTryFrom(
+    const triedInspectType: TriedInspectType = tryInspectScopeType(
+        settings,
+        triedInspectScope.value,
+        nodeIdMapCollection,
+    );
+    if (ResultUtils.isErr(triedInspectType)) {
+        return triedInspectType;
+    }
+
+    const triedInspectAutocomplete: TriedInspectAutocomplete = tryInspectAutocomplete(
         settings,
         maybeActiveNode,
         nodeIdMapCollection,
         maybeParseError,
     );
-    if (ResultUtils.isErr(triedInspectedKeyword)) {
-        return triedInspectedKeyword;
+    if (ResultUtils.isErr(triedInspectAutocomplete)) {
+        return triedInspectAutocomplete;
     }
 
     return ResultUtils.okFactory({
         maybeActiveNode,
-        ...triedInspectedScope.value,
-        ...triedInspectedKeyword.value,
+        ...triedInspectScope.value,
+        ...triedInspectAutocomplete.value,
+        ...triedInspectType.value,
     });
 }

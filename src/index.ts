@@ -10,3 +10,4 @@ export * from "./localization";
 export * from "./parser";
 export * from "./settings";
 export * from "./tasks";
+export * from "./type";

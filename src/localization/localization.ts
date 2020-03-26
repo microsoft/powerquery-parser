@@ -203,8 +203,8 @@ export const Localization: ILocalization = {
         }
     },
 
-    error_common_unknown: (templates: ILocalizationTemplates, message: any) => {
-        return StringUtils.expectFormat(templates.error_common_unknown, message);
+    error_common_unknown: (templates: ILocalizationTemplates, innerError: any) => {
+        return StringUtils.expectFormat(templates.error_common_unknown, new Map([["innerError", innerError]]));
     },
 
     error_lex_badLineNumber: (templates: ILocalizationTemplates, kind: LexError.BadLineNumberKind) => {

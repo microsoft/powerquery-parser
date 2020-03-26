@@ -2,11 +2,11 @@
 // Licensed under the MIT license.
 
 import { Ast, AstUtils, NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
-import { CommonError, isNever, Result, ResultUtils, TypeUtils } from "../../common";
+import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { NodeIdMapUtils } from "../nodeIdMap";
+import { NodeIdMapIterator } from "../nodeIdMap";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -691,7 +691,7 @@ export function readRecursivePrimaryExpression<S = IParserState>(
         const headParentId: number = maybeHeadParentId;
 
         // Remove head as a child of its current parent.
-        const parentChildIds: ReadonlyArray<number> = NodeIdMapUtils.expectChildIds(
+        const parentChildIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(
             nodeIdMapCollection.childIdsById,
             headParentId,
         );
@@ -719,7 +719,7 @@ export function readRecursivePrimaryExpression<S = IParserState>(
 
     // Update start positions for recursive primary expression context
     const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    const mutableContext: TypeUtils.StripReadonly<ParseContext.Node> = currentContextNode;
+    const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.Node> = currentContextNode;
     // UNSAFE MARKER
     //
     // Purpose of code block:
@@ -735,7 +735,7 @@ export function readRecursivePrimaryExpression<S = IParserState>(
     mutableContext.tokenIndexStart = recursiveTokenIndexStart;
 
     // Update attribute index for the head Ast.TNode
-    const mutableHead: TypeUtils.StripReadonly<Ast.TPrimaryExpression> = head;
+    const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
     // UNSAFE MARKER
     //
     // Purpose of code block:
@@ -820,7 +820,12 @@ export function readLiteralExpression<S = IParserState>(
         throw maybeErr;
     }
 
-    const maybeLiteralKind: Ast.LiteralKind | undefined = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
+    const maybeLiteralKind:
+        | Ast.LiteralKind.Numeric
+        | Ast.LiteralKind.Logical
+        | Ast.LiteralKind.Null
+        | Ast.LiteralKind.Text
+        | undefined = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
     if (maybeLiteralKind === undefined) {
         throw new CommonError.InvariantError(
             `couldn't convert TokenKind=${state.maybeCurrentTokenKind} into LiteralKind`,

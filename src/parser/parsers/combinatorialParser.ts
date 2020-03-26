@@ -3,7 +3,7 @@
 
 import { Naive } from ".";
 import { Ast, AstUtils, NodeIdMap, ParseContextUtils } from "..";
-import { ArrayUtils, CommonError, isNever, TypeUtils } from "../../common";
+import { ArrayUtils, CommonError, isNever, TypeScriptUtils } from "../../common";
 import { TokenKind, TokenRange } from "../../lexer";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -124,13 +124,15 @@ function readBinOpExpression<S = IParserState>(
         }
 
         const newBinOpExpressionId: number = ParseContextUtils.nextId(state.contextState);
-        const left: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
-            expressions[minPrecedenceIndex];
+        const left: TypeScriptUtils.StripReadonly<
+            Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
+        > = expressions[minPrecedenceIndex];
         const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
-        const operatorConstant: TypeUtils.StripReadonly<Ast.IConstant<Ast.TBinOpExpressionOperator>> =
+        const operatorConstant: TypeScriptUtils.StripReadonly<Ast.IConstant<Ast.TBinOpExpressionOperator>> =
             operatorConstants[minPrecedenceIndex];
-        const right: TypeUtils.StripReadonly<Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType> =
-            expressions[minPrecedenceIndex + 1];
+        const right: TypeScriptUtils.StripReadonly<
+            Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
+        > = expressions[minPrecedenceIndex + 1];
 
         left.maybeAttributeIndex = 0;
         operatorConstant.maybeAttributeIndex = 1;

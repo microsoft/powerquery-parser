@@ -2,7 +2,16 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "../../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import {
+    Ast,
+    AstUtils,
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    ParseContext,
+    TXorNode,
+    XorNodeKind,
+} from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
@@ -50,7 +59,7 @@ export function maybeActiveNode(
 
     return {
         position,
-        ancestry: NodeIdMapUtils.expectAncestry(nodeIdMapCollection, leaf.node.id),
+        ancestry: NodeIdMapIterator.expectAncestry(nodeIdMapCollection, leaf.node.id),
         maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(position, nodeIdMapCollection, leaf),
     };
 }
@@ -95,16 +104,9 @@ export function expectPreviousXorNode(
     const xorNode: TXorNode = maybeXorNode;
 
     if (maybeAllowedNodeKinds !== undefined) {
-        const details: {} = {
-            fnName: expectPreviousXorNode.name,
-            nodeId: xorNode.node.id,
-            expectedAny: maybeAllowedNodeKinds,
-            actual: xorNode.node.kind,
-        };
-        const maybeErr: CommonError.InvariantError | undefined = AstUtils.testAnyNodeKind(
-            xorNode.node.kind,
+        const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(
+            xorNode,
             maybeAllowedNodeKinds,
-            details,
         );
         if (maybeErr) {
             throw maybeErr;
@@ -127,16 +129,9 @@ export function expectNextXorNode(
     const xorNode: TXorNode = maybeXorNode;
 
     if (maybeAllowedNodeKinds !== undefined) {
-        const details: {} = {
-            fnName: expectNextXorNode.name,
-            nodeId: xorNode.node.id,
-            expectedAny: maybeAllowedNodeKinds,
-            actual: xorNode.node.kind,
-        };
-        const maybeErr: CommonError.InvariantError | undefined = AstUtils.testAnyNodeKind(
-            xorNode.node.kind,
+        const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(
+            xorNode,
             maybeAllowedNodeKinds,
-            details,
         );
         if (maybeErr) {
             throw maybeErr;

@@ -42,31 +42,31 @@ describe(`Inspection - Scope - Parameter`, () => {
         const expected: AbridgedScope = [
             {
                 key: "a",
-                isOptional: true,
+                isOptional: false,
                 isNullable: true,
                 maybeType: undefined,
             },
             {
                 key: "b",
-                isOptional: true,
+                isOptional: false,
                 isNullable: false,
                 maybeType: Ast.PrimitiveTypeConstantKind.Number,
             },
             {
                 key: "c",
-                isOptional: true,
+                isOptional: false,
                 isNullable: true,
                 maybeType: Ast.PrimitiveTypeConstantKind.Function,
             },
             {
                 key: "d",
-                isOptional: false,
+                isOptional: true,
                 isNullable: true,
                 maybeType: undefined,
             },
             {
                 key: "e",
-                isOptional: false,
+                isOptional: true,
                 isNullable: false,
                 maybeType: Ast.PrimitiveTypeConstantKind.Table,
             },

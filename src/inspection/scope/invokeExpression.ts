@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 
@@ -133,7 +133,10 @@ function inspectInvokeExpressionArguments(
     // const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     // const position: Position = state.activeNode.position;
     const csvArray: TXorNode = maybeCsvArray;
-    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapUtils.expectXorChildren(nodeIdMapCollection, csvArray.node.id);
+    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
+        nodeIdMapCollection,
+        csvArray.node.id,
+    );
     const numArguments: number = csvNodes.length;
 
     const maybeAncestorCsv: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, nodeIndex, 2, [

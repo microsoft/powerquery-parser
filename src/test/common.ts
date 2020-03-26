@@ -139,7 +139,7 @@ function expectTriedParse<S = IParserState>(
 
 export function expectInspectionOk(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
     if (!ResultUtils.isOk(triedInspection)) {
-        throw new Error("AssertFailed: ResultUtils.isOk(triedInspect)");
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspect) - ${triedInspection.error.message}`);
     }
     return triedInspection.value;
 }
