@@ -6,7 +6,7 @@ import {
     Ast,
     AstUtils,
     NodeIdMap,
-    NodeIdMapIter,
+    NodeIdMapIterator,
     NodeIdMapUtils,
     ParseContext,
     TXorNode,
@@ -59,7 +59,7 @@ export function maybeActiveNode(
 
     return {
         position,
-        ancestry: NodeIdMapIter.expectAncestry(nodeIdMapCollection, leaf.node.id),
+        ancestry: NodeIdMapIterator.expectAncestry(nodeIdMapCollection, leaf.node.id),
         maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(position, nodeIdMapCollection, leaf),
     };
 }

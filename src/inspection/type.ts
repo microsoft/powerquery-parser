@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, isNever, Result, ResultKind } from "../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
+import { Ast, AstUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { InspectionSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
 import { InspectedScope, ScopeItemKind, TScopeItem } from "./scope";
@@ -235,7 +235,7 @@ function evaluateBinOpExpression(
     }
 
     const parentId: number = xorNode.node.id;
-    const children: ReadonlyArray<TXorNode> = NodeIdMapIter.expectXorChildren(nodeIdMapCollection, parentId);
+    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(nodeIdMapCollection, parentId);
 
     const maybeLeft: undefined | TXorNode = children[0];
     const maybeOperatorKind: undefined | Ast.TBinOpExpressionOperator =
@@ -406,7 +406,7 @@ function evaluateUnaryExpression(
         return noneFactory();
     }
 
-    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIter.maybeAstChildren(
+    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeAstChildren(
         nodeIdMapCollection,
         maybeOperatorsWrapper.node.id,
     ) as ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>>;

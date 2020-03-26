@@ -6,7 +6,7 @@ import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils } from "../.
 import { LexerSnapshot, Token, TokenKind } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { NodeIdMapIter } from "../nodeIdMap";
+import { NodeIdMapIterator } from "../nodeIdMap";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -691,7 +691,7 @@ export function readRecursivePrimaryExpression<S = IParserState>(
         const headParentId: number = maybeHeadParentId;
 
         // Remove head as a child of its current parent.
-        const parentChildIds: ReadonlyArray<number> = NodeIdMapIter.expectChildIds(
+        const parentChildIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(
             nodeIdMapCollection.childIdsById,
             headParentId,
         );

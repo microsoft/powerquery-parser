@@ -4,7 +4,7 @@
 import { ScopeItemKind, TScopeItem } from ".";
 import { InspectionUtils } from "..";
 import { CommonError, isNever, Result, ResultKind } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils } from "../activeNode";
 import { Position, PositionUtils } from "../position";
@@ -282,7 +282,7 @@ function inspectLetExpression(state: IdentifierState, letExpr: TXorNode): void {
         ]);
     }
 
-    for (const kvp of NodeIdMapIter.letKeyValuePairs(nodeIdMapCollection, letExpr)) {
+    for (const kvp of NodeIdMapIterator.letKeyValuePairs(nodeIdMapCollection, letExpr)) {
         if (maybeAncestorKeyValuePair && maybeAncestorKeyValuePair.node.id === kvp.source.node.id) {
             continue;
         }
@@ -327,7 +327,7 @@ function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, record: 
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
     ]);
 
-    for (const kvp of NodeIdMapIter.recordKeyValuePairs(nodeIdMapCollection, record)) {
+    for (const kvp of NodeIdMapIterator.recordKeyValuePairs(nodeIdMapCollection, record)) {
         if (kvp.source.node.id === ancestorKeyValuePair.node.id) {
             continue;
         }
@@ -349,7 +349,7 @@ function inspectSectionMember(state: IdentifierState, sectionMember: TXorNode): 
     const sectionMemberArray: TXorNode = ActiveNodeUtils.expectNextXorNode(state.activeNode, state.nodeIndex, 1, [
         Ast.NodeKind.ArrayWrapper,
     ]);
-    const sectionMembers: ReadonlyArray<TXorNode> = NodeIdMapIter.expectXorChildren(
+    const sectionMembers: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
         nodeIdMapCollection,
         sectionMemberArray.node.id,
     );

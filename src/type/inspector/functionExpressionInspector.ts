@@ -3,7 +3,7 @@
 
 import { Type, TypeUtils } from "..";
 import { CommonError, isNever } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapIter, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 
 export interface InspectedFunctionExpression {
     readonly parameters: ReadonlyArray<InspectedFunctionParameter>;
@@ -90,7 +90,7 @@ function functionParameterXorNodes(
 
     return maybeWrappedContent === undefined
         ? []
-        : NodeIdMapIter.arrayWrapperXorNodes(nodeIdMapCollection, maybeWrappedContent);
+        : NodeIdMapIterator.arrayWrapperXorNodes(nodeIdMapCollection, maybeWrappedContent);
 }
 
 function examineParameter(
