@@ -2,17 +2,17 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result, ResultKind, ResultUtils } from "../../common";
-import { AncestorUtils, Ast, NodeIdMap, NodeIdMapIterator, TXorNode } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { InspectionSettings } from "../../settings";
-import { ScopeItemKind, TScopeItem } from "./scopeItem";
+import { ScopeItemKind2, TScopeItem2 } from "./scopeItem";
 
 export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
 
 export type ScopeById = Map<number, ScopeItemByKey>;
 
-export type ScopeItemByKey = Map<string, TScopeItem>;
+export type ScopeItemByKey = Map<string, TScopeItem2>;
 
-export function tryInspectScope(
+export function tryInspectScope2(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -37,7 +37,6 @@ export function tryInspectScope(
         const numNodes: number = ancestry.length;
         const state: ScopeInspectionState = {
             nodeIndex: 0,
-            currentScope: updateCurrentScope(scopeById, scopeChanges, ancestry, numNodes - 1),
             scopeChanges,
             cache: scopeById,
             ancestry,
@@ -45,15 +44,13 @@ export function tryInspectScope(
             leafNodeIds,
         };
 
-        for (let index: number = numNodes - 1; index < numNodes; index -= 1) {
-            state.currentScope = updateCurrentScope(scopeById, scopeChanges, ancestry, index);
+        for (let index: number = numNodes - 1; index > 0; index -= 1) {
             state.nodeIndex = index;
             const xorNode: TXorNode = ancestry[index];
             inspectNode(state, xorNode);
         }
 
-        throw new Error();
-        // return ResultUtils.okFactory(state.scopeByIdCache);
+        return ResultUtils.okFactory(scopeById);
     } catch (err) {
         return {
             kind: ResultKind.Err,
@@ -64,7 +61,6 @@ export function tryInspectScope(
 
 interface ScopeInspectionState {
     nodeIndex: number;
-    currentScope: ScopeItemByKey;
     readonly scopeChanges: ScopeById;
     readonly cache: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
@@ -111,18 +107,21 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
     }
 }
 
-// If you came from the TExpression in the EachExpression,
-// then add '_' to the scope.
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
-    const previous: TXorNode = AncestorUtils.expectPreviousXorNode(state.ancestry, state.nodeIndex);
-    if (previous.node.maybeAttributeIndex !== 1) {
-        return;
-    }
-
-    mightUpdateScope(state, "_", {
-        kind: ScopeItemKind.Each,
-        each: eachExpr,
-    });
+    expandChildScope(
+        state,
+        eachExpr,
+        [1],
+        [
+            [
+                "_",
+                {
+                    kind: ScopeItemKind2.Each,
+                    each: eachExpr,
+                },
+            ],
+        ],
+    );
 }
 
 // // If position is to the right of '=>',
@@ -145,7 +144,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 
 //     inspectedFnExpr.parameters.map((parameter: TypeInspector.InspectedFunctionParameter) => {
 //         mightUpdateScope(state, parameter.name.literal, {
-//             kind: ScopeItemKind.Parameter,
+//             kind: ScopeItemKind2.Parameter,
 //             name: parameter.name,
 //             isOptional: parameter.isOptional,
 //             isNullable: parameter.isNullable,
@@ -192,7 +191,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 //     }
 
 //     mightUpdateScope(state, identifierAstNode.literal, {
-//         kind: ScopeItemKind.Undefined,
+//         kind: ScopeItemKind2.Undefined,
 //         xorNode: identifier,
 //     });
 // }
@@ -268,7 +267,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 
 //     if (key.length) {
 //         mightUpdateScope(state, key, {
-//             kind: ScopeItemKind.Undefined,
+//             kind: ScopeItemKind2.Undefined,
 //             xorNode: identifierExpr,
 //         });
 //     }
@@ -320,7 +319,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 //             undefined,
 //         );
 //         mightUpdateScope(state, key.literal, {
-//             kind: ScopeItemKind.KeyValuePair,
+//             kind: ScopeItemKind2.KeyValuePair,
 //             key,
 //             maybeValue,
 //         });
@@ -348,7 +347,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 //         }
 
 //         mightUpdateScope(state, kvp.keyLiteral, {
-//             kind: ScopeItemKind.KeyValuePair,
+//             kind: ScopeItemKind2.KeyValuePair,
 //             key: kvp.key,
 //             maybeValue: kvp.maybeValue,
 //         });
@@ -407,7 +406,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 //         );
 
 //         mightUpdateScope(state, name.literal, {
-//             kind: ScopeItemKind.SectionMember,
+//             kind: ScopeItemKind2.SectionMember,
 //             key: name,
 //             maybeValue,
 //         });
@@ -428,38 +427,67 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 //     return maybeParent !== undefined ? maybeParent.node.kind === parentNodeKind : false;
 // }
 
-// function mightUpdateScope(state: ScopeInspectionState, key: string, scopeItem: TScopeItem): void {
+// function mightUpdateScope(state: ScopeInspectionState, key: string, scopeItem: TScopeItem2): void {
 //     const scopeBy;
 
 //     state.scopeById.set(key, scopeItem);
-//     const unsafeScope: Map<string, TScopeItem> = state.result.scope as Map<string, TScopeItem>;
-//     const maybeScopeItem: TScopeItem | undefined = unsafeScope.get(key);
+//     const unsafeScope: Map<string, TScopeItem2> = state.result.scope as Map<string, TScopeItem2>;
+//     const maybeScopeItem: TScopeItem2 | undefined = unsafeScope.get(key);
 //     const isUpdateNeeded: boolean =
 //         maybeScopeItem === undefined ||
-//         (maybeScopeItem.kind === ScopeItemKind.Undefined && scopeItem.kind !== ScopeItemKind.Undefined);
+//         (maybeScopeItem.kind === ScopeItemKind2.Undefined && scopeItem.kind !== ScopeItemKind2.Undefined);
 
 //     if (isUpdateNeeded) {
 //         unsafeScope.set(key, scopeItem);
 //     }
 // }
 
-function updateCurrentScope(
-    cache: ScopeById,
-    temp: ScopeById,
-    ancestry: ReadonlyArray<TXorNode>,
-    index: number,
-): ScopeItemByKey {
-    const currentNodeId: number = ancestry[index].node.id;
-    const maybeCached: undefined | ScopeItemByKey = cache.get(currentNodeId);
-    if (maybeCached !== undefined) {
-        return maybeCached;
-    }
+function expandChildScope(
+    state: ScopeInspectionState,
+    parent: TXorNode,
+    childAttributeIds: ReadonlyArray<number>,
+    newEntries: ReadonlyArray<[string, TScopeItem2]>,
+): void {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const parentId: number = parent.node.id;
+    const parentEntries: ReadonlyArray<[string, TScopeItem2]> = [...scopeFor(state, parentId).entries()];
 
-    const scopeItemByKey: ScopeItemByKey = new Map();
-    temp.set(currentNodeId, scopeItemByKey);
-    return scopeItemByKey;
+    // TODO: optimize this
+    for (const attributeId of childAttributeIds) {
+        const maybeChild: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            nodeIdMapCollection,
+            parentId,
+            attributeId,
+            undefined,
+        );
+        if (maybeChild === undefined) {
+            continue;
+        }
+        const childId: number = maybeChild.node.id;
+
+        const childScope: ScopeItemByKey = scopeFor(state, childId);
+
+        for (const [key, value] of parentEntries) {
+            childScope.set(key, value);
+        }
+        for (const [key, value] of newEntries) {
+            childScope.set(key, value);
+        }
+    }
 }
 
-function mightUpdateScope(state: ScopeInspectionState, key: string, scopeItem: TScopeItem): void {
-    state.currentScope.set(key, scopeItem);
+function scopeFor(state: ScopeInspectionState, nodeId: number): ScopeItemByKey {
+    let maybeScope: undefined | ScopeItemByKey = state.cache.get(nodeId);
+    if (maybeScope !== undefined) {
+        return maybeScope;
+    }
+
+    maybeScope = state.scopeChanges.get(nodeId);
+    if (maybeScope !== undefined) {
+        return maybeScope;
+    } else {
+        const newScope: ScopeItemByKey = new Map();
+        state.scopeChanges.set(nodeId, newScope);
+        return newScope;
+    }
 }

@@ -8,4 +8,5 @@ export * from "./autocomplete";
 export * from "./inspection";
 export * from "./position";
 export * from "./scope";
+export * from "./scope2";
 export * from "./type";

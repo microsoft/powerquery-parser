@@ -1,16 +1,16 @@
-import { Ast, TXorNode } from "../../parser";
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export type TScopeItem =
-    | EachScopeItem
-    | KeyValuePairScopeItem
-    | ParameterScopeItem
-    | SectionMemberScopeItem
-    | UndefinedScopeItem;
+import { Ast, TXorNode } from "../../parser";
 
-export const enum ScopeItemKind {
+export type TScopeItem2 =
+    | EachScopeItem2
+    | KeyValuePairScopeItem2
+    | ParameterScopeItem2
+    | SectionMemberScopeItem2
+    | UndefinedScopeItem2;
+
+export const enum ScopeItemKind2 {
     KeyValuePair = "KeyValuePair",
     Undefined = "Undefined",
     Each = "Each",
@@ -18,34 +18,34 @@ export const enum ScopeItemKind {
     SectionMember = "SectionMember",
 }
 
-export interface IScopeItem {
-    readonly kind: ScopeItemKind;
+export interface IScopeItem2 {
+    readonly kind: ScopeItemKind2;
 }
 
-export interface KeyValuePairScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.KeyValuePair;
+export interface KeyValuePairScopeItem2 extends IScopeItem2 {
+    readonly kind: ScopeItemKind2.KeyValuePair;
     readonly key: Ast.Identifier | Ast.GeneralizedIdentifier;
     readonly maybeValue: TXorNode | undefined;
 }
 
-export interface SectionMemberScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.SectionMember;
+export interface SectionMemberScopeItem2 extends IScopeItem2 {
+    readonly kind: ScopeItemKind2.SectionMember;
     readonly key: Ast.Identifier;
     readonly maybeValue: TXorNode | undefined;
 }
 
-export interface UndefinedScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.Undefined;
+export interface UndefinedScopeItem2 extends IScopeItem2 {
+    readonly kind: ScopeItemKind2.Undefined;
     readonly xorNode: TXorNode;
 }
 
-export interface EachScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.Each;
+export interface EachScopeItem2 extends IScopeItem2 {
+    readonly kind: ScopeItemKind2.Each;
     readonly each: TXorNode;
 }
 
-export interface ParameterScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.Parameter;
+export interface ParameterScopeItem2 extends IScopeItem2 {
+    readonly kind: ScopeItemKind2.Parameter;
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
