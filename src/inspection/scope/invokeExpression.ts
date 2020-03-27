@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
-import { ActiveNode, ActiveNodeUtils } from "../activeNode";
+import { AncestorUtils, Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { ActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 
 export interface InspectedInvokeExpression {
@@ -124,7 +124,7 @@ function inspectInvokeExpressionArguments(
     nodeIndex: number,
 ): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArray: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, nodeIndex, 1, [
+    const maybeCsvArray: TXorNode | undefined = AncestorUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, 1, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeCsvArray === undefined) {
@@ -139,9 +139,12 @@ function inspectInvokeExpressionArguments(
     );
     const numArguments: number = csvNodes.length;
 
-    const maybeAncestorCsv: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, nodeIndex, 2, [
-        Ast.NodeKind.Csv,
-    ]);
+    const maybeAncestorCsv: TXorNode | undefined = AncestorUtils.maybePreviousXorNode(
+        activeNode.ancestry,
+        nodeIndex,
+        2,
+        [Ast.NodeKind.Csv],
+    );
     const maybePositionArgumentIndex: number | undefined =
         maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;
 

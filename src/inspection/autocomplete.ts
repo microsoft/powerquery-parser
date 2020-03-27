@@ -4,9 +4,18 @@
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
+import {
+    AncestorUtils,
+    Ast,
+    IParserState,
+    NodeIdMap,
+    NodeIdMapUtils,
+    ParseError,
+    TXorNode,
+    XorNodeKind,
+} from "../parser";
 import { InspectionSettings } from "../settings";
-import { ActiveNode, ActiveNodeUtils } from "./activeNode";
+import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
 export interface InspectedAutocomplete {
@@ -352,7 +361,7 @@ function autocompleteListExpression(
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestorUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 3, undefined);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -361,7 +370,7 @@ function autocompleteListExpression(
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 4, undefined)
+            ? AncestorUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 4, undefined)
             : nodeOrComma;
 
     if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
@@ -395,10 +404,12 @@ function autocompleteSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, ancestorIndex, 2, [
-            Ast.NodeKind.IdentifierPairedExpression,
-            Ast.NodeKind.Identifier,
-        ]);
+        const maybeName: TXorNode | undefined = AncestorUtils.maybePreviousXorNode(
+            activeNode.ancestry,
+            ancestorIndex,
+            2,
+            [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
+        );
 
         // Name hasn't been parsed yet so we can exit.
         if (maybeName === undefined || maybeName.kind !== XorNodeKind.Ast) {

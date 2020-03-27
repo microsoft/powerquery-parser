@@ -4,11 +4,11 @@
 import { ScopeItemKind, TScopeItem } from ".";
 import { InspectionUtils } from "..";
 import { CommonError, isNever, Result, ResultKind } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { AncestorUtils, Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { InspectionSettings } from "../../settings";
-import { ActiveNode, ActiveNodeUtils } from "../activeNode";
-import { Position, PositionUtils } from "../position";
 import { TypeInspector, TypeUtils } from "../../type";
+import { ActiveNode } from "../activeNode";
+import { Position, PositionUtils } from "../position";
 
 // The inspection travels across ActiveNode.ancestry to build up a scope.
 export interface InspectedIdentifier {
@@ -104,7 +104,7 @@ function inspectNode(state: IdentifierState, xorNode: TXorNode): void {
 // If you came from the TExpression in the EachExpression,
 // then add '_' to the scope.
 function inspectEachExpression(state: IdentifierState, eachExpr: TXorNode): void {
-    const previous: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex);
+    const previous: TXorNode = AncestorUtils.expectPreviousXorNode(state.activeNode.ancestry, state.nodeIndex);
     if (previous.node.maybeAttributeIndex !== 1) {
         return;
     }
@@ -123,7 +123,7 @@ function inspectFunctionExpression(state: IdentifierState, fnExpr: TXorNode): vo
     }
 
     // We only care about parameters if we're to the right of the '=>'
-    const previous: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex);
+    const previous: TXorNode = AncestorUtils.expectPreviousXorNode(state.activeNode.ancestry, state.nodeIndex);
     if (previous.node.maybeAttributeIndex !== 3) {
         return;
     }
@@ -172,7 +172,7 @@ function inspectIdentifier(state: IdentifierState, identifier: TXorNode, isRoot:
 
     // Don't add the identifier if you're coming from inside a ParameterList
     // '(foo|, bar) => 1'
-    const maybeNext: TXorNode | undefined = ActiveNodeUtils.maybeNextXorNode(state.activeNode, state.nodeIndex);
+    const maybeNext: TXorNode | undefined = AncestorUtils.maybeNextXorNode(state.activeNode.ancestry, state.nodeIndex);
     if (maybeNext && maybeNext.node.kind === Ast.NodeKind.Parameter) {
         return;
     }
@@ -262,8 +262,8 @@ function inspectIdentifierExpression(state: IdentifierState, identifierExpr: TXo
 // If position is to the right of an equals sign,
 // then add all keys to the scope EXCEPT for the key that the position is under.
 function inspectLetExpression(state: IdentifierState, letExpr: TXorNode): void {
-    const maybePreviousAttributeIndex: number | undefined = ActiveNodeUtils.expectPreviousXorNode(
-        state.activeNode,
+    const maybePreviousAttributeIndex: number | undefined = AncestorUtils.expectPreviousXorNode(
+        state.activeNode.ancestry,
         state.nodeIndex,
     ).node.maybeAttributeIndex;
     if (maybePreviousAttributeIndex !== 3 && !InspectionUtils.isInKeyValuePairAssignment(state)) {
@@ -277,7 +277,7 @@ function inspectLetExpression(state: IdentifierState, letExpr: TXorNode): void {
     if (maybePreviousAttributeIndex === 3) {
         maybeAncestorKeyValuePair = undefined;
     } else {
-        maybeAncestorKeyValuePair = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 3, [
+        maybeAncestorKeyValuePair = AncestorUtils.expectPreviousXorNode(state.activeNode.ancestry, state.nodeIndex, 3, [
             Ast.NodeKind.IdentifierPairedExpression,
         ]);
     }
@@ -322,10 +322,12 @@ function inspectRecordExpressionOrRecordLiteral(state: IdentifierState, record: 
         return;
     }
 
-    const ancestorKeyValuePair: TXorNode = ActiveNodeUtils.expectPreviousXorNode(state.activeNode, state.nodeIndex, 3, [
-        Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-    ]);
+    const ancestorKeyValuePair: TXorNode = AncestorUtils.expectPreviousXorNode(
+        state.activeNode.ancestry,
+        state.nodeIndex,
+        3,
+        [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, Ast.NodeKind.GeneralizedIdentifierPairedExpression],
+    );
 
     for (const kvp of NodeIdMapIterator.recordKeyValuePairs(nodeIdMapCollection, record)) {
         if (kvp.source.node.id === ancestorKeyValuePair.node.id) {
@@ -346,9 +348,12 @@ function inspectSectionMember(state: IdentifierState, sectionMember: TXorNode): 
     }
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const sectionMemberArray: TXorNode = ActiveNodeUtils.expectNextXorNode(state.activeNode, state.nodeIndex, 1, [
-        Ast.NodeKind.ArrayWrapper,
-    ]);
+    const sectionMemberArray: TXorNode = AncestorUtils.expectNextXorNode(
+        state.activeNode.ancestry,
+        state.nodeIndex,
+        1,
+        [Ast.NodeKind.ArrayWrapper],
+    );
     const sectionMembers: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
         nodeIdMapCollection,
         sectionMemberArray.node.id,
@@ -409,7 +414,10 @@ function expectedNodeKindError(xorNode: TXorNode, expected: Ast.NodeKind): Commo
 }
 
 function isParentOfNodeKind(state: IdentifierState, parentNodeKind: Ast.NodeKind): boolean {
-    const maybeParent: TXorNode | undefined = ActiveNodeUtils.maybeNextXorNode(state.activeNode, state.nodeIndex);
+    const maybeParent: TXorNode | undefined = AncestorUtils.maybeNextXorNode(
+        state.activeNode.ancestry,
+        state.nodeIndex,
+    );
     return maybeParent !== undefined ? maybeParent.node.kind === parentNodeKind : false;
 }
 
