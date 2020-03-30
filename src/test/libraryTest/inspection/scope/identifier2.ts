@@ -4,36 +4,59 @@
 import "mocha";
 import { Inspection } from "../../../..";
 import { ResultUtils } from "../../../../common";
-import { Position, ScopeById, ScopeItemKind2 } from "../../../../inspection";
+import { Position, ScopeById, ScopeItemKind2, Scope2Utils } from "../../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../../inspection/activeNode";
 import { Ast, IParserState, NodeIdMap, ParseOk } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { expectDeepEqual, expectParseOk, expectTextWithPosition } from "../../../common";
 
+export type TAbridgedScopeItem =
+    | AbridgedEachItem
+    | Exclude<IAbridgedScopeItem<ScopeItemKind2>, IAbridgedScopeItem<ScopeItemKind2.Each>>;
+
 interface AbridgedScope {
-    [nodeId: number]: ReadonlyArray<AbridgedScopeItem>;
+    [nodeId: number]: ReadonlyArray<TAbridgedScopeItem>;
 }
 
-interface AbridgedScopeItem {
+interface IAbridgedScopeItem<Kind> {
     readonly key: string;
-    readonly kind: ScopeItemKind2;
+    readonly kind: Kind & ScopeItemKind2;
+}
+
+interface AbridgedEachItem extends IAbridgedScopeItem<ScopeItemKind2.Each> {
+    readonly kind: ScopeItemKind2.Each;
+    readonly eachExpressionNodeId: number;
 }
 
 function actualFactoryFn(scopeById: ScopeById): AbridgedScope {
-    const abridgedScopeItems: AbridgedScope = {};
+    const abridgedScope: AbridgedScope = {};
 
     for (const [nodeId, scopeItemByKey] of scopeById.entries()) {
-        const nodeScope: AbridgedScopeItem[] = [];
+        const abridgedScopeItems: TAbridgedScopeItem[] = [];
         for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
-            nodeScope.push({
-                key: identifier,
-                kind: scopeItem.kind,
-            });
+            let newScopeItem: TAbridgedScopeItem;
+            switch (scopeItem.kind) {
+                case ScopeItemKind2.Each:
+                    newScopeItem = {
+                        key: identifier,
+                        kind: scopeItem.kind,
+                        eachExpressionNodeId: scopeItem.eachExpression.node.id,
+                    };
+                    break;
+
+                default:
+                    newScopeItem = {
+                        key: identifier,
+                        kind: scopeItem.kind,
+                    };
+                    break;
+            }
+            abridgedScopeItems.push(newScopeItem);
         }
-        abridgedScopeItems[nodeId] = nodeScope;
+        abridgedScope[nodeId] = abridgedScopeItems;
     }
 
-    return abridgedScopeItems;
+    return abridgedScope;
 }
 
 export function expectParseOkScope2Ok<S = IParserState>(
@@ -52,23 +75,25 @@ export function expectParseOkScope2Ok<S = IParserState>(
     if (maybeActiveNode === undefined) {
         throw new Error(`AssertFailed: maybeActiveNode !== undefined`);
     }
-    const rootId: number = maybeActiveNode.ancestry[0].node.id;
+    const activeNode: ActiveNode = maybeActiveNode;
 
     const triedScopeInspection: Inspection.TriedScopeInspection = Inspection.tryInspectScope2(
         settings,
         parseOk.nodeIdMapCollection,
         parseOk.leafNodeIds,
-        rootId,
+        activeNode.ancestry[0].node.id,
         undefined,
     );
     if (!ResultUtils.isOk(triedScopeInspection)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeInspection): ${triedScopeInspection.error.message}`);
     }
-    return triedScopeInspection.value;
+    const scopeById: ScopeById = triedScopeInspection.value;
+
+    return Scope2Utils.filterByPosition(parseOk.nodeIdMapCollection, scopeById, activeNode);
 }
 
 describe(`Inspection - Scope - Identifier`, () => {
-    describe(`abc123 ${Ast.NodeKind.EachExpression} (Ast)`, () => {
+    describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
         it(`|each 1`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|each 1`);
             const expected: AbridgedScope = {};
@@ -89,18 +114,11 @@ describe(`Inspection - Scope - Identifier`, () => {
 
         it(`each 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each 1|`);
-            const expected: AbridgedScope = {
-                3: [
-                    {
-                        key: "_",
-                        kind: ScopeItemKind2.Each,
-                    },
-                ],
-            };
+            const expected: AbridgedScope = {};
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
-        it(`each each 1|`, () => {
+        it(`abc123 each each 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each each 1|`);
             const expected: AbridgedScope = {};
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);

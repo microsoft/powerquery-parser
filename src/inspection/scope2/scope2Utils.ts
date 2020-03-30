@@ -12,7 +12,7 @@ export function filterByPosition(
     nodeIdMapCollection: NodeIdMap.Collection,
     scopeById: ScopeById,
     activeNode: ActiveNode,
-): void {
+): ScopeById {
     const missingNodeIds: ReadonlyArray<number> = activeNode.ancestry
         .filter((xorNode: TXorNode) => !scopeById.has(xorNode.node.id))
         .map((xorNode: TXorNode) => xorNode.node.id);
@@ -46,6 +46,8 @@ export function filterByPosition(
             result.set(nodeId, scopeItemByKey);
         }
     }
+
+    return result;
 }
 
 interface ScopeFilterState {
