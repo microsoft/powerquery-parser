@@ -85,7 +85,7 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe("abc1232 UnaryExpression", () => {
+    describe("UnaryExpression", () => {
         it(`+1`, () => {
             expectExpressionType(`+1`, Type.TypeKind.Number, false);
         });

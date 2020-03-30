@@ -5,7 +5,7 @@ import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
 import {
-    AncestorUtils,
+    AncestryUtils,
     Ast,
     IParserState,
     NodeIdMap,
@@ -361,7 +361,7 @@ function autocompleteListExpression(
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestorUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 3, undefined);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -370,7 +370,7 @@ function autocompleteListExpression(
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? AncestorUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 4, undefined)
+            ? AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 4, undefined)
             : nodeOrComma;
 
     if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
@@ -404,7 +404,7 @@ function autocompleteSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = AncestorUtils.maybePreviousXorNode(
+        const maybeName: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
             activeNode.ancestry,
             ancestorIndex,
             2,

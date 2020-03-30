@@ -41,7 +41,7 @@ export interface UndefinedScopeItem2 extends IScopeItem2 {
 
 export interface EachScopeItem2 extends IScopeItem2 {
     readonly kind: ScopeItemKind2.Each;
-    readonly each: TXorNode;
+    readonly eachExpression: TXorNode;
 }
 
 export interface ParameterScopeItem2 extends IScopeItem2 {

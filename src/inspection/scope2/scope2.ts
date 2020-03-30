@@ -4,7 +4,7 @@
 import { CommonError, Result, ResultKind, ResultUtils } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { InspectionSettings } from "../../settings";
-import { ScopeItemKind2, TScopeItem2 } from "./scopeItem";
+import { ScopeItemKind2, TScopeItem2 } from "./scopeItem2";
 
 export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
 
@@ -32,6 +32,8 @@ export function tryInspectScope2(
     }
 
     try {
+        // Store the delta between the given scope and what's found in a temporary map.
+        // This will prevent mutation in the given map if an error is thrown.
         const scopeChanges: ScopeById = new Map();
         const ancestry: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectAncestry(nodeIdMapCollection, nodeId);
         const numNodes: number = ancestry.length;
@@ -44,10 +46,24 @@ export function tryInspectScope2(
             leafNodeIds,
         };
 
+        // Build up the scope through a top-down inspection.
         for (let index: number = numNodes - 1; index > 0; index -= 1) {
             state.nodeIndex = index;
             const xorNode: TXorNode = ancestry[index];
             inspectNode(state, xorNode);
+        }
+
+        // Apply the delta.
+        for (const [changedNodeId, scopeItemByKeyChanges] of state.scopeChanges.entries()) {
+            const maybeScopeItemByKey: undefined | ScopeItemByKey = scopeById.get(changedNodeId);
+            if (maybeScopeItemByKey === undefined) {
+                scopeById.set(nodeId, scopeItemByKeyChanges);
+            } else {
+                const scopeItemByKey: ScopeItemByKey = maybeScopeItemByKey;
+                for (const [key, scopeItem] of scopeItemByKeyChanges.entries()) {
+                    scopeItemByKey.set(key, scopeItem);
+                }
+            }
         }
 
         return ResultUtils.okFactory(scopeById);
@@ -117,11 +133,13 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
                 "_",
                 {
                     kind: ScopeItemKind2.Each,
-                    each: eachExpr,
+                    eachExpression: eachExpr,
                 },
             ],
         ],
     );
+
+    let x = 1;
 }
 
 // // If position is to the right of '=>',

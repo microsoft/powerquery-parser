@@ -1,5 +1,5 @@
 import { CommonError } from "../common";
-import { AncestorUtils, Ast, TXorNode } from "../parser";
+import { AncestryUtils, Ast, TXorNode } from "../parser";
 import { ActiveNode } from "./activeNode";
 
 export interface InspectionState {
@@ -23,7 +23,7 @@ export function isInKeyValuePairAssignment(state: InspectionState): boolean {
         n = 3;
     }
 
-    const maybeKeyValuePair: TXorNode | undefined = AncestorUtils.maybePreviousXorNode(
+    const maybeKeyValuePair: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
         state.activeNode.ancestry,
         state.nodeIndex,
         n,

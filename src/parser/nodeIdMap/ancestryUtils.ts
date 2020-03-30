@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { NodeIdMapUtils } from ".";
 import { Ast } from "..";
 import { CommonError } from "../../common";
-import { NodeIdMapUtils } from "./";
 import { TXorNode } from "./xorNode";
 
 export function expectPreviousXorNode(
