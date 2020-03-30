@@ -22,10 +22,23 @@ export interface IScopeItem2 {
     readonly kind: ScopeItemKind2;
 }
 
+export interface EachScopeItem2 extends IScopeItem2 {
+    readonly kind: ScopeItemKind2.Each;
+    readonly eachExpression: TXorNode;
+}
+
 export interface KeyValuePairScopeItem2 extends IScopeItem2 {
     readonly kind: ScopeItemKind2.KeyValuePair;
     readonly key: Ast.Identifier | Ast.GeneralizedIdentifier;
     readonly maybeValue: TXorNode | undefined;
+}
+
+export interface ParameterScopeItem2 extends IScopeItem2 {
+    readonly kind: ScopeItemKind2.Parameter;
+    readonly name: Ast.Identifier;
+    readonly isOptional: boolean;
+    readonly isNullable: boolean;
+    readonly maybeType: Ast.PrimitiveTypeConstantKind | undefined;
 }
 
 export interface SectionMemberScopeItem2 extends IScopeItem2 {
@@ -37,17 +50,4 @@ export interface SectionMemberScopeItem2 extends IScopeItem2 {
 export interface UndefinedScopeItem2 extends IScopeItem2 {
     readonly kind: ScopeItemKind2.Undefined;
     readonly xorNode: TXorNode;
-}
-
-export interface EachScopeItem2 extends IScopeItem2 {
-    readonly kind: ScopeItemKind2.Each;
-    readonly eachExpression: TXorNode;
-}
-
-export interface ParameterScopeItem2 extends IScopeItem2 {
-    readonly kind: ScopeItemKind2.Parameter;
-    readonly name: Ast.Identifier;
-    readonly isOptional: boolean;
-    readonly isNullable: boolean;
-    readonly maybeType: Ast.PrimitiveTypeConstantKind | undefined;
 }

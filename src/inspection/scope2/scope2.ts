@@ -17,7 +17,7 @@ export function tryInspectScope2(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
-    // If a map is given it's mutated and returned. Else it creates a new one.
+    // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: undefined | ScopeById,
 ): TriedScopeInspection {
     let scopeById: ScopeById;
@@ -57,13 +57,19 @@ export function tryInspectScope2(
         for (const [changedNodeId, scopeItemByKeyChanges] of state.scopeChanges.entries()) {
             const maybeScopeItemByKey: undefined | ScopeItemByKey = scopeById.get(changedNodeId);
             if (maybeScopeItemByKey === undefined) {
-                scopeById.set(nodeId, scopeItemByKeyChanges);
+                scopeById.set(changedNodeId, scopeItemByKeyChanges);
             } else {
                 const scopeItemByKey: ScopeItemByKey = maybeScopeItemByKey;
                 for (const [key, scopeItem] of scopeItemByKeyChanges.entries()) {
                     scopeItemByKey.set(key, scopeItem);
                 }
             }
+        }
+
+        // If the root has no scope defined for it, then give it an empty one.
+        const rootId: number = ancestry[ancestry.length - 1].node.id;
+        if (!scopeById.has(rootId)) {
+            scopeById.set(rootId, new Map());
         }
 
         return ResultUtils.okFactory(scopeById);
@@ -124,6 +130,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
+    ensureScope(state, eachExpr, [0]);
     expandChildScope(
         state,
         eachExpr,
@@ -138,8 +145,6 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
             ],
         ],
     );
-
-    let x = 1;
 }
 
 // // If position is to the right of '=>',
@@ -460,6 +465,10 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 //     }
 // }
 
+function ensureScope(state: ScopeInspectionState, parent: TXorNode, childAttributeIds: ReadonlyArray<number>) {
+    expandChildScope(state, parent, childAttributeIds, []);
+}
+
 function expandChildScope(
     state: ScopeInspectionState,
     parent: TXorNode,
@@ -468,7 +477,6 @@ function expandChildScope(
 ): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const parentId: number = parent.node.id;
-    const parentEntries: ReadonlyArray<[string, TScopeItem2]> = [...scopeFor(state, parentId).entries()];
 
     // TODO: optimize this
     for (const attributeId of childAttributeIds) {
@@ -481,13 +489,9 @@ function expandChildScope(
         if (maybeChild === undefined) {
             continue;
         }
+
         const childId: number = maybeChild.node.id;
-
         const childScope: ScopeItemByKey = scopeFor(state, childId);
-
-        for (const [key, value] of parentEntries) {
-            childScope.set(key, value);
-        }
         for (const [key, value] of newEntries) {
             childScope.set(key, value);
         }

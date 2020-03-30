@@ -4,7 +4,6 @@
 import { CommonError } from "../../common";
 import { AncestryUtils, NodeIdMap, TXorNode } from "../../parser";
 import { ActiveNode } from "../activeNode";
-import { Position } from "../position";
 import { ScopeById, ScopeItemByKey } from "./scope2";
 import { EachScopeItem2, ScopeItemKind2, TScopeItem2 } from "./scopeItem2";
 
