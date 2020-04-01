@@ -28,8 +28,8 @@ export function inspectInvokeExpression(
     const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
     const position: Position = activeNode.position;
-    for (let index: number = 0; index < numAncestors; index += 1) {
-        const xorNode: TXorNode = ancestors[index];
+    for (let ancestorIndex: number = 0; ancestorIndex < numAncestors; ancestorIndex += 1) {
+        const xorNode: TXorNode = ancestors[ancestorIndex];
         if (!isInvokeExpressionContent(position, xorNode)) {
             continue;
         }
@@ -38,7 +38,7 @@ export function inspectInvokeExpression(
             maybeInvokeExpression: {
                 xorNode: xorNode,
                 maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
-                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, index),
+                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestorIndex),
             },
         };
     }

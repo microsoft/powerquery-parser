@@ -39,22 +39,23 @@ export function tryInspectScope2(
         const numNodes: number = ancestry.length;
         const state: ScopeInspectionState = {
             nodeIndex: 0,
-            scopeChanges,
-            cache: scopeById,
+            givenScope: scopeById,
+            deltaScope: scopeChanges,
             ancestry,
             nodeIdMapCollection,
             leafNodeIds,
         };
 
         // Build up the scope through a top-down inspection.
-        for (let index: number = numNodes - 1; index > 0; index -= 1) {
+        for (let index: number = numNodes - 1; index >= 0; index -= 1) {
             state.nodeIndex = index;
             const xorNode: TXorNode = ancestry[index];
             inspectNode(state, xorNode);
+            ensureScope(state, xorNode);
         }
 
         // Apply the delta.
-        for (const [changedNodeId, scopeItemByKeyChanges] of state.scopeChanges.entries()) {
+        for (const [changedNodeId, scopeItemByKeyChanges] of state.deltaScope.entries()) {
             const maybeScopeItemByKey: undefined | ScopeItemByKey = scopeById.get(changedNodeId);
             if (maybeScopeItemByKey === undefined) {
                 scopeById.set(changedNodeId, scopeItemByKeyChanges);
@@ -83,8 +84,8 @@ export function tryInspectScope2(
 
 interface ScopeInspectionState {
     nodeIndex: number;
-    readonly scopeChanges: ScopeById;
-    readonly cache: ScopeById;
+    readonly givenScope: ScopeById;
+    readonly deltaScope: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
@@ -130,7 +131,6 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
-    ensureScope(state, eachExpr, [0]);
     expandChildScope(
         state,
         eachExpr,
@@ -465,10 +465,6 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 //     }
 // }
 
-function ensureScope(state: ScopeInspectionState, parent: TXorNode, childAttributeIds: ReadonlyArray<number>) {
-    expandChildScope(state, parent, childAttributeIds, []);
-}
-
 function expandChildScope(
     state: ScopeInspectionState,
     parent: TXorNode,
@@ -498,18 +494,22 @@ function expandChildScope(
     }
 }
 
+function ensureScope(state: ScopeInspectionState, xorNode: TXorNode): void {
+    scopeFor(state, xorNode.node.id);
+}
+
 function scopeFor(state: ScopeInspectionState, nodeId: number): ScopeItemByKey {
-    let maybeScope: undefined | ScopeItemByKey = state.cache.get(nodeId);
+    let maybeScope: undefined | ScopeItemByKey = state.givenScope.get(nodeId);
     if (maybeScope !== undefined) {
         return maybeScope;
     }
 
-    maybeScope = state.scopeChanges.get(nodeId);
+    maybeScope = state.deltaScope.get(nodeId);
     if (maybeScope !== undefined) {
         return maybeScope;
     } else {
         const newScope: ScopeItemByKey = new Map();
-        state.scopeChanges.set(nodeId, newScope);
+        state.deltaScope.set(nodeId, newScope);
         return newScope;
     }
 }
