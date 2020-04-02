@@ -8,6 +8,8 @@ import { ScopeItemKind2, TScopeItem2 } from "./scopeItem2";
 
 export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
 
+export type TriedNodeScopeInspection = Result<ScopeItemByKey, CommonError.CommonError>;
+
 export type ScopeById = Map<number, ScopeItemByKey>;
 
 export type ScopeItemByKey = Map<string, TScopeItem2>;
@@ -65,6 +67,38 @@ export function tryInspectScope2(
             error: CommonError.ensureCommonError(state.settings.localizationTemplates, err),
         };
     }
+}
+
+export function tryInspectScope2ForNode(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    nodeId: number,
+    // If a map is given, then it's mutated and returned. Else create and return a new instance.
+    maybeScopeById: undefined | ScopeById,
+): TriedNodeScopeInspection {
+    const triedScopeInspection: TriedScopeInspection = tryInspectScope2(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        nodeId,
+        maybeScopeById,
+    );
+
+    if (ResultUtils.isErr(triedScopeInspection)) {
+        return triedScopeInspection;
+    }
+
+    const maybeScope: undefined | ScopeItemByKey = triedScopeInspection.value.get(nodeId);
+    if (maybeScope === undefined) {
+        const details: {} = { nodeId };
+        throw new CommonError.InvariantError(
+            `${tryInspectScope2ForNode.name}: expected nodeId in ${tryInspectScope2.name} result`,
+            details,
+        );
+    }
+
+    return ResultUtils.okFactory(maybeScope);
 }
 
 interface ScopeInspectionState {

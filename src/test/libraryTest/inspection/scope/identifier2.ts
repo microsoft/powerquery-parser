@@ -4,7 +4,7 @@
 import "mocha";
 import { Inspection } from "../../../..";
 import { isNever, ResultUtils } from "../../../../common";
-import { Position, ScopeById, ScopeItemKind2 } from "../../../../inspection";
+import { Position, ScopeById, ScopeItemKind2, ScopeItemByKey } from "../../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../../inspection/activeNode";
 import { Ast, IParserState, NodeIdMap, ParseOk, ParseError } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings, CommonSettings } from "../../../../settings";
@@ -17,9 +17,7 @@ export type TAbridgedScopeItem =
     | AbridgedSectionMemberScopeItem
     | AbridgedUndefinedScopeItem;
 
-interface AbridgedScope {
-    [nodeId: number]: ReadonlyArray<TAbridgedScopeItem>;
-}
+type AbridgedNodeScope = ReadonlyArray<TAbridgedScopeItem>;
 
 interface IAbridgedScopeItem {
     readonly identifier: string;
@@ -52,72 +50,69 @@ interface AbridgedUndefinedScopeItem extends IAbridgedScopeItem {
     readonly nodeId: number;
 }
 
-function actualFactoryFn(scopeById: ScopeById): AbridgedScope {
-    const abridgedScope: AbridgedScope = {};
+function actualFactoryFn(scopeItemByKey: ScopeItemByKey): ReadonlyArray<TAbridgedScopeItem> {
+    const result: TAbridgedScopeItem[] = [];
 
-    for (const [nodeId, scopeItemByKey] of scopeById.entries()) {
-        const abridgedScopeItems: TAbridgedScopeItem[] = [];
-        for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
-            let newScopeItem: TAbridgedScopeItem;
-            switch (scopeItem.kind) {
-                case ScopeItemKind2.Each:
-                    newScopeItem = {
-                        identifier,
-                        kind: scopeItem.kind,
-                        eachExpressionNodeId: scopeItem.eachExpression.node.id,
-                    };
-                    break;
+    for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
+        let newScopeItem: TAbridgedScopeItem;
+        switch (scopeItem.kind) {
+            case ScopeItemKind2.Each:
+                newScopeItem = {
+                    identifier,
+                    kind: scopeItem.kind,
+                    eachExpressionNodeId: scopeItem.eachExpression.node.id,
+                };
+                break;
 
-                case ScopeItemKind2.KeyValuePair:
-                    newScopeItem = {
-                        identifier,
-                        kind: scopeItem.kind,
-                        keyNodeId: scopeItem.key.id,
-                        maybeValueNodeId: scopeItem.maybeValue !== undefined ? scopeItem.maybeValue.node.id : undefined,
-                    };
-                    break;
+            case ScopeItemKind2.KeyValuePair:
+                newScopeItem = {
+                    identifier,
+                    kind: scopeItem.kind,
+                    keyNodeId: scopeItem.key.id,
+                    maybeValueNodeId: scopeItem.maybeValue !== undefined ? scopeItem.maybeValue.node.id : undefined,
+                };
+                break;
 
-                case ScopeItemKind2.Parameter:
-                    newScopeItem = {
-                        identifier,
-                        kind: scopeItem.kind,
-                        nameNodeId: scopeItem.name.id,
-                    };
-                    break;
+            case ScopeItemKind2.Parameter:
+                newScopeItem = {
+                    identifier,
+                    kind: scopeItem.kind,
+                    nameNodeId: scopeItem.name.id,
+                };
+                break;
 
-                case ScopeItemKind2.SectionMember:
-                    newScopeItem = {
-                        identifier,
-                        kind: scopeItem.kind,
-                        keyNodeId: scopeItem.key.id,
-                    };
-                    break;
+            case ScopeItemKind2.SectionMember:
+                newScopeItem = {
+                    identifier,
+                    kind: scopeItem.kind,
+                    keyNodeId: scopeItem.key.id,
+                };
+                break;
 
-                case ScopeItemKind2.Undefined:
-                    newScopeItem = {
-                        identifier,
-                        kind: scopeItem.kind,
-                        nodeId: scopeItem.xorNode.node.id,
-                    };
-                    break;
+            case ScopeItemKind2.Undefined:
+                newScopeItem = {
+                    identifier,
+                    kind: scopeItem.kind,
+                    nodeId: scopeItem.xorNode.node.id,
+                };
+                break;
 
-                default:
-                    throw isNever(scopeItem);
-            }
-            abridgedScopeItems.push(newScopeItem);
+            default:
+                throw isNever(scopeItem);
         }
-        abridgedScope[nodeId] = abridgedScopeItems;
+
+        result.push(newScopeItem);
     }
 
-    return abridgedScope;
+    return result;
 }
 
-function expectScope2Ok(
+function expectScope2ForNodeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-): ScopeById {
+): ScopeItemByKey {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
@@ -128,7 +123,7 @@ function expectScope2Ok(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScopeInspection: Inspection.TriedScopeInspection = Inspection.tryInspectScope2(
+    const triedScopeInspection: Inspection.TriedNodeScopeInspection = Inspection.tryInspectScope2ForNode(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -145,18 +140,18 @@ export function expectParseOkScope2Ok<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Position,
-): ScopeById {
+): ScopeItemByKey {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    return expectScope2Ok(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+    return expectScope2ForNodeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
 }
 
 export function expectParseErrScope2Ok<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Position,
-): ScopeById {
+): ScopeItemByKey {
     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
-    return expectScope2Ok(
+    return expectScope2ForNodeOk(
         settings,
         parseError.state.contextState.nodeIdMapCollection,
         parseError.state.contextState.leafNodeIds,
@@ -164,89 +159,53 @@ export function expectParseErrScope2Ok<S = IParserState>(
     );
 }
 
-describe(`abc123 Inspection - Scope - Identifier`, () => {
+describe(`Inspection - Scope - Identifier`, () => {
     describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
         it(`|each 1`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|each 1`);
-            const expected: AbridgedScope = {
-                1: [],
-                2: [],
-                4: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 1,
-                    },
-                ],
-            };
+            const expected: ReadonlyArray<TAbridgedScopeItem> = [];
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`each| 1`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each| 1`);
-            const expected: AbridgedScope = {
-                1: [],
-                2: [],
-                4: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 1,
-                    },
-                ],
-            };
+            const expected: AbridgedNodeScope = [];
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`each |1`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |1`);
-            const expected: AbridgedScope = {
-                1: [],
-                4: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 1,
-                    },
-                ],
-            };
+            const expected: AbridgedNodeScope = [
+                {
+                    identifier: "_",
+                    kind: ScopeItemKind2.Each,
+                    eachExpressionNodeId: 1,
+                },
+            ];
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`each 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each 1|`);
-            const expected: AbridgedScope = {
-                1: [],
-                4: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 1,
-                    },
-                ],
-            };
+            const expected: AbridgedNodeScope = [
+                {
+                    identifier: "_",
+                    kind: ScopeItemKind2.Each,
+                    eachExpressionNodeId: 1,
+                },
+            ];
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`each each 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each each 1|`);
-            const expected: AbridgedScope = {
-                1: [],
-                3: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 1,
-                    },
-                ],
-                6: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 3,
-                    },
-                ],
-            };
+            const expected: AbridgedNodeScope = [
+                {
+                    identifier: "_",
+                    kind: ScopeItemKind2.Each,
+                    eachExpressionNodeId: 3,
+                },
+            ];
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
     });
@@ -254,33 +213,19 @@ describe(`abc123 Inspection - Scope - Identifier`, () => {
     describe(`${Ast.NodeKind.EachExpression} (ParserContext)`, () => {
         it(`each|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
-            const expected: AbridgedScope = {
-                1: [],
-                2: [],
-                3: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 1,
-                    },
-                ],
-            };
+            const expected: AbridgedNodeScope = [];
             expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
-        it(`each |`, () => {
+        it(`abc123 each |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |`);
-            const expected: AbridgedScope = {
-                1: [],
-                3: [
-                    {
-                        identifier: "_",
-                        kind: ScopeItemKind2.Each,
-                        eachExpressionNodeId: 1,
-                    },
-                ],
-                4: [],
-            };
+            const expected: AbridgedNodeScope = [
+                {
+                    identifier: "_",
+                    kind: ScopeItemKind2.Each,
+                    eachExpressionNodeId: 3,
+                },
+            ];
             expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
     });
