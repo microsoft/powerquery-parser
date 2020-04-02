@@ -8,11 +8,11 @@ import { TXorNode } from "./xorNode";
 
 export function expectPreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,
-    ancestorIndex: number,
+    ancestryIndex: number,
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybePreviousXorNode(ancestry, ancestorIndex, n);
+    const maybeXorNode: TXorNode | undefined = maybePreviousXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError("no previous node");
     }
@@ -33,11 +33,11 @@ export function expectPreviousXorNode(
 
 export function maybePreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,
-    ancestorIndex: number,
+    ancestryIndex: number,
     n: number = 1,
     maybeNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode | undefined {
-    const maybeXorNode: TXorNode | undefined = ancestry[ancestorIndex - n];
+    const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex - n];
     if (maybeXorNode !== undefined && maybeNodeKinds !== undefined) {
         return maybeNodeKinds.indexOf(maybeXorNode.node.kind) !== -1 ? maybeXorNode : undefined;
     } else {
@@ -47,11 +47,11 @@ export function maybePreviousXorNode(
 
 export function expectNextXorNode(
     ancestry: ReadonlyArray<TXorNode>,
-    ancestorIndex: number,
+    ancestryIndex: number,
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybeNextXorNode(ancestry, ancestorIndex, n);
+    const maybeXorNode: TXorNode | undefined = maybeNextXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError("no next node");
     }
@@ -72,10 +72,10 @@ export function expectNextXorNode(
 
 export function maybeNextXorNode(
     ancestry: ReadonlyArray<TXorNode>,
-    ancestorIndex: number,
+    ancestryIndex: number,
     n: number = 1,
 ): TXorNode | undefined {
-    return ancestry[ancestorIndex + n];
+    return ancestry[ancestryIndex + n];
 }
 
 export function expectRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {

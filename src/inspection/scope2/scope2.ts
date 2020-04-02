@@ -3,7 +3,7 @@
 
 import { CommonError, Result, ResultKind, ResultUtils } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
-import { InspectionSettings } from "../../settings";
+import { CommonSettings } from "../../settings";
 import { ScopeItemKind2, TScopeItem2 } from "./scopeItem2";
 
 export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
@@ -13,16 +13,16 @@ export type ScopeById = Map<number, ScopeItemByKey>;
 export type ScopeItemByKey = Map<string, TScopeItem2>;
 
 export function tryInspectScope2(
-    settings: InspectionSettings,
+    settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    nodeId: number,
+    rootId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: undefined | ScopeById,
 ): TriedScopeInspection {
     let scopeById: ScopeById;
     if (maybeScopeById !== undefined) {
-        const maybeCached: undefined | ScopeItemByKey = maybeScopeById.get(nodeId);
+        const maybeCached: undefined | ScopeItemByKey = maybeScopeById.get(rootId);
         if (maybeCached !== undefined) {
             return ResultUtils.okFactory(maybeScopeById);
         }
@@ -31,64 +31,50 @@ export function tryInspectScope2(
         scopeById = new Map();
     }
 
+    // Store the delta between the given scope and what's found in a temporary map.
+    // This will prevent mutation in the given map if an error is thrown.
+    const scopeChanges: ScopeById = new Map();
+    const ancestry: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectAncestry(nodeIdMapCollection, rootId);
+    const state: ScopeInspectionState = {
+        settings,
+        givenScope: scopeById,
+        deltaScope: scopeChanges,
+        ancestry,
+        nodeIdMapCollection,
+        leafNodeIds,
+        ancestryIndex: 0,
+    };
+
     try {
-        // Store the delta between the given scope and what's found in a temporary map.
-        // This will prevent mutation in the given map if an error is thrown.
-        const scopeChanges: ScopeById = new Map();
-        const ancestry: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectAncestry(nodeIdMapCollection, nodeId);
-        const numNodes: number = ancestry.length;
-        const state: ScopeInspectionState = {
-            nodeIndex: 0,
-            givenScope: scopeById,
-            deltaScope: scopeChanges,
-            ancestry,
-            nodeIdMapCollection,
-            leafNodeIds,
-        };
+        ensureScope(state, rootId);
 
         // Build up the scope through a top-down inspection.
-        for (let index: number = numNodes - 1; index >= 0; index -= 1) {
-            state.nodeIndex = index;
-            const xorNode: TXorNode = ancestry[index];
+        const numNodes: number = ancestry.length;
+        for (let ancestryIndex: number = numNodes - 1; ancestryIndex >= 0; ancestryIndex -= 1) {
+            state.ancestryIndex = ancestryIndex;
+            const xorNode: TXorNode = ancestry[ancestryIndex];
+
+            ensureScope(state, xorNode.node.id);
             inspectNode(state, xorNode);
-            ensureScope(state, xorNode);
         }
 
-        // Apply the delta.
-        for (const [changedNodeId, scopeItemByKeyChanges] of state.deltaScope.entries()) {
-            const maybeScopeItemByKey: undefined | ScopeItemByKey = scopeById.get(changedNodeId);
-            if (maybeScopeItemByKey === undefined) {
-                scopeById.set(changedNodeId, scopeItemByKeyChanges);
-            } else {
-                const scopeItemByKey: ScopeItemByKey = maybeScopeItemByKey;
-                for (const [key, scopeItem] of scopeItemByKeyChanges.entries()) {
-                    scopeItemByKey.set(key, scopeItem);
-                }
-            }
-        }
-
-        // If the root has no scope defined for it, then give it an empty one.
-        const rootId: number = ancestry[ancestry.length - 1].node.id;
-        if (!scopeById.has(rootId)) {
-            scopeById.set(rootId, new Map());
-        }
-
-        return ResultUtils.okFactory(scopeById);
+        return ResultUtils.okFactory(state.deltaScope);
     } catch (err) {
         return {
             kind: ResultKind.Err,
-            error: CommonError.ensureCommonError(settings.localizationTemplates, err),
+            error: CommonError.ensureCommonError(state.settings.localizationTemplates, err),
         };
     }
 }
 
 interface ScopeInspectionState {
-    nodeIndex: number;
+    readonly settings: CommonSettings;
     readonly givenScope: ScopeById;
     readonly deltaScope: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
+    ancestryIndex: number;
 }
 
 function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
@@ -494,22 +480,52 @@ function expandChildScope(
     }
 }
 
-function ensureScope(state: ScopeInspectionState, xorNode: TXorNode): void {
-    scopeFor(state, xorNode.node.id);
+function ensureScope(state: ScopeInspectionState, nodeId: number): void {
+    scopeFor(state, nodeId);
 }
 
+// Any operation done on a scope should first invoke `scopeFor` for data integrity.
 function scopeFor(state: ScopeInspectionState, nodeId: number): ScopeItemByKey {
-    let maybeScope: undefined | ScopeItemByKey = state.givenScope.get(nodeId);
-    if (maybeScope !== undefined) {
-        return maybeScope;
+    // If scopeFor has already been called then there should be a nodeId in the deltaScope.
+    const maybeDeltaScope: undefined | ScopeItemByKey = state.deltaScope.get(nodeId);
+    if (maybeDeltaScope !== undefined) {
+        return maybeDeltaScope;
     }
 
-    maybeScope = state.deltaScope.get(nodeId);
-    if (maybeScope !== undefined) {
-        return maybeScope;
-    } else {
-        const newScope: ScopeItemByKey = new Map();
-        state.deltaScope.set(nodeId, newScope);
-        return newScope;
+    // If given a scope with an existing value then assume it's valid.
+    // Cache and return.
+    const maybeGivenScope: undefined | ScopeItemByKey = state.givenScope.get(nodeId);
+    if (maybeGivenScope !== undefined) {
+        state.deltaScope.set(nodeId, { ...maybeGivenScope });
+        return maybeGivenScope;
     }
+
+    // Default to a parent's scope if the node has a parent.
+    const maybeParent: undefined | TXorNode = NodeIdMapUtils.maybeParentXorNode(
+        state.nodeIdMapCollection,
+        nodeId,
+        undefined,
+    );
+    if (maybeParent !== undefined) {
+        const parentNodeId: number = maybeParent.node.id;
+
+        const maybeParentDeltaScope: undefined | ScopeItemByKey = state.deltaScope.get(parentNodeId);
+        if (maybeParentDeltaScope !== undefined) {
+            const shallowCopy: ScopeItemByKey = new Map(maybeParentDeltaScope.entries());
+            state.deltaScope.set(nodeId, shallowCopy);
+            return shallowCopy;
+        }
+
+        const maybeParentGivenScope: undefined | ScopeItemByKey = state.givenScope.get(parentNodeId);
+        if (maybeParentGivenScope !== undefined) {
+            const shallowCopy: ScopeItemByKey = new Map(maybeParentGivenScope.entries());
+            state.deltaScope.set(nodeId, shallowCopy);
+            return shallowCopy;
+        }
+    }
+
+    // The node has no parent or it hasn't been visited.
+    const newScope: ScopeItemByKey = new Map();
+    state.deltaScope.set(nodeId, newScope);
+    return newScope;
 }

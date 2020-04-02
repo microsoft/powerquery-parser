@@ -347,7 +347,7 @@ function autocompleteErrorHandlingExpression(
 function autocompleteListExpression(
     activeNode: ActiveNode,
     child: TXorNode,
-    ancestorIndex: number,
+    ancestryIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
@@ -361,7 +361,7 @@ function autocompleteListExpression(
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 3, undefined);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -370,7 +370,7 @@ function autocompleteListExpression(
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestorIndex, 4, undefined)
+            ? AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 4, undefined)
             : nodeOrComma;
 
     if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
@@ -387,7 +387,7 @@ function autocompleteSectionMember(
     activeNode: ActiveNode,
     parent: TXorNode,
     child: TXorNode,
-    ancestorIndex: number,
+    ancestryIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // SectionMember.namePairedExpression
     if (child.node.maybeAttributeIndex === 2) {
@@ -406,7 +406,7 @@ function autocompleteSectionMember(
         // SectionMember -> IdentifierPairedExpression -> Identifier
         const maybeName: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
             activeNode.ancestry,
-            ancestorIndex,
+            ancestryIndex,
             2,
             [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
         );

@@ -3,12 +3,12 @@
 
 import "mocha";
 import { Inspection } from "../../../..";
-import { ResultUtils, isNever } from "../../../../common";
-import { Position, ScopeById, ScopeItemKind2, Scope2Utils } from "../../../../inspection";
+import { isNever, ResultUtils } from "../../../../common";
+import { Position, ScopeById, ScopeItemKind2 } from "../../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../../inspection/activeNode";
-import { Ast, IParserState, NodeIdMap, ParseOk } from "../../../../parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
-import { expectDeepEqual, expectParseOk, expectTextWithPosition } from "../../../common";
+import { Ast, IParserState, NodeIdMap, ParseOk, ParseError } from "../../../../parser";
+import { DefaultSettings, LexSettings, ParseSettings, CommonSettings } from "../../../../settings";
+import { expectDeepEqual, expectParseOk, expectTextWithPosition, expectParseErr } from "../../../common";
 
 export type TAbridgedScopeItem =
     | AbridgedEachScopeItem
@@ -112,17 +112,15 @@ function actualFactoryFn(scopeById: ScopeById): AbridgedScope {
     return abridgedScope;
 }
 
-export function expectParseOkScope2Ok<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string,
+function expectScope2Ok(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): ScopeById {
-    const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    const nodeIdMapColleciton: NodeIdMap.Collection = parseOk.nodeIdMapCollection;
-    const leafNodeIds: ReadonlyArray<number> = parseOk.leafNodeIds;
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         position,
-        nodeIdMapColleciton,
+        nodeIdMapCollection,
         leafNodeIds,
     );
     if (maybeActiveNode === undefined) {
@@ -132,34 +130,75 @@ export function expectParseOkScope2Ok<S = IParserState>(
 
     const triedScopeInspection: Inspection.TriedScopeInspection = Inspection.tryInspectScope2(
         settings,
-        parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
+        nodeIdMapCollection,
+        leafNodeIds,
         activeNode.ancestry[0].node.id,
         undefined,
     );
     if (!ResultUtils.isOk(triedScopeInspection)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeInspection): ${triedScopeInspection.error.message}`);
     }
-    const scopeById: ScopeById = triedScopeInspection.value;
-
-    return Scope2Utils.filterByPosition(parseOk.nodeIdMapCollection, scopeById, activeNode);
+    return triedScopeInspection.value;
 }
 
-describe(`Inspection - Scope - Identifier`, () => {
+export function expectParseOkScope2Ok<S = IParserState>(
+    settings: LexSettings & ParseSettings<S & IParserState>,
+    text: string,
+    position: Position,
+): ScopeById {
+    const parseOk: ParseOk<S> = expectParseOk(settings, text);
+    return expectScope2Ok(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+}
+
+export function expectParseErrScope2Ok<S = IParserState>(
+    settings: LexSettings & ParseSettings<S & IParserState>,
+    text: string,
+    position: Position,
+): ScopeById {
+    const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
+    return expectScope2Ok(
+        settings,
+        parseError.state.contextState.nodeIdMapCollection,
+        parseError.state.contextState.leafNodeIds,
+        position,
+    );
+}
+
+describe(`abc123 Inspection - Scope - Identifier`, () => {
     describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
         it(`|each 1`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|each 1`);
-            const expected: AbridgedScope = {};
+            const expected: AbridgedScope = {
+                1: [],
+                2: [],
+                4: [
+                    {
+                        identifier: "_",
+                        kind: ScopeItemKind2.Each,
+                        eachExpressionNodeId: 1,
+                    },
+                ],
+            };
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
         it(`each| 1`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each| 1`);
-            const expected: AbridgedScope = {};
+            const expected: AbridgedScope = {
+                1: [],
+                2: [],
+                4: [
+                    {
+                        identifier: "_",
+                        kind: ScopeItemKind2.Each,
+                        eachExpressionNodeId: 1,
+                    },
+                ],
+            };
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
-        it(`abc123 each |1`, () => {
+        it(`each |1`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |1`);
             const expected: AbridgedScope = {
                 1: [],
@@ -174,7 +213,7 @@ describe(`Inspection - Scope - Identifier`, () => {
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
-        it(`abc123 each 1|`, () => {
+        it(`each 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each 1|`);
             const expected: AbridgedScope = {
                 1: [],
@@ -189,7 +228,7 @@ describe(`Inspection - Scope - Identifier`, () => {
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
-        it(`abc123 each each 1|`, () => {
+        it(`each each 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each each 1|`);
             const expected: AbridgedScope = {
                 1: [],
@@ -200,30 +239,51 @@ describe(`Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ],
-                6: [],
+                6: [
+                    {
+                        identifier: "_",
+                        kind: ScopeItemKind2.Each,
+                        eachExpressionNodeId: 3,
+                    },
+                ],
             };
             expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
     });
 
-    // describe(`${Ast.NodeKind.EachExpression} (ParserContext)`, () => {
-    //     it(`each|`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
-    //         const expected: AbridgedScope = [];
-    //         expectDeepEqual(expectParseErrInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
+    describe(`${Ast.NodeKind.EachExpression} (ParserContext)`, () => {
+        it(`each|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
+            const expected: AbridgedScope = {
+                1: [],
+                2: [],
+                3: [
+                    {
+                        identifier: "_",
+                        kind: ScopeItemKind2.Each,
+                        eachExpressionNodeId: 1,
+                    },
+                ],
+            };
+            expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
 
-    //     it(`each |`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |`);
-    //         const expected: AbridgedScope = [
-    //             {
-    //                 kind: ScopeItemKind.Each,
-    //                 key: "_",
-    //             },
-    //         ];
-    //         expectDeepEqual(expectParseErrInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
-    // });
+        it(`each |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |`);
+            const expected: AbridgedScope = {
+                1: [],
+                3: [
+                    {
+                        identifier: "_",
+                        kind: ScopeItemKind2.Each,
+                        eachExpressionNodeId: 1,
+                    },
+                ],
+                4: [],
+            };
+            expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
+    });
 
     // describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
     //     it(`|(x) => z`, () => {
