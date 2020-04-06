@@ -119,7 +119,7 @@ function expectScope2ForNodeOk(
         leafNodeIds,
     );
     if (maybeActiveNode === undefined) {
-        throw new Error(`AssertFailed: maybeActiveNode !== undefined`);
+        return new Map();
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
@@ -230,79 +230,79 @@ describe(`Inspection - Scope - Identifier`, () => {
         });
     });
 
-    // describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
-    //     it(`|(x) => z`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|(x) => z`);
-    //         const expected: AbridgedScope = [];
-    //         expectDeepEqual(expectParseOkInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
+    describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
+        it(`|(x) => z`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|(x) => z`);
+            const expected: AbridgedNodeScope = [];
+            expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
 
-    //     it(`(x|, y) => z`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x|, y) => z`);
-    //         const expected: AbridgedScope = [];
-    //         expectDeepEqual(expectParseOkInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
+        it(`(x|, y) => z`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x|, y) => z`);
+            const expected: AbridgedNodeScope = [];
+            expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
 
-    //     it(`(x, y)| => z`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y)| => z`);
-    //         const expected: AbridgedScope = [];
-    //         expectDeepEqual(expectParseOkInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
+        it(`(x, y)| => z`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y)| => z`);
+            const expected: AbridgedNodeScope = [];
+            expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
 
-    //     it(`(x, y) => z|`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y) => z|`);
-    //         const expected: AbridgedScope = [
-    //             {
-    //                 kind: ScopeItemKind.Undefined,
-    //                 key: "z",
-    //             },
-    //             {
-    //                 kind: ScopeItemKind.Parameter,
-    //                 key: "x",
-    //             },
-    //             {
-    //                 kind: ScopeItemKind.Parameter,
-    //                 key: "y",
-    //             },
-    //         ];
-    //         expectDeepEqual(expectParseOkInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
-    // });
+        it(`(x, y) => z|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y) => z|`);
+            const expected: AbridgedNodeScope = [
+                {
+                    identifier: "x",
+                    kind: ScopeItemKind2.Parameter,
+                    nameNodeId: 7,
+                },
+                {
+                    identifier: "y",
+                    kind: ScopeItemKind2.Parameter,
+                    nameNodeId: 11,
+                },
+            ];
+            expectDeepEqual(expectParseOkScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
+    });
 
-    // describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
-    //     it(`|(x) =>`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|(x) =>`);
-    //         const expected: AbridgedScope = [];
-    //         expectDeepEqual(expectParseErrInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
+    describe(`abc123 ${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
+        it(`|(x) =>`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|(x) =>`);
+            const expected: AbridgedNodeScope = [];
+            expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
 
-    //     it(`(x|, y) =>`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x|, y) =>`);
-    //         const expected: AbridgedScope = [];
-    //         expectDeepEqual(expectParseErrInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
+        it(`(x|, y) =>`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x|, y) =>`);
+            const expected: AbridgedNodeScope = [];
+            expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
 
-    //     it(`(x, y)| =>`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y)| =>`);
-    //         const expected: AbridgedScope = [];
-    //         expectDeepEqual(expectParseErrInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
+        it(`(x, y)| =>`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y)| =>`);
+            const expected: AbridgedNodeScope = [];
+            expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
 
-    //     it(`(x, y) =>|`, () => {
-    //         const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y) =>|`);
-    //         const expected: AbridgedScope = [
-    //             {
-    //                 kind: ScopeItemKind.Parameter,
-    //                 key: "x",
-    //             },
-    //             {
-    //                 kind: ScopeItemKind.Parameter,
-    //                 key: "y",
-    //             },
-    //         ];
-    //         expectDeepEqual(expectParseErrInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
-    //     });
-    // });
+        it(`(x, y) =>|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y) =>|`);
+            const expected: AbridgedNodeScope = [
+                {
+                    identifier: "x",
+                    kind: ScopeItemKind2.Parameter,
+                    nameNodeId: 7,
+                },
+                {
+                    identifier: "y",
+                    kind: ScopeItemKind2.Parameter,
+                    nameNodeId: 11,
+                },
+            ];
+            expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
+        });
+    });
 
     // describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
     //     it(`|foo`, () => {

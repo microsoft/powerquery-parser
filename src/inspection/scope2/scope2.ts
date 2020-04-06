@@ -4,7 +4,8 @@
 import { CommonError, Result, ResultKind, ResultUtils } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { ScopeItemKind2, TScopeItem2 } from "./scopeItem2";
+import { ScopeItemKind2, TScopeItem2, ParameterScopeItem2 } from "./scopeItem2";
+import { TypeInspector, TypeUtils } from "../../type";
 
 export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
 
@@ -114,9 +115,9 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
             inspectEachExpression(state, xorNode);
             break;
 
-        // case Ast.NodeKind.FunctionExpression:
-        //     inspectFunctionExpression(state, xorNode);
-        //     break;
+        case Ast.NodeKind.FunctionExpression:
+            inspectFunctionExpression(state, xorNode);
+            break;
 
         // case Ast.NodeKind.Identifier:
         //     inspectIdentifier(state, xorNode, true);
@@ -165,37 +166,31 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
     );
 }
 
-// // If position is to the right of '=>',
-// // then add all parameter names to the scope.
-// function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode): void {
-//     if (fnExpr.node.kind !== Ast.NodeKind.FunctionExpression) {
-//         throw expectedNodeKindError(fnExpr, Ast.NodeKind.FunctionExpression);
-//     }
+function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode): void {
+    const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
+        state.nodeIdMapCollection,
+        fnExpr,
+    );
 
-//     // We only care about parameters if we're to the right of the '=>'
-//     const previous: TXorNode = AncestorUtils.expectPreviousXorNode(state.ancestry, state.nodeIndex);
-//     if (previous.node.maybeAttributeIndex !== 3) {
-//         return;
-//     }
-
-//     const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
-//         state.nodeIdMapCollection,
-//         fnExpr,
-//     );
-
-//     inspectedFnExpr.parameters.map((parameter: TypeInspector.InspectedFunctionParameter) => {
-//         mightUpdateScope(state, parameter.name.literal, {
-//             kind: ScopeItemKind2.Parameter,
-//             name: parameter.name,
-//             isOptional: parameter.isOptional,
-//             isNullable: parameter.isNullable,
-//             maybeType:
-//                 parameter.maybeType !== undefined
-//                     ? TypeUtils.maybePrimitiveTypeConstantKindFromTypeKind(parameter.maybeType)
-//                     : undefined,
-//         });
-//     });
-// }
+    const newEntries: ReadonlyArray<[string, ParameterScopeItem2]> = inspectedFnExpr.parameters.map(
+        (parameter: TypeInspector.InspectedFunctionParameter) => {
+            return [
+                parameter.name.literal,
+                {
+                    kind: ScopeItemKind2.Parameter,
+                    name: parameter.name,
+                    isOptional: parameter.isOptional,
+                    isNullable: parameter.isNullable,
+                    maybeType:
+                        parameter.maybeType !== undefined
+                            ? TypeUtils.maybePrimitiveTypeConstantKindFromTypeKind(parameter.maybeType)
+                            : undefined,
+                },
+            ];
+        },
+    );
+    expandChildScope(state, fnExpr, [3], newEntries);
+}
 
 // function inspectIdentifier(state: ScopeInspectionState, identifier: TXorNode, isRoot: boolean): void {
 //     // Ignore the case of a Context node as there are two possible states:
