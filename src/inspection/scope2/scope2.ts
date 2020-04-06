@@ -48,15 +48,12 @@ export function tryInspectScope2(
     };
 
     try {
-        ensureScope(state, rootId);
-
         // Build up the scope through a top-down inspection.
         const numNodes: number = ancestry.length;
         for (let ancestryIndex: number = numNodes - 1; ancestryIndex >= 0; ancestryIndex -= 1) {
             state.ancestryIndex = ancestryIndex;
             const xorNode: TXorNode = ancestry[ancestryIndex];
 
-            ensureScope(state, xorNode.node.id);
             inspectNode(state, xorNode);
         }
 
@@ -146,6 +143,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
         //     break;
 
         default:
+            getOrCreateScope(state, xorNode.node.id);
             break;
     }
 }
@@ -507,19 +505,15 @@ function expandChildScope(
         }
 
         const childId: number = maybeChild.node.id;
-        const childScope: ScopeItemByKey = scopeFor(state, childId);
+        const childScope: ScopeItemByKey = getOrCreateScope(state, childId);
         for (const [key, value] of newEntries) {
             childScope.set(key, value);
         }
     }
 }
 
-function ensureScope(state: ScopeInspectionState, nodeId: number): void {
-    scopeFor(state, nodeId);
-}
-
 // Any operation done on a scope should first invoke `scopeFor` for data integrity.
-function scopeFor(state: ScopeInspectionState, nodeId: number): ScopeItemByKey {
+function getOrCreateScope(state: ScopeInspectionState, nodeId: number): ScopeItemByKey {
     // If scopeFor has already been called then there should be a nodeId in the deltaScope.
     const maybeDeltaScope: undefined | ScopeItemByKey = state.deltaScope.get(nodeId);
     if (maybeDeltaScope !== undefined) {

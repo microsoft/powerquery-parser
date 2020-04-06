@@ -217,13 +217,13 @@ describe(`Inspection - Scope - Identifier`, () => {
             expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
         });
 
-        it(`abc123 each |`, () => {
+        it(`each |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each |`);
             const expected: AbridgedNodeScope = [
                 {
                     identifier: "_",
                     kind: ScopeItemKind2.Each,
-                    eachExpressionNodeId: 3,
+                    eachExpressionNodeId: 1,
                 },
             ];
             expectDeepEqual(expectParseErrScope2Ok(DefaultSettings, text, position), expected, actualFactoryFn);
