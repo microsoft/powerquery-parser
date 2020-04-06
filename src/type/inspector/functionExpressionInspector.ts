@@ -90,7 +90,7 @@ function functionParameterXorNodes(
 
     return maybeWrappedContent === undefined
         ? []
-        : NodeIdMapIterator.arrayWrapperXorNodes(nodeIdMapCollection, maybeWrappedContent);
+        : NodeIdMapIterator.arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeWrappedContent);
 }
 
 function examineParameter(

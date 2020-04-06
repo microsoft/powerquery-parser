@@ -2,10 +2,16 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result, ResultKind, ResultUtils } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { ScopeItemKind2, TScopeItem2, ParameterScopeItem2, KeyValuePairScopeItem2 } from "./scopeItem2";
 import { TypeInspector, TypeUtils } from "../../type";
+import {
+    KeyValuePairScopeItem2,
+    ParameterScopeItem2,
+    ScopeItemKind2,
+    SectionMemberScopeItem2,
+    TScopeItem2,
+} from "./scopeItem2";
 
 export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
 
@@ -119,17 +125,6 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
             inspectFunctionExpression(state, xorNode);
             break;
 
-        // case Ast.NodeKind.Identifier:
-        //     inspectIdentifier(state, xorNode, true);
-        //     break;
-
-        // case Ast.NodeKind.IdentifierExpression:
-        //     inspectIdentifierExpression(state, xorNode, true);
-        //     break;
-
-        // case Ast.NodeKind.IdentifierPairedExpression:
-        //     break;
-
         // case Ast.NodeKind.LetExpression:
         //     inspectLetExpression(state, xorNode);
         //     break;
@@ -139,9 +134,9 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
             inspectRecordExpressionOrRecordLiteral(state, xorNode);
             break;
 
-        // case Ast.NodeKind.SectionMember:
-        //     inspectSectionMember(state, xorNode);
-        //     break;
+        case Ast.NodeKind.Section:
+            inspectSection(state, xorNode);
+            break;
 
         default:
             getOrCreateScope(state, xorNode.node.id);
@@ -264,14 +259,19 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
 // If position is to the right of an equals sign,
 // then add all keys to scope EXCEPT for the one the that position is under.
 function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: TXorNode): void {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(record, [
+        Ast.NodeKind.RecordExpression,
+        Ast.NodeKind.RecordLiteral,
+    ]);
+    if (maybeErr) {
+        throw maybeErr;
+    }
 
-    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair> = NodeIdMapIterator.recordKeyValuePairs(
-        nodeIdMapCollection,
-        record,
-    );
+    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
+        Ast.GeneralizedIdentifier
+    >> = NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, record);
     const unfilteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = keyValuePairs.map(
-        (kvp: NodeIdMapIterator.KeyValuePair) => {
+        (kvp: NodeIdMapIterator.KeyValuePair<Ast.GeneralizedIdentifier>) => {
             return [
                 kvp.key.literal,
                 {
@@ -286,6 +286,41 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
     for (const kvp of keyValuePairs) {
         const filteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = unfilteredNewEntries.filter(
             (pair: [string, KeyValuePairScopeItem2]) => {
+                return pair[1].key.id !== kvp.key.id;
+            },
+        );
+        expandScope(state, kvp.source, filteredNewEntries);
+    }
+}
+
+function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        section,
+        Ast.NodeKind.Section,
+    );
+    if (maybeErr) {
+        throw maybeErr;
+    }
+
+    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
+        Ast.Identifier
+    >> = NodeIdMapIterator.sectionMemberKeyValuePairs(state.nodeIdMapCollection, section);
+    const unfilteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem2]> = keyValuePairs.map(
+        (kvp: NodeIdMapIterator.KeyValuePair<Ast.Identifier>) => {
+            return [
+                kvp.key.literal,
+                {
+                    kind: ScopeItemKind2.SectionMember,
+                    key: kvp.key,
+                    maybeValue: kvp.maybeValue,
+                },
+            ];
+        },
+    );
+
+    for (const kvp of keyValuePairs) {
+        const filteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem2]> = unfilteredNewEntries.filter(
+            (pair: [string, SectionMemberScopeItem2]) => {
                 return pair[1].key.id !== kvp.key.id;
             },
         );
