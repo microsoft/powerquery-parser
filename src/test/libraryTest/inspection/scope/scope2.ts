@@ -107,7 +107,7 @@ function actualFactoryFn(scopeItemByKey: ScopeItemByKey): ReadonlyArray<TAbridge
     return result;
 }
 
-function expectScope2ForNodeOk(
+function expectScopeForNodeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -142,7 +142,7 @@ export function expectParseOkScope2Ok<S = IParserState>(
     position: Position,
 ): ScopeItemByKey {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    return expectScope2ForNodeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+    return expectScopeForNodeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
 }
 
 export function expectParseErrScope2Ok<S = IParserState>(
@@ -151,7 +151,7 @@ export function expectParseErrScope2Ok<S = IParserState>(
     position: Position,
 ): ScopeItemByKey {
     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
-    return expectScope2ForNodeOk(
+    return expectScopeForNodeOk(
         settings,
         parseError.state.contextState.nodeIdMapCollection,
         parseError.state.contextState.leafNodeIds,

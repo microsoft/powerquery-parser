@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultKind, ResultUtils } from "../../common";
+import { CommonError, Result, ResultUtils } from "../../common";
 import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { TypeInspector, TypeUtils } from "../../type";
@@ -66,10 +66,7 @@ export function tryInspectScope2(
 
         return ResultUtils.okFactory(state.deltaScope);
     } catch (err) {
-        return {
-            kind: ResultKind.Err,
-            error: CommonError.ensureCommonError(state.settings.localizationTemplates, err),
-        };
+        return ResultUtils.errFactory(CommonError.ensureCommonError(state.settings.localizationTemplates, err));
     }
 }
 
