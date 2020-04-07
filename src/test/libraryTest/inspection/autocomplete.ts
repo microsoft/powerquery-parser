@@ -24,7 +24,7 @@ function expectAutocompleteOk<S>(
         nodeIdMapCollection,
         leafNodeIds,
     );
-    const triedInspect: TriedAutocomplete = Inspection.tryInspectAutocomplete(
+    const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
         maybeActiveNode,
         nodeIdMapCollection,

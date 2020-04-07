@@ -9,13 +9,13 @@ import { ScopeItemByKey, ScopeItemKind, TScopeItem2 } from "./scope";
 
 export type ScopeTypeMap = Map<string, Type.TType>;
 
-export type TriedInspectScopeType = Result<ScopeTypeMap, CommonError.CommonError>;
+export type TriedScopeType = Result<ScopeTypeMap, CommonError.CommonError>;
 
-export function tryInspectScopeType(
+export function tryScopeType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     inspectedScope: ScopeItemByKey,
-): TriedInspectScopeType {
+): TriedScopeType {
     // The return object. Only stores [scope key, TType] pairs.
     const scopeTypeMap: ScopeTypeMap = new Map();
     // A temporary working set. Stores all [nodeId, TType] pairs evaluated.

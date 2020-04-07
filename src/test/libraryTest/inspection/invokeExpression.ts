@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { ResultUtils } from "../../../common";
-import { InspectedInvokeExpression2, Position } from "../../../inspection";
+import { InspectedInvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
@@ -16,7 +16,7 @@ function expectInvokeExpressionOk(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-): undefined | InspectedInvokeExpression2 {
+): undefined | InspectedInvokeExpression {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
@@ -27,7 +27,7 @@ function expectInvokeExpressionOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedInspect: Inspection.TriedInspectInvokeExpression2 = Inspection.tryInspectInvokeExpression2(
+    const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
         settings,
         nodeIdMapCollection,
         activeNode,
@@ -42,7 +42,7 @@ function expectParseOkInvokeExpressionOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Position,
-): undefined | InspectedInvokeExpression2 {
+): undefined | InspectedInvokeExpression {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
     return expectInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
 }
@@ -51,7 +51,7 @@ function expectParseErrInvokeExpressionOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Position,
-): undefined | InspectedInvokeExpression2 {
+): undefined | InspectedInvokeExpression {
     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
     return expectInvokeExpressionOk(
         settings,
@@ -64,7 +64,7 @@ function expectParseErrInvokeExpressionOk<S = IParserState>(
 describe(`subset Inspection - InvokeExpression`, () => {
     it("single invoke expression, no parameters", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(|)");
-        const inspected: undefined | InspectedInvokeExpression2 = expectParseOkInvokeExpressionOk(
+        const inspected: undefined | InspectedInvokeExpression = expectParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -79,7 +79,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
 
     it("multiple invoke expression, no parameters", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Bar(Foo(|))");
-        const inspected: undefined | InspectedInvokeExpression2 = expectParseOkInvokeExpressionOk(
+        const inspected: undefined | InspectedInvokeExpression = expectParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -94,7 +94,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a|)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|)");
-        const inspected: undefined | InspectedInvokeExpression2 = expectParseOkInvokeExpressionOk(
+        const inspected: undefined | InspectedInvokeExpression = expectParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -111,7 +111,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a|,)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|,)");
-        const inspected: undefined | InspectedInvokeExpression2 = expectParseErrInvokeExpressionOk(
+        const inspected: undefined | InspectedInvokeExpression = expectParseErrInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -128,7 +128,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
 
     it("single invoke expression - Foo(a,|)", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a,|)");
-        const inspected: undefined | InspectedInvokeExpression2 = expectParseErrInvokeExpressionOk(
+        const inspected: undefined | InspectedInvokeExpression = expectParseErrInvokeExpressionOk(
             DefaultSettings,
             text,
             position,

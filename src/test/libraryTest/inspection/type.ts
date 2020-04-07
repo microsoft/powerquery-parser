@@ -4,7 +4,7 @@
 import "mocha";
 import { Inspection } from "../../..";
 import { CommonError, Result, ResultUtils } from "../../../common";
-import { Position, ScopeItemByKey, ScopeTypeMap, TriedInspectScopeType } from "../../../inspection";
+import { Position, ScopeItemByKey, ScopeTypeMap, TriedScopeType } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { IParserState, NodeIdMap, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
@@ -36,7 +36,7 @@ function expectScopeTypeOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScope: Result<ScopeItemByKey, CommonError.CommonError> = Inspection.tryInspectScopeForRoot(
+    const triedScope: Result<ScopeItemByKey, CommonError.CommonError> = Inspection.tryScopeForRoot(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -47,11 +47,7 @@ function expectScopeTypeOk(
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScope) - ${triedScope.error}`);
     }
 
-    const triedScopeType: TriedInspectScopeType = Inspection.tryInspectScopeType(
-        settings,
-        nodeIdMapCollection,
-        triedScope.value,
-    );
+    const triedScopeType: TriedScopeType = Inspection.tryScopeType(settings, nodeIdMapCollection, triedScope.value);
     if (!ResultUtils.isOk(triedScopeType)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeType) - ${triedScopeType.error}`);
     }
@@ -67,20 +63,6 @@ function expectParseOkScopeTypeOk<S = IParserState>(
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
     return expectScopeTypeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
 }
-
-// function expectParseErrScopeTypeOk<S = IParserState>(
-//     settings: LexSettings & ParseSettings<S & IParserState>,
-//     text: string,
-//     position: Position,
-// ): ScopeTypeMap {
-//     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
-//     return expectScopeTypeOk(
-//         settings,
-//         parseError.state.contextState.nodeIdMapCollection,
-//         parseError.state.contextState.leafNodeIds,
-//         position,
-//     );
-// }
 
 function actualFactoryFn(inspected: ScopeTypeMap): AbridgedScopeType {
     return [...inspected.entries()]

@@ -13,22 +13,22 @@ import {
     TScopeItem2,
 } from "./scopeItem";
 
-export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
+export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
-export type TriedNodeScopeInspection = Result<ScopeItemByKey, CommonError.CommonError>;
+export type TriedScopeForRoot = Result<ScopeItemByKey, CommonError.CommonError>;
 
 export type ScopeById = Map<number, ScopeItemByKey>;
 
 export type ScopeItemByKey = Map<string, TScopeItem2>;
 
-export function tryInspectScope(
+export function tryScope(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: undefined | ScopeById,
-): TriedScopeInspection {
+): TriedScope {
     const rootId: number = ancestry[0].node.id;
 
     let scopeById: ScopeById;
@@ -71,16 +71,16 @@ export function tryInspectScope(
     }
 }
 
-export function tryInspectScopeForRoot(
+export function tryScopeForRoot(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: undefined | ScopeById,
-): TriedNodeScopeInspection {
+): TriedScopeForRoot {
     const rootId: number = ancestry[0].node.id;
-    const triedScopeInspection: TriedScopeInspection = tryInspectScope(
+    const triedScopeInspection: TriedScope = tryScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -96,7 +96,7 @@ export function tryInspectScopeForRoot(
     if (maybeScope === undefined) {
         const details: {} = { rootId };
         throw new CommonError.InvariantError(
-            `${tryInspectScopeForRoot.name}: expected rootId in ${tryInspectScope.name} result`,
+            `${tryScopeForRoot.name}: expected rootId in ${tryScope.name} result`,
             details,
         );
     }

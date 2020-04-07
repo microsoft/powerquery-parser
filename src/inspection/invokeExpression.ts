@@ -7,24 +7,26 @@ import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export type TriedInspectInvokeExpression2 = Result<InspectedInvokeExpression2 | undefined, CommonError.CommonError>;
+export type InspectedInvokeExpression = undefined | InvokeExpression;
 
-export interface InspectedInvokeExpression2 {
+export type TriedInvokeExpression = Result<InspectedInvokeExpression | undefined, CommonError.CommonError>;
+
+export interface InvokeExpression {
     readonly xorNode: TXorNode;
     readonly maybeName: string | undefined;
-    readonly maybeArguments: InvokeExpressionArgs2 | undefined;
+    readonly maybeArguments: InvokeExpressionArgs | undefined;
 }
 
-export interface InvokeExpressionArgs2 {
+export interface InvokeExpressionArgs {
     readonly numArguments: number;
     readonly positionArgumentIndex: number;
 }
 
-export function tryInspectInvokeExpression2(
+export function tryInvokeExpression(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
-): TriedInspectInvokeExpression2 {
+): TriedInvokeExpression {
     const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
     const position: Position = activeNode.position;
@@ -36,7 +38,7 @@ export function tryInspectInvokeExpression2(
                 continue;
             }
 
-            const inspected: InspectedInvokeExpression2 = {
+            const inspected: InspectedInvokeExpression = {
                 xorNode: xorNode,
                 maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
                 maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
@@ -123,7 +125,7 @@ function inspectInvokeExpressionArguments(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
     nodeIndex: number,
-): InvokeExpressionArgs2 | undefined {
+): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
     const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, 1, [
         Ast.NodeKind.ArrayWrapper,

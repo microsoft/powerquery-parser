@@ -18,9 +18,11 @@ import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export type TriedAutocomplete = Result<ReadonlyArray<KeywordKind>, CommonError.CommonError>;
+export type Autocomplete = ReadonlyArray<KeywordKind>;
 
-export function tryInspectAutocomplete<S = IParserState>(
+export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
+
+export function tryAutocomplete<S = IParserState>(
     settings: CommonSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
