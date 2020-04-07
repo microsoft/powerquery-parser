@@ -230,11 +230,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`each|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`each|`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`each |`, () => {
@@ -246,11 +242,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
         });
 
@@ -301,31 +293,19 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|(x) =>`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|(x) =>`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`(x|, y) =>`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x|, y) =>`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`(x, y)| =>`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(x, y)| =>`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`(x, y) =>|`, () => {
@@ -348,11 +328,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeType: undefined,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
         });
 
@@ -447,41 +423,25 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|[a=1`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`|[a=1`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`[|a=1`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[|a=1`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`[a=|1`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=|1`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`[a=1|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=1|`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`[a=1, b=|`, () => {
@@ -494,11 +454,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 9,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`[a=1, b=2|, c=3`, () => {
@@ -517,31 +473,19 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 21,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`[a=[|b=1`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=[|b=1`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`[a=[b=|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`[a=[b=|`);
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
         });
 
@@ -622,11 +566,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `s|ection foo; x = 1; y = 2`,
                 );
                 const expected: AbridgedNodeScope = [];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`section foo; x = 1|; y = 2`, () => {
@@ -640,11 +580,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 15,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`section foo; x = 1; y = 2|`, () => {
@@ -658,11 +594,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 8,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`section foo; x = 1; y = () => 10|`, () => {
@@ -676,11 +608,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 8,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
         });
 
@@ -856,11 +784,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 9,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`let a = 1, b = 2 in |`, () => {
@@ -879,11 +803,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 16,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`let a = 1|, b = 2 in`, () => {
@@ -896,11 +816,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 16,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`let x = (let y = 1 in z|) in`, () => {
@@ -915,11 +831,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 19,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
 
             it(`let x = (let y = 1 in z) in |`, () => {
@@ -934,11 +846,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 9,
                     },
                 ];
-                expectDeepEqual(
-                    expectParseErrScopeOk(DefaultSettings, text, position),
-                    expected,
-                    actualScopeFactoryFn,
-                );
+                expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
         });
     });
