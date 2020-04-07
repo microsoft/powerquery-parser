@@ -36,7 +36,7 @@ function expectScopeTypeOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScope: Result<ScopeItemByKey, CommonError.CommonError> = Inspection.tryInspectScope2ForRoot(
+    const triedScope: Result<ScopeItemByKey, CommonError.CommonError> = Inspection.tryInspectScopeForRoot(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -68,7 +68,7 @@ function expectParseOkScopeTypeOk<S = IParserState>(
     return expectScopeTypeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
 }
 
-// function expectParseErrInvokeExpression2Ok<S = IParserState>(
+// function expectParseErrScopeTypeOk<S = IParserState>(
 //     settings: LexSettings & ParseSettings<S & IParserState>,
 //     text: string,
 //     position: Position,

@@ -17,10 +17,7 @@ export interface ParseSettings<S = IParserState> extends CommonSettings {
     readonly newParserState: (parseSettings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S & IParserState;
 }
 
-// tslint:disable-next-line: no-empty-interface
-export interface InspectionSettings extends CommonSettings {}
-
-export type Settings<S = IParserState> = LexSettings & ParseSettings<S> & InspectionSettings;
+export type Settings<S = IParserState> = LexSettings & ParseSettings<S>;
 
 export const DefaultSettings: Settings = {
     parser: Parser.CombinatorialParser,

@@ -41,7 +41,7 @@ export function tryParse<S = IParserState>(settings: ParseSettings<S>, lexerSnap
 }
 
 // export function tryInspection<S = IParserState>(
-//     settings: InspectionSettings,
+//     settings: CommonSettings,
 //     triedParse: TriedParse<S>,
 //     position: Inspection.Position,
 // ): TriedInspection {

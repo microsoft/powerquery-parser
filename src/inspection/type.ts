@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Result, ResultKind, ResultUtils } from "../common";
+import { CommonError, isNever, Result, ResultUtils } from "../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
-import { InspectionSettings } from "../settings";
+import { CommonSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
-import { ScopeItemByKey, ScopeItemKind2, TScopeItem2 } from "./scope";
+import { ScopeItemByKey, ScopeItemKind, TScopeItem2 } from "./scope";
 
 export type ScopeTypeMap = Map<string, Type.TType>;
 
 export type TriedInspectScopeType = Result<ScopeTypeMap, CommonError.CommonError>;
 
 export function tryInspectScopeType(
-    settings: InspectionSettings,
+    settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     inspectedScope: ScopeItemByKey,
 ): TriedInspectScopeType {
@@ -40,15 +40,15 @@ function evaluateScopeItem(
     scopeTypeMap: ScopeTypeCacheMap,
 ): Type.TType {
     switch (scopeItem.kind) {
-        case ScopeItemKind2.Each:
+        case ScopeItemKind.Each:
             return evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.eachExpression);
 
-        case ScopeItemKind2.KeyValuePair:
+        case ScopeItemKind.KeyValuePair:
             return scopeItem.maybeValue === undefined
                 ? anyFactory()
                 : evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
 
-        case ScopeItemKind2.Parameter:
+        case ScopeItemKind.Parameter:
             return scopeItem.maybeType === undefined
                 ? anyFactory()
                 : {
@@ -57,12 +57,12 @@ function evaluateScopeItem(
                       isNullable: scopeItem.isNullable,
                   };
 
-        case ScopeItemKind2.SectionMember:
+        case ScopeItemKind.SectionMember:
             return scopeItem.maybeValue === undefined
                 ? anyFactory()
                 : evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
 
-        case ScopeItemKind2.Undefined:
+        case ScopeItemKind.Undefined:
             return unknownFactory();
 
         default:

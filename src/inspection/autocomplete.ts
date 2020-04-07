@@ -14,14 +14,14 @@ import {
     TXorNode,
     XorNodeKind,
 } from "../parser";
-import { InspectionSettings } from "../settings";
+import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
 export type TriedAutocomplete = Result<ReadonlyArray<KeywordKind>, CommonError.CommonError>;
 
 export function tryInspectAutocomplete<S = IParserState>(
-    settings: InspectionSettings,
+    settings: CommonSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseError: ParseError.ParseError<S> | undefined,
@@ -76,7 +76,7 @@ export function tryInspectAutocomplete<S = IParserState>(
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
 function traverseAncestors(
-    settings: InspectionSettings,
+    settings: CommonSettings,
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseErrorToken: Token | undefined,

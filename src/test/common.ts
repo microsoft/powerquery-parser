@@ -7,7 +7,7 @@ import { Inspection } from "..";
 import { ResultUtils } from "../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
 import { IParserState, ParseError, ParseOk, TriedParse } from "../parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../settings";
+import { LexSettings, ParseSettings } from "../settings";
 import { LexParseOk, TriedLexParse, tryLexParse } from "../tasks";
 
 export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {

@@ -6,12 +6,12 @@ import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../
 import { CommonSettings } from "../../settings";
 import { TypeInspector, TypeUtils } from "../../type";
 import {
-    KeyValuePairScopeItem2,
-    ParameterScopeItem2,
-    ScopeItemKind2,
-    SectionMemberScopeItem2,
+    KeyValuePairScopeItem,
+    ParameterScopeItem,
+    ScopeItemKind,
+    SectionMemberScopeItem,
     TScopeItem2,
-} from "./scopeItem2";
+} from "./scopeItem";
 
 export type TriedScopeInspection = Result<ScopeById, CommonError.CommonError>;
 
@@ -21,7 +21,7 @@ export type ScopeById = Map<number, ScopeItemByKey>;
 
 export type ScopeItemByKey = Map<string, TScopeItem2>;
 
-export function tryInspectScope2(
+export function tryInspectScope(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -71,7 +71,7 @@ export function tryInspectScope2(
     }
 }
 
-export function tryInspectScope2ForRoot(
+export function tryInspectScopeForRoot(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -80,7 +80,7 @@ export function tryInspectScope2ForRoot(
     maybeScopeById: undefined | ScopeById,
 ): TriedNodeScopeInspection {
     const rootId: number = ancestry[0].node.id;
-    const triedScopeInspection: TriedScopeInspection = tryInspectScope2(
+    const triedScopeInspection: TriedScopeInspection = tryInspectScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -96,7 +96,7 @@ export function tryInspectScope2ForRoot(
     if (maybeScope === undefined) {
         const details: {} = { rootId };
         throw new CommonError.InvariantError(
-            `${tryInspectScope2ForRoot.name}: expected rootId in ${tryInspectScope2.name} result`,
+            `${tryInspectScopeForRoot.name}: expected rootId in ${tryInspectScope.name} result`,
             details,
         );
     }
@@ -160,7 +160,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
             [
                 "_",
                 {
-                    kind: ScopeItemKind2.Each,
+                    kind: ScopeItemKind.Each,
                     eachExpression: eachExpr,
                 },
             ],
@@ -186,12 +186,12 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
         fnExpr,
     );
 
-    const newEntries: ReadonlyArray<[string, ParameterScopeItem2]> = inspectedFnExpr.parameters.map(
+    const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = inspectedFnExpr.parameters.map(
         (parameter: TypeInspector.InspectedFunctionParameter) => {
             return [
                 parameter.name.literal,
                 {
-                    kind: ScopeItemKind2.Parameter,
+                    kind: ScopeItemKind.Parameter,
                     name: parameter.name,
                     isOptional: parameter.isOptional,
                     isNullable: parameter.isNullable,
@@ -221,7 +221,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
     >> = NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, letExpr);
-    const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = inspectKeyValuePairs(
+    const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = inspectKeyValuePairs(
         state,
         scope,
         keyValuePairs,
@@ -259,12 +259,12 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
     >> = NodeIdMapIterator.sectionMemberKeyValuePairs(state.nodeIdMapCollection, section);
-    const unfilteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem2]> = keyValuePairs.map(
+    const unfilteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem]> = keyValuePairs.map(
         (kvp: NodeIdMapIterator.KeyValuePair<Ast.Identifier>) => {
             return [
                 kvp.key.literal,
                 {
-                    kind: ScopeItemKind2.SectionMember,
+                    kind: ScopeItemKind.SectionMember,
                     key: kvp.key,
                     maybeValue: kvp.maybeValue,
                 },
@@ -277,8 +277,8 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
             continue;
         }
 
-        const filteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem2]> = unfilteredNewEntries.filter(
-            (pair: [string, SectionMemberScopeItem2]) => {
+        const filteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem]> = unfilteredNewEntries.filter(
+            (pair: [string, SectionMemberScopeItem]) => {
                 return pair[1].key.id !== kvp.key.id;
             },
         );
@@ -290,13 +290,13 @@ function inspectKeyValuePairs<T>(
     state: ScopeInspectionState,
     parentScope: ScopeItemByKey,
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<T>>,
-): ReadonlyArray<[string, KeyValuePairScopeItem2]> {
-    const unfilteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = keyValuePairs.map(
+): ReadonlyArray<[string, KeyValuePairScopeItem]> {
+    const unfilteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = keyValuePairs.map(
         (kvp: NodeIdMapIterator.KeyValuePair<T>) => {
             return [
                 kvp.key.literal,
                 {
-                    kind: ScopeItemKind2.KeyValuePair,
+                    kind: ScopeItemKind.KeyValuePair,
                     key: kvp.key,
                     maybeValue: kvp.maybeValue,
                 },
@@ -309,8 +309,8 @@ function inspectKeyValuePairs<T>(
             continue;
         }
 
-        const filteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = unfilteredNewEntries.filter(
-            (pair: [string, KeyValuePairScopeItem2]) => {
+        const filteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = unfilteredNewEntries.filter(
+            (pair: [string, KeyValuePairScopeItem]) => {
                 return pair[1].key.id !== kvp.key.id;
             },
         );
