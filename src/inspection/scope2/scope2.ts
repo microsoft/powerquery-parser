@@ -222,7 +222,12 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
     >> = NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, letExpr);
-    inspectKeyValuePairs(state, scope, keyValuePairs);
+    const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = inspectKeyValuePairs(
+        state,
+        scope,
+        keyValuePairs,
+    );
+    expandChildScope(state, letExpr, [3], newEntries, scope);
 }
 
 // If position is to the right of an equals sign,
@@ -288,7 +293,7 @@ function inspectKeyValuePairs<T>(
     state: ScopeInspectionState,
     parentScope: ScopeItemByKey,
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<T>>,
-): void {
+): ReadonlyArray<[string, KeyValuePairScopeItem2]> {
     const unfilteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = keyValuePairs.map(
         (kvp: NodeIdMapIterator.KeyValuePair<T>) => {
             return [
@@ -314,6 +319,8 @@ function inspectKeyValuePairs<T>(
         );
         expandScope(state, kvp.maybeValue, filteredNewEntries, parentScope);
     }
+
+    return unfilteredNewEntries;
 }
 
 function expandScope(
