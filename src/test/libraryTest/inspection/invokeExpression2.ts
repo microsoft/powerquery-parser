@@ -3,13 +3,13 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../../..";
-import { ResultUtils } from "../../../../common";
-import { InspectedInvokeExpression2, Position } from "../../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../../inspection/activeNode";
-import { Ast, IParserState, NodeIdMap, ParseError, ParseOk } from "../../../../parser";
-import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
-import { expectParseErr, expectParseErrInspectionOk, expectParseOk, expectTextWithPosition } from "../../../common";
+import { Inspection } from "../../..";
+import { ResultUtils } from "../../../common";
+import { InspectedInvokeExpression2, Position } from "../../../inspection";
+import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
+import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
 function expectInvokeExpression2Ok(
     settings: CommonSettings,
