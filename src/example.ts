@@ -3,12 +3,11 @@
 
 /* tslint:disable:no-console */
 
-import { Inspection } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError } from "./parser";
 import { DefaultSettings } from "./settings";
-import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./tasks";
+import { TriedLexParse, tryLexParse } from "./tasks";
 
 parseText(`if true then 1 else 2`);
 
@@ -98,16 +97,16 @@ function lexText(text: string): void {
     }
 }
 
-// @ts-ignore
-function inspectText(text: string, position: Inspection.Position): void {
-    // Having a LexError thrown will abort the inspection and return the offending LexError.
-    // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: TriedLexParseInspection = tryLexParseInspection(DefaultSettings, text, position);
-    if (ResultUtils.isErr(triedInspection)) {
-        console.log(`Inspection failed due to: ${triedInspection.error.message}`);
-        return;
-    }
-    const inspected: Inspection.Inspected = triedInspection.value;
+// // @ts-ignore
+// function inspectText(text: string, position: Inspection.Position): void {
+//     // Having a LexError thrown will abort the inspection and return the offending LexError.
+//     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
+//     const triedInspection: TriedLexParseInspection = tryLexParseInspection(DefaultSettings, text, position);
+//     if (ResultUtils.isErr(triedInspection)) {
+//         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
+//         return;
+//     }
+//     const inspected: Inspection.Inspected = triedInspection.value;
 
-    console.log(`Inspected scope: ${[...inspected.scope.entries()]}`);
-}
+//     console.log(`Inspected scope: ${[...inspected.scope.entries()]}`);
+// }

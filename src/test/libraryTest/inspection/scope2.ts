@@ -4,7 +4,7 @@
 import "mocha";
 import { Inspection } from "../../..";
 import { isNever, ResultUtils } from "../../../common";
-import { Position, ScopeItemByKey, ScopeItemKind2, ParameterScopeItem2 } from "../../../inspection";
+import { Position, ScopeItemByKey, ScopeItemKind2 } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
@@ -138,11 +138,11 @@ function expectScopeForNodeOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScopeInspection: Inspection.TriedNodeScopeInspection = Inspection.tryInspectScope2ForNode(
+    const triedScopeInspection: Inspection.TriedNodeScopeInspection = Inspection.tryInspectScope2ForRoot(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
-        activeNode.ancestry[0].node.id,
+        activeNode.ancestry,
         undefined,
     );
     if (!ResultUtils.isOk(triedScopeInspection)) {

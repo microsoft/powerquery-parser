@@ -38,7 +38,7 @@ function expectInvokeExpression2Ok(
     return triedInspect.value;
 }
 
-export function expectParseOkInvokeExpression2Ok<S = IParserState>(
+function expectParseOkInvokeExpression2Ok<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Position,
@@ -47,7 +47,7 @@ export function expectParseOkInvokeExpression2Ok<S = IParserState>(
     return expectInvokeExpression2Ok(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
 }
 
-export function expectParseErrInvokeExpression2Ok<S = IParserState>(
+function expectParseErrInvokeExpression2Ok<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
     position: Position,

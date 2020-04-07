@@ -18,11 +18,7 @@ import { InspectionSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export interface InspectedAutocomplete {
-    readonly autocompleteKeywords: ReadonlyArray<KeywordKind>;
-}
-
-export type TriedAutocomplete = Result<InspectedAutocomplete, CommonError.CommonError>;
+export type TriedAutocomplete = Result<ReadonlyArray<KeywordKind>, CommonError.CommonError>;
 
 export function tryInspectAutocomplete<S = IParserState>(
     settings: InspectionSettings,
@@ -31,9 +27,7 @@ export function tryInspectAutocomplete<S = IParserState>(
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
-        return ResultUtils.okFactory({
-            autocompleteKeywords: ExpressionAutocomplete,
-        });
+        return ResultUtils.okFactory(ExpressionAutocomplete);
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
@@ -74,7 +68,7 @@ export function tryInspectAutocomplete<S = IParserState>(
     );
     inspected = filterRecommendations(inspected, maybePositionName);
 
-    return ResultUtils.okFactory({ autocompleteKeywords: inspected });
+    return ResultUtils.okFactory(inspected);
 }
 
 // Travel the ancestry path in Active node in [parent, child] pairs.

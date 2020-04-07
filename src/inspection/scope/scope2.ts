@@ -25,10 +25,12 @@ export function tryInspectScope2(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    rootId: number,
+    ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: undefined | ScopeById,
 ): TriedScopeInspection {
+    const rootId: number = ancestry[0].node.id;
+
     let scopeById: ScopeById;
     if (maybeScopeById !== undefined) {
         const maybeCached: undefined | ScopeItemByKey = maybeScopeById.get(rootId);
@@ -43,7 +45,6 @@ export function tryInspectScope2(
     // Store the delta between the given scope and what's found in a temporary map.
     // This will prevent mutation in the given map if an error is thrown.
     const scopeChanges: ScopeById = new Map();
-    const ancestry: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectAncestry(nodeIdMapCollection, rootId);
     const state: ScopeInspectionState = {
         settings,
         givenScope: scopeById,
@@ -70,19 +71,20 @@ export function tryInspectScope2(
     }
 }
 
-export function tryInspectScope2ForNode(
+export function tryInspectScope2ForRoot(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    nodeId: number,
+    ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: undefined | ScopeById,
 ): TriedNodeScopeInspection {
+    const rootId: number = ancestry[0].node.id;
     const triedScopeInspection: TriedScopeInspection = tryInspectScope2(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
-        nodeId,
+        ancestry,
         maybeScopeById,
     );
 
@@ -90,11 +92,11 @@ export function tryInspectScope2ForNode(
         return triedScopeInspection;
     }
 
-    const maybeScope: undefined | ScopeItemByKey = triedScopeInspection.value.get(nodeId);
+    const maybeScope: undefined | ScopeItemByKey = triedScopeInspection.value.get(rootId);
     if (maybeScope === undefined) {
-        const details: {} = { nodeId };
+        const details: {} = { rootId };
         throw new CommonError.InvariantError(
-            `${tryInspectScope2ForNode.name}: expected nodeId in ${tryInspectScope2.name} result`,
+            `${tryInspectScope2ForRoot.name}: expected rootId in ${tryInspectScope2.name} result`,
             details,
         );
     }
@@ -227,8 +229,6 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
     expandChildScope(state, letExpr, [3], newEntries, scope);
 }
 
-// If position is to the right of an equals sign,
-// then add all keys to scope EXCEPT for the one the that position is under.
 function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: TXorNode): void {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(record, [
         Ast.NodeKind.RecordExpression,

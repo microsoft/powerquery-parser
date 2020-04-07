@@ -1,66 +1,54 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Result, ResultKind } from "../common";
+import { CommonError, isNever, Result, ResultKind, ResultUtils } from "../common";
 import { Ast, AstUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { InspectionSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
-import { InspectedScope, ScopeItemKind, TScopeItem } from "./scope";
+import { ScopeItemByKey, ScopeItemKind2, TScopeItem2 } from "./scope";
 
 export type ScopeTypeMap = Map<string, Type.TType>;
 
-export interface InspectedType {
-    readonly scopeTypeMap: ScopeTypeMap;
-}
-
-export type TriedType = Result<InspectedType, CommonError.CommonError>;
+export type TriedInspectScopeType = Result<ScopeTypeMap, CommonError.CommonError>;
 
 export function tryInspectScopeType(
     settings: InspectionSettings,
-    inspectedScope: InspectedScope,
     nodeIdMapCollection: NodeIdMap.Collection,
-): Result<InspectedType, CommonError.CommonError> {
+    inspectedScope: ScopeItemByKey,
+): TriedInspectScopeType {
     // The return object. Only stores [scope key, TType] pairs.
     const scopeTypeMap: ScopeTypeMap = new Map();
     // A temporary working set. Stores all [nodeId, TType] pairs evaluated.
     const scopeTypeCacheMap: ScopeTypeCacheMap = new Map();
 
     try {
-        for (const [key, node] of [...inspectedScope.scope.entries()]) {
+        for (const [key, node] of [...inspectedScope.entries()]) {
             scopeTypeMap.set(key, evaluateScopeItem(nodeIdMapCollection, node, scopeTypeCacheMap));
         }
     } catch (err) {
-        return {
-            kind: ResultKind.Err,
-            error: CommonError.ensureCommonError(settings.localizationTemplates, err),
-        };
+        return ResultUtils.errFactory(CommonError.ensureCommonError(settings.localizationTemplates, err));
     }
 
-    return {
-        kind: ResultKind.Ok,
-        value: {
-            scopeTypeMap,
-        },
-    };
+    return ResultUtils.okFactory(scopeTypeMap);
 }
 
 type ScopeTypeCacheMap = Map<number, Type.TType>;
 
 function evaluateScopeItem(
     nodeIdMapCollection: NodeIdMap.Collection,
-    scopeItem: TScopeItem,
+    scopeItem: TScopeItem2,
     scopeTypeMap: ScopeTypeCacheMap,
 ): Type.TType {
     switch (scopeItem.kind) {
-        case ScopeItemKind.Each:
-            return evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.each);
+        case ScopeItemKind2.Each:
+            return evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.eachExpression);
 
-        case ScopeItemKind.KeyValuePair:
+        case ScopeItemKind2.KeyValuePair:
             return scopeItem.maybeValue === undefined
                 ? anyFactory()
                 : evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
 
-        case ScopeItemKind.Parameter:
+        case ScopeItemKind2.Parameter:
             return scopeItem.maybeType === undefined
                 ? anyFactory()
                 : {
@@ -69,12 +57,12 @@ function evaluateScopeItem(
                       isNullable: scopeItem.isNullable,
                   };
 
-        case ScopeItemKind.SectionMember:
+        case ScopeItemKind2.SectionMember:
             return scopeItem.maybeValue === undefined
                 ? anyFactory()
                 : evaluateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
 
-        case ScopeItemKind.Undefined:
+        case ScopeItemKind2.Undefined:
             return unknownFactory();
 
         default:
