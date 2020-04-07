@@ -1,10 +1,10 @@
 import "mocha";
-import { LexSettings, ParseSettings } from "../settings";
+import { Task } from "..";
 import { IParserState } from "../parser";
+import { LexSettings, ParseSettings } from "../settings";
 
 import * as fs from "fs";
 import * as path from "path";
-import * as Tasks from "../tasks";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -46,9 +46,9 @@ export function writeContents(filePath: string, contents: string): void {
 export function tryLexParse<S = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     filePath: string,
-): Tasks.TriedLexParse<S> {
+): Task.TriedLexParse<S> {
     const contents: string = readContents(filePath);
-    return Tasks.tryLexParse(settings, contents);
+    return Task.tryLexParse(settings, contents);
 }
 
 function isDirectory(maybePath: string): boolean {

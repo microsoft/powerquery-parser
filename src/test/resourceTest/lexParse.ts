@@ -1,8 +1,8 @@
 import "mocha";
+import { Task } from "../..";
 import { ResultUtils } from "../../common";
 import { IParser, Parser } from "../../parser";
 import { DefaultSettings, Settings } from "../../settings";
-import { TriedLexParse } from "../../tasks";
 
 import * as path from "path";
 import * as FileUtils from "../fileUtils";
@@ -35,7 +35,7 @@ function parseAllFiles<S>(settings: Settings<S>, parserName: string): void {
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: TriedLexParse<S> = FileUtils.tryLexParse(settings, filePath);
+                const triedLexParse: Task.TriedLexParse<S> = FileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }

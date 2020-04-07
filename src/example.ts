@@ -3,11 +3,11 @@
 
 /* tslint:disable:no-console */
 
+import { Task } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError } from "./parser";
 import { DefaultSettings } from "./settings";
-import { TriedLexParse, tryLexParse } from "./tasks";
 
 parseText(`if true then 1 else 2`);
 
@@ -15,7 +15,7 @@ parseText(`if true then 1 else 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
+    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {

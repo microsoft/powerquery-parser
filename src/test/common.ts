@@ -3,12 +3,11 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "..";
+import { Inspection, Task } from "..";
 import { ResultUtils } from "../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
 import { IParserState, ParseError, ParseOk, TriedParse } from "../parser";
 import { LexSettings, ParseSettings } from "../settings";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../tasks";
 
 export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
     const actual: Y = actualFactoryFn(partial);
@@ -33,8 +32,8 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 export function expectLexParseOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-): LexParseOk<S> {
-    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
+): Task.LexParseOk<S> {
+    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
     if (!ResultUtils.isOk(triedLexParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }
