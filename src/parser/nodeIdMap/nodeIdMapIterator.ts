@@ -206,7 +206,7 @@ export function sectionMemberKeyValuePairs(
             maybeValue: NodeIdMapUtils.maybeXorChildByAttributeIndex(
                 nodeIdMapCollection,
                 keyValuePairNodeId,
-                1,
+                2,
                 undefined,
             ),
         });

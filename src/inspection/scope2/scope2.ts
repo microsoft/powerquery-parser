@@ -178,6 +178,9 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
         throw maybeErr;
     }
 
+    // Propegates the parent's scope.
+    getOrCreateScope(state, fnExpr.node.id);
+
     const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
         state.nodeIdMapCollection,
         fnExpr,
@@ -284,12 +287,16 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
     );
 
     for (const kvp of keyValuePairs) {
+        if (kvp.maybeValue === undefined) {
+            continue;
+        }
+
         const filteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem2]> = unfilteredNewEntries.filter(
             (pair: [string, KeyValuePairScopeItem2]) => {
                 return pair[1].key.id !== kvp.key.id;
             },
         );
-        expandScope(state, kvp.source, filteredNewEntries);
+        expandScope(state, kvp.maybeValue, filteredNewEntries);
     }
 }
 
@@ -319,12 +326,16 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
     );
 
     for (const kvp of keyValuePairs) {
+        if (kvp.maybeValue === undefined) {
+            continue;
+        }
+
         const filteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem2]> = unfilteredNewEntries.filter(
             (pair: [string, SectionMemberScopeItem2]) => {
                 return pair[1].key.id !== kvp.key.id;
             },
         );
-        expandScope(state, kvp.source, filteredNewEntries);
+        expandScope(state, kvp.maybeValue, filteredNewEntries);
     }
 }
 
