@@ -18,9 +18,9 @@ function expectInvokeExpressionOk(
     position: Position,
 ): undefined | InspectedInvokeExpression {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
-        position,
         nodeIdMapCollection,
         leafNodeIds,
+        position,
     );
     if (!(maybeActiveNode !== undefined)) {
         throw new Error(`AssertedFailed: maybeActiveNode !== undefined`);

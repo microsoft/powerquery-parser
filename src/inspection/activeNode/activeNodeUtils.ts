@@ -31,11 +31,11 @@ import { ActiveNode } from "./activeNode";
 // Sometimes we don't want to shift at all.
 // Nodes that prevent shifting are called anchor nodes.
 export function maybeActiveNode(
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
+    position: Position,
 ): ActiveNode | undefined {
-    const astSearch: AstNodeSearch = positionAstSearch(position, nodeIdMapCollection, leafNodeIds);
+    const astSearch: AstNodeSearch = positionAstSearch(nodeIdMapCollection, leafNodeIds, position);
     const maybeContextSearch: ParseContext.Node | undefined = positionContextSearch(astSearch, nodeIdMapCollection);
 
     let maybeLeaf: TXorNode | undefined;
@@ -59,7 +59,7 @@ export function maybeActiveNode(
     return {
         position,
         ancestry: NodeIdMapIterator.expectAncestry(nodeIdMapCollection, leaf.node.id),
-        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(position, nodeIdMapCollection, leaf),
+        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, leaf, position),
     };
 }
 
@@ -124,9 +124,9 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
 }
 
 function positionAstSearch(
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
+    position: Position,
 ): AstNodeSearch {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     let maybeCurrentOnOrBefore: Ast.TNode | undefined;
@@ -245,9 +245,9 @@ function positionContextSearch(
 }
 
 function maybeIdentifierUnderPosition(
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
     leaf: TXorNode,
+    position: Position,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (leaf.kind !== XorNodeKind.Ast) {
         return undefined;

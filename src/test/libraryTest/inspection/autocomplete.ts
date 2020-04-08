@@ -20,14 +20,14 @@ function expectAutocompleteOk<S>(
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): ReadonlyArray<KeywordKind> {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
-        position,
         nodeIdMapCollection,
         leafNodeIds,
+        position,
     );
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
-        maybeActiveNode,
         nodeIdMapCollection,
+        maybeActiveNode,
         maybeParseError,
     );
     if (!ResultUtils.isOk(triedInspect)) {

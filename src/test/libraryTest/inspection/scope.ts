@@ -129,9 +129,9 @@ function expectScopeForNodeOk(
     position: Position,
 ): ScopeItemByKey {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
-        position,
         nodeIdMapCollection,
         leafNodeIds,
+        position,
     );
     if (maybeActiveNode === undefined) {
         return new Map();

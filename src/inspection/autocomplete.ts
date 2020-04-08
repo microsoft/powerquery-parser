@@ -24,8 +24,8 @@ export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
 export function tryAutocomplete<S = IParserState>(
     settings: CommonSettings,
-    maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
+    maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
