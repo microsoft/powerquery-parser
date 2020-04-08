@@ -28,9 +28,9 @@ const GeneralizedIdentifierTerminatorTokenKinds: ReadonlyArray<TokenKind> = [
     TokenKind.RightBracket,
 ];
 
-// -------------------------------------------
-// ---------- // 12.1.6 Identifiers ----------
-// -------------------------------------------
+// ----------------------------------------
+// ---------- 12.1.6 Identifiers ----------
+// ----------------------------------------
 
 export function readIdentifier<S = IParserState>(
     state: IParserState,

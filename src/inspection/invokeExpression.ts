@@ -39,7 +39,7 @@ export function tryInvokeExpression(
             }
 
             const inspected: InspectedInvokeExpression = {
-                xorNode: xorNode,
+                xorNode,
                 maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
                 maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
             };

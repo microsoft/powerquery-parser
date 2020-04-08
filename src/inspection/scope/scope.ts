@@ -139,7 +139,6 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 
         default:
             getOrCreateScope(state, xorNode.node.id, undefined);
-            break;
     }
 }
 

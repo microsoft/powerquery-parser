@@ -36,7 +36,7 @@ export function maybeActiveNode(
     position: Position,
 ): ActiveNode | undefined {
     const astSearch: AstNodeSearch = positionAstSearch(nodeIdMapCollection, leafNodeIds, position);
-    const maybeContextSearch: ParseContext.Node | undefined = positionContextSearch(astSearch, nodeIdMapCollection);
+    const maybeContextSearch: ParseContext.Node | undefined = positionContextSearch(nodeIdMapCollection, astSearch);
 
     let maybeLeaf: TXorNode | undefined;
     if (astSearch.maybeShiftedNode !== undefined) {
@@ -59,7 +59,7 @@ export function maybeActiveNode(
     return {
         position,
         ancestry: NodeIdMapIterator.expectAncestry(nodeIdMapCollection, leaf.node.id),
-        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, leaf, position),
+        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
     };
 }
 
@@ -220,8 +220,8 @@ function positionAstSearch(
 }
 
 function positionContextSearch(
-    astNodeSearch: AstNodeSearch,
     nodeIdMapCollection: NodeIdMap.Collection,
+    astNodeSearch: AstNodeSearch,
 ): ParseContext.Node | undefined {
     if (astNodeSearch.maybeNode === undefined) {
         return undefined;
@@ -246,8 +246,8 @@ function positionContextSearch(
 
 function maybeIdentifierUnderPosition(
     nodeIdMapCollection: NodeIdMap.Collection,
-    leaf: TXorNode,
     position: Position,
+    leaf: TXorNode,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (leaf.kind !== XorNodeKind.Ast) {
         return undefined;

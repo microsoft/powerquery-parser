@@ -124,7 +124,6 @@ function traverseAncestors(
                             maybeInspected = autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind);
                         }
                     }
-                    break;
                 }
             }
 
