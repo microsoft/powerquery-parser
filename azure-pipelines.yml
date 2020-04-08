@@ -35,6 +35,12 @@ steps:
     command: 'custom'
     customCommand: 'test'
 
+- task: Npm@1
+  displayName: 'pack'
+  inputs:
+    command: 'custom'
+    customCommand: 'pack'
+
 - task: PoliCheck@1
   inputs:
     inputType: 'Basic'
@@ -53,6 +59,12 @@ steps:
     PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
     ArtifactName: lib
   displayName: 'publish lib'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/*.tgz'
+    ArtifactName: package
+  displayName: 'publish npm package'
 
 - task: PublishBuildArtifacts@1
   inputs:
