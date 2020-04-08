@@ -56,8 +56,8 @@ export function tryInspection<S = IParserState>(
     triedParse: TriedParse<S>,
     position: Inspection.Position
 ): TriedInspection {
-    let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
+    let leafNodeIds: ReadonlyArray<number>;
     let maybeParseError: ParseError.ParseError<S> | undefined;
 
     if (ResultUtils.isErr(triedParse)) {
@@ -72,18 +72,18 @@ export function tryInspection<S = IParserState>(
         }
 
         const context: ParseContext.State = triedParse.error.state.contextState;
-        leafNodeIds = context.leafNodeIds;
         nodeIdMapCollection = context.nodeIdMapCollection;
+        leafNodeIds = context.leafNodeIds;
     } else {
         const parseOk: ParseOk<S> = triedParse.value;
-        leafNodeIds = parseOk.leafNodeIds;
         nodeIdMapCollection = parseOk.nodeIdMapCollection;
+        leafNodeIds = parseOk.leafNodeIds;
     }
 
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
-        position,
         nodeIdMapCollection,
-        leafNodeIds
+        leafNodeIds,
+        position
     );
     if (maybeActiveNode === undefined) {
         throw new CommonError.InvariantError(`${tryInspection.name}: couldn't create ActiveNode`);
@@ -110,8 +110,8 @@ export function tryInspection<S = IParserState>(
 
     const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
-        activeNode,
         nodeIdMapCollection,
+        activeNode,
         maybeParseError
     );
     if (ResultUtils.isErr(triedAutocomplete)) {
@@ -131,7 +131,7 @@ export function tryInspection<S = IParserState>(
         autocomplete: triedAutocomplete.value,
         maybeInvokeExpression: triedInvokeExpression.value,
         scope: triedScope.value,
-        scopeType: triedScopeType.value,
+        scopeType: triedScopeType.value
     });
 }
 
@@ -149,7 +149,7 @@ export function tryLexParse<S = IParserState>(
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,
-            lexerSnapshot,
+            lexerSnapshot
         });
     } else {
         return triedParse;
@@ -179,6 +179,6 @@ export function tryLexParseInspection<S = IParserState>(
 
     return ResultUtils.okFactory({
         ...triedInspection.value,
-        triedParse: casted,
+        triedParse: casted
     });
 }

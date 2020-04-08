@@ -20,8 +20,8 @@ export function isBeforeXorNode(position: Position, xorNode: TXorNode, isBoundIn
 }
 
 export function isInXorNode(
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
+    position: Position,
     xorNode: TXorNode,
     isLowerBoundIncluded: boolean,
     isUpperBoundIncluded: boolean
@@ -32,8 +32,8 @@ export function isInXorNode(
 
         case XorNodeKind.Context:
             return isInContextNode(
-                position,
                 nodeIdMapCollection,
+                position,
                 xorNode.node,
                 isLowerBoundIncluded,
                 isUpperBoundIncluded
@@ -58,16 +58,16 @@ export function isOnXorNodeStart(position: Position, xorNode: TXorNode): boolean
 }
 
 export function isOnXorNodeEnd(
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    xorNode: TXorNode,
-    nodeIdMapCollection: NodeIdMap.Collection
+    xorNode: TXorNode
 ): boolean {
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
             return isOnAstNodeEnd(position, xorNode.node);
 
         case XorNodeKind.Context:
-            return isOnContextNodeEnd(position, xorNode.node, nodeIdMapCollection);
+            return isOnContextNodeEnd(nodeIdMapCollection, position, xorNode.node);
 
         default:
             throw isNever(xorNode);
@@ -75,8 +75,8 @@ export function isOnXorNodeEnd(
 }
 
 export function isAfterXorNode(
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
+    position: Position,
     xorNode: TXorNode,
     isBoundIncluded: boolean
 ): boolean {
@@ -85,7 +85,7 @@ export function isAfterXorNode(
             return isAfterAstNode(position, xorNode.node, isBoundIncluded);
 
         case XorNodeKind.Context:
-            return isAfterContextNode(position, nodeIdMapCollection, xorNode.node, isBoundIncluded);
+            return isAfterContextNode(nodeIdMapCollection, position, xorNode.node, isBoundIncluded);
 
         default:
             throw isNever(xorNode);
@@ -107,15 +107,15 @@ export function isBeforeContextNode(
 }
 
 export function isInContextNode(
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
+    position: Position,
     contextNode: ParseContext.Node,
     isLowerBoundIncluded: boolean,
     isHigherBoundIncluded: boolean
 ): boolean {
     return (
         !isBeforeContextNode(position, contextNode, isLowerBoundIncluded) &&
-        !isAfterContextNode(position, nodeIdMapCollection, contextNode, isHigherBoundIncluded)
+        !isAfterContextNode(nodeIdMapCollection, position, contextNode, isHigherBoundIncluded)
     );
 }
 
@@ -126,9 +126,9 @@ export function isOnContextNodeStart(position: Position, contextNode: ParseConte
 }
 
 export function isOnContextNodeEnd(
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    contextNode: ParseContext.Node,
-    nodeIdMapCollection: NodeIdMap.Collection
+    contextNode: ParseContext.Node
 ): boolean {
     const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
@@ -139,8 +139,8 @@ export function isOnContextNodeEnd(
 }
 
 export function isAfterContextNode(
-    position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
+    position: Position,
     contextNode: ParseContext.Node,
     isBoundIncluded: boolean
 ): boolean {

@@ -59,7 +59,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
             return {
                 identifier,
                 kind: scopeItem.kind,
-                eachExpressionNodeId: scopeItem.eachExpression.node.id,
+                eachExpressionNodeId: scopeItem.eachExpression.node.id
             };
 
         case ScopeItemKind.KeyValuePair:
@@ -67,7 +67,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
                 identifier,
                 kind: scopeItem.kind,
                 keyNodeId: scopeItem.key.id,
-                maybeValueNodeId: scopeItem.maybeValue !== undefined ? scopeItem.maybeValue.node.id : undefined,
+                maybeValueNodeId: scopeItem.maybeValue !== undefined ? scopeItem.maybeValue.node.id : undefined
             };
 
         case ScopeItemKind.Parameter:
@@ -77,21 +77,21 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
                 nameNodeId: scopeItem.name.id,
                 isNullable: scopeItem.isNullable,
                 isOptional: scopeItem.isOptional,
-                maybeType: scopeItem.maybeType,
+                maybeType: scopeItem.maybeType
             };
 
         case ScopeItemKind.SectionMember:
             return {
                 identifier,
                 kind: scopeItem.kind,
-                keyNodeId: scopeItem.key.id,
+                keyNodeId: scopeItem.key.id
             };
 
         case ScopeItemKind.Undefined:
             return {
                 identifier,
                 kind: scopeItem.kind,
-                nodeId: scopeItem.xorNode.node.id,
+                nodeId: scopeItem.xorNode.node.id
             };
 
         default:
@@ -129,9 +129,9 @@ function expectScopeForNodeOk(
     position: Position
 ): ScopeItemByKey {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
-        position,
         nodeIdMapCollection,
-        leafNodeIds
+        leafNodeIds,
+        position
     );
     if (maybeActiveNode === undefined) {
         return new Map();
@@ -195,8 +195,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         kind: ScopeItemKind.Each,
-                        eachExpressionNodeId: 1,
-                    },
+                        eachExpressionNodeId: 1
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -207,8 +207,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         kind: ScopeItemKind.Each,
-                        eachExpressionNodeId: 1,
-                    },
+                        eachExpressionNodeId: 1
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -219,8 +219,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         kind: ScopeItemKind.Each,
-                        eachExpressionNodeId: 3,
-                    },
+                        eachExpressionNodeId: 3
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -239,8 +239,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         kind: ScopeItemKind.Each,
-                        eachExpressionNodeId: 1,
-                    },
+                        eachExpressionNodeId: 1
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -274,7 +274,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
-                        maybeType: undefined,
+                        maybeType: undefined
                     },
                     {
                         identifier: "y",
@@ -282,8 +282,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
-                        maybeType: undefined,
-                    },
+                        maybeType: undefined
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -317,7 +317,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
-                        maybeType: undefined,
+                        maybeType: undefined
                     },
                     {
                         identifier: "y",
@@ -325,8 +325,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
-                        maybeType: undefined,
-                    },
+                        maybeType: undefined
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -342,14 +342,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "x",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 9
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 13,
-                        maybeValueNodeId: 16,
-                    },
+                        maybeValueNodeId: 16
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -381,8 +381,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 7,
-                        maybeValueNodeId: 10,
-                    },
+                        maybeValueNodeId: 10
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -394,14 +394,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 7,
-                        maybeValueNodeId: 10,
+                        maybeValueNodeId: 10
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 21,
-                        maybeValueNodeId: 24,
-                    },
+                        maybeValueNodeId: 24
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -451,8 +451,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 7,
-                        maybeValueNodeId: 9,
-                    },
+                        maybeValueNodeId: 9
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -464,14 +464,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 9
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 19,
-                        maybeValueNodeId: 21,
-                    },
+                        maybeValueNodeId: 21
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -506,8 +506,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        keyNodeId: 15,
-                    },
+                        keyNodeId: 15
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -520,8 +520,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        keyNodeId: 8,
-                    },
+                        keyNodeId: 8
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -542,19 +542,19 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        keyNodeId: 8,
+                        keyNodeId: 8
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        keyNodeId: 15,
+                        keyNodeId: 15
                     },
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 29,
-                        maybeValueNodeId: 32,
-                    },
+                        maybeValueNodeId: 32
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -577,8 +577,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        keyNodeId: 15,
-                    },
+                        keyNodeId: 15
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -591,8 +591,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        keyNodeId: 8,
-                    },
+                        keyNodeId: 8
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -605,8 +605,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        keyNodeId: 8,
-                    },
+                        keyNodeId: 8
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -620,8 +620,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
-                    },
+                        maybeValueNodeId: 9
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -633,8 +633,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
-                    },
+                        maybeValueNodeId: 9
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -654,14 +654,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 9
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 13,
-                        maybeValueNodeId: 16,
-                    },
+                        maybeValueNodeId: 16
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -675,8 +675,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 13,
-                        maybeValueNodeId: 16,
-                    },
+                        maybeValueNodeId: 16
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -692,7 +692,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
-                        maybeType: undefined,
+                        maybeType: undefined
                     },
                     {
                         identifier: "p2",
@@ -700,20 +700,20 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
-                        maybeType: undefined,
+                        maybeType: undefined
                     },
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 19,
-                        maybeValueNodeId: 22,
+                        maybeValueNodeId: 22
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 26,
-                        maybeValueNodeId: 29,
-                    },
+                        maybeValueNodeId: 29
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -727,20 +727,20 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "eggs",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 8,
+                        maybeValueNodeId: 8
                     },
                     {
                         identifier: "foo",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 23,
-                        maybeValueNodeId: 26,
+                        maybeValueNodeId: 26
                     },
                     {
                         identifier: "bar",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 30,
-                        maybeValueNodeId: 33,
-                    },
+                        maybeValueNodeId: 33
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -754,20 +754,20 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "foo",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 23,
-                        maybeValueNodeId: 26,
+                        maybeValueNodeId: 26
                     },
                     {
                         identifier: "bar",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 30,
-                        maybeValueNodeId: 33,
+                        maybeValueNodeId: 33
                     },
                     {
                         identifier: "ham",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 13,
-                        maybeValueNodeId: 16,
-                    },
+                        maybeValueNodeId: 16
+                    }
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -781,8 +781,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
-                    },
+                        maybeValueNodeId: 9
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -794,14 +794,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 9
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 13,
-                        maybeValueNodeId: 16,
-                    },
+                        maybeValueNodeId: 16
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -813,8 +813,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 13,
-                        maybeValueNodeId: 16,
-                    },
+                        maybeValueNodeId: 16
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -828,8 +828,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 16,
-                        maybeValueNodeId: 19,
-                    },
+                        maybeValueNodeId: 19
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -843,8 +843,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "x",
                         kind: ScopeItemKind.KeyValuePair,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
-                    },
+                        maybeValueNodeId: 9
+                    }
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
             });
@@ -863,7 +863,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 7,
                     isNullable: true,
                     isOptional: false,
-                    maybeType: undefined,
+                    maybeType: undefined
                 },
                 {
                     identifier: "b",
@@ -871,7 +871,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 11,
                     isNullable: false,
                     isOptional: false,
-                    maybeType: Ast.PrimitiveTypeConstantKind.Number,
+                    maybeType: Ast.PrimitiveTypeConstantKind.Number
                 },
                 {
                     identifier: "c",
@@ -879,7 +879,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 19,
                     isNullable: true,
                     isOptional: false,
-                    maybeType: Ast.PrimitiveTypeConstantKind.Function,
+                    maybeType: Ast.PrimitiveTypeConstantKind.Function
                 },
                 {
                     identifier: "d",
@@ -887,7 +887,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 30,
                     isNullable: true,
                     isOptional: true,
-                    maybeType: undefined,
+                    maybeType: undefined
                 },
                 {
                     identifier: "e",
@@ -895,8 +895,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 35,
                     isNullable: false,
                     isOptional: true,
-                    maybeType: Ast.PrimitiveTypeConstantKind.Table,
-                },
+                    maybeType: Ast.PrimitiveTypeConstantKind.Table
+                }
             ];
             expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualParameterFactoryFn);
         });

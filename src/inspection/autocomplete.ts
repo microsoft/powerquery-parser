@@ -12,7 +12,7 @@ import {
     NodeIdMapUtils,
     ParseError,
     TXorNode,
-    XorNodeKind,
+    XorNodeKind
 } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
@@ -24,8 +24,8 @@ export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
 export function tryAutocomplete<S = IParserState>(
     settings: CommonSettings,
-    maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
+    maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
@@ -39,7 +39,7 @@ export function tryAutocomplete<S = IParserState>(
         : undefined;
 
     let maybePositionName: string | undefined;
-    if (PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, leaf, false, true)) {
+    if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, leaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
             maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
         }
@@ -193,7 +193,7 @@ const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.InvokeExpression, 2),
     createMapKey(Ast.NodeKind.ListExpression, 1),
     createMapKey(Ast.NodeKind.OtherwiseExpression, 1),
-    createMapKey(Ast.NodeKind.ParenthesizedExpression, 1),
+    createMapKey(Ast.NodeKind.ParenthesizedExpression, 1)
 ];
 
 // If we're coming from a constant then we can quickly evaluate using a map.
@@ -212,7 +212,7 @@ const AutocompleteConstantMap: Map<string, KeywordKind> = new Map<string, Keywor
     [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), KeywordKind.Otherwise],
 
     // Ast.NodeKind.Section
-    [createMapKey(Ast.NodeKind.Section, 1), KeywordKind.Section],
+    [createMapKey(Ast.NodeKind.Section, 1), KeywordKind.Section]
 ]);
 
 // Used with maybeParseError to see if a user could be typing a conjunctive keyword such as 'or'. Eg.
@@ -223,7 +223,7 @@ const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Keywor
 >([
     ["a", [KeywordKind.And, KeywordKind.As]],
     ["o", [KeywordKind.Or]],
-    ["m", [KeywordKind.Meta]],
+    ["m", [KeywordKind.Meta]]
 ]);
 
 function updateWithParseErrorToken(
@@ -350,7 +350,7 @@ function autocompleteListExpression(
     } else if (child.node.maybeAttributeIndex !== 1) {
         const details: {} = {
             nodeId: child.node.id,
-            maybeAttributeIndex: child.node.maybeAttributeIndex,
+            maybeAttributeIndex: child.node.maybeAttributeIndex
         };
         throw new CommonError.InvariantError("ListExpression child has an invalid maybeAttributeIndex", details);
     }
@@ -390,7 +390,7 @@ function autocompleteSectionMember(
         const maybeSharedConstant:
             | TXorNode
             | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, parent.node.id, 1, [
-            Ast.NodeKind.Constant,
+            Ast.NodeKind.Constant
         ]);
 
         // 'shared' was parsed so we can exit.
