@@ -74,24 +74,6 @@
                 ]
             }
         ],
-        "no-implicit-dependencies": [
-            true,
-            // Needed because of "@storybook/react".
-            "dev",
-            [
-                "Clients",
-                "ClientShared",
-                "ColumnProfileView",
-                "ColumnProfileViewClient",
-                "Document",
-                "EditableGrid",
-                "Grid",
-                "GridTester",
-                "Rpc",
-                "TestUtils",
-                "Utils"
-            ]
-        ],
         "no-import-side-effect": [
             true,
             {
@@ -170,8 +152,6 @@
         "only-arrow-functions": false,
         "prefer-template": false,
         "promise-function-async": false,
-        "react-a11y-event-has-role": false,
-        "react-this-binding-issue": false,
         "restrict-plus-operands": false,
         "strict-boolean-expressions": false,
         "type-literal-delimiter": false,
