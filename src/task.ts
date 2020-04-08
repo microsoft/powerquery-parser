@@ -12,7 +12,7 @@ export type TriedInspection = Result<InspectionOk, CommonError.CommonError | Lex
 
 export interface InspectionOk {
     readonly autocomplete: Inspection.Autocomplete;
-    readonly invokeExpression: Inspection.InspectedInvokeExpression;
+    readonly maybeInvokeExpression: Inspection.InspectedInvokeExpression;
     readonly scope: Inspection.ScopeItemByKey;
     readonly scopeType: Inspection.ScopeTypeMap;
 }
@@ -129,7 +129,7 @@ export function tryInspection<S = IParserState>(
 
     return ResultUtils.okFactory({
         autocomplete: triedAutocomplete.value,
-        invokeExpression: triedInvokeExpression.value,
+        maybeInvokeExpression: triedInvokeExpression.value,
         scope: triedScope.value,
         scopeType: triedScopeType.value,
     });

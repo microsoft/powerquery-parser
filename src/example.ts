@@ -111,4 +111,14 @@ function inspectText(text: string, position: Inspection.Position): void {
     for (const identifier of inspection.scope.keys()) {
         console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);
     }
+
+    console.log(`Suggested keyword autocomplete: ${inspection.autocomplete.join(", ")}`);
+
+    console.log(`InvokeExpression name: ${inspection.maybeInvokeExpression?.maybeName}`);
+    console.log(
+        `InvokeExpression number of arguments: ${inspection.maybeInvokeExpression?.maybeArguments?.numArguments}`,
+    );
+    console.log(
+        `InvokeExpression argument position: ${inspection.maybeInvokeExpression?.maybeArguments?.positionArgumentIndex}`,
+    );
 }
