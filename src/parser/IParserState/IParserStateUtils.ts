@@ -22,7 +22,7 @@ export interface FastStateBackup {
 // See `benchmark.ts` for an example.
 export function newState<S = IParserState>(
     settings: ParseSettings<S & IParserState>,
-    lexerSnapshot: LexerSnapshot
+    lexerSnapshot: LexerSnapshot,
 ): IParserState {
     const maybeCurrentToken: Token | undefined = lexerSnapshot.tokens[0];
 
@@ -96,7 +96,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     if (backup.maybeContextNodeId) {
         state.maybeCurrentContextNode = NodeIdMapUtils.expectContextNode(
             state.contextState.nodeIdMapCollection.contextNodeById,
-            backup.maybeContextNodeId
+            backup.maybeContextNodeId,
         );
     } else {
         state.maybeCurrentContextNode = undefined;
@@ -109,7 +109,7 @@ export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void 
         nodeKind,
         state.tokenIndex,
         state.maybeCurrentToken,
-        state.maybeCurrentContextNode
+        state.maybeCurrentContextNode,
     );
     state.maybeCurrentContextNode = newContextNode;
 }
@@ -117,14 +117,14 @@ export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void 
 export function endContext(state: IParserState, astNode: Ast.TNode): void {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError(
-            "maybeContextNode should be truthy, can't end a context if it doesn't exist."
+            "maybeContextNode should be truthy, can't end a context if it doesn't exist.",
         );
     }
 
     const maybeParentOfContextNode: ParseContext.Node | undefined = ParseContextUtils.endContext(
         state.contextState,
         state.maybeCurrentContextNode,
-        astNode
+        astNode,
     );
     state.maybeCurrentContextNode = maybeParentOfContextNode;
 }
@@ -134,7 +134,7 @@ export function deleteContext(state: IParserState, maybeNodeId: number | undefin
     if (maybeNodeId === undefined) {
         if (state.maybeCurrentContextNode === undefined) {
             throw new CommonError.InvariantError(
-                "maybeContextNode should be truthy, can't delete a context if it doesn't exist."
+                "maybeContextNode should be truthy, can't delete a context if it doesn't exist.",
             );
         } else {
             const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
@@ -176,7 +176,7 @@ export function isNextTokenKind(state: IParserState, tokenKind: TokenKind): bool
 export function isOnTokenKind(
     state: IParserState,
     tokenKind: TokenKind,
-    tokenIndex: number = state.tokenIndex
+    tokenIndex: number = state.tokenIndex,
 ): boolean {
     return isTokenKind(state, tokenKind, tokenIndex);
 }
@@ -246,7 +246,7 @@ export function isOnGeneralizedIdentifierStart(state: IParserState, tokenIndex: 
 // Assumes a call to readPrimaryExpression has already happened.
 export function isRecursivePrimaryExpressionNext(
     state: IParserState,
-    tokenIndexStart: number = state.tokenIndex
+    tokenIndexStart: number = state.tokenIndex,
 ): boolean {
     return (
         // section-access-expression
@@ -318,13 +318,13 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
 // Eg. testCsvEndLetExpression assumes you're in a LetExpression context and have just read a `,`.
 
 export function testCsvContinuationLetExpression(
-    state: IParserState
+    state: IParserState,
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
             state.localizationTemplates,
             ParseError.CsvContinuationKind.LetExpression,
-            maybeCurrentTokenWithColumnNumber(state)
+            maybeCurrentTokenWithColumnNumber(state),
         );
     }
 
@@ -333,13 +333,13 @@ export function testCsvContinuationLetExpression(
 
 export function testCsvContinuationDanglingComma(
     state: IParserState,
-    tokenKind: TokenKind
+    tokenKind: TokenKind,
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
             state.localizationTemplates,
             ParseError.CsvContinuationKind.DanglingComma,
-            maybeCurrentTokenWithColumnNumber(state)
+            maybeCurrentTokenWithColumnNumber(state),
         );
     } else {
         return undefined;
@@ -352,7 +352,7 @@ export function testCsvContinuationDanglingComma(
 
 export function testIsOnTokenKind(
     state: IParserState,
-    expectedTokenKind: TokenKind
+    expectedTokenKind: TokenKind,
 ): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
@@ -364,7 +364,7 @@ export function testIsOnTokenKind(
 
 export function testIsOnAnyTokenKind(
     state: IParserState,
-    expectedAnyTokenKinds: ReadonlyArray<TokenKind>
+    expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
 ): ParseError.ExpectedAnyTokenKindError | undefined {
     const isError: boolean =
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1;
@@ -383,7 +383,7 @@ export function testNoMoreTokens(state: IParserState): ParseError.UnusedTokensRe
         return new ParseError.UnusedTokensRemainError(
             state.localizationTemplates,
             token,
-            state.lexerSnapshot.graphemePositionStartFrom(token)
+            state.lexerSnapshot.graphemePositionStartFrom(token),
         );
     } else {
         return undefined;
@@ -399,7 +399,7 @@ export function unterminatedParenthesesError(state: IParserState): ParseError.Un
     return new ParseError.UnterminatedParenthesesError(
         state.localizationTemplates,
         token,
-        state.lexerSnapshot.graphemePositionStartFrom(token)
+        state.lexerSnapshot.graphemePositionStartFrom(token),
     );
 }
 
@@ -408,7 +408,7 @@ export function unterminatedBracketError(state: IParserState): ParseError.Unterm
     return new ParseError.UnterminatedBracketError(
         state.localizationTemplates,
         token,
-        state.lexerSnapshot.graphemePositionStartFrom(token)
+        state.lexerSnapshot.graphemePositionStartFrom(token),
     );
 }
 
@@ -422,7 +422,7 @@ export function maybeCurrentTokenWithColumnNumber(state: IParserState): ParseErr
 
 export function maybeTokenWithColumnNumber(
     state: IParserState,
-    tokenIndex: number
+    tokenIndex: number,
 ): ParseError.TokenWithColumnNumber | undefined {
     const maybeToken: Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
     if (maybeToken === undefined) {

@@ -14,7 +14,7 @@ export type TriedScopeType = Result<ScopeTypeMap, CommonError.CommonError>;
 export function tryScopeType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    inspectedScope: ScopeItemByKey
+    inspectedScope: ScopeItemByKey,
 ): TriedScopeType {
     // The return object. Only stores [scope key, TType] pairs.
     const scopeTypeMap: ScopeTypeMap = new Map();
@@ -37,7 +37,7 @@ type ScopeTypeCacheMap = Map<number, Type.TType>;
 function evaluateScopeItem(
     nodeIdMapCollection: NodeIdMap.Collection,
     scopeItem: TScopeItem2,
-    scopeTypeMap: ScopeTypeCacheMap
+    scopeTypeMap: ScopeTypeCacheMap,
 ): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
@@ -73,7 +73,7 @@ function evaluateScopeItem(
 function evaluateXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     scopeTypeMap: ScopeTypeCacheMap,
-    xorNode: TXorNode
+    xorNode: TXorNode,
 ): Type.TType {
     const maybeCached: Type.TType | undefined = scopeTypeMap.get(xorNode.node.id);
     if (maybeCached !== undefined) {
@@ -88,7 +88,7 @@ function evaluateXorNode(
                     // We already checked it's a Ast Literal Expression.
                     const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
                     const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
-                        literalKind
+                        literalKind,
                     );
                     result = genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
                     break;
@@ -196,13 +196,13 @@ function evaluateByChildAttributeIndex(
     nodeIdMapCollection: NodeIdMap.Collection,
     scopeTypeMap: ScopeTypeCacheMap,
     parentXorNode: TXorNode,
-    attributeIndex: number
+    attributeIndex: number,
 ): Type.TType {
     const maybeXorNode: TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
         nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,
-        undefined
+        undefined,
     );
     return maybeXorNode !== undefined
         ? evaluateXorNode(nodeIdMapCollection, scopeTypeMap, maybeXorNode)
@@ -212,7 +212,7 @@ function evaluateByChildAttributeIndex(
 function evaluateBinOpExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     scopeTypeMap: ScopeTypeCacheMap,
-    xorNode: TXorNode
+    xorNode: TXorNode,
 ): Type.TType {
     if (!AstUtils.isTBinOpExpressionKind(xorNode.node.kind)) {
         const details: {} = {
@@ -247,7 +247,7 @@ function evaluateBinOpExpression(
 
         const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
         const maybeAllowedTypeKinds: undefined | ReadonlyArray<Type.TypeKind> = BinOpExpressionPartialLookup.get(
-            partialLookupKey
+            partialLookupKey,
         );
         if (maybeAllowedTypeKinds === undefined) {
             return noneFactory();
@@ -299,7 +299,7 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
         };
         throw new CommonError.InvariantError(
             `${evaluateConstant.name}: expected xorNode to be of NodeKind.Constant`,
-            details
+            details,
         );
     } else {
         const constant: Ast.TConstant = xorNode.node;
@@ -353,7 +353,7 @@ function evaluateConstant(xorNode: TXorNode): Type.TType {
 function evaluateUnaryExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     scopeTypeMap: ScopeTypeCacheMap,
-    xorNode: TXorNode
+    xorNode: TXorNode,
 ): Type.TType {
     if (xorNode.node.kind !== Ast.NodeKind.UnaryExpression) {
         const details: {} = {
@@ -376,7 +376,7 @@ function evaluateUnaryExpression(
         nodeIdMapCollection,
         xorNode.node.id,
         1,
-        undefined
+        undefined,
     );
     if (maybeExpression === undefined) {
         return unknownFactory();
@@ -396,7 +396,7 @@ function evaluateUnaryExpression(
 
     const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeAstChildren(
         nodeIdMapCollection,
-        maybeOperatorsWrapper.node.id
+        maybeOperatorsWrapper.node.id,
     ) as ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>>;
     for (const operator of operators) {
         if (expectedUnaryOperatorKinds.indexOf(operator.constantKind) === -1) {
@@ -453,7 +453,7 @@ const BinOpExpressionLookup: ReadonlyMap<string, Type.TypeKind> = new Map([
         binOpExpressionLookupKey(
             Type.TypeKind.Duration,
             Ast.ArithmeticOperatorKind.Subtraction,
-            Type.TypeKind.Duration
+            Type.TypeKind.Duration,
         ),
         Type.TypeKind.Duration,
     ],
@@ -461,7 +461,7 @@ const BinOpExpressionLookup: ReadonlyMap<string, Type.TypeKind> = new Map([
         binOpExpressionLookupKey(
             Type.TypeKind.Duration,
             Ast.ArithmeticOperatorKind.Multiplication,
-            Type.TypeKind.Number
+            Type.TypeKind.Number,
         ),
         Type.TypeKind.Duration,
     ],
@@ -469,7 +469,7 @@ const BinOpExpressionLookup: ReadonlyMap<string, Type.TypeKind> = new Map([
         binOpExpressionLookupKey(
             Type.TypeKind.Number,
             Ast.ArithmeticOperatorKind.Multiplication,
-            Type.TypeKind.Duration
+            Type.TypeKind.Duration,
         ),
         Type.TypeKind.Duration,
     ],
@@ -522,7 +522,7 @@ const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeK
                 binaryExpressionPartialLookup: Map<string, ReadonlyArray<Type.TypeKind>>,
                 key: string,
                 _currentIndex,
-                _array
+                _array,
             ): Map<string, ReadonlyArray<Type.TypeKind>> => {
                 const lastDeliminatorIndex: number = key.lastIndexOf(",");
                 // Grab '<first operand> , <operator>'.
@@ -532,7 +532,7 @@ const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeK
 
                 // Add the potentialNewValue if it's a new type.
                 const maybeValues: undefined | ReadonlyArray<Type.TypeKind> = binaryExpressionPartialLookup.get(
-                    partialKey
+                    partialKey,
                 );
                 if (maybeValues === undefined) {
                     binaryExpressionPartialLookup.set(partialKey, [potentialNewValue]);
@@ -542,14 +542,14 @@ const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeK
 
                 return binaryExpressionPartialLookup;
             },
-            new Map()
+            new Map(),
         )
-        .entries()
+        .entries(),
 );
 
 function binOpExpressionPartialLookupKey(
     leftTypeKind: Type.TypeKind,
-    operatorKind: Ast.TBinOpExpressionOperator
+    operatorKind: Ast.TBinOpExpressionOperator,
 ): string {
     return `${leftTypeKind},${operatorKind}`;
 }
@@ -557,7 +557,7 @@ function binOpExpressionPartialLookupKey(
 function binOpExpressionLookupKey(
     leftTypeKind: Type.TypeKind,
     operatorKind: Ast.TBinOpExpressionOperator,
-    rightTypeKind: Type.TypeKind
+    rightTypeKind: Type.TypeKind,
 ): string {
     return `${leftTypeKind},${operatorKind},${rightTypeKind}`;
 }
@@ -596,7 +596,7 @@ function createLookupsForLogical(typeKind: Type.TypeKind): ReadonlyArray<[string
 }
 
 function createLookupsForClockKind(
-    typeKind: Type.TypeKind.Date | Type.TypeKind.DateTime | Type.TypeKind.DateTimeZone | Type.TypeKind.Time
+    typeKind: Type.TypeKind.Date | Type.TypeKind.DateTime | Type.TypeKind.DateTimeZone | Type.TypeKind.Time,
 ): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration), typeKind],
@@ -614,7 +614,7 @@ function evaluateTableOrRecordUnion(leftType: Type.TType, rightType: Type.TType)
         };
         throw new CommonError.InvariantError(
             `evaluateTableOrRecordUnion: expected leftType.kind === rightType.kind`,
-            details
+            details,
         );
     }
     // '[] & []'

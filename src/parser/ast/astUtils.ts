@@ -19,7 +19,7 @@ export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined
 }
 
 export function maybeArithmeticOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined
+    maybeTokenKind: TokenKind | undefined,
 ): Ast.ArithmeticOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Asterisk:
@@ -38,7 +38,7 @@ export function maybeArithmeticOperatorKindFrom(
 }
 
 export function maybeEqualityOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined
+    maybeTokenKind: TokenKind | undefined,
 ): Ast.EqualityOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Equal:
@@ -51,7 +51,7 @@ export function maybeEqualityOperatorKindFrom(
 }
 
 export function maybeLogicalOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined
+    maybeTokenKind: TokenKind | undefined,
 ): Ast.LogicalOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.KeywordAnd:
@@ -64,7 +64,7 @@ export function maybeLogicalOperatorKindFrom(
 }
 
 export function maybeRelationalOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined
+    maybeTokenKind: TokenKind | undefined,
 ): Ast.RelationalOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.LessThan:
@@ -81,7 +81,7 @@ export function maybeRelationalOperatorKindFrom(
 }
 
 export function maybeBinOpExpressionOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined
+    maybeTokenKind: TokenKind | undefined,
 ): Ast.TBinOpExpressionOperator | undefined {
     switch (maybeTokenKind) {
         // ArithmeticOperator
@@ -173,7 +173,7 @@ export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpression
 }
 
 export function maybeLiteralKindFrom(
-    maybeTokenKind: TokenKind | undefined
+    maybeTokenKind: TokenKind | undefined,
 ): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {
     switch (maybeTokenKind) {
         case TokenKind.HexLiteral:
@@ -198,7 +198,7 @@ export function maybeLiteralKindFrom(
 }
 
 export function primitiveTypeConstantKindFrom(
-    node: Ast.AsNullablePrimitiveType | Ast.NullablePrimitiveType | Ast.PrimitiveType
+    node: Ast.AsNullablePrimitiveType | Ast.NullablePrimitiveType | Ast.PrimitiveType,
 ): Ast.PrimitiveTypeConstantKind {
     switch (node.kind) {
         case Ast.NodeKind.AsNullablePrimitiveType:
@@ -216,7 +216,7 @@ export function primitiveTypeConstantKindFrom(
 }
 
 export function isPrimitiveTypeConstantKind(
-    maybePrimitiveTypeConstantKind: string
+    maybePrimitiveTypeConstantKind: string,
 ): maybePrimitiveTypeConstantKind is Ast.PrimitiveTypeConstantKind {
     switch (maybePrimitiveTypeConstantKind) {
         case Ast.IdentifierConstantKind.Nullable:
@@ -293,7 +293,7 @@ export function isPairedWrapperConstantKinds(x: Ast.TConstantKind, y: Ast.TConst
 
 export function testAnyNodeKind(
     node: Ast.TNode,
-    allowedNodeKinds: ReadonlyArray<Ast.NodeKind>
+    allowedNodeKinds: ReadonlyArray<Ast.NodeKind>,
 ): CommonError.InvariantError | undefined {
     if (allowedNodeKinds.indexOf(node.kind) !== -1) {
         return undefined;

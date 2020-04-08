@@ -10,7 +10,7 @@ export function expectPreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
     const maybeXorNode: TXorNode | undefined = maybePreviousXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
@@ -21,7 +21,7 @@ export function expectPreviousXorNode(
     if (maybeAllowedNodeKinds !== undefined) {
         const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(
             xorNode,
-            maybeAllowedNodeKinds
+            maybeAllowedNodeKinds,
         );
         if (maybeErr) {
             throw maybeErr;
@@ -35,7 +35,7 @@ export function maybePreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
-    maybeNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined
+    maybeNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode | undefined {
     const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex - n];
     if (maybeXorNode !== undefined && maybeNodeKinds !== undefined) {
@@ -49,7 +49,7 @@ export function expectNextXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
     const maybeXorNode: TXorNode | undefined = maybeNextXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
@@ -60,7 +60,7 @@ export function expectNextXorNode(
     if (maybeAllowedNodeKinds !== undefined) {
         const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(
             xorNode,
-            maybeAllowedNodeKinds
+            maybeAllowedNodeKinds,
         );
         if (maybeErr) {
             throw maybeErr;
@@ -73,7 +73,7 @@ export function expectNextXorNode(
 export function maybeNextXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
-    n: number = 1
+    n: number = 1,
 ): TXorNode | undefined {
     return ancestry[ancestryIndex + n];
 }

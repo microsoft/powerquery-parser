@@ -39,7 +39,7 @@ export class ExpectedCsvContinuationError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly kind: CsvContinuationKind,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_csvContinuation(templates, kind));
     }
@@ -49,7 +49,7 @@ export class ExpectedAnyTokenKindError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKinds, maybeFoundToken));
     }
@@ -59,7 +59,7 @@ export class ExpectedTokenKindError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly expectedTokenKind: TokenKind,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectTokenKind(templates, expectedTokenKind, maybeFoundToken));
     }
@@ -75,7 +75,7 @@ export class InvalidPrimitiveTypeError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly token: Token,
-        readonly positionStart: StringUtils.GraphemePosition
+        readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_invalidPrimitiveType(templates, token));
     }
@@ -85,7 +85,7 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly missingOptionalToken: Token,
-        readonly positionStart: StringUtils.GraphemePosition
+        readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_requiredParameterAfterOptional(templates));
     }
@@ -95,7 +95,7 @@ export class UnterminatedBracketError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly openBracketToken: Token,
-        readonly positionStart: StringUtils.GraphemePosition
+        readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unterminated_bracket(templates));
     }
@@ -105,7 +105,7 @@ export class UnterminatedParenthesesError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly openParenthesesToken: Token,
-        readonly positionStart: StringUtils.GraphemePosition
+        readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unterminated_parenthesis(templates));
     }
@@ -115,7 +115,7 @@ export class UnusedTokensRemainError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly firstUnusedToken: Token,
-        readonly positionStart: StringUtils.GraphemePosition
+        readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unusedTokens(templates));
     }

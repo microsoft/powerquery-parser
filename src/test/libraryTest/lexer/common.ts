@@ -75,14 +75,14 @@ export function expectSnapshotAbridgedTokens(text: string, expected: AbridgedTok
             tokens: expected,
             comments: [],
         },
-        wrapped
+        wrapped,
     );
 }
 
 export function expectSnapshotAbridgedComments(
     text: string,
     expected: AbridgedComments,
-    wrapped: boolean
+    wrapped: boolean,
 ): LexerSnapshot {
     return expectAbridgedSnapshotMatch(
         text,
@@ -90,7 +90,7 @@ export function expectSnapshotAbridgedComments(
             tokens: [],
             comments: expected,
         },
-        wrapped
+        wrapped,
     );
 }
 

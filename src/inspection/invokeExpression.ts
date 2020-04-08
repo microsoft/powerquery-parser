@@ -25,7 +25,7 @@ export interface InvokeExpressionArgs {
 export function tryInvokeExpression(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode
+    activeNode: ActiveNode,
 ): TriedInvokeExpression {
     const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
@@ -72,7 +72,7 @@ function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, no
     const invokeExpr: TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId);
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         invokeExpr,
-        Ast.NodeKind.InvokeExpression
+        Ast.NodeKind.InvokeExpression,
     );
     if (maybeErr) {
         throw maybeErr;
@@ -85,17 +85,17 @@ function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, no
         // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
         const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
             nodeIdMapCollection,
-            invokeExpr.node.id
+            invokeExpr.node.id,
         );
         const recursiveExprXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
             nodeIdMapCollection,
-            recursiveArrayXorNode.node.id
+            recursiveArrayXorNode.node.id,
         );
         const headXorNode: TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
             nodeIdMapCollection,
             recursiveExprXorNode.node.id,
             0,
-            undefined
+            undefined,
         );
         if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
             if (headXorNode.kind !== XorNodeKind.Ast) {
@@ -105,7 +105,7 @@ function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, no
                 };
                 throw new CommonError.InvariantError(
                     `${maybeInvokeExpressionName.name}: the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
-                    details
+                    details,
                 );
             }
 
@@ -124,7 +124,7 @@ function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, no
 function inspectInvokeExpressionArguments(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
-    nodeIndex: number
+    nodeIndex: number,
 ): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
     const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, 1, [
@@ -137,7 +137,7 @@ function inspectInvokeExpressionArguments(
     const csvArray: TXorNode = maybeCsvArray;
     const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
         nodeIdMapCollection,
-        csvArray.node.id
+        csvArray.node.id,
     );
     const numArguments: number = csvNodes.length;
     if (numArguments === 0) {
@@ -148,7 +148,7 @@ function inspectInvokeExpressionArguments(
         activeNode.ancestry,
         nodeIndex,
         2,
-        [Ast.NodeKind.Csv]
+        [Ast.NodeKind.Csv],
     );
     const maybePositionArgumentIndex: number | undefined =
         maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;

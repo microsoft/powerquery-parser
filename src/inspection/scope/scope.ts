@@ -27,7 +27,7 @@ export function tryScope(
     leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: undefined | ScopeById
+    maybeScopeById: undefined | ScopeById,
 ): TriedScope {
     const rootId: number = ancestry[0].node.id;
 
@@ -77,7 +77,7 @@ export function tryScopeForRoot(
     leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: undefined | ScopeById
+    maybeScopeById: undefined | ScopeById,
 ): TriedScopeForRoot {
     const rootId: number = ancestry[0].node.id;
     const triedScopeInspection: TriedScope = tryScope(
@@ -85,7 +85,7 @@ export function tryScopeForRoot(
         nodeIdMapCollection,
         leafNodeIds,
         ancestry,
-        maybeScopeById
+        maybeScopeById,
     );
 
     if (ResultUtils.isErr(triedScopeInspection)) {
@@ -97,7 +97,7 @@ export function tryScopeForRoot(
         const details: {} = { rootId };
         throw new CommonError.InvariantError(
             `${tryScopeForRoot.name}: expected rootId in ${tryScope.name} result`,
-            details
+            details,
         );
     }
 
@@ -145,7 +145,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         eachExpr,
-        Ast.NodeKind.EachExpression
+        Ast.NodeKind.EachExpression,
     );
     if (maybeErr) {
         throw maybeErr;
@@ -164,14 +164,14 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
                 },
             ],
         ],
-        undefined
+        undefined,
     );
 }
 
 function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode): void {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         fnExpr,
-        Ast.NodeKind.FunctionExpression
+        Ast.NodeKind.FunctionExpression,
     );
     if (maybeErr) {
         throw maybeErr;
@@ -182,7 +182,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
 
     const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
         state.nodeIdMapCollection,
-        fnExpr
+        fnExpr,
     );
 
     const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = inspectedFnExpr.parameters.map(
@@ -200,7 +200,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
                             : undefined,
                 },
             ];
-        }
+        },
     );
     expandChildScope(state, fnExpr, [3], newEntries, scope);
 }
@@ -208,7 +208,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
 function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): void {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         letExpr,
-        Ast.NodeKind.LetExpression
+        Ast.NodeKind.LetExpression,
     );
     if (maybeErr) {
         throw maybeErr;
@@ -223,7 +223,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
     const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = inspectKeyValuePairs(
         state,
         scope,
-        keyValuePairs
+        keyValuePairs,
     );
     expandChildScope(state, letExpr, [3], newEntries, scope);
 }
@@ -249,7 +249,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         section,
-        Ast.NodeKind.Section
+        Ast.NodeKind.Section,
     );
     if (maybeErr) {
         throw maybeErr;
@@ -268,7 +268,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
                     maybeValue: kvp.maybeValue,
                 },
             ];
-        }
+        },
     );
 
     for (const kvp of keyValuePairs) {
@@ -279,7 +279,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
         const filteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem]> = unfilteredNewEntries.filter(
             (pair: [string, SectionMemberScopeItem]) => {
                 return pair[1].key.id !== kvp.key.id;
-            }
+            },
         );
         expandScope(state, kvp.maybeValue, filteredNewEntries, new Map());
     }
@@ -288,7 +288,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
 function inspectKeyValuePairs<T>(
     state: ScopeInspectionState,
     parentScope: ScopeItemByKey,
-    keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<T>>
+    keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<T>>,
 ): ReadonlyArray<[string, KeyValuePairScopeItem]> {
     const unfilteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = keyValuePairs.map(
         (kvp: NodeIdMapIterator.KeyValuePair<T>) => {
@@ -300,7 +300,7 @@ function inspectKeyValuePairs<T>(
                     maybeValue: kvp.maybeValue,
                 },
             ];
-        }
+        },
     );
 
     for (const kvp of keyValuePairs) {
@@ -311,7 +311,7 @@ function inspectKeyValuePairs<T>(
         const filteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = unfilteredNewEntries.filter(
             (pair: [string, KeyValuePairScopeItem]) => {
                 return pair[1].key.id !== kvp.key.id;
-            }
+            },
         );
         expandScope(state, kvp.maybeValue, filteredNewEntries, parentScope);
     }
@@ -323,7 +323,7 @@ function expandScope(
     state: ScopeInspectionState,
     xorNode: TXorNode,
     newEntries: ReadonlyArray<[string, TScopeItem2]>,
-    maybeDefaultScope: undefined | ScopeItemByKey
+    maybeDefaultScope: undefined | ScopeItemByKey,
 ): void {
     const scope: ScopeItemByKey = getOrCreateScope(state, xorNode.node.id, maybeDefaultScope);
     for (const [key, value] of newEntries) {
@@ -336,7 +336,7 @@ function expandChildScope(
     parent: TXorNode,
     childAttributeIds: ReadonlyArray<number>,
     newEntries: ReadonlyArray<[string, TScopeItem2]>,
-    maybeDefaultScope: undefined | ScopeItemByKey
+    maybeDefaultScope: undefined | ScopeItemByKey,
 ): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const parentId: number = parent.node.id;
@@ -347,7 +347,7 @@ function expandChildScope(
             nodeIdMapCollection,
             parentId,
             attributeId,
-            undefined
+            undefined,
         );
         if (maybeChild !== undefined) {
             expandScope(state, maybeChild, newEntries, maybeDefaultScope);
@@ -359,7 +359,7 @@ function expandChildScope(
 function getOrCreateScope(
     state: ScopeInspectionState,
     nodeId: number,
-    maybeDefaultScope: undefined | ScopeItemByKey
+    maybeDefaultScope: undefined | ScopeItemByKey,
 ): ScopeItemByKey {
     // If scopeFor has already been called then there should be a nodeId in the deltaScope.
     const maybeDeltaScope: undefined | ScopeItemByKey = state.deltaScope.get(nodeId);
@@ -385,7 +385,7 @@ function getOrCreateScope(
     const maybeParent: undefined | TXorNode = NodeIdMapUtils.maybeParentXorNode(
         state.nodeIdMapCollection,
         nodeId,
-        undefined
+        undefined,
     );
     if (maybeParent !== undefined) {
         const parentNodeId: number = maybeParent.node.id;

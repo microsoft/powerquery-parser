@@ -45,14 +45,14 @@ writeReport(ResourceDirectory, allSummaries);
 
 function createRecurisveDescentBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
-    lexerSnapshot: LexerSnapshot
+    lexerSnapshot: LexerSnapshot,
 ): BenchmarkState {
     return createBenchmarkState(settings, lexerSnapshot, Parser.CombinatorialParser);
 }
 
 function createCombinatorialBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
-    lexerSnapshot: LexerSnapshot
+    lexerSnapshot: LexerSnapshot,
 ): BenchmarkState {
     return createBenchmarkState(settings, lexerSnapshot, Parser.CombinatorialParser);
 }
@@ -60,7 +60,7 @@ function createCombinatorialBenchmarkState(
 function createBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
     lexerSnapshot: LexerSnapshot,
-    baseParser: IParser<IParserState>
+    baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
         ...IParserStateUtils.newState(settings, lexerSnapshot),
@@ -71,7 +71,7 @@ function createBenchmarkState(
 }
 
 function createBenchmarkParseSettings(
-    newParserStateFn: (settings: ParseSettings<BenchmarkState>, lexerSnapshot: LexerSnapshot) => BenchmarkState
+    newParserStateFn: (settings: ParseSettings<BenchmarkState>, lexerSnapshot: LexerSnapshot) => BenchmarkState,
 ): ParseSettings<BenchmarkState> {
     return {
         localizationTemplates: DefaultTemplates,
@@ -174,7 +174,7 @@ function writeReport(resourceDirectory: string, summaries: ReadonlyArray<FileSum
 function writeSingleRunTimestamps(
     resourceDirectory: string,
     perfFileName: string,
-    fnTimestamps: Map<number, FunctionTimestamp>
+    fnTimestamps: Map<number, FunctionTimestamp>,
 ): void {
     const singleRunHeaders: ReadonlyArray<string> = [
         "fileName",

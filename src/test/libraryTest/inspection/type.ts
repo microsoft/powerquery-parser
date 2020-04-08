@@ -24,12 +24,12 @@ function expectScopeTypeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    position: Position
+    position: Position,
 ): ScopeTypeMap {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
-        position
+        position,
     );
     if (!(maybeActiveNode !== undefined)) {
         throw new Error(`AssertedFailed: maybeActiveNode !== undefined`);
@@ -41,7 +41,7 @@ function expectScopeTypeOk(
         nodeIdMapCollection,
         leafNodeIds,
         activeNode.ancestry,
-        undefined
+        undefined,
     );
     if (!ResultUtils.isOk(triedScope)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScope) - ${triedScope.error}`);
@@ -58,7 +58,7 @@ function expectScopeTypeOk(
 function expectParseOkScopeTypeOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position
+    position: Position,
 ): ScopeTypeMap {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
     return expectScopeTypeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
@@ -69,7 +69,7 @@ function actualFactoryFn(inspected: ScopeTypeMap): AbridgedScopeType {
         .map(([key, type]) => {
             return {
                 key,
-                ...type
+                ...type,
             };
         })
         .sort();
@@ -82,8 +82,8 @@ function expectExpressionType(expression: string, kind: Type.TypeKind, isNullabl
             key: "x",
             kind,
             maybeExtendedKind: undefined,
-            isNullable
-        }
+            isNullable,
+        },
     ];
     expectDeepEqual(expectParseOkScopeTypeOk(DefaultSettings, text, position), expected, actualFactoryFn);
 }

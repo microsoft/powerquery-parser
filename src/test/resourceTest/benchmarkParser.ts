@@ -184,14 +184,14 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         state: BenchmarkState,
         parser: IParser<BenchmarkState>,
         allowOpenMarker: boolean,
-        testPostCommaError
+        testPostCommaError,
     ) => {
         const readFieldSpecificationListLambda: () => Ast.FieldSpecificationList = () =>
             state.baseParser.readFieldSpecificationList(
                 state,
                 (parser as unknown) as IParser<IParserState>,
                 allowOpenMarker,
-                testPostCommaError
+                testPostCommaError,
             );
         return traceFunction(state, parser, readFieldSpecificationListLambda);
     },
@@ -219,7 +219,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         state: BenchmarkState,
         parser: IParser<BenchmarkState>,
         onePairRequired: boolean,
-        testPostCommaError
+        testPostCommaError,
     ) => {
         const readFieldNamePairedAnyLiteralsLambda: () => Ast.ICsvArray<
             Ast.GeneralizedIdentifierPairedAnyLiteral
@@ -228,7 +228,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
                 state,
                 (parser as unknown) as IParser<IParserState>,
                 onePairRequired,
-                testPostCommaError
+                testPostCommaError,
             );
 
         return traceFunction(state, parser, readFieldNamePairedAnyLiteralsLambda);
@@ -251,14 +251,14 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         state: BenchmarkState,
         parser: IParser<BenchmarkState>,
         onePairRequired: boolean,
-        testPostCommaError
+        testPostCommaError,
     ) => {
         const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.IdentifierPairedExpression> = () =>
             state.baseParser.readIdentifierPairedExpressions(
                 state,
                 (parser as unknown) as IParser<IParserState>,
                 onePairRequired,
-                testPostCommaError
+                testPostCommaError,
             );
 
         return traceFunction(state, parser, readFieldSpecificationListLambda);
@@ -269,14 +269,14 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         state: BenchmarkState,
         parser: IParser<BenchmarkState>,
         onePairRequired: boolean,
-        testPostCommaError
+        testPostCommaError,
     ) => {
         const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = () =>
             state.baseParser.readGeneralizedIdentifierPairedExpressions(
                 state,
                 (parser as unknown) as IParser<IParserState>,
                 onePairRequired,
-                testPostCommaError
+                testPostCommaError,
             );
         return traceFunction(state, parser, readFieldSpecificationListLambda);
     },
@@ -287,7 +287,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
 export function newBenchmarkState<S = IParserState>(
     parseSettings: ParseSettings<S & IParserState>,
     lexerSnapshot: LexerSnapshot,
-    baseParser: IParser<IParserState>
+    baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
         ...IParserStateUtils.newState(parseSettings, lexerSnapshot),
@@ -300,7 +300,7 @@ export function newBenchmarkState<S = IParserState>(
 function traceFunction<T>(
     benchmarkState: BenchmarkState,
     benchmarkParser: IParser<BenchmarkState>,
-    fn: (state: IParserState, parser: IParser<IParserState>) => T
+    fn: (state: IParserState, parser: IParser<IParserState>) => T,
 ): T {
     const fnCallId: number = functionEntry(benchmarkState, fn);
     const result: T = fn(benchmarkState, (benchmarkParser as unknown) as IParser<IParserState>);

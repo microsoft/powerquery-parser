@@ -12,7 +12,7 @@ import {
     NodeIdMapUtils,
     ParseError,
     TXorNode,
-    XorNodeKind
+    XorNodeKind,
 } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
@@ -26,7 +26,7 @@ export function tryAutocomplete<S = IParserState>(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: ActiveNode | undefined,
-    maybeParseError: ParseError.ParseError<S> | undefined
+    maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
         return ResultUtils.okFactory(ExpressionAutocomplete);
@@ -57,7 +57,7 @@ export function tryAutocomplete<S = IParserState>(
         settings,
         activeNode,
         nodeIdMapCollection,
-        maybeParseErrorToken
+        maybeParseErrorToken,
     );
     if (ResultUtils.isErr(triedAutocomplete)) {
         return triedAutocomplete;
@@ -66,7 +66,7 @@ export function tryAutocomplete<S = IParserState>(
     let inspected: ReadonlyArray<KeywordKind> = handleEdgeCases(
         triedAutocomplete.value,
         activeNode,
-        maybeParseErrorToken
+        maybeParseErrorToken,
     );
     inspected = filterRecommendations(inspected, maybePositionName);
 
@@ -81,7 +81,7 @@ function traverseAncestors(
     settings: CommonSettings,
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseErrorToken: Token | undefined
+    maybeParseErrorToken: Token | undefined,
 ): Result<ReadonlyArray<KeywordKind>, CommonError.CommonError> {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numNodes: number = ancestry.length;
@@ -97,7 +97,7 @@ function traverseAncestors(
                     maybeInspected = autocompleteErrorHandlingExpression(
                         activeNode.position,
                         child,
-                        maybeParseErrorToken
+                        maybeParseErrorToken,
                     );
                     break;
 
@@ -141,7 +141,7 @@ function traverseAncestors(
 function handleEdgeCases(
     inspected: ReadonlyArray<KeywordKind>,
     activeNode: ActiveNode,
-    maybeParseErrorToken: Token | undefined
+    maybeParseErrorToken: Token | undefined,
 ): ReadonlyArray<KeywordKind> {
     // Check if they're typing for the first time at the start of the file,
     // which defaults to searching for an identifier.
@@ -166,7 +166,7 @@ function handleEdgeCases(
 
 function filterRecommendations(
     inspected: ReadonlyArray<KeywordKind>,
-    maybePositionName: string | undefined
+    maybePositionName: string | undefined,
 ): ReadonlyArray<KeywordKind> {
     if (maybePositionName === undefined) {
         return inspected;
@@ -193,7 +193,7 @@ const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.InvokeExpression, 2),
     createMapKey(Ast.NodeKind.ListExpression, 1),
     createMapKey(Ast.NodeKind.OtherwiseExpression, 1),
-    createMapKey(Ast.NodeKind.ParenthesizedExpression, 1)
+    createMapKey(Ast.NodeKind.ParenthesizedExpression, 1),
 ];
 
 // If we're coming from a constant then we can quickly evaluate using a map.
@@ -212,7 +212,7 @@ const AutocompleteConstantMap: Map<string, KeywordKind> = new Map<string, Keywor
     [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), KeywordKind.Otherwise],
 
     // Ast.NodeKind.Section
-    [createMapKey(Ast.NodeKind.Section, 1), KeywordKind.Section]
+    [createMapKey(Ast.NodeKind.Section, 1), KeywordKind.Section],
 ]);
 
 // Used with maybeParseError to see if a user could be typing a conjunctive keyword such as 'or'. Eg.
@@ -223,17 +223,17 @@ const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Keywor
 >([
     ["a", [KeywordKind.And, KeywordKind.As]],
     ["o", [KeywordKind.Or]],
-    ["m", [KeywordKind.Meta]]
+    ["m", [KeywordKind.Meta]],
 ]);
 
 function updateWithParseErrorToken(
     inspected: ReadonlyArray<KeywordKind>,
     activeNode: ActiveNode,
-    parseErrorToken: Token
+    parseErrorToken: Token,
 ): ReadonlyArray<KeywordKind> {
     const parseErrorTokenData: string = parseErrorToken.data;
     const maybeAllowedKeywords: ReadonlyArray<KeywordKind> | undefined = PartialConjunctionKeywordAutocompleteMap.get(
-        parseErrorTokenData[0].toLocaleLowerCase()
+        parseErrorTokenData[0].toLocaleLowerCase(),
     );
     if (maybeAllowedKeywords === undefined) {
         return inspected;
@@ -253,7 +253,7 @@ function updateWithParseErrorToken(
 function updateUsingConjunctionKeywords(
     inspected: ReadonlyArray<KeywordKind>,
     parseErrorTokenData: string,
-    allowedKeywords: ReadonlyArray<KeywordKind>
+    allowedKeywords: ReadonlyArray<KeywordKind>,
 ): ReadonlyArray<KeywordKind> {
     const newAllowedAutocompleteKeywords: KeywordKind[] = [...inspected];
     for (const keyword of allowedKeywords) {
@@ -276,7 +276,7 @@ function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | unde
 function autocompleteKeywordConstant(
     activeNode: ActiveNode,
     child: TXorNode,
-    keywordKind: KeywordKind
+    keywordKind: KeywordKind,
 ): ReadonlyArray<KeywordKind> | undefined {
     if (PositionUtils.isBeforeXorNode(activeNode.position, child, false)) {
         return undefined;
@@ -294,7 +294,7 @@ function autocompleteKeywordConstant(
 function autocompleteErrorHandlingExpression(
     position: Position,
     child: TXorNode,
-    maybeParseErrorToken: Token | undefined
+    maybeParseErrorToken: Token | undefined,
 ): ReadonlyArray<KeywordKind> | undefined {
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
@@ -342,7 +342,7 @@ function autocompleteErrorHandlingExpression(
 function autocompleteListExpression(
     activeNode: ActiveNode,
     child: TXorNode,
-    ancestryIndex: number
+    ancestryIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
@@ -350,7 +350,7 @@ function autocompleteListExpression(
     } else if (child.node.maybeAttributeIndex !== 1) {
         const details: {} = {
             nodeId: child.node.id,
-            maybeAttributeIndex: child.node.maybeAttributeIndex
+            maybeAttributeIndex: child.node.maybeAttributeIndex,
         };
         throw new CommonError.InvariantError("ListExpression child has an invalid maybeAttributeIndex", details);
     }
@@ -382,7 +382,7 @@ function autocompleteSectionMember(
     activeNode: ActiveNode,
     parent: TXorNode,
     child: TXorNode,
-    ancestryIndex: number
+    ancestryIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // SectionMember.namePairedExpression
     if (child.node.maybeAttributeIndex === 2) {
@@ -390,7 +390,7 @@ function autocompleteSectionMember(
         const maybeSharedConstant:
             | TXorNode
             | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, parent.node.id, 1, [
-            Ast.NodeKind.Constant
+            Ast.NodeKind.Constant,
         ]);
 
         // 'shared' was parsed so we can exit.
@@ -403,7 +403,7 @@ function autocompleteSectionMember(
             activeNode.ancestry,
             ancestryIndex,
             2,
-            [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier]
+            [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
         );
 
         // Name hasn't been parsed yet so we can exit.

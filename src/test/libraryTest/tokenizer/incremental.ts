@@ -58,7 +58,7 @@ class MockDocument {
         initialText: string,
         public lines: string[] = initialText.split("\n"),
         public lineEndStates: IState[] = [],
-        public lineTokens: IToken[][] = []
+        public lineTokens: IToken[][] = [],
     ) {
         this.startTokenize(0);
     }

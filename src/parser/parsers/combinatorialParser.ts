@@ -59,7 +59,7 @@ export let CombinatorialParser: IParser<IParserState> = {
 function readBinOpExpression<S = IParserState>(
     state: S & IParserState,
     parser: IParser<S & IParserState>,
-    nodeKind: Ast.NodeKind
+    nodeKind: Ast.NodeKind,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     IParserStateUtils.startContext(state, nodeKind);
     const placeholderContextId: number = state.maybeCurrentContextNode!.id;
@@ -73,7 +73,7 @@ function readBinOpExpression<S = IParserState>(
     ];
 
     let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorKindFrom(
-        state.maybeCurrentTokenKind
+        state.maybeCurrentTokenKind,
     );
     while (maybeOperator !== undefined) {
         const operator: Ast.TBinOpExpressionOperator = maybeOperator;
@@ -82,8 +82,8 @@ function readBinOpExpression<S = IParserState>(
             Naive.readTokenKindAsConstant<S, Ast.TBinOpExpressionOperator>(
                 state,
                 state.maybeCurrentTokenKind!,
-                maybeOperator
-            )
+                maybeOperator,
+            ),
         );
 
         switch (operator) {

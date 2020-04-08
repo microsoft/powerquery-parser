@@ -15,12 +15,12 @@ function expectInvokeExpressionOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    position: Position
+    position: Position,
 ): undefined | InspectedInvokeExpression {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
-        position
+        position,
     );
     if (!(maybeActiveNode !== undefined)) {
         throw new Error(`AssertedFailed: maybeActiveNode !== undefined`);
@@ -30,7 +30,7 @@ function expectInvokeExpressionOk(
     const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
         settings,
         nodeIdMapCollection,
-        activeNode
+        activeNode,
     );
     if (!ResultUtils.isOk(triedInspect)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedInspect): ${triedInspect.error.message}`);
@@ -41,7 +41,7 @@ function expectInvokeExpressionOk(
 function expectParseOkInvokeExpressionOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position
+    position: Position,
 ): undefined | InspectedInvokeExpression {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
     return expectInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
@@ -50,14 +50,14 @@ function expectParseOkInvokeExpressionOk<S = IParserState>(
 function expectParseErrInvokeExpressionOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position
+    position: Position,
 ): undefined | InspectedInvokeExpression {
     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
     return expectInvokeExpressionOk(
         settings,
         parseError.state.contextState.nodeIdMapCollection,
         parseError.state.contextState.leafNodeIds,
-        position
+        position,
     );
 }
 
@@ -67,7 +67,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         const inspected: undefined | InspectedInvokeExpression = expectParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
-            position
+            position,
         );
         if (!(inspected !== undefined)) {
             throw new Error(`AssertFailed: inspected !== undefined`);
@@ -82,7 +82,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         const inspected: undefined | InspectedInvokeExpression = expectParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
-            position
+            position,
         );
         if (!(inspected !== undefined)) {
             throw new Error(`AssertFailed: inspected !== undefined`);
@@ -97,7 +97,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         const inspected: undefined | InspectedInvokeExpression = expectParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
-            position
+            position,
         );
         if (!(inspected !== undefined)) {
             throw new Error(`AssertFailed: inspected !== undefined`);
@@ -114,7 +114,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         const inspected: undefined | InspectedInvokeExpression = expectParseErrInvokeExpressionOk(
             DefaultSettings,
             text,
-            position
+            position,
         );
         if (!(inspected !== undefined)) {
             throw new Error(`AssertFailed: inspected !== undefined`);
@@ -131,7 +131,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         const inspected: undefined | InspectedInvokeExpression = expectParseErrInvokeExpressionOk(
             DefaultSettings,
             text,
-            position
+            position,
         );
         if (!(inspected !== undefined)) {
             throw new Error(`AssertFailed: inspected !== undefined`);

@@ -24,7 +24,7 @@ export function isInXorNode(
     position: Position,
     xorNode: TXorNode,
     isLowerBoundIncluded: boolean,
-    isUpperBoundIncluded: boolean
+    isUpperBoundIncluded: boolean,
 ): boolean {
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
@@ -36,7 +36,7 @@ export function isInXorNode(
                 position,
                 xorNode.node,
                 isLowerBoundIncluded,
-                isUpperBoundIncluded
+                isUpperBoundIncluded,
             );
 
         default:
@@ -60,7 +60,7 @@ export function isOnXorNodeStart(position: Position, xorNode: TXorNode): boolean
 export function isOnXorNodeEnd(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    xorNode: TXorNode
+    xorNode: TXorNode,
 ): boolean {
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
@@ -78,7 +78,7 @@ export function isAfterXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     xorNode: TXorNode,
-    isBoundIncluded: boolean
+    isBoundIncluded: boolean,
 ): boolean {
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
@@ -95,7 +95,7 @@ export function isAfterXorNode(
 export function isBeforeContextNode(
     position: Position,
     contextNode: ParseContext.Node,
-    isBoundIncluded: boolean
+    isBoundIncluded: boolean,
 ): boolean {
     const maybeTokenStart: Token | undefined = contextNode.maybeTokenStart;
     if (maybeTokenStart === undefined) {
@@ -111,7 +111,7 @@ export function isInContextNode(
     position: Position,
     contextNode: ParseContext.Node,
     isLowerBoundIncluded: boolean,
-    isHigherBoundIncluded: boolean
+    isHigherBoundIncluded: boolean,
 ): boolean {
     return (
         !isBeforeContextNode(position, contextNode, isLowerBoundIncluded) &&
@@ -128,7 +128,7 @@ export function isOnContextNodeStart(position: Position, contextNode: ParseConte
 export function isOnContextNodeEnd(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    contextNode: ParseContext.Node
+    contextNode: ParseContext.Node,
 ): boolean {
     const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
@@ -142,7 +142,7 @@ export function isAfterContextNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     contextNode: ParseContext.Node,
-    isBoundIncluded: boolean
+    isBoundIncluded: boolean,
 ): boolean {
     const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
@@ -167,7 +167,7 @@ export function isInAstNode(
     position: Position,
     astNode: Ast.TNode,
     isLowerBoundIncluded: boolean,
-    isHigherBoundIncluded: boolean
+    isHigherBoundIncluded: boolean,
 ): boolean {
     return (
         !isBeforeAstNode(position, astNode, isLowerBoundIncluded) &&
@@ -191,7 +191,7 @@ export function isInToken(
     position: Position,
     token: Token,
     isLowerBoundIncluded: boolean,
-    isHigherBoundIncluded: boolean
+    isHigherBoundIncluded: boolean,
 ): boolean {
     return (
         !isBeforeTokenPosition(position, token.positionStart, isLowerBoundIncluded) &&
@@ -202,7 +202,7 @@ export function isInToken(
 export function isBeforeTokenPosition(
     position: Position,
     tokenPosition: TokenPosition,
-    isBoundIncluded: boolean
+    isBoundIncluded: boolean,
 ): boolean {
     const positionLineNumber: number = position.lineNumber;
 
@@ -223,7 +223,7 @@ export function isOnTokenPosition(position: Position, tokenPosition: TokenPositi
 export function isAfterTokenPosition(
     position: Position,
     tokenPosition: TokenPosition,
-    isBoundIncluded: boolean
+    isBoundIncluded: boolean,
 ): boolean {
     const positionLineNumber: number = position.lineNumber;
 

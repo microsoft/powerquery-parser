@@ -31,7 +31,7 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 
 export function expectLexParseOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string
+    text: string,
 ): Task.LexParseOk<S> {
     const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
     if (!ResultUtils.isOk(triedLexParse)) {
@@ -42,7 +42,7 @@ export function expectLexParseOk<S = IParserState>(
 
 export function expectParseErr<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string
+    text: string,
 ): ParseError.ParseError<S> {
     const triedParse: TriedParse<S> = expectTriedParse(settings, text);
     if (!ResultUtils.isErr(triedParse)) {
@@ -58,7 +58,7 @@ export function expectParseErr<S = IParserState>(
 
 export function expectParseOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string
+    text: string,
 ): ParseOk<S> {
     const triedParse: TriedParse<S> = expectTriedParse(settings, text);
     if (!ResultUtils.isOk(triedParse)) {
@@ -71,7 +71,7 @@ export function expectParseOk<S = IParserState>(
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
 function expectTriedParse<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string
+    text: string,
 ): TriedParse<S> {
     const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);

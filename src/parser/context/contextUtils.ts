@@ -40,7 +40,7 @@ export function startContext(
     nodeKind: Ast.NodeKind,
     tokenIndexStart: number,
     maybeTokenStart: Token | undefined,
-    maybeParentNode: Node | undefined
+    maybeParentNode: Node | undefined,
 ): Node {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     let maybeAttributeIndex: number | undefined;
@@ -250,7 +250,7 @@ function removeOrReplaceChildId(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
     childId: number,
-    maybeReplacementId: number | undefined
+    maybeReplacementId: number | undefined,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
     const childIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(childIdsById, parentId);
