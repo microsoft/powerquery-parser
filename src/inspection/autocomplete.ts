@@ -4,27 +4,32 @@
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
-import { Ast, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
-import { InspectionSettings } from "../settings";
-import { ActiveNode, ActiveNodeUtils } from "./activeNode";
+import {
+    AncestryUtils,
+    Ast,
+    IParserState,
+    NodeIdMap,
+    NodeIdMapUtils,
+    ParseError,
+    TXorNode,
+    XorNodeKind,
+} from "../parser";
+import { CommonSettings } from "../settings";
+import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export interface InspectedAutocomplete {
-    readonly autocompleteKeywords: ReadonlyArray<KeywordKind>;
-}
+export type Autocomplete = ReadonlyArray<KeywordKind>;
 
-export type TriedAutocomplete = Result<InspectedAutocomplete, CommonError.CommonError>;
+export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
-export function tryInspectAutocomplete<S = IParserState>(
-    settings: InspectionSettings,
+export function tryAutocomplete<S = IParserState>(
+    settings: CommonSettings,
     maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
-        return ResultUtils.okFactory({
-            autocompleteKeywords: ExpressionAutocomplete,
-        });
+        return ResultUtils.okFactory(ExpressionAutocomplete);
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
@@ -65,7 +70,7 @@ export function tryInspectAutocomplete<S = IParserState>(
     );
     inspected = filterRecommendations(inspected, maybePositionName);
 
-    return ResultUtils.okFactory({ autocompleteKeywords: inspected });
+    return ResultUtils.okFactory(inspected);
 }
 
 // Travel the ancestry path in Active node in [parent, child] pairs.
@@ -73,7 +78,7 @@ export function tryInspectAutocomplete<S = IParserState>(
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
 function traverseAncestors(
-    settings: InspectionSettings,
+    settings: CommonSettings,
     activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeParseErrorToken: Token | undefined,
@@ -338,7 +343,7 @@ function autocompleteErrorHandlingExpression(
 function autocompleteListExpression(
     activeNode: ActiveNode,
     child: TXorNode,
-    ancestorIndex: number,
+    ancestryIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
@@ -352,7 +357,7 @@ function autocompleteListExpression(
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 3, undefined);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -361,7 +366,7 @@ function autocompleteListExpression(
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? ActiveNodeUtils.expectPreviousXorNode(activeNode, ancestorIndex, 4, undefined)
+            ? AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 4, undefined)
             : nodeOrComma;
 
     if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
@@ -378,7 +383,7 @@ function autocompleteSectionMember(
     activeNode: ActiveNode,
     parent: TXorNode,
     child: TXorNode,
-    ancestorIndex: number,
+    ancestryIndex: number,
 ): ReadonlyArray<KeywordKind> | undefined {
     // SectionMember.namePairedExpression
     if (child.node.maybeAttributeIndex === 2) {
@@ -395,10 +400,12 @@ function autocompleteSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, ancestorIndex, 2, [
-            Ast.NodeKind.IdentifierPairedExpression,
-            Ast.NodeKind.Identifier,
-        ]);
+        const maybeName: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
+            activeNode.ancestry,
+            ancestryIndex,
+            2,
+            [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
+        );
 
         // Name hasn't been parsed yet so we can exit.
         if (maybeName === undefined || maybeName.kind !== XorNodeKind.Ast) {

@@ -2,10 +2,14 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Inspection } from "../../../..";
-import { DefaultSettings } from "../../../../settings";
-import { Type } from "../../../../type";
-import { expectDeepEqual, expectParseOkInspectionOk, expectTextWithPosition } from "../../../common";
+import { Inspection } from "../../..";
+import { CommonError, Result, ResultUtils } from "../../../common";
+import { Position, ScopeItemByKey, ScopeTypeMap, TriedScopeType } from "../../../inspection";
+import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { IParserState, NodeIdMap, ParseOk } from "../../../parser";
+import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
+import { Type } from "../../../type";
+import { expectDeepEqual, expectParseOk, expectTextWithPosition } from "../../common";
 
 type AbridgedScopeType = ReadonlyArray<AbridgedScopeTypeElement | undefined>;
 
@@ -16,8 +20,52 @@ interface AbridgedScopeTypeElement {
     readonly isNullable: boolean;
 }
 
-function actualFactoryFn(inspected: Inspection.Inspected): AbridgedScopeType {
-    return [...inspected.scopeTypeMap.entries()]
+function expectScopeTypeOk(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    position: Position,
+): ScopeTypeMap {
+    const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+    );
+    if (!(maybeActiveNode !== undefined)) {
+        throw new Error(`AssertedFailed: maybeActiveNode !== undefined`);
+    }
+    const activeNode: ActiveNode = maybeActiveNode;
+
+    const triedScope: Result<ScopeItemByKey, CommonError.CommonError> = Inspection.tryScopeForRoot(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        activeNode.ancestry,
+        undefined,
+    );
+    if (!ResultUtils.isOk(triedScope)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedScope) - ${triedScope.error}`);
+    }
+
+    const triedScopeType: TriedScopeType = Inspection.tryScopeType(settings, nodeIdMapCollection, triedScope.value);
+    if (!ResultUtils.isOk(triedScopeType)) {
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeType) - ${triedScopeType.error}`);
+    }
+
+    return triedScopeType.value;
+}
+
+function expectParseOkScopeTypeOk<S = IParserState>(
+    settings: LexSettings & ParseSettings<S & IParserState>,
+    text: string,
+    position: Position,
+): ScopeTypeMap {
+    const parseOk: ParseOk<S> = expectParseOk(settings, text);
+    return expectScopeTypeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+}
+
+function actualFactoryFn(inspected: ScopeTypeMap): AbridgedScopeType {
+    return [...inspected.entries()]
         .map(([key, type]) => {
             return {
                 key,
@@ -37,7 +85,7 @@ function expectExpressionType(expression: string, kind: Type.TypeKind, isNullabl
             isNullable,
         },
     ];
-    expectDeepEqual(expectParseOkInspectionOk(DefaultSettings, text, position), expected, actualFactoryFn);
+    expectDeepEqual(expectParseOkScopeTypeOk(DefaultSettings, text, position), expected, actualFactoryFn);
 }
 
 describe(`Inspection - Scope - Type`, () => {
@@ -85,7 +133,7 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe("abc1232 UnaryExpression", () => {
+    describe("UnaryExpression", () => {
         it(`+1`, () => {
             expectExpressionType(`+1`, Type.TypeKind.Number, false);
         });

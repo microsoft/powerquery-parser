@@ -3,12 +3,11 @@
 
 /* tslint:disable:no-console */
 
-import { Inspection } from ".";
+import { Task } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError } from "./parser";
 import { DefaultSettings } from "./settings";
-import { TriedLexParse, TriedLexParseInspection, tryLexParse, tryLexParseInspection } from "./tasks";
 
 parseText(`if true then 1 else 2`);
 
@@ -16,7 +15,7 @@ parseText(`if true then 1 else 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: TriedLexParse = tryLexParse(DefaultSettings, text);
+    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
@@ -102,12 +101,24 @@ function lexText(text: string): void {
 function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: TriedLexParseInspection = tryLexParseInspection(DefaultSettings, text, position);
+    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(DefaultSettings, text, position);
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;
     }
-    const inspected: Inspection.Inspected = triedInspection.value;
+    const inspection: Task.InspectionOk = triedInspection.value;
 
-    console.log(`Inspected scope: ${[...inspected.scope.entries()]}`);
+    for (const identifier of inspection.scope.keys()) {
+        console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);
+    }
+
+    console.log(`Suggested keyword autocomplete: ${inspection.autocomplete.join(", ")}`);
+
+    console.log(`InvokeExpression name: ${inspection.maybeInvokeExpression?.maybeName}`);
+    console.log(
+        `InvokeExpression number of arguments: ${inspection.maybeInvokeExpression?.maybeArguments?.numArguments}`,
+    );
+    console.log(
+        `InvokeExpression argument position: ${inspection.maybeInvokeExpression?.maybeArguments?.positionArgumentIndex}`,
+    );
 }

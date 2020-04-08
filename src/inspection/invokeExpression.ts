@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError } from "../../common";
-import { Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
-import { ActiveNode, ActiveNodeUtils } from "../activeNode";
-import { Position, PositionUtils } from "../position";
+import { CommonError, Result, ResultUtils } from "../common";
+import { AncestryUtils, Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
+import { CommonSettings } from "../settings";
+import { ActiveNode } from "./activeNode";
+import { Position, PositionUtils } from "./position";
 
-export interface InspectedInvokeExpression {
-    readonly maybeInvokeExpression: InvokeExpression | undefined;
-}
+export type InspectedInvokeExpression = undefined | InvokeExpression;
+
+export type TriedInvokeExpression = Result<InspectedInvokeExpression | undefined, CommonError.CommonError>;
 
 export interface InvokeExpression {
     readonly xorNode: TXorNode;
@@ -21,31 +22,34 @@ export interface InvokeExpressionArgs {
     readonly positionArgumentIndex: number;
 }
 
-export function inspectInvokeExpression(
-    activeNode: ActiveNode,
+export function tryInvokeExpression(
+    settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-): InspectedInvokeExpression {
+    activeNode: ActiveNode,
+): TriedInvokeExpression {
     const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
     const position: Position = activeNode.position;
-    for (let index: number = 0; index < numAncestors; index += 1) {
-        const xorNode: TXorNode = ancestors[index];
-        if (!isInvokeExpressionContent(position, xorNode)) {
-            continue;
-        }
 
-        return {
-            maybeInvokeExpression: {
+    try {
+        for (let ancestryIndex: number = 0; ancestryIndex < numAncestors; ancestryIndex += 1) {
+            const xorNode: TXorNode = ancestors[ancestryIndex];
+            if (!isInvokeExpressionContent(position, xorNode)) {
+                continue;
+            }
+
+            const inspected: InspectedInvokeExpression = {
                 xorNode: xorNode,
                 maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
-                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, index),
-            },
-        };
+                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
+            };
+            return ResultUtils.okFactory(inspected);
+        }
+    } catch (err) {
+        return ResultUtils.errFactory(CommonError.ensureCommonError(settings.localizationTemplates, err));
     }
 
-    return {
-        maybeInvokeExpression: undefined,
-    };
+    return ResultUtils.okFactory(undefined);
 }
 
 function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boolean {
@@ -65,24 +69,23 @@ function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boole
 }
 
 function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): string | undefined {
-    const invokeExprXorNode: TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId);
-
-    if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
-        const details: {} = { invokeExprXorNode };
-        throw new CommonError.InvariantError(
-            `expected invokeExprXorNode to have a Ast.NodeKind of ${Ast.NodeKind.InvokeExpression}`,
-            details,
-        );
+    const invokeExpr: TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId);
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        invokeExpr,
+        Ast.NodeKind.InvokeExpression,
+    );
+    if (maybeErr) {
+        throw maybeErr;
     }
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
     let maybeName: string | undefined;
-    if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
+    if (invokeExpr.node.maybeAttributeIndex === 0) {
         // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
         const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
             nodeIdMapCollection,
-            invokeExprXorNode.node.id,
+            invokeExpr.node.id,
         );
         const recursiveExprXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
             nodeIdMapCollection,
@@ -98,10 +101,10 @@ function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, no
             if (headXorNode.kind !== XorNodeKind.Ast) {
                 const details: {} = {
                     identifierExpressionNodeId: headXorNode.node.id,
-                    invokeExpressionNodeId: invokeExprXorNode.node.id,
+                    invokeExpressionNodeId: invokeExpr.node.id,
                 };
                 throw new CommonError.InvariantError(
-                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                    `${maybeInvokeExpressionName.name}: the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
                     details,
                 );
             }
@@ -124,24 +127,29 @@ function inspectInvokeExpressionArguments(
     nodeIndex: number,
 ): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArray: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, nodeIndex, 1, [
+    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, 1, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeCsvArray === undefined) {
         return undefined;
     }
-    // const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    // const position: Position = state.activeNode.position;
+
     const csvArray: TXorNode = maybeCsvArray;
     const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
         nodeIdMapCollection,
         csvArray.node.id,
     );
     const numArguments: number = csvNodes.length;
+    if (numArguments === 0) {
+        return undefined;
+    }
 
-    const maybeAncestorCsv: TXorNode | undefined = ActiveNodeUtils.maybePreviousXorNode(activeNode, nodeIndex, 2, [
-        Ast.NodeKind.Csv,
-    ]);
+    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
+        activeNode.ancestry,
+        nodeIndex,
+        2,
+        [Ast.NodeKind.Csv],
+    );
     const maybePositionArgumentIndex: number | undefined =
         maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;
 

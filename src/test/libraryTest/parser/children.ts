@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { Task } from "../../..";
 import { Ast, IParserState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { LexParseOk } from "../../../tasks";
 import { expectDeepEqual, expectLexParseOk } from "../../common";
 
 interface ChildIdsByIdEntry {
@@ -13,7 +13,7 @@ interface ChildIdsByIdEntry {
     readonly kind: Ast.NodeKind;
 }
 
-function acutalFactoryFn<S = IParserState>(lexParseOk: LexParseOk<S>): ChildIdsByIdEntry[] {
+function acutalFactoryFn<S = IParserState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
     const astNodeById: NodeIdMap.AstNodeById = lexParseOk.nodeIdMapCollection.astNodeById;
 

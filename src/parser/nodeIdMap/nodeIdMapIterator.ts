@@ -5,9 +5,9 @@ import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from ".";
 import { Ast } from "..";
 import { CommonError, isNever, MapUtils } from "../../common";
 
-export interface KeyValuePair {
+export interface KeyValuePair<T> {
     readonly source: TXorNode;
-    readonly key: Ast.GeneralizedIdentifier | Ast.Identifier;
+    readonly key: T & (Ast.GeneralizedIdentifier | Ast.Identifier);
     readonly keyLiteral: string;
     readonly maybeValue: undefined | TXorNode;
 }
@@ -104,73 +104,10 @@ export function expectXorChildren(
     return expectXorNodes(nodeIdMapCollection, childIds);
 }
 
-export function sectionNameValuePairs(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    section: TXorNode,
-): ReadonlyArray<KeyValuePair> {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        section,
-        Ast.NodeKind.Section,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
-
-    const maybeSectionMembers: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-        nodeIdMapCollection,
-        section.node.id,
-        4,
-        [Ast.NodeKind.ArrayWrapper],
-    );
-    if (maybeSectionMembers === undefined) {
-        return [];
-    }
-
-    const partial: KeyValuePair[] = [];
-    for (const sectionMember of arrayWrapperXorNodes(nodeIdMapCollection, maybeSectionMembers)) {
-        const maybeKeyValuePair:
-            | TXorNode
-            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, sectionMember.node.id, 2, [
-            Ast.NodeKind.IdentifierPairedExpression,
-        ]);
-        if (maybeKeyValuePair === undefined) {
-            continue;
-        }
-        const keyValuePair: TXorNode = maybeKeyValuePair;
-
-        // Add name to scope.
-        const maybeName: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
-            nodeIdMapCollection,
-            keyValuePair.node.id,
-            0,
-            [Ast.NodeKind.Identifier],
-        );
-        if (maybeName === undefined) {
-            continue;
-        }
-        const name: Ast.Identifier = maybeName as Ast.Identifier;
-
-        const maybeValue: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-            nodeIdMapCollection,
-            keyValuePair.node.id,
-            2,
-            undefined,
-        );
-
-        partial.push({
-            source: keyValuePair,
-            key: name,
-            keyLiteral: name.literal,
-            maybeValue,
-        });
-    }
-    return partial;
-}
-
 export function recordKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     record: TXorNode,
-): ReadonlyArray<KeyValuePair> {
+): ReadonlyArray<KeyValuePair<Ast.GeneralizedIdentifier>> {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(record, [
         Ast.NodeKind.RecordExpression,
         Ast.NodeKind.RecordLiteral,
@@ -186,7 +123,7 @@ export function recordKeyValuePairs(
 export function letKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     letExpression: TXorNode,
-): ReadonlyArray<KeyValuePair> {
+): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         letExpression,
         Ast.NodeKind.LetExpression,
@@ -204,12 +141,86 @@ export function letKeyValuePairs(
     return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }
 
-export function keyValuePairs(
+export function sectionMemberKeyValuePairs(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    section: TXorNode,
+): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        section,
+        Ast.NodeKind.Section,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    if (section.kind === XorNodeKind.Ast) {
+        return (section.node as Ast.Section).sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
+            const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
+            return {
+                source: NodeIdMapUtils.xorNodeFromAst(namePairedExpression),
+                key: namePairedExpression.key,
+                keyLiteral: namePairedExpression.key.literal,
+                maybeValue: NodeIdMapUtils.xorNodeFromAst(namePairedExpression.value),
+            };
+        });
+    }
+
+    const maybeSectionMemberArrayWrapper:
+        | undefined
+        | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, section.node.id, 4, [
+        Ast.NodeKind.ArrayWrapper,
+    ]);
+    if (maybeSectionMemberArrayWrapper === undefined) {
+        return [];
+    }
+    const sectionMemberArrayWrapper: TXorNode = maybeSectionMemberArrayWrapper;
+
+    const partial: KeyValuePair<Ast.Identifier>[] = [];
+    for (const sectionMember of expectXorChildren(nodeIdMapCollection, sectionMemberArrayWrapper.node.id)) {
+        const maybeKeyValuePair:
+            | undefined
+            | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, sectionMember.node.id, 2, [
+            Ast.NodeKind.IdentifierPairedExpression,
+        ]);
+        if (maybeKeyValuePair === undefined) {
+            continue;
+        }
+        const keyValuePair: TXorNode = maybeKeyValuePair;
+        const keyValuePairNodeId: number = keyValuePair.node.id;
+
+        const maybeKey: undefined | Ast.Identifier = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+            nodeIdMapCollection,
+            keyValuePairNodeId,
+            0,
+            [Ast.NodeKind.Identifier],
+        ) as Ast.Identifier;
+        if (maybeKey === undefined) {
+            continue;
+        }
+        const key: Ast.Identifier = maybeKey;
+
+        partial.push({
+            source: keyValuePair,
+            key,
+            keyLiteral: key.literal,
+            maybeValue: NodeIdMapUtils.maybeXorChildByAttributeIndex(
+                nodeIdMapCollection,
+                keyValuePairNodeId,
+                2,
+                undefined,
+            ),
+        });
+    }
+
+    return partial;
+}
+
+export function keyValuePairs<T>(
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
-): ReadonlyArray<KeyValuePair> {
-    const partial: KeyValuePair[] = [];
-    for (const keyValuePair of arrayWrapperXorNodes(nodeIdMapCollection, arrayWrapper)) {
+): ReadonlyArray<KeyValuePair<T>> {
+    const partial: KeyValuePair<T & (Ast.GeneralizedIdentifier | Ast.Identifier)>[] = [];
+    for (const keyValuePair of arrayWrapperCsvXorNodes(nodeIdMapCollection, arrayWrapper)) {
         const maybeKey: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePair.node.id,
@@ -219,7 +230,8 @@ export function keyValuePairs(
         if (maybeKey === undefined) {
             break;
         }
-        const key: Ast.GeneralizedIdentifier | Ast.Identifier = maybeKey as Ast.GeneralizedIdentifier | Ast.Identifier;
+        const key: T & (Ast.GeneralizedIdentifier | Ast.Identifier) = maybeKey as T &
+            (Ast.GeneralizedIdentifier | Ast.Identifier);
 
         partial.push({
             source: keyValuePair,
@@ -237,7 +249,7 @@ export function keyValuePairs(
     return partial;
 }
 
-export function arrayWrapperXorNodes(
+export function arrayWrapperCsvXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
 ): ReadonlyArray<TXorNode> {

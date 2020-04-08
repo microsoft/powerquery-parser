@@ -5,13 +5,12 @@
 import performanceNow = require("performance-now");
 
 import "mocha";
+import { Task } from "../..";
 import { ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultTemplates } from "../../localization";
-import { IParser, IParserState, IParserStateUtils } from "../../parser";
-import { CombinatorialParser } from "../../parser/parsers";
+import { IParser, IParserState, IParserStateUtils, Parser } from "../../parser";
 import { ParseSettings, Settings } from "../../settings";
-import { TriedLexParse } from "../../tasks";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
 import * as path from "path";
@@ -48,14 +47,14 @@ function createRecurisveDescentBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
     lexerSnapshot: LexerSnapshot,
 ): BenchmarkState {
-    return createBenchmarkState(settings, lexerSnapshot, CombinatorialParser);
+    return createBenchmarkState(settings, lexerSnapshot, Parser.CombinatorialParser);
 }
 
 function createCombinatorialBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
     lexerSnapshot: LexerSnapshot,
 ): BenchmarkState {
-    return createBenchmarkState(settings, lexerSnapshot, CombinatorialParser);
+    return createBenchmarkState(settings, lexerSnapshot, Parser.CombinatorialParser);
 }
 
 function createBenchmarkState(
@@ -97,7 +96,7 @@ function parseAllFiles(settings: Settings<BenchmarkState>, parserName: string): 
                 // tslint:disable-next-line: no-console
                 console.log(`\tRun ${index} of ${NumberOfRunsPerFile}`);
             }
-            const triedLexParse: TriedLexParse<BenchmarkState> = FileUtils.tryLexParse(settings, filePath);
+            const triedLexParse: Task.TriedLexParse<BenchmarkState> = FileUtils.tryLexParse(settings, filePath);
             if (!ResultUtils.isOk(triedLexParse)) {
                 throw triedLexParse.error;
             }

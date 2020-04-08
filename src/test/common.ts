@@ -3,12 +3,11 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "..";
+import { Inspection, Task } from "..";
 import { ResultUtils } from "../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
 import { IParserState, ParseError, ParseOk, TriedParse } from "../parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../settings";
-import { LexParseOk, TriedLexParse, tryLexParse } from "../tasks";
+import { LexSettings, ParseSettings } from "../settings";
 
 export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
     const actual: Y = actualFactoryFn(partial);
@@ -30,58 +29,11 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
     return [text.replace("|", ""), position];
 }
 
-export function expectParseOkInspectionOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string,
-    position: Inspection.Position,
-): Inspection.Inspected {
-    const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
-        DefaultSettings,
-        position,
-        parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
-        undefined,
-    );
-    return expectInspectionOk(triedInspection);
-}
-
-export function expectParseErrInspectionOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string,
-    position: Inspection.Position,
-): Inspection.Inspected {
-    const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
-    const triedInspection: Inspection.TriedInspection = Inspection.tryFrom(
-        DefaultSettings,
-        position,
-        parseError.state.contextState.nodeIdMapCollection,
-        parseError.state.contextState.leafNodeIds,
-        parseError,
-    );
-    return expectInspectionOk(triedInspection);
-}
-
-export function expectParseErrInspectionErr<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
-    text: string,
-    position: Inspection.Position,
-): Inspection.TriedInspection {
-    const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
-    return Inspection.tryFrom(
-        DefaultSettings,
-        position,
-        parseError.state.contextState.nodeIdMapCollection,
-        parseError.state.contextState.leafNodeIds,
-        parseError,
-    );
-}
-
 export function expectLexParseOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-): LexParseOk<S> {
-    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
+): Task.LexParseOk<S> {
+    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
     if (!ResultUtils.isOk(triedLexParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }
@@ -135,11 +87,4 @@ function expectTriedParse<S = IParserState>(
 
     const parserState: S & IParserState = settings.newParserState(settings, lexerSnapshot);
     return settings.parser.readDocument(parserState, settings.parser);
-}
-
-export function expectInspectionOk(triedInspection: Inspection.TriedInspection): Inspection.Inspected {
-    if (!ResultUtils.isOk(triedInspection)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspect) - ${triedInspection.error.message}`);
-    }
-    return triedInspection.value;
 }

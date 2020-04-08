@@ -3,23 +3,32 @@
 
 import { Inspection } from ".";
 import { CommonError, Result, ResultUtils } from "./common";
-import { Inspected, TriedInspection } from "./inspection";
+import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { IParser, IParserState, NodeIdMap, ParseContext, ParseError, ParseOk, TriedParse } from "./parser";
-import { InspectionSettings, LexSettings, ParseSettings, Settings } from "./settings";
+import { IParser, IParserState, NodeIdMap, ParseContext, ParseError, ParseOk, TriedParse, TXorNode } from "./parser";
+import { CommonSettings, LexSettings, ParseSettings } from "./settings";
+
+export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
+
+export interface InspectionOk {
+    readonly autocomplete: Inspection.Autocomplete;
+    readonly maybeInvokeExpression: Inspection.InspectedInvokeExpression;
+    readonly scope: Inspection.ScopeItemByKey;
+    readonly scopeType: Inspection.ScopeTypeMap;
+}
 
 export type TriedLexParse<S = IParserState> = Result<LexParseOk<S>, LexError.TLexError | ParseError.TParseError<S>>;
 
-export type TriedLexParseInspection<S = IParserState> = Result<
-    LexParseInspectionOk<S>,
-    LexError.TLexError | ParseError.TParseError<S>
+export type TriedLexParseInspect<S = IParserState> = Result<
+    LexParseInspectOk<S>,
+    CommonError.CommonError | LexError.LexError | ParseError.ParseError
 >;
 
 export interface LexParseOk<S = IParserState> extends ParseOk<S> {
     readonly lexerSnapshot: LexerSnapshot;
 }
 
-export interface LexParseInspectionOk<S = IParserState> extends Inspected {
+export interface LexParseInspectOk<S = IParserState> extends InspectionOk {
     readonly triedParse: TriedParse<S>;
 }
 
@@ -43,7 +52,7 @@ export function tryParse<S = IParserState>(settings: ParseSettings<S>, lexerSnap
 }
 
 export function tryInspection<S = IParserState>(
-    settings: InspectionSettings,
+    settings: CommonSettings,
     triedParse: TriedParse<S>,
     position: Inspection.Position,
 ): TriedInspection {
@@ -71,7 +80,59 @@ export function tryInspection<S = IParserState>(
         nodeIdMapCollection = parseOk.nodeIdMapCollection;
     }
 
-    return Inspection.tryFrom(settings, position, nodeIdMapCollection, leafNodeIds, maybeParseError);
+    const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
+        position,
+        nodeIdMapCollection,
+        leafNodeIds,
+    );
+    if (maybeActiveNode === undefined) {
+        throw new CommonError.InvariantError(`${tryInspection.name}: couldn't create ActiveNode`);
+    }
+    const activeNode: ActiveNode = maybeActiveNode;
+    const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
+
+    const triedScope: Inspection.TriedScopeForRoot = Inspection.tryScopeForRoot(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        ancestry,
+        undefined,
+    );
+    if (ResultUtils.isErr(triedScope)) {
+        return triedScope;
+    }
+    const scope: Inspection.ScopeItemByKey = triedScope.value;
+
+    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(settings, nodeIdMapCollection, scope);
+    if (ResultUtils.isErr(triedScopeType)) {
+        return triedScopeType;
+    }
+
+    const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
+        settings,
+        activeNode,
+        nodeIdMapCollection,
+        maybeParseError,
+    );
+    if (ResultUtils.isErr(triedAutocomplete)) {
+        return triedAutocomplete;
+    }
+
+    const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
+        settings,
+        nodeIdMapCollection,
+        activeNode,
+    );
+    if (ResultUtils.isErr(triedInvokeExpression)) {
+        return triedInvokeExpression;
+    }
+
+    return ResultUtils.okFactory({
+        autocomplete: triedAutocomplete.value,
+        maybeInvokeExpression: triedInvokeExpression.value,
+        scope: triedScope.value,
+        scopeType: triedScopeType.value,
+    });
 }
 
 export function tryLexParse<S = IParserState>(
@@ -96,22 +157,19 @@ export function tryLexParse<S = IParserState>(
 }
 
 export function tryLexParseInspection<S = IParserState>(
-    settings: Settings<S & IParserState>,
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
-): TriedLexParseInspection<S> {
+): TriedLexParseInspect<S> {
     const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
     if (ResultUtils.isErr(triedLexParse) && triedLexParse.error instanceof LexError.LexError) {
         return triedLexParse;
     }
 
     // The if statement above should remove LexError from the error type in Result<T, E>
-    const casted: Result<
+    const casted: Result<LexParseOk<S>, ParseError.TParseError<S>> = triedLexParse as Result<
         LexParseOk<S>,
-        ParseError.TParseError<S> | Exclude<LexError.TLexError, LexError.LexError>
-    > = triedLexParse as Result<
-        LexParseOk<S>,
-        ParseError.TParseError<S> | Exclude<LexError.TLexError, LexError.LexError>
+        ParseError.TParseError<S>
     >;
     const triedInspection: TriedInspection = tryInspection(settings, casted, position);
 
