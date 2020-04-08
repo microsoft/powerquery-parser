@@ -41,11 +41,19 @@ steps:
     command: 'custom'
     customCommand: 'pack'
 
+- task: CopyFiles@2
+  displayName: 'copy package to out directory'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    Contents: '*.tgz'
+    TargetFolder: '$(Build.SourcesDirectory)/out'
+    OverWrite: true
+
 - task: PoliCheck@1
   inputs:
     inputType: 'Basic'
     targetType: 'F'
-    targetArgument: '$(Build.SourcesDirectory)/src'
+    targetArgument: 'src'
     result: 'PoliCheck.xml'
 
 - task: PublishTestResults@2
@@ -62,9 +70,9 @@ steps:
 
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)/*.tgz'
-    ArtifactName: package
-  displayName: 'publish npm package'
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/out'
+    ArtifactName: out
+  displayName: 'publish out directory'
 
 - task: PublishBuildArtifacts@1
   inputs:
