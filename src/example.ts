@@ -97,16 +97,18 @@ function lexText(text: string): void {
     }
 }
 
-// // @ts-ignore
-// function inspectText(text: string, position: Inspection.Position): void {
-//     // Having a LexError thrown will abort the inspection and return the offending LexError.
-//     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-//     const triedInspection: TriedLexParseInspection = tryLexParseInspection(DefaultSettings, text, position);
-//     if (ResultUtils.isErr(triedInspection)) {
-//         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
-//         return;
-//     }
-//     const inspected: Inspection.Inspected = triedInspection.value;
+// @ts-ignore
+function inspectText(text: string, position: Inspection.Position): void {
+    // Having a LexError thrown will abort the inspection and return the offending LexError.
+    // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
+    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(DefaultSettings, text, position);
+    if (ResultUtils.isErr(triedInspection)) {
+        console.log(`Inspection failed due to: ${triedInspection.error.message}`);
+        return;
+    }
+    const inspection: Task.InspectionOk = triedInspection.value;
 
-//     console.log(`Inspected scope: ${[...inspected.scope.entries()]}`);
-// }
+    for (const identifier of inspection.scope.keys()) {
+        console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);
+    }
+}
