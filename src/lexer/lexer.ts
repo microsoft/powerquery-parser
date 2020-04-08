@@ -111,7 +111,7 @@ export function stateFrom(settings: LexSettings, text: string): State {
     const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         settings.localizationTemplates,
         splitLines,
-        LineMode.Default,
+        LineMode.Default
     );
     return {
         lines: tokenizedLines,
@@ -174,7 +174,7 @@ export function tryUpdateRange(state: State, range: Range, text: string): TriedL
     const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         state.localizationTemplates,
         splitLines,
-        previousLineModeEnd,
+        previousLineModeEnd
     );
 
     const lines: ReadonlyArray<TLine> = [
@@ -387,7 +387,7 @@ function rangeFrom(line: TLine, lineNumber: number): Range {
 function tokenizedLinesFrom(
     localizationTemplates: ILocalizationTemplates,
     splitLines: ReadonlyArray<SplitLine>,
-    previousLineModeEnd: LineMode,
+    previousLineModeEnd: LineMode
 ): ReadonlyArray<TLine> {
     const numLines: number = splitLines.length;
     const tokenizedLines: TLine[] = [];
@@ -568,7 +568,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
                     tokens: newTokens,
                     lineModeEnd: lineMode,
                 },
-                maybeError,
+                maybeError
             );
         } else {
             partialTokenizeResult = PartialResultUtils.errFactory(maybeError);
@@ -586,7 +586,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
 // Takes the return from a tokenizeX function to updates the TLine's state.
 function updateLineState(
     line: TLine,
-    tokenizePartialResult: PartialResult<TokenizeChanges, LexError.TLexError>,
+    tokenizePartialResult: PartialResult<TokenizeChanges, LexError.TLexError>
 ): TLine {
     switch (tokenizePartialResult.kind) {
         case PartialResultKind.Ok: {
@@ -679,7 +679,7 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
             const details: {} = { read };
             throw new CommonError.InvariantError(
                 `${tokenizeTextLiteralContentOrEnd.name} returned an unexpected kind`,
-                details,
+                details
             );
     }
 }
@@ -707,7 +707,7 @@ function tokenizeDefault(
     localizationTemplates: ILocalizationTemplates,
     line: TLine,
     lineNumber: number,
-    positionStart: number,
+    positionStart: number
 ): LineModeAlteringRead {
     const text: string = line.text;
 
@@ -765,7 +765,7 @@ function tokenizeDefault(
         if (chr2 === undefined) {
             throw new LexError.UnexpectedEofError(
                 localizationTemplates,
-                graphemePositionFrom(text, lineNumber, positionStart),
+                graphemePositionFrom(text, lineNumber, positionStart)
             );
         } else if ("1" <= chr2 && chr2 <= "9") {
             token = readNumericLiteral(localizationTemplates, text, lineNumber, positionStart);
@@ -846,7 +846,7 @@ function drainWhitespace(text: string, position: number): number {
         const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(
             Pattern.RegExpWhitespace,
             text,
-            position,
+            position
         );
         if (maybeLength) {
             position += maybeLength;
@@ -878,14 +878,14 @@ function readHexLiteral(
     localizationTemplates: ILocalizationTemplates,
     text: string,
     lineNumber: number,
-    positionStart: number,
+    positionStart: number
 ): LineToken {
     const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             localizationTemplates,
             graphemePositionFrom(text, lineNumber, positionStart),
-            LexError.ExpectedKind.HexLiteral,
+            LexError.ExpectedKind.HexLiteral
         );
     }
     const positionEnd: number = maybePositionEnd;
@@ -897,14 +897,14 @@ function readNumericLiteral(
     localizationTemplates: ILocalizationTemplates,
     text: string,
     lineNumber: number,
-    positionStart: number,
+    positionStart: number
 ): LineToken {
     const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             localizationTemplates,
             graphemePositionFrom(text, lineNumber, positionStart),
-            LexError.ExpectedKind.Numeric,
+            LexError.ExpectedKind.Numeric
         );
     }
     const positionEnd: number = maybePositionEnd;
@@ -936,7 +936,7 @@ function readKeyword(
     localizationTemplates: ILocalizationTemplates,
     text: string,
     lineNumber: number,
-    positionStart: number,
+    positionStart: number
 ): LineToken {
     const maybeLineToken: LineToken | undefined = maybeReadKeyword(text, positionStart);
     if (maybeLineToken) {
@@ -952,7 +952,7 @@ function maybeReadKeyword(text: string, currentPosition: number): LineToken | un
     const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfRegexEnd(
         Pattern.RegExpIdentifier,
         text,
-        identifierPositionStart,
+        identifierPositionStart
     );
     if (maybeIdentifierPositionEnd === undefined) {
         return undefined;
@@ -996,7 +996,7 @@ function readKeywordOrIdentifier(
     localizationTemplates: ILocalizationTemplates,
     text: string,
     lineNumber: number,
-    positionStart: number,
+    positionStart: number
 ): LineToken {
     // keyword
     if (text[positionStart] === "#") {
@@ -1007,13 +1007,13 @@ function readKeywordOrIdentifier(
         const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(
             Pattern.RegExpIdentifier,
             text,
-            positionStart,
+            positionStart
         );
         if (maybePositionEnd === undefined) {
             throw new LexError.ExpectedError(
                 localizationTemplates,
                 graphemePositionFrom(text, lineNumber, positionStart),
-                LexError.ExpectedKind.KeywordOrIdentifier,
+                LexError.ExpectedKind.KeywordOrIdentifier
             );
         }
         const positionEnd: number = maybePositionEnd;
@@ -1047,7 +1047,7 @@ function readTokenFrom(
     lineTokenKind: LineTokenKind,
     text: string,
     positionStart: number,
-    positionEnd: number,
+    positionEnd: number
 ): LineToken {
     return {
         kind: lineTokenKind,
@@ -1156,11 +1156,11 @@ function unexpectedReadError(
     localizationTemplates: ILocalizationTemplates,
     text: string,
     lineNumber: number,
-    lineCodeUnit: number,
+    lineCodeUnit: number
 ): LexError.UnexpectedReadError {
     return new LexError.UnexpectedReadError(
         localizationTemplates,
-        graphemePositionFrom(text, lineNumber, lineCodeUnit),
+        graphemePositionFrom(text, lineNumber, lineCodeUnit)
     );
 }
 
@@ -1171,14 +1171,14 @@ function maybeBadLineNumberError(state: State, lineNumber: number): LexError.Bad
             state.localizationTemplates,
             LexError.BadLineNumberKind.GreaterThanNumLines,
             lineNumber,
-            numLines,
+            numLines
         );
     } else if (lineNumber < 0) {
         return new LexError.BadLineNumberError(
             state.localizationTemplates,
             LexError.BadLineNumberKind.LessThanZero,
             lineNumber,
-            numLines,
+            numLines
         );
     } else {
         return undefined;

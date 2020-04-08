@@ -44,7 +44,7 @@ export function graphemePositionFrom(
     text: string,
     lineCodeUnit: number,
     lineNumber: number,
-    maybeCodeUnit: number | undefined,
+    maybeCodeUnit: number | undefined
 ): GraphemePosition {
     return {
         lineCodeUnit,

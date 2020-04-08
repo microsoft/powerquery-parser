@@ -126,12 +126,12 @@ function expectScopeForNodeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    position: Position,
+    position: Position
 ): ScopeItemByKey {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
-        leafNodeIds,
+        leafNodeIds
     );
     if (maybeActiveNode === undefined) {
         return new Map();
@@ -143,7 +143,7 @@ function expectScopeForNodeOk(
         nodeIdMapCollection,
         leafNodeIds,
         activeNode.ancestry,
-        undefined,
+        undefined
     );
     if (!ResultUtils.isOk(triedScopeInspection)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeInspection): ${triedScopeInspection.error.message}`);
@@ -154,7 +154,7 @@ function expectScopeForNodeOk(
 export function expectParseOkScopeOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position,
+    position: Position
 ): ScopeItemByKey {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
     return expectScopeForNodeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
@@ -163,14 +163,14 @@ export function expectParseOkScopeOk<S = IParserState>(
 export function expectParseErrScopeOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position,
+    position: Position
 ): ScopeItemByKey {
     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
     return expectScopeForNodeOk(
         settings,
         parseError.state.contextState.nodeIdMapCollection,
         parseError.state.contextState.leafNodeIds,
-        position,
+        position
     );
 }
 
@@ -335,7 +335,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
             it(`let x = 1, y = x in 1|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `let x = 1, y = x in 1|`,
+                    `let x = 1, y = x in 1|`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -492,7 +492,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         describe(`${Ast.NodeKind.Section} (Ast)`, () => {
             it(`s|ection foo; x = 1; y = 2;`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `s|ection foo; x = 1; y = 2;`,
+                    `s|ection foo; x = 1; y = 2;`
                 );
                 const expected: AbridgedNodeScope = [];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -500,7 +500,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`section foo; x = 1|; y = 2;`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `section foo; x = 1|; y = 2;`,
+                    `section foo; x = 1|; y = 2;`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -514,7 +514,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`section foo; x = 1; y = 2|;`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `section foo; x = 1; y = 2|;`,
+                    `section foo; x = 1; y = 2|;`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -528,7 +528,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`section foo; x = 1; y = 2;|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `section foo; x = 1; y = 2;|`,
+                    `section foo; x = 1; y = 2;|`
                 );
                 const expected: AbridgedNodeScope = [];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -536,7 +536,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `section foo; x = 1; y = 2; z = let a = 1 in |b;`,
+                    `section foo; x = 1; y = 2; z = let a = 1 in |b;`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -563,7 +563,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
             it(`s|ection foo; x = 1; y = 2`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `s|ection foo; x = 1; y = 2`,
+                    `s|ection foo; x = 1; y = 2`
                 );
                 const expected: AbridgedNodeScope = [];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -571,7 +571,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`section foo; x = 1|; y = 2`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `section foo; x = 1|; y = 2`,
+                    `section foo; x = 1|; y = 2`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -585,7 +585,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`section foo; x = 1; y = 2|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `section foo; x = 1; y = 2|`,
+                    `section foo; x = 1; y = 2|`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -599,7 +599,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`section foo; x = 1; y = () => 10|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `section foo; x = 1; y = () => 10|`,
+                    `section foo; x = 1; y = () => 10|`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -647,7 +647,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`let a = 1, b = 2 in x|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `let a = 1, b = 2 in x|`,
+                    `let a = 1, b = 2 in x|`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -668,7 +668,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`let a = 1|, b = 2 in x`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `let a = 1|, b = 2 in x`,
+                    `let a = 1|, b = 2 in x`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -683,7 +683,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `(p1, p2) => let a = 1, b = 2, c = 3| in c`,
+                    `(p1, p2) => let a = 1, b = 2, c = 3| in c`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -720,7 +720,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`,
+                    `let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -747,7 +747,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`,
+                    `let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -821,7 +821,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`let x = (let y = 1 in z|) in`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `let x = (let y = 1 in z|) in`,
+                    `let x = (let y = 1 in z|) in`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -836,7 +836,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
             it(`let x = (let y = 1 in z) in |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `let x = (let y = 1 in z) in |`,
+                    `let x = (let y = 1 in z) in |`
                 );
                 const expected: AbridgedNodeScope = [
                     {
@@ -854,7 +854,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
     describe(`Parameter`, () => {
         it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                `(a, b as number, c as nullable function, optional d, optional e as table) => 1|`,
+                `(a, b as number, c as nullable function, optional d, optional e as table) => 1|`
             );
             const expected: ReadonlyArray<AbridgedParameterScopeItem> = [
                 {

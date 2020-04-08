@@ -13,7 +13,7 @@ export type TVisitNodeFn<State, ResultType, Node, Return> = (state: State & ISta
 export type TVisitChildNodeFn<State, ResultType, Node, Return> = (
     state: State & IState<ResultType>,
     parent: Node,
-    node: Node,
+    node: Node
 ) => Return;
 
 export type TEarlyExitFn<State, ResultType, Node> = TVisitNodeFn<State, ResultType, Node, boolean>;
@@ -21,7 +21,7 @@ export type TEarlyExitFn<State, ResultType, Node> = TVisitNodeFn<State, ResultTy
 export type TExpandNodesFn<State, ResultType, Node, NodesById> = (
     state: State & IState<ResultType>,
     node: Node,
-    collection: NodesById,
+    collection: NodesById
 ) => ReadonlyArray<Node>;
 
 export const enum VisitNodeStrategy {
@@ -42,7 +42,7 @@ export function tryTraverseAst<State, ResultType>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Ast.TNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Ast.TNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Ast.TNode> | undefined
 ): TriedTraverse<ResultType> {
     return tryTraverse<State, ResultType, Ast.TNode, NodeIdMap.Collection>(
         state,
@@ -51,7 +51,7 @@ export function tryTraverseAst<State, ResultType>(
         strategy,
         visitNodeFn,
         expandNodesFn,
-        maybeEarlyExitFn,
+        maybeEarlyExitFn
     );
 }
 
@@ -63,7 +63,7 @@ export function tryTraverseXor<State, ResultType>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, TXorNode, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, TXorNode, NodeIdMap.Collection>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, TXorNode> | undefined
 ): TriedTraverse<ResultType> {
     return tryTraverse<State, ResultType, TXorNode, NodeIdMap.Collection>(
         state,
@@ -72,7 +72,7 @@ export function tryTraverseXor<State, ResultType>(
         strategy,
         visitNodeFn,
         expandNodesFn,
-        maybeEarlyExitFn,
+        maybeEarlyExitFn
     );
 }
 
@@ -83,7 +83,7 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined
 ): TriedTraverse<ResultType> {
     try {
         traverseRecursion<State, ResultType, Node, NodesById>(
@@ -93,7 +93,7 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
             strategy,
             visitNodeFn,
             expandNodesFn,
-            maybeEarlyExitFn,
+            maybeEarlyExitFn
         );
         return ResultUtils.okFactory(state.result);
     } catch (e) {
@@ -105,7 +105,7 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
 export function expectExpandAllAstChildren<State, ResultType>(
     _state: State & IState<ResultType>,
     astNode: Ast.TNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection
 ): ReadonlyArray<Ast.TNode> {
     const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(astNode.id);
 
@@ -121,7 +121,7 @@ export function expectExpandAllAstChildren<State, ResultType>(
 export function expectExpandAllXorChildren<State, ResultType>(
     _state: State & IState<ResultType>,
     xorNode: TXorNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection
 ): ReadonlyArray<TXorNode> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
@@ -137,7 +137,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
             const result: TXorNode[] = [];
             const contextNode: ParseContext.Node = xorNode.node;
             const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
-                contextNode.id,
+                contextNode.id
             );
 
             if (maybeChildIds !== undefined) {
@@ -154,7 +154,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
                     }
 
                     const maybeContextChild: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(
-                        childId,
+                        childId
                     );
                     if (maybeContextChild) {
                         const contextChild: ParseContext.Node = maybeContextChild;
@@ -168,7 +168,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
                     const details: {} = { nodeId: childId };
                     throw new CommonError.InvariantError(
                         `nodeId should be found in either astNodesById or contextNodesById`,
-                        details,
+                        details
                     );
                 }
             }
@@ -184,7 +184,7 @@ export function expectExpandAllXorChildren<State, ResultType>(
 export function maybeExpandXorParent<T>(
     _state: T,
     xorNode: TXorNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection
 ): ReadonlyArray<TXorNode> {
     const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(nodeIdMapCollection, xorNode.node.id);
     return maybeParent !== undefined ? [maybeParent] : [];
@@ -197,7 +197,7 @@ function traverseRecursion<State, ResultType, Node, NodesById>(
     strategy: VisitNodeStrategy,
     visitNodeFn: TVisitNodeFn<State, ResultType, Node, void>,
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
-    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
+    maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined
 ): void {
     if (maybeEarlyExitFn && maybeEarlyExitFn(state, node)) {
         return;

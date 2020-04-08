@@ -17,18 +17,18 @@ function expectAutocompleteOk<S>(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-    maybeParseError: ParseError.ParseError<S> | undefined,
+    maybeParseError: ParseError.ParseError<S> | undefined
 ): ReadonlyArray<KeywordKind> {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
-        leafNodeIds,
+        leafNodeIds
     );
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
         maybeActiveNode,
         nodeIdMapCollection,
-        maybeParseError,
+        maybeParseError
     );
     if (!ResultUtils.isOk(triedInspect)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedInspect): ${triedInspect.error.message}`);
@@ -39,7 +39,7 @@ function expectAutocompleteOk<S>(
 function expectParseOkAutocompleteOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position,
+    position: Position
 ): ReadonlyArray<KeywordKind> {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
     return expectAutocompleteOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position, undefined);
@@ -48,7 +48,7 @@ function expectParseOkAutocompleteOk<S = IParserState>(
 function expectParseErrAutocompleteOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position,
+    position: Position
 ): ReadonlyArray<KeywordKind> {
     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
     return expectAutocompleteOk(
@@ -56,7 +56,7 @@ function expectParseErrAutocompleteOk<S = IParserState>(
         parseError.state.contextState.nodeIdMapCollection,
         parseError.state.contextState.leafNodeIds,
         position,
-        parseError,
+        parseError
     );
 }
 
@@ -383,7 +383,7 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
             it(`try true otherwise| false`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `try true otherwise| false`,
+                    `try true otherwise| false`
                 );
                 const expected: ReadonlyArray<KeywordKind> = [];
                 expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
@@ -391,7 +391,7 @@ describe(`Inspection`, () => {
 
             it(`try true otherwise |false`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
-                    `try true otherwise |false`,
+                    `try true otherwise |false`
                 );
                 const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
                 expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);

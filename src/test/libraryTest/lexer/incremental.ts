@@ -38,7 +38,7 @@ function expectLexerUpdateLine(
     expectedOriginal: AbridgedTLexerLine,
     lineNumber: number,
     newText: string,
-    expectedUpdate: AbridgedTLexerLine,
+    expectedUpdate: AbridgedTLexerLine
 ): Lexer.State {
     let state: Lexer.State = expectLexOk(originalText);
     expectAbridgedTLexerLine(state, expectedOriginal);
@@ -58,7 +58,7 @@ function expectLexerUpdateLine(
 function expectLexerUpdateLineAlphaBravoCharlie(
     newText: string,
     lineNumber: number,
-    expectedUpdate: AbridgedTLexerLine,
+    expectedUpdate: AbridgedTLexerLine
 ): Lexer.State {
     const originalText: string = `alpha${LINE_TERMINATOR}bravo${LINE_TERMINATOR}charlie`;
     const originalExpected: AbridgedTLexerLine = [
@@ -220,7 +220,7 @@ describe(`Lexer.Incremental`, () => {
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
             if (!ResultUtils.isOk(triedSnapshot)) {
                 throw new Error(
-                    `AssertFailed: ResultUtils.isOk(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`,
+                    `AssertFailed: ResultUtils.isOk(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`
                 );
             }
             const snapshot: LexerSnapshot = triedSnapshot.value;
@@ -245,7 +245,7 @@ describe(`Lexer.Incremental`, () => {
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
             if (!ResultUtils.isOk(triedSnapshot)) {
                 throw new Error(
-                    `AssertFailed: ResultUtils.isOK(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`,
+                    `AssertFailed: ResultUtils.isOK(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`
                 );
             }
             const snapshot: LexerSnapshot = triedSnapshot.value;
@@ -271,7 +271,7 @@ describe(`Lexer.Incremental`, () => {
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
             if (!ResultUtils.isOk(triedSnapshot)) {
                 throw new Error(
-                    `AssertFailed: ResultUtils.isOk(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`,
+                    `AssertFailed: ResultUtils.isOk(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`
                 );
             }
             const snapshot: LexerSnapshot = triedSnapshot.value;
@@ -287,7 +287,7 @@ describe(`Lexer.Incremental`, () => {
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`]],
                     0,
                     `foobar`,
-                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]],
+                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]]
                 );
             });
 
@@ -297,7 +297,7 @@ describe(`Lexer.Incremental`, () => {
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`]],
                     0,
                     `"`,
-                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
+                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]]
                 );
             });
 
@@ -307,7 +307,7 @@ describe(`Lexer.Incremental`, () => {
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
                     0,
                     `foobar`,
-                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]],
+                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]]
                 );
             });
         });
@@ -319,7 +319,7 @@ describe(`Lexer.Incremental`, () => {
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
                     0,
                     `foobar`,
-                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]],
+                    [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`]]
                 );
             });
 

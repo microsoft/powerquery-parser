@@ -65,7 +65,7 @@ function expectBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeK
 
 function expectUnterminatedMultilineTokenKind(
     text: string,
-    expectedKind: LexError.UnterminatedMultilineTokenKind,
+    expectedKind: LexError.UnterminatedMultilineTokenKind
 ): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
@@ -77,8 +77,8 @@ function expectUnterminatedMultilineTokenKind(
     if (!(error.innerError instanceof LexError.UnterminatedMultilineTokenError)) {
         throw new Error(
             `AssertFailed: error.innerError instanceof LexError.UnterminatedMultilineTokenError: ${JSON.stringify(
-                error,
-            )}`,
+                error
+            )}`
         );
     }
 

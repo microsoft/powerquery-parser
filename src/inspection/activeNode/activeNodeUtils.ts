@@ -33,7 +33,7 @@ import { ActiveNode } from "./activeNode";
 export function maybeActiveNode(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
+    leafNodeIds: ReadonlyArray<number>
 ): ActiveNode | undefined {
     const astSearch: AstNodeSearch = positionAstSearch(position, nodeIdMapCollection, leafNodeIds);
     const maybeContextSearch: ParseContext.Node | undefined = positionContextSearch(astSearch, nodeIdMapCollection);
@@ -126,7 +126,7 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
 function positionAstSearch(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
+    leafNodeIds: ReadonlyArray<number>
 ): AstNodeSearch {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     let maybeCurrentOnOrBefore: Ast.TNode | undefined;
@@ -197,7 +197,7 @@ function positionAstSearch(
                 nodeIdMapCollection,
                 parent.id,
                 1,
-                [Ast.NodeKind.ArrayWrapper],
+                [Ast.NodeKind.ArrayWrapper]
             );
             maybeShiftedNode = arrayWrapper;
         }
@@ -221,7 +221,7 @@ function positionAstSearch(
 
 function positionContextSearch(
     astNodeSearch: AstNodeSearch,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection
 ): ParseContext.Node | undefined {
     if (astNodeSearch.maybeNode === undefined) {
         return undefined;
@@ -247,7 +247,7 @@ function positionContextSearch(
 function maybeIdentifierUnderPosition(
     position: Position,
     nodeIdMapCollection: NodeIdMap.Collection,
-    leaf: TXorNode,
+    leaf: TXorNode
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (leaf.kind !== XorNodeKind.Ast) {
         return undefined;

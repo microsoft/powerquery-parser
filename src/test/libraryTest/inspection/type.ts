@@ -24,12 +24,12 @@ function expectScopeTypeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    position: Position,
+    position: Position
 ): ScopeTypeMap {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
-        leafNodeIds,
+        leafNodeIds
     );
     if (!(maybeActiveNode !== undefined)) {
         throw new Error(`AssertedFailed: maybeActiveNode !== undefined`);
@@ -41,7 +41,7 @@ function expectScopeTypeOk(
         nodeIdMapCollection,
         leafNodeIds,
         activeNode.ancestry,
-        undefined,
+        undefined
     );
     if (!ResultUtils.isOk(triedScope)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScope) - ${triedScope.error}`);
@@ -58,7 +58,7 @@ function expectScopeTypeOk(
 function expectParseOkScopeTypeOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-    position: Position,
+    position: Position
 ): ScopeTypeMap {
     const parseOk: ParseOk<S> = expectParseOk(settings, text);
     return expectScopeTypeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);

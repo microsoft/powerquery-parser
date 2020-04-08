@@ -38,7 +38,7 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return ResultUtils.errFactory(
-            new LexError.LexError(new LexError.ErrorLineMapError(settings.localizationTemplates, errorLineMap)),
+            new LexError.LexError(new LexError.ErrorLineMapError(settings.localizationTemplates, errorLineMap))
         );
     }
 
@@ -54,7 +54,7 @@ export function tryParse<S = IParserState>(settings: ParseSettings<S>, lexerSnap
 export function tryInspection<S = IParserState>(
     settings: CommonSettings,
     triedParse: TriedParse<S>,
-    position: Inspection.Position,
+    position: Inspection.Position
 ): TriedInspection {
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
@@ -83,7 +83,7 @@ export function tryInspection<S = IParserState>(
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         position,
         nodeIdMapCollection,
-        leafNodeIds,
+        leafNodeIds
     );
     if (maybeActiveNode === undefined) {
         throw new CommonError.InvariantError(`${tryInspection.name}: couldn't create ActiveNode`);
@@ -96,7 +96,7 @@ export function tryInspection<S = IParserState>(
         nodeIdMapCollection,
         leafNodeIds,
         ancestry,
-        undefined,
+        undefined
     );
     if (ResultUtils.isErr(triedScope)) {
         return triedScope;
@@ -112,7 +112,7 @@ export function tryInspection<S = IParserState>(
         settings,
         activeNode,
         nodeIdMapCollection,
-        maybeParseError,
+        maybeParseError
     );
     if (ResultUtils.isErr(triedAutocomplete)) {
         return triedAutocomplete;
@@ -121,7 +121,7 @@ export function tryInspection<S = IParserState>(
     const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
         settings,
         nodeIdMapCollection,
-        activeNode,
+        activeNode
     );
     if (ResultUtils.isErr(triedInvokeExpression)) {
         return triedInvokeExpression;
@@ -137,7 +137,7 @@ export function tryInspection<S = IParserState>(
 
 export function tryLexParse<S = IParserState>(
     settings: LexSettings & ParseSettings<S>,
-    text: string,
+    text: string
 ): TriedLexParse<S> {
     const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
@@ -159,7 +159,7 @@ export function tryLexParse<S = IParserState>(
 export function tryLexParseInspection<S = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    position: Inspection.Position,
+    position: Inspection.Position
 ): TriedLexParseInspect<S> {
     const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
     if (ResultUtils.isErr(triedLexParse) && triedLexParse.error instanceof LexError.LexError) {

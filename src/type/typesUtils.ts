@@ -6,7 +6,7 @@ import { isNever } from "../common";
 import { Ast } from "../parser";
 
 export function typeKindFromLiteralKind(
-    literalKind: Exclude<Ast.LiteralKind, Ast.LiteralKind.Record>,
+    literalKind: Exclude<Ast.LiteralKind, Ast.LiteralKind.Record>
 ): Exclude<Type.TypeKind, Type.TExtendedTypeKind> {
     switch (literalKind) {
         case Ast.LiteralKind.List:
@@ -30,7 +30,7 @@ export function typeKindFromLiteralKind(
 }
 
 export function maybePrimitiveTypeConstantKindFromTypeKind(
-    typeKind: Type.TypeKind,
+    typeKind: Type.TypeKind
 ): undefined | Ast.PrimitiveTypeConstantKind {
     switch (typeKind) {
         case Type.TypeKind.Action:
@@ -79,7 +79,7 @@ export function maybePrimitiveTypeConstantKindFromTypeKind(
 }
 
 export function typeKindFromPrimitiveTypeConstantKind(
-    primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind,
+    primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind
 ): Type.TypeKind {
     switch (primitiveTypeConstantKind) {
         case Ast.PrimitiveTypeConstantKind.Action:

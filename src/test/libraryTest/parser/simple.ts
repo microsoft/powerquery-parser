@@ -37,7 +37,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
         Traverse.expectExpandAllAstChildren,
-        undefined,
+        undefined
     );
 
     if (!ResultUtils.isOk(triedTraverse)) {
@@ -67,7 +67,7 @@ function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequire
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
         Traverse.expectExpandAllAstChildren,
-        nthNodeEarlyExit,
+        nthNodeEarlyExit
     );
 
     if (!ResultUtils.isOk(triedTraverse)) {

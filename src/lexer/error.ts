@@ -58,7 +58,7 @@ export class BadLineNumberError extends Error {
         templates: ILocalizationTemplates,
         readonly kind: BadLineNumberKind,
         readonly lineNumber: number,
-        readonly numLines: number,
+        readonly numLines: number
     ) {
         super(Localization.error_lex_badLineNumber(templates, kind));
     }
@@ -92,7 +92,7 @@ export class ExpectedError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly graphemePosition: StringUtils.GraphemePosition,
-        readonly kind: ExpectedKind,
+        readonly kind: ExpectedKind
     ) {
         super(Localization.error_lex_expectedKind(templates, kind));
     }
@@ -114,7 +114,7 @@ export class UnterminatedMultilineTokenError extends Error {
     constructor(
         templates: ILocalizationTemplates,
         readonly graphemePosition: StringUtils.GraphemePosition,
-        readonly kind: UnterminatedMultilineTokenKind,
+        readonly kind: UnterminatedMultilineTokenKind
     ) {
         super(Localization.error_lex_unterminatedMultilineToken(templates, kind));
     }

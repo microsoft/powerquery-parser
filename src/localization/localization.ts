@@ -11,7 +11,7 @@ interface ILocalization {
     readonly error_common_invariantError: (
         templates: ILocalizationTemplates,
         reason: string,
-        maybeJsonifyableDetails: any | undefined,
+        maybeJsonifyableDetails: any | undefined
     ) => string;
     readonly error_common_unknown: (templates: ILocalizationTemplates, message: any) => string;
     readonly error_lex_badLineNumber: (templates: ILocalizationTemplates, kind: LexError.BadLineNumberKind) => string;
@@ -24,25 +24,25 @@ interface ILocalization {
     readonly error_lex_unexpectedRead: (templates: ILocalizationTemplates) => string;
     readonly error_lex_unterminatedMultilineToken: (
         templates: ILocalizationTemplates,
-        kind: LexError.UnterminatedMultilineTokenKind,
+        kind: LexError.UnterminatedMultilineTokenKind
     ) => string;
     readonly error_parse_csvContinuation: (
         templates: ILocalizationTemplates,
-        kind: ParseError.CsvContinuationKind,
+        kind: ParseError.CsvContinuationKind
     ) => string;
     readonly error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
         expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
-        maybeFoundToken: TokenWithColumnNumber | undefined,
+        maybeFoundToken: TokenWithColumnNumber | undefined
     ) => string;
     readonly error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,
-        maybeFoundToken: TokenWithColumnNumber | undefined,
+        maybeFoundToken: TokenWithColumnNumber | undefined
     ) => string;
     readonly error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
         expectedTokenKind: TokenKind,
-        maybeFoundToken: TokenWithColumnNumber | undefined,
+        maybeFoundToken: TokenWithColumnNumber | undefined
     ) => string;
     readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => string;
     readonly error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) => string;
@@ -185,7 +185,7 @@ export const Localization: ILocalization = {
     error_common_invariantError: (
         templates: ILocalizationTemplates,
         invariantBroken: string,
-        maybeJsonifyableDetails: any | undefined,
+        maybeJsonifyableDetails: any | undefined
     ) => {
         if (maybeJsonifyableDetails !== undefined) {
             return StringUtils.expectFormat(
@@ -193,12 +193,12 @@ export const Localization: ILocalization = {
                 new Map([
                     ["invariantBroken", invariantBroken],
                     ["details", JSON.stringify(maybeJsonifyableDetails, undefined, 4)],
-                ]),
+                ])
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_common_invariantError_2_noDetails,
-                new Map([["invariantBroken", invariantBroken]]),
+                new Map([["invariantBroken", invariantBroken]])
             );
         }
     },
@@ -281,7 +281,7 @@ export const Localization: ILocalization = {
 
     error_lex_unterminatedMultilineToken: (
         templates: ILocalizationTemplates,
-        kind: LexError.UnterminatedMultilineTokenKind,
+        kind: LexError.UnterminatedMultilineTokenKind
     ) => {
         switch (kind) {
             case LexError.UnterminatedMultilineTokenKind.MultilineComment:
@@ -314,7 +314,7 @@ export const Localization: ILocalization = {
     error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
         expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
-        maybeFoundToken: TokenWithColumnNumber | undefined,
+        maybeFoundToken: TokenWithColumnNumber | undefined
     ) => {
         const localizedExpectedAnyTokenKinds: string = expectedAnyTokenKinds
             .map((tokenKind: TokenKind) => localizeTokenKind(templates, tokenKind))
@@ -326,19 +326,19 @@ export const Localization: ILocalization = {
                 new Map([
                     ["foundTokenKind", localizeTokenKind(templates, maybeFoundToken.token.kind)],
                     ["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds],
-                ]),
+                ])
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_parse_expectAnyTokenKind_2_endOfStream,
-                new Map([["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds]]),
+                new Map([["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds]])
             );
         }
     },
 
     error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,
-        maybeFoundToken: TokenWithColumnNumber | undefined,
+        maybeFoundToken: TokenWithColumnNumber | undefined
     ) => {
         if (maybeFoundToken !== undefined) {
             return templates.error_parse_expectGeneralizedIdentifier_1_other;
@@ -350,7 +350,7 @@ export const Localization: ILocalization = {
     error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
         expectedTokenKind: TokenKind,
-        maybeFoundToken: TokenWithColumnNumber | undefined,
+        maybeFoundToken: TokenWithColumnNumber | undefined
     ) => {
         const localizedExpectedTokenKind: string = localizeTokenKind(templates, expectedTokenKind);
 
@@ -360,12 +360,12 @@ export const Localization: ILocalization = {
                 new Map([
                     ["expectedTokenKind", localizedExpectedTokenKind],
                     ["foundTokenKind", localizeTokenKind(templates, maybeFoundToken.token.kind)],
-                ]),
+                ])
             );
         } else {
             return StringUtils.expectFormat(
                 templates.error_parse_expectTokenKind_2_endOfStream,
-                new Map([["expectedTokenKind", localizedExpectedTokenKind]]),
+                new Map([["expectedTokenKind", localizedExpectedTokenKind]])
             );
         }
     },
@@ -373,7 +373,7 @@ export const Localization: ILocalization = {
     error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => {
         return StringUtils.expectFormat(
             templates.error_parse_invalidPrimitiveType,
-            new Map([["foundTokenKind", localizeTokenKind(templates, token.kind)]]),
+            new Map([["foundTokenKind", localizeTokenKind(templates, token.kind)]])
         );
     },
 
