@@ -27,9 +27,9 @@ function expectScopeTypeOk(
     position: Position,
 ): ScopeTypeMap {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
-        position,
         nodeIdMapCollection,
         leafNodeIds,
+        position,
     );
     if (!(maybeActiveNode !== undefined)) {
         throw new Error(`AssertedFailed: maybeActiveNode !== undefined`);

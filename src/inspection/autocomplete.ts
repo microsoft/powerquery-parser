@@ -24,8 +24,8 @@ export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
 export function tryAutocomplete<S = IParserState>(
     settings: CommonSettings,
-    maybeActiveNode: ActiveNode | undefined,
     nodeIdMapCollection: NodeIdMap.Collection,
+    maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
@@ -39,7 +39,7 @@ export function tryAutocomplete<S = IParserState>(
         : undefined;
 
     let maybePositionName: string | undefined;
-    if (PositionUtils.isInXorNode(activeNode.position, nodeIdMapCollection, leaf, false, true)) {
+    if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, leaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
             maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
         }
