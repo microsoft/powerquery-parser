@@ -7,9 +7,7 @@ import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export type InspectedInvokeExpression = undefined | InvokeExpression;
-
-export type TriedInvokeExpression = Result<InspectedInvokeExpression | undefined, CommonError.CommonError>;
+export type TriedInvokeExpression = Result<undefined | InvokeExpression, CommonError.CommonError>;
 
 export interface InvokeExpression {
     readonly xorNode: TXorNode;
