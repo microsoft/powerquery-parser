@@ -7,7 +7,7 @@ import { Inspection } from "../../..";
 import { ResultUtils } from "../../../common";
 import { Position, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { KeywordKind, TExpressionKeywords } from "../../../lexer";
+import { KeywordKind, ExpressionKeywords } from "../../../lexer";
 import { Ast, IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
@@ -193,7 +193,7 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try |`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -213,7 +213,7 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
             it(`if |error`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |error`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -225,7 +225,7 @@ describe(`Inspection`, () => {
 
             it(`error |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`error |`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
         });
@@ -239,7 +239,7 @@ describe(`Inspection`, () => {
 
             it(`if |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -251,7 +251,7 @@ describe(`Inspection`, () => {
 
             it(`if |if`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |if`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -275,7 +275,7 @@ describe(`Inspection`, () => {
 
             it(`if 1 then |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if 1 then |`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -305,7 +305,7 @@ describe(`Inspection`, () => {
 
             it(`if 1 then 1 else |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if 1 then 1 else |`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
         });
@@ -313,7 +313,7 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.InvokeExpression}`, () => {
             it(`foo(|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`foo(|`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -331,7 +331,7 @@ describe(`Inspection`, () => {
 
             it(`foo(a,|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`foo(a,|`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
         });
@@ -339,7 +339,7 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.ListExpression}`, () => {
             it(`{|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{|`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -357,25 +357,25 @@ describe(`Inspection`, () => {
 
             it(`{1,|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{1,|`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
             it(`{1,|2`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{1,|2`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
             it(`{1,|2,`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{1,|2,`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
             it(`{1..|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`{1..|`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
         });
@@ -393,7 +393,7 @@ describe(`Inspection`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
                     `try true otherwise |false`,
                 );
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -405,7 +405,7 @@ describe(`Inspection`, () => {
 
             it(`try true otherwise |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true otherwise |`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
         });
@@ -413,7 +413,7 @@ describe(`Inspection`, () => {
         describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
             it(`+(|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+(|`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
         });
@@ -427,7 +427,7 @@ describe(`Inspection`, () => {
 
             it(`+[a=|`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[a=|`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -451,7 +451,7 @@ describe(`Inspection`, () => {
 
             it(`+[a=| 1]`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[a=| 1]`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -481,7 +481,7 @@ describe(`Inspection`, () => {
 
             it(`+[a=|1,b=`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[a=|1,b=`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
 
@@ -513,7 +513,13 @@ describe(`Inspection`, () => {
 
             it(`section; x = |`, () => {
                 const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; x = |`);
-                const expected: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+                expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+            });
+
+            it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, () => {
+                const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; x = |`);
+                const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
                 expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
             });
         });

@@ -69,7 +69,7 @@ export const Keywords: ReadonlyArray<KeywordKind> = [
     KeywordKind.HashTime,
 ];
 
-export const TExpressionKeywords: ReadonlyArray<KeywordKind> = [
+export const ExpressionKeywords: ReadonlyArray<KeywordKind> = [
     KeywordKind.Each,
     KeywordKind.Error,
     KeywordKind.False,

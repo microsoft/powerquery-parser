@@ -3,7 +3,7 @@
 
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
-import { KeywordKind, TExpressionKeywords, Token, TokenKind } from "../lexer";
+import { KeywordKind, ExpressionKeywords, Token, TokenKind } from "../lexer";
 import {
     AncestryUtils,
     Ast,
@@ -176,9 +176,9 @@ function filterRecommendations(
     return inspected.filter((kind: KeywordKind) => kind.startsWith(positionName));
 }
 
-const ExpressionAutocomplete: ReadonlyArray<KeywordKind> = TExpressionKeywords;
+const ExpressionAutocomplete: ReadonlyArray<KeywordKind> = ExpressionKeywords;
 
-const ExpressionAndSectionAutocomplete: ReadonlyArray<KeywordKind> = [...TExpressionKeywords, KeywordKind.Section];
+const ExpressionAndSectionAutocomplete: ReadonlyArray<KeywordKind> = [...ExpressionKeywords, KeywordKind.Section];
 
 const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1),
