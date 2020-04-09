@@ -11,6 +11,7 @@ import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
 export interface InspectionOk {
+    readonly activeNode: ActiveNode;
     readonly autocomplete: Inspection.Autocomplete;
     readonly maybeInvokeExpression: Inspection.InspectedInvokeExpression;
     readonly scope: Inspection.ScopeItemByKey;
@@ -128,6 +129,7 @@ export function tryInspection<S = IParserState>(
     }
 
     return ResultUtils.okFactory({
+        activeNode,
         autocomplete: triedAutocomplete.value,
         maybeInvokeExpression: triedInvokeExpression.value,
         scope: triedScope.value,
