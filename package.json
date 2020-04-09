@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.1.41",
+    "version": "0.1.42",
     "description": "A parser for the Power Query/M formula language.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -35,15 +35,16 @@
         "lib/lexer/*",
         "lib/localization/*",
         "lib/parser/*",
+        "lib/type/*",
         "lib/index.d.ts",
         "lib/index.js",
         "lib/index.js.map",
         "lib/settings.d.ts",
         "lib/settings.js",
         "lib/settings.js.map",
-        "lib/tasks.d.ts",
-        "lib/tasks.js",
-        "lib/tasks.js.map"
+        "lib/task.d.ts",
+        "lib/task.js",
+        "lib/task.js.map"
     ],
     "scripts": {
         "build": "node_modules\\.bin\\tsc",
