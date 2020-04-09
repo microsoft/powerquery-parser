@@ -35,7 +35,6 @@
         "lib/lexer/*",
         "lib/localization/*",
         "lib/parser/*",
-        "lib/test/*",
         "lib/type/*",
         "lib/index.d.ts",
         "lib/index.js",
