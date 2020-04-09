@@ -2,10 +2,20 @@
 // Licensed under the MIT license.
 
 import { Inspection } from ".";
-import { CommonError, Result, ResultUtils } from "./common";
+import { CommonError, Result, ResultUtils, isNever } from "./common";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { IParser, IParserState, NodeIdMap, ParseContext, ParseError, ParseOk, TriedParse, TXorNode } from "./parser";
+import {
+    IParser,
+    IParserState,
+    NodeIdMap,
+    ParseContext,
+    ParseError,
+    ParseOk,
+    TriedParse,
+    TXorNode,
+    Ast,
+} from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
@@ -164,16 +174,14 @@ export function tryLexParseInspection<S = IParserState>(
     position: Inspection.Position,
 ): TriedLexParseInspect<S> {
     const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
-    if (ResultUtils.isErr(triedLexParse) && triedLexParse.error instanceof LexError.LexError) {
-        return triedLexParse;
+    const maybeTriedParse: undefined | TriedParse<S> = maybeTriedParseFromTriedLexParse(triedLexParse);
+    // maybeTriedParse is undefined iff maybeLexParse is Err<CommonError | LexError>
+    // Err<CommonError | LexError> is a subset of TriedLexParse
+    if (maybeTriedParse == undefined) {
+        return triedLexParse as TriedLexParseInspect<S>;
     }
-
-    // The if statement above should remove LexError from the error type in Result<T, E>
-    const casted: Result<LexParseOk<S>, ParseError.TParseError<S>> = triedLexParse as Result<
-        LexParseOk<S>,
-        ParseError.TParseError<S>
-    >;
-    const triedInspection: TriedInspection = tryInspection(settings, casted, position);
+    const triedParse: TriedParse<S> = maybeTriedParse;
+    const triedInspection: TriedInspection = tryInspection(settings, triedParse, position);
 
     if (ResultUtils.isErr(triedInspection)) {
         return triedInspection;
@@ -181,6 +189,39 @@ export function tryLexParseInspection<S = IParserState>(
 
     return ResultUtils.okFactory({
         ...triedInspection.value,
-        triedParse: casted,
+        triedParse,
+    });
+}
+
+export function maybeTriedParseFromTriedLexParse<S>(triedLexParse: TriedLexParse<S>): undefined | TriedParse<S> {
+    let ast: Ast.TDocument;
+    let leafNodeIds: ReadonlyArray<number>;
+    let nodeIdMapCollection: NodeIdMap.Collection;
+    let state: S & IParserState;
+
+    if (ResultUtils.isErr(triedLexParse)) {
+        if (
+            triedLexParse.error instanceof CommonError.CommonError ||
+            triedLexParse.error instanceof LexError.LexError
+        ) {
+            return undefined;
+        } else if (triedLexParse.error instanceof ParseError.ParseError) {
+            return triedLexParse as TriedParse<S>;
+        } else {
+            throw isNever(triedLexParse.error);
+        }
+    } else {
+        const lexParseOk: LexParseOk<S> = triedLexParse.value;
+        ast = lexParseOk.ast;
+        nodeIdMapCollection = lexParseOk.nodeIdMapCollection;
+        leafNodeIds = lexParseOk.leafNodeIds;
+        state = lexParseOk.state;
+    }
+
+    return ResultUtils.okFactory({
+        ast,
+        leafNodeIds,
+        nodeIdMapCollection,
+        state,
     });
 }
