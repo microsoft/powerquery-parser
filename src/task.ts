@@ -13,7 +13,7 @@ export type TriedInspection = Result<InspectionOk, CommonError.CommonError | Lex
 export interface InspectionOk {
     readonly activeNode: ActiveNode;
     readonly autocomplete: Inspection.Autocomplete;
-    readonly maybeInvokeExpression: Inspection.InspectedInvokeExpression;
+    readonly maybeInvokeExpression: undefined | Inspection.InvokeExpression;
     readonly scope: Inspection.ScopeItemByKey;
     readonly scopeType: Inspection.ScopeTypeMap;
 }
