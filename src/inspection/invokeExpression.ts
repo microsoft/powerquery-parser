@@ -36,7 +36,7 @@ export function tryInvokeExpression(
                 continue;
             }
 
-            const inspected: InspectedInvokeExpression = {
+            const inspected: InvokeExpression = {
                 xorNode,
                 maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
                 maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
