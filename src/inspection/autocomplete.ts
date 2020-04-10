@@ -22,6 +22,8 @@ export type Autocomplete = ReadonlyArray<KeywordKind>;
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
+export const StartOfDoctumentKeywords: ReadonlyArray<KeywordKind> = [...ExpressionKeywords, KeywordKind.Section];
+
 export function tryAutocomplete<S = IParserState>(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -151,7 +153,7 @@ function handleEdgeCases(
         activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
-        inspected = ExpressionAndSectionAutocomplete;
+        inspected = StartOfDoctumentKeywords;
     }
 
     if (
@@ -177,8 +179,6 @@ function filterRecommendations(
 }
 
 const ExpressionAutocomplete: ReadonlyArray<KeywordKind> = ExpressionKeywords;
-
-const ExpressionAndSectionAutocomplete: ReadonlyArray<KeywordKind> = [...ExpressionKeywords, KeywordKind.Section];
 
 const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1),

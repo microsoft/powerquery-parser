@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { ResultUtils } from "../../../common";
-import { Position, TriedAutocomplete } from "../../../inspection";
+import { Position, TriedAutocomplete, StartOfDoctumentKeywords } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { KeywordKind, ExpressionKeywords } from "../../../lexer";
 import { Ast, IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
@@ -24,6 +24,10 @@ function expectAutocompleteOk<S>(
         leafNodeIds,
         position,
     );
+    if (maybeActiveNode === undefined) {
+        return StartOfDoctumentKeywords;
+    }
+
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
         nodeIdMapCollection,
