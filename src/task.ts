@@ -17,11 +17,12 @@ import {
     Ast,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
+import { StartOfDoctumentKeywords } from "./inspection";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
 export interface InspectionOk {
-    readonly activeNode: ActiveNode;
+    readonly maybeActiveNode: undefined | ActiveNode;
     readonly autocomplete: Inspection.Autocomplete;
     readonly maybeInvokeExpression: undefined | Inspection.InvokeExpression;
     readonly scope: Inspection.ScopeItemByKey;
@@ -91,13 +92,20 @@ export function tryInspection<S = IParserState>(
         leafNodeIds = parseOk.leafNodeIds;
     }
 
+    // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
     if (maybeActiveNode === undefined) {
-        throw new CommonError.InvariantError(`${tryInspection.name}: couldn't create ActiveNode`);
+        return ResultUtils.okFactory({
+            maybeActiveNode,
+            autocomplete: StartOfDoctumentKeywords,
+            maybeInvokeExpression: undefined,
+            scope: new Map(),
+            scopeType: new Map(),
+        });
     }
     const activeNode: ActiveNode = maybeActiveNode;
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
@@ -139,7 +147,7 @@ export function tryInspection<S = IParserState>(
     }
 
     return ResultUtils.okFactory({
-        activeNode,
+        maybeActiveNode,
         autocomplete: triedAutocomplete.value,
         maybeInvokeExpression: triedInvokeExpression.value,
         scope: triedScope.value,
