@@ -29,7 +29,7 @@ export function tryAutocomplete<S = IParserState>(
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined) {
-        return ResultUtils.okFactory(ExpressionAutocomplete);
+        return ResultUtils.okFactory([...ExpressionAutocomplete, KeywordKind.Section]);
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
