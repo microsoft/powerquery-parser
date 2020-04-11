@@ -503,6 +503,75 @@ describe(`Inspection - Autocomplete`, () => {
         });
     });
 
+    // Map the ordering of tests to autocomplete.ts::AutocompleteExpressionKeys
+    describe(`AutocompleteExpression`, () => {
+        it(`error |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`error |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`let x = |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`let x = |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`if |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`if true then |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if true then |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`if true then true else |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if true then true else |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`foo(|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`foo(|`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`let x = 1 in |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = 1 in |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`+{|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+{|`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`try true otherwise |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true otherwise |`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`WIP (|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(|`);
+            const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.SectionMember}`, () => {
         it(`section; [] |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; [] |`);

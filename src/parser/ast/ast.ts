@@ -27,7 +27,6 @@ export const enum NodeKind {
     GeneralizedIdentifierPairedExpression = "GeneralizedIdentifierPairedExpression",
     Identifier = "Identifier",
     IdentifierExpression = "IdentifierExpression",
-    IdentifierExpressionPairedExpression = "IdentifierExpressionPairedExpression",
     IdentifierPairedExpression = "IdentifierPairedExpression",
     IfExpression = "IfExpression",
     InvokeExpression = "InvokeExpression",
@@ -151,12 +150,10 @@ export type TBinOpExpressionNodeKind =
 export type TKeyValuePair =
     | GeneralizedIdentifierPairedAnyLiteral
     | GeneralizedIdentifierPairedExpression
-    | IdentifierExpressionPairedExpression
     | IdentifierPairedExpression;
 export type TKeyValuePairNodeKind =
     | NodeKind.GeneralizedIdentifierPairedAnyLiteral
     | NodeKind.GeneralizedIdentifierPairedExpression
-    | NodeKind.IdentifierExpressionPairedExpression
     | NodeKind.IdentifierPairedExpression;
 
 export type TPairedConstant =
@@ -704,9 +701,6 @@ export interface GeneralizedIdentifierPairedExpression
 
 export interface IdentifierPairedExpression
     extends IKeyValuePair<NodeKind.IdentifierPairedExpression, Identifier, TExpression> {}
-
-export interface IdentifierExpressionPairedExpression
-    extends IKeyValuePair<NodeKind.IdentifierExpressionPairedExpression, IdentifierExpression, TExpression> {}
 
 // ---------------------------------------
 // ---------- Parameter related ----------
