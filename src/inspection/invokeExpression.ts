@@ -17,7 +17,7 @@ export interface InvokeExpression {
 
 export interface InvokeExpressionArgs {
     readonly numArguments: number;
-    readonly positionArgumentIndex: number;
+    readonly argumentOrdinal: number;
 }
 
 export function tryInvokeExpression(
@@ -25,29 +25,33 @@ export function tryInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
 ): TriedInvokeExpression {
+    return ResultUtils.ensureResult(settings.localizationTemplates, () =>
+        inspectInvokeExpression(nodeIdMapCollection, activeNode),
+    );
+}
+
+function inspectInvokeExpression(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
+): undefined | InvokeExpression {
     const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
     const position: Position = activeNode.position;
 
-    try {
-        for (let ancestryIndex: number = 0; ancestryIndex < numAncestors; ancestryIndex += 1) {
-            const xorNode: TXorNode = ancestors[ancestryIndex];
-            if (!isInvokeExpressionContent(position, xorNode)) {
-                continue;
-            }
-
-            const inspected: InvokeExpression = {
-                xorNode,
-                maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
-                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
-            };
-            return ResultUtils.okFactory(inspected);
+    for (let ancestryIndex: number = 0; ancestryIndex < numAncestors; ancestryIndex += 1) {
+        const xorNode: TXorNode = ancestors[ancestryIndex];
+        if (!isInvokeExpressionContent(position, xorNode)) {
+            continue;
         }
-    } catch (err) {
-        return ResultUtils.errFactory(CommonError.ensureCommonError(settings.localizationTemplates, err));
+
+        return {
+            xorNode,
+            maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
+            maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
+        };
     }
 
-    return ResultUtils.okFactory(undefined);
+    return undefined;
 }
 
 function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boolean {
@@ -153,6 +157,6 @@ function inspectInvokeExpressionArguments(
 
     return {
         numArguments,
-        positionArgumentIndex: maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0,
+        argumentOrdinal: maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0,
     };
 }

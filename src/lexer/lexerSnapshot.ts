@@ -324,7 +324,7 @@ function collectWhileContent<KindVariant>(
 
     return {
         tokenStart,
-        collectedTokens: collectedTokens,
+        collectedTokens,
         maybeTokenEnd: flatTokens[flatIndex],
     };
 }
