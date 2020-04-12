@@ -99,7 +99,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
 
     // Move nodeId from contextNodeMap to astNodeMap.
     if (!nodeIdMapCollection.contextNodeById.delete(contextNode.id)) {
-        throw new CommonError.InvariantError("can't end a context that doesn't belong to state");
+        throw new CommonError.InvariantError(`can't end a context that doesn't belong to state`);
     }
     nodeIdMapCollection.astNodeById.set(astNode.id, astNode);
 

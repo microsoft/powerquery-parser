@@ -43,7 +43,7 @@ export function tryScopeForRoot(
     maybeScopeById: undefined | ScopeById,
 ): TriedScopeForRoot {
     if (ancestry.length === 0) {
-        throw new CommonError.InvariantError(`${tryScopeForRoot.name}: ancestry.length should be non-zero`);
+        throw new CommonError.InvariantError(`ancestry.length should be non-zero`);
     }
 
     const rootId: number = ancestry[0].node.id;
@@ -52,10 +52,7 @@ export function tryScopeForRoot(
         const maybeScope: undefined | ScopeItemByKey = inspected.get(rootId);
         if (maybeScope === undefined) {
             const details: {} = { rootId };
-            throw new CommonError.InvariantError(
-                `${tryScopeForRoot.name}: expected rootId in ${tryScope.name} result`,
-                details,
-            );
+            throw new CommonError.InvariantError(`expected rootId in scope result`, details);
         }
 
         return maybeScope;

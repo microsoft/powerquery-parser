@@ -304,5 +304,5 @@ export function testAnyNodeKind(
         actualNodeKind: node.kind,
         actualNodeId: node.id,
     };
-    return new CommonError.InvariantError(`${testAnyNodeKind.name}: incorrect Ast.NodeKind`, details);
+    return new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
 }

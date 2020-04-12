@@ -221,7 +221,7 @@ function translateBinOpExpression(
             nodeId: xorNode.node.id,
             nodeKind: xorNode.node.kind,
         };
-        throw new CommonError.InvariantError("expected xorNode to be TBinOpExpression", details);
+        throw new CommonError.InvariantError(`xorNode isn't a TBinOpExpression`, details);
     }
 
     const parentId: number = xorNode.node.id;
@@ -299,10 +299,7 @@ function translateConstant(xorNode: TXorNode): Type.TType {
             nodeId: xorNode.node.id,
             nodeKind: xorNode.node.kind,
         };
-        throw new CommonError.InvariantError(
-            `${translateConstant.name}: expected xorNode to be of NodeKind.Constant`,
-            details,
-        );
+        throw new CommonError.InvariantError(`xorNode isn't a NodeKind.Constant`, details);
     } else {
         const constant: Ast.TConstant = xorNode.node;
 
@@ -362,7 +359,7 @@ function translateUnaryExpression(
             actualNodeKind: xorNode.node.kind,
             expectedNodeKind: Ast.NodeKind.UnaryExpression,
         };
-        throw new CommonError.InvariantError(`expected Ast.NodeKind.UnaryExpression`, details);
+        throw new CommonError.InvariantError(`xorNode isn't NodeKind.UnaryExpression`, details);
     }
 
     const maybeOperatorsWrapper:
@@ -614,10 +611,7 @@ function translateTableOrRecordUnion(leftType: Type.TType, rightType: Type.TType
             leftTypeKind: leftType.kind,
             rightTypeKind: rightType.kind,
         };
-        throw new CommonError.InvariantError(
-            `${translateTableOrRecordUnion.name}: expected leftType.kind === rightType.kind`,
-            details,
-        );
+        throw new CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
     // '[] & []'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {

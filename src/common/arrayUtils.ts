@@ -10,7 +10,7 @@ export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T
             index,
             collectionLength: collection.length,
         };
-        throw new CommonError.InvariantError("index not within array bounds", details);
+        throw new CommonError.InvariantError(`index not within array bounds`, details);
     }
 
     return [...collection.slice(0, index), ...collection.slice(index + 1)];

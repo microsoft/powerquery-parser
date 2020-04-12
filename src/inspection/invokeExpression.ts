@@ -106,7 +106,7 @@ function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, no
                     invokeExpressionNodeId: invokeExpr.node.id,
                 };
                 throw new CommonError.InvariantError(
-                    `${maybeInvokeExpressionName.name}: the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
                     details,
                 );
             }

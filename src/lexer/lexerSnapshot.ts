@@ -207,7 +207,7 @@ function readMultilineComment(
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.MultilineCommentEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
-        const message: string = "once a multiline token starts it should either reach a paired end token, or eof";
+        const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
@@ -246,7 +246,7 @@ function readQuotedIdentifier(
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.QuotedIdentifierEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
-        const message: string = "once a multiline token starts it should either reach a paired end token, or eof";
+        const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
@@ -284,7 +284,7 @@ function readTextLiteral(
         );
     } else if (maybeTokenEnd.kind !== LineTokenKind.TextLiteralEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
-        const message: string = "once a multiline token starts it should either reach a paired end token, or eof";
+        const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;

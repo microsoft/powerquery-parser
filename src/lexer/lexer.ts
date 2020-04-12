@@ -678,7 +678,7 @@ function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: numb
         default:
             const details: {} = { read };
             throw new CommonError.InvariantError(
-                `${tokenizeTextLiteralContentOrEnd.name} returned an unexpected kind`,
+                `expected the return to be either ${LineTokenKind.TextLiteralContent} or ${LineTokenKind.TextLiteralEnd}`,
                 details,
             );
     }

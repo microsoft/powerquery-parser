@@ -339,7 +339,7 @@ function autocompleteListExpression(
             nodeId: child.node.id,
             maybeAttributeIndex: child.node.maybeAttributeIndex,
         };
-        throw new CommonError.InvariantError("ListExpression child has an invalid maybeAttributeIndex", details);
+        throw new CommonError.InvariantError(`maybeAttributeIndex not in range [0, 2]`, details);
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
