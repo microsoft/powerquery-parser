@@ -10,7 +10,7 @@ import {
     ParameterScopeItem,
     ScopeItemKind,
     SectionMemberScopeItem,
-    TScopeItem2,
+    TScopeItem,
 } from "./scopeItem";
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
@@ -19,7 +19,7 @@ export type TriedScopeForRoot = Result<ScopeItemByKey, CommonError.CommonError>;
 
 export type ScopeById = Map<number, ScopeItemByKey>;
 
-export type ScopeItemByKey = Map<string, TScopeItem2>;
+export type ScopeItemByKey = Map<string, TScopeItem>;
 
 export function tryScope(
     settings: CommonSettings,
@@ -29,13 +29,51 @@ export function tryScope(
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: undefined | ScopeById,
 ): TriedScope {
+    return ResultUtils.ensureResult(settings.localizationTemplates, () =>
+        inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById),
+    );
+}
+
+export function tryScopeForRoot(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    ancestry: ReadonlyArray<TXorNode>,
+    // If a map is given, then it's mutated and returned. Else create and return a new instance.
+    maybeScopeById: undefined | ScopeById,
+): TriedScopeForRoot {
+    if (ancestry.length === 0) {
+        throw new CommonError.InvariantError(`ancestry.length should be non-zero`);
+    }
+
+    const rootId: number = ancestry[0].node.id;
+    return ResultUtils.ensureResult(settings.localizationTemplates, () => {
+        const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
+        const maybeScope: undefined | ScopeItemByKey = inspected.get(rootId);
+        if (maybeScope === undefined) {
+            const details: {} = { rootId };
+            throw new CommonError.InvariantError(`expected rootId in scope result`, details);
+        }
+
+        return maybeScope;
+    });
+}
+
+function inspectScope(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    ancestry: ReadonlyArray<TXorNode>,
+    // If a map is given, then it's mutated and returned. Else create and return a new instance.
+    maybeScopeById: undefined | ScopeById,
+): ScopeById {
     const rootId: number = ancestry[0].node.id;
 
     let scopeById: ScopeById;
     if (maybeScopeById !== undefined) {
         const maybeCached: undefined | ScopeItemByKey = maybeScopeById.get(rootId);
         if (maybeCached !== undefined) {
-            return ResultUtils.okFactory(maybeScopeById);
+            return maybeScopeById;
         }
         scopeById = maybeScopeById;
     } else {
@@ -55,53 +93,16 @@ export function tryScope(
         ancestryIndex: 0,
     };
 
-    try {
-        // Build up the scope through a top-down inspection.
-        const numNodes: number = ancestry.length;
-        for (let ancestryIndex: number = numNodes - 1; ancestryIndex >= 0; ancestryIndex -= 1) {
-            state.ancestryIndex = ancestryIndex;
-            const xorNode: TXorNode = ancestry[ancestryIndex];
+    // Build up the scope through a top-down inspection.
+    const numNodes: number = ancestry.length;
+    for (let ancestryIndex: number = numNodes - 1; ancestryIndex >= 0; ancestryIndex -= 1) {
+        state.ancestryIndex = ancestryIndex;
+        const xorNode: TXorNode = ancestry[ancestryIndex];
 
-            inspectNode(state, xorNode);
-        }
-
-        return ResultUtils.okFactory(state.deltaScope);
-    } catch (err) {
-        return ResultUtils.errFactory(CommonError.ensureCommonError(state.settings.localizationTemplates, err));
-    }
-}
-
-export function tryScopeForRoot(
-    settings: CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    ancestry: ReadonlyArray<TXorNode>,
-    // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: undefined | ScopeById,
-): TriedScopeForRoot {
-    const rootId: number = ancestry[0].node.id;
-    const triedScopeInspection: TriedScope = tryScope(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestry,
-        maybeScopeById,
-    );
-
-    if (ResultUtils.isErr(triedScopeInspection)) {
-        return triedScopeInspection;
+        inspectNode(state, xorNode);
     }
 
-    const maybeScope: undefined | ScopeItemByKey = triedScopeInspection.value.get(rootId);
-    if (maybeScope === undefined) {
-        const details: {} = { rootId };
-        throw new CommonError.InvariantError(
-            `${tryScopeForRoot.name}: expected rootId in ${tryScope.name} result`,
-            details,
-        );
-    }
-
-    return ResultUtils.okFactory(maybeScope);
+    return state.deltaScope;
 }
 
 interface ScopeInspectionState {
@@ -322,7 +323,7 @@ function inspectKeyValuePairs<T>(
 function expandScope(
     state: ScopeInspectionState,
     xorNode: TXorNode,
-    newEntries: ReadonlyArray<[string, TScopeItem2]>,
+    newEntries: ReadonlyArray<[string, TScopeItem]>,
     maybeDefaultScope: undefined | ScopeItemByKey,
 ): void {
     const scope: ScopeItemByKey = getOrCreateScope(state, xorNode.node.id, maybeDefaultScope);
@@ -335,7 +336,7 @@ function expandChildScope(
     state: ScopeInspectionState,
     parent: TXorNode,
     childAttributeIds: ReadonlyArray<number>,
-    newEntries: ReadonlyArray<[string, TScopeItem2]>,
+    newEntries: ReadonlyArray<[string, TScopeItem]>,
     maybeDefaultScope: undefined | ScopeItemByKey,
 ): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;

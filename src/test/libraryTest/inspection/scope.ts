@@ -53,7 +53,7 @@ interface AbridgedUndefinedScopeItem extends IAbridgedNodeScopeItem {
     readonly nodeId: number;
 }
 
-function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeItem2): TAbridgedNodeScopeItem {
+function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeItem): TAbridgedNodeScopeItem {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
             return {

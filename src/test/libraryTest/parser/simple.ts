@@ -736,8 +736,6 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    // Ast.NodeKind.IdentifierExpressionPairedExpression covered by LetExpression
-
     it(Ast.NodeKind.IdentifierPairedExpression, () => {
         const text: string = `section; x = 1;`;
         const expected: ReadonlyArray<AbridgedNode> = [

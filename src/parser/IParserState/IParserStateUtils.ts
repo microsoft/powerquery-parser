@@ -117,7 +117,7 @@ export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void 
 export function endContext(state: IParserState, astNode: Ast.TNode): void {
     if (state.maybeCurrentContextNode === undefined) {
         throw new CommonError.InvariantError(
-            "maybeContextNode should be truthy, can't end a context if it doesn't exist.",
+            `maybeContextNode should be truthy, can't end a context if it doesn't exist.`,
         );
     }
 
@@ -134,7 +134,7 @@ export function deleteContext(state: IParserState, maybeNodeId: number | undefin
     if (maybeNodeId === undefined) {
         if (state.maybeCurrentContextNode === undefined) {
             throw new CommonError.InvariantError(
-                "maybeContextNode should be truthy, can't delete a context if it doesn't exist.",
+                `maybeContextNode should be truthy, can't delete a context if it doesn't exist.`,
             );
         } else {
             const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
@@ -266,7 +266,7 @@ export function isRecursivePrimaryExpressionNext(
 
 export function expectContextNodeMetadata(state: IParserState): ContextNodeMetadata {
     if (state.maybeCurrentContextNode === undefined) {
-        throw new CommonError.InvariantError("maybeCurrentContextNode should be truthy");
+        throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
     }
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
@@ -306,7 +306,7 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
     if (maybeToken) {
         return maybeToken;
     } else {
-        throw new CommonError.InvariantError(`this.tokens[${tokenIndex}] is falsey`);
+        throw new CommonError.InvariantError(`${expectTokenAt.name}: this.tokens[${tokenIndex}] is falsey`);
     }
 }
 

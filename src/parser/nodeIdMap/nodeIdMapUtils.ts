@@ -479,7 +479,7 @@ export function testAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): unde
             actualAstNodeKind: xorNode.node.kind,
             xorNodeId: xorNode.node.id,
         };
-        return new CommonError.InvariantError(`${testAstNodeKind.name}: incorrect Ast.NodeKind`, details);
+        return new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
     } else {
         return undefined;
     }
@@ -498,7 +498,7 @@ export function testAstAnyNodeKind(
         actualAstNodeKind: xorNode.node.kind,
         actualXorNodeId: xorNode.node.id,
     };
-    return new CommonError.InvariantError(`${testAstAnyNodeKind.name}: incorrect Ast.NodeKind`, details);
+    return new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
 }
 
 export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {

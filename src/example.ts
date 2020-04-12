@@ -119,6 +119,6 @@ function inspectText(text: string, position: Inspection.Position): void {
         `InvokeExpression number of arguments: ${inspection.maybeInvokeExpression?.maybeArguments?.numArguments}`,
     );
     console.log(
-        `InvokeExpression argument position: ${inspection.maybeInvokeExpression?.maybeArguments?.positionArgumentIndex}`,
+        `InvokeExpression argument position: ${inspection.maybeInvokeExpression?.maybeArguments?.argumentOrdinal}`,
     );
 }

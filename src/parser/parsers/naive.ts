@@ -837,7 +837,7 @@ export function readLiteralExpression<S = IParserState>(
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: true,
-        literal: literal,
+        literal,
         literalKind: maybeLiteralKind,
     };
     IParserStateUtils.endContext(state, astNode);
@@ -1191,7 +1191,7 @@ export function readLetExpression<S = IParserState>(
         TokenKind.KeywordLet,
         Ast.KeywordConstantKind.Let,
     );
-    const identifierExpressionPairedExpressions: Ast.ICsvArray<Ast.IdentifierPairedExpression> = parser.readIdentifierPairedExpressions(
+    const identifierPairedExpression: Ast.ICsvArray<Ast.IdentifierPairedExpression> = parser.readIdentifierPairedExpressions(
         state,
         parser,
         !IParserStateUtils.isNextTokenKind(state, TokenKind.KeywordIn),
@@ -1209,7 +1209,7 @@ export function readLetExpression<S = IParserState>(
         kind: Ast.NodeKind.LetExpression,
         isLeaf: false,
         letConstant,
-        variableList: identifierExpressionPairedExpressions,
+        variableList: identifierPairedExpression,
         inConstant,
         expression,
     };

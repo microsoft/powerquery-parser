@@ -14,7 +14,7 @@ export function expectPreviousXorNode(
 ): TXorNode {
     const maybeXorNode: TXorNode | undefined = maybePreviousXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
-        throw new CommonError.InvariantError("no previous node");
+        throw new CommonError.InvariantError(`no previous node`);
     }
     const xorNode: TXorNode = maybeXorNode;
 
@@ -53,7 +53,7 @@ export function expectNextXorNode(
 ): TXorNode {
     const maybeXorNode: TXorNode | undefined = maybeNextXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
-        throw new CommonError.InvariantError("no next node");
+        throw new CommonError.InvariantError(`no next node`);
     }
     const xorNode: TXorNode = maybeXorNode;
 

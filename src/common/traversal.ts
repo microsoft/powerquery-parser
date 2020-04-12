@@ -85,7 +85,7 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): TriedTraverse<ResultType> {
-    try {
+    return ResultUtils.ensureResult(state.localizationTemplates, () => {
         traverseRecursion<State, ResultType, Node, NodesById>(
             state,
             nodesById,
@@ -95,10 +95,8 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
             expandNodesFn,
             maybeEarlyExitFn,
         );
-        return ResultUtils.okFactory(state.result);
-    } catch (e) {
-        return ResultUtils.errFactory(CommonError.ensureCommonError(state.localizationTemplates, e));
-    }
+        return state.result;
+    });
 }
 
 // a TExpandNodesFn usable by tryTraverseAst which visits all nodes.

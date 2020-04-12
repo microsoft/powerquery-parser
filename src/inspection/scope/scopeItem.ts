@@ -3,7 +3,7 @@
 
 import { Ast, TXorNode } from "../../parser";
 
-export type TScopeItem2 =
+export type TScopeItem =
     | EachScopeItem
     | KeyValuePairScopeItem
     | ParameterScopeItem

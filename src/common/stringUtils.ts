@@ -92,7 +92,7 @@ export function expectFormat(template: string, args: Map<string, string>): strin
     for (const [key, value] of args.entries()) {
         const formatKey: string = `{${key}}`;
         if (template.indexOf(formatKey) === -1) {
-            throw new CommonError.InvariantError("unknown key", { formatKey });
+            throw new CommonError.InvariantError(`unknown format key`, { formatKey });
         }
 
         result = result.replace(formatKey, value);

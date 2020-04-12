@@ -106,7 +106,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).not.equal(undefined, "expected arguments");
         expect(inspected.maybeArguments?.numArguments).equal(1);
-        expect(inspected.maybeArguments?.positionArgumentIndex).equal(0);
+        expect(inspected.maybeArguments?.argumentOrdinal).equal(0);
     });
 
     it("single invoke expression - Foo(a|,)", () => {
@@ -123,7 +123,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).not.equal(undefined, "expected arguments");
         expect(inspected.maybeArguments?.numArguments).equal(2);
-        expect(inspected.maybeArguments?.positionArgumentIndex).equal(0);
+        expect(inspected.maybeArguments?.argumentOrdinal).equal(0);
     });
 
     it("single invoke expression - Foo(a,|)", () => {
@@ -140,6 +140,6 @@ describe(`subset Inspection - InvokeExpression`, () => {
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).not.equal(undefined, "expected arguments");
         expect(inspected.maybeArguments?.numArguments).equal(2);
-        expect(inspected.maybeArguments?.positionArgumentIndex).equal(1);
+        expect(inspected.maybeArguments?.argumentOrdinal).equal(1);
     });
 });
