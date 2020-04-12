@@ -565,8 +565,8 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
 
-        it(`WIP (|`, () => {
-            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`(|`);
+        it(`+(|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+(|`);
             const expected: ReadonlyArray<KeywordKind> = ExpressionKeywords;
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });

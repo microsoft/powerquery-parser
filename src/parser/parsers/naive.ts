@@ -837,7 +837,7 @@ export function readLiteralExpression<S = IParserState>(
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: true,
-        literal: literal,
+        literal,
         literalKind: maybeLiteralKind,
     };
     IParserStateUtils.endContext(state, astNode);
