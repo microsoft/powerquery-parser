@@ -3,8 +3,8 @@
 
 import { Type, TypeUtils } from "..";
 import { CommonError, isNever } from "../../common";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Ast } from "../../language";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 
 export interface InspectedFunctionExpression {
     readonly parameters: ReadonlyArray<InspectedFunctionParameter>;

@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Lexer, LexError } from ".";
+import { Language } from "..";
 import { CommonError, Result, ResultUtils, StringUtils } from "../common";
 import { ILocalizationTemplates } from "../localization";
-import { Language } from "..";
 
 // The lexer is a multiline aware lexer.
 // That in part means multiline tokens are split up into <begin>, <content>, and <end> components.

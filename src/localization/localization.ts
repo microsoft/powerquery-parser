@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Language } from "..";
 import { isNever, StringUtils } from "../common";
 import { Lexer, LexError } from "../lexer";
 import { ParseError } from "../parser";
 import { TokenWithColumnNumber } from "../parser/error";
 import { ILocalizationTemplates } from "./templates";
-import { Language } from "..";
 
 interface ILocalization {
     readonly error_common_invariantError: (

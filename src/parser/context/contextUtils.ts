@@ -2,11 +2,11 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext } from "../";
+import { Language } from "../..";
 import { CommonError, TypeScriptUtils } from "../../common";
+import { Ast } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
-import { Ast } from "../../language";
-import { Language } from "../..";
 
 export function newState(): State {
     return {

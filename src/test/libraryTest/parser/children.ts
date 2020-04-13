@@ -3,10 +3,10 @@
 
 import "mocha";
 import { Task } from "../../..";
+import { Ast } from "../../../language";
 import { IParserState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { expectDeepEqual, expectLexParseOk } from "../../common";
-import { Ast } from "../../../language";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;

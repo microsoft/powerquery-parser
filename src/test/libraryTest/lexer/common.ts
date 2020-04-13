@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import { expect } from "chai";
+import { Language } from "../../..";
 import { ResultUtils } from "../../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
-import { Language } from "../../..";
 
 export type AbridgedComments = ReadonlyArray<[Language.CommentKind, string]>;
 

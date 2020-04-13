@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
+import { Language } from "../..";
 import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapIterator } from "../nodeIdMap";
-import { Ast, AstUtils } from "../../language";
-import { Language } from "../..";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,

@@ -3,11 +3,11 @@
 
 import { Naive } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
+import { Language } from "../..";
 import { ArrayUtils, CommonError, isNever, TypeScriptUtils } from "../../common";
+import { Ast, AstUtils } from "../../language";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { Ast, AstUtils } from "../../language";
-import { Language } from "../..";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
 // which at each step would create a new context node, parse LiteralExpression, then traverse back up while

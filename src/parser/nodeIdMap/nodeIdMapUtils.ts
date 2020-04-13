@@ -2,11 +2,11 @@
 // Licensed under the MIT license.
 
 import { ParseContext } from "..";
+import { Language } from "../..";
 import { CommonError, isNever, MapUtils } from "../../common";
+import { Ast } from "../../language";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
-import { Ast } from "../../language";
-import { Language } from "../..";
 
 export function xorNodeFromAst(node: Ast.TNode): TXorNode {
     return {

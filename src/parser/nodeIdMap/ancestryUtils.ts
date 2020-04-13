@@ -3,8 +3,8 @@
 
 import { NodeIdMapUtils } from ".";
 import { CommonError } from "../../common";
-import { TXorNode } from "./xorNode";
 import { Ast } from "../../language";
+import { TXorNode } from "./xorNode";
 
 export function expectPreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,

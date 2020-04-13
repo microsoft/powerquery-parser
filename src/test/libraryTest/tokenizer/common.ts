@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Language } from "../../..";
 import { Lexer } from "../../../lexer";
 import { DefaultTemplates } from "../../../localization";
-import { Language } from "../../..";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}

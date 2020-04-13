@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Language } from "..";
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
+import { Ast } from "../language";
 import { AncestryUtils, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
-import { Ast } from "../language";
-import { Language } from "..";
 
 export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
 

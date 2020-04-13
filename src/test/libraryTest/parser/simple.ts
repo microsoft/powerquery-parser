@@ -5,10 +5,10 @@ import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
 import { ResultUtils, Traverse } from "../../../common";
+import { Ast } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
 import { DefaultSettings } from "../../../settings";
 import { expectLexParseOk } from "../../common";
-import { Ast } from "../../../language";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 

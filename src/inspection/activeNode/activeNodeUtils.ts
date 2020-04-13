@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Ast, AstUtils } from "../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
-import { Ast, AstUtils } from "../../language";
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.

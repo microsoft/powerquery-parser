@@ -5,12 +5,12 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection, Language } from "../../..";
 import { ResultUtils } from "../../../common";
-import { Position, TriedAutocomplete, StartOfDoctumentKeywords } from "../../../inspection";
+import { Position, StartOfDoctumentKeywords, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
-import { Ast } from "../../../language";
 
 function expectAutocompleteOk<S>(
     settings: CommonSettings,

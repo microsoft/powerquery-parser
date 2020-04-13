@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Language } from "..";
 import { CommonError, StringUtils } from "../common";
 import { ILocalizationTemplates, Localization } from "../localization";
 import { IParserState } from "./IParserState";
-import { Language } from "..";
 
 export type TParseError<S = IParserState> = CommonError.CommonError | ParseError<S>;
 

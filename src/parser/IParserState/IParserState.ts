@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { ParseContext } from "..";
+import { Language } from "../..";
 import { LexerSnapshot } from "../../lexer";
 import { ILocalizationTemplates } from "../../localization";
-import { Language } from "../..";
 
 export interface IParserState {
     readonly lexerSnapshot: LexerSnapshot;

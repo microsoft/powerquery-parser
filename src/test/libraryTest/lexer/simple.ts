@@ -3,8 +3,8 @@
 
 import { expect } from "chai";
 import "mocha";
-import { expectSnapshotAbridgedTokens } from "./common";
 import { Language } from "../../..";
+import { expectSnapshotAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
     it(`HexLiteral`, () => {

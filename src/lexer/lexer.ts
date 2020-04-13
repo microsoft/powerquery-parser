@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { LexError } from ".";
+import { Language } from "..";
 import {
     CommonError,
     isNever,
@@ -15,7 +16,6 @@ import {
 } from "../common";
 import { ILocalizationTemplates } from "../localization";
 import { LexSettings } from "../settings";
-import { Language } from "..";
 
 // Call Lexer.stateFrom to instantiate a new State instance.
 // Lexer functions will return a new state object.

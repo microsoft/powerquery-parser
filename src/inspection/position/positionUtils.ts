@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Language } from "../..";
 import { isNever } from "../../common";
+import { Ast } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position } from "./position";
-import { Language } from "../..";
-import { Ast } from "../../language";
 
 export function isBeforeXorNode(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {
     switch (xorNode.kind) {

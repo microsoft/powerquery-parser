@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result, ResultUtils } from "../../common";
+import { Ast } from "../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { TypeInspector, TypeUtils } from "../../type";
@@ -12,7 +13,6 @@ import {
     SectionMemberScopeItem,
     TScopeItem,
 } from "./scopeItem";
-import { Ast } from "../../language";
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 

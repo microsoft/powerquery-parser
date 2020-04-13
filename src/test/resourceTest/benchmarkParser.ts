@@ -4,11 +4,11 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
+import { Language } from "../..";
+import { LexerSnapshot } from "../../lexer";
 import { IParser, TriedParse } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
 import { ParseSettings } from "../../settings";
-import { Language } from "../..";
-import { LexerSnapshot } from "../../lexer";
 
 export interface BenchmarkState extends IParserState {
     readonly baseParser: IParser<IParserState>;

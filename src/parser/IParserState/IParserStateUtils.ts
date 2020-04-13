@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
+import { Language } from "../..";
 import { CommonError } from "../../common";
+import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ParseSettings } from "../../settings";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
-import { Language } from "../..";
-import { Ast } from "../../language";
 
 export interface FastStateBackup {
     readonly tokenIndex: number;

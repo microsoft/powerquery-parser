@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { Language } from "../../..";
 import {
     AbridgedComments,
     AbridgedLineTokens,
@@ -12,7 +13,6 @@ import {
     expectSnapshotAbridgedComments,
     expectSnapshotAbridgedTokens,
 } from "./common";
-import { Language } from "../../..";
 
 const LINE_TERMINATOR: string = "\n";
 

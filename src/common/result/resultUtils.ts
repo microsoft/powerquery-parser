@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Err, Ok, Result, ResultKind } from "./result";
-import { ILocalizationTemplates } from "../../localization";
 import { CommonError } from "..";
-import { ResultUtils } from ".";
+import { ILocalizationTemplates } from "../../localization";
+import { Err, Ok, Result, ResultKind } from "./result";
 
 export function okFactory<T>(value: T): Ok<T> {
     return {
@@ -33,8 +32,8 @@ export function ensureResult<T>(
     callbackFn: () => T,
 ): Result<T, CommonError.CommonError> {
     try {
-        return ResultUtils.okFactory(callbackFn());
+        return okFactory(callbackFn());
     } catch (err) {
-        return ResultUtils.errFactory(CommonError.ensureCommonError(templates, err));
+        return errFactory(CommonError.ensureCommonError(templates, err));
     }
 }
