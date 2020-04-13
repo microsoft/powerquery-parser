@@ -6,9 +6,9 @@ import "mocha";
 import { Task } from "../../..";
 import { ResultUtils, Traverse } from "../../../common";
 import { DefaultTemplates } from "../../../localization";
-import { Ast } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { expectLexParseOk } from "../../common";
+import { Ast } from "../../../language";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 

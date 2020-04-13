@@ -2,10 +2,11 @@
 // Licensed under the MIT license.
 
 import { CommonError, isNever, Result, ResultUtils } from "../common";
-import { Ast, AstUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
 import { ScopeItemByKey, ScopeItemKind, TScopeItem } from "./scope";
+import { Ast, AstUtils } from "../language";
 
 export type ScopeTypeMap = Map<string, Type.TType>;
 

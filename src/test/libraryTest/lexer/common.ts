@@ -3,25 +3,30 @@
 
 import { expect } from "chai";
 import { ResultUtils } from "../../../common";
-import { CommentKind, Lexer, LexerSnapshot, LineTokenKind, TokenKind, TriedLexerSnapshot } from "../../../lexer";
+import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
+import { Language } from "../../..";
 
-export type AbridgedComments = ReadonlyArray<[CommentKind, string]>;
+export type AbridgedComments = ReadonlyArray<[Language.CommentKind, string]>;
 
-export type AbridgedTokens = ReadonlyArray<[TokenKind, string]>;
+export type AbridgedTokens = ReadonlyArray<[Language.TokenKind, string]>;
 
 export interface AbridgedSnapshot {
     readonly tokens: AbridgedTokens;
     readonly comments: AbridgedComments;
 }
 
-export type AbridgedLineTokens = ReadonlyArray<[LineTokenKind, string]>;
+export type AbridgedLineTokens = ReadonlyArray<[Language.LineTokenKind, string]>;
 
 export function expectAbridgedSnapshotMatch(text: string, expected: AbridgedSnapshot, wrapped: boolean): LexerSnapshot {
     if (wrapped) {
         const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
         const wrappedExpected: AbridgedSnapshot = {
-            tokens: [[TokenKind.Identifier, "wrapperOpen"], ...expected.tokens, [TokenKind.Identifier, "wrapperClose"]],
+            tokens: [
+                [Language.TokenKind.Identifier, "wrapperOpen"],
+                ...expected.tokens,
+                [Language.TokenKind.Identifier, "wrapperClose"],
+            ],
             comments: expected.comments,
         };
         expectAbridgedSnapshotMatch(wrappedText, wrappedExpected, false);
@@ -43,16 +48,16 @@ export function expectLineTokenMatch(text: string, expected: AbridgedLineTokens,
     if (wrapped) {
         const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
         const wrappedExpected: AbridgedLineTokens = [
-            [LineTokenKind.Identifier, "wrapperOpen"],
+            [Language.LineTokenKind.Identifier, "wrapperOpen"],
             ...expected,
-            [LineTokenKind.Identifier, "wrapperClose"],
+            [Language.LineTokenKind.Identifier, "wrapperClose"],
         ];
         expectLineTokenMatch(wrappedText, wrappedExpected, false);
     }
 
     const state: Lexer.State = expectLexOk(text);
 
-    const tmp: [LineTokenKind, string][] = [];
+    const tmp: [Language.LineTokenKind, string][] = [];
     for (const line of state.lines) {
         for (const token of line.tokens) {
             tmp.push([token.kind, token.data]);

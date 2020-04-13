@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ParseContext } from "..";
+import { ParseContext } from "..";
+import { Ast } from "../../language";
 
 export const enum XorNodeKind {
     Ast = "Ast",

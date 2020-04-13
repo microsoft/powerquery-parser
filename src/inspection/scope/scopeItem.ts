@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, TXorNode } from "../../parser";
+import { TXorNode } from "../../parser";
+import { Ast } from "../../language";
 
 export type TScopeItem =
     | EachScopeItem

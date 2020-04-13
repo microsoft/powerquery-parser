@@ -6,9 +6,10 @@ import { Inspection } from "../../..";
 import { isNever, ResultUtils } from "../../../common";
 import { Position, ScopeItemByKey, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { Ast, IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { expectDeepEqual, expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
+import { Ast } from "../../../language";
 
 export type TAbridgedNodeScopeItem =
     | AbridgedEachScopeItem

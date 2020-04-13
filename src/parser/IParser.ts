@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, IParserState, NodeIdMap, ParseError } from ".";
+import { IParserState, NodeIdMap, ParseError } from ".";
 import { Result } from "../common";
+import { Ast } from "../language";
 
 export type TriedParse<S = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 

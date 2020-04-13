@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from ".";
-import { Ast } from "..";
 import { CommonError, isNever, MapUtils } from "../../common";
+import { Ast } from "../../language";
 
 export interface KeyValuePair<T> {
     readonly source: TXorNode;

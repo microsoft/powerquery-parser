@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, TXorNode } from "../../parser";
+import { TXorNode } from "../../parser";
 import { Position } from "../position";
+import { Ast } from "../../language";
 
 // An ActiveNode represents the context a user in a text editor expects their cursor to be in.
 // Examples:

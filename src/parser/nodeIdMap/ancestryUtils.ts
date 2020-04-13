@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { NodeIdMapUtils } from ".";
-import { Ast } from "..";
 import { CommonError } from "../../common";
 import { TXorNode } from "./xorNode";
+import { Ast } from "../../language";
 
 export function expectPreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,

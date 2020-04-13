@@ -3,8 +3,9 @@
 
 import { CommonError, isNever, Result } from ".";
 import { ILocalizationTemplates } from "../localization";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
 import { ResultUtils } from "./result";
+import { Ast } from "../language";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
 

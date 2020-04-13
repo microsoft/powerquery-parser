@@ -5,19 +5,10 @@ import { Inspection } from ".";
 import { CommonError, Result, ResultUtils, isNever } from "./common";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import {
-    IParser,
-    IParserState,
-    NodeIdMap,
-    ParseContext,
-    ParseError,
-    ParseOk,
-    TriedParse,
-    TXorNode,
-    Ast,
-} from "./parser";
+import { IParser, IParserState, NodeIdMap, ParseContext, ParseError, ParseOk, TriedParse, TXorNode } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 import { StartOfDoctumentKeywords } from "./inspection";
+import { Ast } from "./language";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
