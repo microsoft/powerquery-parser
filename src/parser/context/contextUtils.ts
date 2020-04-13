@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParseContext } from "../";
+import { NodeIdMap, ParseContext } from "../";
+import { Language } from "../..";
 import { CommonError, TypeScriptUtils } from "../../common";
-import { Token } from "../../lexer";
+import { Ast } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 
@@ -39,7 +40,7 @@ export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
     tokenIndexStart: number,
-    maybeTokenStart: Token | undefined,
+    maybeTokenStart: Language.Token | undefined,
     maybeParentNode: Node | undefined,
 ): Node {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;

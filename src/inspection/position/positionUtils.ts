@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Language } from "../..";
 import { isNever } from "../../common";
-import { Token, TokenPosition } from "../../lexer";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { Ast } from "../../language";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position } from "./position";
 
 export function isBeforeXorNode(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {
@@ -97,11 +98,11 @@ export function isBeforeContextNode(
     contextNode: ParseContext.Node,
     isBoundIncluded: boolean,
 ): boolean {
-    const maybeTokenStart: Token | undefined = contextNode.maybeTokenStart;
+    const maybeTokenStart: Language.Token | undefined = contextNode.maybeTokenStart;
     if (maybeTokenStart === undefined) {
         return false;
     }
-    const tokenStart: Token = maybeTokenStart;
+    const tokenStart: Language.Token = maybeTokenStart;
 
     return isBeforeTokenPosition(position, tokenStart.positionStart, isBoundIncluded);
 }
@@ -189,7 +190,7 @@ export function isAfterAstNode(position: Position, astNode: Ast.TNode, isBoundIn
 
 export function isInToken(
     position: Position,
-    token: Token,
+    token: Language.Token,
     isLowerBoundIncluded: boolean,
     isHigherBoundIncluded: boolean,
 ): boolean {
@@ -201,7 +202,7 @@ export function isInToken(
 
 export function isBeforeTokenPosition(
     position: Position,
-    tokenPosition: TokenPosition,
+    tokenPosition: Language.TokenPosition,
     isBoundIncluded: boolean,
 ): boolean {
     const positionLineNumber: number = position.lineNumber;
@@ -216,13 +217,13 @@ export function isBeforeTokenPosition(
     }
 }
 
-export function isOnTokenPosition(position: Position, tokenPosition: TokenPosition): boolean {
+export function isOnTokenPosition(position: Position, tokenPosition: Language.TokenPosition): boolean {
     return position.lineNumber === tokenPosition.lineNumber && position.lineCodeUnit === tokenPosition.lineCodeUnit;
 }
 
 export function isAfterTokenPosition(
     position: Position,
-    tokenPosition: TokenPosition,
+    tokenPosition: Language.TokenPosition,
     isBoundIncluded: boolean,
 ): boolean {
     const positionLineNumber: number = position.lineNumber;

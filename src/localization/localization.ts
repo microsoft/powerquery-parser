@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Language } from "..";
 import { isNever, StringUtils } from "../common";
-import { Lexer, LexError, Token, TokenKind } from "../lexer";
+import { Lexer, LexError } from "../lexer";
 import { ParseError } from "../parser";
 import { TokenWithColumnNumber } from "../parser/error";
 import { ILocalizationTemplates } from "./templates";
@@ -32,7 +33,7 @@ interface ILocalization {
     ) => string;
     readonly error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
+        expectedAnyTokenKinds: ReadonlyArray<Language.TokenKind>,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
     readonly error_parse_expectGeneralizedIdentifier: (
@@ -41,139 +42,142 @@ interface ILocalization {
     ) => string;
     readonly error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
-        expectedTokenKind: TokenKind,
+        expectedTokenKind: Language.TokenKind,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => string;
-    readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => string;
+    readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Language.Token) => string;
     readonly error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) => string;
     readonly error_parse_unterminated_bracket: (templates: ILocalizationTemplates) => string;
     readonly error_parse_unterminated_parenthesis: (templates: ILocalizationTemplates) => string;
     readonly error_parse_unusedTokens: (templates: ILocalizationTemplates) => string;
 }
 
-export function localizeTokenKind(localizationTemplates: ILocalizationTemplates, tokenKind: TokenKind): string {
+export function localizeTokenKind(
+    localizationTemplates: ILocalizationTemplates,
+    tokenKind: Language.TokenKind,
+): string {
     switch (tokenKind) {
-        case TokenKind.Ampersand:
+        case Language.TokenKind.Ampersand:
             return localizationTemplates.tokenKind_ampersand;
-        case TokenKind.Asterisk:
+        case Language.TokenKind.Asterisk:
             return localizationTemplates.tokenKind_asterisk;
-        case TokenKind.AtSign:
+        case Language.TokenKind.AtSign:
             return localizationTemplates.tokenKind_atSign;
-        case TokenKind.Bang:
+        case Language.TokenKind.Bang:
             return localizationTemplates.tokenKind_bang;
-        case TokenKind.Comma:
+        case Language.TokenKind.Comma:
             return localizationTemplates.tokenKind_comma;
-        case TokenKind.Division:
+        case Language.TokenKind.Division:
             return localizationTemplates.tokenKind_division;
-        case TokenKind.DotDot:
+        case Language.TokenKind.DotDot:
             return localizationTemplates.tokenKind_dotDot;
-        case TokenKind.Ellipsis:
+        case Language.TokenKind.Ellipsis:
             return localizationTemplates.tokenKind_ellipsis;
-        case TokenKind.Equal:
+        case Language.TokenKind.Equal:
             return localizationTemplates.tokenKind_equal;
-        case TokenKind.FatArrow:
+        case Language.TokenKind.FatArrow:
             return localizationTemplates.tokenKind_fatArrow;
-        case TokenKind.GreaterThan:
+        case Language.TokenKind.GreaterThan:
             return localizationTemplates.tokenKind_greaterThan;
-        case TokenKind.GreaterThanEqualTo:
+        case Language.TokenKind.GreaterThanEqualTo:
             return localizationTemplates.tokenKind_greaterThanEqualTo;
-        case TokenKind.HexLiteral:
+        case Language.TokenKind.HexLiteral:
             return localizationTemplates.tokenKind_hexLiteral;
-        case TokenKind.Identifier:
+        case Language.TokenKind.Identifier:
             return localizationTemplates.tokenKind_identifier;
-        case TokenKind.KeywordAnd:
+        case Language.TokenKind.KeywordAnd:
             return localizationTemplates.tokenKind_keywordAnd;
-        case TokenKind.KeywordAs:
+        case Language.TokenKind.KeywordAs:
             return localizationTemplates.tokenKind_keywordAs;
-        case TokenKind.KeywordEach:
+        case Language.TokenKind.KeywordEach:
             return localizationTemplates.tokenKind_keywordEach;
-        case TokenKind.KeywordElse:
+        case Language.TokenKind.KeywordElse:
             return localizationTemplates.tokenKind_keywordElse;
-        case TokenKind.KeywordError:
+        case Language.TokenKind.KeywordError:
             return localizationTemplates.tokenKind_keywordError;
-        case TokenKind.KeywordFalse:
+        case Language.TokenKind.KeywordFalse:
             return localizationTemplates.tokenKind_keywordFalse;
-        case TokenKind.KeywordHashBinary:
+        case Language.TokenKind.KeywordHashBinary:
             return localizationTemplates.tokenKind_keywordHashBinary;
-        case TokenKind.KeywordHashDate:
+        case Language.TokenKind.KeywordHashDate:
             return localizationTemplates.tokenKind_keywordHashDate;
-        case TokenKind.KeywordHashDateTime:
+        case Language.TokenKind.KeywordHashDateTime:
             return localizationTemplates.tokenKind_keywordHashDateTime;
-        case TokenKind.KeywordHashDateTimeZone:
+        case Language.TokenKind.KeywordHashDateTimeZone:
             return localizationTemplates.tokenKind_keywordHashDateTimeZone;
-        case TokenKind.KeywordHashDuration:
+        case Language.TokenKind.KeywordHashDuration:
             return localizationTemplates.tokenKind_keywordHashDuration;
-        case TokenKind.KeywordHashInfinity:
+        case Language.TokenKind.KeywordHashInfinity:
             return localizationTemplates.tokenKind_keywordHashInfinity;
-        case TokenKind.KeywordHashNan:
+        case Language.TokenKind.KeywordHashNan:
             return localizationTemplates.tokenKind_keywordHashNan;
-        case TokenKind.KeywordHashSections:
+        case Language.TokenKind.KeywordHashSections:
             return localizationTemplates.tokenKind_keywordHashSections;
-        case TokenKind.KeywordHashShared:
+        case Language.TokenKind.KeywordHashShared:
             return localizationTemplates.tokenKind_keywordShared;
-        case TokenKind.KeywordHashTable:
+        case Language.TokenKind.KeywordHashTable:
             return localizationTemplates.tokenKind_keywordHashTable;
-        case TokenKind.KeywordHashTime:
+        case Language.TokenKind.KeywordHashTime:
             return localizationTemplates.tokenKind_keywordHashTime;
-        case TokenKind.KeywordIf:
+        case Language.TokenKind.KeywordIf:
             return localizationTemplates.tokenKind_keywordIf;
-        case TokenKind.KeywordIn:
+        case Language.TokenKind.KeywordIn:
             return localizationTemplates.tokenKind_keywordIn;
-        case TokenKind.KeywordIs:
+        case Language.TokenKind.KeywordIs:
             return localizationTemplates.tokenKind_keywordIs;
-        case TokenKind.KeywordLet:
+        case Language.TokenKind.KeywordLet:
             return localizationTemplates.tokenKind_keywordLet;
-        case TokenKind.KeywordMeta:
+        case Language.TokenKind.KeywordMeta:
             return localizationTemplates.tokenKind_keywordMeta;
-        case TokenKind.KeywordNot:
+        case Language.TokenKind.KeywordNot:
             return localizationTemplates.tokenKind_notEqual;
-        case TokenKind.KeywordOr:
+        case Language.TokenKind.KeywordOr:
             return localizationTemplates.tokenKind_keywordOr;
-        case TokenKind.KeywordOtherwise:
+        case Language.TokenKind.KeywordOtherwise:
             return localizationTemplates.tokenKind_keywordOtherwise;
-        case TokenKind.KeywordSection:
+        case Language.TokenKind.KeywordSection:
             return localizationTemplates.tokenKind_keywordSection;
-        case TokenKind.KeywordShared:
+        case Language.TokenKind.KeywordShared:
             return localizationTemplates.tokenKind_keywordShared;
-        case TokenKind.KeywordThen:
+        case Language.TokenKind.KeywordThen:
             return localizationTemplates.tokenKind_keywordThen;
-        case TokenKind.KeywordTrue:
+        case Language.TokenKind.KeywordTrue:
             return localizationTemplates.tokenKind_keywordTrue;
-        case TokenKind.KeywordTry:
+        case Language.TokenKind.KeywordTry:
             return localizationTemplates.tokenKind_keywordTry;
-        case TokenKind.KeywordType:
+        case Language.TokenKind.KeywordType:
             return localizationTemplates.tokenKind_keywordType;
-        case TokenKind.LeftBrace:
+        case Language.TokenKind.LeftBrace:
             return localizationTemplates.tokenKind_leftBrace;
-        case TokenKind.LeftBracket:
+        case Language.TokenKind.LeftBracket:
             return localizationTemplates.tokenKind_leftBracket;
-        case TokenKind.LeftParenthesis:
+        case Language.TokenKind.LeftParenthesis:
             return localizationTemplates.tokenKind_leftParenthesis;
-        case TokenKind.LessThan:
+        case Language.TokenKind.LessThan:
             return localizationTemplates.tokenKind_lessThan;
-        case TokenKind.LessThanEqualTo:
+        case Language.TokenKind.LessThanEqualTo:
             return localizationTemplates.tokenKind_lessThanEqualTo;
-        case TokenKind.Minus:
+        case Language.TokenKind.Minus:
             return localizationTemplates.tokenKind_minus;
-        case TokenKind.NotEqual:
+        case Language.TokenKind.NotEqual:
             return localizationTemplates.tokenKind_notEqual;
-        case TokenKind.NullLiteral:
+        case Language.TokenKind.NullLiteral:
             return localizationTemplates.tokenKind_nullLiteral;
-        case TokenKind.NumericLiteral:
+        case Language.TokenKind.NumericLiteral:
             return localizationTemplates.tokenKind_numericLiteral;
-        case TokenKind.Plus:
+        case Language.TokenKind.Plus:
             return localizationTemplates.tokenKind_plus;
-        case TokenKind.QuestionMark:
+        case Language.TokenKind.QuestionMark:
             return localizationTemplates.tokenKind_questionMark;
-        case TokenKind.RightBrace:
+        case Language.TokenKind.RightBrace:
             return localizationTemplates.tokenKind_rightBrace;
-        case TokenKind.RightBracket:
+        case Language.TokenKind.RightBracket:
             return localizationTemplates.tokenKind_rightBracket;
-        case TokenKind.RightParenthesis:
+        case Language.TokenKind.RightParenthesis:
             return localizationTemplates.tokenKind_rightParenthesis;
-        case TokenKind.Semicolon:
+        case Language.TokenKind.Semicolon:
             return localizationTemplates.tokenKind_semicolon;
-        case TokenKind.TextLiteral:
+        case Language.TokenKind.TextLiteral:
             return localizationTemplates.tokenKind_stringLiteral;
 
         default:
@@ -313,11 +317,11 @@ export const Localization: ILocalization = {
 
     error_parse_expectAnyTokenKind: (
         templates: ILocalizationTemplates,
-        expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
+        expectedAnyTokenKinds: ReadonlyArray<Language.TokenKind>,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
         const localizedExpectedAnyTokenKinds: string = expectedAnyTokenKinds
-            .map((tokenKind: TokenKind) => localizeTokenKind(templates, tokenKind))
+            .map((tokenKind: Language.TokenKind) => localizeTokenKind(templates, tokenKind))
             .join(", ");
 
         if (maybeFoundToken !== undefined) {
@@ -349,7 +353,7 @@ export const Localization: ILocalization = {
 
     error_parse_expectTokenKind: (
         templates: ILocalizationTemplates,
-        expectedTokenKind: TokenKind,
+        expectedTokenKind: Language.TokenKind,
         maybeFoundToken: TokenWithColumnNumber | undefined,
     ) => {
         const localizedExpectedTokenKind: string = localizeTokenKind(templates, expectedTokenKind);
@@ -370,7 +374,7 @@ export const Localization: ILocalization = {
         }
     },
 
-    error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token) => {
+    error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Language.Token) => {
         return StringUtils.expectFormat(
             templates.error_parse_invalidPrimitiveType,
             new Map([["foundTokenKind", localizeTokenKind(templates, token.kind)]]),

@@ -1,16 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    Ast,
-    AstUtils,
-    NodeIdMap,
-    NodeIdMapIterator,
-    NodeIdMapUtils,
-    ParseContext,
-    TXorNode,
-    XorNodeKind,
-} from "../../parser";
+import { Ast, AstUtils } from "../../language";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 

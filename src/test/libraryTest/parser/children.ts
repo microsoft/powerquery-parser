@@ -3,7 +3,8 @@
 
 import "mocha";
 import { Task } from "../../..";
-import { Ast, IParserState, NodeIdMap } from "../../../parser";
+import { Ast } from "../../../language";
+import { IParserState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { expectDeepEqual, expectLexParseOk } from "../../common";
 

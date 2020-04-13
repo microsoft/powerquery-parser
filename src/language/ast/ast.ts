@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TokenRange } from "../../lexer/token";
+import { TokenRange } from "../token";
 
 export const enum NodeKind {
     ArithmeticExpression = "ArithmeticExpression",

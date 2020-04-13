@@ -3,7 +3,7 @@
 
 import { Type } from ".";
 import { isNever } from "../common";
-import { Ast } from "../parser";
+import { Ast } from "../language";
 
 export function typeKindFromLiteralKind(
     literalKind: Exclude<Ast.LiteralKind, Ast.LiteralKind.Record>,

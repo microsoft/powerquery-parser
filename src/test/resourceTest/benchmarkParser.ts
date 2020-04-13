@@ -4,8 +4,9 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
-import { LexerSnapshot, TokenPosition } from "../../lexer";
-import { Ast } from "../../parser";
+import { Language } from "../..";
+import { Ast } from "../../language";
+import { LexerSnapshot } from "../../lexer";
 import { IParser, TriedParse } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
 import { ParseSettings } from "../../settings";
@@ -309,7 +310,7 @@ function traceFunction<T>(
 }
 
 function functionEntry<S, T>(state: BenchmarkState, fn: (state: S, parser: IParser<S>) => T): number {
-    const tokenPosition: TokenPosition = state.maybeCurrentToken!.positionStart;
+    const tokenPosition: Language.TokenPosition = state.maybeCurrentToken!.positionStart;
     const id: number = state.functionTimestampCounter;
     state.functionTimestampCounter += 1;
 
@@ -332,7 +333,7 @@ function functionEntry<S, T>(state: BenchmarkState, fn: (state: S, parser: IPars
 }
 
 function functionExit(state: BenchmarkState, id: number): void {
-    const tokenPosition: TokenPosition = state.maybeCurrentToken!.positionStart;
+    const tokenPosition: Language.TokenPosition = state.maybeCurrentToken!.positionStart;
     const fnTimestamp: FunctionTimestamp = state.functionTimestamps.get(id)!;
     const finish: number = performanceNow();
     const duration: number = finish - fnTimestamp.timeStart;

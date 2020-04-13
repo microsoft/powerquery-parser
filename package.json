@@ -32,6 +32,7 @@
     "files": [
         "lib/common/*",
         "lib/inspection/*",
+        "lib/language/*",
         "lib/lexer/*",
         "lib/localization/*",
         "lib/parser/*",

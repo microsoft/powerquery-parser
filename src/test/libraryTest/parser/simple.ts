@@ -5,8 +5,8 @@ import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
 import { ResultUtils, Traverse } from "../../../common";
+import { Ast } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
-import { Ast } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { expectLexParseOk } from "../../common";
 

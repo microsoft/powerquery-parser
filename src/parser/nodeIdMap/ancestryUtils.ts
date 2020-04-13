@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { NodeIdMapUtils } from ".";
-import { Ast } from "..";
 import { CommonError } from "../../common";
+import { Ast } from "../../language";
 import { TXorNode } from "./xorNode";
 
 export function expectPreviousXorNode(

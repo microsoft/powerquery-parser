@@ -2,7 +2,8 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result, ResultUtils } from "../common";
-import { AncestryUtils, Ast, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
+import { Ast } from "../language";
+import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";

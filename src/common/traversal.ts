@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import { CommonError, isNever, Result } from ".";
+import { Ast } from "../language";
 import { ILocalizationTemplates } from "../localization";
-import { Ast, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
 import { ResultUtils } from "./result";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;

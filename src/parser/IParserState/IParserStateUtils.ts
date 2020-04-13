@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
+import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
+import { Language } from "../..";
 import { CommonError } from "../../common";
-import { LexerSnapshot, Token, TokenKind, TokenRange } from "../../lexer";
+import { Ast } from "../../language";
+import { LexerSnapshot } from "../../lexer";
 import { ParseSettings } from "../../settings";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
@@ -24,7 +26,7 @@ export function newState<S = IParserState>(
     settings: ParseSettings<S & IParserState>,
     lexerSnapshot: LexerSnapshot,
 ): IParserState {
-    const maybeCurrentToken: Token | undefined = lexerSnapshot.tokens[0];
+    const maybeCurrentToken: Language.Token | undefined = lexerSnapshot.tokens[0];
 
     return {
         localizationTemplates: settings.localizationTemplates,
@@ -159,8 +161,8 @@ export function incrementAttributeCounter(state: IParserState): void {
 // ---------- IsX ----------
 // -------------------------
 
-export function isTokenKind(state: IParserState, tokenKind: TokenKind, tokenIndex: number): boolean {
-    const maybeToken: Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
+export function isTokenKind(state: IParserState, tokenKind: Language.TokenKind, tokenIndex: number): boolean {
+    const maybeToken: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
 
     if (maybeToken) {
         return maybeToken.kind === tokenKind;
@@ -169,21 +171,21 @@ export function isTokenKind(state: IParserState, tokenKind: TokenKind, tokenInde
     }
 }
 
-export function isNextTokenKind(state: IParserState, tokenKind: TokenKind): boolean {
+export function isNextTokenKind(state: IParserState, tokenKind: Language.TokenKind): boolean {
     return isTokenKind(state, tokenKind, state.tokenIndex + 1);
 }
 
 export function isOnTokenKind(
     state: IParserState,
-    tokenKind: TokenKind,
+    tokenKind: Language.TokenKind,
     tokenIndex: number = state.tokenIndex,
 ): boolean {
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
 export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstantKind): boolean {
-    if (isOnTokenKind(state, TokenKind.Identifier)) {
-        const currentToken: Token = state.lexerSnapshot.tokens[state.tokenIndex];
+    if (isOnTokenKind(state, Language.TokenKind.Identifier)) {
+        const currentToken: Language.Token = state.lexerSnapshot.tokens[state.tokenIndex];
         if (currentToken === undefined || currentToken.data === undefined) {
             const details: {} = { currentToken };
             throw new CommonError.InvariantError(`expected data on Token`, details);
@@ -197,45 +199,45 @@ export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstan
 }
 
 export function isOnGeneralizedIdentifierStart(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
-    const maybeToken: Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
     if (maybeToken === undefined) {
         return false;
     }
-    const tokenKind: TokenKind = maybeToken.kind;
+    const tokenKind: Language.TokenKind = maybeToken.kind;
 
     switch (tokenKind) {
-        case TokenKind.Identifier:
-        case TokenKind.KeywordAnd:
-        case TokenKind.KeywordAs:
-        case TokenKind.KeywordEach:
-        case TokenKind.KeywordElse:
-        case TokenKind.KeywordError:
-        case TokenKind.KeywordFalse:
-        case TokenKind.KeywordHashBinary:
-        case TokenKind.KeywordHashDate:
-        case TokenKind.KeywordHashDateTime:
-        case TokenKind.KeywordHashDateTimeZone:
-        case TokenKind.KeywordHashDuration:
-        case TokenKind.KeywordHashInfinity:
-        case TokenKind.KeywordHashNan:
-        case TokenKind.KeywordHashSections:
-        case TokenKind.KeywordHashShared:
-        case TokenKind.KeywordHashTable:
-        case TokenKind.KeywordHashTime:
-        case TokenKind.KeywordIf:
-        case TokenKind.KeywordIn:
-        case TokenKind.KeywordIs:
-        case TokenKind.KeywordLet:
-        case TokenKind.KeywordMeta:
-        case TokenKind.KeywordNot:
-        case TokenKind.KeywordOr:
-        case TokenKind.KeywordOtherwise:
-        case TokenKind.KeywordSection:
-        case TokenKind.KeywordShared:
-        case TokenKind.KeywordThen:
-        case TokenKind.KeywordTrue:
-        case TokenKind.KeywordTry:
-        case TokenKind.KeywordType:
+        case Language.TokenKind.Identifier:
+        case Language.TokenKind.KeywordAnd:
+        case Language.TokenKind.KeywordAs:
+        case Language.TokenKind.KeywordEach:
+        case Language.TokenKind.KeywordElse:
+        case Language.TokenKind.KeywordError:
+        case Language.TokenKind.KeywordFalse:
+        case Language.TokenKind.KeywordHashBinary:
+        case Language.TokenKind.KeywordHashDate:
+        case Language.TokenKind.KeywordHashDateTime:
+        case Language.TokenKind.KeywordHashDateTimeZone:
+        case Language.TokenKind.KeywordHashDuration:
+        case Language.TokenKind.KeywordHashInfinity:
+        case Language.TokenKind.KeywordHashNan:
+        case Language.TokenKind.KeywordHashSections:
+        case Language.TokenKind.KeywordHashShared:
+        case Language.TokenKind.KeywordHashTable:
+        case Language.TokenKind.KeywordHashTime:
+        case Language.TokenKind.KeywordIf:
+        case Language.TokenKind.KeywordIn:
+        case Language.TokenKind.KeywordIs:
+        case Language.TokenKind.KeywordLet:
+        case Language.TokenKind.KeywordMeta:
+        case Language.TokenKind.KeywordNot:
+        case Language.TokenKind.KeywordOr:
+        case Language.TokenKind.KeywordOtherwise:
+        case Language.TokenKind.KeywordSection:
+        case Language.TokenKind.KeywordShared:
+        case Language.TokenKind.KeywordThen:
+        case Language.TokenKind.KeywordTrue:
+        case Language.TokenKind.KeywordTry:
+        case Language.TokenKind.KeywordType:
             return true;
 
         default:
@@ -252,11 +254,11 @@ export function isRecursivePrimaryExpressionNext(
         // section-access-expression
         // this.isOnTokenKind(TokenKind.Bang)
         // field-access-expression
-        isTokenKind(state, TokenKind.LeftBrace, tokenIndexStart) ||
+        isTokenKind(state, Language.TokenKind.LeftBrace, tokenIndexStart) ||
         // item-access-expression
-        isTokenKind(state, TokenKind.LeftBracket, tokenIndexStart) ||
+        isTokenKind(state, Language.TokenKind.LeftBracket, tokenIndexStart) ||
         // invoke-expression
-        isTokenKind(state, TokenKind.LeftParenthesis, tokenIndexStart)
+        isTokenKind(state, Language.TokenKind.LeftParenthesis, tokenIndexStart)
     );
 }
 
@@ -270,21 +272,21 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
     }
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
-    const maybeTokenStart: Token | undefined = currentContextNode.maybeTokenStart;
+    const maybeTokenStart: Language.Token | undefined = currentContextNode.maybeTokenStart;
     if (maybeTokenStart === undefined) {
         throw new CommonError.InvariantError(`maybeTokenStart should be truthy`);
     }
-    const tokenStart: Token = maybeTokenStart;
+    const tokenStart: Language.Token = maybeTokenStart;
 
     // inclusive token index
     const tokenIndexEnd: number = state.tokenIndex - 1;
-    const maybeTokenEnd: Token | undefined = state.lexerSnapshot.tokens[tokenIndexEnd];
+    const maybeTokenEnd: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndexEnd];
     if (maybeTokenEnd === undefined) {
         throw new CommonError.InvariantError(`maybeTokenEnd should be truthy`);
     }
-    const tokenEnd: Token = maybeTokenEnd;
+    const tokenEnd: Language.Token = maybeTokenEnd;
 
-    const tokenRange: TokenRange = {
+    const tokenRange: Language.TokenRange = {
         tokenIndexStart: currentContextNode.tokenIndexStart,
         tokenIndexEnd,
         positionStart: tokenStart.positionStart,
@@ -299,9 +301,9 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
     };
 }
 
-export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
+export function expectTokenAt(state: IParserState, tokenIndex: number): Language.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
-    const maybeToken: Token | undefined = lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Language.Token | undefined = lexerSnapshot.tokens[tokenIndex];
 
     if (maybeToken) {
         return maybeToken;
@@ -320,7 +322,7 @@ export function expectTokenAt(state: IParserState, tokenIndex: number): Token {
 export function testCsvContinuationLetExpression(
     state: IParserState,
 ): ParseError.ExpectedCsvContinuationError | undefined {
-    if (state.maybeCurrentTokenKind === TokenKind.KeywordIn) {
+    if (state.maybeCurrentTokenKind === Language.TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
             state.localizationTemplates,
             ParseError.CsvContinuationKind.LetExpression,
@@ -333,7 +335,7 @@ export function testCsvContinuationLetExpression(
 
 export function testCsvContinuationDanglingComma(
     state: IParserState,
-    tokenKind: TokenKind,
+    tokenKind: Language.TokenKind,
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
@@ -352,7 +354,7 @@ export function testCsvContinuationDanglingComma(
 
 export function testIsOnTokenKind(
     state: IParserState,
-    expectedTokenKind: TokenKind,
+    expectedTokenKind: Language.TokenKind,
 ): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
@@ -364,7 +366,7 @@ export function testIsOnTokenKind(
 
 export function testIsOnAnyTokenKind(
     state: IParserState,
-    expectedAnyTokenKinds: ReadonlyArray<TokenKind>,
+    expectedAnyTokenKinds: ReadonlyArray<Language.TokenKind>,
 ): ParseError.ExpectedAnyTokenKindError | undefined {
     const isError: boolean =
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1;
@@ -379,7 +381,7 @@ export function testIsOnAnyTokenKind(
 
 export function testNoMoreTokens(state: IParserState): ParseError.UnusedTokensRemainError | undefined {
     if (state.tokenIndex !== state.lexerSnapshot.tokens.length) {
-        const token: Token = expectTokenAt(state, state.tokenIndex);
+        const token: Language.Token = expectTokenAt(state, state.tokenIndex);
         return new ParseError.UnusedTokensRemainError(
             state.localizationTemplates,
             token,
@@ -395,7 +397,7 @@ export function testNoMoreTokens(state: IParserState): ParseError.UnusedTokensRe
 // -------------------------------------
 
 export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedParenthesesError {
-    const token: Token = expectTokenAt(state, state.tokenIndex);
+    const token: Language.Token = expectTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedParenthesesError(
         state.localizationTemplates,
         token,
@@ -404,7 +406,7 @@ export function unterminatedParenthesesError(state: IParserState): ParseError.Un
 }
 
 export function unterminatedBracketError(state: IParserState): ParseError.UnterminatedBracketError {
-    const token: Token = expectTokenAt(state, state.tokenIndex);
+    const token: Language.Token = expectTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedBracketError(
         state.localizationTemplates,
         token,
@@ -424,11 +426,11 @@ export function maybeTokenWithColumnNumber(
     state: IParserState,
     tokenIndex: number,
 ): ParseError.TokenWithColumnNumber | undefined {
-    const maybeToken: Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
     if (maybeToken === undefined) {
         return undefined;
     }
-    const currentToken: Token = maybeToken;
+    const currentToken: Language.Token = maybeToken;
 
     return {
         token: currentToken,
@@ -439,5 +441,5 @@ export function maybeTokenWithColumnNumber(
 interface ContextNodeMetadata {
     readonly id: number;
     readonly maybeAttributeIndex: number | undefined;
-    readonly tokenRange: TokenRange;
+    readonly tokenRange: Language.TokenRange;
 }
