@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, isNever } from "../../common";
-import { TokenKind } from "../../lexer";
+import { TokenKind } from "../token";
 import { Ast } from "../ast";
 
 export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperatorKind | undefined {
