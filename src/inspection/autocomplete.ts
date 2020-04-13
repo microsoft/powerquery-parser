@@ -4,7 +4,7 @@
 import { Language } from "..";
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
-import { Ast } from "../language";
+import { Ast, ExpressionKeywords } from "../language";
 import { AncestryUtils, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
@@ -15,7 +15,7 @@ export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
 export const StartOfDoctumentKeywords: ReadonlyArray<Language.KeywordKind> = [
-    ...Language.ExpressionKeywords,
+    ...ExpressionKeywords,
     Language.KeywordKind.Section,
 ];
 
@@ -166,7 +166,7 @@ function filterRecommendations(
     return inspected.filter((kind: Language.KeywordKind) => kind.startsWith(positionName));
 }
 
-const ExpressionAutocomplete: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
+const ExpressionAutocomplete: ReadonlyArray<Language.KeywordKind> = ExpressionKeywords;
 
 const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1),

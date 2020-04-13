@@ -5,6 +5,7 @@
 import performanceNow = require("performance-now");
 
 import { Language } from "../..";
+import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { IParser, TriedParse } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
@@ -99,7 +100,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
     readPrimaryExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readPrimaryExpression),
     readRecursivePrimaryExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>, head) => {
-        const readRecursivePrimaryExpressionLambda: () => Language.Ast.RecursivePrimaryExpression = () =>
+        const readRecursivePrimaryExpressionLambda: () => Ast.RecursivePrimaryExpression = () =>
             state.baseParser.readRecursivePrimaryExpression(state, (parser as unknown) as IParser<IParserState>, head);
         return traceFunction(state, parser, readRecursivePrimaryExpressionLambda);
     },
@@ -144,7 +145,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
     readFieldProjection: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readFieldProjection),
     readFieldSelector: (state: BenchmarkState, parser: IParser<BenchmarkState>, allowOptional: boolean) => {
-        const readFieldSelectorLambda: () => Language.Ast.FieldSelector = () =>
+        const readFieldSelectorLambda: () => Ast.FieldSelector = () =>
             state.baseParser.readFieldSelector(state, (parser as unknown) as IParser<IParserState>, allowOptional);
         return traceFunction(state, parser, readFieldSelectorLambda);
     },
@@ -186,7 +187,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         allowOpenMarker: boolean,
         testPostCommaError,
     ) => {
-        const readFieldSpecificationListLambda: () => Language.Ast.FieldSpecificationList = () =>
+        const readFieldSpecificationListLambda: () => Ast.FieldSpecificationList = () =>
             state.baseParser.readFieldSpecificationList(
                 state,
                 (parser as unknown) as IParser<IParserState>,
@@ -221,8 +222,8 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         onePairRequired: boolean,
         testPostCommaError,
     ) => {
-        const readFieldNamePairedAnyLiteralsLambda: () => Language.Ast.ICsvArray<
-            Language.Ast.GeneralizedIdentifierPairedAnyLiteral
+        const readFieldNamePairedAnyLiteralsLambda: () => Ast.ICsvArray<
+            Ast.GeneralizedIdentifierPairedAnyLiteral
         > = () =>
             state.baseParser.readFieldNamePairedAnyLiterals(
                 state,
@@ -253,9 +254,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         onePairRequired: boolean,
         testPostCommaError,
     ) => {
-        const readFieldSpecificationListLambda: () => Language.Ast.ICsvArray<
-            Language.Ast.IdentifierPairedExpression
-        > = () =>
+        const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.IdentifierPairedExpression> = () =>
             state.baseParser.readIdentifierPairedExpressions(
                 state,
                 (parser as unknown) as IParser<IParserState>,
@@ -273,9 +272,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         onePairRequired: boolean,
         testPostCommaError,
     ) => {
-        const readFieldSpecificationListLambda: () => Language.Ast.ICsvArray<
-            Language.Ast.GeneralizedIdentifierPairedExpression
-        > = () =>
+        const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = () =>
             state.baseParser.readGeneralizedIdentifierPairedExpressions(
                 state,
                 (parser as unknown) as IParser<IParserState>,
