@@ -1,6 +1,23 @@
 {
     "name": "@microsoft/powerquery-parser",
     "version": "0.1.47",
+    "author": "Microsoft",
+    "license": "MIT",
+    "scripts": {
+        "build": "node_modules\\.bin\\tsc",
+        "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/libraryTest/**/*.ts",
+        "test:resources": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/resourceTest/**/*.ts",
+        "check": "node_modules\\.bin\\prettier --config \".prettierrc\" --list-different src\\**\\*.ts",
+        "prepublishOnly": "git clean -xdf && npm install && npm run check && npm run build && npm run test && npm run test:resources"
+    },
+    "homepage": "https://github.com/microsoft/powerquery-parser#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/microsoft/powerquery-parser.git"
+    },
+    "bugs": {
+        "url": "https://github.com/microsoft/powerquery-parser/issues"
+    },
     "description": "A parser for the Power Query/M formula language.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
@@ -46,22 +63,5 @@
         "lib/task.d.ts",
         "lib/task.js",
         "lib/task.js.map"
-    ],
-    "scripts": {
-        "build": "node_modules\\.bin\\tsc",
-        "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/libraryTest/**/*.ts",
-        "test:resources": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/resourceTest/**/*.ts",
-        "check": "node_modules\\.bin\\prettier --config \".prettierrc\" --list-different src\\**\\*.ts",
-        "prepublishOnly": "git clean -xdf && npm install && npm run check && npm run build && npm run test && npm run test:resources"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/microsoft/powerquery-parser.git"
-    },
-    "author": "Microsoft",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/microsoft/powerquery-parser/issues"
-    },
-    "homepage": "https://github.com/microsoft/powerquery-parser#readme"
+    ]
 }
