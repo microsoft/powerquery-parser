@@ -85,27 +85,6 @@ function translateXorNode(
 
     let result: Type.TType;
     switch (xorNode.node.kind) {
-        case Ast.NodeKind.LiteralExpression: {
-            switch (xorNode.kind) {
-                case XorNodeKind.Ast:
-                    // We already checked it's a Ast Literal Expression.
-                    const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
-                    const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
-                        literalKind,
-                    );
-                    result = genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
-                    break;
-
-                case XorNodeKind.Context:
-                    result = unknownFactory();
-                    break;
-
-                default:
-                    throw isNever(xorNode);
-            }
-            break;
-        }
-
         case Ast.NodeKind.ArithmeticExpression:
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
@@ -136,6 +115,10 @@ function translateXorNode(
 
         case Ast.NodeKind.ListExpression:
             result = genericFactory(Type.TypeKind.List, false);
+            break;
+
+        case Ast.NodeKind.LiteralExpression:
+            result = translateLiteralExpression(xorNode);
             break;
 
         case Ast.NodeKind.RecordExpression:
@@ -293,60 +276,85 @@ function translateBinOpExpression(
 }
 
 function translateConstant(xorNode: TXorNode): Type.TType {
-    if (xorNode.kind === XorNodeKind.Context) {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.Constant,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    } else if (xorNode.kind === XorNodeKind.Context) {
         return unknownFactory();
-    } else if (xorNode.node.kind !== Ast.NodeKind.Constant) {
-        const details: {} = {
-            nodeId: xorNode.node.id,
-            nodeKind: xorNode.node.kind,
-        };
-        throw new CommonError.InvariantError(`xorNode isn't a NodeKind.Constant`, details);
-    } else {
-        const constant: Ast.TConstant = xorNode.node;
+    }
 
-        switch (constant.constantKind) {
-            case Ast.PrimitiveTypeConstantKind.Action:
-                return genericFactory(Type.TypeKind.Action, false);
-            case Ast.PrimitiveTypeConstantKind.Any:
-                return genericFactory(Type.TypeKind.Any, true);
-            case Ast.PrimitiveTypeConstantKind.AnyNonNull:
-                return genericFactory(Type.TypeKind.AnyNonNull, false);
-            case Ast.PrimitiveTypeConstantKind.Binary:
-                return genericFactory(Type.TypeKind.Binary, false);
-            case Ast.PrimitiveTypeConstantKind.Date:
-                return genericFactory(Type.TypeKind.Date, false);
-            case Ast.PrimitiveTypeConstantKind.DateTime:
-                return genericFactory(Type.TypeKind.DateTime, false);
-            case Ast.PrimitiveTypeConstantKind.DateTimeZone:
-                return genericFactory(Type.TypeKind.DateTimeZone, false);
-            case Ast.PrimitiveTypeConstantKind.Duration:
-                return genericFactory(Type.TypeKind.Duration, false);
-            case Ast.PrimitiveTypeConstantKind.Function:
-                return genericFactory(Type.TypeKind.Function, false);
-            case Ast.PrimitiveTypeConstantKind.List:
-                return genericFactory(Type.TypeKind.List, false);
-            case Ast.PrimitiveTypeConstantKind.Logical:
-                return genericFactory(Type.TypeKind.Logical, false);
-            case Ast.PrimitiveTypeConstantKind.None:
-                return genericFactory(Type.TypeKind.None, false);
-            case Ast.PrimitiveTypeConstantKind.Null:
-                return genericFactory(Type.TypeKind.Null, true);
-            case Ast.PrimitiveTypeConstantKind.Number:
-                return genericFactory(Type.TypeKind.Number, false);
-            case Ast.PrimitiveTypeConstantKind.Record:
-                return genericFactory(Type.TypeKind.Record, false);
-            case Ast.PrimitiveTypeConstantKind.Table:
-                return genericFactory(Type.TypeKind.Table, false);
-            case Ast.PrimitiveTypeConstantKind.Text:
-                return genericFactory(Type.TypeKind.Text, false);
-            case Ast.PrimitiveTypeConstantKind.Time:
-                return genericFactory(Type.TypeKind.Time, false);
-            case Ast.PrimitiveTypeConstantKind.Type:
-                return genericFactory(Type.TypeKind.Type, false);
+    const constant: Ast.TConstant = xorNode.node as Ast.TConstant;
+    switch (constant.constantKind) {
+        case Ast.PrimitiveTypeConstantKind.Action:
+            return genericFactory(Type.TypeKind.Action, false);
+        case Ast.PrimitiveTypeConstantKind.Any:
+            return genericFactory(Type.TypeKind.Any, true);
+        case Ast.PrimitiveTypeConstantKind.AnyNonNull:
+            return genericFactory(Type.TypeKind.AnyNonNull, false);
+        case Ast.PrimitiveTypeConstantKind.Binary:
+            return genericFactory(Type.TypeKind.Binary, false);
+        case Ast.PrimitiveTypeConstantKind.Date:
+            return genericFactory(Type.TypeKind.Date, false);
+        case Ast.PrimitiveTypeConstantKind.DateTime:
+            return genericFactory(Type.TypeKind.DateTime, false);
+        case Ast.PrimitiveTypeConstantKind.DateTimeZone:
+            return genericFactory(Type.TypeKind.DateTimeZone, false);
+        case Ast.PrimitiveTypeConstantKind.Duration:
+            return genericFactory(Type.TypeKind.Duration, false);
+        case Ast.PrimitiveTypeConstantKind.Function:
+            return genericFactory(Type.TypeKind.Function, false);
+        case Ast.PrimitiveTypeConstantKind.List:
+            return genericFactory(Type.TypeKind.List, false);
+        case Ast.PrimitiveTypeConstantKind.Logical:
+            return genericFactory(Type.TypeKind.Logical, false);
+        case Ast.PrimitiveTypeConstantKind.None:
+            return genericFactory(Type.TypeKind.None, false);
+        case Ast.PrimitiveTypeConstantKind.Null:
+            return genericFactory(Type.TypeKind.Null, true);
+        case Ast.PrimitiveTypeConstantKind.Number:
+            return genericFactory(Type.TypeKind.Number, false);
+        case Ast.PrimitiveTypeConstantKind.Record:
+            return genericFactory(Type.TypeKind.Record, false);
+        case Ast.PrimitiveTypeConstantKind.Table:
+            return genericFactory(Type.TypeKind.Table, false);
+        case Ast.PrimitiveTypeConstantKind.Text:
+            return genericFactory(Type.TypeKind.Text, false);
+        case Ast.PrimitiveTypeConstantKind.Time:
+            return genericFactory(Type.TypeKind.Time, false);
+        case Ast.PrimitiveTypeConstantKind.Type:
+            return genericFactory(Type.TypeKind.Type, false);
 
-            default:
-                return unknownFactory();
-        }
+        default:
+            return unknownFactory();
+    }
+}
+
+function translateLiteralExpression(xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.LiteralExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    switch (xorNode.kind) {
+        case XorNodeKind.Ast:
+            // We already checked it's a Ast Literal Expression.
+            const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
+            const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
+                literalKind,
+            );
+            return genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
+
+        case XorNodeKind.Context:
+            return unknownFactory();
+
+        default:
+            throw isNever(xorNode);
     }
 }
 
@@ -355,12 +363,12 @@ function translateUnaryExpression(
     scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
-    if (xorNode.node.kind !== Ast.NodeKind.UnaryExpression) {
-        const details: {} = {
-            actualNodeKind: xorNode.node.kind,
-            expectedNodeKind: Ast.NodeKind.UnaryExpression,
-        };
-        throw new CommonError.InvariantError(`xorNode isn't NodeKind.UnaryExpression`, details);
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.UnaryExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
     }
 
     const maybeOperatorsWrapper:
