@@ -11,8 +11,8 @@ export const enum XorNodeKind {
 
 export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParseContext.Node>;
 
-export interface IXorNode<Kind, T> {
-    readonly kind: Kind & XorNodeKind;
+export interface IXorNode<Kind extends XorNodeKind, T> {
+    readonly kind: Kind;
     readonly node: T;
 }
 

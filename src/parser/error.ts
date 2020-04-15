@@ -6,7 +6,7 @@ import { CommonError, StringUtils } from "../common";
 import { ILocalizationTemplates, Localization } from "../localization";
 import { IParserState } from "./IParserState";
 
-export type TParseError<S = IParserState> = CommonError.CommonError | ParseError<S>;
+export type TParseError<S extends IParserState = IParserState> = CommonError.CommonError | ParseError<S>;
 
 export type TInnerParseError =
     | ExpectedAnyTokenKindError
@@ -29,8 +29,8 @@ export const enum UnterminatedKind {
     Parenthesis = "Parenthesis",
 }
 
-export class ParseError<S = IParserState> extends Error {
-    constructor(readonly innerError: TInnerParseError, readonly state: S & IParserState) {
+export class ParseError<S extends IParserState = IParserState> extends Error {
+    constructor(readonly innerError: TInnerParseError, readonly state: S) {
         super(innerError.message);
     }
 }
@@ -126,7 +126,7 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-export function isTParseError<S = IParserState>(x: any): x is TParseError<S> {
+export function isTParseError<S extends IParserState = IParserState>(x: any): x is TParseError<S> {
     return x instanceof ParseError || x instanceof CommonError.CommonError;
 }
 

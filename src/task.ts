@@ -20,18 +20,21 @@ export interface InspectionOk {
     readonly scopeType: Inspection.ScopeTypeMap;
 }
 
-export type TriedLexParse<S = IParserState> = Result<LexParseOk<S>, LexError.TLexError | ParseError.TParseError<S>>;
+export type TriedLexParse<S extends IParserState = IParserState> = Result<
+    LexParseOk<S>,
+    LexError.TLexError | ParseError.TParseError<S>
+>;
 
-export type TriedLexParseInspect<S = IParserState> = Result<
+export type TriedLexParseInspect<S extends IParserState = IParserState> = Result<
     LexParseInspectOk<S>,
     CommonError.CommonError | LexError.LexError | ParseError.ParseError
 >;
 
-export interface LexParseOk<S = IParserState> extends ParseOk<S> {
+export interface LexParseOk<S extends IParserState = IParserState> extends ParseOk<S> {
     readonly lexerSnapshot: LexerSnapshot;
 }
 
-export interface LexParseInspectOk<S = IParserState> extends InspectionOk {
+export interface LexParseInspectOk<S extends IParserState = IParserState> extends InspectionOk {
     readonly triedParse: TriedParse<S>;
 }
 
@@ -48,13 +51,16 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse<S = IParserState>(settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot): TriedParse<S> {
-    const parser: IParser<S & IParserState> = settings.parser;
-    const parserState: S & IParserState = settings.newParserState(settings, lexerSnapshot);
+export function tryParse<S extends IParserState = IParserState>(
+    settings: ParseSettings<S>,
+    lexerSnapshot: LexerSnapshot,
+): TriedParse<S> {
+    const parser: IParser<S> = settings.parser;
+    const parserState: S = settings.newParserState(settings, lexerSnapshot);
     return parser.readDocument(parserState, parser);
 }
 
-export function tryInspection<S = IParserState>(
+export function tryInspection<S extends IParserState = IParserState>(
     settings: CommonSettings,
     triedParse: TriedParse<S>,
     position: Inspection.Position,
@@ -146,7 +152,7 @@ export function tryInspection<S = IParserState>(
     });
 }
 
-export function tryLexParse<S = IParserState>(
+export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
 ): TriedLexParse<S> {
@@ -167,7 +173,7 @@ export function tryLexParse<S = IParserState>(
     }
 }
 
-export function tryLexParseInspection<S = IParserState>(
+export function tryLexParseInspection<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
@@ -192,11 +198,13 @@ export function tryLexParseInspection<S = IParserState>(
     });
 }
 
-export function maybeTriedParseFromTriedLexParse<S>(triedLexParse: TriedLexParse<S>): undefined | TriedParse<S> {
+export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
+    triedLexParse: TriedLexParse<S>,
+): undefined | TriedParse<S> {
     let ast: Ast.TDocument;
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
-    let state: S & IParserState;
+    let state: S;
 
     if (ResultUtils.isErr(triedLexParse)) {
         if (

@@ -152,8 +152,8 @@ function expectScopeForNodeOk(
     return triedScopeInspection.value;
 }
 
-export function expectParseOkScopeOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+export function expectParseOkScopeOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
 ): ScopeItemByKey {
@@ -161,8 +161,8 @@ export function expectParseOkScopeOk<S = IParserState>(
     return expectScopeForNodeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
 }
 
-export function expectParseErrScopeOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+export function expectParseErrScopeOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
 ): ScopeItemByKey {

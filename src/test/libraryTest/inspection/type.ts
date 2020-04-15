@@ -55,8 +55,8 @@ function expectScopeTypeOk(
     return triedScopeType.value;
 }
 
-function expectParseOkScopeTypeOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+function expectParseOkScopeTypeOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
 ): ScopeTypeMap {

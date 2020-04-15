@@ -22,8 +22,8 @@ export interface FastStateBackup {
 
 // If you have a custom parser + parser state, then you'll have to create your own newState function.
 // See `benchmark.ts` for an example.
-export function newState<S = IParserState>(
-    settings: ParseSettings<S & IParserState>,
+export function newState<S extends IParserState = IParserState>(
+    settings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
 ): IParserState {
     const maybeCurrentToken: Language.Token | undefined = lexerSnapshot.tokens[0];

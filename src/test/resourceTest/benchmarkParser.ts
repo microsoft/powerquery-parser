@@ -285,8 +285,8 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readGeneralizedIdentifierPairedExpression),
 };
 
-export function newBenchmarkState<S = IParserState>(
-    parseSettings: ParseSettings<S & IParserState>,
+export function newBenchmarkState<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
     baseParser: IParser<IParserState>,
 ): BenchmarkState {
@@ -309,7 +309,10 @@ function traceFunction<T>(
     return result;
 }
 
-function functionEntry<S, T>(state: BenchmarkState, fn: (state: S, parser: IParser<S>) => T): number {
+function functionEntry<S extends IParserState, T>(
+    state: BenchmarkState,
+    fn: (state: S, parser: IParser<S>) => T,
+): number {
     const tokenPosition: Language.TokenPosition = state.maybeCurrentToken!.positionStart;
     const id: number = state.functionTimestampCounter;
     state.functionTimestampCounter += 1;

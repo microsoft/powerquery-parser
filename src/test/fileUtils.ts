@@ -43,7 +43,7 @@ export function writeContents(filePath: string, contents: string): void {
     });
 }
 
-export function tryLexParse<S = IParserState>(
+export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     filePath: string,
 ): Task.TriedLexParse<S> {
