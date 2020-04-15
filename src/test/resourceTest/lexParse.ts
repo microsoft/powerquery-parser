@@ -27,7 +27,7 @@ function testNameFromFilePath(filePath: string): string {
     return filePath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles<S>(settings: Settings<S & IParserState>, parserName: string): void {
+function parseAllFiles<S extends IParserState>(settings: Settings<S>, parserName: string): void {
     describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 

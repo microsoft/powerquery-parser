@@ -9,18 +9,26 @@ import { ResultUtils } from "./result";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
 
-export type TVisitNodeFn<State, ResultType, Node, Return> = (state: State & IState<ResultType>, node: Node) => Return;
+export type TVisitNodeFn<State extends IState<ResultType>, ResultType, Node, Return> = (
+    state: State,
+    node: Node,
+) => Return;
 
-export type TVisitChildNodeFn<State, ResultType, Node, Return> = (
-    state: State & IState<ResultType>,
+export type TVisitChildNodeFn<State extends IState<ResultType>, ResultType, Node, Return> = (
+    state: State,
     parent: Node,
     node: Node,
 ) => Return;
 
-export type TEarlyExitFn<State, ResultType, Node> = TVisitNodeFn<State, ResultType, Node, boolean>;
+export type TEarlyExitFn<State extends IState<ResultType>, ResultType, Node> = TVisitNodeFn<
+    State,
+    ResultType,
+    Node,
+    boolean
+>;
 
-export type TExpandNodesFn<State, ResultType, Node, NodesById> = (
-    state: State & IState<ResultType>,
+export type TExpandNodesFn<State extends IState<ResultType>, ResultType, Node, NodesById> = (
+    state: State,
     node: Node,
     collection: NodesById,
 ) => ReadonlyArray<Node>;
@@ -36,8 +44,8 @@ export interface IState<T> {
 }
 
 // sets Node and NodesById for tryTraverse
-export function tryTraverseAst<State, ResultType>(
-    state: State & IState<ResultType>,
+export function tryTraverseAst<State extends IState<ResultType>, ResultType>(
+    state: State,
     nodeIdMapCollection: NodeIdMap.Collection,
     root: Ast.TNode,
     strategy: VisitNodeStrategy,
@@ -57,8 +65,8 @@ export function tryTraverseAst<State, ResultType>(
 }
 
 // sets Node and NodesById for tryTraverse
-export function tryTraverseXor<State, ResultType>(
-    state: State & IState<ResultType>,
+export function tryTraverseXor<State extends IState<ResultType>, ResultType>(
+    state: State,
     nodeIdMapCollection: NodeIdMap.Collection,
     root: TXorNode,
     strategy: VisitNodeStrategy,
@@ -77,8 +85,8 @@ export function tryTraverseXor<State, ResultType>(
     );
 }
 
-export function tryTraverse<State, ResultType, Node, NodesById>(
-    state: State & IState<ResultType>,
+export function tryTraverse<State extends IState<ResultType>, ResultType, Node, NodesById>(
+    state: State,
     nodesById: NodesById,
     root: Node,
     strategy: VisitNodeStrategy,
@@ -101,8 +109,8 @@ export function tryTraverse<State, ResultType, Node, NodesById>(
 }
 
 // a TExpandNodesFn usable by tryTraverseAst which visits all nodes.
-export function expectExpandAllAstChildren<State, ResultType>(
-    _state: State & IState<ResultType>,
+export function expectExpandAllAstChildren<State extends IState<ResultType>, ResultType>(
+    _state: State,
     astNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<Ast.TNode> {
@@ -117,8 +125,8 @@ export function expectExpandAllAstChildren<State, ResultType>(
 }
 
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
-export function expectExpandAllXorChildren<State, ResultType>(
-    _state: State & IState<ResultType>,
+export function expectExpandAllXorChildren<State extends IState<ResultType>, ResultType>(
+    _state: State,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<TXorNode> {
@@ -189,8 +197,8 @@ export function maybeExpandXorParent<T>(
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 
-function traverseRecursion<State, ResultType, Node, NodesById>(
-    state: State & IState<ResultType>,
+function traverseRecursion<State extends IState<ResultType>, ResultType, Node, NodesById>(
+    state: State,
     nodesById: NodesById,
     node: Node,
     strategy: VisitNodeStrategy,

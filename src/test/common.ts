@@ -29,8 +29,8 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
     return [text.replace("|", ""), position];
 }
 
-export function expectLexParseOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+export function expectLexParseOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
 ): Task.LexParseOk<S & IParserState> {
     const triedLexParse: Task.TriedLexParse<S & IParserState> = Task.tryLexParse(settings, text);
@@ -40,8 +40,8 @@ export function expectLexParseOk<S = IParserState>(
     return triedLexParse.value;
 }
 
-export function expectParseErr<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+export function expectParseErr<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
 ): ParseError.ParseError<S & IParserState> {
     const triedParse: TriedParse<S & IParserState> = expectTriedParse(settings, text);
@@ -56,8 +56,8 @@ export function expectParseErr<S = IParserState>(
     return triedParse.error;
 }
 
-export function expectParseOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+export function expectParseOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
 ): ParseOk<S & IParserState> {
     const triedParse: TriedParse<S & IParserState> = expectTriedParse(settings, text);
@@ -69,8 +69,8 @@ export function expectParseOk<S = IParserState>(
 
 // I only care about errors coming from the parse stage.
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
-function expectTriedParse<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+function expectTriedParse<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
 ): TriedParse<S & IParserState> {
     const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
@@ -85,6 +85,6 @@ function expectTriedParse<S = IParserState>(
     }
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    const parserState: S & IParserState = settings.newParserState(settings, lexerSnapshot);
+    const parserState: S = settings.newParserState(settings, lexerSnapshot);
     return settings.parser.readDocument(parserState, settings.parser);
 }

@@ -302,10 +302,10 @@ function readTextLiteral(
     }
 }
 
-function collectWhileContent<KindVariant>(
+function collectWhileContent<KindVariant extends Language.LineTokenKind>(
     flatTokens: ReadonlyArray<FlatLineToken>,
     tokenStart: FlatLineToken,
-    contentKind: KindVariant & Language.LineTokenKind,
+    contentKind: KindVariant,
 ): FlatLineCollection {
     const collectedTokens: FlatLineToken[] = [];
     const numTokens: number = flatTokens.length;

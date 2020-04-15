@@ -287,7 +287,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
     }
 }
 
-function inspectKeyValuePairs<T>(
+function inspectKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>(
     state: ScopeInspectionState,
     parentScope: ScopeItemByKey,
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<T>>,
