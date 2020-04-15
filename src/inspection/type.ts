@@ -113,6 +113,10 @@ function translateXorNode(
             result = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
             break;
 
+        case Ast.NodeKind.IfExpression:
+            result = translateIfExpression(nodeIdMapCollection, scopeTypeMap, xorNode);
+            break;
+
         case Ast.NodeKind.ListExpression:
             result = genericFactory(Type.TypeKind.List, false);
             break;
@@ -330,6 +334,35 @@ function translateConstant(xorNode: TXorNode): Type.TType {
         default:
             return unknownFactory();
     }
+}
+
+function translateIfExpression(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    scopeTypeMap: ScopeTypeCacheMap,
+    xorNode: TXorNode,
+): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.IfExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const conditionType: Type.TType = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
+    // Ensure unions are unions of only logicals
+    if (conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+        if (!recursiveAnyUnionCheck(conditionType, (type: Type.TType) => type.kind === Type.TypeKind.Logical)) {
+            return noneFactory();
+        }
+    } else if (conditionType.kind !== Type.TypeKind.Logical) {
+        return noneFactory();
+    }
+
+    const trueExprType: Type.TType = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 3);
+    const falseExprType: Type.TType = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 5);
+
+    return anyUnionFactory([trueExprType, falseExprType]);
 }
 
 function translateLiteralExpression(xorNode: TXorNode): Type.TType {
@@ -636,4 +669,16 @@ function translateTableOrRecordUnion(leftType: Type.TType, rightType: Type.TType
     } else {
         throw new Error("TODO");
     }
+}
+
+function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, fn: (type: Type.TType) => boolean): boolean {
+    return (
+        anyUnion.unionedTypePairs
+            .map((type: Type.TType) => {
+                return type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
+                    ? recursiveAnyUnionCheck(type, fn)
+                    : fn(type);
+            })
+            .indexOf(false) === -1
+    );
 }

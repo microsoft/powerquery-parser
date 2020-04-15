@@ -16,14 +16,14 @@ export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: 
 
 // Only works with single line expressions
 export function expectTextWithPosition(text: string): [string, Inspection.Position] {
-    const indexOfBar: number = text.indexOf("|");
+    const indexOfPipe: number = text.indexOf("|");
 
-    expect(indexOfBar).to.be.greaterThan(-1, "text must have | marker");
-    expect(indexOfBar).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
+    expect(indexOfPipe).to.be.greaterThan(-1, "text must have | marker");
+    expect(indexOfPipe).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
 
     const position: Inspection.Position = {
         lineNumber: 0,
-        lineCodeUnit: indexOfBar,
+        lineCodeUnit: indexOfPipe,
     };
 
     return [text.replace("|", ""), position];
@@ -32,8 +32,8 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 export function expectLexParseOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-): Task.LexParseOk<S> {
-    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
+): Task.LexParseOk<S & IParserState> {
+    const triedLexParse: Task.TriedLexParse<S & IParserState> = Task.tryLexParse(settings, text);
     if (!ResultUtils.isOk(triedLexParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }
@@ -43,8 +43,8 @@ export function expectLexParseOk<S = IParserState>(
 export function expectParseErr<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-): ParseError.ParseError<S> {
-    const triedParse: TriedParse<S> = expectTriedParse(settings, text);
+): ParseError.ParseError<S & IParserState> {
+    const triedParse: TriedParse<S & IParserState> = expectTriedParse(settings, text);
     if (!ResultUtils.isErr(triedParse)) {
         throw new Error(`AssertFailed: ResultUtils.Err(triedParse)`);
     }
@@ -59,8 +59,8 @@ export function expectParseErr<S = IParserState>(
 export function expectParseOk<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-): ParseOk<S> {
-    const triedParse: TriedParse<S> = expectTriedParse(settings, text);
+): ParseOk<S & IParserState> {
+    const triedParse: TriedParse<S & IParserState> = expectTriedParse(settings, text);
     if (!ResultUtils.isOk(triedParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedParse): ${triedParse.error.message}`);
     }
@@ -72,7 +72,7 @@ export function expectParseOk<S = IParserState>(
 function expectTriedParse<S = IParserState>(
     settings: LexSettings & ParseSettings<S & IParserState>,
     text: string,
-): TriedParse<S> {
+): TriedParse<S & IParserState> {
     const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {

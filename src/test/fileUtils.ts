@@ -44,7 +44,7 @@ export function writeContents(filePath: string, contents: string): void {
 }
 
 export function tryLexParse<S = IParserState>(
-    settings: LexSettings & ParseSettings<S>,
+    settings: LexSettings & ParseSettings<S & IParserState>,
     filePath: string,
 ): Task.TriedLexParse<S> {
     const contents: string = readContents(filePath);

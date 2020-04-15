@@ -1,7 +1,7 @@
 import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../common";
-import { IParser, Parser } from "../../parser";
+import { IParser, IParserState, Parser } from "../../parser";
 import { DefaultSettings, Settings } from "../../settings";
 
 import * as path from "path";
@@ -27,7 +27,7 @@ function testNameFromFilePath(filePath: string): string {
     return filePath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles<S>(settings: Settings<S>, parserName: string): void {
+function parseAllFiles<S>(settings: Settings<S & IParserState>, parserName: string): void {
     describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 
@@ -35,7 +35,7 @@ function parseAllFiles<S>(settings: Settings<S>, parserName: string): void {
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: Task.TriedLexParse<S> = FileUtils.tryLexParse(settings, filePath);
+                const triedLexParse: Task.TriedLexParse<S & IParserState> = FileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }
