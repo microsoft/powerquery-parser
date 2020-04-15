@@ -19,7 +19,7 @@ export const StartOfDoctumentKeywords: ReadonlyArray<Language.KeywordKind> = [
     Language.KeywordKind.Section,
 ];
 
-export function tryAutocomplete<S = IParserState>(
+export function tryAutocomplete<S extends IParserState = IParserState>(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: ActiveNode | undefined,
@@ -33,7 +33,7 @@ export function tryAutocomplete<S = IParserState>(
     );
 }
 
-function inspectAutocomplete<S>(
+function inspectAutocomplete<S extends IParserState = IParserState>(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
     maybeParseError: ParseError.ParseError<S> | undefined,
