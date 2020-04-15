@@ -2217,15 +2217,20 @@ function readKeyValuePair<S extends IParserState, Kind, Key, Value>(
     return keyValuePair;
 }
 
-function readPairedConstant<S extends IParserState, Kind, ConstantKind, Paired>(
+function readPairedConstant<
+    S extends IParserState,
+    Kind extends Ast.TPairedConstantNodeKind,
+    ConstantKind extends Ast.TConstantKind,
+    Paired
+>(
     state: S,
-    nodeKind: Kind & Ast.TPairedConstantNodeKind,
-    constantReader: () => Ast.TConstant & Ast.IConstant<Ast.TConstantKind & ConstantKind>,
+    nodeKind: Kind,
+    constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
     pairedReader: () => Paired,
 ): Ast.IPairedConstant<Kind, ConstantKind, Paired> {
     IParserStateUtils.startContext(state, nodeKind);
 
-    const constant: Ast.TConstant & Ast.IConstant<Ast.TConstantKind & ConstantKind> = constantReader();
+    const constant: Ast.TConstant & Ast.IConstant<ConstantKind> = constantReader();
     const paired: Paired = pairedReader();
 
     const pairedConstant: Ast.IPairedConstant<Kind, ConstantKind, Paired> = {
@@ -2241,11 +2246,16 @@ function readPairedConstant<S extends IParserState, Kind, ConstantKind, Paired>(
     return pairedConstant;
 }
 
-function maybeReadPairedConstant<S extends IParserState, Kind, ConstantKind, Paired>(
+function maybeReadPairedConstant<
+    S extends IParserState,
+    Kind extends Ast.TPairedConstantNodeKind,
+    ConstantKind extends Ast.TConstantKind,
+    Paired
+>(
     state: S,
-    nodeKind: Kind & Ast.TPairedConstantNodeKind,
+    nodeKind: Kind,
     condition: () => boolean,
-    constantReader: () => Ast.TConstant & Ast.IConstant<Ast.TConstantKind & ConstantKind>,
+    constantReader: () => Ast.TConstant & Ast.IConstant<ConstantKind>,
     pairedReader: () => Paired,
 ): Ast.IPairedConstant<Kind, ConstantKind, Paired> | undefined {
     if (condition()) {
