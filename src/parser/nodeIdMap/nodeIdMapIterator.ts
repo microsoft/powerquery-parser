@@ -5,9 +5,9 @@ import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from ".";
 import { CommonError, isNever, MapUtils } from "../../common";
 import { Ast } from "../../language";
 
-export interface KeyValuePair<T> {
+export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly source: TXorNode;
-    readonly key: T & (Ast.GeneralizedIdentifier | Ast.Identifier);
+    readonly key: T;
     readonly keyLiteral: string;
     readonly maybeValue: undefined | TXorNode;
 }
@@ -215,11 +215,11 @@ export function sectionMemberKeyValuePairs(
     return partial;
 }
 
-export function keyValuePairs<T>(
+export function keyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>(
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
 ): ReadonlyArray<KeyValuePair<T>> {
-    const partial: KeyValuePair<T & (Ast.GeneralizedIdentifier | Ast.Identifier)>[] = [];
+    const partial: KeyValuePair<T>[] = [];
     for (const keyValuePair of arrayWrapperCsvXorNodes(nodeIdMapCollection, arrayWrapper)) {
         const maybeKey: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
             nodeIdMapCollection,
@@ -230,8 +230,7 @@ export function keyValuePairs<T>(
         if (maybeKey === undefined) {
             break;
         }
-        const key: T & (Ast.GeneralizedIdentifier | Ast.Identifier) = maybeKey as T &
-            (Ast.GeneralizedIdentifier | Ast.Identifier);
+        const key: T = maybeKey as T & (Ast.GeneralizedIdentifier | Ast.Identifier);
 
         partial.push({
             source: keyValuePair,

@@ -20,7 +20,12 @@ type TriedReadPrimitiveType = Result<
     ParseError.ExpectedAnyTokenKindError | ParseError.InvalidPrimitiveTypeError | CommonError.InvariantError
 >;
 
-interface WrappedRead<Kind, Open, Content, Close> extends Ast.IWrapped<Kind, Open, Content, Close> {
+interface WrappedRead<
+    Kind extends Ast.TWrappedNodeKind,
+    Open extends Ast.WrapperConstantKind,
+    Content,
+    Close extends Ast.WrapperConstantKind
+> extends Ast.IWrapped<Kind, Open, Content, Close> {
     readonly maybeOptionalConstant: Ast.IConstant<Ast.MiscConstantKind.QuestionMark> | undefined;
 }
 
@@ -2371,7 +2376,13 @@ function genericReadParameterList<S extends IParserState, T extends Ast.TParamet
     return astNode;
 }
 
-function readWrapped<S extends IParserState, Kind extends Ast.TWrappedNodeKind, Open, Content, Close>(
+function readWrapped<
+    S extends IParserState,
+    Kind extends Ast.TWrappedNodeKind,
+    Open extends Ast.WrapperConstantKind,
+    Content,
+    Close extends Ast.WrapperConstantKind
+>(
     state: S,
     nodeKind: Kind,
     openConstantReader: () => Ast.IConstant<Open>,

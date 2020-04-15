@@ -572,7 +572,7 @@ export interface IArrayWrapper<T> extends INode {
     readonly elements: ReadonlyArray<T>;
 }
 
-export interface ICsvArray<T> extends IArrayWrapper<ICsv<T & TCsvType>> {}
+export interface ICsvArray<T extends TCsvType> extends IArrayWrapper<ICsv<T>> {}
 
 export interface ICsv<T> extends INode {
     readonly kind: NodeKind.Csv;
@@ -580,8 +580,8 @@ export interface ICsv<T> extends INode {
     readonly maybeCommaConstant: IConstant<MiscConstantKind.Comma> | undefined;
 }
 
-export interface IKeyValuePair<Kind, Key, Value> extends INode {
-    readonly kind: Kind & TKeyValuePairNodeKind;
+export interface IKeyValuePair<Kind extends TKeyValuePairNodeKind, Key, Value> extends INode {
+    readonly kind: Kind;
     readonly key: Key;
     readonly equalConstant: IConstant<MiscConstantKind.Equal>;
     readonly value: Value;
@@ -589,26 +589,32 @@ export interface IKeyValuePair<Kind, Key, Value> extends INode {
 
 // A [Constant, T] tuple
 // eg. EachExpression is a `each` Constant paired with a TExpression
-export interface IPairedConstant<Kind, ConstantKind, Paired> extends INode {
-    readonly kind: Kind & TPairedConstantNodeKind;
+export interface IPairedConstant<Kind extends TPairedConstantNodeKind, ConstantKind extends TConstantKind, Paired>
+    extends INode {
+    readonly kind: Kind;
     readonly constant: IConstant<ConstantKind>;
     readonly paired: Paired;
 }
 
-export interface IWrapped<Kind, Open, Content, Close> extends INode {
-    readonly kind: Kind & TWrappedNodeKind;
+export interface IWrapped<
+    Kind extends TWrappedNodeKind,
+    Open extends WrapperConstantKind,
+    Content,
+    Close extends WrapperConstantKind
+> extends INode {
+    readonly kind: Kind;
     readonly openWrapperConstant: IConstant<Open>;
     readonly content: Content;
     readonly closeWrapperConstant: IConstant<Close>;
 }
 
-export interface IBraceWrapped<Kind, Content>
+export interface IBraceWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<Kind, WrapperConstantKind.LeftBrace, Content, WrapperConstantKind.RightBrace> {}
 
-export interface IBracketWrapped<Kind, Content>
+export interface IBracketWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<Kind, WrapperConstantKind.LeftBracket, Content, WrapperConstantKind.RightBracket> {}
 
-export interface IParenthesisWrapped<Kind, Content>
+export interface IParenthesisWrapped<Kind extends TWrappedNodeKind, Content>
     extends IWrapped<Kind, WrapperConstantKind.LeftParenthesis, Content, WrapperConstantKind.RightParenthesis> {}
 
 // --------------------------------------
@@ -640,8 +646,13 @@ export type TBinOpExpressionSubtype =
     | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, KeywordConstantKind.As, TNullablePrimitiveType>
     | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, KeywordConstantKind.Is, TNullablePrimitiveType>;
 
-export interface IBinOpExpression<Kind, Left, OperatorKind, Right> extends INode {
-    readonly kind: Kind & TBinOpExpressionNodeKind;
+export interface IBinOpExpression<
+    Kind extends TBinOpExpressionNodeKind,
+    Left,
+    OperatorKind extends TBinOpExpressionOperator,
+    Right
+> extends INode {
+    readonly kind: Kind;
     readonly left: Left;
     readonly operatorConstant: IConstant<OperatorKind>;
     readonly right:
@@ -708,15 +719,15 @@ export interface IdentifierPairedExpression
 
 export type TParameterType = AsType | AsNullablePrimitiveType | undefined;
 
-export interface IParameterList<T>
-    extends IParenthesisWrapped<NodeKind.ParameterList, ICsvArray<IParameter<T & TParameterType>>> {}
+export interface IParameterList<T extends TParameterType>
+    extends IParenthesisWrapped<NodeKind.ParameterList, ICsvArray<IParameter<T>>> {}
 
-export interface IParameter<T> extends INode {
+export interface IParameter<T extends TParameterType> extends INode {
     readonly kind: NodeKind.Parameter;
     readonly isLeaf: false;
     readonly maybeOptionalConstant: IConstant<IdentifierConstantKind.Optional> | undefined;
     readonly name: Identifier;
-    readonly maybeParameterType: T & TParameterType;
+    readonly maybeParameterType: T;
 }
 
 export interface AsNullablePrimitiveType
@@ -740,10 +751,10 @@ export type TConstantKind =
     | UnaryOperatorKind
     | WrapperConstantKind;
 
-export interface IConstant<C> extends INode {
+export interface IConstant<ConstantKind extends TConstantKind> extends INode {
     readonly kind: NodeKind.Constant;
     readonly isLeaf: true;
-    readonly constantKind: C & TConstantKind;
+    readonly constantKind: ConstantKind;
 }
 
 export type TConstant = IConstant<TConstantKind>;
