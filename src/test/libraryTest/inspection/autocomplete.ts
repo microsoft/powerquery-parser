@@ -12,7 +12,7 @@ import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
-function expectAutocompleteOk<S>(
+function expectAutocompleteOk<S extends IParserState>(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -40,8 +40,8 @@ function expectAutocompleteOk<S>(
     return triedInspect.value;
 }
 
-function expectParseOkAutocompleteOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+function expectParseOkAutocompleteOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
 ): ReadonlyArray<Language.KeywordKind> {
@@ -49,8 +49,8 @@ function expectParseOkAutocompleteOk<S = IParserState>(
     return expectAutocompleteOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position, undefined);
 }
 
-function expectParseErrAutocompleteOk<S = IParserState>(
-    settings: LexSettings & ParseSettings<S & IParserState>,
+function expectParseErrAutocompleteOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
 ): ReadonlyArray<Language.KeywordKind> {

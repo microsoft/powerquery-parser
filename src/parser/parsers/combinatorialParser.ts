@@ -57,9 +57,9 @@ export let CombinatorialParser: IParser<IParserState> = {
     readUnaryExpression,
 };
 
-function readBinOpExpression<S = IParserState>(
-    state: S & IParserState,
-    parser: IParser<S & IParserState>,
+function readBinOpExpression<S extends IParserState = IParserState>(
+    state: S,
+    parser: IParser<S>,
     nodeKind: Ast.NodeKind,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
     IParserStateUtils.startContext(state, nodeKind);

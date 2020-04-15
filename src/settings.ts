@@ -12,12 +12,12 @@ export interface CommonSettings {
 // tslint:disable-next-line: no-empty-interface
 export interface LexSettings extends CommonSettings {}
 
-export interface ParseSettings<S = IParserState> extends CommonSettings {
-    readonly parser: IParser<S & IParserState>;
-    readonly newParserState: (parseSettings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S & IParserState;
+export interface ParseSettings<S extends IParserState = IParserState> extends CommonSettings {
+    readonly parser: IParser<S>;
+    readonly newParserState: (parseSettings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S;
 }
 
-export type Settings<S = IParserState> = LexSettings & ParseSettings<S>;
+export type Settings<S extends IParserState = IParserState> = LexSettings & ParseSettings<S>;
 
 export const DefaultSettings: Settings = {
     parser: Parser.CombinatorialParser,
