@@ -12,7 +12,7 @@ import { CommonSettings, DefaultSettings } from "../../../settings";
 import { Type } from "../../../type";
 import { expectDeepEqual, expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
-type AbridgedScopeType = ReadonlyArray<[string, Type.TType] | undefined>;
+type AbridgedScopeType = Type.TType;
 
 function expectScopeTypeOk(
     settings: CommonSettings,
@@ -49,8 +49,13 @@ function expectScopeTypeOk(
     return triedScopeType.value;
 }
 
-function actualFactoryFn(inspected: ScopeTypeMap): AbridgedScopeType {
-    return [...inspected.entries()].sort();
+function actualFactoryFn(inspected: ScopeTypeMap): Type.TType {
+    const maybeDebug: undefined | Type.TType = inspected.get("__debug");
+    if (!(maybeDebug !== undefined)) {
+        throw new Error(`AssertFailed: maybeDebug !== undefined`);
+    }
+
+    return maybeDebug;
 }
 
 function wrapExpression(expression: string): string {
@@ -91,16 +96,11 @@ function expectTypeOk(
 }
 
 function expectSimpleExpressionType(expression: string, kind: Type.TypeKind, isNullable: boolean): void {
-    const expected: AbridgedScopeType = [
-        [
-            "__ignore",
-            {
-                kind,
-                maybeExtendedKind: undefined,
-                isNullable,
-            },
-        ],
-    ];
+    const expected: Type.TType = {
+        kind,
+        maybeExtendedKind: undefined,
+        isNullable,
+    };
     expectParseOkTypeOk(expression, expected);
 }
 
@@ -152,46 +152,55 @@ describe(`Inspection - Scope - Type`, () => {
     describe(`WIP ${Ast.NodeKind.IfExpression}`, () => {
         it(`if true then 1 else false`, () => {
             const expression: string = `if true then 1 else false`;
-            const expected: AbridgedScopeType = [
-                [
-                    "__ignore",
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [
                     {
-                        kind: Type.TypeKind.Any,
-                        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                        kind: Type.TypeKind.Number,
+                        maybeExtendedKind: undefined,
                         isNullable: false,
-                        unionedTypePairs: [
-                            {
-                                kind: Type.TypeKind.Number,
-                                maybeExtendedKind: undefined,
-                                isNullable: false,
-                            },
-                            {
-                                kind: Type.TypeKind.Logical,
-                                maybeExtendedKind: undefined,
-                                isNullable: false,
-                            },
-                        ],
+                    },
+                    {
+                        kind: Type.TypeKind.Logical,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
                     },
                 ],
-            ];
+            };
             expectParseOkTypeOk(expression, expected);
         });
 
         it(`if if true then true else false then 1 else 0`, () => {
-            const expression: string = `if if true then true else false then 1 else 0`;
-            const expected: AbridgedScopeType = [];
+            const expression: string = `if if true then true else false then 1 else ""`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [],
+            };
             expectParseOkTypeOk(expression, expected);
         });
 
         it(`if`, () => {
             const expression: string = `if`;
-            const expected: AbridgedScopeType = [];
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.None,
+                maybeExtendedKind: undefined,
+                isNullable: false,
+            };
             expectParseErrTypeOk(expression, expected);
         });
 
         it(`if true then 1`, () => {
             const expression: string = `if true then 1`;
-            const expected: AbridgedScopeType = [];
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [],
+            };
             expectParseErrTypeOk(expression, expected);
         });
     });
