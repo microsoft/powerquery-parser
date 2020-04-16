@@ -59,7 +59,7 @@ function actualFactoryFn(inspected: ScopeTypeMap): Type.TType {
 }
 
 function wrapExpression(expression: string): string {
-    return `let __ignore = ${expression} in |_`;
+    return `let __debug = ${expression} in |_`;
 }
 
 function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
@@ -178,7 +178,18 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Any,
                 maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
                 isNullable: false,
-                unionedTypePairs: [],
+                unionedTypePairs: [
+                    {
+                        kind: Type.TypeKind.Number,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    },
+                    {
+                        kind: Type.TypeKind.Text,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    },
+                ],
             };
             expectParseOkTypeOk(expression, expected);
         });
