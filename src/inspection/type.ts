@@ -188,7 +188,7 @@ function translateFromChildAttributeIndex(
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
-    const maybeXorNode: TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+    const maybeXorNode: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,

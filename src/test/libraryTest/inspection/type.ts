@@ -50,16 +50,16 @@ function expectScopeTypeOk(
 }
 
 function actualFactoryFn(inspected: ScopeTypeMap): Type.TType {
-    const maybeDebug: undefined | Type.TType = inspected.get("__debug");
-    if (!(maybeDebug !== undefined)) {
-        throw new Error(`AssertFailed: maybeDebug !== undefined`);
+    const maybeBar: undefined | Type.TType = inspected.get("__bar");
+    if (!(maybeBar !== undefined)) {
+        throw new Error(`AssertFailed: maybebar !== undefined`);
     }
 
-    return maybeDebug;
+    return maybeBar;
 }
 
 function wrapExpression(expression: string): string {
-    return `let __debug = ${expression} in |_`;
+    return `let __foo = |__bar, __bar = ${expression} in _`;
 }
 
 function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
@@ -210,7 +210,18 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Any,
                 maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
                 isNullable: false,
-                unionedTypePairs: [],
+                unionedTypePairs: [
+                    {
+                        kind: Type.TypeKind.Number,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    },
+                    {
+                        kind: Type.TypeKind.Unknown,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    },
+                ],
             };
             expectParseErrTypeOk(expression, expected);
         });
