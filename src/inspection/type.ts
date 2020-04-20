@@ -353,7 +353,7 @@ function translateIfExpression(
     // Ensure unions are unions of only logicals
     if (conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
         if (!recursiveAnyUnionCheck(conditionType, (type: Type.TType) => type.kind === Type.TypeKind.Logical)) {
-            return noneFactory();
+            return unknownFactory();
         }
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
         return noneFactory();
@@ -671,13 +671,16 @@ function translateTableOrRecordUnion(leftType: Type.TType, rightType: Type.TType
     }
 }
 
-function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, fn: (type: Type.TType) => boolean): boolean {
+// recursively flattens all AnyUnion.unionedTypePairs into a single array,
+// maps each entry into a boolean,
+// then calls any(...) on the mapped values.
+function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType) => boolean): boolean {
     return (
         anyUnion.unionedTypePairs
             .map((type: Type.TType) => {
                 return type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
-                    ? recursiveAnyUnionCheck(type, fn)
-                    : fn(type);
+                    ? recursiveAnyUnionCheck(type, conditionFn)
+                    : conditionFn(type);
             })
             .indexOf(false) === -1
     );
