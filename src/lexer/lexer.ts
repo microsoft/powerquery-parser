@@ -944,11 +944,7 @@ function readKeyword(
 function maybeReadKeyword(text: string, currentPosition: number): Language.LineToken | undefined {
     const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
 
-    const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfRegexEnd(
-        Pattern.RegExpIdentifier,
-        text,
-        identifierPositionStart,
-    );
+    const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, identifierPositionStart);
     if (maybeIdentifierPositionEnd === undefined) {
         return undefined;
     }
@@ -999,11 +995,7 @@ function readKeywordOrIdentifier(
     }
     // either keyword or identifier
     else {
-        const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(
-            Pattern.RegExpIdentifier,
-            text,
-            positionStart,
-        );
+        const maybePositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, positionStart);
         if (maybePositionEnd === undefined) {
             throw new LexError.ExpectedError(
                 localizationTemplates,
@@ -1068,6 +1060,11 @@ function readRestOfLine(
 
 function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
     const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
+    return maybeLength !== undefined ? positionStart + maybeLength : undefined;
+}
+
+function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
+    const maybeLength: number | undefined = StringUtils.maybeIdentifierLength(text, positionStart);
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 
