@@ -842,11 +842,7 @@ function drainWhitespace(text: string, position: number): number {
     let continueDraining: boolean = text[position] !== undefined;
 
     while (continueDraining) {
-        const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(
-            Pattern.RegExpWhitespace,
-            text,
-            position,
-        );
+        const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(Pattern.Whitespace, text, position);
         if (maybeLength) {
             position += maybeLength;
         } else {
@@ -879,7 +875,7 @@ function readHexLiteral(
     lineNumber: number,
     positionStart: number,
 ): Language.LineToken {
-    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.RegExpHex, text, positionStart);
+    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Hex, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             localizationTemplates,
@@ -898,7 +894,7 @@ function readNumericLiteral(
     lineNumber: number,
     positionStart: number,
 ): Language.LineToken {
-    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.RegExpNumeric, text, positionStart);
+    const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Numeric, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
             localizationTemplates,
@@ -948,11 +944,7 @@ function readKeyword(
 function maybeReadKeyword(text: string, currentPosition: number): Language.LineToken | undefined {
     const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
 
-    const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfRegexEnd(
-        Pattern.RegExpIdentifier,
-        text,
-        identifierPositionStart,
-    );
+    const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, identifierPositionStart);
     if (maybeIdentifierPositionEnd === undefined) {
         return undefined;
     }
@@ -1003,11 +995,7 @@ function readKeywordOrIdentifier(
     }
     // either keyword or identifier
     else {
-        const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(
-            Pattern.RegExpIdentifier,
-            text,
-            positionStart,
-        );
+        const maybePositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, positionStart);
         if (maybePositionEnd === undefined) {
             throw new LexError.ExpectedError(
                 localizationTemplates,
@@ -1072,6 +1060,11 @@ function readRestOfLine(
 
 function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: number): number | undefined {
     const maybeLength: number | undefined = StringUtils.maybeRegexMatchLength(pattern, text, positionStart);
+    return maybeLength !== undefined ? positionStart + maybeLength : undefined;
+}
+
+function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
+    const maybeLength: number | undefined = StringUtils.maybeIdentifierLength(text, positionStart);
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 

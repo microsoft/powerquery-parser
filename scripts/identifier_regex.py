@@ -56,10 +56,7 @@ def classes_2_regex(*args):
 
 def int_2_javascript_hex_literal(i):
     without_prefix = hex(i).replace("0x", "").zfill(4)
-    if len(without_prefix) >= 5:
-        return "\\u{" + without_prefix + "}"
-    else:
-        return "\\u" + without_prefix
+    return "\\u{" + without_prefix + "}"
 
 letter_character_classes = [
     letter_uppercase_class,
@@ -87,24 +84,8 @@ identifier_part_classes = [
 letter_character_regex = classes_2_regex(*letter_character_classes)
 
 identifier_start_regex = letter_character_regex + "{}".format(int_2_javascript_hex_literal(ord("_")))
-
 identifier_part_regex = classes_2_regex(*identifier_part_classes)
 
-keyword_or_identifier_regex = "".join([
-    "("
-        "[{}]".format(identifier_start_regex),
-        "[{}]*".format(identifier_part_regex),
-    ")",
-])
-
-regular_identifier_regex = "".join([
-    "(",
-        "{}".format(keyword_or_identifier_regex),
-        "(",
-            "\\\\.",
-            "{}".format(keyword_or_identifier_regex),
-        ")*",
-    ")",
-])
-
-print(regular_identifier_regex)
+# stdout these as needed to get the components of an identifier
+# print(identifier_start_regex)
+# print(identifier_part_regex)

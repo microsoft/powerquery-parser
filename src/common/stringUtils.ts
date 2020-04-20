@@ -3,7 +3,7 @@
 
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
-import { CommonError } from ".";
+import { CommonError, Pattern } from ".";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
@@ -63,6 +63,42 @@ export function maybeRegexMatchLength(pattern: RegExp, text: string, index: numb
     } else {
         return matches[0].length;
     }
+}
+
+export function maybeIdentifierLength(text: string, index: number): number | undefined {
+    const startingIndex: number = index;
+    let continueMatching: boolean = true;
+    let isOnStartCharacter: boolean = true;
+
+    const textLength: number = text.length;
+
+    while (continueMatching) {
+        const maybeMatchLength: undefined | number = maybeRegexMatchLength(
+            isOnStartCharacter ? Pattern.IdentifierStartCharacter : Pattern.IdentifierPartCharacters,
+            text,
+            index,
+        );
+
+        if (maybeMatchLength === undefined) {
+            continueMatching = false;
+            continue;
+        }
+
+        index += maybeMatchLength;
+
+        if (text[index] === ".") {
+            isOnStartCharacter = true;
+            index += 1;
+        } else {
+            isOnStartCharacter = false;
+        }
+
+        if (index >= textLength) {
+            continueMatching = false;
+        }
+    }
+
+    return index !== startingIndex ? index - startingIndex : undefined;
 }
 
 export function maybeNewlineKindAt(text: string, index: number): NewlineKind | undefined {
