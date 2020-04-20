@@ -32,8 +32,8 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 export function expectLexParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-): Task.LexParseOk<S & IParserState> {
-    const triedLexParse: Task.TriedLexParse<S & IParserState> = Task.tryLexParse(settings, text);
+): Task.LexParseOk<S> {
+    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
     if (!ResultUtils.isOk(triedLexParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
     }
@@ -43,8 +43,8 @@ export function expectLexParseOk<S extends IParserState = IParserState>(
 export function expectParseErr<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-): ParseError.ParseError<S & IParserState> {
-    const triedParse: TriedParse<S & IParserState> = expectTriedParse(settings, text);
+): ParseError.ParseError<S> {
+    const triedParse: TriedParse<S> = expectTriedParse(settings, text);
     if (!ResultUtils.isErr(triedParse)) {
         throw new Error(`AssertFailed: ResultUtils.Err(triedParse)`);
     }
@@ -59,8 +59,8 @@ export function expectParseErr<S extends IParserState = IParserState>(
 export function expectParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-): ParseOk<S & IParserState> {
-    const triedParse: TriedParse<S & IParserState> = expectTriedParse(settings, text);
+): ParseOk<S> {
+    const triedParse: TriedParse<S> = expectTriedParse(settings, text);
     if (!ResultUtils.isOk(triedParse)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedParse): ${triedParse.error.message}`);
     }
@@ -72,7 +72,7 @@ export function expectParseOk<S extends IParserState = IParserState>(
 function expectTriedParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-): TriedParse<S & IParserState> {
+): TriedParse<S> {
     const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
     if (!(maybeErrorLineMap === undefined)) {

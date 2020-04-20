@@ -35,7 +35,7 @@ function parseAllFiles<S extends IParserState>(settings: Settings<S>, parserName
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: Task.TriedLexParse<S & IParserState> = FileUtils.tryLexParse(settings, filePath);
+                const triedLexParse: Task.TriedLexParse<S> = FileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }
