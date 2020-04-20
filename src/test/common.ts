@@ -16,14 +16,14 @@ export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: 
 
 // Only works with single line expressions
 export function expectTextWithPosition(text: string): [string, Inspection.Position] {
-    const indexOfBar: number = text.indexOf("|");
+    const indexOfPipe: number = text.indexOf("|");
 
-    expect(indexOfBar).to.be.greaterThan(-1, "text must have | marker");
-    expect(indexOfBar).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
+    expect(indexOfPipe).to.be.greaterThan(-1, "text must have | marker");
+    expect(indexOfPipe).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
 
     const position: Inspection.Position = {
         lineNumber: 0,
-        lineCodeUnit: indexOfBar,
+        lineCodeUnit: indexOfPipe,
     };
 
     return [text.replace("|", ""), position];
