@@ -21,6 +21,7 @@ export const enum ScopeItemKind {
 
 export interface IScopeItem {
     readonly kind: ScopeItemKind;
+    readonly recursive: boolean;
 }
 
 export interface EachScopeItem extends IScopeItem {

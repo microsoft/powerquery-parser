@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-parser",
-    "version": "0.1.49",
+    "version": "0.1.50",
     "description": "A parser for the Power Query/M formula language.",
     "author": "Microsoft",
     "license": "MIT",
@@ -15,7 +15,7 @@
         "lint": "npm run lint:prettier && npm run lint:tslint",
         "lint:prettier": ".\\node_modules\\.bin\\prettier --config \".prettierrc\" --list-different src\\**\\*.ts",
         "lint:tslint": ".\\node_modules\\.bin\\tslint src/*.ts",
-        "prepublishOnly": "git clean -xdf && npm install && npm run check && npm run build && npm run test && npm run test:resources"
+        "prepublishOnly": "git clean -xdf && npm install && npm run lint && npm run build && npm run test && npm run test:resources"
     },
     "homepage": "https://github.com/microsoft/powerquery-parser#readme",
     "repository": {

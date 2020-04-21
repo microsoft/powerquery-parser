@@ -162,6 +162,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
                 "_",
                 {
                     kind: ScopeItemKind.Each,
+                    recursive: false,
                     eachExpression: eachExpr,
                 },
             ],
@@ -193,6 +194,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
                 parameter.name.literal,
                 {
                     kind: ScopeItemKind.Parameter,
+                    recursive: false,
                     name: parameter.name,
                     isOptional: parameter.isOptional,
                     isNullable: parameter.isNullable,
@@ -222,10 +224,14 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
     >> = NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, letExpr);
-    const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = inspectKeyValuePairs(
-        state,
-        scope,
+
+    inspectKeyValuePairs(state, scope, keyValuePairs, keyValuePairScopeItemFactory);
+
+    // Places the assignments from the 'let' into LetExpression.expression
+    const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = scopeItemsFromKeyValuePairs(
         keyValuePairs,
+        -1,
+        keyValuePairScopeItemFactory,
     );
     expandChildScope(state, letExpr, [3], newEntries, scope);
 }
@@ -245,7 +251,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.GeneralizedIdentifier
     >> = NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, record);
-    inspectKeyValuePairs(state, scope, keyValuePairs);
+    inspectKeyValuePairs(state, scope, keyValuePairs, keyValuePairScopeItemFactory);
 }
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
@@ -260,65 +266,44 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
     >> = NodeIdMapIterator.sectionMemberKeyValuePairs(state.nodeIdMapCollection, section);
-    const unfilteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem]> = keyValuePairs.map(
-        (kvp: NodeIdMapIterator.KeyValuePair<Ast.Identifier>) => {
-            return [
-                kvp.key.literal,
-                {
-                    kind: ScopeItemKind.SectionMember,
-                    key: kvp.key,
-                    maybeValue: kvp.maybeValue,
-                },
-            ];
-        },
-    );
 
     for (const kvp of keyValuePairs) {
         if (kvp.maybeValue === undefined) {
             continue;
         }
 
-        const filteredNewEntries: ReadonlyArray<[string, SectionMemberScopeItem]> = unfilteredNewEntries.filter(
-            (pair: [string, SectionMemberScopeItem]) => {
-                return pair[1].key.id !== kvp.key.id;
-            },
+        const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemsFromKeyValuePairs(
+            keyValuePairs,
+            kvp.key.id,
+            sectionMemberScopeItemFactory,
         );
-        expandScope(state, kvp.maybeValue, filteredNewEntries, new Map());
+        if (newScopeItems.length !== 0) {
+            expandScope(state, kvp.maybeValue, newScopeItems, new Map());
+        }
     }
 }
 
-function inspectKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>(
+// Expands the scope of the value portion for each key value pair.
+function inspectKeyValuePairs<T extends TScopeItem, I extends Ast.GeneralizedIdentifier | Ast.Identifier>(
     state: ScopeInspectionState,
     parentScope: ScopeItemByKey,
-    keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<T>>,
-): ReadonlyArray<[string, KeyValuePairScopeItem]> {
-    const unfilteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = keyValuePairs.map(
-        (kvp: NodeIdMapIterator.KeyValuePair<T>) => {
-            return [
-                kvp.key.literal,
-                {
-                    kind: ScopeItemKind.KeyValuePair,
-                    key: kvp.key,
-                    maybeValue: kvp.maybeValue,
-                },
-            ];
-        },
-    );
-
+    keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<I>>,
+    factoryFn: (keyValuePair: NodeIdMapIterator.KeyValuePair<I>, recursive: boolean) => T,
+): void {
     for (const kvp of keyValuePairs) {
         if (kvp.maybeValue === undefined) {
             continue;
         }
 
-        const filteredNewEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = unfilteredNewEntries.filter(
-            (pair: [string, KeyValuePairScopeItem]) => {
-                return pair[1].key.id !== kvp.key.id;
-            },
+        const newScopeItems: ReadonlyArray<[string, T]> = scopeItemsFromKeyValuePairs(
+            keyValuePairs,
+            kvp.key.id,
+            factoryFn,
         );
-        expandScope(state, kvp.maybeValue, filteredNewEntries, parentScope);
+        if (newScopeItems.length !== 0) {
+            expandScope(state, kvp.maybeValue, newScopeItems, parentScope);
+        }
     }
-
-    return unfilteredNewEntries;
 }
 
 function expandScope(
@@ -411,4 +396,41 @@ function getOrCreateScope(
     const newScope: ScopeItemByKey = new Map();
     state.deltaScope.set(nodeId, newScope);
     return newScope;
+}
+
+function scopeItemsFromKeyValuePairs<T extends TScopeItem, I extends Ast.Identifier | Ast.GeneralizedIdentifier>(
+    keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<I>>,
+    ancestorKeyNodeId: number,
+    factoryFn: (keyValuePair: NodeIdMapIterator.KeyValuePair<I>, recursive: boolean) => T,
+): ReadonlyArray<[string, T]> {
+    return keyValuePairs
+        .filter((keyValuePair: NodeIdMapIterator.KeyValuePair<I>) => keyValuePair.maybeValue !== undefined)
+        .map((keyValuePair: NodeIdMapIterator.KeyValuePair<I>) => {
+            const isRecursive: boolean = ancestorKeyNodeId === keyValuePair.key.id;
+            return [keyValuePair.keyLiteral, factoryFn(keyValuePair, isRecursive)];
+        });
+}
+
+function sectionMemberScopeItemFactory(
+    keyValuePair: NodeIdMapIterator.KeyValuePair<Ast.Identifier>,
+    recursive: boolean,
+): SectionMemberScopeItem {
+    return {
+        kind: ScopeItemKind.SectionMember,
+        recursive,
+        key: keyValuePair.key,
+        maybeValue: keyValuePair.maybeValue,
+    };
+}
+
+function keyValuePairScopeItemFactory<T extends Ast.Identifier | Ast.GeneralizedIdentifier>(
+    keyValuePair: NodeIdMapIterator.KeyValuePair<T>,
+    recursive: boolean,
+): KeyValuePairScopeItem {
+    return {
+        kind: ScopeItemKind.KeyValuePair,
+        recursive,
+        key: keyValuePair.key,
+        maybeValue: keyValuePair.maybeValue,
+    };
 }
