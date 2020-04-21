@@ -353,9 +353,9 @@ function translateConstant(xorNode: TXorNode): Type.TType {
 }
 
 function translateIdentifier(
-    _nodeIdMapCollection: NodeIdMap.Collection,
-    _scope: ScopeItemByKey,
-    _scopeTypeMap: ScopeTypeCacheMap,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
+    scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
@@ -368,18 +368,25 @@ function translateIdentifier(
         return unknownFactory();
     }
 
-    throw new Error();
+    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
+        nodeIdMapCollection,
+        scope,
+        scopeTypeMap,
+        xorNode.node as Ast.Identifier,
+        false,
+    );
+    return dereferencedType !== undefined ? dereferencedType : unknownFactory();
 }
 
 function translateIdentifierExpression(
-    _nodeIdMapCollection: NodeIdMap.Collection,
-    _scope: ScopeItemByKey,
-    _scopeTypeMap: ScopeTypeCacheMap,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
+    scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
-        Ast.NodeKind.Identifier,
+        Ast.NodeKind.IdentifierExpression,
     );
     if (maybeErr !== undefined) {
         throw maybeErr;
@@ -387,7 +394,14 @@ function translateIdentifierExpression(
         return unknownFactory();
     }
 
-    throw new Error();
+    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
+        nodeIdMapCollection,
+        scope,
+        scopeTypeMap,
+        (xorNode.node as Ast.IdentifierExpression).identifier,
+        false,
+    );
+    return dereferencedType !== undefined ? dereferencedType : unknownFactory();
 }
 
 function translateIfExpression(
@@ -649,9 +663,12 @@ const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeK
                 const maybeValues: undefined | ReadonlyArray<Type.TypeKind> = binaryExpressionPartialLookup.get(
                     partialKey,
                 );
+                // First occurance of '<first operand> , <operator>'
                 if (maybeValues === undefined) {
                     binaryExpressionPartialLookup.set(partialKey, [potentialNewValue]);
-                } else if (maybeValues.indexOf(potentialNewValue) !== -1) {
+                }
+                // First occurance of '<second operand>' in '<first operand> , <operator>'
+                else if (maybeValues.indexOf(potentialNewValue) !== -1) {
                     binaryExpressionPartialLookup.set(partialKey, [...maybeValues, potentialNewValue]);
                 }
 
@@ -693,7 +710,7 @@ function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[strin
     ];
 }
 
-// Note: does not include the "and" operator.
+// Note: does not include the and <'&'> operator.
 function createLookupsForArithmetic(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
@@ -760,7 +777,7 @@ function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, conditionFn: (type: Typ
     );
 }
 
-function dereferencedIdentifierType(
+function maybeDereferencedIdentifierType(
     nodeIdMapCollection: NodeIdMap.Collection,
     scope: ScopeItemByKey,
     scopeTypeMap: ScopeTypeCacheMap,
@@ -807,13 +824,13 @@ function dereferencedIdentifierType(
 
     if (nextXorNode.node.kind === Ast.NodeKind.Identifier) {
         return nextXorNode.kind === XorNodeKind.Ast
-            ? dereferencedIdentifierType(nodeIdMapCollection, scope, scopeTypeMap, nextXorNode.node, false)
+            ? maybeDereferencedIdentifierType(nodeIdMapCollection, scope, scopeTypeMap, nextXorNode.node, false)
             : undefined;
     } else if (nextXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
         if (nextXorNode.kind === XorNodeKind.Context) {
             return undefined;
         }
-        return dereferencedIdentifierType(
+        return maybeDereferencedIdentifierType(
             nodeIdMapCollection,
             scope,
             scopeTypeMap,
