@@ -535,12 +535,6 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
     }
 }
 
-export function recordKey(nodeIdMapCollection: Collection, xorNode: TXorNode): undefined | Ast.GeneralizedIdentifier {
-    return maybeAstChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
-        Ast.NodeKind.GeneralizedIdentifier,
-    ]) as Ast.GeneralizedIdentifier;
-}
-
 export function maybeWrappedContent(nodeIdMapCollection: Collection, wrapped: TXorNode): undefined | TXorNode {
     return maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [Ast.NodeKind.ArrayWrapper]);
 }
