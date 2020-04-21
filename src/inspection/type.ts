@@ -188,7 +188,7 @@ function translateFromChildAttributeIndex(
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
-    const maybeXorNode: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,
@@ -215,12 +215,12 @@ function translateBinOpExpression(
     const parentId: number = xorNode.node.id;
     const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(nodeIdMapCollection, parentId);
 
-    const maybeLeft: undefined | TXorNode = children[0];
-    const maybeOperatorKind: undefined | Ast.TBinOpExpressionOperator =
+    const maybeLeft: TXorNode | undefined = children[0];
+    const maybeOperatorKind: Ast.TBinOpExpressionOperator | undefined =
         children[1] === undefined || children[1].kind === XorNodeKind.Context
             ? undefined
             : (children[1].node as Ast.IConstant<Ast.TBinOpExpressionOperator>).constantKind;
-    const maybeRight: undefined | TXorNode = children[2];
+    const maybeRight: TXorNode | undefined = children[2];
 
     // ''
     if (maybeLeft === undefined) {
@@ -236,7 +236,7 @@ function translateBinOpExpression(
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
 
         const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
-        const maybeAllowedTypeKinds: undefined | ReadonlyArray<Type.TypeKind> = BinOpExpressionPartialLookup.get(
+        const maybeAllowedTypeKinds: ReadonlyArray<Type.TypeKind> | undefined = BinOpExpressionPartialLookup.get(
             partialLookupKey,
         );
         if (maybeAllowedTypeKinds === undefined) {
@@ -261,7 +261,7 @@ function translateBinOpExpression(
         const rightType: Type.TType = translateXorNode(nodeIdMapCollection, scopeTypeMap, maybeRight);
 
         const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
-        const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);
+        const maybeResultTypeKind: Type.TypeKind | undefined = BinOpExpressionLookup.get(key);
         if (maybeResultTypeKind === undefined) {
             return noneFactory();
         }
@@ -280,7 +280,7 @@ function translateBinOpExpression(
 }
 
 function translateConstant(xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.Constant,
     );
@@ -341,7 +341,7 @@ function translateIfExpression(
     scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.IfExpression,
     );
@@ -366,7 +366,7 @@ function translateIfExpression(
 }
 
 function translateLiteralExpression(xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.LiteralExpression,
     );
@@ -396,7 +396,7 @@ function translateUnaryExpression(
     scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.UnaryExpression,
     );
@@ -413,7 +413,7 @@ function translateUnaryExpression(
         return unknownFactory();
     }
 
-    const maybeExpression: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         xorNode.node.id,
         1,
@@ -572,7 +572,7 @@ const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeK
                 const potentialNewValue: Type.TypeKind = key.slice(lastDeliminatorIndex + 1) as Type.TypeKind;
 
                 // Add the potentialNewValue if it's a new type.
-                const maybeValues: undefined | ReadonlyArray<Type.TypeKind> = binaryExpressionPartialLookup.get(
+                const maybeValues: ReadonlyArray<Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(
                     partialKey,
                 );
                 if (maybeValues === undefined) {

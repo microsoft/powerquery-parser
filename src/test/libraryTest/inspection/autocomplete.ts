@@ -19,7 +19,7 @@ function expectAutocompleteOk<S extends IParserState>(
     position: Position,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
-    const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,

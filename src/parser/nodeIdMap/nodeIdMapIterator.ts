@@ -9,7 +9,7 @@ export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifi
     readonly source: TXorNode;
     readonly key: T;
     readonly keyLiteral: string;
-    readonly maybeValue: undefined | TXorNode;
+    readonly maybeValue: TXorNode | undefined;
 }
 
 export function expectAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
@@ -108,7 +108,7 @@ export function recordKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     record: TXorNode,
 ): ReadonlyArray<KeyValuePair<Ast.GeneralizedIdentifier>> {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(record, [
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(record, [
         Ast.NodeKind.RecordExpression,
         Ast.NodeKind.RecordLiteral,
     ]);
@@ -116,7 +116,7 @@ export function recordKeyValuePairs(
         throw maybeErr;
     }
 
-    const maybeArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, record);
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, record);
     return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }
 
@@ -124,7 +124,7 @@ export function letKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     letExpression: TXorNode,
 ): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         letExpression,
         Ast.NodeKind.LetExpression,
     );
@@ -132,7 +132,7 @@ export function letKeyValuePairs(
         throw maybeErr;
     }
 
-    const maybeArrayWrapper: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         letExpression.node.id,
         1,
@@ -145,7 +145,7 @@ export function sectionMemberKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     section: TXorNode,
 ): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         section,
         Ast.NodeKind.Section,
     );
@@ -188,7 +188,7 @@ export function sectionMemberKeyValuePairs(
         const keyValuePair: TXorNode = maybeKeyValuePair;
         const keyValuePairNodeId: number = keyValuePair.node.id;
 
-        const maybeKey: undefined | Ast.Identifier = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+        const maybeKey: Ast.Identifier | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePairNodeId,
             0,
@@ -221,7 +221,7 @@ export function keyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifi
 ): ReadonlyArray<KeyValuePair<T>> {
     const partial: KeyValuePair<T>[] = [];
     for (const keyValuePair of arrayWrapperCsvXorNodes(nodeIdMapCollection, arrayWrapper)) {
-        const maybeKey: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+        const maybeKey: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
             nodeIdMapCollection,
             keyValuePair.node.id,
             0,
@@ -252,7 +252,7 @@ export function arrayWrapperCsvXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         arrayWrapper,
         Ast.NodeKind.ArrayWrapper,
     );
@@ -274,7 +274,7 @@ export function arrayWrapperCsvXorNodes(
                 break;
 
             case XorNodeKind.Context: {
-                const maybeChild: undefined | TXorNode = NodeIdMapUtils.maybeCsvNode(nodeIdMapCollection, csvXorNode);
+                const maybeChild: TXorNode | undefined = NodeIdMapUtils.maybeCsvNode(nodeIdMapCollection, csvXorNode);
                 if (maybeChild !== undefined) {
                     partial.push(maybeChild);
                 }

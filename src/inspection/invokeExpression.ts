@@ -8,7 +8,7 @@ import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export type TriedInvokeExpression = Result<undefined | InvokeExpression, CommonError.CommonError>;
+export type TriedInvokeExpression = Result<InvokeExpression | undefined, CommonError.CommonError>;
 
 export interface InvokeExpression {
     readonly xorNode: TXorNode;
@@ -34,7 +34,7 @@ export function tryInvokeExpression(
 function inspectInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
-): undefined | InvokeExpression {
+): InvokeExpression | undefined {
     const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
     const position: Position = activeNode.position;
@@ -73,7 +73,7 @@ function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boole
 
 function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): string | undefined {
     const invokeExpr: TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId);
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         invokeExpr,
         Ast.NodeKind.InvokeExpression,
     );
