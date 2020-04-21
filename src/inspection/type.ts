@@ -6,7 +6,7 @@ import { Ast, AstUtils } from "../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
-import { ScopeItemByKey, ScopeItemKind, TScopeItem } from "./scope";
+import { ParameterScopeItem, ScopeItemByKey, ScopeItemKind, TScopeItem } from "./scope";
 
 export type ScopeTypeMap = Map<string, Type.TType>;
 
@@ -15,23 +15,21 @@ export type TriedScopeType = Result<ScopeTypeMap, CommonError.CommonError>;
 export function tryScopeType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    inspectedScope: ScopeItemByKey,
+    scope: ScopeItemByKey,
 ): TriedScopeType {
-    return ResultUtils.ensureResult(settings.localizationTemplates, () =>
-        inspectScopeType(nodeIdMapCollection, inspectedScope),
-    );
+    return ResultUtils.ensureResult(settings.localizationTemplates, () => inspectScopeType(nodeIdMapCollection, scope));
 }
 
 type ScopeTypeCacheMap = Map<number, Type.TType>;
 
-function inspectScopeType(nodeIdMapCollection: NodeIdMap.Collection, inspectedScope: ScopeItemByKey): ScopeTypeMap {
+function inspectScopeType(nodeIdMapCollection: NodeIdMap.Collection, scope: ScopeItemByKey): ScopeTypeMap {
     // The return object. Only stores [scope key, TType] pairs.
     const scopeTypeMap: ScopeTypeMap = new Map();
     // A temporary working set. Stores all [nodeId, TType] pairs evaluated.
     const scopeTypeCacheMap: ScopeTypeCacheMap = new Map();
 
-    for (const [key, node] of [...inspectedScope.entries()]) {
-        scopeTypeMap.set(key, translateScopeItem(nodeIdMapCollection, node, scopeTypeCacheMap));
+    for (const [key, node] of [...scope.entries()]) {
+        scopeTypeMap.set(key, translateScopeItem(nodeIdMapCollection, scope, scopeTypeCacheMap, node));
     }
 
     return scopeTypeMap;
@@ -39,31 +37,26 @@ function inspectScopeType(nodeIdMapCollection: NodeIdMap.Collection, inspectedSc
 
 function translateScopeItem(
     nodeIdMapCollection: NodeIdMap.Collection,
-    scopeItem: TScopeItem,
+    scope: ScopeItemByKey,
     scopeTypeMap: ScopeTypeCacheMap,
+    scopeItem: TScopeItem,
 ): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
-            return translateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.eachExpression);
+            return translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, scopeItem.eachExpression);
 
         case ScopeItemKind.KeyValuePair:
             return scopeItem.maybeValue === undefined
                 ? anyFactory()
-                : translateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
+                : translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, scopeItem.maybeValue);
 
         case ScopeItemKind.Parameter:
-            return scopeItem.maybeType === undefined
-                ? anyFactory()
-                : {
-                      kind: TypeUtils.typeKindFromPrimitiveTypeConstantKind(scopeItem.maybeType),
-                      maybeExtendedKind: undefined,
-                      isNullable: scopeItem.isNullable,
-                  };
+            return parameterFactory(scopeItem);
 
         case ScopeItemKind.SectionMember:
             return scopeItem.maybeValue === undefined
                 ? anyFactory()
-                : translateXorNode(nodeIdMapCollection, scopeTypeMap, scopeItem.maybeValue);
+                : translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, scopeItem.maybeValue);
 
         case ScopeItemKind.Undefined:
             return unknownFactory();
@@ -75,6 +68,7 @@ function translateScopeItem(
 
 function translateXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
     scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
@@ -89,16 +83,16 @@ function translateXorNode(
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
-            result = translateBinOpExpression(nodeIdMapCollection, scopeTypeMap, xorNode);
+            result = translateBinOpExpression(nodeIdMapCollection, scope, scopeTypeMap, xorNode);
             break;
 
         case Ast.NodeKind.AsExpression: {
-            result = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 2);
+            result = translateFromChildAttributeIndex(nodeIdMapCollection, scope, scopeTypeMap, xorNode, 2);
             break;
         }
 
         case Ast.NodeKind.AsNullablePrimitiveType:
-            result = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
+            result = translateFromChildAttributeIndex(nodeIdMapCollection, scope, scopeTypeMap, xorNode, 1);
             break;
 
         case Ast.NodeKind.Constant:
@@ -106,15 +100,23 @@ function translateXorNode(
             break;
 
         case Ast.NodeKind.Csv:
-            result = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
+            result = translateFromChildAttributeIndex(nodeIdMapCollection, scope, scopeTypeMap, xorNode, 1);
             break;
 
         case Ast.NodeKind.EachExpression:
-            result = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
+            result = translateFromChildAttributeIndex(nodeIdMapCollection, scope, scopeTypeMap, xorNode, 1);
+            break;
+
+        case Ast.NodeKind.Identifier:
+            result = translateIdentifier(nodeIdMapCollection, scope, scopeTypeMap, xorNode);
+            break;
+
+        case Ast.NodeKind.IdentifierExpression:
+            result = translateIdentifierExpression(nodeIdMapCollection, scope, scopeTypeMap, xorNode);
             break;
 
         case Ast.NodeKind.IfExpression:
-            result = translateIfExpression(nodeIdMapCollection, scopeTypeMap, xorNode);
+            result = translateIfExpression(nodeIdMapCollection, scope, scopeTypeMap, xorNode);
             break;
 
         case Ast.NodeKind.ListExpression:
@@ -130,7 +132,7 @@ function translateXorNode(
             break;
 
         case Ast.NodeKind.UnaryExpression:
-            result = translateUnaryExpression(nodeIdMapCollection, scopeTypeMap, xorNode);
+            result = translateUnaryExpression(nodeIdMapCollection, scope, scopeTypeMap, xorNode);
             break;
 
         default:
@@ -182,8 +184,21 @@ function noneFactory(): Type.TType {
     };
 }
 
+function parameterFactory(parameter: ParameterScopeItem): Type.TType {
+    if (parameter.maybeType === undefined) {
+        return unknownFactory();
+    }
+
+    return {
+        kind: TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
+        maybeExtendedKind: undefined,
+        isNullable: parameter.isNullable,
+    };
+}
+
 function translateFromChildAttributeIndex(
     nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
     scopeTypeMap: ScopeTypeCacheMap,
     parentXorNode: TXorNode,
     attributeIndex: number,
@@ -195,12 +210,13 @@ function translateFromChildAttributeIndex(
         undefined,
     );
     return maybeXorNode !== undefined
-        ? translateXorNode(nodeIdMapCollection, scopeTypeMap, maybeXorNode)
+        ? translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, maybeXorNode)
         : unknownFactory();
 }
 
 function translateBinOpExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
     scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
@@ -228,11 +244,11 @@ function translateBinOpExpression(
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        return translateXorNode(nodeIdMapCollection, scopeTypeMap, maybeLeft);
+        return translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, maybeLeft);
     }
     // '1 +'
     else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
-        const leftType: Type.TType = translateXorNode(nodeIdMapCollection, scopeTypeMap, maybeLeft);
+        const leftType: Type.TType = translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, maybeLeft);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
 
         const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
@@ -256,9 +272,9 @@ function translateBinOpExpression(
     }
     // '1 + 1'
     else {
-        const leftType: Type.TType = translateXorNode(nodeIdMapCollection, scopeTypeMap, maybeLeft);
+        const leftType: Type.TType = translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, maybeLeft);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: Type.TType = translateXorNode(nodeIdMapCollection, scopeTypeMap, maybeRight);
+        const rightType: Type.TType = translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, maybeRight);
 
         const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: undefined | Type.TypeKind = BinOpExpressionLookup.get(key);
@@ -336,8 +352,47 @@ function translateConstant(xorNode: TXorNode): Type.TType {
     }
 }
 
+function translateIdentifier(
+    _nodeIdMapCollection: NodeIdMap.Collection,
+    _scope: ScopeItemByKey,
+    _scopeTypeMap: ScopeTypeCacheMap,
+    xorNode: TXorNode,
+): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.Identifier,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    } else if (xorNode.kind === XorNodeKind.Context) {
+        return unknownFactory();
+    }
+
+    throw new Error();
+}
+
+function translateIdentifierExpression(
+    _nodeIdMapCollection: NodeIdMap.Collection,
+    _scope: ScopeItemByKey,
+    _scopeTypeMap: ScopeTypeCacheMap,
+    xorNode: TXorNode,
+): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.Identifier,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    } else if (xorNode.kind === XorNodeKind.Context) {
+        return unknownFactory();
+    }
+
+    throw new Error();
+}
+
 function translateIfExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
     scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
@@ -349,7 +404,13 @@ function translateIfExpression(
         throw maybeErr;
     }
 
-    const conditionType: Type.TType = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 1);
+    const conditionType: Type.TType = translateFromChildAttributeIndex(
+        nodeIdMapCollection,
+        scope,
+        scopeTypeMap,
+        xorNode,
+        1,
+    );
     // Ensure unions are unions of only logicals
     if (conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
         if (!recursiveAnyUnionCheck(conditionType, (type: Type.TType) => type.kind === Type.TypeKind.Logical)) {
@@ -359,8 +420,20 @@ function translateIfExpression(
         return noneFactory();
     }
 
-    const trueExprType: Type.TType = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 3);
-    const falseExprType: Type.TType = translateFromChildAttributeIndex(nodeIdMapCollection, scopeTypeMap, xorNode, 5);
+    const trueExprType: Type.TType = translateFromChildAttributeIndex(
+        nodeIdMapCollection,
+        scope,
+        scopeTypeMap,
+        xorNode,
+        3,
+    );
+    const falseExprType: Type.TType = translateFromChildAttributeIndex(
+        nodeIdMapCollection,
+        scope,
+        scopeTypeMap,
+        xorNode,
+        5,
+    );
 
     return anyUnionFactory([trueExprType, falseExprType]);
 }
@@ -393,6 +466,7 @@ function translateLiteralExpression(xorNode: TXorNode): Type.TType {
 
 function translateUnaryExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
     scopeTypeMap: ScopeTypeCacheMap,
     xorNode: TXorNode,
 ): Type.TType {
@@ -426,7 +500,7 @@ function translateUnaryExpression(
     // Only certain operators are allowed depending on the type.
     // Unlike BinOpExpression, it's easier to implement the check without a lookup table.
     let expectedUnaryOperatorKinds: ReadonlyArray<Ast.UnaryOperatorKind>;
-    const expressionType: Type.TType = translateXorNode(nodeIdMapCollection, scopeTypeMap, maybeExpression);
+    const expressionType: Type.TType = translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, maybeExpression);
     if (expressionType.kind === Type.TypeKind.Number) {
         expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Positive, Ast.UnaryOperatorKind.Negative];
     } else if (expressionType.kind === Type.TypeKind.Logical) {
@@ -684,4 +758,69 @@ function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, conditionFn: (type: Typ
             })
             .indexOf(false) === -1
     );
+}
+
+function dereferencedIdentifierType(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    scope: ScopeItemByKey,
+    scopeTypeMap: ScopeTypeCacheMap,
+    identifier: Ast.Identifier,
+    isRecursive: boolean,
+): undefined | Type.TType {
+    const maybeScopeItem: undefined | TScopeItem = scope.get(identifier.literal);
+    if (maybeScopeItem === undefined) {
+        return undefined;
+    }
+    const scopeItem: TScopeItem = maybeScopeItem;
+    if (scopeItem.recursive !== isRecursive) {
+        return undefined;
+    }
+
+    let maybeNextXorNode: undefined | TXorNode;
+    switch (scopeItem.kind) {
+        case ScopeItemKind.Each:
+            maybeNextXorNode = scopeItem.eachExpression;
+            break;
+
+        case ScopeItemKind.KeyValuePair:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
+
+        case ScopeItemKind.Parameter:
+            return parameterFactory(scopeItem);
+
+        case ScopeItemKind.SectionMember:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
+
+        case ScopeItemKind.Undefined:
+            return undefined;
+
+        default:
+            throw isNever(scopeItem);
+    }
+
+    if (maybeNextXorNode === undefined) {
+        return undefined;
+    }
+    const nextXorNode: TXorNode = maybeNextXorNode;
+
+    if (nextXorNode.node.kind === Ast.NodeKind.Identifier) {
+        return nextXorNode.kind === XorNodeKind.Ast
+            ? dereferencedIdentifierType(nodeIdMapCollection, scope, scopeTypeMap, nextXorNode.node, false)
+            : undefined;
+    } else if (nextXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+        if (nextXorNode.kind === XorNodeKind.Context) {
+            return undefined;
+        }
+        return dereferencedIdentifierType(
+            nodeIdMapCollection,
+            scope,
+            scopeTypeMap,
+            nextXorNode.node.identifier,
+            nextXorNode.node.maybeInclusiveConstant !== undefined,
+        );
+    } else {
+        return translateXorNode(nodeIdMapCollection, scope, scopeTypeMap, nextXorNode);
+    }
 }
