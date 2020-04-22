@@ -36,7 +36,7 @@ export const enum ExtendedTypeKind {
 
 export interface IType {
     readonly kind: TypeKind;
-    readonly maybeExtendedKind: undefined | ExtendedTypeKind;
+    readonly maybeExtendedKind: ExtendedTypeKind | undefined;
     readonly isNullable: boolean;
 }
 

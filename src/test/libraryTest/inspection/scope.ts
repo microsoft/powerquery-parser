@@ -34,7 +34,7 @@ interface AbridgedEachScopeItem extends IAbridgedNodeScopeItem {
 interface AbridgedKeyValuePairScopeItem extends IAbridgedNodeScopeItem {
     readonly kind: ScopeItemKind.KeyValuePair;
     readonly keyNodeId: number;
-    readonly maybeValueNodeId: undefined | number;
+    readonly maybeValueNodeId: number | undefined;
 }
 
 interface AbridgedParameterScopeItem extends IAbridgedNodeScopeItem {
@@ -135,7 +135,7 @@ function expectScopeForNodeOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): ScopeItemByKey {
-    const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,

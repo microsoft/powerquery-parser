@@ -20,7 +20,7 @@ function expectScopeTypeOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): ScopeTypeMap {
-    const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
@@ -50,7 +50,7 @@ function expectScopeTypeOk(
 }
 
 function actualFactoryFn(inspected: ScopeTypeMap): Type.TType {
-    const maybeBar: undefined | Type.TType = inspected.get("__bar");
+    const maybeBar: Type.TType | undefined = inspected.get("__bar");
     if (!(maybeBar !== undefined)) {
         throw new Error(`AssertFailed: maybebar !== undefined`);
     }

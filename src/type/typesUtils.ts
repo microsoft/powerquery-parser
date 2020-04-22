@@ -31,7 +31,7 @@ export function typeKindFromLiteralKind(
 
 export function maybePrimitiveTypeConstantKindFromTypeKind(
     typeKind: Type.TypeKind,
-): undefined | Ast.PrimitiveTypeConstantKind {
+): Ast.PrimitiveTypeConstantKind | undefined {
     switch (typeKind) {
         case Type.TypeKind.Action:
             return Ast.PrimitiveTypeConstantKind.Action;

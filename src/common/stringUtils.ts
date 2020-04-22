@@ -73,7 +73,7 @@ export function maybeIdentifierLength(text: string, index: number): number | und
     const textLength: number = text.length;
 
     while (continueMatching) {
-        const maybeMatchLength: undefined | number = maybeRegexMatchLength(
+        const maybeMatchLength: number | undefined = maybeRegexMatchLength(
             isOnStartCharacter ? Pattern.IdentifierStartCharacter : Pattern.IdentifierPartCharacters,
             text,
             index,
