@@ -3,8 +3,8 @@
 
 import "mocha";
 import { Inspection } from "../../..";
-import { CommonError, Result, ResultUtils } from "../../../common";
-import { Position, ScopeItemByKey, ScopeTypeMap, TriedScopeType } from "../../../inspection";
+import { ResultUtils } from "../../../common";
+import { Position, ScopeTypeMap, TriedScopeType } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
@@ -30,7 +30,7 @@ function expectScopeTypeOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScope: Result<ScopeItemByKey, CommonError.CommonError> = Inspection.tryScopeForRoot(
+    const triedScope: Inspection.TriedScope = Inspection.tryScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -41,7 +41,12 @@ function expectScopeTypeOk(
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScope) - ${triedScope.error}`);
     }
 
-    const triedScopeType: TriedScopeType = Inspection.tryScopeType(settings, nodeIdMapCollection, triedScope.value);
+    const triedScopeType: TriedScopeType = Inspection.tryScopeTypeForRoot(
+        settings,
+        nodeIdMapCollection,
+        triedScope.value,
+        activeNode.ancestry,
+    );
     if (!ResultUtils.isOk(triedScopeType)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeType) - ${triedScopeType.error}`);
     }
@@ -123,6 +128,16 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`WIP ${Ast.NodeKind.IdentifierExpression}`, () => {
+        it(`let x = true in x`, () => {
+            expectSimpleExpressionType("let x = true in x", Type.TypeKind.Logical, false);
+        });
+
+        it(`let x = 1 in x`, () => {
+            expectSimpleExpressionType("let x = 1 in x", Type.TypeKind.Logical, false);
+        });
+    });
+
     describe(`${Ast.NodeKind.LiteralExpression}`, () => {
         it(`true`, () => {
             expectSimpleExpressionType("true", Type.TypeKind.Logical, false);
@@ -149,7 +164,7 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe(`WIP ${Ast.NodeKind.IfExpression}`, () => {
+    describe(`${Ast.NodeKind.IfExpression}`, () => {
         it(`if true then 1 else false`, () => {
             const expression: string = `if true then 1 else false`;
             const expected: Type.TType = {
