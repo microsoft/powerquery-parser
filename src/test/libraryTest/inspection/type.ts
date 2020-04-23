@@ -4,7 +4,7 @@
 import "mocha";
 import { Inspection } from "../../..";
 import { ResultUtils } from "../../../common";
-import { Position, ScopeTypeMap, TriedScopeType } from "../../../inspection";
+import { Position, ScopeTypeByKey, TriedScopeType } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
@@ -19,7 +19,7 @@ function expectScopeTypeOk(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-): ScopeTypeMap {
+): ScopeTypeByKey {
     const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
@@ -44,8 +44,10 @@ function expectScopeTypeOk(
     const triedScopeType: TriedScopeType = Inspection.tryScopeTypeForRoot(
         settings,
         nodeIdMapCollection,
+        leafNodeIds,
         triedScope.value,
         activeNode.ancestry,
+        undefined,
     );
     if (!ResultUtils.isOk(triedScopeType)) {
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeType) - ${triedScopeType.error}`);
@@ -54,7 +56,7 @@ function expectScopeTypeOk(
     return triedScopeType.value;
 }
 
-function actualFactoryFn(inspected: ScopeTypeMap): Type.TType {
+function actualFactoryFn(inspected: ScopeTypeByKey): Type.TType {
     const maybeBar: undefined | Type.TType = inspected.get("__bar");
     if (!(maybeBar !== undefined)) {
         throw new Error(`AssertFailed: maybebar !== undefined`);
@@ -70,7 +72,7 @@ function wrapExpression(expression: string): string {
 function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
     const parseOk: ParseOk<IParserState> = expectParseOk(DefaultSettings, text);
-    const scopeTypeMap: ScopeTypeMap = expectTypeOk(
+    const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
         DefaultSettings,
         parseOk.nodeIdMapCollection,
         parseOk.leafNodeIds,
@@ -82,7 +84,7 @@ function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): v
 function expectParseErrTypeOk(expression: string, expected: AbridgedScopeType): void {
     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
     const parseErr: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
-    const scopeTypeMap: ScopeTypeMap = expectTypeOk(
+    const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
         DefaultSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
@@ -96,7 +98,7 @@ function expectTypeOk(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-): ScopeTypeMap {
+): ScopeTypeByKey {
     return expectScopeTypeOk(settings, nodeIdMapCollection, leafNodeIds, position);
 }
 

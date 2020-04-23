@@ -13,6 +13,7 @@ export interface InspectedFunctionExpression {
 }
 
 export interface InspectedFunctionParameter {
+    readonly id: number,
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
@@ -127,6 +128,7 @@ function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>):
     }
 
     return {
+        id: node.id,
         name: node.name,
         isOptional: node.maybeOptionalConstant !== undefined,
         isNullable,
@@ -179,6 +181,7 @@ function examineContextParameter(
     }
 
     return {
+        id: parameter.id,
         name,
         isOptional,
         isNullable,

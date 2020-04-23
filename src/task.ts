@@ -17,7 +17,7 @@ export interface InspectionOk {
     readonly autocomplete: Inspection.Autocomplete;
     readonly maybeInvokeExpression: undefined | Inspection.InvokeExpression;
     readonly scope: Inspection.ScopeItemByKey;
-    readonly scopeType: Inspection.ScopeTypeMap;
+    readonly scopeType: Inspection.ScopeTypeByKey;
 }
 
 export type TriedLexParse<S extends IParserState = IParserState> = Result<
@@ -128,8 +128,10 @@ export function tryInspection<S extends IParserState = IParserState>(
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeTypeForRoot(
         settings,
         nodeIdMapCollection,
+        leafNodeIds,
         scopeById,
         ancestry,
+        undefined,
     );
     if (ResultUtils.isErr(triedScopeType)) {
         return triedScopeType;

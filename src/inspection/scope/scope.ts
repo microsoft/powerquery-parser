@@ -60,6 +60,16 @@ export function tryScopeForRoot(
     });
 }
 
+interface ScopeInspectionState {
+    readonly settings: CommonSettings;
+    readonly givenScope: ScopeById;
+    readonly deltaScope: ScopeById;
+    readonly ancestry: ReadonlyArray<TXorNode>;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+    ancestryIndex: number;
+}
+
 function inspectScope(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -104,16 +114,6 @@ function inspectScope(
     }
 
     return state.deltaScope;
-}
-
-interface ScopeInspectionState {
-    readonly settings: CommonSettings;
-    readonly givenScope: ScopeById;
-    readonly deltaScope: ScopeById;
-    readonly ancestry: ReadonlyArray<TXorNode>;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
-    ancestryIndex: number;
 }
 
 function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
@@ -162,6 +162,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
                 "_",
                 {
                     kind: ScopeItemKind.Each,
+                    id: eachExpr.node.id,
                     recursive: false,
                     eachExpression: eachExpr,
                 },
@@ -194,6 +195,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
                 parameter.name.literal,
                 {
                     kind: ScopeItemKind.Parameter,
+                    id: parameter.id,
                     recursive: false,
                     name: parameter.name,
                     isOptional: parameter.isOptional,
@@ -417,6 +419,7 @@ function sectionMemberScopeItemFactory(
 ): SectionMemberScopeItem {
     return {
         kind: ScopeItemKind.SectionMember,
+        id: keyValuePair.source.node.id,
         recursive,
         key: keyValuePair.key,
         maybeValue: keyValuePair.maybeValue,
@@ -429,6 +432,7 @@ function keyValuePairScopeItemFactory<T extends Ast.Identifier | Ast.Generalized
 ): KeyValuePairScopeItem {
     return {
         kind: ScopeItemKind.KeyValuePair,
+        id: keyValuePair.source.node.id,
         recursive,
         key: keyValuePair.key,
         maybeValue: keyValuePair.maybeValue,
