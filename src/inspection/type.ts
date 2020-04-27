@@ -906,17 +906,3 @@ function getOrCreateScope(state: ScopeTypeInspectionState, nodeId: number): Scop
 
     return triedScope.value;
 }
-
-// function expectScopeFor(scopeById: number, nodeId: number): void {
-//     const maybeScopeItemByKey: ScopeItemByKey | undefined = scopeById.get(identifier.id);
-//     if (maybeScopeItemByKey === undefined) {
-//         const details: {} = { identifierNodeId: identifier.id };
-//         throw new CommonError.InvariantError(`expected identifier.id to be in scopeById`, details);
-//     }
-//     const scopeItemByKey: ScopeItemByKey = maybeScopeItemByKey;
-
-//     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifier.literal);
-//     if (maybeScopeItem === undefined) {
-//         return undefined;
-//     }
-// }
