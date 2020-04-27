@@ -13,9 +13,9 @@ import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
 export interface InspectionOk {
-    readonly maybeActiveNode: undefined | ActiveNode;
+    readonly maybeActiveNode: ActiveNode | undefined;
     readonly autocomplete: Inspection.Autocomplete;
-    readonly maybeInvokeExpression: undefined | Inspection.InvokeExpression;
+    readonly maybeInvokeExpression: Inspection.InvokeExpression | undefined;
     readonly scope: Inspection.ScopeItemByKey;
     readonly scopeType: Inspection.ScopeTypeByKey;
 }
@@ -90,7 +90,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     }
 
     // We should only get an undefined for activeNode iff the document is empty
-    const maybeActiveNode: undefined | ActiveNode = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
@@ -192,7 +192,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
     position: Inspection.Position,
 ): TriedLexParseInspect<S> {
     const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
-    const maybeTriedParse: undefined | TriedParse<S> = maybeTriedParseFromTriedLexParse(triedLexParse);
+    const maybeTriedParse: TriedParse<S> | undefined = maybeTriedParseFromTriedLexParse(triedLexParse);
     // maybeTriedParse is undefined iff maybeLexParse is Err<CommonError | LexError>
     // Err<CommonError | LexError> is a subset of TriedLexParse
     if (maybeTriedParse == undefined) {
@@ -213,7 +213,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
 
 export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     triedLexParse: TriedLexParse<S>,
-): undefined | TriedParse<S> {
+): TriedParse<S> | undefined {
     let ast: Ast.TDocument;
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;

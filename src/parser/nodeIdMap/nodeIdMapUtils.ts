@@ -473,7 +473,7 @@ export function isTFieldAccessExpression(xorNode: TXorNode): boolean {
     return xorNode.node.kind === Ast.NodeKind.FieldSelector || xorNode.node.kind === Ast.NodeKind.FieldProjection;
 }
 
-export function testAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): undefined | CommonError.InvariantError {
+export function testAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): CommonError.InvariantError | undefined {
     if (xorNode.node.kind !== expected) {
         const details: {} = {
             expectedNodeKind: expected,
@@ -489,7 +489,7 @@ export function testAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): unde
 export function testAstAnyNodeKind(
     xorNode: TXorNode,
     allowedNodeKinds: ReadonlyArray<Ast.NodeKind>,
-): undefined | CommonError.InvariantError {
+): CommonError.InvariantError | undefined {
     if (allowedNodeKinds.indexOf(xorNode.node.kind) !== -1) {
         return undefined;
     }
@@ -539,6 +539,6 @@ export function maybeWrappedContent(nodeIdMapCollection: Collection, wrapped: TX
     return maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [Ast.NodeKind.ArrayWrapper]);
 }
 
-export function maybeCsvNode(nodeIdMapCollection: Collection, csv: TXorNode): undefined | TXorNode {
+export function maybeCsvNode(nodeIdMapCollection: Collection, csv: TXorNode): TXorNode | undefined {
     return maybeXorChildByAttributeIndex(nodeIdMapCollection, csv.node.id, 0, undefined);
 }

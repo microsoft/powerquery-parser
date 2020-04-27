@@ -28,7 +28,7 @@ export function tryScope(
     leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: undefined | ScopeById,
+    maybeScopeById: ScopeById | undefined,
 ): TriedScope {
     return ResultUtils.ensureResult(settings.localizationTemplates, () =>
         inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById),
@@ -41,7 +41,7 @@ export function tryScopeForRoot(
     leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: undefined | ScopeById,
+    maybeScopeById: ScopeById | undefined,
 ): TriedScopeForRoot {
     if (ancestry.length === 0) {
         throw new CommonError.InvariantError(`ancestry.length should be non-zero`);
@@ -50,7 +50,7 @@ export function tryScopeForRoot(
     const rootId: number = ancestry[0].node.id;
     return ResultUtils.ensureResult(settings.localizationTemplates, () => {
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
-        const maybeScope: undefined | ScopeItemByKey = inspected.get(rootId);
+        const maybeScope: ScopeItemByKey | undefined = inspected.get(rootId);
         if (maybeScope === undefined) {
             const details: {} = { rootId };
             throw new CommonError.InvariantError(`expected rootId in scope result`, details);
@@ -76,13 +76,13 @@ function inspectScope(
     leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: undefined | ScopeById,
+    maybeScopeById: ScopeById | undefined,
 ): ScopeById {
     const rootId: number = ancestry[0].node.id;
 
     let scopeById: ScopeById;
     if (maybeScopeById !== undefined) {
-        const maybeCached: undefined | ScopeItemByKey = maybeScopeById.get(rootId);
+        const maybeCached: ScopeItemByKey | undefined = maybeScopeById.get(rootId);
         if (maybeCached !== undefined) {
             return maybeScopeById;
         }
@@ -145,7 +145,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         eachExpr,
         Ast.NodeKind.EachExpression,
     );
@@ -173,7 +173,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 }
 
 function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode): void {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         fnExpr,
         Ast.NodeKind.FunctionExpression,
     );
@@ -212,7 +212,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
 }
 
 function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): void {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         letExpr,
         Ast.NodeKind.LetExpression,
     );
@@ -239,7 +239,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
 }
 
 function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: TXorNode): void {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(record, [
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(record, [
         Ast.NodeKind.RecordExpression,
         Ast.NodeKind.RecordLiteral,
     ]);
@@ -257,7 +257,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
 }
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         section,
         Ast.NodeKind.Section,
     );
@@ -312,7 +312,7 @@ function expandScope(
     state: ScopeInspectionState,
     xorNode: TXorNode,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
-    maybeDefaultScope: undefined | ScopeItemByKey,
+    maybeDefaultScope: ScopeItemByKey | undefined,
 ): void {
     const scope: ScopeItemByKey = getOrCreateScope(state, xorNode.node.id, maybeDefaultScope);
     for (const [key, value] of newEntries) {
@@ -325,14 +325,14 @@ function expandChildScope(
     parent: TXorNode,
     childAttributeIds: ReadonlyArray<number>,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
-    maybeDefaultScope: undefined | ScopeItemByKey,
+    maybeDefaultScope: ScopeItemByKey | undefined,
 ): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const parentId: number = parent.node.id;
 
     // TODO: optimize this
     for (const attributeId of childAttributeIds) {
-        const maybeChild: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeChild: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
             nodeIdMapCollection,
             parentId,
             attributeId,
@@ -348,17 +348,17 @@ function expandChildScope(
 function getOrCreateScope(
     state: ScopeInspectionState,
     nodeId: number,
-    maybeDefaultScope: undefined | ScopeItemByKey,
+    maybeDefaultScope: ScopeItemByKey | undefined,
 ): ScopeItemByKey {
     // If scopeFor has already been called then there should be a nodeId in the deltaScope.
-    const maybeDeltaScope: undefined | ScopeItemByKey = state.deltaScope.get(nodeId);
+    const maybeDeltaScope: ScopeItemByKey | undefined = state.deltaScope.get(nodeId);
     if (maybeDeltaScope !== undefined) {
         return maybeDeltaScope;
     }
 
     // If given a scope with an existing value then assume it's valid.
     // Cache and return.
-    const maybeGivenScope: undefined | ScopeItemByKey = state.givenScope.get(nodeId);
+    const maybeGivenScope: ScopeItemByKey | undefined = state.givenScope.get(nodeId);
     if (maybeGivenScope !== undefined) {
         const shallowCopy: ScopeItemByKey = new Map(maybeGivenScope.entries());
         state.deltaScope.set(nodeId, shallowCopy);
@@ -372,7 +372,7 @@ function getOrCreateScope(
     }
 
     // Default to a parent's scope if the node has a parent.
-    const maybeParent: undefined | TXorNode = NodeIdMapUtils.maybeParentXorNode(
+    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(
         state.nodeIdMapCollection,
         nodeId,
         undefined,
@@ -380,14 +380,14 @@ function getOrCreateScope(
     if (maybeParent !== undefined) {
         const parentNodeId: number = maybeParent.node.id;
 
-        const maybeParentDeltaScope: undefined | ScopeItemByKey = state.deltaScope.get(parentNodeId);
+        const maybeParentDeltaScope: ScopeItemByKey | undefined = state.deltaScope.get(parentNodeId);
         if (maybeParentDeltaScope !== undefined) {
             const shallowCopy: ScopeItemByKey = new Map(maybeParentDeltaScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);
             return shallowCopy;
         }
 
-        const maybeParentGivenScope: undefined | ScopeItemByKey = state.givenScope.get(parentNodeId);
+        const maybeParentGivenScope: ScopeItemByKey | undefined = state.givenScope.get(parentNodeId);
         if (maybeParentGivenScope !== undefined) {
             const shallowCopy: ScopeItemByKey = new Map(maybeParentGivenScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);

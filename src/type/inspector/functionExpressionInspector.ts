@@ -17,14 +17,14 @@ export interface InspectedFunctionParameter {
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
-    readonly maybeType: undefined | Type.TypeKind;
+    readonly maybeType: Type.TypeKind | undefined;
 }
 
 export function inspectFunctionExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): InspectedFunctionExpression {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         fnExpr,
         Ast.NodeKind.FunctionExpression,
     );
@@ -36,7 +36,7 @@ export function inspectFunctionExpression(
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const maybeExaminable: undefined | InspectedFunctionParameter = examineParameter(
+        const maybeExaminable: InspectedFunctionParameter | undefined = examineParameter(
             nodeIdMapCollection,
             parameter,
         );
@@ -45,7 +45,7 @@ export function inspectFunctionExpression(
         }
     }
 
-    const maybeReturnType: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeReturnType: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
         nodeIdMapCollection,
         fnExpr.node.id,
         1,
@@ -76,7 +76,7 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeParameterList: undefined | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeParameterList: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
         fnExpr.node.id,
         0,
@@ -85,7 +85,7 @@ function functionParameterXorNodes(
     if (maybeParameterList === undefined) {
         return [];
     }
-    const maybeWrappedContent: undefined | TXorNode = NodeIdMapUtils.maybeWrappedContent(
+    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
         nodeIdMapCollection,
         maybeParameterList,
     );
@@ -98,7 +98,7 @@ function functionParameterXorNodes(
 function examineParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: TXorNode,
-): undefined | InspectedFunctionParameter {
+): InspectedFunctionParameter | undefined {
     switch (parameter.kind) {
         case XorNodeKind.Ast:
             return examineAstParameter(parameter.node as Ast.IParameter<Ast.AsNullablePrimitiveType>);
@@ -113,7 +113,7 @@ function examineParameter(
 
 function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>): InspectedFunctionParameter {
     let isNullable: boolean;
-    let maybeType: undefined | Type.TypeKind;
+    let maybeType: Type.TypeKind | undefined;
 
     const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = node.maybeParameterType;
     if (maybeParameterType !== undefined) {
@@ -139,13 +139,13 @@ function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>):
 function examineContextParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     parameter: ParseContext.Node,
-): undefined | InspectedFunctionParameter {
+): InspectedFunctionParameter | undefined {
     let name: Ast.Identifier;
     let isOptional: boolean;
     let isNullable: boolean;
-    let maybeType: undefined | Type.TypeKind;
+    let maybeType: Type.TypeKind | undefined;
 
-    const maybeName: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
         nodeIdMapCollection,
         parameter.id,
         1,
@@ -156,7 +156,7 @@ function examineContextParameter(
     }
     name = maybeName as Ast.Identifier;
 
-    const maybeOptional: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeOptional: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
         nodeIdMapCollection,
         parameter.id,
         0,
@@ -164,7 +164,7 @@ function examineContextParameter(
     );
     isOptional = maybeOptional !== undefined;
 
-    const maybeParameterType: undefined | Ast.TNode = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeParameterType: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
         nodeIdMapCollection,
         parameter.id,
         2,
