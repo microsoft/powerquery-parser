@@ -176,6 +176,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateLiteralExpression(xorNode);
             break;
 
+        case Ast.NodeKind.RecursivePrimaryExpression:
+            result = translateRecursivePrimaryExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.RecordExpression:
             result = genericFactory(Type.TypeKind.Record, false);
             break;
@@ -461,6 +465,50 @@ function translateLiteralExpression(xorNode: TXorNode): Type.TType {
     );
     if (maybeErr !== undefined) {
         throw maybeErr;
+    }
+
+    switch (xorNode.kind) {
+        case XorNodeKind.Ast:
+            // We already checked it's a Ast Literal Expression.
+            const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
+            const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
+                literalKind,
+            );
+            return genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
+
+        case XorNodeKind.Context:
+            return unknownFactory();
+
+        default:
+            throw isNever(xorNode);
+    }
+}
+
+function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.RecursivePrimaryExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const headType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 0);
+    if (
+        headType.kind === Type.TypeKind.Any ||
+        headType.kind === Type.TypeKind.None ||
+        headType.kind === Type.TypeKind.Unknown
+    ) {
+        return headType;
+    }
+
+    const maybeArrayWrapper:
+        | TXorNode
+        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
+        Ast.NodeKind.ArrayWrapper,
+    ]);
+    if (maybeArrayWrapper === undefined) {
+        return unknownFactory();
     }
 
     switch (xorNode.kind) {
