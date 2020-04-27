@@ -752,7 +752,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, recursiveArrayNodeKind);
 
-    const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
+    const recursiveExpressions: (Ast.InvokeExpression | Ast.ItemAccessExpression | Ast.TFieldAccessExpression)[] = [];
     let continueReadingValues: boolean = true;
     while (continueReadingValues) {
         const maybeCurrentTokenKind: Language.TokenKind | undefined = state.maybeCurrentTokenKind;
@@ -762,17 +762,19 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
         } else if (maybeCurrentTokenKind === Language.TokenKind.LeftBrace) {
             recursiveExpressions.push(parser.readItemAccessExpression(state, parser));
         } else if (maybeCurrentTokenKind === Language.TokenKind.LeftBracket) {
-            const bracketExpression: Ast.TRecursivePrimaryExpression = readBracketDisambiguation(state, parser, [
+            const bracketExpression: Ast.TFieldAccessExpression = readBracketDisambiguation(state, parser, [
                 BracketDisambiguation.FieldProjection,
                 BracketDisambiguation.FieldSelection,
-            ]) as Ast.TRecursivePrimaryExpression;
+            ]) as Ast.TFieldAccessExpression;
             recursiveExpressions.push(bracketExpression);
         } else {
             continueReadingValues = false;
         }
     }
 
-    const recursiveArray: Ast.IArrayWrapper<Ast.TRecursivePrimaryExpression> = {
+    const recursiveArray: Ast.IArrayWrapper<
+        Ast.InvokeExpression | Ast.ItemAccessExpression | Ast.TFieldAccessExpression
+    > = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: recursiveArrayNodeKind,
         isLeaf: false,
