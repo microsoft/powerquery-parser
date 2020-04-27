@@ -130,13 +130,13 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe(`WIP ${Ast.NodeKind.IdentifierExpression}`, () => {
+    describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
         it(`let x = true in x`, () => {
             expectSimpleExpressionType("let x = true in x", Type.TypeKind.Logical, false);
         });
 
         it(`let x = 1 in x`, () => {
-            expectSimpleExpressionType("let x = 1 in x", Type.TypeKind.Logical, false);
+            expectSimpleExpressionType("let x = 1 in x", Type.TypeKind.Number, false);
         });
     });
 

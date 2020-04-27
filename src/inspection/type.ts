@@ -152,13 +152,13 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
 
-        // case Ast.NodeKind.Identifier:
-        //     result = translateIdentifier(nodeIdMapCollection, scopeById, scopeTypeMap, xorNode);
-        //     break;
+        case Ast.NodeKind.Identifier:
+            result = translateIdentifier(state, xorNode);
+            break;
 
-        // case Ast.NodeKind.IdentifierExpression:
-        //     result = translateIdentifierExpression(nodeIdMapCollection, scopeById, scopeTypeMap, xorNode);
-        //     break;
+        case Ast.NodeKind.IdentifierExpression:
+            result = translateIdentifierExpression(state, xorNode);
+            break;
 
         case Ast.NodeKind.IfExpression:
             result = translateIfExpression(state, xorNode);
@@ -391,57 +391,43 @@ function translateConstant(xorNode: TXorNode): Type.TType {
     }
 }
 
-// function translateIdentifier(
-//     nodeIdMapCollection: NodeIdMap.Collection,
-//     scopeById: ScopeById,
-//     scopeTypeMap: ScopeTypeCacheMap,
-//     xorNode: TXorNode,
-// ): Type.TType {
-//     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-//         xorNode,
-//         Ast.NodeKind.Identifier,
-//     );
-//     if (maybeErr !== undefined) {
-//         throw maybeErr;
-//     } else if (xorNode.kind === XorNodeKind.Context) {
-//         return unknownFactory();
-//     }
+function translateIdentifier(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.Identifier,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    } else if (xorNode.kind === XorNodeKind.Context) {
+        return unknownFactory();
+    }
 
-//     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
-//         nodeIdMapCollection,
-//         scopeById,
-//         scopeTypeMap,
-//         xorNode.node as Ast.Identifier,
-//         false,
-//     );
-//     return dereferencedType !== undefined ? dereferencedType : unknownFactory();
-// }
+    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
+        state,
+        xorNode.node as Ast.Identifier,
+        false,
+    );
+    return dereferencedType !== undefined ? dereferencedType : unknownFactory();
+}
 
-// function translateIdentifierExpression(
-//     nodeIdMapCollection: NodeIdMap.Collection,
-//     scopeById: ScopeById,
-//     scopeTypeMap: ScopeTypeCacheMap,
-//     xorNode: TXorNode,
-// ): Type.TType {
-//     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-//         xorNode,
-//         Ast.NodeKind.IdentifierExpression,
-//     );
-//     if (maybeErr !== undefined) {
-//         throw maybeErr;
-//     } else if (xorNode.kind === XorNodeKind.Context) {
-//         return unknownFactory();
-//     }
+function translateIdentifierExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.IdentifierExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    } else if (xorNode.kind === XorNodeKind.Context) {
+        return unknownFactory();
+    }
 
-//     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
-//         nodeIdMapCollection,
-//         scopeById,
-//         scopeTypeMap,
-//         (xorNode.node as Ast.IdentifierExpression).identifier,
-//         false,
-//     );
-//     return dereferencedType !== undefined ? dereferencedType : unknownFactory();
-// }
+    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
+        state,
+        (xorNode.node as Ast.IdentifierExpression).identifier,
+        false,
+    );
+    return dereferencedType !== undefined ? dereferencedType : unknownFactory();
+}
 
 function translateIfExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
@@ -789,77 +775,68 @@ function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, conditionFn: (type: Typ
     );
 }
 
-// function maybeDereferencedIdentifierType(
-//     nodeIdMapCollection: NodeIdMap.Collection,
-//     scopeById: ScopeById,
-//     scopeTypeMap: ScopeTypeCacheMap,
-//     identifier: Ast.Identifier,
-//     isRecursive: boolean,
-// ): undefined | Type.TType {
-//     const maybeScopeItemByKey: ScopeItemByKey | undefined = scopeById.get(identifier.id);
-//     if (maybeScopeItemByKey === undefined) {
-//         const details: {} = { identifierNodeId: identifier.id };
-//         throw new CommonError.InvariantError(`expected identifier.id to be in scopeById`, details);
-//     }
-//     const scopeItemByKey: ScopeItemByKey = maybeScopeItemByKey;
+function maybeDereferencedIdentifierType(
+    state: ScopeTypeInspectionState,
+    identifier: Ast.Identifier,
+    isRecursive: boolean,
+): undefined | Type.TType {
+    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, identifier.id);
 
-//     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifier.literal);
-//     if (maybeScopeItem === undefined) {
-//         return undefined;
-//     }
-//     const scopeItem: TScopeItem = maybeScopeItem;
-//     if (scopeItem.recursive !== isRecursive) {
-//         return undefined;
-//     }
+    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifier.literal);
+    if (maybeScopeItem === undefined) {
+        return undefined;
+    }
+    const scopeItem: TScopeItem = maybeScopeItem;
+    if (scopeItem.recursive !== isRecursive) {
+        return undefined;
+    }
 
-//     let maybeNextXorNode: undefined | TXorNode;
-//     switch (scopeItem.kind) {
-//         case ScopeItemKind.Each:
-//             maybeNextXorNode = scopeItem.eachExpression;
-//             break;
+    let maybeNextXorNode: undefined | TXorNode;
+    switch (scopeItem.kind) {
+        case ScopeItemKind.Each:
+            maybeNextXorNode = scopeItem.eachExpression;
+            break;
 
-//         case ScopeItemKind.KeyValuePair:
-//             maybeNextXorNode = scopeItem.maybeValue;
-//             break;
+        case ScopeItemKind.KeyValuePair:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
 
-//         case ScopeItemKind.Parameter:
-//             return parameterFactory(scopeItem);
+        case ScopeItemKind.Parameter:
+            return parameterFactory(scopeItem);
 
-//         case ScopeItemKind.SectionMember:
-//             maybeNextXorNode = scopeItem.maybeValue;
-//             break;
+        case ScopeItemKind.SectionMember:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
 
-//         case ScopeItemKind.Undefined:
-//             return undefined;
+        case ScopeItemKind.Undefined:
+            return undefined;
 
-//         default:
-//             throw isNever(scopeItem);
-//     }
+        default:
+            throw isNever(scopeItem);
+    }
 
-//     if (maybeNextXorNode === undefined) {
-//         return undefined;
-//     }
-//     const nextXorNode: TXorNode = maybeNextXorNode;
+    if (maybeNextXorNode === undefined) {
+        return undefined;
+    }
+    const nextXorNode: TXorNode = maybeNextXorNode;
 
-//     if (nextXorNode.node.kind === Ast.NodeKind.Identifier) {
-//         return nextXorNode.kind === XorNodeKind.Ast
-//             ? maybeDereferencedIdentifierType(nodeIdMapCollection, scopeById, scopeTypeMap, nextXorNode.node, false)
-//             : undefined;
-//     } else if (nextXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-//         if (nextXorNode.kind === XorNodeKind.Context) {
-//             return undefined;
-//         }
-//         return maybeDereferencedIdentifierType(
-//             nodeIdMapCollection,
-//             scopeById,
-//             scopeTypeMap,
-//             nextXorNode.node.identifier,
-//             nextXorNode.node.maybeInclusiveConstant !== undefined,
-//         );
-//     } else {
-//         return translateXorNode(nodeIdMapCollection, scopeById, scopeTypeMap, nextXorNode);
-//     }
-// }
+    if (nextXorNode.node.kind === Ast.NodeKind.Identifier) {
+        return nextXorNode.kind === XorNodeKind.Ast
+            ? maybeDereferencedIdentifierType(state, nextXorNode.node, false)
+            : undefined;
+    } else if (nextXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
+        if (nextXorNode.kind === XorNodeKind.Context) {
+            return undefined;
+        }
+        return maybeDereferencedIdentifierType(
+            state,
+            nextXorNode.node.identifier,
+            nextXorNode.node.maybeInclusiveConstant !== undefined,
+        );
+    } else {
+        return translateXorNode(state, nextXorNode);
+    }
+}
 
 function getOrCreateScope(state: ScopeTypeInspectionState, nodeId: number): ScopeItemByKey {
     const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
