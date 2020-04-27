@@ -360,8 +360,9 @@ function getOrCreateScope(
     // Cache and return.
     const maybeGivenScope: undefined | ScopeItemByKey = state.givenScope.get(nodeId);
     if (maybeGivenScope !== undefined) {
-        state.deltaScope.set(nodeId, { ...maybeGivenScope });
-        return maybeGivenScope;
+        const shallowCopy: ScopeItemByKey = new Map(maybeGivenScope.entries());
+        state.deltaScope.set(nodeId, shallowCopy);
+        return shallowCopy;
     }
 
     if (maybeDefaultScope !== undefined) {
