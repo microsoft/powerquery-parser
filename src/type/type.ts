@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 export type TType = PrimitiveType | TExtendedType;
-export type TExtendedType = AnyUnion | DefinedRecord | DefinedTable;
-export type TExtendedTypeKind = TypeKind.Any | TypeKind.Record | TypeKind.Table;
+export type TExtendedType = AnyUnion | DefinedFunction | DefinedRecord | DefinedTable;
+export type TExtendedTypeKind = TypeKind.Any | TypeKind.Function | TypeKind.Record | TypeKind.Table;
 
 export const enum TypeKind {
     Action = "Action",
@@ -30,8 +30,9 @@ export const enum TypeKind {
 
 export const enum ExtendedTypeKind {
     AnyUnion = "AnyUnion",
-    CustomRecord = "CustomRecord",
-    CustomTable = "CustomTable",
+    DefinedFunction = "DefinedFunction",
+    DefinedRecord = "DefinedRecord",
+    DefinedTable = "DefinedTable",
 }
 
 export interface IType {
@@ -55,15 +56,22 @@ export interface AnyUnion extends IExtendedType {
     readonly unionedTypePairs: ReadonlyArray<TType>;
 }
 
+export interface DefinedFunction extends IExtendedType {
+    readonly kind: TypeKind.Function;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedFunction;
+    readonly parameterTypes: ReadonlyArray<TType>;
+    readonly returnType: TType;
+}
+
 export interface DefinedRecord extends IExtendedType {
     readonly kind: TypeKind.Record;
-    readonly maybeExtendedKind: ExtendedTypeKind.CustomRecord;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
     readonly fields: Map<string, TType>;
 }
 
 export interface DefinedTable extends IExtendedType {
     readonly kind: TypeKind.Record;
-    readonly maybeExtendedKind: ExtendedTypeKind.CustomTable;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
     readonly fields: Map<string, TType>;
 }
 

@@ -8,12 +8,11 @@ import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, X
 
 export interface InspectedFunctionExpression {
     readonly parameters: ReadonlyArray<InspectedFunctionParameter>;
-    readonly isReturnNullable: boolean;
-    readonly returnType: Type.TypeKind;
+    readonly returnType: Type.TType;
 }
 
 export interface InspectedFunctionParameter {
-    readonly id: number,
+    readonly id: number;
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
@@ -67,8 +66,11 @@ export function inspectFunctionExpression(
 
     return {
         parameters: examinedParameters,
-        isReturnNullable,
-        returnType,
+        returnType: {
+            kind: returnType,
+            maybeExtendedKind: undefined,
+            isNullable: isReturnNullable,
+        },
     };
 }
 

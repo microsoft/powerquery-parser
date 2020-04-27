@@ -5,7 +5,7 @@ import { CommonError, isNever, Result, ResultUtils } from "../common";
 import { Ast, AstUtils } from "../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
-import { Type, TypeUtils } from "../type";
+import { Type, TypeInspector, TypeUtils } from "../type";
 import {
     ParameterScopeItem,
     ScopeById,
@@ -150,6 +150,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.EachExpression:
             result = translateFromChildAttributeIndex(state, xorNode, 1);
+            break;
+
+        case Ast.NodeKind.FunctionExpression:
+            result = translateFunctionExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.Identifier:
@@ -393,6 +397,36 @@ function translateConstant(xorNode: TXorNode): Type.TType {
         default:
             return unknownFactory();
     }
+}
+
+function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.FunctionExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const inspectedFunctionExpression: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
+        state.nodeIdMapCollection,
+        xorNode,
+    );
+
+    return {
+        kind: Type.TypeKind.Function,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+        isNullable: false,
+        parameterTypes: inspectedFunctionExpression.parameters.map(
+            (parameter: TypeInspector.InspectedFunctionParameter) => {
+                return genericFactory(
+                    parameter.maybeType !== undefined ? parameter.maybeType : Type.TypeKind.Unknown,
+                    parameter.isNullable,
+                );
+            },
+        ),
+        returnType: inspectedFunctionExpression.returnType,
+    };
 }
 
 function translateIdentifier(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
