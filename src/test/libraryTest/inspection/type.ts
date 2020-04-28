@@ -162,7 +162,14 @@ describe(`Inspection - Scope - Type`, () => {
         });
 
         it(`[]`, () => {
-            expectSimpleExpressionType("[]", Type.TypeKind.Record, false);
+            const expression: string = `[]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                isNullable: false,
+                fields: new Map(),
+            };
+            expectParseOkTypeOk(expression, expected);
         });
     });
 
@@ -245,12 +252,30 @@ describe(`Inspection - Scope - Type`, () => {
     });
 
     describe(`${Ast.NodeKind.RecordExpression}`, () => {
-        it(`WIP type [foo=1] & type record`, () => {
-            const expression: string = `type [foo=1] & type record`;
+        it(`[foo=1] & [bar=2]`, () => {
+            const expression: string = `[foo=1] & [bar=2]`;
             const expected: AbridgedScopeType = {
-                kind: Type.TypeKind.Any,
-                maybeExtendedKind: undefined,
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
+                fields: new Map([
+                    [
+                        "foo",
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                    [
+                        "bar",
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                ]),
             };
             expectParseOkTypeOk(expression, expected);
         });
@@ -258,29 +283,59 @@ describe(`Inspection - Scope - Type`, () => {
         it(`[] & [bar=2]`, () => {
             const expression: string = `[] & [bar=2]`;
             const expected: AbridgedScopeType = {
-                kind: Type.TypeKind.Any,
-                maybeExtendedKind: undefined,
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
+                fields: new Map([
+                    [
+                        "bar",
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                ]),
             };
             expectParseOkTypeOk(expression, expected);
         });
 
-        it(`[foo=1] & [bar=2]`, () => {
-            const expression: string = `[foo=1] & [bar=2]`;
+        it(`[foo=1] & []`, () => {
+            const expression: string = `[foo=1] & []`;
             const expected: AbridgedScopeType = {
-                kind: Type.TypeKind.Any,
-                maybeExtendedKind: undefined,
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
+                fields: new Map([
+                    [
+                        "foo",
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                ]),
             };
             expectParseOkTypeOk(expression, expected);
         });
 
-        it(`[foo=1] & [foo=2]`, () => {
-            const expression: string = `[foo=1] & [foo=2]`;
+        it(`[foo=1] & [foo=""]`, () => {
+            const expression: string = `[foo=1] & [foo=""]`;
             const expected: AbridgedScopeType = {
-                kind: Type.TypeKind.Any,
-                maybeExtendedKind: undefined,
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
+                fields: new Map([
+                    [
+                        "foo",
+                        {
+                            kind: Type.TypeKind.Text,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                ]),
             };
             expectParseOkTypeOk(expression, expected);
         });

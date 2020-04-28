@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 export type TType = IPrimitiveType | TExtendedType;
-export type TExtendedType = AnyUnion | DefinedFunction | DefinedRecord | DefinedTable;
-export type TExtendedTypeKind = TypeKind.Any | TypeKind.Function | TypeKind.Record | TypeKind.Table;
+export type TExtendedType = AnyUnion | DefinedFunction | DefinedRecordExpression | DefinedTable | DefinedType;
+export type TExtendedTypeKind = TypeKind.Any | TypeKind.Function | TypeKind.Record | TypeKind.Table | TypeKind.Type;
 
 export const enum TypeKind {
     Action = "Action",
@@ -31,8 +31,9 @@ export const enum TypeKind {
 export const enum ExtendedTypeKind {
     AnyUnion = "AnyUnion",
     DefinedFunction = "DefinedFunction",
-    DefinedRecord = "DefinedRecord",
+    DefinedRecordExpression = "DefinedRecordExpression",
     DefinedTable = "DefinedTable",
+    DefinedType = "DefinedType",
 }
 
 export interface IType<T extends TypeKind = TypeKind> {
@@ -63,9 +64,9 @@ export interface DefinedFunction extends IExtendedType {
     readonly returnType: TType;
 }
 
-export interface DefinedRecord extends IExtendedType {
+export interface DefinedRecordExpression extends IExtendedType {
     readonly kind: TypeKind.Record;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecordExpression;
     readonly fields: Map<string, TType>;
 }
 
@@ -73,6 +74,12 @@ export interface DefinedTable extends IExtendedType {
     readonly kind: TypeKind.Table;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
     readonly fields: Map<string, TType>;
+}
+
+export interface DefinedType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedType;
+    readonly primaryType: TType;
 }
 
 export interface ParameterType extends IExtendedType {

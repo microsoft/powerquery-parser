@@ -46,7 +46,7 @@ export function tryScopeTypeForRoot(
 type TRecordOrTable =
     | Type.IPrimitiveType<Type.TypeKind.Record>
     | Type.IPrimitiveType<Type.TypeKind.Table>
-    | Type.DefinedRecord
+    | Type.DefinedRecordExpression
     | Type.DefinedTable;
 
 interface ScopeTypeInspectionState {
@@ -191,7 +191,7 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.RecordExpression:
-            result = genericFactory(Type.TypeKind.Record, false);
+            result = translateRecordExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.TypePrimaryType:
@@ -606,8 +606,40 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     throw new Error();
 }
 
-function translateTypePrimaryType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
-    throw new Error("TODO");
+function translateRecordExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedRecordExpression {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.RecordExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const fields: Map<string, Type.TType> = new Map();
+    for (const keyValuePair of NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, xorNode)) {
+        if (keyValuePair.maybeValue) {
+            fields.set(keyValuePair.keyLiteral, translateXorNode(state, keyValuePair.maybeValue));
+        } else {
+            fields.set(keyValuePair.keyLiteral, unknownFactory());
+        }
+    }
+
+    return {
+        kind: Type.TypeKind.Record,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+        isNullable: false,
+        fields,
+    };
+}
+
+function translateTypePrimaryType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedType {
+    const primaryType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 1);
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+        isNullable: primaryType.isNullable,
+        primaryType,
+    };
 }
 
 function translateUnaryExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -874,52 +906,48 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
         };
         throw new CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
-    // '[] & []'
+    // '[] & []' or '{} & {}'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
         return genericFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
     }
-    // '[key=value] & []'
+    // '[key=value] & []' or '{...} & {}`
     else if (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind === undefined) {
         return leftType;
     }
-    // '[] & [key=value]'
+    // '[] & [key=value]' or `{} & {...}`
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind !== undefined) {
         return rightType;
     }
     // '[foo=value] & [bar=value]'
     else if (leftType.kind === Type.TypeKind.Record) {
-        return translateDefinedRecordUnion(leftType as Type.DefinedRecord, rightType as Type.DefinedRecord);
-    } else if (leftType.kind === Type.TypeKind.Table) {
-        return translateDefinedTableUnion(leftType as Type.DefinedTable, rightType as Type.DefinedTable);
+        return translateDefinedRecordExpressionUnion(
+            leftType as Type.DefinedRecordExpression,
+            rightType as Type.DefinedRecordExpression,
+        );
+    }
+    // `{...} & {...}`
+    else if (leftType.kind === Type.TypeKind.Table) {
+        return genericFactory(leftType.kind, leftType.isNullable && rightType.isNullable);
     } else {
         throw isNever(leftType);
     }
 }
 
-function translateDefinedRecordUnion(leftType: Type.DefinedRecord, rightType: Type.DefinedRecord): Type.DefinedRecord {
-    return {
-        kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-        fields: combineMaps(leftType.fields, rightType.fields),
-        isNullable: leftType.isNullable && rightType.isNullable,
-    };
-}
-function translateDefinedTableUnion(leftType: Type.DefinedTable, rightType: Type.DefinedTable): Type.DefinedTable {
-    return {
-        kind: Type.TypeKind.Table,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
-        fields: combineMaps(leftType.fields, rightType.fields),
-        isNullable: leftType.isNullable && rightType.isNullable,
-    };
-}
-
-function combineMaps(left: Map<string, Type.TType>, right: Map<string, Type.TType>): Map<string, Type.TType> {
-    const combinedFields: Map<string, Type.TType> = new Map(left);
-    for (const [key, value] of right.entries()) {
+function translateDefinedRecordExpressionUnion(
+    leftType: Type.DefinedRecordExpression,
+    rightType: Type.DefinedRecordExpression,
+): Type.DefinedRecordExpression {
+    const combinedFields: Map<string, Type.TType> = new Map(leftType.fields);
+    for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }
 
-    return combinedFields;
+    return {
+        kind: Type.TypeKind.Record,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+        fields: combinedFields,
+        isNullable: leftType.isNullable && rightType.isNullable,
+    };
 }
 
 // recursively flattens all AnyUnion.unionedTypePairs into a single array,
