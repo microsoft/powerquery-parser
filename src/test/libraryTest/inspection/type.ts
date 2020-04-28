@@ -244,8 +244,50 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.RecordExpression}`, () => {
+        it(`WIP type [foo=1] & type record`, () => {
+            const expression: string = `type [foo=1] & type record`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: undefined,
+                isNullable: false,
+            };
+            expectParseOkTypeOk(expression, expected);
+        });
+
+        it(`[] & [bar=2]`, () => {
+            const expression: string = `[] & [bar=2]`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: undefined,
+                isNullable: false,
+            };
+            expectParseOkTypeOk(expression, expected);
+        });
+
+        it(`[foo=1] & [bar=2]`, () => {
+            const expression: string = `[foo=1] & [bar=2]`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: undefined,
+                isNullable: false,
+            };
+            expectParseOkTypeOk(expression, expected);
+        });
+
+        it(`[foo=1] & [foo=2]`, () => {
+            const expression: string = `[foo=1] & [foo=2]`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: undefined,
+                isNullable: false,
+            };
+            expectParseOkTypeOk(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
-        it(`WIP let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)`, () => {
+        it(`let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)`, () => {
             expectSimpleExpressionType(
                 "let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)",
                 Type.TypeKind.Number,

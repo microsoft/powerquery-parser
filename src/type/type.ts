@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export type TType = PrimitiveType | TExtendedType;
+export type TType = IPrimitiveType | TExtendedType;
 export type TExtendedType = AnyUnion | DefinedFunction | DefinedRecord | DefinedTable;
 export type TExtendedTypeKind = TypeKind.Any | TypeKind.Function | TypeKind.Record | TypeKind.Table;
 
@@ -35,13 +35,13 @@ export const enum ExtendedTypeKind {
     DefinedTable = "DefinedTable",
 }
 
-export interface IType {
-    readonly kind: TypeKind;
+export interface IType<T extends TypeKind = TypeKind> {
+    readonly kind: T;
     readonly maybeExtendedKind: ExtendedTypeKind | undefined;
     readonly isNullable: boolean;
 }
 
-export interface PrimitiveType extends IType {
+export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
     readonly maybeExtendedKind: undefined;
 }
 
@@ -70,7 +70,7 @@ export interface DefinedRecord extends IExtendedType {
 }
 
 export interface DefinedTable extends IExtendedType {
-    readonly kind: TypeKind.Record;
+    readonly kind: TypeKind.Table;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
     readonly fields: Map<string, TType>;
 }
