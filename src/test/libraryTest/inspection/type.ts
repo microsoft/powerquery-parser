@@ -353,6 +353,14 @@ describe(`Inspection - Scope - Type`, () => {
         it(`let foo = (x as number) => if x > 0 then @foo(x - 1) else 0 in foo(0)`, () => {
             expectSimpleExpressionType(
                 "let foo = (x as number) => if x > 0 then @foo(x - 1) else 0 in foo(0)",
+                Type.TypeKind.Any,
+                true,
+            );
+        });
+
+        it(`WIP let x = () as function => () as number => 1 in x()()`, () => {
+            expectSimpleExpressionType(
+                "let x = () as function => () as number => 1 in x()()",
                 Type.TypeKind.Number,
                 false,
             );

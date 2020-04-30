@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { NodeIdMapIterator } from ".";
 import { ParseContext } from "..";
 import { Language } from "../..";
 import { CommonError, isNever, MapUtils } from "../../common";
@@ -195,15 +196,57 @@ export function maybeContextChildByAttributeIndex(
     }
 }
 
+export function expectInvokeExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+    const invokeExpr: TXorNode = expectXorNode(nodeIdMapCollection, nodeId);
+    const maybeErr: CommonError.InvariantError | undefined = testAstNodeKind(invokeExpr, Ast.NodeKind.InvokeExpression);
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const arrayWrapper: TXorNode = expectParentXorNode(nodeIdMapCollection, nodeId, [Ast.NodeKind.ArrayWrapper]);
+    const maybeInvokeExpressionAttributeIndex: number | undefined = invokeExpr.node.maybeAttributeIndex;
+
+    // It's not the first element in the ArrayWrapper.
+    if (maybeInvokeExpressionAttributeIndex && maybeInvokeExpressionAttributeIndex > 0) {
+        const childIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(
+            nodeIdMapCollection.childIdsById,
+            arrayWrapper.node.id,
+        );
+        const indexOfInvokeExprId: number = childIds.indexOf(invokeExpr.node.id);
+        if (indexOfInvokeExprId === -1 || indexOfInvokeExprId === 0) {
+            const details: {} = {
+                invokeExprId: invokeExpr.node.id,
+                arrayWrapperId: arrayWrapper.node.id,
+                indexOfInvokeExprId,
+            };
+            throw new CommonError.InvariantError(
+                `expected to find invokeExpr in arrayWrapper's children at an index > 0`,
+                details,
+            );
+        }
+
+        return expectXorChildByAttributeIndex(
+            nodeIdMapCollection,
+            arrayWrapper.node.id,
+            indexOfInvokeExprId - 1,
+            undefined,
+        );
+    }
+    // It's the first element in ArrayWrapper, meaning we must grab RecursivePrimaryExpression.head
+    else {
+        const recursivePrimaryExpression: TXorNode = expectParentXorNode(nodeIdMapCollection, arrayWrapper.node.id);
+        return expectXorChildByAttributeIndex(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0, undefined);
+    }
+}
+
 export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeId: number): string | undefined {
     const invokeExprXorNode: TXorNode = expectXorNode(nodeIdMapCollection, nodeId);
-
-    if (invokeExprXorNode.node.kind !== Ast.NodeKind.InvokeExpression) {
-        const details: {} = { invokeExprXorNode };
-        throw new CommonError.InvariantError(
-            `expected invokeExprXorNode to have a Ast.NodeKind of ${Ast.NodeKind.InvokeExpression}`,
-            details,
-        );
+    const maybeErr: CommonError.InvariantError | undefined = testAstNodeKind(
+        invokeExprXorNode,
+        Ast.NodeKind.InvokeExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
     }
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression

@@ -579,6 +579,7 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
         let rightType: Type.TType = translateXorNode(state, right);
 
         if (leftType.kind === Type.TypeKind.Function) {
+            // TODO: inspect the number of parameters and their types?
             if (right.node.kind !== Ast.NodeKind.InvokeExpression) {
                 return noneFactory();
             } else if (leftType.kind !== Type.TypeKind.Function) {
@@ -592,10 +593,12 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
                     `a FunctionExpression (left) should've preceded the InvokeExpression (right)`,
                     details,
                 );
+            } else if (leftType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
+                return leftType.returnType;
             }
-            // TODO: inspect the number of parameters and their types?
+            // We only know the left is a FunctionExpression, we don't know its return type, so default to any.
             else {
-                rightType = genericFactory(leftType.kind, leftType.isNullable);
+                rightType = anyFactory();
             }
         }
 
@@ -603,7 +606,7 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
         left = right;
     }
 
-    throw new Error();
+    return leftType;
 }
 
 function translateRecordExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedRecordExpression {
