@@ -723,8 +723,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     // UNSAFE MARKER
     //
     // Purpose of code block:
-    //      Shift the start of ParserContext from the default location (which doesn't include head),
-    //      to the left so that head is also included.
+    //      Shift the start of ParserContext to an earlier location so the head is included.
     //
     // Why are you trying to avoid a safer approach?
     //      There isn't one? At least not without refactoring in ways which will make things messier.
@@ -733,6 +732,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     //      I'm only mutating start location in the recursive expression to one already parsed, the head.
     mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[recursiveTokenIndexStart];
     mutableContext.tokenIndexStart = recursiveTokenIndexStart;
+    mutableContext.attributeCounter = 1;
 
     // Update attribute index for the head Ast.TNode
     const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
