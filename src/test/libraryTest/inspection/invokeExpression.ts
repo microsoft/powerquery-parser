@@ -7,7 +7,7 @@ import { Inspection } from "../../..";
 import { ResultUtils } from "../../../common";
 import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { IParserState, NodeIdMap, ParseContext } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
@@ -43,8 +43,8 @@ function expectParseOkInvokeExpressionOk<S extends IParserState = IParserState>(
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    return expectInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+    const contextState: ParseContext.State = expectParseOk(settings, text).state.contextState;
+    return expectInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 function expectParseErrInvokeExpressionOk<S extends IParserState = IParserState>(
@@ -52,13 +52,8 @@ function expectParseErrInvokeExpressionOk<S extends IParserState = IParserState>
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
-    return expectInvokeExpressionOk(
-        settings,
-        parseError.state.contextState.nodeIdMapCollection,
-        parseError.state.contextState.leafNodeIds,
-        position,
-    );
+    const contextState: ParseContext.State = expectParseErr(settings, text).state.contextState;
+    return expectInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 describe(`subset Inspection - InvokeExpression`, () => {

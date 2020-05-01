@@ -11,7 +11,7 @@ export function tryRead<State extends IParserState = IParserState>(
     state: State,
     parser: IParser<State>,
 ): TriedParse<State> {
-    let node: Ast.TNode = parser.read(state, parser);
+    let node: Ast.TNode;
 
     try {
         node = parser.read(state, parser);

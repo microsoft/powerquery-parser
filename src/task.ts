@@ -95,8 +95,8 @@ export function tryInspection<S extends IParserState = IParserState>(
         leafNodeIds = context.leafNodeIds;
     } else {
         const parseOk: ParseOk<S> = triedParse.value;
-        nodeIdMapCollection = parseOk.nodeIdMapCollection;
-        leafNodeIds = parseOk.leafNodeIds;
+        nodeIdMapCollection = parseOk.state.contextState.nodeIdMapCollection;
+        leafNodeIds = parseOk.state.contextState.leafNodeIds;
     }
 
     // We should only get an undefined for activeNode iff the document is empty
@@ -230,8 +230,8 @@ export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     } else {
         const lexParseOk: LexParseOk<S> = triedLexParse.value;
         ast = lexParseOk.ast;
-        nodeIdMapCollection = lexParseOk.nodeIdMapCollection;
-        leafNodeIds = lexParseOk.leafNodeIds;
+        nodeIdMapCollection = lexParseOk.state.contextState.nodeIdMapCollection;
+        leafNodeIds = lexParseOk.state.contextState.leafNodeIds;
         state = lexParseOk.state;
     }
 

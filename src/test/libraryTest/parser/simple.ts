@@ -32,7 +32,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         AbridgedNode[]
     >(
         state,
-        lexParseOk.nodeIdMapCollection,
+        lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
@@ -62,7 +62,7 @@ function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequire
         Ast.TNode | undefined
     >(
         state,
-        lexParseOk.nodeIdMapCollection,
+        lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
@@ -105,6 +105,10 @@ function expectAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>)
 }
 
 describe("Parser.AbridgedNode", () => {
+    describe(`IParser.read`, () => {
+        it(``);
+    });
+
     describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
         it(`1 & 2`, () => {
             const text: string = `1 & 2`;

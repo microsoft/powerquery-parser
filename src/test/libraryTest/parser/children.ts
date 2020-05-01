@@ -16,9 +16,9 @@ interface ChildIdsByIdEntry {
 
 function acutalFactoryFn<S extends IParserState = IParserState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
-    const astNodeById: NodeIdMap.AstNodeById = lexParseOk.nodeIdMapCollection.astNodeById;
+    const astNodeById: NodeIdMap.AstNodeById = lexParseOk.state.contextState.nodeIdMapCollection.astNodeById;
 
-    for (const [key, value] of lexParseOk.nodeIdMapCollection.childIdsById.entries()) {
+    for (const [key, value] of lexParseOk.state.contextState.nodeIdMapCollection.childIdsById.entries()) {
         actual.push({
             childNodeIds: value,
             id: key,

@@ -8,7 +8,7 @@ import { ResultUtils } from "../../../common";
 import { Position, StartOfDoctumentKeywords, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
-import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { IParserState, NodeIdMap, ParseContext, ParseError } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
@@ -45,8 +45,14 @@ function expectParseOkAutocompleteOk<S extends IParserState = IParserState>(
     text: string,
     position: Position,
 ): ReadonlyArray<Language.KeywordKind> {
-    const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    return expectAutocompleteOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position, undefined);
+    const contextState: ParseContext.State = expectParseOk(settings, text).state.contextState;
+    return expectAutocompleteOk(
+        settings,
+        contextState.nodeIdMapCollection,
+        contextState.leafNodeIds,
+        position,
+        undefined,
+    );
 }
 
 function expectParseErrAutocompleteOk<S extends IParserState = IParserState>(
@@ -55,10 +61,11 @@ function expectParseErrAutocompleteOk<S extends IParserState = IParserState>(
     position: Position,
 ): ReadonlyArray<Language.KeywordKind> {
     const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
+    const contextState: ParseContext.State = expectParseErr(settings, text).state.contextState;
     return expectAutocompleteOk(
         settings,
-        parseError.state.contextState.nodeIdMapCollection,
-        parseError.state.contextState.leafNodeIds,
+        contextState.nodeIdMapCollection,
+        contextState.leafNodeIds,
         position,
         parseError,
     );
