@@ -16,7 +16,13 @@ export function tryRead<State extends IParserState = IParserState>(
     try {
         node = parser.read(state, parser);
     } catch (err) {
-        return ResultUtils.errFactory(CommonError.ensureCommonError(state.localizationTemplates, err));
+        let convertedError: ParseError.TParseError<State>;
+        if (ParseError.isTInnerParseError(err)) {
+            convertedError = new ParseError.ParseError(err, state);
+        } else {
+            convertedError = CommonError.ensureCommonError(state.localizationTemplates, err);
+        }
+        return ResultUtils.errFactory(convertedError);
     }
 
     const maybeCommonErr: CommonError.InvariantError | undefined = IParserStateUtils.testNoOpenContext(state);
