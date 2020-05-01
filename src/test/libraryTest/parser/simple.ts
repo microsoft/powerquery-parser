@@ -7,7 +7,9 @@ import { Task } from "../../..";
 import { ResultUtils, Traverse } from "../../../common";
 import { Ast } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
-import { DefaultSettings } from "../../../settings";
+import { IParser, IParserState } from "../../../parser";
+import { RecursiveDescentParser } from "../../../parser/parsers";
+import { DefaultSettings, Settings } from "../../../settings";
 import { expectLexParseOk } from "../../common";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
@@ -105,8 +107,19 @@ function expectAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>)
 }
 
 describe("Parser.AbridgedNode", () => {
-    describe(`IParser.read`, () => {
-        it(``);
+    describe(`custom IParser.read`, () => {
+        it(`readErrorRaisingExpression`, () => {
+            const customParser: IParser<IParserState> = {
+                ...RecursiveDescentParser,
+                read: RecursiveDescentParser.readErrorRaisingExpression,
+            };
+            const customSettings: Settings = {
+                ...DefaultSettings,
+                parser: customParser,
+            };
+            const triedLexParse: Task.TriedLexParse = Task.tryLexParse(customSettings, "error 1");
+            expect(ResultUtils.isOk(triedLexParse)).to.equal(true, "triedLexParse should be an Ok");
+        });
     });
 
     describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
