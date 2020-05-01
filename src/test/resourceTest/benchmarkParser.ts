@@ -33,8 +33,8 @@ export interface FunctionTimestamp {
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
     read: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
-        const readStartLambda: () => TriedParse<BenchmarkState> = () =>
-            state.baseParser.read(state, (parser as unknown) as IParser<IParserState>) as TriedParse<BenchmarkState>;
+        const readStartLambda: () => Ast.TNode = () =>
+            state.baseParser.read(state, (parser as unknown) as IParser<IParserState>) as Ast.TNode;
         return traceFunction(state, parser, readStartLambda);
     },
 
@@ -49,10 +49,8 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
 
     // 12.2.1 Documents
     readDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
-        const readDocumentLambda: () => TriedParse<BenchmarkState> = () =>
-            state.baseParser.readDocument(state, (parser as unknown) as IParser<IParserState>) as TriedParse<
-                BenchmarkState
-            >;
+        const readDocumentLambda: () => Ast.TDocument = () =>
+            state.baseParser.readDocument(state, (parser as unknown) as IParser<IParserState>) as Ast.TDocument;
         return traceFunction(state, parser, readDocumentLambda);
     },
 

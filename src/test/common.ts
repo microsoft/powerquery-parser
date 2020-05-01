@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection, Task } from "..";
 import { ResultUtils } from "../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
-import { IParserState, ParseError, ParseOk, TriedParse } from "../parser";
+import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../parser";
 import { LexSettings, ParseSettings } from "../settings";
 
 export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
@@ -86,5 +86,5 @@ function expectTriedParse<S extends IParserState = IParserState>(
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: S = settings.newParserState(settings, lexerSnapshot);
-    return settings.parser.readDocument(parserState, settings.parser);
+    return IParserUtils.tryRead(parserState, settings.parser);
 }
