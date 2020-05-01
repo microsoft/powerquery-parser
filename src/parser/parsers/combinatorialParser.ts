@@ -22,8 +22,9 @@ import { IParserState, IParserStateUtils } from "../IParserState";
 //
 // 2)
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
-export let CombinatorialParser: IParser<IParserState> = {
+export const CombinatorialParser: IParser<IParserState> = {
     ...Naive,
+    read: Naive.readDocument,
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: IParserState, parser: IParser<IParserState>) =>

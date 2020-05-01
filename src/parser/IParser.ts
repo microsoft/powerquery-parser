@@ -26,6 +26,8 @@ export interface ParseOk<S extends IParserState = IParserState> {
 }
 
 export interface IParser<State extends IParserState = IParserState> {
+    readonly read: (state: State, parser: IParser<State>) => TriedParse<State>;
+
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: State, parser: IParser<State>) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (state: State, parser: IParser<State>) => Ast.GeneralizedIdentifier;
