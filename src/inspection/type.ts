@@ -174,6 +174,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateIfExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.InvokeExpression:
+            result = translateInvokeExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.LetExpression:
             result = translateFromChildAttributeIndex(state, xorNode, 3);
             break;
@@ -500,6 +504,30 @@ function translateIfExpression(state: ScopeTypeInspectionState, xorNode: TXorNod
     const falseExprType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 5);
 
     return anyUnionFactory([trueExprType, falseExprType]);
+}
+
+function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.InvokeExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const previousSibling: TXorNode = NodeIdMapUtils.expectInvokeExpressionPreviousSibling(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+    );
+    const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
+
+    if (previousSiblingType.kind !== Type.TypeKind.Function) {
+        return noneFactory();
+    } else if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
+        return previousSiblingType.returnType;
+    } else {
+        return anyFactory();
+    }
 }
 
 function translateLiteralExpression(xorNode: TXorNode): Type.TType {
