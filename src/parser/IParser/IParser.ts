@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { IParserState, NodeIdMap, ParseError } from ".";
-import { Result } from "../common";
-import { Ast } from "../language";
+import { IParserState, NodeIdMap, ParseError } from "..";
+import { Result } from "../../common";
+import { Ast } from "../../language";
 
 export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
@@ -19,14 +19,14 @@ export const enum BracketDisambiguation {
 }
 
 export interface ParseOk<S extends IParserState = IParserState> {
-    readonly ast: Ast.TDocument;
+    readonly ast: Ast.TNode;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     readonly state: S;
 }
 
 export interface IParser<State extends IParserState = IParserState> {
-    readonly read: (state: State, parser: IParser<State>) => TriedParse<State>;
+    readonly read: (state: State, parser: IParser<State>) => Ast.TNode;
 
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: State, parser: IParser<State>) => Ast.Identifier;
