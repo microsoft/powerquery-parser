@@ -392,6 +392,18 @@ export function testNoMoreTokens(state: IParserState): ParseError.UnusedTokensRe
     }
 }
 
+export function testNoOpenContext(state: IParserState): CommonError.InvariantError | undefined {
+    if (state.maybeCurrentContextNode !== undefined) {
+        const details: {} = { maybeContextNode: state.maybeCurrentContextNode };
+        return new CommonError.InvariantError(
+            "maybeContextNode should be falsey, there shouldn't be an open context",
+            details,
+        );
+    } else {
+        return undefined;
+    }
+}
+
 // -------------------------------------
 // ---------- Error factories ----------
 // -------------------------------------

@@ -6,7 +6,7 @@ import { Language } from "../..";
 import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
+import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapIterator } from "../nodeIdMap";
 
@@ -139,15 +139,16 @@ export function readKeyword<S extends IParserState = IParserState>(
 // ---------- 12.2.1 Documents ----------
 // --------------------------------------
 
-export function readDocument<S extends IParserState = IParserState>(state: S, parser: IParser<S>): TriedParse<S> {
-    let triedReadDocument: Result<Ast.TDocument, Error>;
+export function readDocument<S extends IParserState = IParserState>(state: S, parser: IParser<S>): Ast.TDocument {
+    let document: Ast.TDocument;
 
     // Try parsing as an Expression document first.
     // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
     // If both fail then return the error which parsed more tokens.
     try {
-        triedReadDocument = ResultUtils.okFactory(parser.readExpression(state, parser));
-        const maybeErr: ParseError.UnusedTokensRemainError | undefined = IParserStateUtils.testNoMoreTokens(state);
+        document = parser.readExpression(state, parser);
+        const maybeErr: Error | undefined =
+            IParserStateUtils.testNoMoreTokens(state) || IParserStateUtils.testNoOpenContext(state);
         if (maybeErr) {
             throw maybeErr;
         }
@@ -168,8 +169,9 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
         }
 
         try {
-            triedReadDocument = ResultUtils.okFactory(readSectionDocument(state, parser));
-            const maybeErr: ParseError.UnusedTokensRemainError | undefined = IParserStateUtils.testNoMoreTokens(state);
+            document = readSectionDocument(state, parser);
+            const maybeErr: Error | undefined =
+                IParserStateUtils.testNoMoreTokens(state) || IParserStateUtils.testNoOpenContext(state);
             if (maybeErr) {
                 throw maybeErr;
             }
@@ -183,38 +185,11 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
                 triedError = sectionError;
             }
 
-            triedReadDocument = ResultUtils.errFactory(triedError);
+            throw triedError;
         }
     }
 
-    if (ResultUtils.isErr(triedReadDocument)) {
-        const currentError: Error = triedReadDocument.error;
-        let convertedError: ParseError.TParseError<S>;
-        if (ParseError.isTInnerParseError(currentError)) {
-            convertedError = new ParseError.ParseError(currentError, state);
-        } else {
-            convertedError = CommonError.ensureCommonError(state.localizationTemplates, currentError);
-        }
-
-        return ResultUtils.errFactory(convertedError);
-    }
-    const document: Ast.TDocument = triedReadDocument.value;
-
-    if (state.maybeCurrentContextNode !== undefined) {
-        const details: {} = { maybeContextNode: state.maybeCurrentContextNode };
-        throw new CommonError.InvariantError(
-            "maybeContextNode should be falsey, there shouldn't be an open context",
-            details,
-        );
-    }
-
-    const contextState: ParseContext.State = state.contextState;
-    return ResultUtils.okFactory({
-        ast: document,
-        nodeIdMapCollection: contextState.nodeIdMapCollection,
-        leafNodeIds: contextState.leafNodeIds,
-        state,
-    });
+    return document;
 }
 
 // ----------------------------------------------

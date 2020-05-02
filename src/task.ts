@@ -7,7 +7,17 @@ import { StartOfDoctumentKeywords } from "./inspection";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Ast } from "./language";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { IParser, IParserState, NodeIdMap, ParseContext, ParseError, ParseOk, TriedParse, TXorNode } from "./parser";
+import {
+    IParser,
+    IParserState,
+    IParserUtils,
+    NodeIdMap,
+    ParseContext,
+    ParseError,
+    ParseOk,
+    TriedParse,
+    TXorNode,
+} from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
@@ -56,8 +66,8 @@ export function tryParse<S extends IParserState = IParserState>(
     lexerSnapshot: LexerSnapshot,
 ): TriedParse<S> {
     const parser: IParser<S> = settings.parser;
-    const parserState: S = settings.newParserState(settings, lexerSnapshot);
-    return parser.readDocument(parserState, parser);
+    const state: S = settings.newParserState(settings, lexerSnapshot);
+    return IParserUtils.tryRead(state, parser);
 }
 
 export function tryInspection<S extends IParserState = IParserState>(
@@ -85,8 +95,8 @@ export function tryInspection<S extends IParserState = IParserState>(
         leafNodeIds = context.leafNodeIds;
     } else {
         const parseOk: ParseOk<S> = triedParse.value;
-        nodeIdMapCollection = parseOk.nodeIdMapCollection;
-        leafNodeIds = parseOk.leafNodeIds;
+        nodeIdMapCollection = parseOk.state.contextState.nodeIdMapCollection;
+        leafNodeIds = parseOk.state.contextState.leafNodeIds;
     }
 
     // We should only get an undefined for activeNode iff the document is empty
@@ -201,7 +211,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
 export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     triedLexParse: TriedLexParse<S>,
 ): TriedParse<S> | undefined {
-    let ast: Ast.TDocument;
+    let ast: Ast.TNode;
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
     let state: S;
@@ -220,8 +230,8 @@ export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     } else {
         const lexParseOk: LexParseOk<S> = triedLexParse.value;
         ast = lexParseOk.ast;
-        nodeIdMapCollection = lexParseOk.nodeIdMapCollection;
-        leafNodeIds = lexParseOk.leafNodeIds;
+        nodeIdMapCollection = lexParseOk.state.contextState.nodeIdMapCollection;
+        leafNodeIds = lexParseOk.state.contextState.leafNodeIds;
         state = lexParseOk.state;
     }
 

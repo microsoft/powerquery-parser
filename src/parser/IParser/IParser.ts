@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { IParserState, NodeIdMap, ParseError } from ".";
-import { Result } from "../common";
-import { Ast } from "../language";
+import { IParserState, ParseError } from "..";
+import { Result } from "../../common";
+import { Ast } from "../../language";
 
 export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
@@ -19,20 +19,20 @@ export const enum BracketDisambiguation {
 }
 
 export interface ParseOk<S extends IParserState = IParserState> {
-    readonly ast: Ast.TDocument;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
+    readonly ast: Ast.TNode;
     readonly state: S;
 }
 
 export interface IParser<State extends IParserState = IParserState> {
+    readonly read: (state: State, parser: IParser<State>) => Ast.TNode;
+
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: State, parser: IParser<State>) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (state: State, parser: IParser<State>) => Ast.GeneralizedIdentifier;
     readonly readKeyword: (state: State, parser: IParser<State>) => Ast.IdentifierExpression;
 
     // 12.2.1 Documents
-    readonly readDocument: (state: State, parser: IParser<State>) => TriedParse<State>;
+    readonly readDocument: (state: State, parser: IParser<State>) => Ast.TDocument;
 
     // 12.2.2 Section Documents
     readonly readSectionDocument: (state: State, parser: IParser<State>) => Ast.Section;

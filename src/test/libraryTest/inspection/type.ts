@@ -7,7 +7,7 @@ import { CommonError, Result, ResultUtils } from "../../../common";
 import { Position, ScopeItemByKey, ScopeTypeMap, TriedScopeType } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
-import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { NodeIdMap, ParseContext } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
 import { Type } from "../../../type";
 import { expectDeepEqual, expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
@@ -64,11 +64,11 @@ function wrapExpression(expression: string): string {
 
 function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
-    const parseOk: ParseOk<IParserState> = expectParseOk(DefaultSettings, text);
+    const contextState: ParseContext.State = expectParseOk(DefaultSettings, text).state.contextState;
     const scopeTypeMap: ScopeTypeMap = expectTypeOk(
         DefaultSettings,
-        parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
+        contextState.nodeIdMapCollection,
+        contextState.leafNodeIds,
         position,
     );
     expectDeepEqual(scopeTypeMap, expected, actualFactoryFn);
@@ -76,11 +76,11 @@ function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): v
 
 function expectParseErrTypeOk(expression: string, expected: AbridgedScopeType): void {
     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
-    const parseErr: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
+    const contextState: ParseContext.State = expectParseErr(DefaultSettings, text).state.contextState;
     const scopeTypeMap: ScopeTypeMap = expectTypeOk(
         DefaultSettings,
-        parseErr.state.contextState.nodeIdMapCollection,
-        parseErr.state.contextState.leafNodeIds,
+        contextState.nodeIdMapCollection,
+        contextState.leafNodeIds,
         position,
     );
     expectDeepEqual(scopeTypeMap, expected, actualFactoryFn);
@@ -149,7 +149,7 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe(`WIP ${Ast.NodeKind.IfExpression}`, () => {
+    describe(`${Ast.NodeKind.IfExpression}`, () => {
         it(`if true then 1 else false`, () => {
             const expression: string = `if true then 1 else false`;
             const expected: Type.TType = {

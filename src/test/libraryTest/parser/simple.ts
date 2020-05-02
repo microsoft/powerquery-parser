@@ -7,7 +7,9 @@ import { Task } from "../../..";
 import { ResultUtils, Traverse } from "../../../common";
 import { Ast } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
-import { DefaultSettings } from "../../../settings";
+import { IParser, IParserState } from "../../../parser";
+import { RecursiveDescentParser } from "../../../parser/parsers";
+import { DefaultSettings, Settings } from "../../../settings";
 import { expectLexParseOk } from "../../common";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
@@ -32,7 +34,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         AbridgedNode[]
     >(
         state,
-        lexParseOk.nodeIdMapCollection,
+        lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
@@ -62,7 +64,7 @@ function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequire
         Ast.TNode | undefined
     >(
         state,
-        lexParseOk.nodeIdMapCollection,
+        lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.ast,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
@@ -105,6 +107,26 @@ function expectAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>)
 }
 
 describe("Parser.AbridgedNode", () => {
+    describe(`custom IParser.read`, () => {
+        it(`readParameterSpecificationList`, () => {
+            const customParser: IParser<IParserState> = {
+                ...RecursiveDescentParser,
+                read: RecursiveDescentParser.readParameterSpecificationList,
+            };
+            const customSettings: Settings = {
+                ...DefaultSettings,
+                parser: customParser,
+            };
+            const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
+                customSettings,
+                "(a as number, optional b as text)",
+            );
+            if (!ResultUtils.isOk(triedLexParse)) {
+                throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
+            }
+        });
+    });
+
     describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
         it(`1 & 2`, () => {
             const text: string = `1 & 2`;
