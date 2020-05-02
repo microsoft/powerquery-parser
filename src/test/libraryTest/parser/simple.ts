@@ -108,17 +108,22 @@ function expectAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>)
 
 describe("Parser.AbridgedNode", () => {
     describe(`custom IParser.read`, () => {
-        it(`readErrorRaisingExpression`, () => {
+        it(`readParameterSpecificationList`, () => {
             const customParser: IParser<IParserState> = {
                 ...RecursiveDescentParser,
-                read: RecursiveDescentParser.readErrorRaisingExpression,
+                read: RecursiveDescentParser.readParameterSpecificationList,
             };
             const customSettings: Settings = {
                 ...DefaultSettings,
                 parser: customParser,
             };
-            const triedLexParse: Task.TriedLexParse = Task.tryLexParse(customSettings, "error 1");
-            expect(ResultUtils.isOk(triedLexParse)).to.equal(true, "triedLexParse should be an Ok");
+            const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
+                customSettings,
+                "(a as number, optional b as text)",
+            );
+            if (!ResultUtils.isOk(triedLexParse)) {
+                throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
+            }
         });
     });
 
