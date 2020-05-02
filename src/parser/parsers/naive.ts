@@ -6,7 +6,7 @@ import { Language } from "../..";
 import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { BracketDisambiguation, IParser, ParenthesisDisambiguation, TriedParse } from "../IParser";
+import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapIterator } from "../nodeIdMap";
 

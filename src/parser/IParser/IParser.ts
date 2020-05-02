@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { IParserState, NodeIdMap, ParseError } from "..";
+import { IParserState, ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
 

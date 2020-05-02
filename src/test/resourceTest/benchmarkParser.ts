@@ -7,7 +7,7 @@ import performanceNow = require("performance-now");
 import { Language } from "../..";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { IParser, TriedParse } from "../../parser/IParser";
+import { IParser } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
 import { ParseSettings } from "../../settings";
 
