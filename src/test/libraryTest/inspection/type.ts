@@ -149,7 +149,7 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe(`WIP ${Ast.NodeKind.IfExpression}`, () => {
+    describe(`${Ast.NodeKind.IfExpression}`, () => {
         it(`if true then 1 else false`, () => {
             const expression: string = `if true then 1 else false`;
             const expected: Type.TType = {
