@@ -454,11 +454,7 @@ function translateIdentifier(state: ScopeTypeInspectionState, xorNode: TXorNode)
         return unknownFactory();
     }
 
-    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
-        state,
-        xorNode.node as Ast.Identifier,
-        false,
-    );
+    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
     return dereferencedType !== undefined ? dereferencedType : unknownFactory();
 }
 
@@ -473,11 +469,7 @@ function translateIdentifierExpression(state: ScopeTypeInspectionState, xorNode:
         return unknownFactory();
     }
 
-    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(
-        state,
-        (xorNode.node as Ast.IdentifierExpression).identifier,
-        false,
-    );
+    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
     return dereferencedType !== undefined ? dereferencedType : unknownFactory();
 }
 
@@ -519,12 +511,23 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
+    // const deferenced = previousSibling.node.kind === Ast.NodeKind.IdentifierExpression ? deference
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
 
     if (previousSiblingType.kind !== Type.TypeKind.Function) {
         return noneFactory();
     } else if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
-        return previousSiblingType.returnType;
+        const maybePreviousSiblingExpression: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            state.nodeIdMapCollection,
+            previousSibling.node.id,
+            3,
+            undefined,
+        );
+        if (maybePreviousSiblingExpression === undefined) {
+            return previousSiblingType.returnType;
+        }
+
+        return translateXorNode(state, maybePreviousSiblingExpression);
     } else {
         return anyFactory();
     }
@@ -996,21 +999,49 @@ function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, conditionFn: (type: Typ
     );
 }
 
-function maybeDereferencedIdentifierType(
-    state: ScopeTypeInspectionState,
-    identifier: Ast.Identifier,
-    isRecursive: boolean,
-): undefined | Type.TType {
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, identifier.id);
+function maybeDereferencedIdentifierType(state: ScopeTypeInspectionState, xorNode: TXorNode): undefined | Type.TType {
+    const maybeDeferenced: TXorNode | undefined = maybeDereferencedIdentifier(state, xorNode);
+    if (maybeDeferenced === undefined) {
+        return undefined;
+    } else if (maybeDeferenced.kind !== XorNodeKind.Ast) {
+        throw new CommonError.InvariantError(`${maybeDereferencedIdentifier.name} should only return Ast identifiers`);
+    }
 
-    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifier.literal);
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(maybeDeferenced, [
+        Ast.NodeKind.Identifier,
+        Ast.NodeKind.IdentifierExpression,
+    ]);
+    if (maybeErr) {
+        throw maybeErr;
+    }
+    const deferenced: Ast.Identifier | Ast.IdentifierExpression = maybeDeferenced.node as
+        | Ast.Identifier
+        | Ast.IdentifierExpression;
+
+    let identifierLiteral: string;
+    let isIdentifierRecurisve: boolean;
+
+    switch (deferenced.kind) {
+        case Ast.NodeKind.Identifier:
+            identifierLiteral = deferenced.literal;
+            isIdentifierRecurisve = false;
+            break;
+
+        case Ast.NodeKind.IdentifierExpression:
+            identifierLiteral = deferenced.identifier.literal;
+            isIdentifierRecurisve = deferenced.maybeInclusiveConstant !== undefined;
+            break;
+
+        default:
+            throw isNever(deferenced);
+    }
+
+    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, deferenced.id);
+    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
     if (maybeScopeItem === undefined) {
         return undefined;
     }
     const scopeItem: TScopeItem = maybeScopeItem;
-    if (scopeItem.recursive !== isRecursive) {
-        return undefined;
-    }
 
     let maybeNextXorNode: undefined | TXorNode;
     switch (scopeItem.kind) {
@@ -1039,23 +1070,82 @@ function maybeDereferencedIdentifierType(
     if (maybeNextXorNode === undefined) {
         return undefined;
     }
-    const nextXorNode: TXorNode = maybeNextXorNode;
+    return translateXorNode(state, maybeNextXorNode);
+}
 
-    if (nextXorNode.node.kind === Ast.NodeKind.Identifier) {
-        return nextXorNode.kind === XorNodeKind.Ast
-            ? maybeDereferencedIdentifierType(state, nextXorNode.node, false)
-            : undefined;
-    } else if (nextXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-        if (nextXorNode.kind === XorNodeKind.Context) {
-            return undefined;
-        }
-        return maybeDereferencedIdentifierType(
-            state,
-            nextXorNode.node.identifier,
-            nextXorNode.node.maybeInclusiveConstant !== undefined,
-        );
+function maybeDereferencedIdentifier(state: ScopeTypeInspectionState, xorNode: TXorNode): TXorNode | undefined {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(xorNode, [
+        Ast.NodeKind.Identifier,
+        Ast.NodeKind.IdentifierExpression,
+    ]);
+    if (maybeErr) {
+        throw maybeErr;
+    } else if (xorNode.kind === XorNodeKind.Context) {
+        return undefined;
+    }
+    const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
+        | Ast.Identifier
+        | Ast.IdentifierExpression;
+
+    let identifierLiteral: string;
+    let isIdentifierRecurisve: boolean;
+
+    switch (identifier.kind) {
+        case Ast.NodeKind.Identifier:
+            identifierLiteral = identifier.literal;
+            isIdentifierRecurisve = false;
+            break;
+
+        case Ast.NodeKind.IdentifierExpression:
+            identifierLiteral = identifier.identifier.literal;
+            isIdentifierRecurisve = identifier.maybeInclusiveConstant !== undefined;
+            break;
+
+        default:
+            throw isNever(identifier);
+    }
+
+    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, identifier.id);
+    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
+    if (maybeScopeItem === undefined) {
+        throw new CommonError.InvariantError(`maybeScopeItem should be at least an instance of Undefined`);
+    }
+    const scopeItem: TScopeItem = maybeScopeItem;
+    if (scopeItem.recursive !== isIdentifierRecurisve) {
+        return undefined;
+    }
+
+    let maybeNextXorNode: undefined | TXorNode;
+    switch (scopeItem.kind) {
+        case ScopeItemKind.Each:
+        case ScopeItemKind.Parameter:
+        case ScopeItemKind.Undefined:
+            break;
+
+        case ScopeItemKind.KeyValuePair:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
+
+        case ScopeItemKind.SectionMember:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
+
+        default:
+            throw isNever(scopeItem);
+    }
+
+    if (maybeNextXorNode === undefined) {
+        return xorNode;
+    }
+
+    if (
+        maybeNextXorNode.kind !== XorNodeKind.Ast ||
+        (maybeNextXorNode.node.kind !== Ast.NodeKind.Identifier &&
+            maybeNextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
+    ) {
+        return xorNode;
     } else {
-        return translateXorNode(state, nextXorNode);
+        return maybeDereferencedIdentifier(state, maybeNextXorNode);
     }
 }
 
