@@ -5,6 +5,7 @@ import { Language } from "..";
 import { CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { Ast, ExpressionKeywords } from "../language";
+import { getLocalizationTemplates } from "../localization";
 import { AncestryUtils, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
@@ -28,7 +29,7 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
     if (maybeActiveNode === undefined) {
         return ResultUtils.okFactory([...ExpressionAutocomplete, Language.KeywordKind.Section]);
     }
-    return ResultUtils.ensureResult(settings.localizationTemplates, () =>
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
         inspectAutocomplete(nodeIdMapCollection, maybeActiveNode, maybeParseError),
     );
 }
