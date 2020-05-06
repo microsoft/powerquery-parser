@@ -7,6 +7,7 @@ import { StartOfDoctumentKeywords } from "./inspection";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Ast } from "./language";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import { getLocalizationTemplates } from "./localization";
 import {
     IParser,
     IParserState,
@@ -54,7 +55,9 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return ResultUtils.errFactory(
-            new LexError.LexError(new LexError.ErrorLineMapError(settings.localizationTemplates, errorLineMap)),
+            new LexError.LexError(
+                new LexError.ErrorLineMapError(getLocalizationTemplates(settings.locale), errorLineMap),
+            ),
         );
     }
 

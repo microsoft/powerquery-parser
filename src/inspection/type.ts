@@ -3,6 +3,7 @@
 
 import { CommonError, isNever, Result, ResultUtils } from "../common";
 import { Ast, AstUtils } from "../language";
+import { getLocalizationTemplates } from "../localization";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { Type, TypeUtils } from "../type";
@@ -17,7 +18,7 @@ export function tryScopeType(
     nodeIdMapCollection: NodeIdMap.Collection,
     inspectedScope: ScopeItemByKey,
 ): TriedScopeType {
-    return ResultUtils.ensureResult(settings.localizationTemplates, () =>
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
         inspectScopeType(nodeIdMapCollection, inspectedScope),
     );
 }

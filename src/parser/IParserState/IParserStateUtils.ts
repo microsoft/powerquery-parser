@@ -6,6 +6,7 @@ import { Language } from "../..";
 import { CommonError } from "../../common";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
+import { getLocalizationTemplates } from "../../localization";
 import { ParseSettings } from "../../settings";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
@@ -29,7 +30,7 @@ export function newState<S extends IParserState = IParserState>(
     const maybeCurrentToken: Language.Token | undefined = lexerSnapshot.tokens[0];
 
     return {
-        localizationTemplates: settings.localizationTemplates,
+        localizationTemplates: getLocalizationTemplates(settings.locale),
         lexerSnapshot,
         tokenIndex: 0,
         maybeCurrentToken,

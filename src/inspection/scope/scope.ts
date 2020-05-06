@@ -13,6 +13,7 @@ import {
     SectionMemberScopeItem,
     TScopeItem,
 } from "./scopeItem";
+import { getLocalizationTemplates } from "../../localization";
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
@@ -30,7 +31,7 @@ export function tryScope(
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedScope {
-    return ResultUtils.ensureResult(settings.localizationTemplates, () =>
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
         inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById),
     );
 }
@@ -48,7 +49,7 @@ export function tryScopeForRoot(
     }
 
     const rootId: number = ancestry[0].node.id;
-    return ResultUtils.ensureResult(settings.localizationTemplates, () => {
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
         const maybeScope: ScopeItemByKey | undefined = inspected.get(rootId);
         if (maybeScope === undefined) {

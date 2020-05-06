@@ -7,6 +7,7 @@ import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, 
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
+import { getLocalizationTemplates } from "../localization";
 
 export type TriedInvokeExpression = Result<InvokeExpression | undefined, CommonError.CommonError>;
 
@@ -26,7 +27,7 @@ export function tryInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
 ): TriedInvokeExpression {
-    return ResultUtils.ensureResult(settings.localizationTemplates, () =>
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
         inspectInvokeExpression(nodeIdMapCollection, activeNode),
     );
 }

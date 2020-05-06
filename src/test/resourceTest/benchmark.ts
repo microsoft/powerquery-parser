@@ -8,7 +8,7 @@ import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
-import { DefaultTemplates } from "../../localization";
+import { DefaultLocale } from "../../localization";
 import { IParser, IParserState, IParserStateUtils, Parser } from "../../parser";
 import { ParseSettings, Settings } from "../../settings";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
@@ -74,9 +74,9 @@ function createBenchmarkParseSettings(
     newParserStateFn: (settings: ParseSettings<BenchmarkState>, lexerSnapshot: LexerSnapshot) => BenchmarkState,
 ): ParseSettings<BenchmarkState> {
     return {
-        localizationTemplates: DefaultTemplates,
         parser: BenchmarkParser,
         newParserState: newParserStateFn,
+        locale: DefaultLocale,
     };
 }
 

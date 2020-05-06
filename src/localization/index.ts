@@ -2,4 +2,5 @@
 // Licensed under the MIT license.
 
 export { Localization } from "./localization";
-export { DefaultTemplates, ILocalizationTemplates, TemplatesByLocale } from "./templates";
+export * from "./templates";
+export * from "./locale";

@@ -2,11 +2,11 @@
 // Licensed under the MIT license.
 
 import { LexerSnapshot } from "./lexer";
-import { DefaultTemplates, ILocalizationTemplates } from "./localization";
+import { DefaultLocale } from "./localization/templates";
 import { IParser, IParserState, IParserStateUtils, Parser } from "./parser";
 
 export interface CommonSettings {
-    readonly localizationTemplates: ILocalizationTemplates;
+    readonly locale: string;
 }
 
 // tslint:disable-next-line: no-empty-interface
@@ -23,5 +23,5 @@ export const DefaultSettings: Settings = {
     parser: Parser.CombinatorialParser,
     newParserState: (parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot) =>
         IParserStateUtils.newState(parseSettings, lexerSnapshot),
-    localizationTemplates: DefaultTemplates,
+    locale: DefaultLocale,
 };
