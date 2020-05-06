@@ -195,5 +195,19 @@ export const DefaultLocale: Locale = Locale.en_US;
 export const DefaultTemplates: ILocalizationTemplates = en_US;
 
 export function getLocalizationTemplates(locale: string): ILocalizationTemplates {
-    return TemplatesByLocale.get(locale) || DefaultTemplates;
+    const maybeTemplates: ILocalizationTemplates | undefined = TemplatesByLocale.get(locale);
+    if (maybeTemplates !== undefined) {
+        return maybeTemplates;
+    }
+
+    // It might be a case sensitivity issue. There isn't a built-in case insensitive map so we need to iterate.
+    // This shouldn't normally be a big performance impact since it's fallback behavior.
+    const lowerLocale: string = locale.toLowerCase();
+    for (const [key, templates] of TemplatesByLocale.entries()) {
+        if (key.toLowerCase() === lowerLocale) {
+            return templates;
+        }
+    }
+
+    return DefaultTemplates;
 }
