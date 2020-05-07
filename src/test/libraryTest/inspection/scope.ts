@@ -7,7 +7,7 @@ import { isNever, ResultUtils } from "../../../common";
 import { Position, ScopeItemByKey, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
-import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { IParserState, NodeIdMap, ParseContext } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { expectDeepEqual, expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
@@ -163,8 +163,8 @@ export function expectParseOkScopeOk<S extends IParserState = IParserState>(
     text: string,
     position: Position,
 ): ScopeItemByKey {
-    const parseOk: ParseOk<S> = expectParseOk(settings, text);
-    return expectScopeForNodeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+    const contextState: ParseContext.State = expectParseOk(settings, text).state.contextState;
+    return expectScopeForNodeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 export function expectParseErrScopeOk<S extends IParserState = IParserState>(
@@ -172,13 +172,8 @@ export function expectParseErrScopeOk<S extends IParserState = IParserState>(
     text: string,
     position: Position,
 ): ScopeItemByKey {
-    const parseError: ParseError.ParseError<S> = expectParseErr(settings, text);
-    return expectScopeForNodeOk(
-        settings,
-        parseError.state.contextState.nodeIdMapCollection,
-        parseError.state.contextState.leafNodeIds,
-        position,
-    );
+    const contextState: ParseContext.State = expectParseErr(settings, text).state.contextState;
+    return expectScopeForNodeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 describe(`subset Inspection - Scope - Identifier`, () => {

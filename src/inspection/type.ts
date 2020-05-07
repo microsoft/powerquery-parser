@@ -3,6 +3,7 @@
 
 import { CommonError, isNever, Result, ResultUtils } from "../common";
 import { Ast, AstUtils } from "../language";
+import { getLocalizationTemplates } from "../localization";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { Type, TypeInspector, TypeUtils } from "../type";
@@ -40,7 +41,7 @@ export function tryScopeTypeForRoot(
         scopeById,
     };
 
-    return ResultUtils.ensureResult(settings.localizationTemplates, () => inspectScopeType(state));
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state));
 }
 
 type TRecordOrTable =
@@ -1038,7 +1039,7 @@ function maybeDereferencedIdentifierType(state: ScopeTypeInspectionState, xorNod
 
     const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, deferenced.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
-    if (maybeScopeItem === undefined) {
+    if (maybeScopeItem === undefined || (maybeScopeItem.recursive === true && isIdentifierRecurisve === false)) {
         return undefined;
     }
     const scopeItem: TScopeItem = maybeScopeItem;

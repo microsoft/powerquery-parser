@@ -74,8 +74,8 @@ function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): v
     const parseOk: ParseOk<IParserState> = expectParseOk(DefaultSettings, text);
     const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
         DefaultSettings,
-        parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
+        parseOk.state.contextState.nodeIdMapCollection,
+        parseOk.state.contextState.leafNodeIds,
         position,
     );
     expectDeepEqual(scopeTypeMap, expected, actualFactoryFn);

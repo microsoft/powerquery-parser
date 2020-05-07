@@ -7,7 +7,7 @@ import performanceNow = require("performance-now");
 import { Language } from "../..";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { IParser, TriedParse } from "../../parser/IParser";
+import { IParser } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
 import { ParseSettings } from "../../settings";
 
@@ -32,6 +32,12 @@ export interface FunctionTimestamp {
 }
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
+    read: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
+        const readStartLambda: () => Ast.TNode = () =>
+            state.baseParser.read(state, (parser as unknown) as IParser<IParserState>) as Ast.TNode;
+        return traceFunction(state, parser, readStartLambda);
+    },
+
     // 12.1.6 Identifiers
     readIdentifier: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIdentifier),
@@ -43,10 +49,8 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
 
     // 12.2.1 Documents
     readDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
-        const readDocumentLambda: () => TriedParse<BenchmarkState> = () =>
-            state.baseParser.readDocument(state, (parser as unknown) as IParser<IParserState>) as TriedParse<
-                BenchmarkState
-            >;
+        const readDocumentLambda: () => Ast.TDocument = () =>
+            state.baseParser.readDocument(state, (parser as unknown) as IParser<IParserState>) as Ast.TDocument;
         return traceFunction(state, parser, readDocumentLambda);
     },
 

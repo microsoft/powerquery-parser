@@ -5,4 +5,7 @@ import { Naive } from ".";
 import { IParser } from "../IParser";
 import { IParserState } from "../IParserState";
 
-export let RecursiveDescentParser: IParser<IParserState> = { ...Naive };
+export let RecursiveDescentParser: IParser<IParserState> = {
+    ...Naive,
+    read: Naive.readDocument,
+};

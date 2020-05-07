@@ -14,7 +14,7 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
-import { ILocalizationTemplates } from "../localization";
+import { getLocalizationTemplates, ILocalizationTemplates } from "../localization";
 import { LexSettings } from "../settings";
 
 // Call Lexer.stateFrom to instantiate a new State instance.
@@ -106,15 +106,16 @@ export interface RangePosition {
 }
 
 export function stateFrom(settings: LexSettings, text: string): State {
+    const localizationTemplates: ILocalizationTemplates = getLocalizationTemplates(settings.locale);
     const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
     const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
-        settings.localizationTemplates,
+        getLocalizationTemplates(settings.locale),
         splitLines,
         LineMode.Default,
     );
     return {
         lines: tokenizedLines,
-        localizationTemplates: settings.localizationTemplates,
+        localizationTemplates,
     };
 }
 
