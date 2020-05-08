@@ -27,12 +27,12 @@ export function tryRead<State extends IParserState = IParserState>(
 
     const maybeCommonErr: CommonError.InvariantError | undefined = IParserStateUtils.testNoOpenContext(state);
     if (maybeCommonErr) {
-        throw maybeCommonErr;
+        return ResultUtils.errFactory(new CommonError.CommonError(maybeCommonErr));
     }
 
     const maybeLeftoverErr: ParseError.UnusedTokensRemainError | undefined = IParserStateUtils.testNoMoreTokens(state);
     if (maybeLeftoverErr) {
-        throw maybeLeftoverErr;
+        return ResultUtils.errFactory(new ParseError.ParseError(maybeLeftoverErr, state));
     }
 
     return ResultUtils.okFactory({
