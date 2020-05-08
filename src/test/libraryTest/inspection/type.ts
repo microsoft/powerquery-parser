@@ -342,7 +342,7 @@ describe(`Inspection - Scope - Type`, () => {
     });
 
     describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
-        it(`let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)`, () => {
+        it(`WIP let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)`, () => {
             expectSimpleExpressionType(
                 "let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)",
                 Type.TypeKind.Number,
@@ -358,7 +358,7 @@ describe(`Inspection - Scope - Type`, () => {
             );
         });
 
-        it(`WIP let x = () as function => () as number => 1 in x()()`, () => {
+        it(`let x = () as function => () as number => 1 in x()()`, () => {
             expectSimpleExpressionType(
                 "let x = () as function => () as number => 1 in x()()",
                 Type.TypeKind.Number,

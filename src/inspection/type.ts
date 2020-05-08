@@ -427,6 +427,21 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
         state.nodeIdMapCollection,
         xorNode,
     );
+    const inspectedReturnType: Type.TType = inspectedFunctionExpression.returnType;
+
+    const expressionType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 3);
+    // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
+    // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),
+    // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
+    let returnType: Type.TType;
+
+    if (inspectedReturnType.kind !== expressionType.kind) {
+        returnType = noneFactory();
+    } else if (inspectedReturnType.maybeExtendedKind === undefined && expressionType.maybeExtendedKind !== undefined) {
+        returnType = expressionType;
+    } else {
+        returnType = expressionType;
+    }
 
     return {
         kind: Type.TypeKind.Function,
@@ -440,7 +455,7 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
                 );
             },
         ),
-        returnType: inspectedFunctionExpression.returnType,
+        returnType,
     };
 }
 
@@ -606,36 +621,11 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     }
 
     let leftType: Type.TType = headType;
-    let left: TXorNode = maybeHead;
+    // let left: TXorNode = maybeHead;
     for (const right of maybeExpressions) {
-        let rightType: Type.TType = translateXorNode(state, right);
-
-        if (leftType.kind === Type.TypeKind.Function) {
-            // TODO: inspect the number of parameters and their types?
-            if (right.node.kind !== Ast.NodeKind.InvokeExpression) {
-                return noneFactory();
-            } else if (leftType.kind !== Type.TypeKind.Function) {
-                const details: {} = {
-                    leftId: left.node.id,
-                    leftType,
-                    rightId: right.node.id,
-                    rightType,
-                };
-                throw new CommonError.InvariantError(
-                    `a FunctionExpression (left) should've preceded the InvokeExpression (right)`,
-                    details,
-                );
-            } else if (leftType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
-                return leftType.returnType;
-            }
-            // We only know the left is a FunctionExpression, we don't know its return type, so default to any.
-            else {
-                rightType = anyFactory();
-            }
-        }
-
+        const rightType: Type.TType = translateXorNode(state, right);
         leftType = rightType;
-        left = right;
+        // left = right;
     }
 
     return leftType;
@@ -891,17 +881,23 @@ function binOpExpressionLookupKey(
 
 function createLookupsForRelational(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThan, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThanEqualTo, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.LessThan, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.LessThanEqualTo, typeKind), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThan, typeKind), Type.TypeKind.Logical],
+        [
+            binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThanEqualTo, typeKind),
+            Type.TypeKind.Logical,
+        ],
+        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.LessThan, typeKind), Type.TypeKind.Logical],
+        [
+            binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.LessThanEqualTo, typeKind),
+            Type.TypeKind.Logical,
+        ],
     ];
 }
 
 function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.EqualTo, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.NotEqualTo, typeKind), typeKind],
+        [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.EqualTo, typeKind), Type.TypeKind.Logical],
+        [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.NotEqualTo, typeKind), Type.TypeKind.Logical],
     ];
 }
 
