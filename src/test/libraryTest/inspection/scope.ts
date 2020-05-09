@@ -22,7 +22,7 @@ type AbridgedNodeScope = ReadonlyArray<TAbridgedNodeScopeItem>;
 
 interface IAbridgedNodeScopeItem {
     readonly identifier: string;
-    readonly recursive: boolean;
+    readonly isRecursive: boolean;
     readonly kind: ScopeItemKind;
 }
 
@@ -60,7 +60,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
         case ScopeItemKind.Each:
             return {
                 identifier,
-                recursive: scopeItem.recursive,
+                isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 eachExpressionNodeId: scopeItem.eachExpression.node.id,
             };
@@ -68,7 +68,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
         case ScopeItemKind.KeyValuePair:
             return {
                 identifier,
-                recursive: scopeItem.recursive,
+                isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 keyNodeId: scopeItem.key.id,
                 maybeValueNodeId: scopeItem.maybeValue !== undefined ? scopeItem.maybeValue.node.id : undefined,
@@ -77,7 +77,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
         case ScopeItemKind.Parameter:
             return {
                 identifier,
-                recursive: scopeItem.recursive,
+                isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 nameNodeId: scopeItem.name.id,
                 isNullable: scopeItem.isNullable,
@@ -88,7 +88,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
         case ScopeItemKind.SectionMember:
             return {
                 identifier,
-                recursive: scopeItem.recursive,
+                isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 keyNodeId: scopeItem.key.id,
             };
@@ -96,7 +96,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
         case ScopeItemKind.Undefined:
             return {
                 identifier,
-                recursive: scopeItem.recursive,
+                isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 nodeId: scopeItem.xorNode.node.id,
             };
@@ -196,7 +196,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
-                        recursive: false,
+                        isRecursive: false,
                         kind: ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
@@ -209,7 +209,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
-                        recursive: false,
+                        isRecursive: false,
                         kind: ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
@@ -222,7 +222,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
-                        recursive: false,
+                        isRecursive: false,
                         kind: ScopeItemKind.Each,
                         eachExpressionNodeId: 3,
                     },
@@ -243,7 +243,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
-                        recursive: false,
+                        isRecursive: false,
                         kind: ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
@@ -277,7 +277,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.Parameter,
-                        recursive: false,
+                        isRecursive: false,
                         nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
@@ -286,7 +286,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "y",
                         kind: ScopeItemKind.Parameter,
-                        recursive: false,
+                        isRecursive: false,
                         nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
@@ -322,7 +322,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.Parameter,
-                        recursive: false,
+                        isRecursive: false,
                         nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
@@ -331,7 +331,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "y",
                         kind: ScopeItemKind.Parameter,
-                        recursive: false,
+                        isRecursive: false,
                         nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
@@ -351,14 +351,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 16,
                     },
@@ -386,7 +386,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 7,
                         maybeValueNodeId: 10,
                     },
@@ -400,14 +400,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 7,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 14,
                         maybeValueNodeId: 17,
                     },
@@ -421,21 +421,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 7,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 14,
                         maybeValueNodeId: 17,
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 21,
                         maybeValueNodeId: 24,
                     },
@@ -455,7 +455,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 7,
                         maybeValueNodeId: 10,
                     },
@@ -483,7 +483,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 7,
                         maybeValueNodeId: 9,
                     },
@@ -497,7 +497,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 7,
                         maybeValueNodeId: 9,
                     },
@@ -511,14 +511,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 7,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 13,
                         maybeValueNodeId: 15,
                     },
@@ -532,21 +532,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 7,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 13,
                         maybeValueNodeId: 15,
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 19,
                         maybeValueNodeId: 21,
                     },
@@ -560,7 +560,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 7,
                         maybeValueNodeId: 9,
                     },
@@ -574,14 +574,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 7,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 14,
                         maybeValueNodeId: 16,
                     },
@@ -607,13 +607,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 15,
                     },
                 ];
@@ -628,13 +628,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 15,
                     },
                 ];
@@ -657,25 +657,25 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 15,
                     },
                     {
                         identifier: "z",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 22,
                     },
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 29,
                         maybeValueNodeId: 32,
                     },
@@ -701,13 +701,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 15,
                     },
                 ];
@@ -722,13 +722,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 15,
                     },
                 ];
@@ -743,13 +743,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 15,
                     },
                 ];
@@ -764,7 +764,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
@@ -778,7 +778,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
@@ -792,7 +792,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
@@ -808,14 +808,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 16,
                     },
@@ -831,14 +831,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 16,
                     },
@@ -854,7 +854,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "p1",
                         kind: ScopeItemKind.Parameter,
-                        recursive: false,
+                        isRecursive: false,
                         nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
@@ -863,7 +863,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "p2",
                         kind: ScopeItemKind.Parameter,
-                        recursive: false,
+                        isRecursive: false,
                         nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
@@ -872,21 +872,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 19,
                         maybeValueNodeId: 22,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 26,
                         maybeValueNodeId: 29,
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 33,
                         maybeValueNodeId: 36,
                     },
@@ -902,21 +902,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "eggs",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 8,
                     },
                     {
                         identifier: "foo",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 23,
                         maybeValueNodeId: 26,
                     },
                     {
                         identifier: "bar",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 30,
                         maybeValueNodeId: 33,
                     },
@@ -932,28 +932,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "eggs",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 8,
                     },
                     {
                         identifier: "foo",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 23,
                         maybeValueNodeId: 26,
                     },
                     {
                         identifier: "bar",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 30,
                         maybeValueNodeId: 33,
                     },
                     {
                         identifier: "ham",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 16,
                     },
@@ -969,7 +969,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
@@ -983,14 +983,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 16,
                     },
@@ -1004,14 +1004,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 16,
                     },
@@ -1027,14 +1027,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: true,
+                        isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 16,
                         maybeValueNodeId: 19,
                     },
@@ -1050,7 +1050,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "x",
                         kind: ScopeItemKind.KeyValuePair,
-                        recursive: false,
+                        isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
@@ -1069,7 +1069,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 {
                     identifier: "a",
                     kind: ScopeItemKind.Parameter,
-                    recursive: false,
+                    isRecursive: false,
                     nameNodeId: 7,
                     isNullable: true,
                     isOptional: false,
@@ -1078,7 +1078,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 {
                     identifier: "b",
                     kind: ScopeItemKind.Parameter,
-                    recursive: false,
+                    isRecursive: false,
                     nameNodeId: 11,
                     isNullable: false,
                     isOptional: false,
@@ -1087,7 +1087,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 {
                     identifier: "c",
                     kind: ScopeItemKind.Parameter,
-                    recursive: false,
+                    isRecursive: false,
                     nameNodeId: 19,
                     isNullable: true,
                     isOptional: false,
@@ -1096,7 +1096,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 {
                     identifier: "d",
                     kind: ScopeItemKind.Parameter,
-                    recursive: false,
+                    isRecursive: false,
                     nameNodeId: 30,
                     isNullable: true,
                     isOptional: true,
@@ -1105,7 +1105,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 {
                     identifier: "e",
                     kind: ScopeItemKind.Parameter,
-                    recursive: false,
+                    isRecursive: false,
                     nameNodeId: 35,
                     isNullable: false,
                     isOptional: true,

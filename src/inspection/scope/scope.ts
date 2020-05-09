@@ -3,6 +3,7 @@
 
 import { CommonError, Result, ResultUtils } from "../../common";
 import { Ast } from "../../language";
+import { getLocalizationTemplates } from "../../localization";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { TypeInspector, TypeUtils } from "../../type";
@@ -13,7 +14,6 @@ import {
     SectionMemberScopeItem,
     TScopeItem,
 } from "./scopeItem";
-import { getLocalizationTemplates } from "../../localization";
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
@@ -164,7 +164,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
                 {
                     kind: ScopeItemKind.Each,
                     id: eachExpr.node.id,
-                    recursive: false,
+                    isRecursive: false,
                     eachExpression: eachExpr,
                 },
             ],
@@ -197,7 +197,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
                 {
                     kind: ScopeItemKind.Parameter,
                     id: parameter.id,
-                    recursive: false,
+                    isRecursive: false,
                     name: parameter.name,
                     isOptional: parameter.isOptional,
                     isNullable: parameter.isNullable,
@@ -405,24 +405,23 @@ function getOrCreateScope(
 function scopeItemsFromKeyValuePairs<T extends TScopeItem, I extends Ast.Identifier | Ast.GeneralizedIdentifier>(
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<I>>,
     ancestorKeyNodeId: number,
-    factoryFn: (keyValuePair: NodeIdMapIterator.KeyValuePair<I>, recursive: boolean) => T,
+    factoryFn: (keyValuePair: NodeIdMapIterator.KeyValuePair<I>, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     return keyValuePairs
         .filter((keyValuePair: NodeIdMapIterator.KeyValuePair<I>) => keyValuePair.maybeValue !== undefined)
         .map((keyValuePair: NodeIdMapIterator.KeyValuePair<I>) => {
-            const isRecursive: boolean = ancestorKeyNodeId === keyValuePair.key.id;
-            return [keyValuePair.keyLiteral, factoryFn(keyValuePair, isRecursive)];
+            return [keyValuePair.keyLiteral, factoryFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id)];
         });
 }
 
 function sectionMemberScopeItemFactory(
     keyValuePair: NodeIdMapIterator.KeyValuePair<Ast.Identifier>,
-    recursive: boolean,
+    isRecursive: boolean,
 ): SectionMemberScopeItem {
     return {
         kind: ScopeItemKind.SectionMember,
         id: keyValuePair.source.node.id,
-        recursive,
+        isRecursive,
         key: keyValuePair.key,
         maybeValue: keyValuePair.maybeValue,
     };
@@ -430,12 +429,12 @@ function sectionMemberScopeItemFactory(
 
 function keyValuePairScopeItemFactory<T extends Ast.Identifier | Ast.GeneralizedIdentifier>(
     keyValuePair: NodeIdMapIterator.KeyValuePair<T>,
-    recursive: boolean,
+    isRecursive: boolean,
 ): KeyValuePairScopeItem {
     return {
         kind: ScopeItemKind.KeyValuePair,
         id: keyValuePair.source.node.id,
-        recursive,
+        isRecursive,
         key: keyValuePair.key,
         maybeValue: keyValuePair.maybeValue,
     };

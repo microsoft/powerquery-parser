@@ -1035,10 +1035,14 @@ function maybeDereferencedIdentifierType(state: ScopeTypeInspectionState, xorNod
 
     const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, deferenced.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
-    if (maybeScopeItem === undefined || (maybeScopeItem.recursive === true && isIdentifierRecurisve === false)) {
+    if (maybeScopeItem === undefined || (maybeScopeItem.isRecursive === true && isIdentifierRecurisve === false)) {
         return undefined;
     }
     const scopeItem: TScopeItem = maybeScopeItem;
+    // TODO: handle recursive identifiers
+    if (scopeItem.isRecursive === true) {
+        return anyFactory();
+    }
 
     let maybeNextXorNode: undefined | TXorNode;
     switch (scopeItem.kind) {
@@ -1108,7 +1112,7 @@ function maybeDereferencedIdentifier(state: ScopeTypeInspectionState, xorNode: T
         throw new CommonError.InvariantError(`maybeScopeItem should be at least an instance of Undefined`);
     }
     const scopeItem: TScopeItem = maybeScopeItem;
-    if (scopeItem.recursive !== isIdentifierRecurisve) {
+    if (scopeItem.isRecursive !== isIdentifierRecurisve) {
         return undefined;
     }
 
