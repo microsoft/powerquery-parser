@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { isNever } from "../common";
+import { isNever, MapUtils } from "../common";
 import { Ast } from "../language";
 
 export function typeKindFromLiteralKind(
@@ -150,4 +150,105 @@ export function simplifyNullablePrimitiveType(node: Ast.AsNullablePrimitiveType)
         typeKind: typeKindFromPrimitiveTypeConstantKind(primitiveTypeConstantKind),
         isNullable,
     };
+}
+
+export function equalType(left: Type.TType, right: Type.TType): boolean {
+    if (left.kind !== right.kind) {
+        return false;
+    } else if (left.maybeExtendedKind !== undefined && right.maybeExtendedKind !== undefined) {
+        return equalExtendedTypes(left, right);
+    } else if (left.isNullable !== right.isNullable) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
+    if (leftTypes.length !== rightTypes.length) {
+        return false;
+    }
+
+    const numTypes: number = leftTypes.length;
+    for (let index: number = 0; index < numTypes; index += 1) {
+        if (equalType(leftTypes[index], rightTypes[index]) === false) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
+    if (left.isNullable !== right.isNullable) {
+        return false;
+    } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case Type.ExtendedTypeKind.AnyUnion:
+            return equalAnyUnion(left, right as Type.AnyUnion);
+
+        case Type.ExtendedTypeKind.DefinedFunction:
+            return equalDefinedFunction(left, right as Type.DefinedFunction);
+
+        case Type.ExtendedTypeKind.DefinedRecordExpression:
+            return equalDefinedRecordExpression(left, right as Type.DefinedRecordExpression);
+
+        case Type.ExtendedTypeKind.DefinedTable:
+            return equalDefinedTable(left, right as Type.DefinedTable);
+
+        case Type.ExtendedTypeKind.DefinedType:
+            return equalDefinedType(left, right as Type.DefinedType);
+
+        default:
+            throw isNever(left);
+    }
+}
+
+export function equalAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
+    if (left.isNullable !== right.isNullable) {
+        return false;
+    }
+    return equalTypes(left.unionedTypePairs, right.unionedTypePairs);
+}
+
+export function equalDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
+    if (left.isNullable !== right.isNullable) {
+        return false;
+    } else if (equalType(left.returnType, right.returnType) === false) {
+        return false;
+    } else if (equalTypes(left.parameterTypes, right.parameterTypes) === false) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+export function equalDefinedRecordExpression(
+    left: Type.DefinedRecordExpression,
+    right: Type.DefinedRecordExpression,
+): boolean {
+    if (left.isNullable !== right.isNullable) {
+        return false;
+    } else {
+        return MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType);
+    }
+}
+
+export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
+    if (left.isNullable !== right.isNullable) {
+        return false;
+    } else {
+        return MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType);
+    }
+}
+
+export function equalDefinedType(left: Type.DefinedType, right: Type.DefinedType): boolean {
+    if (left.isNullable !== right.isNullable) {
+        return false;
+    } else {
+        return equalType(left.primaryType, right.primaryType);
+    }
 }
