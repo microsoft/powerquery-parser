@@ -69,7 +69,7 @@ function wrapExpression(expression: string): string {
     return `let __foo = |__bar, __bar = ${expression} in _`;
 }
 
-function expectParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
+function expectExpressionParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
     const parseOk: ParseOk<IParserState> = expectParseOk(DefaultSettings, text);
     const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
@@ -108,7 +108,7 @@ function expectSimpleExpressionType(expression: string, kind: Type.TypeKind, isN
         maybeExtendedKind: undefined,
         isNullable,
     };
-    expectParseOkTypeOk(expression, expected);
+    expectExpressionParseOkTypeOk(expression, expected);
 }
 
 describe(`Inspection - Scope - Type`, () => {
@@ -169,7 +169,7 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 fields: new Map(),
             };
-            expectParseOkTypeOk(expression, expected);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
     });
 
@@ -193,7 +193,7 @@ describe(`Inspection - Scope - Type`, () => {
                     },
                 ],
             };
-            expectParseOkTypeOk(expression, expected);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
 
         it(`if if true then true else false then 1 else 0`, () => {
@@ -215,7 +215,7 @@ describe(`Inspection - Scope - Type`, () => {
                     },
                 ],
             };
-            expectParseOkTypeOk(expression, expected);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
 
         it(`if`, () => {
@@ -277,7 +277,7 @@ describe(`Inspection - Scope - Type`, () => {
                     ],
                 ]),
             };
-            expectParseOkTypeOk(expression, expected);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
 
         it(`[] & [bar=2]`, () => {
@@ -297,7 +297,7 @@ describe(`Inspection - Scope - Type`, () => {
                     ],
                 ]),
             };
-            expectParseOkTypeOk(expression, expected);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
 
         it(`[foo=1] & []`, () => {
@@ -317,7 +317,7 @@ describe(`Inspection - Scope - Type`, () => {
                     ],
                 ]),
             };
-            expectParseOkTypeOk(expression, expected);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
 
         it(`[foo=1] & [foo=""]`, () => {
@@ -337,7 +337,7 @@ describe(`Inspection - Scope - Type`, () => {
                     ],
                 ]),
             };
-            expectParseOkTypeOk(expression, expected);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
     });
 
