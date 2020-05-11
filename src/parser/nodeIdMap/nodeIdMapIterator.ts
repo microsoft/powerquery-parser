@@ -104,22 +104,6 @@ export function expectXorChildren(
     return expectXorNodes(nodeIdMapCollection, childIds);
 }
 
-export function recordKeyValuePairs(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    record: TXorNode,
-): ReadonlyArray<KeyValuePair<Ast.GeneralizedIdentifier>> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(record, [
-        Ast.NodeKind.RecordExpression,
-        Ast.NodeKind.RecordLiteral,
-    ]);
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
-
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, record);
-    return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
-}
-
 export function letKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     letExpression: TXorNode,
@@ -138,6 +122,35 @@ export function letKeyValuePairs(
         1,
         [Ast.NodeKind.ArrayWrapper],
     );
+    return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
+}
+
+export function listItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorNode): ReadonlyArray<TXorNode> {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(list, [
+        Ast.NodeKind.ListExpression,
+        Ast.NodeKind.ListLiteral,
+    ]);
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, list);
+    return maybeArrayWrapper === undefined ? [] : arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeArrayWrapper);
+}
+
+export function recordKeyValuePairs(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    record: TXorNode,
+): ReadonlyArray<KeyValuePair<Ast.GeneralizedIdentifier>> {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(record, [
+        Ast.NodeKind.RecordExpression,
+        Ast.NodeKind.RecordLiteral,
+    ]);
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, record);
     return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }
 
