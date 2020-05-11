@@ -138,10 +138,22 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateBinOpExpression(state, xorNode);
             break;
 
-        case Ast.NodeKind.AsExpression: {
+        case Ast.NodeKind.ArrayWrapper:
+            throw new CommonError.InvariantError(`this should never be a scope item`);
+
+        // TODO: how should error handling be typed?
+        case Ast.NodeKind.ErrorHandlingExpression:
+        case Ast.NodeKind.ErrorRaisingExpression:
+            result = anyFactory();
+            break;
+
+        case Ast.NodeKind.AsExpression:
             result = translateFromChildAttributeIndex(state, xorNode, 2);
             break;
-        }
+
+        case Ast.NodeKind.AsType:
+            result = translateFromChildAttributeIndex(state, xorNode, 1);
+            break;
 
         case Ast.NodeKind.AsNullablePrimitiveType:
             result = translateFromChildAttributeIndex(state, xorNode, 1);
@@ -212,6 +224,7 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
+            // throw isNever(xorNode.node.kind);
             result = unknownFactory();
     }
 
