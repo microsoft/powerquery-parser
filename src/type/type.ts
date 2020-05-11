@@ -2,8 +2,20 @@
 // Licensed under the MIT license.
 
 export type TType = IPrimitiveType | TExtendedType;
-export type TExtendedType = AnyUnion | DefinedFunction | DefinedRecordExpression | DefinedTable | DefinedType;
-export type TExtendedTypeKind = TypeKind.Any | TypeKind.Function | TypeKind.Record | TypeKind.Table | TypeKind.Type;
+export type TExtendedType =
+    | AnyUnion
+    | DefinedFunction
+    | DefinedList
+    | DefinedRecordExpression
+    | DefinedTable
+    | DefinedType;
+export type TExtendedTypeKind =
+    | TypeKind.Any
+    | TypeKind.Function
+    | TypeKind.List
+    | TypeKind.Record
+    | TypeKind.Table
+    | TypeKind.Type;
 
 export const enum TypeKind {
     Action = "Action",
@@ -31,6 +43,7 @@ export const enum TypeKind {
 export const enum ExtendedTypeKind {
     AnyUnion = "AnyUnion",
     DefinedFunction = "DefinedFunction",
+    DefinedList = "DefinedList",
     DefinedRecordExpression = "DefinedRecordExpression",
     DefinedTable = "DefinedTable",
     DefinedType = "DefinedType",
@@ -62,6 +75,12 @@ export interface DefinedFunction extends IExtendedType {
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedFunction;
     readonly parameterTypes: ReadonlyArray<TType>;
     readonly returnType: TType;
+}
+
+export interface DefinedList extends IExtendedType {
+    readonly kind: TypeKind.List;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedList;
+    readonly itemType: TType;
 }
 
 export interface DefinedRecordExpression extends IExtendedType {

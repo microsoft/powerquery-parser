@@ -184,11 +184,15 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.ListExpression:
-            result = genericFactory(Type.TypeKind.List, false);
+            result = translateListExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.LiteralExpression:
             result = translateLiteralExpression(xorNode);
+            break;
+
+        case Ast.NodeKind.RangeExpression:
+            result = translateRangeExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.RecursivePrimaryExpression:
@@ -214,7 +218,7 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
     return result;
 }
 
-function genericFactory(typeKind: Type.TypeKind, isNullable: boolean): Type.TType {
+function genericFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolean): Type.IPrimitiveType<T> {
     return {
         kind: typeKind,
         maybeExtendedKind: undefined,
@@ -549,6 +553,34 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
     }
 }
 
+function translateListExpression(
+    state: ScopeTypeInspectionState,
+    xorNode: TXorNode,
+): Type.IPrimitiveType<Type.TypeKind.List> | Type.DefinedList {
+    const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
+    if (items.length === 0) {
+        return genericFactory(Type.TypeKind.List, false);
+    }
+
+    const itemTypes: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => translateXorNode(state, item));
+    const firstType: Type.TType = itemTypes[0];
+    const equalityComparisons: ReadonlyArray<boolean> = itemTypes.map((iterType: Type.TType) =>
+        TypeUtils.equalType(firstType, iterType),
+    );
+    const allSameTypes: boolean = equalityComparisons.indexOf(false) === -1;
+
+    if (allSameTypes === true) {
+        return {
+            kind: Type.TypeKind.List,
+            isNullable: false,
+            maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+            itemType: firstType,
+        };
+    } else {
+        return genericFactory(Type.TypeKind.List, false);
+    }
+}
+
 function translateLiteralExpression(xorNode: TXorNode): Type.TType {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
@@ -562,9 +594,7 @@ function translateLiteralExpression(xorNode: TXorNode): Type.TType {
         case XorNodeKind.Ast:
             // We already checked it's a Ast Literal Expression.
             const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
-            const typeKind: Exclude<Type.TypeKind, Type.TExtendedTypeKind> = TypeUtils.typeKindFromLiteralKind(
-                literalKind,
-            );
+            const typeKind: Type.TypeKind = TypeUtils.typeKindFromLiteralKind(literalKind);
             return genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
 
         case XorNodeKind.Context:
@@ -572,6 +602,36 @@ function translateLiteralExpression(xorNode: TXorNode): Type.TType {
 
         default:
             throw isNever(xorNode);
+    }
+}
+
+function translateRangeExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.RangeExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeLeftType: Type.TType | undefined = translateFromChildAttributeIndex(state, xorNode, 0);
+    const maybeRightType: Type.TType | undefined = translateFromChildAttributeIndex(state, xorNode, 2);
+
+    if (maybeLeftType === undefined || maybeRightType === undefined) {
+        return unknownFactory();
+    } else if (maybeLeftType.kind === Type.TypeKind.Number && maybeRightType.kind === Type.TypeKind.Number) {
+        // TODO: handle isNullable better
+        if (maybeLeftType.isNullable === true || maybeRightType.isNullable === true) {
+            return noneFactory();
+        } else {
+            return genericFactory(maybeLeftType.kind, maybeLeftType.isNullable);
+        }
+    } else if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
+        return noneFactory();
+    } else if (maybeLeftType.kind === Type.TypeKind.Unknown || maybeRightType.kind === Type.TypeKind.Unknown) {
+        return unknownFactory();
+    } else {
+        return noneFactory();
     }
 }
 

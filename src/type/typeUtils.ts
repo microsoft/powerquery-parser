@@ -5,9 +5,7 @@ import { Type } from ".";
 import { isNever, MapUtils } from "../common";
 import { Ast } from "../language";
 
-export function typeKindFromLiteralKind(
-    literalKind: Exclude<Ast.LiteralKind, Ast.LiteralKind.Record>,
-): Exclude<Type.TypeKind, Type.TExtendedTypeKind> {
+export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
         case Ast.LiteralKind.List:
             return Type.TypeKind.List;
@@ -20,6 +18,9 @@ export function typeKindFromLiteralKind(
 
         case Ast.LiteralKind.Numeric:
             return Type.TypeKind.Number;
+
+        case Ast.LiteralKind.Record:
+            return Type.TypeKind.Record;
 
         case Ast.LiteralKind.Text:
             return Type.TypeKind.Text;
@@ -180,9 +181,7 @@ export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: Rea
 }
 
 export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
-    if (left.isNullable !== right.isNullable) {
-        return false;
-    } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
+    if (left.maybeExtendedKind !== right.maybeExtendedKind) {
         return false;
     }
 
@@ -192,6 +191,9 @@ export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtend
 
         case Type.ExtendedTypeKind.DefinedFunction:
             return equalDefinedFunction(left, right as Type.DefinedFunction);
+
+        case Type.ExtendedTypeKind.DefinedList:
+            return equalDefinedList(left, right as Type.DefinedList);
 
         case Type.ExtendedTypeKind.DefinedRecordExpression:
             return equalDefinedRecordExpression(left, right as Type.DefinedRecordExpression);
@@ -208,47 +210,38 @@ export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtend
 }
 
 export function equalAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
-    if (left.isNullable !== right.isNullable) {
-        return false;
-    }
-    return equalTypes(left.unionedTypePairs, right.unionedTypePairs);
+    return left.isNullable === right.isNullable && equalTypes(left.unionedTypePairs, right.unionedTypePairs);
 }
 
 export function equalDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
-    if (left.isNullable !== right.isNullable) {
-        return false;
-    } else if (equalType(left.returnType, right.returnType) === false) {
-        return false;
-    } else if (equalTypes(left.parameterTypes, right.parameterTypes) === false) {
-        return false;
-    } else {
-        return true;
-    }
+    return (
+        left.isNullable === right.isNullable &&
+        equalType(left.returnType, right.returnType) &&
+        equalTypes(left.parameterTypes, right.parameterTypes)
+    );
+}
+
+export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
+    return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
 }
 
 export function equalDefinedRecordExpression(
     left: Type.DefinedRecordExpression,
     right: Type.DefinedRecordExpression,
 ): boolean {
-    if (left.isNullable !== right.isNullable) {
-        return false;
-    } else {
-        return MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType);
-    }
+    return (
+        left.isNullable === right.isNullable &&
+        MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType)
+    );
 }
 
 export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
-    if (left.isNullable !== right.isNullable) {
-        return false;
-    } else {
-        return MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType);
-    }
+    return (
+        left.isNullable === right.isNullable &&
+        MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType)
+    );
 }
 
 export function equalDefinedType(left: Type.DefinedType, right: Type.DefinedType): boolean {
-    if (left.isNullable !== right.isNullable) {
-        return false;
-    } else {
-        return equalType(left.primaryType, right.primaryType);
-    }
+    return left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType);
 }
