@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Result, ResultUtils } from "../common";
+import { ArrayUtils, CommonError, isNever, MapUtils, Result, ResultUtils } from "../common";
 import { Ast, AstUtils } from "../language";
 import { getLocalizationTemplates } from "../localization";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
@@ -171,6 +171,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
 
+        case Ast.NodeKind.FieldProjection:
+            result = translateFieldProjection(state, xorNode);
+            break;
+
         case Ast.NodeKind.FunctionExpression:
             result = translateFunctionExpression(state, xorNode);
             break;
@@ -224,8 +228,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
-            // throw isNever(xorNode.node.kind);
-            result = unknownFactory();
+            throw isNever(xorNode.node.kind);
+        // result = unknownFactory();
     }
 
     return result;
@@ -431,6 +435,74 @@ function translateConstant(xorNode: TXorNode): Type.TType {
     }
 }
 
+function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.FieldProjection,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.fieldProjectionGeneralizedIdentifiers(
+        state.nodeIdMapCollection,
+        xorNode,
+    ).map((generalizedIdentifier: Ast.GeneralizedIdentifier) => generalizedIdentifier.literal);
+    const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+    );
+    const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
+
+    if (previousSiblingType.kind !== Type.TypeKind.Record && previousSiblingType.kind !== Type.TypeKind.Table) {
+        return noneFactory();
+    } else if (
+        previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecordExpression ||
+        previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable
+    ) {
+        const knownFields: Map<string, Type.TType> = previousSiblingType.fields;
+        const knownFieldNames: ReadonlyArray<string> = [...previousSiblingType.fields.keys()];
+        const projectedOnlyKnownFields: boolean = ArrayUtils.isSubset(
+            knownFieldNames,
+            projectedFieldNames,
+            (left: string, right: string) => left === right,
+        );
+
+        if (projectedOnlyKnownFields === true) {
+            const newFields: Map<string, Type.TType> = MapUtils.pick(knownFields, projectedFieldNames);
+            // TODO: TypeScript requires this to properly narrow the types.
+            // Try to rework this towards a more elegant solution.
+            if (
+                previousSiblingType.kind === Type.TypeKind.Record &&
+                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecordExpression
+            ) {
+                return {
+                    kind: previousSiblingType.kind,
+                    maybeExtendedKind: previousSiblingType.maybeExtendedKind,
+                    isNullable: previousSiblingType.isNullable,
+                    fields: newFields,
+                };
+            } else if (
+                previousSiblingType.kind === Type.TypeKind.Table &&
+                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable
+            ) {
+                return {
+                    kind: previousSiblingType.kind,
+                    maybeExtendedKind: previousSiblingType.maybeExtendedKind,
+                    isNullable: previousSiblingType.isNullable,
+                    fields: newFields,
+                };
+            } else {
+                throw new CommonError.InvariantError(`this should never be reached`);
+            }
+        } else {
+            return noneFactory();
+        }
+    } else {
+        return genericFactory(previousSiblingType.kind, previousSiblingType.isNullable);
+    }
+}
+
 function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
@@ -540,7 +612,7 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
         throw maybeErr;
     }
 
-    const previousSibling: TXorNode = NodeIdMapUtils.expectInvokeExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );

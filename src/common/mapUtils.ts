@@ -31,3 +31,19 @@ export function equalMaps<K, V>(
     }
     return true;
 }
+
+export function pick<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): Map<K, V> {
+    const newMap: Map<K, V> = new Map();
+
+    for (const key of keys) {
+        const maybeValue: V | undefined = map.get(key);
+        if (maybeValue === undefined) {
+            const details: {} = { key };
+            throw new CommonError.InvariantError(`key from keys is not found in map`, details);
+        }
+
+        newMap.set(key, maybeValue);
+    }
+
+    return newMap;
+}

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from ".";
-import { CommonError, isNever, MapUtils } from "../../common";
+import { CommonError, isNever, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast } from "../../language";
 
 export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
@@ -123,6 +123,38 @@ export function letKeyValuePairs(
         [Ast.NodeKind.ArrayWrapper],
     );
     return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
+}
+
+export function fieldProjectionFieldNames(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    fieldProjection: TXorNode,
+): ReadonlyArray<TXorNode> {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
+        fieldProjection,
+        Ast.NodeKind.FieldProjection,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+        nodeIdMapCollection,
+        fieldProjection,
+    );
+    return maybeArrayWrapper === undefined ? [] : arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeArrayWrapper);
+}
+
+export function fieldProjectionGeneralizedIdentifiers(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    fieldProjection: TXorNode,
+): ReadonlyArray<Ast.GeneralizedIdentifier> {
+    const fieldNames: ReadonlyArray<TXorNode> = fieldProjectionFieldNames(nodeIdMapCollection, fieldProjection);
+    const maybeIdentifiers: ReadonlyArray<Ast.GeneralizedIdentifier | undefined> = fieldNames.map((xorNode: TXorNode) =>
+        xorNode.kind === XorNodeKind.Ast && xorNode.node.kind === Ast.NodeKind.GeneralizedIdentifier
+            ? xorNode.node
+            : undefined,
+    );
+    return maybeIdentifiers.filter(TypeScriptUtils.isDefined);
 }
 
 export function listItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorNode): ReadonlyArray<TXorNode> {

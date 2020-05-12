@@ -196,15 +196,10 @@ export function maybeContextChildByAttributeIndex(
     }
 }
 
-export function expectInvokeExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    const invokeExpr: TXorNode = expectXorNode(nodeIdMapCollection, nodeId);
-    const maybeErr: CommonError.InvariantError | undefined = testAstNodeKind(invokeExpr, Ast.NodeKind.InvokeExpression);
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
-
+export function expectRecursiveExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+    const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, nodeId);
     const arrayWrapper: TXorNode = expectParentXorNode(nodeIdMapCollection, nodeId, [Ast.NodeKind.ArrayWrapper]);
-    const maybeInvokeExpressionAttributeIndex: number | undefined = invokeExpr.node.maybeAttributeIndex;
+    const maybeInvokeExpressionAttributeIndex: number | undefined = xorNode.node.maybeAttributeIndex;
 
     // It's not the first element in the ArrayWrapper.
     if (maybeInvokeExpressionAttributeIndex && maybeInvokeExpressionAttributeIndex > 0) {
@@ -212,10 +207,10 @@ export function expectInvokeExpressionPreviousSibling(nodeIdMapCollection: Colle
             nodeIdMapCollection.childIdsById,
             arrayWrapper.node.id,
         );
-        const indexOfInvokeExprId: number = childIds.indexOf(invokeExpr.node.id);
+        const indexOfInvokeExprId: number = childIds.indexOf(xorNode.node.id);
         if (indexOfInvokeExprId === -1 || indexOfInvokeExprId === 0) {
             const details: {} = {
-                invokeExprId: invokeExpr.node.id,
+                invokeExprId: xorNode.node.id,
                 arrayWrapperId: arrayWrapper.node.id,
                 indexOfInvokeExprId,
             };

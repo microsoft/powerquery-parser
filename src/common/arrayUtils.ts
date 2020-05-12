@@ -29,3 +29,29 @@ export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) =
 
     return undefined;
 }
+
+export function isSubset<T>(
+    largerCollection: ReadonlyArray<T>,
+    smallerCollection: ReadonlyArray<T>,
+    valueCmpFn: (left: T, right: T) => boolean,
+): boolean {
+    if (smallerCollection.length > largerCollection.length) {
+        return false;
+    }
+
+    for (const smallerCollectionValue of smallerCollection) {
+        let foundMatch: boolean = false;
+        for (const largerCollectionValue of largerCollection) {
+            if (valueCmpFn(smallerCollectionValue, largerCollectionValue)) {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if (foundMatch === false) {
+            return false;
+        }
+    }
+
+    return true;
+}
