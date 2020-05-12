@@ -11,6 +11,6 @@ describe("StringUtils", () => {
         it("a.1", () => expect(StringUtils.isGeneralizedIdentifier("a.1"), "should be true").to.be.true);
         it("a b", () => expect(StringUtils.isGeneralizedIdentifier("a b"), "should be true").to.be.true);
 
-        it("a..1", () => expect(StringUtils.isGeneralizedIdentifier("a..1"), "should be true").to.be.false);
+        it("a..1", () => expect(StringUtils.isGeneralizedIdentifier("a..1"), "should be false").to.be.false);
     });
 });
