@@ -76,13 +76,20 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
         tokenRangeEndIndex = state.tokenIndex;
     }
 
+    if (tokenRangeStartIndex === tokenRangeEndIndex) {
+        throw new ParseError.ExpectedGeneralizedIdentifierError(
+            state.localizationTemplates,
+            IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
+        );
+    }
+
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const tokens: ReadonlyArray<Language.Token> = lexerSnapshot.tokens;
     const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
     const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
-    if (tokenRangeStartIndex === tokenRangeEndIndex || StringUtils.isGeneralizedIdentifier(literal) === false) {
+    if (StringUtils.isGeneralizedIdentifier(literal) === false) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
             state.localizationTemplates,
             IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
