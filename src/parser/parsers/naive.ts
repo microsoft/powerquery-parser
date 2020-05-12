@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils, StringUtils } from "../../common";
+import { CommonError, isNever, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";

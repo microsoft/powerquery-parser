@@ -4,7 +4,7 @@
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
 import { CommonError, Pattern } from ".";
-import { Keywords, KeywordKind } from "../language";
+import { KeywordKind, Keywords } from "../language";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
