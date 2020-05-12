@@ -92,7 +92,6 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
     if (
         !StringUtils.isIdentifier(literal) &&
         !StringUtils.isGeneralizedIdentifier(literal) &&
-        !StringUtils.isKeyword(literal) &&
         !StringUtils.isQuotedIdentifier(literal)
     ) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
