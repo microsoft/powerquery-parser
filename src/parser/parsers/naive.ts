@@ -89,7 +89,12 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
     const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
-    if (StringUtils.isGeneralizedIdentifier(literal) === false) {
+    if (
+        !StringUtils.isIdentifier(literal) &&
+        !StringUtils.isGeneralizedIdentifier(literal) &&
+        !StringUtils.isKeyword(literal) &&
+        !StringUtils.isQuotedIdentifier(literal)
+    ) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
             state.localizationTemplates,
             IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
