@@ -54,6 +54,14 @@ export function graphemePositionFrom(
     };
 }
 
+export function isIdentifier(text: string): boolean {
+    return maybeIdentifierLength(text, 0) === text.length;
+}
+
+export function isGeneralizedIdentifier(text: string): boolean {
+    return maybeGeneralizedIdentifierLength(text, 0) === text.length;
+}
+
 export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): number | undefined {
     pattern.lastIndex = index;
     const matches: RegExpExecArray | null = pattern.exec(text);
@@ -67,10 +75,10 @@ export function maybeRegexMatchLength(pattern: RegExp, text: string, index: numb
 
 export function maybeIdentifierLength(text: string, index: number): number | undefined {
     const startingIndex: number = index;
+    const textLength: number = text.length;
+
     let continueMatching: boolean = true;
     let isOnStartCharacter: boolean = true;
-
-    const textLength: number = text.length;
 
     while (continueMatching) {
         const maybeMatchLength: number | undefined = maybeRegexMatchLength(
@@ -91,6 +99,45 @@ export function maybeIdentifierLength(text: string, index: number): number | und
             index += 1;
         } else {
             isOnStartCharacter = false;
+        }
+
+        if (index >= textLength) {
+            continueMatching = false;
+        }
+    }
+
+    return index !== startingIndex ? index - startingIndex : undefined;
+}
+
+export function maybeGeneralizedIdentifierLength(text: string, index: number): number | undefined {
+    const startingIndex: number = index;
+    const textLength: number = text.length;
+
+    let continueMatching: boolean = true;
+
+    while (continueMatching) {
+        const currentChr: string = text[index];
+
+        if (currentChr === " ") {
+            index += 1;
+        } else if (currentChr === ".") {
+            if (text[index - 1] === ".") {
+                continueMatching = false;
+                break;
+            }
+            index += 1;
+        } else {
+            const maybeMatchLength: number | undefined = maybeRegexMatchLength(
+                Pattern.IdentifierPartCharacters,
+                text,
+                index,
+            );
+            if (maybeMatchLength === undefined) {
+                continueMatching = false;
+                break;
+            }
+
+            index += maybeMatchLength;
         }
 
         if (index >= textLength) {
