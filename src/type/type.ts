@@ -87,12 +87,14 @@ export interface DefinedRecordExpression extends IExtendedType {
     readonly kind: TypeKind.Record;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecordExpression;
     readonly fields: Map<string, TType>;
+    readonly isOpen: boolean;
 }
 
 export interface DefinedTable extends IExtendedType {
     readonly kind: TypeKind.Table;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
     readonly fields: Map<string, TType>;
+    readonly isOpen: boolean;
 }
 
 export interface DefinedType extends IExtendedType {

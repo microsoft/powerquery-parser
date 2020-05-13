@@ -460,13 +460,10 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
         previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecordExpression ||
         previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable
     ) {
+        const previousSiblingDefinedType: Type.DefinedTable | Type.DefinedRecordExpression = previousSiblingType;
         const knownFields: Map<string, Type.TType> = previousSiblingType.fields;
         const knownFieldNames: ReadonlyArray<string> = [...previousSiblingType.fields.keys()];
-        const projectedOnlyKnownFields: boolean = ArrayUtils.isSubset(
-            knownFieldNames,
-            projectedFieldNames,
-            (left: string, right: string) => left === right,
-        );
+        const projectedOnlyKnownFields: boolean = ArrayUtils.isSubset(knownFieldNames, projectedFieldNames);
 
         if (projectedOnlyKnownFields === true) {
             const newFields: Map<string, Type.TType> = MapUtils.pick(knownFields, projectedFieldNames);
@@ -501,6 +498,22 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
     } else {
         return genericFactory(previousSiblingType.kind, previousSiblingType.isNullable);
     }
+}
+
+function reduceFields(
+    current: Type.DefinedRecordExpression | Type.DefinedTable,
+    keys: ReadonlyArray<string>,
+): Type.DefinedRecordExpression | Type.DefinedTable | Type.IPrimitiveType<Type.TypeKind.None> {
+    const currentFields: Map<string, Type.TType> = current.fields;
+    const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
+    const newFields: Map<string, Type.TType> = MapUtils.pick(currentFields, keys);
+
+    return {
+        ...current,
+        fields: newFields,
+    };
+
+    // const projectedOnlyCurrentFields: boolean = ArrayUtils.isSubset(knownFieldNames, projectedFieldNames);
 }
 
 function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -799,6 +812,7 @@ function translateRecordExpression(state: ScopeTypeInspectionState, xorNode: TXo
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
         isNullable: false,
         fields,
+        isOpen: false,
     };
 }
 

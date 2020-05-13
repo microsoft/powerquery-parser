@@ -33,7 +33,7 @@ export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) =
 export function isSubset<T>(
     largerCollection: ReadonlyArray<T>,
     smallerCollection: ReadonlyArray<T>,
-    valueCmpFn: (left: T, right: T) => boolean,
+    valueCmpFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
 ): boolean {
     if (smallerCollection.length > largerCollection.length) {
         return false;
