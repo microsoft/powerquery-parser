@@ -168,6 +168,7 @@ describe(`Inspection - Scope - Type`, () => {
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
                 fields: new Map(),
+                isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
@@ -276,6 +277,7 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 ]),
+                isOpen: true,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
@@ -296,6 +298,7 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 ]),
+                isOpen: true,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
@@ -316,6 +319,7 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 ]),
+                isOpen: true,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
@@ -333,9 +337,11 @@ describe(`Inspection - Scope - Type`, () => {
                             kind: Type.TypeKind.Text,
                             maybeExtendedKind: undefined,
                             isNullable: false,
+                            isOpen: false,
                         },
                     ],
                 ]),
+                isOpen: true,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });

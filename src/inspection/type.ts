@@ -228,8 +228,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
-            throw isNever(xorNode.node.kind);
-        // result = unknownFactory();
+            // throw isNever(xorNode.node.kind);
+            result = unknownFactory();
     }
 
     return result;
@@ -1084,36 +1084,37 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
         };
         throw new CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
-    // '[] & []' or '{} & {}'
+    // '[] & []' or '#table() & #table()'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
         return genericFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
     }
-    // '[key=value] & []' or '{...} & {}`
-    else if (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind === undefined) {
-        return leftType;
+    // '[key=value] & []' or '#table(...) & #table()`
+    // '[] & [key=value]' or `#table() & #table(...)`
+    else if (
+        (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind === undefined) ||
+        (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind !== undefined)
+    ) {
+        // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
+        const extendedType: Type.DefinedRecordExpression | Type.DefinedTable =
+            leftType.maybeExtendedKind !== undefined
+                ? leftType
+                : (rightType as Type.DefinedRecordExpression | Type.DefinedTable);
+        return {
+            ...extendedType,
+            isOpen: true,
+        };
     }
-    // '[] & [key=value]' or `{} & {...}`
-    else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind !== undefined) {
-        return rightType;
-    }
-    // '[foo=value] & [bar=value]'
-    else if (leftType.kind === Type.TypeKind.Record) {
-        return translateDefinedRecordExpressionUnion(
-            leftType as Type.DefinedRecordExpression,
-            rightType as Type.DefinedRecordExpression,
-        );
-    }
-    // `{...} & {...}`
-    else if (leftType.kind === Type.TypeKind.Table) {
-        return genericFactory(leftType.kind, leftType.isNullable && rightType.isNullable);
+    // '[foo=value] & [bar=value] or #table(...) & #table(...)'
+    else if (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind !== undefined) {
+        return unionFields(leftType, rightType);
     } else {
-        throw isNever(leftType);
+        throw new CommonError.InvariantError(`this should never be reached, but TypeScript can't tell that`);
     }
 }
 
-function translateDefinedRecordExpressionUnion(
-    leftType: Type.DefinedRecordExpression,
-    rightType: Type.DefinedRecordExpression,
+function unionFields(
+    leftType: Type.DefinedRecordExpression | Type.DefinedTable,
+    rightType: Type.DefinedRecordExpression | Type.DefinedTable,
 ): Type.DefinedRecordExpression {
     const combinedFields: Map<string, Type.TType> = new Map(leftType.fields);
     for (const [key, value] of rightType.fields.entries()) {
@@ -1125,6 +1126,7 @@ function translateDefinedRecordExpressionUnion(
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
         fields: combinedFields,
         isNullable: leftType.isNullable && rightType.isNullable,
+        isOpen: leftType.isOpen || rightType.isOpen,
     };
 }
 
