@@ -32,6 +32,10 @@ export function equalMaps<K, V>(
     return true;
 }
 
+export function hasCollection<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): boolean {
+    return keys.map((key: K) => map.has(key)).indexOf(false) === -1;
+}
+
 export function pick<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): Map<K, V> {
     const newMap: Map<K, V> = new Map();
 

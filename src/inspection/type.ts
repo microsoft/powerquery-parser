@@ -243,7 +243,7 @@ function genericFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolea
     };
 }
 
-function anyFactory(): Type.TType {
+function anyFactory(): Type.IPrimitiveType<Type.TypeKind.Any> {
     return {
         kind: Type.TypeKind.Any,
         maybeExtendedKind: undefined,
@@ -260,7 +260,7 @@ function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.AnyU
     };
 }
 
-function unknownFactory(): Type.TType {
+function unknownFactory(): Type.IPrimitiveType<Type.TypeKind.Unknown> {
     return {
         kind: Type.TypeKind.Unknown,
         maybeExtendedKind: undefined,
@@ -268,7 +268,7 @@ function unknownFactory(): Type.TType {
     };
 }
 
-function noneFactory(): Type.TType {
+function noneFactory(): Type.IPrimitiveType<Type.TypeKind.None> {
     return {
         kind: Type.TypeKind.None,
         maybeExtendedKind: undefined,
@@ -456,64 +456,52 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
 
     if (previousSiblingType.kind !== Type.TypeKind.Record && previousSiblingType.kind !== Type.TypeKind.Table) {
         return noneFactory();
-    } else if (
-        previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecordExpression ||
-        previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable
-    ) {
-        const previousSiblingDefinedType: Type.DefinedTable | Type.DefinedRecordExpression = previousSiblingType;
-        const knownFields: Map<string, Type.TType> = previousSiblingType.fields;
-        const knownFieldNames: ReadonlyArray<string> = [...previousSiblingType.fields.keys()];
-        const projectedOnlyKnownFields: boolean = ArrayUtils.isSubset(knownFieldNames, projectedFieldNames);
+    } else if (previousSiblingType.maybeExtendedKind === undefined) {
+        const newFields: Map<string, Type.IPrimitiveType<Type.TypeKind.Any>> = new Map(
+            projectedFieldNames.map((key: string) => [key, anyFactory()]),
+        );
 
-        if (projectedOnlyKnownFields === true) {
-            const newFields: Map<string, Type.TType> = MapUtils.pick(knownFields, projectedFieldNames);
-            // TODO: TypeScript requires this to properly narrow the types.
-            // Try to rework this towards a more elegant solution.
-            if (
-                previousSiblingType.kind === Type.TypeKind.Record &&
-                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecordExpression
-            ) {
+        switch (previousSiblingType.kind) {
+            case Type.TypeKind.Record:
                 return {
                     kind: previousSiblingType.kind,
-                    maybeExtendedKind: previousSiblingType.maybeExtendedKind,
-                    isNullable: previousSiblingType.isNullable,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                    isNullable: false,
                     fields: newFields,
+                    isOpen: false,
                 };
-            } else if (
-                previousSiblingType.kind === Type.TypeKind.Table &&
-                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable
-            ) {
+
+            case Type.TypeKind.Table:
                 return {
                     kind: previousSiblingType.kind,
-                    maybeExtendedKind: previousSiblingType.maybeExtendedKind,
-                    isNullable: previousSiblingType.isNullable,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                    isNullable: false,
                     fields: newFields,
+                    isOpen: false,
                 };
-            } else {
-                throw new CommonError.InvariantError(`this should never be reached`);
-            }
-        } else {
-            return noneFactory();
+
+            default:
+                throw isNever(previousSiblingType.kind);
         }
     } else {
-        return genericFactory(previousSiblingType.kind, previousSiblingType.isNullable);
+        return reducedFieldsToKeys(previousSiblingType, projectedFieldNames);
     }
 }
 
-function reduceFields(
+function reducedFieldsToKeys(
     current: Type.DefinedRecordExpression | Type.DefinedTable,
     keys: ReadonlyArray<string>,
 ): Type.DefinedRecordExpression | Type.DefinedTable | Type.IPrimitiveType<Type.TypeKind.None> {
     const currentFields: Map<string, Type.TType> = current.fields;
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
-    const newFields: Map<string, Type.TType> = MapUtils.pick(currentFields, keys);
+    if (ArrayUtils.isSubset(currentFieldNames, keys) === false) {
+        return noneFactory();
+    }
 
     return {
         ...current,
-        fields: newFields,
+        fields: MapUtils.pick(currentFields, keys),
     };
-
-    // const projectedOnlyCurrentFields: boolean = ArrayUtils.isSubset(knownFieldNames, projectedFieldNames);
 }
 
 function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
