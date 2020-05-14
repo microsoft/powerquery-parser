@@ -277,7 +277,7 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 ]),
-                isOpen: true,
+                isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
@@ -298,7 +298,7 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 ]),
-                isOpen: true,
+                isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
@@ -319,12 +319,12 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 ]),
-                isOpen: true,
+                isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
 
-        it(`[foo=1] & [foo=""]`, () => {
+        it(`WIP [foo=1] & [foo=""]`, () => {
             const expression: string = `[foo=1] & [foo=""]`;
             const expected: AbridgedScopeType = {
                 kind: Type.TypeKind.Record,
@@ -341,7 +341,7 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 ]),
-                isOpen: true,
+                isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
