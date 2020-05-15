@@ -225,10 +225,7 @@ export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList
     return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
 }
 
-export function equalDefinedRecord(
-    left: Type.DefinedRecord,
-    right: Type.DefinedRecord,
-): boolean {
+export function equalDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
         left.isNullable === right.isNullable &&
         MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType)

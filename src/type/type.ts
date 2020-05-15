@@ -2,13 +2,7 @@
 // Licensed under the MIT license.
 
 export type TType = IPrimitiveType | TExtendedType;
-export type TExtendedType =
-    | AnyUnion
-    | DefinedFunction
-    | DefinedList
-    | DefinedRecord
-    | DefinedTable
-    | DefinedType;
+export type TExtendedType = AnyUnion | DefinedFunction | DefinedList | DefinedRecord | DefinedTable | DefinedType;
 export type TExtendedTypeKind =
     | TypeKind.Any
     | TypeKind.Function

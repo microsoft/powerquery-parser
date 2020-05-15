@@ -1104,9 +1104,7 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
     ) {
         // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
         const extendedType: Type.DefinedRecord | Type.DefinedTable =
-            leftType.maybeExtendedKind !== undefined
-                ? leftType
-                : (rightType as Type.DefinedRecord | Type.DefinedTable);
+            leftType.maybeExtendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
         return {
             ...extendedType,
             isOpen: true,
