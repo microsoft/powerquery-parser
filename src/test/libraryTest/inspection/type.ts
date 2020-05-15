@@ -167,7 +167,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
-                fields: new Map(),
+                fields: new Map<string, Type.TType>(),
                 isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -259,7 +259,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
-                fields: new Map([
+                fields: new Map<string, Type.TType>([
                     [
                         "foo",
                         {
@@ -288,7 +288,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
-                fields: new Map([
+                fields: new Map<string, Type.TType>([
                     [
                         "bar",
                         {
@@ -309,7 +309,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
-                fields: new Map([
+                fields: new Map<string, Type.TType>([
                     [
                         "foo",
                         {
@@ -324,20 +324,19 @@ describe(`Inspection - Scope - Type`, () => {
             expectExpressionParseOkTypeOk(expression, expected);
         });
 
-        it(`WIP [foo=1] & [foo=""]`, () => {
+        it(`[foo=1] & [foo=""]`, () => {
             const expression: string = `[foo=1] & [foo=""]`;
             const expected: AbridgedScopeType = {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
                 isNullable: false,
-                fields: new Map([
+                fields: new Map<string, Type.TType>([
                     [
                         "foo",
                         {
                             kind: Type.TypeKind.Text,
                             maybeExtendedKind: undefined,
                             isNullable: false,
-                            isOpen: false,
                         },
                     ],
                 ]),
