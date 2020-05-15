@@ -4,8 +4,9 @@
 import { expect } from "chai";
 import "mocha";
 import { DefaultTemplates, Localization } from "../../../localization";
-import { ParseError } from "../../../parser";
-import { DefaultSettings } from "../../../settings";
+import { IParser, IParserState, ParseError } from "../../../parser";
+import { RecursiveDescentParser } from "../../../parser/parsers";
+import { DefaultSettings, Settings } from "../../../settings";
 import { expectParseErr } from "../../common";
 
 function expectCsvContinuationError(text: string): ParseError.ExpectedCsvContinuationError {
@@ -41,10 +42,26 @@ describe("Parser.Error", () => {
         expect(innerError instanceof ParseError.UnterminatedParenthesesError).to.equal(true, innerError.message);
     });
 
-    it("UnusedTokensRemainError: 1 1", () => {
-        const text: string = "1 1";
-        const innerError: ParseError.TInnerParseError = expectParseErr(DefaultSettings, text).innerError;
-        expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
+    describe(`UnusedTokensRemainError`, () => {
+        it("default parser", () => {
+            const text: string = "1 1";
+            const innerError: ParseError.TInnerParseError = expectParseErr(DefaultSettings, text).innerError;
+            expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
+        });
+
+        it("custom start", () => {
+            const customParser: IParser<IParserState> = {
+                ...RecursiveDescentParser,
+                read: RecursiveDescentParser.readIdentifier,
+            };
+            const customSettings: Settings = {
+                ...DefaultSettings,
+                parser: customParser,
+            };
+            const text: string = "a b";
+            const innerError: ParseError.TInnerParseError = expectParseErr(customSettings, text).innerError;
+            expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
+        });
     });
 
     it(`Dangling Comma for LetExpression`, () => {

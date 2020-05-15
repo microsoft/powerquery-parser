@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { CommonError, isNever, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { CommonError, isNever, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
@@ -66,9 +66,6 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
     const nodeKind: Ast.NodeKind.GeneralizedIdentifier = Ast.NodeKind.GeneralizedIdentifier;
     IParserStateUtils.startContext(state, nodeKind);
 
-    let literal: string;
-    let astNode: Ast.GeneralizedIdentifier;
-
     const tokenRangeStartIndex: number = state.tokenIndex;
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
     while (
@@ -90,9 +87,20 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
     const tokens: ReadonlyArray<Language.Token> = lexerSnapshot.tokens;
     const contiguousIdentifierStartIndex: number = tokens[tokenRangeStartIndex].positionStart.codeUnit;
     const contiguousIdentifierEndIndex: number = tokens[tokenRangeEndIndex - 1].positionEnd.codeUnit;
-    literal = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
+    const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
-    astNode = {
+    if (
+        !StringUtils.isIdentifier(literal) &&
+        !StringUtils.isGeneralizedIdentifier(literal) &&
+        !StringUtils.isQuotedIdentifier(literal)
+    ) {
+        throw new ParseError.ExpectedGeneralizedIdentifierError(
+            state.localizationTemplates,
+            IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
+        );
+    }
+
+    const astNode: Ast.GeneralizedIdentifier = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: true,

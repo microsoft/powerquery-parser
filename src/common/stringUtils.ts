@@ -4,6 +4,7 @@
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
 import { CommonError, Pattern } from ".";
+import { KeywordKind, Keywords } from "../language";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
@@ -54,6 +55,22 @@ export function graphemePositionFrom(
     };
 }
 
+export function isIdentifier(text: string): boolean {
+    return maybeIdentifierLength(text, 0) === text.length;
+}
+
+export function isGeneralizedIdentifier(text: string): boolean {
+    return maybeGeneralizedIdentifierLength(text, 0) === text.length;
+}
+
+export function isKeyword(text: string): boolean {
+    return Keywords.indexOf(text as KeywordKind) !== -1;
+}
+
+export function isQuotedIdentifier(text: string): boolean {
+    return maybeQuotedIdentifier(text, 0) === text.length;
+}
+
 export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): number | undefined {
     pattern.lastIndex = index;
     const matches: RegExpExecArray | null = pattern.exec(text);
@@ -67,10 +84,10 @@ export function maybeRegexMatchLength(pattern: RegExp, text: string, index: numb
 
 export function maybeIdentifierLength(text: string, index: number): number | undefined {
     const startingIndex: number = index;
+    const textLength: number = text.length;
+
     let continueMatching: boolean = true;
     let isOnStartCharacter: boolean = true;
-
-    const textLength: number = text.length;
 
     while (continueMatching) {
         const maybeMatchLength: number | undefined = maybeRegexMatchLength(
@@ -99,6 +116,85 @@ export function maybeIdentifierLength(text: string, index: number): number | und
     }
 
     return index !== startingIndex ? index - startingIndex : undefined;
+}
+
+export function maybeGeneralizedIdentifierLength(text: string, index: number): number | undefined {
+    const startingIndex: number = index;
+    const textLength: number = text.length;
+
+    let continueMatching: boolean = true;
+
+    while (continueMatching) {
+        const currentChr: string = text[index];
+
+        if (currentChr === " ") {
+            index += 1;
+        } else if (currentChr === ".") {
+            if (text[index - 1] === ".") {
+                continueMatching = false;
+                break;
+            }
+            index += 1;
+        } else {
+            const maybeMatchLength: number | undefined = maybeRegexMatchLength(
+                Pattern.IdentifierPartCharacters,
+                text,
+                index,
+            );
+            if (maybeMatchLength === undefined) {
+                continueMatching = false;
+                break;
+            }
+
+            index += maybeMatchLength;
+        }
+
+        if (index >= textLength) {
+            continueMatching = false;
+        }
+    }
+
+    return index !== startingIndex ? index - startingIndex : undefined;
+}
+
+export function maybeQuotedIdentifier(text: string, index: number): number | undefined {
+    if (text[index] !== "#") {
+        return undefined;
+    }
+    if (text[index + 1] !== '"') {
+        return undefined;
+    }
+
+    const startingIndex: number = index;
+    const textLength: number = text.length;
+    let continueMatching: boolean = true;
+    let isValid: boolean = false;
+    index += 2;
+
+    while (continueMatching) {
+        const chr1: string | undefined = text[index];
+
+        if (chr1 === '"') {
+            const chr2: string | undefined = text[index + 1];
+
+            if (chr2 !== '"') {
+                continueMatching = false;
+                isValid = true;
+                index += 1;
+                continue;
+            } else {
+                index += 2;
+            }
+        }
+
+        index += 1;
+
+        if (index >= textLength) {
+            continueMatching = false;
+        }
+    }
+
+    return isValid ? index - startingIndex : undefined;
 }
 
 export function maybeNewlineKindAt(text: string, index: number): NewlineKind | undefined {
