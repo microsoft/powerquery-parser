@@ -47,7 +47,7 @@ export function tryScopeTypeForRoot(
 type TRecordOrTable =
     | Type.IPrimitiveType<Type.TypeKind.Record>
     | Type.IPrimitiveType<Type.TypeKind.Table>
-    | Type.DefinedRecordExpression
+    | Type.DefinedRecord
     | Type.DefinedTable;
 
 interface ScopeTypeInspectionState {
@@ -473,7 +473,7 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
             case Type.TypeKind.Record:
                 return {
                     kind: previousSiblingType.kind,
-                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                     isNullable: false,
                     fields: newFields,
                     isOpen: false,
@@ -497,9 +497,9 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
 }
 
 function reducedFieldsToKeys(
-    current: Type.DefinedRecordExpression | Type.DefinedTable,
+    current: Type.DefinedRecord | Type.DefinedTable,
     keys: ReadonlyArray<string>,
-): Type.DefinedRecordExpression | Type.DefinedTable | Type.IPrimitiveType<Type.TypeKind.None> {
+): Type.DefinedRecord | Type.DefinedTable | Type.IPrimitiveType<Type.TypeKind.None> {
     const currentFields: Map<string, Type.TType> = current.fields;
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
     if (ArrayUtils.isSubset(currentFieldNames, keys) === false) {
@@ -785,7 +785,7 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     return leftType;
 }
 
-function translateRecordExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedRecordExpression {
+function translateRecordExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.RecordExpression,
@@ -805,7 +805,7 @@ function translateRecordExpression(state: ScopeTypeInspectionState, xorNode: TXo
 
     return {
         kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
         isNullable: false,
         fields,
         isOpen: false,
@@ -1103,10 +1103,10 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
         (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind !== undefined)
     ) {
         // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
-        const extendedType: Type.DefinedRecordExpression | Type.DefinedTable =
+        const extendedType: Type.DefinedRecord | Type.DefinedTable =
             leftType.maybeExtendedKind !== undefined
                 ? leftType
-                : (rightType as Type.DefinedRecordExpression | Type.DefinedTable);
+                : (rightType as Type.DefinedRecord | Type.DefinedTable);
         return {
             ...extendedType,
             isOpen: true,
@@ -1121,9 +1121,9 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
 }
 
 function unionFields(
-    leftType: Type.DefinedRecordExpression | Type.DefinedTable,
-    rightType: Type.DefinedRecordExpression | Type.DefinedTable,
-): Type.DefinedRecordExpression {
+    leftType: Type.DefinedRecord | Type.DefinedTable,
+    rightType: Type.DefinedRecord | Type.DefinedTable,
+): Type.DefinedRecord {
     const combinedFields: Map<string, Type.TType> = new Map(leftType.fields);
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
@@ -1131,7 +1131,7 @@ function unionFields(
 
     return {
         kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
         fields: combinedFields,
         isNullable: leftType.isNullable && rightType.isNullable,
         isOpen: leftType.isOpen || rightType.isOpen,

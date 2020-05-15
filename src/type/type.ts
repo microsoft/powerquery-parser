@@ -6,7 +6,7 @@ export type TExtendedType =
     | AnyUnion
     | DefinedFunction
     | DefinedList
-    | DefinedRecordExpression
+    | DefinedRecord
     | DefinedTable
     | DefinedType;
 export type TExtendedTypeKind =
@@ -44,7 +44,7 @@ export const enum ExtendedTypeKind {
     AnyUnion = "AnyUnion",
     DefinedFunction = "DefinedFunction",
     DefinedList = "DefinedList",
-    DefinedRecordExpression = "DefinedRecordExpression",
+    DefinedRecord = "DefinedRecord",
     DefinedTable = "DefinedTable",
     DefinedType = "DefinedType",
 }
@@ -83,9 +83,9 @@ export interface DefinedList extends IExtendedType {
     readonly itemType: TType;
 }
 
-export interface DefinedRecordExpression extends IExtendedType {
+export interface DefinedRecord extends IExtendedType {
     readonly kind: TypeKind.Record;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecordExpression;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
     readonly fields: Map<string, TType>;
     readonly isOpen: boolean;
 }

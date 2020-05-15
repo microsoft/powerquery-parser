@@ -165,7 +165,7 @@ describe(`Inspection - Scope - Type`, () => {
             const expression: string = `[]`;
             const expected: Type.TType = {
                 kind: Type.TypeKind.Record,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
                 fields: new Map<string, Type.TType>(),
                 isOpen: false,
@@ -257,7 +257,7 @@ describe(`Inspection - Scope - Type`, () => {
             const expression: string = `[foo=1] & [bar=2]`;
             const expected: AbridgedScopeType = {
                 kind: Type.TypeKind.Record,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
                 fields: new Map<string, Type.TType>([
                     [
@@ -286,7 +286,7 @@ describe(`Inspection - Scope - Type`, () => {
             const expression: string = `[] & [bar=2]`;
             const expected: AbridgedScopeType = {
                 kind: Type.TypeKind.Record,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
                 fields: new Map<string, Type.TType>([
                     [
@@ -307,7 +307,7 @@ describe(`Inspection - Scope - Type`, () => {
             const expression: string = `[foo=1] & []`;
             const expected: AbridgedScopeType = {
                 kind: Type.TypeKind.Record,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
                 fields: new Map<string, Type.TType>([
                     [
@@ -328,7 +328,7 @@ describe(`Inspection - Scope - Type`, () => {
             const expression: string = `[foo=1] & [foo=""]`;
             const expected: AbridgedScopeType = {
                 kind: Type.TypeKind.Record,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecordExpression,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
                 fields: new Map<string, Type.TType>([
                     [

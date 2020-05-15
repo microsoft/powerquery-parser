@@ -195,8 +195,8 @@ export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtend
         case Type.ExtendedTypeKind.DefinedList:
             return equalDefinedList(left, right as Type.DefinedList);
 
-        case Type.ExtendedTypeKind.DefinedRecordExpression:
-            return equalDefinedRecordExpression(left, right as Type.DefinedRecordExpression);
+        case Type.ExtendedTypeKind.DefinedRecord:
+            return equalDefinedRecord(left, right as Type.DefinedRecord);
 
         case Type.ExtendedTypeKind.DefinedTable:
             return equalDefinedTable(left, right as Type.DefinedTable);
@@ -225,9 +225,9 @@ export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList
     return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
 }
 
-export function equalDefinedRecordExpression(
-    left: Type.DefinedRecordExpression,
-    right: Type.DefinedRecordExpression,
+export function equalDefinedRecord(
+    left: Type.DefinedRecord,
+    right: Type.DefinedRecord,
 ): boolean {
     return (
         left.isNullable === right.isNullable &&
