@@ -129,6 +129,13 @@ function translateScopeItem(state: ScopeTypeInspectionState, scopeItem: TScopeIt
 }
 
 function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const xorNodeId: number = xorNode.node.id;
+    const maybeCached: Type.TType | undefined =
+        state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
+    if (maybeCached !== undefined) {
+        return maybeCached;
+    }
+
     let result: Type.TType;
     switch (xorNode.node.kind) {
         case Ast.NodeKind.ArithmeticExpression:
@@ -232,6 +239,7 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = unknownFactory();
     }
 
+    state.deltaTypeById.set(xorNodeId, result);
     return result;
 }
 
