@@ -1,7 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, CommonError, isNever, MapUtils, Result, ResultUtils } from "../common";
+import {
+    ArrayUtils,
+    CommonError,
+    isNever,
+    MapUtils,
+    Result,
+    ResultUtils,
+    shouldBeIsNever as shouldNeverBeReached,
+} from "../common";
 import { Ast, AstUtils } from "../language";
 import { getLocalizationTemplates } from "../localization";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
@@ -1151,7 +1159,7 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
     else if (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind !== undefined) {
         return unionFields(leftType, rightType);
     } else {
-        throw new CommonError.InvariantError(`this should never be reached, but TypeScript can't tell that`);
+        throw shouldNeverBeReached();
     }
 }
 
