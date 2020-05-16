@@ -344,6 +344,58 @@ describe(`Inspection - Scope - Type`, () => {
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
+
+        it(`[] as record & [foo=1]`, () => {
+            const expression: string = `[] as record & [foo=1]`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                isNullable: false,
+                fields: new Map<string, Type.TType>([
+                    [
+                        "foo",
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                ]),
+                isOpen: true,
+            };
+            expectExpressionParseOkTypeOk(expression, expected);
+        });
+
+        it(`[foo=1] & [] as record`, () => {
+            const expression: string = `[foo=1] & [] as record`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                isNullable: false,
+                fields: new Map<string, Type.TType>([
+                    [
+                        "foo",
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                ]),
+                isOpen: true,
+            };
+            expectExpressionParseOkTypeOk(expression, expected);
+        });
+
+        it(`[] as record & [] as record`, () => {
+            const expression: string = `[] as record & [] as record`;
+            const expected: AbridgedScopeType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: undefined,
+                isNullable: false,
+            };
+            expectExpressionParseOkTypeOk(expression, expected);
+        });
     });
 
     describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {

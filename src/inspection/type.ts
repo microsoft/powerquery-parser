@@ -101,8 +101,6 @@ function getOrCreateType(state: ScopeTypeInspectionState, scopeItem: TScopeItem)
     }
 
     const scopeType: Type.TType = translateScopeItem(state, scopeItem);
-    state.deltaTypeById.set(nodeId, scopeType);
-
     return scopeType;
 }
 
@@ -112,13 +110,17 @@ function translateScopeItem(state: ScopeTypeInspectionState, scopeItem: TScopeIt
             return translateXorNode(state, scopeItem.eachExpression);
 
         case ScopeItemKind.KeyValuePair:
-            return scopeItem.maybeValue === undefined ? anyFactory() : translateXorNode(state, scopeItem.maybeValue);
+            return scopeItem.maybeValue === undefined
+                ? unknownFactory()
+                : translateXorNode(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Parameter:
             return parameterFactory(scopeItem);
 
         case ScopeItemKind.SectionMember:
-            return scopeItem.maybeValue === undefined ? anyFactory() : translateXorNode(state, scopeItem.maybeValue);
+            return scopeItem.maybeValue === undefined
+                ? unknownFactory()
+                : translateXorNode(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Undefined:
             return unknownFactory();
@@ -212,6 +214,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.LiteralExpression:
             result = translateLiteralExpression(xorNode);
+            break;
+
+        case Ast.NodeKind.PrimitiveType:
+            result = translatePrimitiveType(xorNode);
             break;
 
         case Ast.NodeKind.RangeExpression:
@@ -526,19 +532,29 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
         xorNode,
     );
     const inspectedReturnType: Type.TType = inspectedFunctionExpression.returnType;
-
     const expressionType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 3);
+
     // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
     // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),
     // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
     let returnType: Type.TType;
-
-    if (inspectedReturnType.kind !== expressionType.kind) {
-        returnType = noneFactory();
-    } else if (inspectedReturnType.maybeExtendedKind === undefined && expressionType.maybeExtendedKind !== undefined) {
+    if (inspectedReturnType.kind === Type.TypeKind.Any) {
+        returnType = expressionType;
+    } else if (
+        expressionType.kind === Type.TypeKind.Any &&
+        expressionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion &&
+        allForAnyUnion(
+            expressionType,
+            (type: Type.TType) => type.kind === inspectedReturnType.kind || type.kind === Type.TypeKind.Any,
+        )
+    ) {
+        returnType = expressionType;
+    } else if (inspectedReturnType.kind !== expressionType.kind) {
+        return noneFactory();
+    } else if (expressionType.kind !== Type.TypeKind.Unknown) {
         returnType = expressionType;
     } else {
-        returnType = expressionType;
+        returnType = inspectedReturnType;
     }
 
     return {
@@ -599,7 +615,7 @@ function translateIfExpression(state: ScopeTypeInspectionState, xorNode: TXorNod
     const conditionType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 1);
     // Ensure unions are unions of only logicals
     if (conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-        if (!recursiveAnyUnionCheck(conditionType, (type: Type.TType) => type.kind === Type.TypeKind.Logical)) {
+        if (!allForAnyUnion(conditionType, (type: Type.TType) => type.kind === Type.TypeKind.Logical)) {
             return unknownFactory();
         }
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
@@ -697,6 +713,27 @@ function translateLiteralExpression(xorNode: TXorNode): Type.TType {
         default:
             throw isNever(xorNode);
     }
+}
+
+function translatePrimitiveType(xorNode: TXorNode): Type.TType {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.PrimitiveType,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    } else if (xorNode.kind === XorNodeKind.Context) {
+        return unknownFactory();
+    }
+
+    const kind: Type.TypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(
+        (xorNode.node as Ast.PrimitiveType).primitiveType.constantKind,
+    );
+    return {
+        kind,
+        maybeExtendedKind: undefined,
+        isNullable: false,
+    };
 }
 
 function translateRangeExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -1138,13 +1175,13 @@ function unionFields(
 
 // recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
-// then calls any(...) on the mapped values.
-function recursiveAnyUnionCheck(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType) => boolean): boolean {
+// then calls all(...) on the mapped values.
+function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType) => boolean): boolean {
     return (
         anyUnion.unionedTypePairs
             .map((type: Type.TType) => {
                 return type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
-                    ? recursiveAnyUnionCheck(type, conditionFn)
+                    ? allForAnyUnion(type, conditionFn)
                     : conditionFn(type);
             })
             .indexOf(false) === -1
