@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { isNever, MapUtils } from "../common";
+import { ArrayUtils, isNever, MapUtils } from "../common";
 import { ParameterScopeItem } from "../inspection";
 import { Ast } from "../language";
 
@@ -22,12 +22,15 @@ export function anyFactory(): Type.IPrimitiveType<Type.TypeKind.Any> {
     };
 }
 
-export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.AnyUnion {
+export function anyUnionFactory(
+    unionedTypePairs: ReadonlyArray<Type.TType>,
+    dedupeTypes: boolean = true,
+): Type.AnyUnion {
     return {
         kind: Type.TypeKind.Any,
         maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
         isNullable: unionedTypePairs.find((ttype: Type.TType) => ttype.isNullable === true) !== undefined,
-        unionedTypePairs: dedupe(unionedTypePairs),
+        unionedTypePairs: dedupe(unionedTypePairs, dedupeTypes),
     };
 }
 
@@ -59,7 +62,7 @@ export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
     };
 }
 
-export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
+export function dedupe(types: ReadonlyArray<Type.TType>, combineAnys: boolean = true): ReadonlyArray<Type.TType> {
     const buckets: Map<string, Type.TType[]> = new Map();
 
     for (const current of types) {
@@ -75,9 +78,47 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
         }
     }
 
+    if (combineAnys === true) {
+        const anyUnionKey: string = `${Type.TypeKind.Any},${Type.ExtendedTypeKind.AnyUnion}`;
+        const maybeAnyUnions: ReadonlyArray<Type.TType> | undefined = buckets.get(anyUnionKey);
+        if (maybeAnyUnions !== undefined) {
+            buckets.set(anyUnionKey, [...combineAnyUnions(maybeAnyUnions as ReadonlyArray<Type.AnyUnion>)]);
+        }
+    }
+
     const result: Type.TType[] = [];
     for (types of buckets.values()) {
         result.push(...types);
+    }
+
+    return result;
+}
+
+export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.AnyUnion> {
+    const [nullable, nonNullable]: [ReadonlyArray<Type.AnyUnion>, ReadonlyArray<Type.AnyUnion>] = ArrayUtils.split(
+        anyUnions,
+        (value: Type.AnyUnion) => value.isNullable === true,
+    );
+
+    const flattenedNullable: ReadonlyArray<Type.TType> = nullable
+        .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
+        .reduce((flattened: Type.TType[], types: ReadonlyArray<Type.TType>, _currentIndex, _array): Type.TType[] => {
+            flattened.push(...types);
+            return flattened;
+        }, []);
+    const flattenedNonNullable: ReadonlyArray<Type.TType> = nonNullable
+        .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
+        .reduce((flattened: Type.TType[], types: ReadonlyArray<Type.TType>, _currentIndex, _array): Type.TType[] => {
+            flattened.push(...types);
+            return flattened;
+        }, []);
+
+    const result: Type.AnyUnion[] = [];
+    if (flattenedNullable.length !== 0) {
+        result.push(anyUnionFactory(flattenedNullable, false));
+    }
+    if (flattenedNonNullable.length !== 0) {
+        result.push(anyUnionFactory(flattenedNonNullable, false));
     }
 
     return result;

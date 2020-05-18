@@ -55,3 +55,21 @@ export function isSubset<T>(
 
     return true;
 }
+
+export function split<T>(
+    collection: ReadonlyArray<T>,
+    splitFn: (value: T) => boolean,
+): [ReadonlyArray<T>, ReadonlyArray<T>] {
+    const left: T[] = [];
+    const right: T[] = [];
+
+    for (const value of collection) {
+        if (splitFn(value) === true) {
+            left.push(value);
+        } else {
+            right.push(value);
+        }
+    }
+
+    return [left, right];
+}
