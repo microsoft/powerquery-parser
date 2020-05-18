@@ -86,5 +86,20 @@ describe(`TypeUtils`, () => {
             const secondAnyUnion: Type.AnyUnion = expectAnyUnion(result[1]);
             expect(secondAnyUnion.unionedTypePairs.length).to.equal(1);
         });
+
+        it(`dedupe - ${Type.ExtendedTypeKind.AnyUnion}, nested`, () => {
+            const result: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+                TypeUtils.anyUnionFactory([
+                    TypeUtils.genericFactory(Type.TypeKind.Record, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Record, false),
+                ]),
+                TypeUtils.anyUnionFactory([TypeUtils.genericFactory(Type.TypeKind.Record, true)]),
+            ]);
+            expect(result.length).to.equal(2);
+            const firstAnyUnion: Type.AnyUnion = expectAnyUnion(result[0]);
+            expect(firstAnyUnion.unionedTypePairs.length).to.equal(1);
+            const secondAnyUnion: Type.AnyUnion = expectAnyUnion(result[1]);
+            expect(secondAnyUnion.unionedTypePairs.length).to.equal(1);
+        });
     });
 });
