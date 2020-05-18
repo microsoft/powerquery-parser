@@ -3,7 +3,85 @@
 
 import { Type } from ".";
 import { isNever, MapUtils } from "../common";
+import { ParameterScopeItem } from "../inspection";
 import { Ast } from "../language";
+
+export function genericFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolean): Type.IPrimitiveType<T> {
+    return {
+        kind: typeKind,
+        maybeExtendedKind: undefined,
+        isNullable,
+    };
+}
+
+export function anyFactory(): Type.IPrimitiveType<Type.TypeKind.Any> {
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: undefined,
+        isNullable: true,
+    };
+}
+
+export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.AnyUnion {
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+        isNullable: unionedTypePairs.find((ttype: Type.TType) => ttype.isNullable === true) !== undefined,
+        unionedTypePairs: dedupe(unionedTypePairs),
+    };
+}
+
+export function unknownFactory(): Type.IPrimitiveType<Type.TypeKind.Unknown> {
+    return {
+        kind: Type.TypeKind.Unknown,
+        maybeExtendedKind: undefined,
+        isNullable: false,
+    };
+}
+
+export function noneFactory(): Type.IPrimitiveType<Type.TypeKind.None> {
+    return {
+        kind: Type.TypeKind.None,
+        maybeExtendedKind: undefined,
+        isNullable: false,
+    };
+}
+
+export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
+    if (parameter.maybeType === undefined) {
+        return unknownFactory();
+    }
+
+    return {
+        kind: typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
+        maybeExtendedKind: undefined,
+        isNullable: parameter.isNullable,
+    };
+}
+
+export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
+    const buckets: Map<string, Type.TType[]> = new Map();
+
+    for (const current of types) {
+        const key: string = `${current.kind},${current.maybeExtendedKind}`;
+        const maybeColllection: Type.TType[] | undefined = buckets.get(key);
+        // First type of TypeKind
+        if (maybeColllection === undefined) {
+            buckets.set(key, [current]);
+        }
+        // In the bucket for type.kind, check if it's the first with a deep equals comparison.
+        else if (maybeColllection.find((type: Type.TType) => equalType(current, type)) === undefined) {
+            maybeColllection.push(current);
+        }
+    }
+
+    const result: Type.TType[] = [];
+    for (types of buckets.values()) {
+        result.push(...types);
+    }
+
+    return result;
+}
 
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
