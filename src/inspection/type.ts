@@ -204,6 +204,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateInvokeExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.ItemAccessExpression:
+            result = TypeUtils.anyFactory();
+            break;
+
         case Ast.NodeKind.LetExpression:
             result = translateFromChildAttributeIndex(state, xorNode, 3);
             break;
@@ -360,7 +364,7 @@ function translateConstant(xorNode: TXorNode): Type.TType {
             return TypeUtils.genericFactory(Type.TypeKind.Action, false);
 
         case Ast.PrimitiveTypeConstantKind.Any:
-            return TypeUtils.genericFactory(Type.TypeKind.Any, true);
+            return TypeUtils.anyFactory();
 
         case Ast.PrimitiveTypeConstantKind.AnyNonNull:
             return TypeUtils.genericFactory(Type.TypeKind.AnyNonNull, false);
@@ -393,7 +397,7 @@ function translateConstant(xorNode: TXorNode): Type.TType {
             return TypeUtils.genericFactory(Type.TypeKind.None, false);
 
         case Ast.PrimitiveTypeConstantKind.Null:
-            return TypeUtils.genericFactory(Type.TypeKind.Null, true);
+            return TypeUtils.noneFactory();
 
         case Ast.PrimitiveTypeConstantKind.Number:
             return TypeUtils.genericFactory(Type.TypeKind.Number, false);

@@ -420,20 +420,8 @@ describe(`Inspection - Scope - Type`, () => {
                 const expression: string = `(_ as any){0}`;
                 const expected: Type.TType = {
                     kind: Type.TypeKind.Any,
-                    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-                    isNullable: false,
-                    unionedTypePairs: [
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                        {
-                            kind: Type.TypeKind.Logical,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
+                    maybeExtendedKind: undefined,
+                    isNullable: true,
                 };
                 expectExpressionParseOkTypeOk(expression, expected);
             });
