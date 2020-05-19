@@ -11,12 +11,25 @@ export type TExtendedTypeKind =
     | TypeKind.Table
     | TypeKind.Type;
 
+export type Action = IPrimitiveType<TypeKind.Action>;
 export type Any = IPrimitiveType<TypeKind.Any>;
+export type AnyNonNull = IPrimitiveType<TypeKind.AnyNonNull>;
+export type Binary = IPrimitiveType<TypeKind.Binary>;
+export type Date = IPrimitiveType<TypeKind.Date>;
+export type DateTime = IPrimitiveType<TypeKind.DateTime>;
+export type DateTimeZone = IPrimitiveType<TypeKind.DateTimeZone>;
+export type Duration = IPrimitiveType<TypeKind.Duration>;
+export type Function = IPrimitiveType<TypeKind.Function>;
 export type List = IPrimitiveType<TypeKind.List>;
+export type Logical = IPrimitiveType<TypeKind.Logical>;
 export type None = IPrimitiveType<TypeKind.None>;
-export type Unknown = IPrimitiveType<TypeKind.Unknown>;
+export type Number = IPrimitiveType<TypeKind.Number>;
 export type Record = IPrimitiveType<TypeKind.Record>;
 export type Table = IPrimitiveType<TypeKind.Table>;
+export type Text = IPrimitiveType<TypeKind.Text>;
+export type Time = IPrimitiveType<TypeKind.Time>;
+export type Type = IPrimitiveType<TypeKind.Type>;
+export type Unknown = IPrimitiveType<TypeKind.Unknown>;
 
 export const enum TypeKind {
     Action = "Action",
