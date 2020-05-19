@@ -581,6 +581,17 @@ export function maybeWrappedContent(
     return maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [maybeChildNodeKind]);
 }
 
+export function maybeWrappedContentAst(
+    nodeIdMapCollection: Collection,
+    wrapped: TXorNode,
+    maybeChildNodeKind: Ast.NodeKind,
+): Ast.TNode | undefined {
+    const maybeAst: TXorNode | undefined = maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [
+        maybeChildNodeKind,
+    ]);
+    return maybeAst !== undefined && maybeAst.kind === XorNodeKind.Ast ? maybeAst.node : undefined;
+}
+
 export function maybeArrayWrapperContent(nodeIdMapCollection: Collection, wrapped: TXorNode): TXorNode | undefined {
     return maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [Ast.NodeKind.ArrayWrapper]);
 }

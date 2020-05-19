@@ -180,6 +180,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFieldProjection(state, xorNode);
             break;
 
+        case Ast.NodeKind.FieldSelector:
+            result = translateFieldSelector(state, xorNode);
+            break;
+
         case Ast.NodeKind.FunctionExpression:
             result = translateFunctionExpression(state, xorNode);
             break;
@@ -475,6 +479,62 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
                 return reducedFieldsToKeys(previousSiblingType, projectedFieldNames);
             }
         }
+
+        default:
+            return TypeUtils.noneFactory();
+    }
+}
+
+function translateFieldSelector(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.FieldSelector,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeFieldName: Ast.TNode | undefined = NodeIdMapUtils.maybeWrappedContentAst(
+        state.nodeIdMapCollection,
+        xorNode,
+        Ast.NodeKind.GeneralizedIdentifier,
+    );
+    if (maybeFieldName === undefined) {
+        return TypeUtils.unknownFactory();
+    }
+    const fieldName: string = (maybeFieldName as Ast.GeneralizedIdentifier).literal;
+
+    const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+    );
+    const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
+    switch (previousSiblingType.kind) {
+        case Type.TypeKind.Any:
+            return TypeUtils.anyFactory();
+
+        case Type.TypeKind.Record:
+        case Type.TypeKind.Table:
+            if (previousSiblingType.maybeExtendedKind === undefined) {
+                return TypeUtils.anyFactory();
+            } else if (
+                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord ||
+                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable
+            ) {
+                const maybeNamedField: Type.TType | undefined = previousSiblingType.fields.get(fieldName);
+                if (maybeNamedField !== undefined) {
+                    return maybeNamedField;
+                } else if (previousSiblingType.isOpen) {
+                    return TypeUtils.anyFactory();
+                } else {
+                    return TypeUtils.noneFactory();
+                }
+            } else {
+                throw isNever(previousSiblingType);
+            }
+
+        case Type.TypeKind.Unknown:
+            return TypeUtils.unknownFactory();
 
         default:
             return TypeUtils.noneFactory();

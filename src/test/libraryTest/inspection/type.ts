@@ -442,20 +442,8 @@ describe(`Inspection - Scope - Type`, () => {
                 const expression: string = `(_ as any)[foo]`;
                 const expected: Type.TType = {
                     kind: Type.TypeKind.Any,
-                    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-                    isNullable: false,
-                    unionedTypePairs: [
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                        {
-                            kind: Type.TypeKind.Logical,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
+                    maybeExtendedKind: undefined,
+                    isNullable: true,
                 };
                 expectExpressionParseOkTypeOk(expression, expected);
             });
@@ -482,6 +470,16 @@ describe(`Inspection - Scope - Type`, () => {
                             isOpen: false,
                         },
                     ],
+                };
+                expectExpressionParseOkTypeOk(expression, expected);
+            });
+
+            it(`${Ast.NodeKind.FieldSelector}`, () => {
+                const expression: string = `[a=1][a]`;
+                const expected: Type.TType = {
+                    kind: Type.TypeKind.Number,
+                    maybeExtendedKind: undefined,
+                    isNullable: false,
                 };
                 expectExpressionParseOkTypeOk(expression, expected);
             });
