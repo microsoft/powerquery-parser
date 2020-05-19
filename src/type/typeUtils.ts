@@ -427,7 +427,7 @@ const AnyConstant: Type.Any = {
 const NoneConstant: Type.None = {
     kind: Type.TypeKind.None,
     maybeExtendedKind: undefined,
-    isNullable: true,
+    isNullable: false,
 };
 
 const UnknownConstant: Type.Unknown = {

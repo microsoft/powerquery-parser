@@ -174,6 +174,30 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`WIP ${Ast.NodeKind.FieldProjection}`, () => {
+        it(`(x as any)[[foo]]`, () => {
+            const expression: string = `(x as any)[[foo]]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [
+                    {
+                        kind: Type.TypeKind.Number,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    },
+                    {
+                        kind: Type.TypeKind.Logical,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    },
+                ],
+            };
+            expectExpressionParseOkTypeOk(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.IfExpression}`, () => {
         it(`if true then 1 else false`, () => {
             const expression: string = `if true then 1 else false`;
