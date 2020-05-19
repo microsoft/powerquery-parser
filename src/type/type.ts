@@ -94,7 +94,7 @@ export interface DefinedFunction extends IExtendedType {
 export interface DefinedList extends IExtendedType {
     readonly kind: TypeKind.List;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedList;
-    readonly itemType: TType;
+    readonly elements: ReadonlyArray<TType>;
 }
 
 export interface DefinedRecord extends IExtendedType {

@@ -628,29 +628,16 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
     }
 }
 
-function translateListExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.List | Type.DefinedList {
+function translateListExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedList {
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
-    if (items.length === 0) {
-        return TypeUtils.genericFactory(Type.TypeKind.List, false);
-    }
+    const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => translateXorNode(state, item));
 
-    const itemTypes: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => translateXorNode(state, item));
-    const firstType: Type.TType = itemTypes[0];
-    const equalityComparisons: ReadonlyArray<boolean> = itemTypes.map((iterType: Type.TType) =>
-        TypeUtils.equalType(firstType, iterType),
-    );
-    const allSameTypes: boolean = equalityComparisons.indexOf(false) === -1;
-
-    if (allSameTypes === true) {
-        return {
-            kind: Type.TypeKind.List,
-            isNullable: false,
-            maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
-            itemType: firstType,
-        };
-    } else {
-        return TypeUtils.genericFactory(Type.TypeKind.List, false);
-    }
+    return {
+        kind: Type.TypeKind.List,
+        isNullable: false,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+        elements,
+    };
 }
 
 function translateLiteralExpression(xorNode: TXorNode): Type.TType {

@@ -158,9 +158,15 @@ describe(`Inspection - Scope - Type`, () => {
         });
 
         it(`{}`, () => {
-            expectSimpleExpressionType("{}", Type.TypeKind.List, false);
+            const expression: string = `{}`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.List,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+                isNullable: false,
+                elements: [],
+            };
+            expectExpressionParseOkTypeOk(expression, expected);
         });
-
         it(`[]`, () => {
             const expression: string = `[]`;
             const expected: Type.TType = {

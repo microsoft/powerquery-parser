@@ -397,7 +397,14 @@ export function equalDefinedFunction(left: Type.DefinedFunction, right: Type.Def
 }
 
 export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
-    return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
+    if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
+        return false;
+    }
+
+    const rightElements: ReadonlyArray<Type.TType> = right.elements;
+    return ArrayUtils.all(
+        left.elements.map((leftType: Type.TType, index: number) => equalType(leftType, rightElements[index])),
+    );
 }
 
 export function equalDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {

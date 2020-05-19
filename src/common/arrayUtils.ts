@@ -1,5 +1,18 @@
 import { CommonError } from ".";
 
+export function all<T>(
+    collection: ReadonlyArray<T>,
+    predicateFn: (value: T) => boolean = (value: T) => !!value,
+): boolean {
+    for (const element of collection) {
+        if (!predicateFn(element)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
     return removeAtIndex(collection, collection.indexOf(element));
 }
