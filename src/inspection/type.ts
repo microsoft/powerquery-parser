@@ -144,7 +144,16 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.ArrayWrapper:
-            throw new CommonError.InvariantError(`this should never be a scope item`);
+        case Ast.NodeKind.GeneralizedIdentifier:
+        case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
+        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+        case Ast.NodeKind.IdentifierPairedExpression:
+        case Ast.NodeKind.Section:
+            const details: {} = {
+                nodeId: xorNode.node.id,
+                nodeKind: xorNode.node.kind,
+            };
+            throw new CommonError.InvariantError(`this should never be a scope item`, details);
 
         // TODO: how should error handling be typed?
         case Ast.NodeKind.ErrorHandlingExpression:
@@ -200,6 +209,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateIfExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.IsExpression:
+            result = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            break;
+
         case Ast.NodeKind.InvokeExpression:
             result = translateInvokeExpression(state, xorNode);
             break;
@@ -218,6 +231,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.LiteralExpression:
             result = translateLiteralExpression(xorNode);
+            break;
+
+        case Ast.NodeKind.NotImplementedExpression:
+            result = TypeUtils.noneFactory();
             break;
 
         case Ast.NodeKind.ParenthesizedExpression:
@@ -249,8 +266,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
-            // throw isNever(xorNode.node.kind);
-            result = TypeUtils.unknownFactory();
+            throw isNever(xorNode.node.kind);
+        // result = TypeUtils.unknownFactory();
     }
 
     state.deltaTypeById.set(xorNodeId, result);
