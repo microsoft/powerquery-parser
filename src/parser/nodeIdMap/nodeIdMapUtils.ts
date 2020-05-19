@@ -573,7 +573,15 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
     }
 }
 
-export function maybeWrappedContent(nodeIdMapCollection: Collection, wrapped: TXorNode): undefined | TXorNode {
+export function maybeWrappedContent(
+    nodeIdMapCollection: Collection,
+    wrapped: TXorNode,
+    maybeChildNodeKind: Ast.NodeKind,
+): TXorNode | undefined {
+    return maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [maybeChildNodeKind]);
+}
+
+export function maybeArrayWrapperContent(nodeIdMapCollection: Collection, wrapped: TXorNode): TXorNode | undefined {
     return maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [Ast.NodeKind.ArrayWrapper]);
 }
 

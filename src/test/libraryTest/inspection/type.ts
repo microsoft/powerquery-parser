@@ -9,7 +9,7 @@ import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
-import { Type } from "../../../type";
+import { Type, TypeUtils } from "../../../type";
 import { expectDeepEqual, expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
 type AbridgedScopeType = Type.TType;
@@ -169,30 +169,6 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 fields: new Map<string, Type.TType>(),
                 isOpen: false,
-            };
-            expectExpressionParseOkTypeOk(expression, expected);
-        });
-    });
-
-    describe(`WIP ${Ast.NodeKind.FieldProjection}`, () => {
-        it(`(x as any)[[foo]]`, () => {
-            const expression: string = `(x as any)[[foo]]`;
-            const expected: Type.TType = {
-                kind: Type.TypeKind.Any,
-                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-                isNullable: false,
-                unionedTypePairs: [
-                    {
-                        kind: Type.TypeKind.Number,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
-                    {
-                        kind: Type.TypeKind.Logical,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
-                ],
             };
             expectExpressionParseOkTypeOk(expression, expected);
         });
@@ -423,6 +399,88 @@ describe(`Inspection - Scope - Type`, () => {
     });
 
     describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
+        describe(`any is allowed`, () => {
+            it(`${Ast.NodeKind.InvokeExpression}`, () => {
+                const expression: string = `(_ as any)()`;
+                const expected: Type.TType = {
+                    kind: Type.TypeKind.Any,
+                    maybeExtendedKind: undefined,
+                    isNullable: false,
+                };
+                expectExpressionParseOkTypeOk(expression, expected);
+            });
+
+            it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
+                const expression: string = `(_ as any){0}`;
+                const expected: Type.TType = {
+                    kind: Type.TypeKind.Any,
+                    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                    isNullable: false,
+                    unionedTypePairs: [
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                        {
+                            kind: Type.TypeKind.Logical,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                };
+                expectExpressionParseOkTypeOk(expression, expected);
+            });
+
+            it(`${Ast.NodeKind.FieldSelector}`, () => {
+                const expression: string = `(_ as any)[foo]`;
+                const expected: Type.TType = {
+                    kind: Type.TypeKind.Any,
+                    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                    isNullable: false,
+                    unionedTypePairs: [
+                        {
+                            kind: Type.TypeKind.Number,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                        {
+                            kind: Type.TypeKind.Logical,
+                            maybeExtendedKind: undefined,
+                            isNullable: false,
+                        },
+                    ],
+                };
+                expectExpressionParseOkTypeOk(expression, expected);
+            });
+
+            it(`${Ast.NodeKind.FieldProjection}`, () => {
+                const expression: string = `(_ as any)[[foo]]`;
+                const expected: Type.TType = {
+                    kind: Type.TypeKind.Any,
+                    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                    isNullable: false,
+                    unionedTypePairs: [
+                        {
+                            kind: Type.TypeKind.Record,
+                            maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                            isNullable: false,
+                            fields: new Map([["foo", TypeUtils.anyFactory()]]),
+                            isOpen: false,
+                        },
+                        {
+                            kind: Type.TypeKind.Table,
+                            maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                            isNullable: false,
+                            fields: new Map([["foo", TypeUtils.anyFactory()]]),
+                            isOpen: false,
+                        },
+                    ],
+                };
+                expectExpressionParseOkTypeOk(expression, expected);
+            });
+        });
+
         xit(`let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)`, () => {
             expectSimpleExpressionType(
                 "let foo = (x as number) as number => if x > 0 then @foo(x - 1) else 0 in foo(0)",

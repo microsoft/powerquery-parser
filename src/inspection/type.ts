@@ -212,6 +212,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateLiteralExpression(xorNode);
             break;
 
+        case Ast.NodeKind.ParenthesizedExpression:
+            result = translateFromChildAttributeIndex(state, xorNode, 1);
+            break;
+
         case Ast.NodeKind.PrimitiveType:
             result = translatePrimitiveType(xorNode);
             break;
@@ -419,10 +423,10 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
         throw maybeErr;
     }
 
-    const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.fieldProjectionGeneralizedIdentifiers(
+    const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.fieldProjectionFieldNames(
         state.nodeIdMapCollection,
         xorNode,
-    ).map((generalizedIdentifier: Ast.GeneralizedIdentifier) => generalizedIdentifier.literal);
+    );
     const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
@@ -475,23 +479,6 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
         default:
             return TypeUtils.noneFactory();
     }
-}
-
-function reducedFieldsToKeys(
-    current: Type.DefinedRecord | Type.DefinedTable,
-    keys: ReadonlyArray<string>,
-): Type.DefinedRecord | Type.DefinedTable | Type.None {
-    const currentFields: Map<string, Type.TType> = current.fields;
-    const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
-    if (ArrayUtils.isSubset(currentFieldNames, keys) === false) {
-        return TypeUtils.noneFactory();
-    }
-
-    return {
-        ...current,
-        fields: MapUtils.pick(currentFields, keys),
-        isOpen: false,
-    };
 }
 
 function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -617,8 +604,10 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    // const deferenced = previousSibling.node.kind === Ast.NodeKind.IdentifierExpression ? deference
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
+    if (previousSiblingType.kind === Type.TypeKind.Any) {
+        return previousSiblingType;
+    }
 
     if (previousSiblingType.kind !== Type.TypeKind.Function) {
         return TypeUtils.noneFactory();
@@ -759,11 +748,7 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     }
 
     const headType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 0);
-    if (
-        headType.kind === Type.TypeKind.Any ||
-        headType.kind === Type.TypeKind.None ||
-        headType.kind === Type.TypeKind.Unknown
-    ) {
+    if (headType.kind === Type.TypeKind.None || headType.kind === Type.TypeKind.Unknown) {
         return headType;
     }
 
@@ -1126,6 +1111,23 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
     } else {
         throw shouldNeverBeReached();
     }
+}
+
+function reducedFieldsToKeys(
+    current: Type.DefinedRecord | Type.DefinedTable,
+    keys: ReadonlyArray<string>,
+): Type.DefinedRecord | Type.DefinedTable | Type.None {
+    const currentFields: Map<string, Type.TType> = current.fields;
+    const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
+    if (ArrayUtils.isSubset(currentFieldNames, keys) === false) {
+        return TypeUtils.noneFactory();
+    }
+
+    return {
+        ...current,
+        fields: MapUtils.pick(currentFields, keys),
+        isOpen: false,
+    };
 }
 
 function unionFields(

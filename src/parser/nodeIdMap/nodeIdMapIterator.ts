@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from ".";
-import { CommonError, isNever, MapUtils, TypeScriptUtils } from "../../common";
+import { CommonError, isNever, MapUtils } from "../../common";
 import { Ast } from "../../language";
 
 export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
@@ -125,7 +125,7 @@ export function letKeyValuePairs(
     return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }
 
-export function fieldProjectionFieldNames(
+export function fieldProjectionFieldSelectors(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldProjection: TXorNode,
 ): ReadonlyArray<TXorNode> {
@@ -137,24 +137,33 @@ export function fieldProjectionFieldNames(
         throw maybeErr;
     }
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(
         nodeIdMapCollection,
         fieldProjection,
     );
     return maybeArrayWrapper === undefined ? [] : arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeArrayWrapper);
 }
 
-export function fieldProjectionGeneralizedIdentifiers(
+export function fieldProjectionFieldNames(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldProjection: TXorNode,
-): ReadonlyArray<Ast.GeneralizedIdentifier> {
-    const fieldNames: ReadonlyArray<TXorNode> = fieldProjectionFieldNames(nodeIdMapCollection, fieldProjection);
-    const maybeIdentifiers: ReadonlyArray<Ast.GeneralizedIdentifier | undefined> = fieldNames.map((xorNode: TXorNode) =>
-        xorNode.kind === XorNodeKind.Ast && xorNode.node.kind === Ast.NodeKind.GeneralizedIdentifier
-            ? xorNode.node
-            : undefined,
-    );
-    return maybeIdentifiers.filter(TypeScriptUtils.isDefined);
+): ReadonlyArray<string> {
+    const result: string[] = [];
+
+    for (const selector of fieldProjectionFieldSelectors(nodeIdMapCollection, fieldProjection)) {
+        const maybeIdentifier: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+            nodeIdMapCollection,
+            selector,
+            Ast.NodeKind.GeneralizedIdentifier,
+        );
+        if (maybeIdentifier === undefined || maybeIdentifier.kind !== XorNodeKind.Ast) {
+            break;
+        } else {
+            result.push((maybeIdentifier.node as Ast.GeneralizedIdentifier).literal);
+        }
+    }
+
+    return result;
 }
 
 export function listItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorNode): ReadonlyArray<TXorNode> {
@@ -166,7 +175,7 @@ export function listItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorN
         throw maybeErr;
     }
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, list);
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(nodeIdMapCollection, list);
     return maybeArrayWrapper === undefined ? [] : arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeArrayWrapper);
 }
 
@@ -182,7 +191,10 @@ export function recordKeyValuePairs(
         throw maybeErr;
     }
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(nodeIdMapCollection, record);
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(
+        nodeIdMapCollection,
+        record,
+    );
     return maybeArrayWrapper === undefined ? [] : keyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }
 
