@@ -22,15 +22,17 @@ export function anyFactory(): Type.IPrimitiveType<Type.TypeKind.Any> {
     };
 }
 
-export function anyUnionFactory(
-    unionedTypePairs: ReadonlyArray<Type.TType>,
-    dedupeTypes: boolean = true,
-): Type.AnyUnion {
+export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>, dedupeTypes: boolean = true): Type.TType {
+    const simplified: ReadonlyArray<Type.TType> = dedupe(unionedTypePairs, dedupeTypes);
+    if (simplified.length === 1) {
+        return simplified[0];
+    }
+
     return {
         kind: Type.TypeKind.Any,
         maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
         isNullable: unionedTypePairs.find((ttype: Type.TType) => ttype.isNullable === true) !== undefined,
-        unionedTypePairs: dedupe(unionedTypePairs, dedupeTypes),
+        unionedTypePairs: simplified,
     };
 }
 
@@ -94,7 +96,7 @@ export function dedupe(types: ReadonlyArray<Type.TType>, combineAnys: boolean = 
     return result;
 }
 
-export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.AnyUnion> {
+export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.TType> {
     const [nullable, nonNullable]: [ReadonlyArray<Type.AnyUnion>, ReadonlyArray<Type.AnyUnion>] = ArrayUtils.split(
         anyUnions,
         (value: Type.AnyUnion) => value.isNullable === true,
@@ -113,7 +115,7 @@ export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Reado
             return flattened;
         }, []);
 
-    const result: Type.AnyUnion[] = [];
+    const result: Type.TType[] = [];
     if (flattenedNullable.length !== 0) {
         result.push(anyUnionFactory(flattenedNullable, false));
     }
