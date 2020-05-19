@@ -354,40 +354,58 @@ function translateConstant(xorNode: TXorNode): Type.TType {
     switch (constant.constantKind) {
         case Ast.PrimitiveTypeConstantKind.Action:
             return TypeUtils.genericFactory(Type.TypeKind.Action, false);
+
         case Ast.PrimitiveTypeConstantKind.Any:
             return TypeUtils.genericFactory(Type.TypeKind.Any, true);
+
         case Ast.PrimitiveTypeConstantKind.AnyNonNull:
             return TypeUtils.genericFactory(Type.TypeKind.AnyNonNull, false);
+
         case Ast.PrimitiveTypeConstantKind.Binary:
             return TypeUtils.genericFactory(Type.TypeKind.Binary, false);
+
         case Ast.PrimitiveTypeConstantKind.Date:
             return TypeUtils.genericFactory(Type.TypeKind.Date, false);
+
         case Ast.PrimitiveTypeConstantKind.DateTime:
             return TypeUtils.genericFactory(Type.TypeKind.DateTime, false);
+
         case Ast.PrimitiveTypeConstantKind.DateTimeZone:
             return TypeUtils.genericFactory(Type.TypeKind.DateTimeZone, false);
+
         case Ast.PrimitiveTypeConstantKind.Duration:
             return TypeUtils.genericFactory(Type.TypeKind.Duration, false);
+
         case Ast.PrimitiveTypeConstantKind.Function:
             return TypeUtils.genericFactory(Type.TypeKind.Function, false);
+
         case Ast.PrimitiveTypeConstantKind.List:
             return TypeUtils.genericFactory(Type.TypeKind.List, false);
+
         case Ast.PrimitiveTypeConstantKind.Logical:
             return TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+
         case Ast.PrimitiveTypeConstantKind.None:
             return TypeUtils.genericFactory(Type.TypeKind.None, false);
+
         case Ast.PrimitiveTypeConstantKind.Null:
             return TypeUtils.genericFactory(Type.TypeKind.Null, true);
+
         case Ast.PrimitiveTypeConstantKind.Number:
             return TypeUtils.genericFactory(Type.TypeKind.Number, false);
+
         case Ast.PrimitiveTypeConstantKind.Record:
             return TypeUtils.genericFactory(Type.TypeKind.Record, false);
+
         case Ast.PrimitiveTypeConstantKind.Table:
             return TypeUtils.genericFactory(Type.TypeKind.Table, false);
+
         case Ast.PrimitiveTypeConstantKind.Text:
             return TypeUtils.genericFactory(Type.TypeKind.Text, false);
+
         case Ast.PrimitiveTypeConstantKind.Time:
             return TypeUtils.genericFactory(Type.TypeKind.Time, false);
+
         case Ast.PrimitiveTypeConstantKind.Type:
             return TypeUtils.genericFactory(Type.TypeKind.Type, false);
 
