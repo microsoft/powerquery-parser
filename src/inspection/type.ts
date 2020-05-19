@@ -527,7 +527,15 @@ function translateFieldSelector(state: ScopeTypeInspectionState, xorNode: TXorNo
                 } else if (previousSiblingType.isOpen) {
                     return TypeUtils.anyFactory();
                 } else {
-                    return TypeUtils.noneFactory();
+                    const maybeOptionalConstant:
+                        | Ast.TNode
+                        | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+                        state.nodeIdMapCollection,
+                        xorNode.node.id,
+                        3,
+                        [Ast.NodeKind.Constant],
+                    );
+                    return maybeOptionalConstant !== undefined ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
                 }
             } else {
                 throw isNever(previousSiblingType);

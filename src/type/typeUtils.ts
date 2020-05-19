@@ -68,6 +68,10 @@ export function noneFactory(): Type.None {
     return NoneConstant;
 }
 
+export function nullFactory(): Type.Null {
+    return NullConstant;
+}
+
 export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
     if (parameter.maybeType === undefined) {
         return unknownFactory();
@@ -433,6 +437,12 @@ const AnyConstant: Type.Any = {
 
 const NoneConstant: Type.None = {
     kind: Type.TypeKind.None,
+    maybeExtendedKind: undefined,
+    isNullable: false,
+};
+
+const NullConstant: Type.Null = {
+    kind: Type.TypeKind.Null,
     maybeExtendedKind: undefined,
     isNullable: false,
 };

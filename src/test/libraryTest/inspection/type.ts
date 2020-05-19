@@ -438,14 +438,36 @@ describe(`Inspection - Scope - Type`, () => {
                 expectExpressionParseOkTypeOk(expression, expected);
             });
 
-            it(`${Ast.NodeKind.FieldSelector}`, () => {
-                const expression: string = `(_ as any)[foo]`;
-                const expected: Type.TType = {
-                    kind: Type.TypeKind.Any,
-                    maybeExtendedKind: undefined,
-                    isNullable: true,
-                };
-                expectExpressionParseOkTypeOk(expression, expected);
+            describe(`${Ast.NodeKind.FieldSelector}`, () => {
+                it("[a=1][a]", () => {
+                    const expression: string = `[a=1][a]`;
+                    const expected: Type.TType = {
+                        kind: Type.TypeKind.Number,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    };
+                    expectExpressionParseOkTypeOk(expression, expected);
+                });
+
+                it("[a=1][b]", () => {
+                    const expression: string = `[a=1][b]`;
+                    const expected: Type.TType = {
+                        kind: Type.TypeKind.None,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    };
+                    expectExpressionParseOkTypeOk(expression, expected);
+                });
+
+                it("[a=1][b]?", () => {
+                    const expression: string = `[a=1][b]?`;
+                    const expected: Type.TType = {
+                        kind: Type.TypeKind.Null,
+                        maybeExtendedKind: undefined,
+                        isNullable: false,
+                    };
+                    expectExpressionParseOkTypeOk(expression, expected);
+                });
             });
 
             it(`${Ast.NodeKind.FieldProjection}`, () => {

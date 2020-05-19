@@ -23,6 +23,7 @@ export type Function = IPrimitiveType<TypeKind.Function>;
 export type List = IPrimitiveType<TypeKind.List>;
 export type Logical = IPrimitiveType<TypeKind.Logical>;
 export type None = IPrimitiveType<TypeKind.None>;
+export type Null = IPrimitiveType<TypeKind.Null>;
 export type Number = IPrimitiveType<TypeKind.Number>;
 export type Record = IPrimitiveType<TypeKind.Record>;
 export type Table = IPrimitiveType<TypeKind.Table>;
