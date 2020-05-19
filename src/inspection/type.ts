@@ -44,11 +44,7 @@ export function tryScopeTypeForRoot(
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state));
 }
 
-type TRecordOrTable =
-    | Type.IPrimitiveType<Type.TypeKind.Record>
-    | Type.IPrimitiveType<Type.TypeKind.Table>
-    | Type.DefinedRecord
-    | Type.DefinedTable;
+type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 
 interface ScopeTypeInspectionState {
     readonly settings: CommonSettings;
@@ -432,45 +428,59 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
         xorNode.node.id,
     );
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
+    const isPreviousSiblingTypeNullable: boolean = previousSiblingType.isNullable;
 
-    if (previousSiblingType.kind !== Type.TypeKind.Record && previousSiblingType.kind !== Type.TypeKind.Table) {
-        return TypeUtils.noneFactory();
-    } else if (previousSiblingType.maybeExtendedKind === undefined) {
-        const newFields: Map<string, Type.IPrimitiveType<Type.TypeKind.Any>> = new Map(
-            projectedFieldNames.map((key: string) => [key, TypeUtils.anyFactory()]),
-        );
-
-        switch (previousSiblingType.kind) {
-            case Type.TypeKind.Record:
-                return {
-                    kind: previousSiblingType.kind,
-                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: newFields,
-                    isOpen: false,
-                };
-
-            case Type.TypeKind.Table:
-                return {
-                    kind: previousSiblingType.kind,
-                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
-                    isNullable: false,
-                    fields: newFields,
-                    isOpen: false,
-                };
-
-            default:
-                throw isNever(previousSiblingType.kind);
+    switch (previousSiblingType.kind) {
+        case Type.TypeKind.Any: {
+            const newFields: Map<string, Type.Any> = new Map(
+                projectedFieldNames.map((fieldName: string) => [fieldName, TypeUtils.anyFactory()]),
+            );
+            return {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: isPreviousSiblingTypeNullable,
+                unionedTypePairs: [
+                    {
+                        kind: Type.TypeKind.Record,
+                        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                        isNullable: isPreviousSiblingTypeNullable,
+                        fields: newFields,
+                        isOpen: false,
+                    },
+                    {
+                        kind: Type.TypeKind.Table,
+                        maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                        isNullable: isPreviousSiblingTypeNullable,
+                        fields: newFields,
+                        isOpen: false,
+                    },
+                ],
+            };
         }
-    } else {
-        return reducedFieldsToKeys(previousSiblingType, projectedFieldNames);
+
+        case Type.TypeKind.Record:
+        case Type.TypeKind.Table: {
+            if (previousSiblingType.maybeExtendedKind === undefined) {
+                const newFields: Map<string, Type.Any> = new Map(
+                    projectedFieldNames.map((fieldName: string) => [fieldName, TypeUtils.anyFactory()]),
+                );
+                return previousSiblingType.kind === Type.TypeKind.Record
+                    ? TypeUtils.definedRecordFactory(false, newFields, false)
+                    : TypeUtils.definedTableFactory(false, newFields, false);
+            } else {
+                return reducedFieldsToKeys(previousSiblingType, projectedFieldNames);
+            }
+        }
+
+        default:
+            return TypeUtils.noneFactory();
     }
 }
 
 function reducedFieldsToKeys(
     current: Type.DefinedRecord | Type.DefinedTable,
     keys: ReadonlyArray<string>,
-): Type.DefinedRecord | Type.DefinedTable | Type.IPrimitiveType<Type.TypeKind.None> {
+): Type.DefinedRecord | Type.DefinedTable | Type.None {
     const currentFields: Map<string, Type.TType> = current.fields;
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
     if (ArrayUtils.isSubset(currentFieldNames, keys) === false) {
@@ -480,6 +490,7 @@ function reducedFieldsToKeys(
     return {
         ...current,
         fields: MapUtils.pick(currentFields, keys),
+        isOpen: false,
     };
 }
 
@@ -628,10 +639,7 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
     }
 }
 
-function translateListExpression(
-    state: ScopeTypeInspectionState,
-    xorNode: TXorNode,
-): Type.IPrimitiveType<Type.TypeKind.List> | Type.DefinedList {
+function translateListExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.List | Type.DefinedList {
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
     if (items.length === 0) {
         return TypeUtils.genericFactory(Type.TypeKind.List, false);

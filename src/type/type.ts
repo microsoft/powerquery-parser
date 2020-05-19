@@ -11,6 +11,13 @@ export type TExtendedTypeKind =
     | TypeKind.Table
     | TypeKind.Type;
 
+export type Any = IPrimitiveType<TypeKind.Any>;
+export type List = IPrimitiveType<TypeKind.List>;
+export type None = IPrimitiveType<TypeKind.None>;
+export type Unknown = IPrimitiveType<TypeKind.Unknown>;
+export type Record = IPrimitiveType<TypeKind.Record>;
+export type Table = IPrimitiveType<TypeKind.Table>;
+
 export const enum TypeKind {
     Action = "Action",
     Any = "Any",

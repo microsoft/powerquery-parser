@@ -14,12 +14,8 @@ export function genericFactory<T extends Type.TypeKind>(typeKind: T, isNullable:
     };
 }
 
-export function anyFactory(): Type.IPrimitiveType<Type.TypeKind.Any> {
-    return {
-        kind: Type.TypeKind.Any,
-        maybeExtendedKind: undefined,
-        isNullable: true,
-    };
+export function anyFactory(): Type.Any {
+    return AnyConstant;
 }
 
 export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>, dedupeTypes: boolean = true): Type.TType {
@@ -36,20 +32,40 @@ export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>, ded
     };
 }
 
-export function unknownFactory(): Type.IPrimitiveType<Type.TypeKind.Unknown> {
+export function definedRecordFactory(
+    isNullable: boolean,
+    fields: Map<string, Type.TType>,
+    isOpen: boolean,
+): Type.DefinedRecord {
     return {
-        kind: Type.TypeKind.Unknown,
-        maybeExtendedKind: undefined,
-        isNullable: false,
+        kind: Type.TypeKind.Record,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+        isNullable,
+        fields,
+        isOpen,
     };
 }
 
-export function noneFactory(): Type.IPrimitiveType<Type.TypeKind.None> {
+export function definedTableFactory(
+    isNullable: boolean,
+    fields: Map<string, Type.TType>,
+    isOpen: boolean,
+): Type.DefinedTable {
     return {
-        kind: Type.TypeKind.None,
-        maybeExtendedKind: undefined,
-        isNullable: false,
+        kind: Type.TypeKind.Table,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+        isNullable,
+        fields,
+        isOpen,
     };
+}
+
+export function unknownFactory(): Type.Unknown {
+    return UnknownConstant;
+}
+
+export function noneFactory(): Type.None {
+    return NoneConstant;
 }
 
 export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
@@ -401,3 +417,21 @@ export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTa
 export function equalDefinedType(left: Type.DefinedType, right: Type.DefinedType): boolean {
     return left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType);
 }
+
+const AnyConstant: Type.Any = {
+    kind: Type.TypeKind.Any,
+    maybeExtendedKind: undefined,
+    isNullable: true,
+};
+
+const NoneConstant: Type.None = {
+    kind: Type.TypeKind.None,
+    maybeExtendedKind: undefined,
+    isNullable: true,
+};
+
+const UnknownConstant: Type.Unknown = {
+    kind: Type.TypeKind.Unknown,
+    maybeExtendedKind: undefined,
+    isNullable: false,
+};
