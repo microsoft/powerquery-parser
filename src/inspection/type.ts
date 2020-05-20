@@ -144,6 +144,7 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.ArrayWrapper:
+        case Ast.NodeKind.FieldSpecificationList:
         case Ast.NodeKind.GeneralizedIdentifier:
         case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
         case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
@@ -156,7 +157,6 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             throw new CommonError.InvariantError(`this should never be a scope item`, details);
 
         // TODO: how should error handling be typed?
-        case Ast.NodeKind.ErrorHandlingExpression:
         case Ast.NodeKind.ErrorRaisingExpression:
             result = TypeUtils.anyFactory();
             break;
@@ -183,6 +183,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.EachExpression:
             result = translateFromChildAttributeIndex(state, xorNode, 1);
+            break;
+
+        case Ast.NodeKind.ErrorHandlingExpression:
+            result = translateErrorHandlingExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.FieldProjection:
@@ -215,6 +219,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.InvokeExpression:
             result = translateInvokeExpression(state, xorNode);
+            break;
+
+        case Ast.NodeKind.IsNullablePrimitiveType:
+            result = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
             break;
 
         case Ast.NodeKind.ItemAccessExpression:
@@ -266,8 +274,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
-            throw isNever(xorNode.node.kind);
-        // result = TypeUtils.unknownFactory();
+            // throw isNever(xorNode.node.kind);
+            result = TypeUtils.unknownFactory();
     }
 
     state.deltaTypeById.set(xorNodeId, result);
@@ -436,6 +444,33 @@ function translateConstant(xorNode: TXorNode): Type.TType {
 
         default:
             return TypeUtils.unknownFactory();
+    }
+}
+
+function translateErrorHandlingExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.ErrorHandlingExpression,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const isOtherwisePresent: boolean =
+        NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
+            Ast.NodeKind.Constant,
+        ]) !== undefined;
+
+    if (isOtherwisePresent === true) {
+        return TypeUtils.anyUnionFactory([
+            translateFromChildAttributeIndex(state, xorNode, 1),
+            translateFromChildAttributeIndex(state, xorNode, 3),
+        ]);
+    } else {
+        return TypeUtils.anyUnionFactory([
+            translateFromChildAttributeIndex(state, xorNode, 1),
+            TypeUtils.genericFactory(Type.TypeKind.Record, false),
+        ]);
     }
 }
 
@@ -665,10 +700,19 @@ function translateIfExpression(state: ScopeTypeInspectionState, xorNode: TXorNod
     }
 
     const conditionType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 1);
-    // Ensure unions are unions of only logicals
-    if (conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-        if (!allForAnyUnion(conditionType, (type: Type.TType) => type.kind === Type.TypeKind.Logical)) {
-            return TypeUtils.unknownFactory();
+    if (conditionType.kind === Type.TypeKind.Unknown) {
+        return TypeUtils.unknownFactory();
+    }
+    // Any is allowed so long as AnyUnion only contains Any or Logical.
+    else if (conditionType.kind === Type.TypeKind.Any) {
+        if (
+            conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion &&
+            !allForAnyUnion(
+                conditionType,
+                (type: Type.TType) => type.kind === Type.TypeKind.Logical || type.kind === Type.TypeKind.Any,
+            )
+        ) {
+            return TypeUtils.noneFactory();
         }
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
         return TypeUtils.noneFactory();

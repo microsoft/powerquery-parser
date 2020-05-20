@@ -130,6 +130,22 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
+        it(`try 1`, () => {
+            const expression: string = `try 1`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [
+                    TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Record, false),
+                ],
+            };
+            expectExpressionParseOkTypeOk(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
         it(`let x = true in x`, () => {
             expectSimpleExpressionType("let x = true in x", Type.TypeKind.Logical, false);
@@ -188,16 +204,8 @@ describe(`Inspection - Scope - Type`, () => {
                 maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
                 isNullable: false,
                 unionedTypePairs: [
-                    {
-                        kind: Type.TypeKind.Number,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
-                    {
-                        kind: Type.TypeKind.Logical,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
+                    TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Logical, false),
                 ],
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -210,16 +218,8 @@ describe(`Inspection - Scope - Type`, () => {
                 maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
                 isNullable: false,
                 unionedTypePairs: [
-                    {
-                        kind: Type.TypeKind.Number,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
-                    {
-                        kind: Type.TypeKind.Text,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
+                    TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Text, false),
                 ],
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -227,12 +227,26 @@ describe(`Inspection - Scope - Type`, () => {
 
         it(`if`, () => {
             const expression: string = `if`;
-            const expected: AbridgedScopeType = {
-                kind: Type.TypeKind.None,
-                maybeExtendedKind: undefined,
-                isNullable: false,
-            };
+            const expected: AbridgedScopeType = TypeUtils.unknownFactory();
             expectParseErrTypeOk(expression, expected);
+        });
+
+        it(`if "a"`, () => {
+            const expression: string = `if "a"`;
+            const expected: AbridgedScopeType = TypeUtils.noneFactory();
+            expectParseErrTypeOk(expression, expected);
+        });
+
+        it(`if true or "a"`, () => {
+            const expression: string = `if true or "a"`;
+            const expected: AbridgedScopeType = TypeUtils.noneFactory();
+            expectParseErrTypeOk(expression, expected);
+        });
+
+        it(`if 1 as any then "a" else "b"`, () => {
+            const expression: string = `if 1 as any then "a" else "b"`;
+            const expected: AbridgedScopeType = TypeUtils.genericFactory(Type.TypeKind.Text, false);
+            expectExpressionParseOkTypeOk(expression, expected);
         });
 
         it(`if true then 1`, () => {
