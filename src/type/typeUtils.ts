@@ -432,7 +432,7 @@ export function equalDefinedType(left: Type.DefinedType, right: Type.DefinedType
 const AnyConstant: Type.Any = {
     kind: Type.TypeKind.Any,
     maybeExtendedKind: undefined,
-    isNullable: true,
+    isNullable: false,
 };
 
 const NoneConstant: Type.None = {

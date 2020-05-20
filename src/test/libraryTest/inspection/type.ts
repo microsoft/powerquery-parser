@@ -256,16 +256,8 @@ describe(`Inspection - Scope - Type`, () => {
                 maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
                 isNullable: false,
                 unionedTypePairs: [
-                    {
-                        kind: Type.TypeKind.Number,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
-                    {
-                        kind: Type.TypeKind.Unknown,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    },
+                    TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Unknown, false),
                 ],
             };
             expectParseErrTypeOk(expression, expected);
@@ -280,22 +272,8 @@ describe(`Inspection - Scope - Type`, () => {
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
                 fields: new Map<string, Type.TType>([
-                    [
-                        "foo",
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
-                    [
-                        "bar",
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
+                    ["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
+                    ["bar", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
                 ]),
                 isOpen: false,
             };
@@ -308,16 +286,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map<string, Type.TType>([
-                    [
-                        "bar",
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
-                ]),
+                fields: new Map<string, Type.TType>([["bar", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -329,16 +298,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map<string, Type.TType>([
-                    [
-                        "foo",
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
-                ]),
+                fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -350,16 +310,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map<string, Type.TType>([
-                    [
-                        "foo",
-                        {
-                            kind: Type.TypeKind.Text,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
-                ]),
+                fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Text, false)]]),
                 isOpen: false,
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -371,16 +322,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map<string, Type.TType>([
-                    [
-                        "foo",
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
-                ]),
+                fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: true,
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -392,16 +334,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map<string, Type.TType>([
-                    [
-                        "foo",
-                        {
-                            kind: Type.TypeKind.Number,
-                            maybeExtendedKind: undefined,
-                            isNullable: false,
-                        },
-                    ],
-                ]),
+                fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: true,
             };
             expectExpressionParseOkTypeOk(expression, expected);
@@ -409,11 +342,7 @@ describe(`Inspection - Scope - Type`, () => {
 
         it(`[] as record & [] as record`, () => {
             const expression: string = `[] as record & [] as record`;
-            const expected: AbridgedScopeType = {
-                kind: Type.TypeKind.Record,
-                maybeExtendedKind: undefined,
-                isNullable: false,
-            };
+            const expected: AbridgedScopeType = TypeUtils.genericFactory(Type.TypeKind.Record, false);
             expectExpressionParseOkTypeOk(expression, expected);
         });
     });
@@ -422,52 +351,32 @@ describe(`Inspection - Scope - Type`, () => {
         describe(`any is allowed`, () => {
             it(`${Ast.NodeKind.InvokeExpression}`, () => {
                 const expression: string = `(_ as any)()`;
-                const expected: Type.TType = {
-                    kind: Type.TypeKind.Any,
-                    maybeExtendedKind: undefined,
-                    isNullable: false,
-                };
+                const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Any, false);
                 expectExpressionParseOkTypeOk(expression, expected);
             });
 
-            it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
+            it(`WIP ${Ast.NodeKind.ItemAccessExpression}`, () => {
                 const expression: string = `(_ as any){0}`;
-                const expected: Type.TType = {
-                    kind: Type.TypeKind.Any,
-                    maybeExtendedKind: undefined,
-                    isNullable: true,
-                };
+                const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Any, false);
                 expectExpressionParseOkTypeOk(expression, expected);
             });
 
             describe(`${Ast.NodeKind.FieldSelector}`, () => {
                 it("[a=1][a]", () => {
                     const expression: string = `[a=1][a]`;
-                    const expected: Type.TType = {
-                        kind: Type.TypeKind.Number,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    };
+                    const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
                     expectExpressionParseOkTypeOk(expression, expected);
                 });
 
                 it("[a=1][b]", () => {
                     const expression: string = `[a=1][b]`;
-                    const expected: Type.TType = {
-                        kind: Type.TypeKind.None,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    };
+                    const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.None, false);
                     expectExpressionParseOkTypeOk(expression, expected);
                 });
 
                 it("[a=1][b]?", () => {
                     const expression: string = `[a=1][b]?`;
-                    const expected: Type.TType = {
-                        kind: Type.TypeKind.Null,
-                        maybeExtendedKind: undefined,
-                        isNullable: false,
-                    };
+                    const expected: Type.TType = TypeUtils.nullFactory();
                     expectExpressionParseOkTypeOk(expression, expected);
                 });
             });
@@ -500,11 +409,7 @@ describe(`Inspection - Scope - Type`, () => {
 
             it(`${Ast.NodeKind.FieldSelector}`, () => {
                 const expression: string = `[a=1][a]`;
-                const expected: Type.TType = {
-                    kind: Type.TypeKind.Number,
-                    maybeExtendedKind: undefined,
-                    isNullable: false,
-                };
+                const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
                 expectExpressionParseOkTypeOk(expression, expected);
             });
         });
