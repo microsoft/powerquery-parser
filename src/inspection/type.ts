@@ -143,6 +143,16 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateBinOpExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral:
+            result = translateList(state, xorNode);
+            break;
+
+        case Ast.NodeKind.RecordLiteral:
+        case Ast.NodeKind.RecordExpression:
+            result = translateRecord(state, xorNode);
+            break;
+
         case Ast.NodeKind.ArrayWrapper:
         case Ast.NodeKind.FieldSpecificationList:
         case Ast.NodeKind.GeneralizedIdentifier:
@@ -197,6 +207,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFieldSelector(state, xorNode);
             break;
 
+        case Ast.NodeKind.FieldSpecification:
+            result = translateFieldSpecification(state, xorNode);
+            break;
+
         case Ast.NodeKind.FunctionExpression:
             result = translateFunctionExpression(state, xorNode);
             break;
@@ -233,16 +247,19 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFromChildAttributeIndex(state, xorNode, 3);
             break;
 
-        case Ast.NodeKind.ListExpression:
-            result = translateListExpression(state, xorNode);
-            break;
-
         case Ast.NodeKind.LiteralExpression:
             result = translateLiteralExpression(xorNode);
             break;
 
         case Ast.NodeKind.NotImplementedExpression:
             result = TypeUtils.noneFactory();
+            break;
+
+        case Ast.NodeKind.NullablePrimitiveType:
+            result = {
+                ...translateFromChildAttributeIndex(state, xorNode, 1),
+                isNullable: true,
+            };
             break;
 
         case Ast.NodeKind.ParenthesizedExpression:
@@ -259,10 +276,6 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.RecursivePrimaryExpression:
             result = translateRecursivePrimaryExpression(state, xorNode);
-            break;
-
-        case Ast.NodeKind.RecordExpression:
-            result = translateRecordExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.TypePrimaryType:
@@ -605,6 +618,27 @@ function translateFieldSelector(state: ScopeTypeInspectionState, xorNode: TXorNo
     }
 }
 
+function translateFieldSpecification(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.FieldSpecification,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        2,
+        undefined,
+    );
+
+    return maybeFieldTypeSpecification !== undefined
+        ? translateXorNode(state, maybeFieldTypeSpecification)
+        : TypeUtils.anyFactory();
+}
+
 function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
@@ -761,18 +795,6 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
     }
 }
 
-function translateListExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedList {
-    const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
-    const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => translateXorNode(state, item));
-
-    return {
-        kind: Type.TypeKind.List,
-        isNullable: false,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
-        elements,
-    };
-}
-
 function translateLiteralExpression(xorNode: TXorNode): Type.TType {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
@@ -898,33 +920,6 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     }
 
     return leftType;
-}
-
-function translateRecordExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.RecordExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
-
-    const fields: Map<string, Type.TType> = new Map();
-    for (const keyValuePair of NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, xorNode)) {
-        if (keyValuePair.maybeValue) {
-            fields.set(keyValuePair.keyLiteral, translateXorNode(state, keyValuePair.maybeValue));
-        } else {
-            fields.set(keyValuePair.keyLiteral, TypeUtils.unknownFactory());
-        }
-    }
-
-    return {
-        kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-        isNullable: false,
-        fields,
-        isOpen: false,
-    };
 }
 
 function translateTypePrimaryType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedType {
@@ -1197,6 +1192,45 @@ function createLookupsForClockKind(
         [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, Type.TypeKind.Duration), typeKind],
         [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, typeKind), Type.TypeKind.Duration],
     ];
+}
+
+function translateList(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedList {
+    const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
+    const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => translateXorNode(state, item));
+
+    return {
+        kind: Type.TypeKind.List,
+        isNullable: false,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+        elements,
+    };
+}
+
+function translateRecord(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(xorNode, [
+        Ast.NodeKind.RecordExpression,
+        Ast.NodeKind.RecordLiteral,
+    ]);
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const fields: Map<string, Type.TType> = new Map();
+    for (const keyValuePair of NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, xorNode)) {
+        if (keyValuePair.maybeValue) {
+            fields.set(keyValuePair.keyLiteral, translateXorNode(state, keyValuePair.maybeValue));
+        } else {
+            fields.set(keyValuePair.keyLiteral, TypeUtils.unknownFactory());
+        }
+    }
+
+    return {
+        kind: Type.TypeKind.Record,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+        isNullable: false,
+        fields,
+        isOpen: false,
+    };
 }
 
 function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): Type.TType {
