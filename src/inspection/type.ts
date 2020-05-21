@@ -154,11 +154,13 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.ArrayWrapper:
+        case Ast.NodeKind.Csv:
         case Ast.NodeKind.FieldSpecificationList:
         case Ast.NodeKind.GeneralizedIdentifier:
         case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
         case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
         case Ast.NodeKind.IdentifierPairedExpression:
+        case Ast.NodeKind.ParameterList:
         case Ast.NodeKind.Section:
             const details: {} = {
                 nodeId: xorNode.node.id,
@@ -187,10 +189,6 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateConstant(xorNode);
             break;
 
-        case Ast.NodeKind.Csv:
-            result = translateFromChildAttributeIndex(state, xorNode, 1);
-            break;
-
         case Ast.NodeKind.EachExpression:
             result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
@@ -209,6 +207,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.FieldSpecification:
             result = translateFieldSpecification(state, xorNode);
+            break;
+
+        case Ast.NodeKind.FieldTypeSpecification:
+            result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
 
         case Ast.NodeKind.FunctionExpression:
@@ -255,11 +257,24 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = TypeUtils.noneFactory();
             break;
 
+        case Ast.NodeKind.MetadataExpression:
+            result = translateFromChildAttributeIndex(state, xorNode, 0);
+            break;
+
+        case Ast.NodeKind.NullableType:
         case Ast.NodeKind.NullablePrimitiveType:
             result = {
                 ...translateFromChildAttributeIndex(state, xorNode, 1),
                 isNullable: true,
             };
+            break;
+
+        case Ast.NodeKind.OtherwiseExpression:
+            result = translateFromChildAttributeIndex(state, xorNode, 1);
+            break;
+
+        case Ast.NodeKind.Parameter:
+            result = translateParameter(state, xorNode);
             break;
 
         case Ast.NodeKind.ParenthesizedExpression:
@@ -287,8 +302,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
-            // throw isNever(xorNode.node.kind);
-            result = TypeUtils.unknownFactory();
+            throw isNever(xorNode.node.kind);
+        // result = TypeUtils.unknownFactory();
     }
 
     state.deltaTypeById.set(xorNodeId, result);
@@ -817,6 +832,26 @@ function translateLiteralExpression(xorNode: TXorNode): Type.TType {
         default:
             throw isNever(xorNode);
     }
+}
+
+function translateParameter(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.Parameter,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const isOptional: boolean =
+        NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 0, [
+            Ast.NodeKind.Constant,
+        ]) !== undefined;
+
+    return {
+        ...translateFromChildAttributeIndex(state, xorNode, 2),
+        isNullable: isOptional,
+    };
 }
 
 function translatePrimitiveType(xorNode: TXorNode): Type.TType {
