@@ -217,6 +217,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFunctionExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.FunctionType:
+            result = translateFunctionType(state, xorNode);
+            break;
+
         case Ast.NodeKind.Identifier:
             result = translateIdentifier(state, xorNode);
             break;
@@ -705,6 +709,42 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
                 );
             },
         ),
+        returnType,
+    };
+}
+
+function translateFunctionType(
+    state: ScopeTypeInspectionState,
+    xorNode: TXorNode,
+): Type.DefinedFunction | Type.Unknown {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.FunctionType,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeParameters:
+        | TXorNode
+        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
+        Ast.NodeKind.ParameterList,
+    ]);
+    if (maybeParameters === undefined) {
+        return TypeUtils.unknownFactory();
+    }
+    const parameterTypes: ReadonlyArray<Type.TType> = NodeIdMapIterator.arrayWrapperCsvXorNodes(
+        state.nodeIdMapCollection,
+        maybeParameters,
+    ).map((parameter: TXorNode) => translateXorNode(state, parameter));
+
+    const returnType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 2);
+
+    return {
+        kind: Type.TypeKind.Function,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+        isNullable: false,
+        parameterTypes,
         returnType,
     };
 }
