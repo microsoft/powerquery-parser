@@ -118,10 +118,6 @@ export interface DefinedType extends IExtendedType {
     readonly primaryType: TType;
 }
 
-export interface ParameterType extends IExtendedType {
-    readonly isOptional: boolean;
-}
-
 export interface SimplifiedNullablePrimitiveType {
     readonly typeKind: TypeKind;
     readonly isNullable: boolean;
