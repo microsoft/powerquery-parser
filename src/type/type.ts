@@ -2,7 +2,15 @@
 // Licensed under the MIT license.
 
 export type TType = IPrimitiveType | TExtendedType;
-export type TExtendedType = AnyUnion | DefinedFunction | DefinedList | DefinedRecord | DefinedTable | DefinedType;
+export type TExtendedType =
+    | AnyUnion
+    | DefinedFunction
+    | DefinedList
+    | DefinedListType
+    | DefinedRecord
+    | DefinedTable
+    | DefinedType<TType>
+    | PrimaryExpressionTable;
 export type TExtendedTypeKind =
     | TypeKind.Any
     | TypeKind.Function
@@ -59,9 +67,11 @@ export const enum ExtendedTypeKind {
     AnyUnion = "AnyUnion",
     DefinedFunction = "DefinedFunction",
     DefinedList = "DefinedList",
+    DefinedListType = "DefinedListType",
     DefinedRecord = "DefinedRecord",
     DefinedTable = "DefinedTable",
     DefinedType = "DefinedType",
+    PrimaryExpressionTable = "PrimaryExpressionTable",
 }
 
 export interface IType<T extends TypeKind = TypeKind> {
@@ -98,6 +108,12 @@ export interface DefinedList extends IExtendedType {
     readonly elements: ReadonlyArray<TType>;
 }
 
+export interface DefinedListType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedListType;
+    readonly itemType: TType;
+}
+
 export interface DefinedRecord extends IExtendedType {
     readonly kind: TypeKind.Record;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
@@ -112,10 +128,16 @@ export interface DefinedTable extends IExtendedType {
     readonly isOpen: boolean;
 }
 
-export interface DefinedType extends IExtendedType {
+export interface DefinedType<T extends TType> extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedType;
-    readonly primaryType: TType;
+    readonly primaryType: T;
+}
+
+export interface PrimaryExpressionTable extends IExtendedType {
+    readonly kind: TypeKind.Table;
+    readonly maybeExtendedKind: ExtendedTypeKind.PrimaryExpressionTable;
+    readonly type: TType;
 }
 
 export interface SimplifiedNullablePrimitiveType {

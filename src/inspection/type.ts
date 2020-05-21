@@ -56,6 +56,11 @@ interface ScopeTypeInspectionState {
     scopeById: ScopeById;
 }
 
+interface ExaminedFieldSpecificationList {
+    readonly fields: Map<string, Type.TType>;
+    readonly isOpen: boolean;
+}
+
 function inspectScopeType(state: ScopeTypeInspectionState): ScopeTypeByKey {
     const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, state.ancestry[0].node.id);
 
@@ -253,6 +258,10 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFromChildAttributeIndex(state, xorNode, 3);
             break;
 
+        case Ast.NodeKind.ListType:
+            result = translateListType(state, xorNode);
+            break;
+
         case Ast.NodeKind.LiteralExpression:
             result = translateLiteralExpression(xorNode);
             break;
@@ -293,8 +302,20 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateRangeExpression(state, xorNode);
             break;
 
+        case Ast.NodeKind.RecordType:
+            result = translateRecordType(state, xorNode);
+            break;
+
         case Ast.NodeKind.RecursivePrimaryExpression:
             result = translateRecursivePrimaryExpression(state, xorNode);
+            break;
+
+        case Ast.NodeKind.SectionMember:
+            result = translateSectionMember(state, xorNode);
+            break;
+
+        case Ast.NodeKind.TableType:
+            result = translateTableType(state, xorNode);
             break;
 
         case Ast.NodeKind.TypePrimaryType:
@@ -306,8 +327,7 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
-            throw isNever(xorNode.node.kind);
-        // result = TypeUtils.unknownFactory();
+            throw isNever(xorNode.node);
     }
 
     state.deltaTypeById.set(xorNodeId, result);
@@ -524,8 +544,11 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
         xorNode.node.id,
     );
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
-    const isPreviousSiblingTypeNullable: boolean = previousSiblingType.isNullable;
 
+    return helper(previousSiblingType, projectedFieldNames);
+}
+
+function helper(previousSiblingType: Type.TType, projectedFieldNames: ReadonlyArray<string>): Type.TType {
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any: {
             const newFields: Map<string, Type.Any> = new Map(
@@ -534,19 +557,19 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
             return {
                 kind: Type.TypeKind.Any,
                 maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-                isNullable: isPreviousSiblingTypeNullable,
+                isNullable: previousSiblingType.isNullable,
                 unionedTypePairs: [
                     {
                         kind: Type.TypeKind.Record,
                         maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-                        isNullable: isPreviousSiblingTypeNullable,
+                        isNullable: previousSiblingType.isNullable,
                         fields: newFields,
                         isOpen: false,
                     },
                     {
                         kind: Type.TypeKind.Table,
                         maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
-                        isNullable: isPreviousSiblingTypeNullable,
+                        isNullable: previousSiblingType.isNullable,
                         fields: newFields,
                         isOpen: false,
                     },
@@ -556,6 +579,8 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
 
         case Type.TypeKind.Record:
         case Type.TypeKind.Table: {
+            // All we know is previousSibling was a Record/Table.
+            // Create a DefinedRecord/DefinedTable with the projected fields.
             if (previousSiblingType.maybeExtendedKind === undefined) {
                 const newFields: Map<string, Type.Any> = new Map(
                     projectedFieldNames.map((fieldName: string) => [fieldName, TypeUtils.anyFactory()]),
@@ -563,6 +588,11 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
                 return previousSiblingType.kind === Type.TypeKind.Record
                     ? TypeUtils.definedRecordFactory(false, newFields, false)
                     : TypeUtils.definedTableFactory(false, newFields, false);
+            }
+            if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.PrimaryExpressionTable) {
+                // Dereference PrimaryExpressionTable.type and call the helper again.
+                // Change the extended factory from a Extended.fields subset factory to the anyFactory.
+                return helper(previousSiblingType.type, projectedFieldNames);
             } else {
                 return reducedFieldsToKeys(previousSiblingType, projectedFieldNames);
             }
@@ -597,40 +627,51 @@ function translateFieldSelector(state: ScopeTypeInspectionState, xorNode: TXorNo
         xorNode.node.id,
     );
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
+    const isOptional: boolean =
+        NodeIdMapUtils.maybeAstChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
+            Ast.NodeKind.Constant,
+        ]) !== undefined;
+
+    return helperForTranslateFieldSelector(state, previousSiblingType, fieldName, isOptional);
+}
+
+function helperForTranslateFieldSelector(
+    state: ScopeTypeInspectionState,
+    previousSiblingType: Type.TType,
+    fieldName: string,
+    isOptional: boolean,
+): Type.TType {
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any:
             return TypeUtils.anyFactory();
 
-        case Type.TypeKind.Record:
-        case Type.TypeKind.Table:
-            if (previousSiblingType.maybeExtendedKind === undefined) {
-                return TypeUtils.anyFactory();
-            } else if (
-                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord ||
-                previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable
-            ) {
-                const maybeNamedField: Type.TType | undefined = previousSiblingType.fields.get(fieldName);
-                if (maybeNamedField !== undefined) {
-                    return maybeNamedField;
-                } else if (previousSiblingType.isOpen) {
-                    return TypeUtils.anyFactory();
-                } else {
-                    const maybeOptionalConstant:
-                        | Ast.TNode
-                        | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
-                        state.nodeIdMapCollection,
-                        xorNode.node.id,
-                        3,
-                        [Ast.NodeKind.Constant],
-                    );
-                    return maybeOptionalConstant !== undefined ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
-                }
-            } else {
-                throw isNever(previousSiblingType);
-            }
-
         case Type.TypeKind.Unknown:
             return TypeUtils.unknownFactory();
+
+        case Type.TypeKind.Record:
+        case Type.TypeKind.Table:
+            switch (previousSiblingType.maybeExtendedKind) {
+                case undefined:
+                    return TypeUtils.anyFactory();
+
+                case Type.ExtendedTypeKind.DefinedRecord:
+                case Type.ExtendedTypeKind.DefinedTable: {
+                    const maybeNamedField: Type.TType | undefined = previousSiblingType.fields.get(fieldName);
+                    if (maybeNamedField !== undefined) {
+                        return maybeNamedField;
+                    } else if (previousSiblingType.isOpen) {
+                        return TypeUtils.anyFactory();
+                    } else {
+                        return isOptional !== undefined ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
+                    }
+                }
+
+                case Type.ExtendedTypeKind.PrimaryExpressionTable:
+                    return helperForTranslateFieldSelector(state, previousSiblingType.type, fieldName, isOptional);
+
+                default:
+                    throw isNever(previousSiblingType);
+            }
 
         default:
             return TypeUtils.noneFactory();
@@ -850,6 +891,34 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
     }
 }
 
+function translateListType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedListType | Type.Unknown {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.ListType,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        undefined,
+    );
+    if (maybeListItem === undefined) {
+        return TypeUtils.unknownFactory();
+    }
+    const itemType: Type.TType = translateXorNode(state, maybeListItem);
+
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+        isNullable: false,
+        itemType,
+    };
+}
+
 function translateLiteralExpression(xorNode: TXorNode): Type.TType {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
@@ -945,6 +1014,41 @@ function translateRangeExpression(state: ScopeTypeInspectionState, xorNode: TXor
     }
 }
 
+function translateRecordType(
+    state: ScopeTypeInspectionState,
+    xorNode: TXorNode,
+): Type.DefinedType<Type.DefinedRecord> | Type.Unknown {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.RecordType,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        [Ast.NodeKind.RecordType],
+    );
+    if (maybeFields === undefined) {
+        return TypeUtils.unknownFactory();
+    }
+
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+        isNullable: false,
+        primaryType: {
+            kind: Type.TypeKind.Record,
+            maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+            isNullable: false,
+            ...examineFieldSpecificationList(state, maybeFields),
+        },
+    };
+}
+
 function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
@@ -997,14 +1101,78 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     return leftType;
 }
 
-function translateTypePrimaryType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedType {
-    const primaryType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 1);
-    return {
-        kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
-        isNullable: primaryType.isNullable,
-        primaryType,
-    };
+function translateSectionMember(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.SectionMember,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeKeyValuePair:
+        | TXorNode
+        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
+        Ast.NodeKind.IdentifierPairedExpression,
+    ]);
+    if (maybeKeyValuePair === undefined) {
+        return TypeUtils.unknownFactory();
+    }
+
+    return translateXorNode(state, maybeKeyValuePair);
+}
+
+function translateTableType(
+    state: ScopeTypeInspectionState,
+    xorNode: TXorNode,
+): Type.DefinedType<Type.DefinedTable | Type.PrimaryExpressionTable> | Type.Unknown {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.TableType,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        undefined,
+    );
+    if (maybeRowType === undefined) {
+        return TypeUtils.unknownFactory();
+    }
+
+    if (maybeRowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
+        return {
+            kind: Type.TypeKind.Type,
+            maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+            isNullable: false,
+            primaryType: {
+                kind: Type.TypeKind.Table,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                isNullable: false,
+                ...examineFieldSpecificationList(state, maybeRowType),
+            },
+        };
+    } else {
+        return {
+            kind: Type.TypeKind.Type,
+            maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+            isNullable: false,
+            primaryType: {
+                kind: Type.TypeKind.Table,
+                maybeExtendedKind: Type.ExtendedTypeKind.PrimaryExpressionTable,
+                isNullable: false,
+                type: translateXorNode(state, maybeRowType),
+            },
+        };
+    }
+}
+
+function translateTypePrimaryType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+    return translateFromChildAttributeIndex(state, xorNode, 1);
 }
 
 function translateUnaryExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -1335,20 +1503,30 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
         };
     }
     // '[foo=value] & [bar=value] or #table(...) & #table(...)'
-    else if (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind !== undefined) {
-        return unionFields(leftType, rightType);
+    else if (
+        leftType.maybeExtendedKind !== undefined &&
+        rightType.maybeExtendedKind !== undefined &&
+        leftType.maybeExtendedKind === rightType.maybeExtendedKind
+    ) {
+        // The cast should be safe since the first if statement tests their the same kind,
+        // and the above checks if they're the same extended kind.
+        return unionFields([leftType, rightType] as
+            | [Type.DefinedRecord, Type.DefinedRecord]
+            | [Type.DefinedTable, Type.DefinedTable]);
     } else {
         throw shouldNeverBeReached();
     }
 }
 
+// Returns None if a projection is being done a closed list with incorrect field names.
 function reducedFieldsToKeys(
     current: Type.DefinedRecord | Type.DefinedTable,
     keys: ReadonlyArray<string>,
 ): Type.DefinedRecord | Type.DefinedTable | Type.None {
     const currentFields: Map<string, Type.TType> = current.fields;
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
-    if (ArrayUtils.isSubset(currentFieldNames, keys) === false) {
+
+    if (current.isOpen === false && ArrayUtils.isSubset(currentFieldNames, keys) === false) {
         return TypeUtils.noneFactory();
     }
 
@@ -1359,18 +1537,16 @@ function reducedFieldsToKeys(
     };
 }
 
-function unionFields(
-    leftType: Type.DefinedRecord | Type.DefinedTable,
-    rightType: Type.DefinedRecord | Type.DefinedTable,
-): Type.DefinedRecord {
+function unionFields([leftType, rightType]:
+    | [Type.DefinedRecord, Type.DefinedRecord]
+    | [Type.DefinedTable, Type.DefinedTable]): Type.DefinedRecord | Type.DefinedTable {
     const combinedFields: Map<string, Type.TType> = new Map(leftType.fields);
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }
 
     return {
-        kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+        ...leftType,
         fields: combinedFields,
         isNullable: leftType.isNullable && rightType.isNullable,
         isOpen: leftType.isOpen || rightType.isOpen,
@@ -1390,6 +1566,47 @@ function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType)
             })
             .indexOf(false) === -1
     );
+}
+
+function examineFieldSpecificationList(
+    state: ScopeTypeInspectionState,
+    xorNode: TXorNode,
+): ExaminedFieldSpecificationList {
+    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
+        xorNode,
+        Ast.NodeKind.FieldSpecificationList,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+
+    const fields: [string, Type.TType][] = [];
+    for (const fieldSpecification of NodeIdMapIterator.arrayWrapperCsvXorNodes(nodeIdMapCollection, xorNode)) {
+        const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+            nodeIdMapCollection,
+            fieldSpecification.node.id,
+            1,
+            [Ast.NodeKind.GeneralizedIdentifier],
+        );
+
+        if (maybeName === undefined) {
+            break;
+        }
+        const name: string = (maybeName as Ast.GeneralizedIdentifier).literal;
+        const type: Type.TType = translateFieldSpecification(state, fieldSpecification);
+        fields.push([name, type]);
+    }
+    const isOpen: boolean =
+        NodeIdMapUtils.maybeAstChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 3, [
+            Ast.NodeKind.Constant,
+        ]) !== undefined;
+
+    return {
+        fields: new Map(fields),
+        isOpen,
+    };
 }
 
 function maybeDereferencedIdentifierType(state: ScopeTypeInspectionState, xorNode: TXorNode): undefined | Type.TType {
