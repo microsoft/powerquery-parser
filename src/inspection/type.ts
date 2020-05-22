@@ -545,10 +545,13 @@ function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXor
     );
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
 
-    return helper(previousSiblingType, projectedFieldNames);
+    return translateFieldProjectionHelper(previousSiblingType, projectedFieldNames);
 }
 
-function helper(previousSiblingType: Type.TType, projectedFieldNames: ReadonlyArray<string>): Type.TType {
+function translateFieldProjectionHelper(
+    previousSiblingType: Type.TType,
+    projectedFieldNames: ReadonlyArray<string>,
+): Type.TType {
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any: {
             const newFields: Map<string, Type.Any> = new Map(
@@ -592,7 +595,7 @@ function helper(previousSiblingType: Type.TType, projectedFieldNames: ReadonlyAr
             if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.PrimaryExpressionTable) {
                 // Dereference PrimaryExpressionTable.type and call the helper again.
                 // Change the extended factory from a Extended.fields subset factory to the anyFactory.
-                return helper(previousSiblingType.type, projectedFieldNames);
+                return translateFieldProjectionHelper(previousSiblingType.type, projectedFieldNames);
             } else {
                 return reducedFieldsToKeys(previousSiblingType, projectedFieldNames);
             }
@@ -718,10 +721,15 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
     // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
     // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),
     // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
+
     let returnType: Type.TType;
+    // If the stated return type is Any,
+    // then it might as well be the expression's type as it can't be any wider than Any.
     if (inspectedReturnType.kind === Type.TypeKind.Any) {
         returnType = expressionType;
-    } else if (
+    }
+    // If the return type is Any then see if we can narrow it to the stated return type.
+    else if (
         expressionType.kind === Type.TypeKind.Any &&
         expressionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion &&
         allForAnyUnion(
@@ -730,12 +738,18 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
         )
     ) {
         returnType = expressionType;
-    } else if (inspectedReturnType.kind !== expressionType.kind) {
+    }
+    // If the stated return type doesn't match the expression's type then it's None.
+    else if (inspectedReturnType.kind !== expressionType.kind) {
         return TypeUtils.noneFactory();
-    } else if (expressionType.kind !== Type.TypeKind.Unknown) {
-        returnType = expressionType;
-    } else {
+    }
+    // If the expression's type can't be known, then assume it's the stated return type.
+    else if (expressionType.kind === Type.TypeKind.Unknown) {
         returnType = inspectedReturnType;
+    }
+    // Else fallback to the expression's type.
+    else {
+        returnType = expressionType;
     }
 
     return {
@@ -757,7 +771,7 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
 function translateFunctionType(
     state: ScopeTypeInspectionState,
     xorNode: TXorNode,
-): Type.DefinedFunction | Type.Unknown {
+): Type.DefinedType<Type.DefinedFunction> | Type.Unknown {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.FunctionType,
@@ -782,11 +796,16 @@ function translateFunctionType(
     const returnType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 2);
 
     return {
-        kind: Type.TypeKind.Function,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
         isNullable: false,
-        parameterTypes,
-        returnType,
+        primaryType: {
+            kind: Type.TypeKind.Function,
+            maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+            isNullable: false,
+            parameterTypes,
+            returnType,
+        },
     };
 }
 
@@ -869,23 +888,11 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
     );
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
     if (previousSiblingType.kind === Type.TypeKind.Any) {
-        return previousSiblingType;
-    }
-
-    if (previousSiblingType.kind !== Type.TypeKind.Function) {
+        return TypeUtils.anyFactory();
+    } else if (previousSiblingType.kind !== Type.TypeKind.Function) {
         return TypeUtils.noneFactory();
     } else if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
-        const maybePreviousSiblingExpression: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
-            state.nodeIdMapCollection,
-            previousSibling.node.id,
-            3,
-            undefined,
-        );
-        if (maybePreviousSiblingExpression === undefined) {
-            return previousSiblingType.returnType;
-        }
-
-        return translateXorNode(state, maybePreviousSiblingExpression);
+        return previousSiblingType.returnType;
     } else {
         return TypeUtils.anyFactory();
     }
@@ -952,14 +959,15 @@ function translateParameter(state: ScopeTypeInspectionState, xorNode: TXorNode):
         throw maybeErr;
     }
 
-    const isOptional: boolean =
-        NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 0, [
-            Ast.NodeKind.Constant,
-        ]) !== undefined;
+    const maybeOptionalConstant:
+        | Ast.TNode
+        | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 0, [
+        Ast.NodeKind.Constant,
+    ]);
 
     return {
         ...translateFromChildAttributeIndex(state, xorNode, 2),
-        isNullable: isOptional,
+        isNullable: maybeOptionalConstant !== undefined,
     };
 }
 
@@ -1091,11 +1099,9 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     }
 
     let leftType: Type.TType = headType;
-    // let left: TXorNode = maybeHead;
     for (const right of maybeExpressions) {
         const rightType: Type.TType = translateXorNode(state, right);
         leftType = rightType;
-        // left = right;
     }
 
     return leftType;
