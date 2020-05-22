@@ -6,103 +6,21 @@ import {
     CommonError,
     isNever,
     MapUtils,
-    Result,
     ResultUtils,
     shouldBeIsNever as shouldNeverBeReached,
-} from "../common";
-import { Ast, AstUtils } from "../language";
-import { getLocalizationTemplates } from "../localization";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
-import { CommonSettings } from "../settings";
-import { Type, TypeInspector, TypeUtils } from "../type";
-import { ScopeById, ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeForRoot, TScopeItem } from "./scope";
-
-export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
-
-export type ScopeTypeByKey = Map<string, Type.TType>;
-
-export type ScopeTypeById = Map<number, Type.TType>;
-
-export function tryScopeTypeForRoot(
-    settings: CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    scopeById: ScopeById,
-    ancestry: ReadonlyArray<TXorNode>,
-    maybeScopeTypeById: undefined | ScopeTypeById,
-): TriedScopeType {
-    const state: ScopeTypeInspectionState = {
-        settings,
-        givenTypeById: maybeScopeTypeById !== undefined ? maybeScopeTypeById : new Map(),
-        deltaTypeById: new Map(),
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestry,
-        scopeById,
-    };
-
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state));
-}
+} from "../../common";
+import { Ast, AstUtils } from "../../language";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { Type, TypeInspector, TypeUtils } from "../../type";
+import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeForRoot, TScopeItem } from "../scope";
+import * as BinOpExpression from "./binOpExpression";
+import { ScopeTypeInspectionState } from "./type";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
-
-interface ScopeTypeInspectionState {
-    readonly settings: CommonSettings;
-    readonly givenTypeById: ScopeTypeById;
-    readonly deltaTypeById: ScopeTypeById;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
-    readonly ancestry: ReadonlyArray<TXorNode>;
-    scopeById: ScopeById;
-}
 
 interface ExaminedFieldSpecificationList {
     readonly fields: Map<string, Type.TType>;
     readonly isOpen: boolean;
-}
-
-function inspectScopeType(state: ScopeTypeInspectionState): ScopeTypeByKey {
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, state.ancestry[0].node.id);
-
-    for (const scopeItem of scopeItemByKey.values()) {
-        if (!state.givenTypeById.has(scopeItem.id)) {
-            state.deltaTypeById.set(scopeItem.id, getOrCreateType(state, scopeItem));
-        }
-    }
-
-    for (const [key, value] of state.deltaTypeById.entries()) {
-        state.givenTypeById.set(key, value);
-    }
-
-    const result: ScopeTypeByKey = new Map();
-    for (const [key, scopeItem] of scopeItemByKey.entries()) {
-        const maybeType: Type.TType | undefined = state.givenTypeById.get(scopeItem.id);
-        if (maybeType === undefined) {
-            const details: {} = { nodeId: scopeItem.id };
-            throw new CommonError.InvariantError(`expected nodeId to be in givenTypeById`, details);
-        }
-
-        result.set(key, maybeType);
-    }
-
-    return result;
-}
-
-function getOrCreateType(state: ScopeTypeInspectionState, scopeItem: TScopeItem): Type.TType {
-    const nodeId: number = scopeItem.id;
-
-    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeGivenType !== undefined) {
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeDeltaType !== undefined) {
-        return maybeDeltaType;
-    }
-
-    const scopeType: Type.TType = translateScopeItem(state, scopeItem);
-    return scopeType;
 }
 
 function translateScopeItem(state: ScopeTypeInspectionState, scopeItem: TScopeItem): Type.TType {
@@ -380,22 +298,23 @@ function translateBinOpExpression(state: ScopeTypeInspectionState, xorNode: TXor
         const leftType: Type.TType = translateXorNode(state, maybeLeft);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
 
-        const partialLookupKey: string = binOpExpressionPartialLookupKey(leftType.kind, operatorKind);
-        const maybeAllowedTypeKinds: ReadonlyArray<Type.TypeKind> | undefined = BinOpExpressionPartialLookup.get(
+        const partialLookupKey: string = BinOpExpression.partialLookupKey(leftType.kind, operatorKind);
+        const maybeAllowedTypeKinds: ReadonlySet<Type.TypeKind> | undefined = BinOpExpression.PartialLookup.get(
             partialLookupKey,
         );
         if (maybeAllowedTypeKinds === undefined) {
             return TypeUtils.noneFactory();
-        } else if (maybeAllowedTypeKinds.length === 1) {
-            return TypeUtils.genericFactory(maybeAllowedTypeKinds[0], leftType.isNullable);
+        } else if (maybeAllowedTypeKinds.size === 1) {
+            return TypeUtils.genericFactory(maybeAllowedTypeKinds.values().next().value, leftType.isNullable);
         } else {
-            const unionedTypePairs: ReadonlyArray<Type.TType> = maybeAllowedTypeKinds.map((kind: Type.TypeKind) => {
-                return {
+            const unionedTypePairs: Type.TType[] = [];
+            for (const kind of maybeAllowedTypeKinds.values()) {
+                unionedTypePairs.push({
                     kind,
                     maybeExtendedKind: undefined,
                     isNullable: true,
-                };
-            });
+                });
+            }
             return TypeUtils.anyUnionFactory(unionedTypePairs);
         }
     }
@@ -405,8 +324,8 @@ function translateBinOpExpression(state: ScopeTypeInspectionState, xorNode: TXor
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
         const rightType: Type.TType = translateXorNode(state, maybeRight);
 
-        const key: string = binOpExpressionLookupKey(leftType.kind, operatorKind, rightType.kind);
-        const maybeResultTypeKind: Type.TypeKind | undefined = BinOpExpressionLookup.get(key);
+        const key: string = BinOpExpression.lookupKey(leftType.kind, operatorKind, rightType.kind);
+        const maybeResultTypeKind: Type.TypeKind | undefined = BinOpExpression.Lookup.get(key);
         if (maybeResultTypeKind === undefined) {
             return TypeUtils.noneFactory();
         }
@@ -1235,214 +1154,6 @@ function translateUnaryExpression(state: ScopeTypeInspectionState, xorNode: TXor
     return expressionType;
 }
 
-const BinOpExpressionLookup: ReadonlyMap<string, Type.TypeKind> = new Map([
-    ...createLookupsForRelational(Type.TypeKind.Null),
-    ...createLookupsForEquality(Type.TypeKind.Null),
-
-    ...createLookupsForRelational(Type.TypeKind.Logical),
-    ...createLookupsForEquality(Type.TypeKind.Logical),
-    ...createLookupsForLogical(Type.TypeKind.Logical),
-
-    ...createLookupsForRelational(Type.TypeKind.Number),
-    ...createLookupsForEquality(Type.TypeKind.Number),
-    ...createLookupsForArithmetic(Type.TypeKind.Number),
-
-    ...createLookupsForRelational(Type.TypeKind.Time),
-    ...createLookupsForEquality(Type.TypeKind.Time),
-    ...createLookupsForClockKind(Type.TypeKind.Time),
-    [
-        binOpExpressionLookupKey(Type.TypeKind.Date, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Time),
-        Type.TypeKind.DateTime,
-    ],
-
-    ...createLookupsForRelational(Type.TypeKind.Date),
-    ...createLookupsForEquality(Type.TypeKind.Date),
-    ...createLookupsForClockKind(Type.TypeKind.Date),
-    [
-        binOpExpressionLookupKey(Type.TypeKind.Date, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Time),
-        Type.TypeKind.DateTime,
-    ],
-
-    ...createLookupsForRelational(Type.TypeKind.DateTime),
-    ...createLookupsForEquality(Type.TypeKind.DateTime),
-    ...createLookupsForClockKind(Type.TypeKind.DateTime),
-
-    ...createLookupsForRelational(Type.TypeKind.DateTimeZone),
-    ...createLookupsForEquality(Type.TypeKind.DateTimeZone),
-    ...createLookupsForClockKind(Type.TypeKind.DateTimeZone),
-
-    ...createLookupsForRelational(Type.TypeKind.Duration),
-    ...createLookupsForEquality(Type.TypeKind.Duration),
-    [
-        binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration),
-        Type.TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(
-            Type.TypeKind.Duration,
-            Ast.ArithmeticOperatorKind.Subtraction,
-            Type.TypeKind.Duration,
-        ),
-        Type.TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(
-            Type.TypeKind.Duration,
-            Ast.ArithmeticOperatorKind.Multiplication,
-            Type.TypeKind.Number,
-        ),
-        Type.TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(
-            Type.TypeKind.Number,
-            Ast.ArithmeticOperatorKind.Multiplication,
-            Type.TypeKind.Duration,
-        ),
-        Type.TypeKind.Duration,
-    ],
-    [
-        binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Division, Type.TypeKind.Number),
-        Type.TypeKind.Duration,
-    ],
-
-    ...createLookupsForRelational(Type.TypeKind.Text),
-    ...createLookupsForEquality(Type.TypeKind.Text),
-    [
-        binOpExpressionLookupKey(Type.TypeKind.Text, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Text),
-        Type.TypeKind.Text,
-    ],
-
-    ...createLookupsForRelational(Type.TypeKind.Binary),
-    ...createLookupsForEquality(Type.TypeKind.Binary),
-
-    ...createLookupsForEquality(Type.TypeKind.List),
-    [
-        binOpExpressionLookupKey(Type.TypeKind.List, Ast.ArithmeticOperatorKind.And, Type.TypeKind.List),
-        Type.TypeKind.List,
-    ],
-
-    ...createLookupsForEquality(Type.TypeKind.Record),
-    [
-        binOpExpressionLookupKey(Type.TypeKind.Record, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Record),
-        Type.TypeKind.Record,
-    ],
-
-    ...createLookupsForEquality(Type.TypeKind.Table),
-    [
-        binOpExpressionLookupKey(Type.TypeKind.Table, Ast.ArithmeticOperatorKind.And, Type.TypeKind.Table),
-        Type.TypeKind.Table,
-    ],
-]);
-
-// Creates a lookup of what types are accepted in a BinOpExpression which hasn't parsed its second operand.
-// Eg. '1 + ' and 'true and '
-//
-// Created by processing BinOpExpressionLookup's keys, which are in the form of:
-// <first operand> , <operator> , <second operand>
-// The partial lookup key is the first two components (first operand, operator),
-// and the value is the set of (second operand).
-const BinOpExpressionPartialLookup: ReadonlyMap<string, ReadonlyArray<Type.TypeKind>> = new Map(
-    // Grab the keys
-    [...BinOpExpressionLookup.keys()]
-        .reduce(
-            (
-                binaryExpressionPartialLookup: Map<string, ReadonlyArray<Type.TypeKind>>,
-                key: string,
-                _currentIndex,
-                _array,
-            ): Map<string, ReadonlyArray<Type.TypeKind>> => {
-                const lastDeliminatorIndex: number = key.lastIndexOf(",");
-                // Grab '<first operand> , <operator>'.
-                const partialKey: string = key.slice(0, lastDeliminatorIndex);
-                // Grab '<second operand>'.
-                const potentialNewValue: Type.TypeKind = key.slice(lastDeliminatorIndex + 1) as Type.TypeKind;
-
-                // Add the potentialNewValue if it's a new type.
-                const maybeValues: ReadonlyArray<Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(
-                    partialKey,
-                );
-                // First occurance of '<first operand> , <operator>'
-                if (maybeValues === undefined) {
-                    binaryExpressionPartialLookup.set(partialKey, [potentialNewValue]);
-                }
-                // First occurance of '<second operand>' in '<first operand> , <operator>'
-                else if (maybeValues.indexOf(potentialNewValue) !== -1) {
-                    binaryExpressionPartialLookup.set(partialKey, [...maybeValues, potentialNewValue]);
-                }
-
-                return binaryExpressionPartialLookup;
-            },
-            new Map(),
-        )
-        .entries(),
-);
-
-function binOpExpressionPartialLookupKey(
-    leftTypeKind: Type.TypeKind,
-    operatorKind: Ast.TBinOpExpressionOperator,
-): string {
-    return `${leftTypeKind},${operatorKind}`;
-}
-
-function binOpExpressionLookupKey(
-    leftTypeKind: Type.TypeKind,
-    operatorKind: Ast.TBinOpExpressionOperator,
-    rightTypeKind: Type.TypeKind,
-): string {
-    return `${leftTypeKind},${operatorKind},${rightTypeKind}`;
-}
-
-function createLookupsForRelational(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
-    return [
-        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThan, typeKind), Type.TypeKind.Logical],
-        [
-            binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.GreaterThanEqualTo, typeKind),
-            Type.TypeKind.Logical,
-        ],
-        [binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.LessThan, typeKind), Type.TypeKind.Logical],
-        [
-            binOpExpressionLookupKey(typeKind, Ast.RelationalOperatorKind.LessThanEqualTo, typeKind),
-            Type.TypeKind.Logical,
-        ],
-    ];
-}
-
-function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
-    return [
-        [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.EqualTo, typeKind), Type.TypeKind.Logical],
-        [binOpExpressionLookupKey(typeKind, Ast.EqualityOperatorKind.NotEqualTo, typeKind), Type.TypeKind.Logical],
-    ];
-}
-
-// Note: does not include the and <'&'> operator.
-function createLookupsForArithmetic(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
-    return [
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Division, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Multiplication, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, typeKind), typeKind],
-    ];
-}
-
-function createLookupsForLogical(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
-    return [
-        [binOpExpressionLookupKey(typeKind, Ast.LogicalOperatorKind.And, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.LogicalOperatorKind.Or, typeKind), typeKind],
-    ];
-}
-
-function createLookupsForClockKind(
-    typeKind: Type.TypeKind.Date | Type.TypeKind.DateTime | Type.TypeKind.DateTimeZone | Type.TypeKind.Time,
-): ReadonlyArray<[string, Type.TypeKind]> {
-    return [
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration), typeKind],
-        [binOpExpressionLookupKey(Type.TypeKind.Duration, Ast.ArithmeticOperatorKind.Addition, typeKind), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, Type.TypeKind.Duration), typeKind],
-        [binOpExpressionLookupKey(typeKind, Ast.ArithmeticOperatorKind.Subtraction, typeKind), Type.TypeKind.Duration],
-    ];
-}
-
 function translateList(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedList {
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
     const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => translateXorNode(state, item));
@@ -1769,7 +1480,24 @@ function maybeDereferencedIdentifier(state: ScopeTypeInspectionState, xorNode: T
     }
 }
 
-function getOrCreateScope(state: ScopeTypeInspectionState, nodeId: number): ScopeItemByKey {
+export function getOrCreateType(state: ScopeTypeInspectionState, scopeItem: TScopeItem): Type.TType {
+    const nodeId: number = scopeItem.id;
+
+    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeGivenType !== undefined) {
+        return maybeGivenType;
+    }
+
+    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeDeltaType !== undefined) {
+        return maybeDeltaType;
+    }
+
+    const scopeType: Type.TType = translateScopeItem(state, scopeItem);
+    return scopeType;
+}
+
+export function getOrCreateScope(state: ScopeTypeInspectionState, nodeId: number): ScopeItemByKey {
     const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
     if (maybeScope !== undefined) {
         return maybeScope;
