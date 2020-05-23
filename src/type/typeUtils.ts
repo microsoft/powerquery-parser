@@ -359,7 +359,7 @@ export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: Rea
     return true;
 }
 
-export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
+export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
     if (left.maybeExtendedKind !== right.maybeExtendedKind) {
         return false;
     }
@@ -374,6 +374,9 @@ export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtend
         case Type.ExtendedTypeKind.DefinedList:
             return equalDefinedList(left, right as Type.DefinedList);
 
+        case Type.ExtendedTypeKind.DefinedListType:
+            return equalDefinedListType(left, right as Type.DefinedListType);
+
         case Type.ExtendedTypeKind.DefinedRecord:
             return equalDefinedRecord(left, right as Type.DefinedRecord);
 
@@ -381,7 +384,10 @@ export function equalExtendedTypes(left: Type.TExtendedType, right: Type.TExtend
             return equalDefinedTable(left, right as Type.DefinedTable);
 
         case Type.ExtendedTypeKind.DefinedType:
-            return equalDefinedType(left, right as Type.DefinedType);
+            return equalDefinedType(left, right as Type.DefinedType<T>);
+
+        case Type.ExtendedTypeKind.PrimaryExpressionTable:
+            return equalPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
 
         default:
             throw isNever(left);
@@ -411,6 +417,10 @@ export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList
     );
 }
 
+export function equalDefinedListType(left: Type.DefinedListType, right: Type.DefinedListType): boolean {
+    return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
+}
+
 export function equalDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
         left.isNullable === right.isNullable &&
@@ -425,8 +435,15 @@ export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTa
     );
 }
 
-export function equalDefinedType(left: Type.DefinedType, right: Type.DefinedType): boolean {
+export function equalDefinedType<T extends Type.TType>(left: Type.DefinedType<T>, right: Type.DefinedType<T>): boolean {
     return left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType);
+}
+
+export function equalPrimaryExpressionTable(
+    left: Type.PrimaryExpressionTable,
+    right: Type.PrimaryExpressionTable,
+): boolean {
+    return equalType(left.type, right.type);
 }
 
 const AnyConstant: Type.Any = {
