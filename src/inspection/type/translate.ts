@@ -80,6 +80,7 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
         case Ast.NodeKind.FieldTypeSpecification:
         case Ast.NodeKind.OtherwiseExpression:
         case Ast.NodeKind.ParenthesizedExpression:
+        case Ast.NodeKind.TypePrimaryType:
             result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
 
@@ -88,6 +89,11 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
             result = translateBinOpExpression(state, xorNode);
+            break;
+
+        case Ast.NodeKind.AsExpression:
+        case Ast.NodeKind.SectionMember:
+            result = translateFromChildAttributeIndex(state, xorNode, 2);
             break;
 
         case Ast.NodeKind.ListExpression:
@@ -111,10 +117,6 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
         // TODO: how should error handling be typed?
         case Ast.NodeKind.ErrorRaisingExpression:
             result = TypeUtils.anyFactory();
-            break;
-
-        case Ast.NodeKind.AsExpression:
-            result = translateFromChildAttributeIndex(state, xorNode, 2);
             break;
 
         case Ast.NodeKind.Constant:
@@ -213,16 +215,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateRecursivePrimaryExpression(state, xorNode);
             break;
 
-        case Ast.NodeKind.SectionMember:
-            result = translateSectionMember(state, xorNode);
-            break;
-
         case Ast.NodeKind.TableType:
             result = translateTableType(state, xorNode);
-            break;
-
-        case Ast.NodeKind.TypePrimaryType:
-            result = translateTypePrimaryType(state, xorNode);
             break;
 
         case Ast.NodeKind.UnaryExpression:
@@ -1011,27 +1005,6 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
     return leftType;
 }
 
-function translateSectionMember(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.SectionMember,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
-
-    const maybeKeyValuePair:
-        | TXorNode
-        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
-        Ast.NodeKind.IdentifierPairedExpression,
-    ]);
-    if (maybeKeyValuePair === undefined) {
-        return TypeUtils.unknownFactory();
-    }
-
-    return translateXorNode(state, maybeKeyValuePair);
-}
-
 function translateTableType(
     state: ScopeTypeInspectionState,
     xorNode: TXorNode,
@@ -1079,10 +1052,6 @@ function translateTableType(
             },
         };
     }
-}
-
-function translateTypePrimaryType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
-    return translateFromChildAttributeIndex(state, xorNode, 1);
 }
 
 function translateUnaryExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
