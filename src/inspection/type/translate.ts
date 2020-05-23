@@ -59,23 +59,6 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
     let result: Type.TType;
     switch (xorNode.node.kind) {
-        case Ast.NodeKind.ArithmeticExpression:
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.LogicalExpression:
-        case Ast.NodeKind.RelationalExpression:
-            result = translateBinOpExpression(state, xorNode);
-            break;
-
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.ListLiteral:
-            result = translateList(state, xorNode);
-            break;
-
-        case Ast.NodeKind.RecordLiteral:
-        case Ast.NodeKind.RecordExpression:
-            result = translateRecord(state, xorNode);
-            break;
-
         case Ast.NodeKind.ArrayWrapper:
         case Ast.NodeKind.Csv:
         case Ast.NodeKind.FieldSpecificationList:
@@ -91,6 +74,40 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             };
             throw new CommonError.InvariantError(`this should never be a scope item`, details);
 
+        case Ast.NodeKind.AsType:
+        case Ast.NodeKind.AsNullablePrimitiveType:
+        case Ast.NodeKind.EachExpression:
+        case Ast.NodeKind.FieldTypeSpecification:
+        case Ast.NodeKind.OtherwiseExpression:
+        case Ast.NodeKind.ParenthesizedExpression:
+            result = translateFromChildAttributeIndex(state, xorNode, 1);
+            break;
+
+        case Ast.NodeKind.ArithmeticExpression:
+        case Ast.NodeKind.EqualityExpression:
+        case Ast.NodeKind.LogicalExpression:
+        case Ast.NodeKind.RelationalExpression:
+            result = translateBinOpExpression(state, xorNode);
+            break;
+
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral:
+            result = translateList(state, xorNode);
+            break;
+
+        case Ast.NodeKind.NullableType:
+        case Ast.NodeKind.NullablePrimitiveType:
+            result = {
+                ...translateFromChildAttributeIndex(state, xorNode, 1),
+                isNullable: true,
+            };
+            break;
+
+        case Ast.NodeKind.RecordLiteral:
+        case Ast.NodeKind.RecordExpression:
+            result = translateRecord(state, xorNode);
+            break;
+
         // TODO: how should error handling be typed?
         case Ast.NodeKind.ErrorRaisingExpression:
             result = TypeUtils.anyFactory();
@@ -100,20 +117,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFromChildAttributeIndex(state, xorNode, 2);
             break;
 
-        case Ast.NodeKind.AsType:
-            result = translateFromChildAttributeIndex(state, xorNode, 1);
-            break;
-
-        case Ast.NodeKind.AsNullablePrimitiveType:
-            result = translateFromChildAttributeIndex(state, xorNode, 1);
-            break;
-
         case Ast.NodeKind.Constant:
             result = translateConstant(xorNode);
-            break;
-
-        case Ast.NodeKind.EachExpression:
-            result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
 
         case Ast.NodeKind.ErrorHandlingExpression:
@@ -130,10 +135,6 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.FieldSpecification:
             result = translateFieldSpecification(state, xorNode);
-            break;
-
-        case Ast.NodeKind.FieldTypeSpecification:
-            result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
 
         case Ast.NodeKind.FunctionExpression:
@@ -192,24 +193,8 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
             result = translateFromChildAttributeIndex(state, xorNode, 0);
             break;
 
-        case Ast.NodeKind.NullableType:
-        case Ast.NodeKind.NullablePrimitiveType:
-            result = {
-                ...translateFromChildAttributeIndex(state, xorNode, 1),
-                isNullable: true,
-            };
-            break;
-
-        case Ast.NodeKind.OtherwiseExpression:
-            result = translateFromChildAttributeIndex(state, xorNode, 1);
-            break;
-
         case Ast.NodeKind.Parameter:
             result = translateParameter(state, xorNode);
-            break;
-
-        case Ast.NodeKind.ParenthesizedExpression:
-            result = translateFromChildAttributeIndex(state, xorNode, 1);
             break;
 
         case Ast.NodeKind.PrimitiveType:
