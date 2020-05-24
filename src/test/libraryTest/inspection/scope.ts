@@ -145,11 +145,11 @@ function expectScopeForNodeOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScopeInspection: Inspection.TriedScopeForRoot = Inspection.tryScopeForRoot(
+    const triedScopeInspection: Inspection.TriedScopeForRoot = Inspection.tryScopeItems(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
-        activeNode.ancestry,
+        activeNode.ancestry[0].node.id,
         undefined,
     );
     if (!ResultUtils.isOk(triedScopeInspection)) {

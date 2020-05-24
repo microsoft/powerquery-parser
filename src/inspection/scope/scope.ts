@@ -4,7 +4,7 @@
 import { CommonError, Result, ResultUtils } from "../../common";
 import { Ast } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
+import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { TypeInspector, TypeUtils } from "../../type";
 import {
@@ -36,20 +36,21 @@ export function tryScope(
     );
 }
 
-export function tryScopeForRoot(
+export function tryScopeItems(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    ancestry: ReadonlyArray<TXorNode>,
+    nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedScopeForRoot {
-    if (ancestry.length === 0) {
-        throw new CommonError.InvariantError(`ancestry.length should be non-zero`);
-    }
-
-    const rootId: number = ancestry[0].node.id;
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
+        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(nodeIdMapCollection, nodeId);
+        if (ancestry.length === 0) {
+            return new Map();
+        }
+        const rootId: number = ancestry[0].node.id;
+
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
         const maybeScope: ScopeItemByKey | undefined = inspected.get(rootId);
         if (maybeScope === undefined) {

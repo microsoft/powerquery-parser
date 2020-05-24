@@ -5,7 +5,7 @@ import { ArrayUtils, CommonError, isNever, MapUtils, ResultUtils, shouldNeverBeR
 import { Ast, AstUtils } from "../../language";
 import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { Type, TypeInspector, TypeUtils } from "../../type";
-import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeForRoot, TScopeItem } from "../scope";
+import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScopeItem } from "../scope";
 import * as BinOpExpression from "./binOpExpression";
 import { TypeInspectionState } from "./type";
 
@@ -33,11 +33,11 @@ export function getOrCreateScope(state: TypeInspectionState, nodeId: number): Sc
     }
 
     const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
-    const triedScope: TriedScopeForRoot = tryScopeForRoot(
+    const triedScope: TriedScopeForRoot = tryScopeItems(
         state.settings,
         state.nodeIdMapCollection,
         state.leafNodeIds,
-        ancestry,
+        ancestry[0].node.id,
         state.scopeById,
     );
     if (ResultUtils.isErr(triedScope)) {
