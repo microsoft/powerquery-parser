@@ -19,7 +19,7 @@ export function tryScopeType(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
-    maybeScopeById: ScopeById,
+    maybeScopeById: ScopeById | undefined = new Map(),
     maybeScopeTypeById: ScopeTypeById | undefined = new Map(),
 ): TriedScopeType {
     const state: TypeInspectionState = {
@@ -39,7 +39,7 @@ export function tryType(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
-    maybeScopeById: ScopeById | undefined,
+    maybeScopeById: ScopeById | undefined = new Map(),
     maybeScopeTypeById: ScopeTypeById | undefined = new Map(),
 ): TriedType {
     const state: TypeInspectionState = {
