@@ -7,6 +7,6 @@ export function isNever(_: never): never {
     throw new CommonError.InvariantError(`should never be reached`);
 }
 
-export function shouldBeIsNever(): CommonError.InvariantError {
+export function shouldNeverBeReached(): CommonError.InvariantError {
     return new CommonError.InvariantError(`this should never be reached, but TypeScript can't tell that`);
 }

@@ -3,38 +3,61 @@
 
 import { CommonError, Result, ResultUtils } from "../../common";
 import { getLocalizationTemplates } from "../../localization";
-import { NodeIdMap, TXorNode } from "../../parser";
+import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { Type } from "../../type";
 import { ScopeById, ScopeItemByKey } from "../scope";
-import { getOrCreateScope, getOrCreateType } from "./translate";
-import { ScopeTypeById, ScopeTypeByKey, ScopeTypeInspectionState } from "./type";
+import { getOrCreateScope, getOrCreateType, translateXorNode } from "./translate";
+import { ScopeTypeById, ScopeTypeByKey, TypeInspectionState } from "./type";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
-export function tryScopeTypeForRoot(
+export type TriedType = Result<Type.TType, CommonError.CommonError>;
+
+export function tryScopeType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    scopeById: ScopeById,
-    ancestry: ReadonlyArray<TXorNode>,
+    nodeId: number,
+    maybeScopeById: ScopeById,
     maybeScopeTypeById: ScopeTypeById | undefined = new Map(),
 ): TriedScopeType {
-    const state: ScopeTypeInspectionState = {
+    const state: TypeInspectionState = {
         settings,
         givenTypeById: maybeScopeTypeById !== undefined ? maybeScopeTypeById : new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
         leafNodeIds,
-        ancestry,
-        scopeById,
+        scopeById: maybeScopeById !== undefined ? maybeScopeById : new Map(),
     };
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state));
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state, nodeId));
 }
 
-function inspectScopeType(state: ScopeTypeInspectionState): ScopeTypeByKey {
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, state.ancestry[0].node.id);
+export function tryType(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    nodeId: number,
+    maybeScopeById: ScopeById | undefined,
+    maybeScopeTypeById: ScopeTypeById | undefined = new Map(),
+): TriedType {
+    const state: TypeInspectionState = {
+        settings,
+        givenTypeById: maybeScopeTypeById !== undefined ? maybeScopeTypeById : new Map(),
+        deltaTypeById: new Map(),
+        nodeIdMapCollection,
+        leafNodeIds,
+        scopeById: maybeScopeById !== undefined ? maybeScopeById : new Map(),
+    };
+
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
+        translateXorNode(state, NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, nodeId)),
+    );
+}
+
+function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeTypeByKey {
+    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, nodeId);
 
     for (const scopeItem of scopeItemByKey.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {

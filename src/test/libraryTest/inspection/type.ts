@@ -78,12 +78,12 @@ function expectTypeOk(
         throw new Error(`AssertFailed: ResultUtils.isOk(triedScope) - ${triedScope.error}`);
     }
 
-    const triedScopeType: TriedScopeType = Inspection.tryScopeTypeForRoot(
+    const triedScopeType: TriedScopeType = Inspection.tryScopeType(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
+        activeNode.ancestry[0].node.id,
         triedScope.value,
-        activeNode.ancestry,
         undefined,
     );
     if (!ResultUtils.isOk(triedScopeType)) {

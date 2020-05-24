@@ -1,29 +1,53 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    ArrayUtils,
-    CommonError,
-    isNever,
-    MapUtils,
-    ResultUtils,
-    shouldBeIsNever as shouldNeverBeReached,
-} from "../../common";
+import { ArrayUtils, CommonError, isNever, MapUtils, ResultUtils, shouldNeverBeReached } from "../../common";
 import { Ast, AstUtils } from "../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { Type, TypeInspector, TypeUtils } from "../../type";
 import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeForRoot, TScopeItem } from "../scope";
 import * as BinOpExpression from "./binOpExpression";
-import { ScopeTypeInspectionState } from "./type";
+import { TypeInspectionState } from "./type";
 
-type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
+export function getOrCreateType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+    const nodeId: number = scopeItem.id;
 
-interface ExaminedFieldSpecificationList {
-    readonly fields: Map<string, Type.TType>;
-    readonly isOpen: boolean;
+    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeGivenType !== undefined) {
+        return maybeGivenType;
+    }
+
+    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeDeltaType !== undefined) {
+        return maybeDeltaType;
+    }
+
+    const scopeType: Type.TType = translateScopeItem(state, scopeItem);
+    return scopeType;
 }
 
-function translateScopeItem(state: ScopeTypeInspectionState, scopeItem: TScopeItem): Type.TType {
+export function getOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
+    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
+    if (maybeScope !== undefined) {
+        return maybeScope;
+    }
+
+    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
+    const triedScope: TriedScopeForRoot = tryScopeForRoot(
+        state.settings,
+        state.nodeIdMapCollection,
+        state.leafNodeIds,
+        ancestry,
+        state.scopeById,
+    );
+    if (ResultUtils.isErr(triedScope)) {
+        throw triedScope.error;
+    }
+
+    return triedScope.value;
+}
+
+export function translateScopeItem(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
             return translateXorNode(state, scopeItem.eachExpression);
@@ -49,7 +73,7 @@ function translateScopeItem(state: ScopeTypeInspectionState, scopeItem: TScopeIt
     }
 }
 
-function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+export function translateXorNode(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const xorNodeId: number = xorNode.node.id;
     const maybeCached: Type.TType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
@@ -231,8 +255,15 @@ function translateXorNode(state: ScopeTypeInspectionState, xorNode: TXorNode): T
     return result;
 }
 
+type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
+
+interface ExaminedFieldSpecificationList {
+    readonly fields: Map<string, Type.TType>;
+    readonly isOpen: boolean;
+}
+
 function translateFromChildAttributeIndex(
-    state: ScopeTypeInspectionState,
+    state: TypeInspectionState,
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
@@ -245,7 +276,7 @@ function translateFromChildAttributeIndex(
     return maybeXorNode !== undefined ? translateXorNode(state, maybeXorNode) : TypeUtils.unknownFactory();
 }
 
-function translateBinOpExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     if (!AstUtils.isTBinOpExpressionKind(xorNode.node.kind)) {
         const details: {} = {
             nodeId: xorNode.node.id,
@@ -397,7 +428,7 @@ function translateConstant(xorNode: TXorNode): Type.TType {
     }
 }
 
-function translateErrorHandlingExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateErrorHandlingExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.ErrorHandlingExpression,
@@ -424,7 +455,7 @@ function translateErrorHandlingExpression(state: ScopeTypeInspectionState, xorNo
     }
 }
 
-function translateFieldProjection(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.FieldProjection,
@@ -504,7 +535,7 @@ function translateFieldProjectionHelper(
     }
 }
 
-function translateFieldSelector(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.FieldSelector,
@@ -537,7 +568,7 @@ function translateFieldSelector(state: ScopeTypeInspectionState, xorNode: TXorNo
 }
 
 function helperForTranslateFieldSelector(
-    state: ScopeTypeInspectionState,
+    state: TypeInspectionState,
     previousSiblingType: Type.TType,
     fieldName: string,
     isOptional: boolean,
@@ -579,7 +610,7 @@ function helperForTranslateFieldSelector(
     }
 }
 
-function translateFieldSpecification(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateFieldSpecification(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.FieldSpecification,
@@ -600,7 +631,7 @@ function translateFieldSpecification(state: ScopeTypeInspectionState, xorNode: T
         : TypeUtils.anyFactory();
 }
 
-function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateFunctionExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.FunctionExpression,
@@ -667,7 +698,7 @@ function translateFunctionExpression(state: ScopeTypeInspectionState, xorNode: T
 }
 
 function translateFunctionType(
-    state: ScopeTypeInspectionState,
+    state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.DefinedFunction> | Type.Unknown {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
@@ -707,7 +738,7 @@ function translateFunctionType(
     };
 }
 
-function translateIdentifier(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateIdentifier(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.Identifier,
@@ -722,7 +753,7 @@ function translateIdentifier(state: ScopeTypeInspectionState, xorNode: TXorNode)
     return dereferencedType !== undefined ? dereferencedType : TypeUtils.unknownFactory();
 }
 
-function translateIdentifierExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateIdentifierExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.IdentifierExpression,
@@ -737,7 +768,7 @@ function translateIdentifierExpression(state: ScopeTypeInspectionState, xorNode:
     return dereferencedType !== undefined ? dereferencedType : TypeUtils.unknownFactory();
 }
 
-function translateIfExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.IfExpression,
@@ -771,7 +802,7 @@ function translateIfExpression(state: ScopeTypeInspectionState, xorNode: TXorNod
     return TypeUtils.anyUnionFactory([trueExprType, falseExprType]);
 }
 
-function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateInvokeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.InvokeExpression,
@@ -796,7 +827,7 @@ function translateInvokeExpression(state: ScopeTypeInspectionState, xorNode: TXo
     }
 }
 
-function translateListType(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedListType | Type.Unknown {
+function translateListType(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedListType | Type.Unknown {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.ListType,
@@ -848,7 +879,7 @@ function translateLiteralExpression(xorNode: TXorNode): Type.TType {
     }
 }
 
-function translateParameter(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateParameter(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.Parameter,
@@ -890,7 +921,7 @@ function translatePrimitiveType(xorNode: TXorNode): Type.TType {
     };
 }
 
-function translateRangeExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateRangeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.RangeExpression,
@@ -921,7 +952,7 @@ function translateRangeExpression(state: ScopeTypeInspectionState, xorNode: TXor
 }
 
 function translateRecordType(
-    state: ScopeTypeInspectionState,
+    state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.DefinedRecord> | Type.Unknown {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
@@ -955,7 +986,7 @@ function translateRecordType(
     };
 }
 
-function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateRecursivePrimaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.RecursivePrimaryExpression,
@@ -1006,7 +1037,7 @@ function translateRecursivePrimaryExpression(state: ScopeTypeInspectionState, xo
 }
 
 function translateTableType(
-    state: ScopeTypeInspectionState,
+    state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.DefinedTable | Type.PrimaryExpressionTable> | Type.Unknown {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
@@ -1054,7 +1085,7 @@ function translateTableType(
     }
 }
 
-function translateUnaryExpression(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.TType {
+function translateUnaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.UnaryExpression,
@@ -1108,7 +1139,7 @@ function translateUnaryExpression(state: ScopeTypeInspectionState, xorNode: TXor
     return expressionType;
 }
 
-function translateList(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedList {
+function translateList(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedList {
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
     const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => translateXorNode(state, item));
 
@@ -1120,7 +1151,7 @@ function translateList(state: ScopeTypeInspectionState, xorNode: TXorNode): Type
     };
 }
 
-function translateRecord(state: ScopeTypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
+function translateRecord(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(xorNode, [
         Ast.NodeKind.RecordExpression,
         Ast.NodeKind.RecordLiteral,
@@ -1239,10 +1270,7 @@ function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType)
     );
 }
 
-function examineFieldSpecificationList(
-    state: ScopeTypeInspectionState,
-    xorNode: TXorNode,
-): ExaminedFieldSpecificationList {
+function examineFieldSpecificationList(state: TypeInspectionState, xorNode: TXorNode): ExaminedFieldSpecificationList {
     const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.FieldSpecificationList,
@@ -1280,7 +1308,7 @@ function examineFieldSpecificationList(
     };
 }
 
-function maybeDereferencedIdentifierType(state: ScopeTypeInspectionState, xorNode: TXorNode): undefined | Type.TType {
+function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TXorNode): undefined | Type.TType {
     const maybeDeferenced: TXorNode | undefined = maybeDereferencedIdentifier(state, xorNode);
     if (maybeDeferenced === undefined) {
         return undefined;
@@ -1358,7 +1386,7 @@ function maybeDereferencedIdentifierType(state: ScopeTypeInspectionState, xorNod
     return translateXorNode(state, maybeNextXorNode);
 }
 
-function maybeDereferencedIdentifier(state: ScopeTypeInspectionState, xorNode: TXorNode): TXorNode | undefined {
+function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNode): TXorNode | undefined {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(xorNode, [
         Ast.NodeKind.Identifier,
         Ast.NodeKind.IdentifierExpression,
@@ -1432,42 +1460,4 @@ function maybeDereferencedIdentifier(state: ScopeTypeInspectionState, xorNode: T
     } else {
         return maybeDereferencedIdentifier(state, maybeNextXorNode);
     }
-}
-
-export function getOrCreateType(state: ScopeTypeInspectionState, scopeItem: TScopeItem): Type.TType {
-    const nodeId: number = scopeItem.id;
-
-    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeGivenType !== undefined) {
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeDeltaType !== undefined) {
-        return maybeDeltaType;
-    }
-
-    const scopeType: Type.TType = translateScopeItem(state, scopeItem);
-    return scopeType;
-}
-
-export function getOrCreateScope(state: ScopeTypeInspectionState, nodeId: number): ScopeItemByKey {
-    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
-    if (maybeScope !== undefined) {
-        return maybeScope;
-    }
-
-    const ancestry: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectAncestry(state.nodeIdMapCollection, nodeId);
-    const triedScope: TriedScopeForRoot = tryScopeForRoot(
-        state.settings,
-        state.nodeIdMapCollection,
-        state.leafNodeIds,
-        ancestry,
-        state.scopeById,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        throw triedScope.error;
-    }
-
-    return triedScope.value;
 }

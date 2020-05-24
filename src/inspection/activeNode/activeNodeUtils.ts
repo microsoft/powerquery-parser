@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, AstUtils } from "../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { AncestryUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
@@ -50,7 +50,7 @@ export function maybeActiveNode(
 
     return {
         position,
-        ancestry: NodeIdMapIterator.expectAncestry(nodeIdMapCollection, leaf.node.id),
+        ancestry: AncestryUtils.expectAncestry(nodeIdMapCollection, leaf.node.id),
         maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
     };
 }

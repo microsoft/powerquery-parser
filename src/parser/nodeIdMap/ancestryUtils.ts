@@ -1,10 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMapUtils } from ".";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils } from ".";
 import { CommonError } from "../../common";
 import { Ast } from "../../language";
 import { TXorNode } from "./xorNode";
+
+export function expectAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
+    const ancestryIds: number[] = [rootId];
+
+    let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(rootId);
+    while (maybeParentId) {
+        const parentId: number = maybeParentId;
+        ancestryIds.push(parentId);
+        maybeParentId = nodeIdMapCollection.parentIdById.get(parentId);
+    }
+
+    return NodeIdMapIterator.expectXorNodes(nodeIdMapCollection, ancestryIds);
+}
 
 export function expectPreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,

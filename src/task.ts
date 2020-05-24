@@ -138,12 +138,12 @@ export function tryInspection<S extends IParserState = IParserState>(
     }
     const scope: Inspection.ScopeItemByKey = maybeScope;
 
-    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeTypeForRoot(
+    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
+        ancestry[0].node.id,
         scopeById,
-        ancestry,
         undefined,
     );
     if (ResultUtils.isErr(triedScopeType)) {

@@ -12,19 +12,6 @@ export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifi
     readonly maybeValue: TXorNode | undefined;
 }
 
-export function expectAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
-    const ancestryIds: number[] = [rootId];
-
-    let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(rootId);
-    while (maybeParentId) {
-        const parentId: number = maybeParentId;
-        ancestryIds.push(parentId);
-        maybeParentId = nodeIdMapCollection.parentIdById.get(parentId);
-    }
-
-    return expectXorNodes(nodeIdMapCollection, ancestryIds);
-}
-
 export function maybeAstChildren(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
