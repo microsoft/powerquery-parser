@@ -246,6 +246,38 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.FieldSelector}`, () => {
+        it(`[a=1][a]`, () => {
+            const expression: string = `[a=1][a]`;
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`[a=1][b]`, () => {
+            const expression: string = `[a=1][b]`;
+            const expected: Type.TType = TypeUtils.noneFactory();
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`[a=1][b]?`, () => {
+            const expression: string = `[a=1][b]?`;
+            const expected: Type.TType = TypeUtils.nullFactory();
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`(1 as record)[a]`, () => {
+            const expression: string = `(1 as record)[a]`;
+            const expected: Type.TType = TypeUtils.anyFactory();
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`(1 as record)[a]?`, () => {
+            const expression: string = `(1 as record)[a]?`;
+            const expected: Type.TType = TypeUtils.anyFactory();
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
         it(`let x = true in x`, () => {
             const expression: string = "let x = true in x";
