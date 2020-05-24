@@ -563,7 +563,7 @@ function helperForTranslateFieldSelector(
                     } else if (previousSiblingType.isOpen) {
                         return TypeUtils.anyFactory();
                     } else {
-                        return isOptional !== undefined ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
+                        return isOptional ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
                     }
                 }
 

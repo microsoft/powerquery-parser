@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Inspection } from "../../..";
+import { Inspection, Task } from "../../..";
 import { ResultUtils } from "../../../common";
 import { Position, ScopeTypeByKey, TriedScopeType } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
@@ -10,11 +10,48 @@ import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
 import { Type, TypeUtils } from "../../../type";
-import { expectDeepEqual, expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
+import { expectDeepEqual, expectLexParseOk, expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
 type AbridgedScopeType = Type.TType;
 
-function expectScopeTypeOk(
+function expressionActualFactoryFn(inspected: ScopeTypeByKey): Type.TType {
+    const maybeBar: Type.TType | undefined = inspected.get("__bar");
+    if (!(maybeBar !== undefined)) {
+        throw new Error(`AssertFailed: maybebar !== undefined`);
+    }
+
+    return maybeBar;
+}
+
+function wrapExpression(expression: string): string {
+    return `let __foo = |__bar, __bar = ${expression} in _`;
+}
+
+function expectExpressionLexParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
+    const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
+    const parseOk: ParseOk<IParserState> = expectParseOk(DefaultSettings, text);
+    const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
+        DefaultSettings,
+        parseOk.state.contextState.nodeIdMapCollection,
+        parseOk.state.contextState.leafNodeIds,
+        position,
+    );
+    expectDeepEqual(scopeTypeMap, expected, expressionActualFactoryFn);
+}
+
+function expectParseErrTypeOk(expression: string, expected: AbridgedScopeType): void {
+    const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
+    const parseErr: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
+    const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
+        DefaultSettings,
+        parseErr.state.contextState.nodeIdMapCollection,
+        parseErr.state.contextState.leafNodeIds,
+        position,
+    );
+    expectDeepEqual(scopeTypeMap, expected, expressionActualFactoryFn);
+}
+
+function expectTypeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -56,50 +93,16 @@ function expectScopeTypeOk(
     return triedScopeType.value;
 }
 
-function actualFactoryFn(inspected: ScopeTypeByKey): Type.TType {
-    const maybeBar: Type.TType | undefined = inspected.get("__bar");
-    if (!(maybeBar !== undefined)) {
-        throw new Error(`AssertFailed: maybebar !== undefined`);
-    }
-
-    return maybeBar;
-}
-
-function wrapExpression(expression: string): string {
-    return `let __foo = |__bar, __bar = ${expression} in _`;
-}
-
-function expectExpressionParseOkTypeOk(expression: string, expected: AbridgedScopeType): void {
-    const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
-    const parseOk: ParseOk<IParserState> = expectParseOk(DefaultSettings, text);
-    const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
-        DefaultSettings,
-        parseOk.state.contextState.nodeIdMapCollection,
-        parseOk.state.contextState.leafNodeIds,
-        position,
-    );
-    expectDeepEqual(scopeTypeMap, expected, actualFactoryFn);
-}
-
-function expectParseErrTypeOk(expression: string, expected: AbridgedScopeType): void {
-    const [text, position]: [string, Inspection.Position] = expectTextWithPosition(wrapExpression(expression));
-    const parseErr: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
+function expectLexParseOkTypeOk<Y>(text: string, expected: Y, actualFactoryFn: (partial: ScopeTypeByKey) => Y): void {
+    const [text2, position]: [string, Inspection.Position] = expectTextWithPosition(text);
+    const parseErr: Task.LexParseOk = expectLexParseOk(DefaultSettings, text2);
     const scopeTypeMap: ScopeTypeByKey = expectTypeOk(
         DefaultSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
         position,
     );
-    expectDeepEqual(scopeTypeMap, expected, actualFactoryFn);
-}
-
-function expectTypeOk(
-    settings: CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    position: Position,
-): ScopeTypeByKey {
-    return expectScopeTypeOk(settings, nodeIdMapCollection, leafNodeIds, position);
+    expectDeepEqual<ScopeTypeByKey, Y>(scopeTypeMap, expected, actualFactoryFn);
 }
 
 function expectSimpleExpressionType(expression: string, kind: Type.TypeKind, isNullable: boolean): void {
@@ -108,13 +111,13 @@ function expectSimpleExpressionType(expression: string, kind: Type.TypeKind, isN
         maybeExtendedKind: undefined,
         isNullable,
     };
-    expectExpressionParseOkTypeOk(expression, expected);
+    expectExpressionLexParseOkTypeOk(expression, expected);
 }
 
 describe(`Inspection - Scope - Type`, () => {
     describe("BinOpExpression", () => {
         it(`1 + 1`, () => {
-            expectSimpleExpressionType(`1 + 1`, Type.TypeKind.Number, false);
+            expectSimpleExpressionType("1 + 1", Type.TypeKind.Number, false);
         });
 
         it(`true and false`, () => {
@@ -130,6 +133,37 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.AsExpression}`, () => {
+        it(`1 as number`, () => {
+            const expression: string = `1 as number`;
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
+            expectExpressionLexParseOkTypeOk(expression, expected);
+        });
+
+        it(`1 as text`, () => {
+            const expression: string = `1 as text`;
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Text, false);
+            expectExpressionLexParseOkTypeOk(expression, expected);
+        });
+
+        it(`1 as any`, () => {
+            const expression: string = `1 as any`;
+            const expected: Type.TType = TypeUtils.anyFactory();
+            expectExpressionLexParseOkTypeOk(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
+        it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
+            const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
+            const expected: ScopeTypeByKey = new Map([
+                ["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
+                ["bar", TypeUtils.genericFactory(Type.TypeKind.Number, true)],
+            ]);
+            expectLexParseOkTypeOk(expression, expected, _ => _);
+        });
+    });
+
     describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
         it(`try 1`, () => {
             const expression: string = `try 1`;
@@ -142,7 +176,7 @@ describe(`Inspection - Scope - Type`, () => {
                     TypeUtils.genericFactory(Type.TypeKind.Record, false),
                 ],
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
     });
 
@@ -181,7 +215,7 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 elements: [],
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
         it(`[]`, () => {
             const expression: string = `[]`;
@@ -192,7 +226,7 @@ describe(`Inspection - Scope - Type`, () => {
                 fields: new Map<string, Type.TType>(),
                 isOpen: false,
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
     });
 
@@ -208,7 +242,7 @@ describe(`Inspection - Scope - Type`, () => {
                     TypeUtils.genericFactory(Type.TypeKind.Logical, false),
                 ],
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`if if true then true else false then 1 else 0`, () => {
@@ -222,7 +256,7 @@ describe(`Inspection - Scope - Type`, () => {
                     TypeUtils.genericFactory(Type.TypeKind.Text, false),
                 ],
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`if`, () => {
@@ -246,7 +280,7 @@ describe(`Inspection - Scope - Type`, () => {
         it(`if 1 as any then "a" else "b"`, () => {
             const expression: string = `if 1 as any then "a" else "b"`;
             const expected: AbridgedScopeType = TypeUtils.genericFactory(Type.TypeKind.Text, false);
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`if true then 1`, () => {
@@ -277,7 +311,7 @@ describe(`Inspection - Scope - Type`, () => {
                 ]),
                 isOpen: false,
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`[] & [bar=2]`, () => {
@@ -289,7 +323,7 @@ describe(`Inspection - Scope - Type`, () => {
                 fields: new Map<string, Type.TType>([["bar", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: false,
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`[foo=1] & []`, () => {
@@ -301,7 +335,7 @@ describe(`Inspection - Scope - Type`, () => {
                 fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: false,
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`[foo=1] & [foo=""]`, () => {
@@ -313,7 +347,7 @@ describe(`Inspection - Scope - Type`, () => {
                 fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Text, false)]]),
                 isOpen: false,
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`[] as record & [foo=1]`, () => {
@@ -325,7 +359,7 @@ describe(`Inspection - Scope - Type`, () => {
                 fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: true,
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`[foo=1] & [] as record`, () => {
@@ -337,13 +371,13 @@ describe(`Inspection - Scope - Type`, () => {
                 fields: new Map<string, Type.TType>([["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: true,
             };
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
 
         it(`[] as record & [] as record`, () => {
             const expression: string = `[] as record & [] as record`;
             const expected: AbridgedScopeType = TypeUtils.genericFactory(Type.TypeKind.Record, false);
-            expectExpressionParseOkTypeOk(expression, expected);
+            expectExpressionLexParseOkTypeOk(expression, expected);
         });
     });
 
@@ -352,32 +386,32 @@ describe(`Inspection - Scope - Type`, () => {
             it(`${Ast.NodeKind.InvokeExpression}`, () => {
                 const expression: string = `(_ as any)()`;
                 const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Any, false);
-                expectExpressionParseOkTypeOk(expression, expected);
+                expectExpressionLexParseOkTypeOk(expression, expected);
             });
 
-            it(`WIP ${Ast.NodeKind.ItemAccessExpression}`, () => {
+            it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
                 const expression: string = `(_ as any){0}`;
                 const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Any, false);
-                expectExpressionParseOkTypeOk(expression, expected);
+                expectExpressionLexParseOkTypeOk(expression, expected);
             });
 
             describe(`${Ast.NodeKind.FieldSelector}`, () => {
                 it("[a=1][a]", () => {
                     const expression: string = `[a=1][a]`;
                     const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
-                    expectExpressionParseOkTypeOk(expression, expected);
+                    expectExpressionLexParseOkTypeOk(expression, expected);
                 });
 
                 it("[a=1][b]", () => {
                     const expression: string = `[a=1][b]`;
                     const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.None, false);
-                    expectExpressionParseOkTypeOk(expression, expected);
+                    expectExpressionLexParseOkTypeOk(expression, expected);
                 });
 
                 it("[a=1][b]?", () => {
                     const expression: string = `[a=1][b]?`;
                     const expected: Type.TType = TypeUtils.nullFactory();
-                    expectExpressionParseOkTypeOk(expression, expected);
+                    expectExpressionLexParseOkTypeOk(expression, expected);
                 });
             });
 
@@ -404,13 +438,13 @@ describe(`Inspection - Scope - Type`, () => {
                         },
                     ],
                 };
-                expectExpressionParseOkTypeOk(expression, expected);
+                expectExpressionLexParseOkTypeOk(expression, expected);
             });
 
             it(`${Ast.NodeKind.FieldSelector}`, () => {
                 const expression: string = `[a=1][a]`;
                 const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
-                expectExpressionParseOkTypeOk(expression, expected);
+                expectExpressionLexParseOkTypeOk(expression, expected);
             });
         });
 
