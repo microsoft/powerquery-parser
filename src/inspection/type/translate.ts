@@ -469,13 +469,18 @@ function translateFieldProjection(state: TypeInspectionState, xorNode: TXorNode)
         xorNode.node.id,
     );
     const previousSiblingType: Type.TType = translateXorNode(state, previousSibling);
+    const isOptional: boolean =
+        NodeIdMapUtils.maybeAstChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
+            Ast.NodeKind.Constant,
+        ]) !== undefined;
 
-    return translateFieldProjectionHelper(previousSiblingType, projectedFieldNames);
+    return translateFieldProjectionHelper(previousSiblingType, projectedFieldNames, isOptional);
 }
 
 function translateFieldProjectionHelper(
     previousSiblingType: Type.TType,
     projectedFieldNames: ReadonlyArray<string>,
+    isOptional: boolean,
 ): Type.TType {
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any: {
@@ -519,10 +524,9 @@ function translateFieldProjectionHelper(
             }
             if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.PrimaryExpressionTable) {
                 // Dereference PrimaryExpressionTable.type and call the helper again.
-                // Change the extended factory from a Extended.fields subset factory to the anyFactory.
-                return translateFieldProjectionHelper(previousSiblingType.type, projectedFieldNames);
+                return translateFieldProjectionHelper(previousSiblingType.type, projectedFieldNames, isOptional);
             } else {
-                return reducedFieldsToKeys(previousSiblingType, projectedFieldNames);
+                return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional);
             }
         }
 
@@ -1216,16 +1220,18 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
     }
 }
 
-// Returns None if a projection is being done a closed list with incorrect field names.
+// Returns a subset of `current` using `keys`.
+// If a mismatch is found it either returns Null if isOptional, else None.
 function reducedFieldsToKeys(
     current: Type.DefinedRecord | Type.DefinedTable,
     keys: ReadonlyArray<string>,
-): Type.DefinedRecord | Type.DefinedTable | Type.None {
+    isOptional: boolean,
+): Type.DefinedRecord | Type.DefinedTable | Type.None | Type.Null {
     const currentFields: Map<string, Type.TType> = current.fields;
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
 
     if (current.isOpen === false && ArrayUtils.isSubset(currentFieldNames, keys) === false) {
-        return TypeUtils.noneFactory();
+        return isOptional ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
     }
 
     return {

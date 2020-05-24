@@ -196,6 +196,56 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.FieldProjection}`, () => {
+        it(`[a=1][[a]]`, () => {
+            const expression: string = `[a=1][[a]]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                isNullable: false,
+                fields: new Map([["a", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
+                isOpen: false,
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`[a=1][[b]]`, () => {
+            const expression: string = `[a=1][[b]]`;
+            const expected: Type.TType = TypeUtils.noneFactory();
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`[a=1][[b]]?`, () => {
+            const expression: string = `[a=1][[b]]?`;
+            const expected: Type.TType = TypeUtils.nullFactory();
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`(1 as record)[[a]]`, () => {
+            const expression: string = `(1 as record)[[a]]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                isNullable: false,
+                fields: new Map([["a", TypeUtils.anyFactory()]]),
+                isOpen: false,
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`(1 as record)[[a]]?`, () => {
+            const expression: string = `(1 as record)[[a]]?`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                isNullable: false,
+                fields: new Map([["a", TypeUtils.anyFactory()]]),
+                isOpen: false,
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
         it(`let x = true in x`, () => {
             const expression: string = "let x = true in x";
