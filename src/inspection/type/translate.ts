@@ -437,22 +437,18 @@ function translateErrorHandlingExpression(state: TypeInspectionState, xorNode: T
         throw maybeErr;
     }
 
-    const isOtherwisePresent: boolean =
-        NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
-            Ast.NodeKind.Constant,
-        ]) !== undefined;
+    const maybeOtherwiseExpression:
+        | TXorNode
+        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
+        Ast.NodeKind.OtherwiseExpression,
+    ]);
 
-    if (isOtherwisePresent === true) {
-        return TypeUtils.anyUnionFactory([
-            translateFromChildAttributeIndex(state, xorNode, 1),
-            translateFromChildAttributeIndex(state, xorNode, 3),
-        ]);
-    } else {
-        return TypeUtils.anyUnionFactory([
-            translateFromChildAttributeIndex(state, xorNode, 1),
-            TypeUtils.genericFactory(Type.TypeKind.Record, false),
-        ]);
-    }
+    return TypeUtils.anyUnionFactory([
+        translateFromChildAttributeIndex(state, xorNode, 1),
+        maybeOtherwiseExpression !== undefined
+            ? translateXorNode(state, maybeOtherwiseExpression)
+            : TypeUtils.genericFactory(Type.TypeKind.Record, false),
+    ]);
 }
 
 function translateFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {

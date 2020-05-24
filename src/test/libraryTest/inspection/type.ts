@@ -127,6 +127,17 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
+        it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
+            const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
+            const expected: ScopeTypeByKey = new Map([
+                ["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
+                ["bar", TypeUtils.genericFactory(Type.TypeKind.Number, true)],
+            ]);
+            expectParseOkScopeTypeEqual(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.AsExpression}`, () => {
         it(`1 as number`, () => {
             const expression: string = `1 as number`;
@@ -147,17 +158,6 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
-        it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
-            const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
-            const expected: ScopeTypeByKey = new Map([
-                ["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
-                ["bar", TypeUtils.genericFactory(Type.TypeKind.Number, true)],
-            ]);
-            expectParseOkScopeTypeEqual(expression, expected);
-        });
-    });
-
     describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
         it(`try 1`, () => {
             const expression: string = `try 1`;
@@ -170,6 +170,28 @@ describe(`Inspection - Scope - Type`, () => {
                     TypeUtils.genericFactory(Type.TypeKind.Record, false),
                 ],
             };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`try 1 otherwise false`, () => {
+            const expression: string = `try 1 otherwise false`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [
+                    TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Logical, false),
+                ],
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
+        it(`error 1`, () => {
+            const expression: string = `error 1`;
+            const expected: Type.TType = TypeUtils.anyFactory();
             expectParseOkNodeTypeEqual(expression, expected);
         });
     });
