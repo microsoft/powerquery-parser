@@ -717,9 +717,19 @@ function translateFunctionType(
     if (maybeParameters === undefined) {
         return TypeUtils.unknownFactory();
     }
-    const parameterTypes: ReadonlyArray<Type.TType> = NodeIdMapIterator.arrayWrapperCsvXorNodes(
+
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
         state.nodeIdMapCollection,
         maybeParameters,
+        Ast.NodeKind.ArrayWrapper,
+    );
+    if (maybeArrayWrapper === undefined) {
+        return TypeUtils.unknownFactory();
+    }
+
+    const parameterTypes: ReadonlyArray<Type.TType> = NodeIdMapIterator.arrayWrapperCsvXorNodes(
+        state.nodeIdMapCollection,
+        maybeArrayWrapper,
     ).map((parameter: TXorNode) => translateXorNode(state, parameter));
 
     const returnType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 2);

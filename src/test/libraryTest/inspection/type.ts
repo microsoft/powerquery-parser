@@ -278,6 +278,31 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+        it(`type function`, () => {
+            const expression: string = `type function`;
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Function, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`type function () as text`, () => {
+            const expression: string = `type function () as text`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Function,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+                    isNullable: false,
+                    parameterTypes: [],
+                    returnType: TypeUtils.genericFactory(Type.TypeKind.Text, false),
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
         it(`let x = true in x`, () => {
             const expression: string = "let x = true in x";
