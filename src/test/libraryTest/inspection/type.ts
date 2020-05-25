@@ -705,8 +705,8 @@ describe(`Inspection - Scope - Type`, () => {
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
-        it(`WIP type [foo, ...]`, () => {
-            const expression: string = `type [foo]`;
+        it(`type [foo, ...]`, () => {
+            const expression: string = `type [foo, ...]`;
             const expected: Type.TType = {
                 kind: Type.TypeKind.Type,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
@@ -722,8 +722,8 @@ describe(`Inspection - Scope - Type`, () => {
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
-        it(`type [foo = number, bar as nullable text]`, () => {
-            const expression: string = `type [foo = number, bar as nullable text]`;
+        it(`type [foo = number, bar = nullable text]`, () => {
+            const expression: string = `type [foo = number, bar = nullable text]`;
             const expected: Type.TType = {
                 kind: Type.TypeKind.Type,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,

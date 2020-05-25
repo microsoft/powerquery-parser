@@ -1370,7 +1370,7 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
     );
     const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
     let continueReadingValues: boolean = true;
-    let maybeOpenRecordMarkerConstant: Ast.IConstant<Ast.MiscConstantKind.Ellipsis> | undefined = undefined;
+    let isOnOpenRecordMarker: boolean = false;
 
     const fieldArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, fieldArrayNodeKind);
@@ -1383,14 +1383,10 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
 
         if (IParserStateUtils.isOnTokenKind(state, Language.TokenKind.Ellipsis)) {
             if (allowOpenMarker) {
-                if (maybeOpenRecordMarkerConstant) {
+                if (isOnOpenRecordMarker) {
                     throw fieldSpecificationListReadError(state, false);
                 } else {
-                    maybeOpenRecordMarkerConstant = readTokenKindAsConstant(
-                        state,
-                        Language.TokenKind.Ellipsis,
-                        Ast.MiscConstantKind.Ellipsis,
-                    );
+                    isOnOpenRecordMarker = true;
                     continueReadingValues = false;
                 }
             } else {
@@ -1414,11 +1410,6 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
                 parser,
             );
 
-            const maybeCommaConstant:
-                | Ast.IConstant<Ast.MiscConstantKind.Comma>
-                | undefined = maybeReadTokenKindAsConstant(state, Language.TokenKind.Comma, Ast.MiscConstantKind.Comma);
-            continueReadingValues = maybeCommaConstant !== undefined;
-
             const field: Ast.FieldSpecification = {
                 ...IParserStateUtils.expectContextNodeMetadata(state),
                 kind: fieldSpecificationNodeKind,
@@ -1428,6 +1419,11 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
                 maybeFieldTypeSpecification,
             };
             IParserStateUtils.endContext(state, field);
+
+            const maybeCommaConstant:
+                | Ast.IConstant<Ast.MiscConstantKind.Comma>
+                | undefined = maybeReadTokenKindAsConstant(state, Language.TokenKind.Comma, Ast.MiscConstantKind.Comma);
+            continueReadingValues = maybeCommaConstant !== undefined;
 
             const csv: Ast.ICsv<Ast.FieldSpecification> = {
                 ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1450,6 +1446,15 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
         isLeaf: false,
     };
     IParserStateUtils.endContext(state, fieldArray);
+
+    let maybeOpenRecordMarkerConstant: Ast.IConstant<Ast.MiscConstantKind.Ellipsis> | undefined = undefined;
+    if (isOnOpenRecordMarker) {
+        maybeOpenRecordMarkerConstant = readTokenKindAsConstant(
+            state,
+            Language.TokenKind.Ellipsis,
+            Ast.MiscConstantKind.Ellipsis,
+        );
+    }
 
     const rightBracketConstant: Ast.IConstant<Ast.WrapperConstantKind.RightBracket> = readTokenKindAsConstant(
         state,
