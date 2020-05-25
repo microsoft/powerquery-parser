@@ -279,6 +279,69 @@ describe(`Inspection - Scope - Type`, () => {
     });
 
     describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+        it(`() => 1`, () => {
+            const expression: string = `() => 1`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Function,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+                isNullable: false,
+                parameters: [],
+                returnType: TypeUtils.genericFactory(Type.TypeKind.Number, false),
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        // Test AnyUnion return
+        it(`() => if true then 1 else ""`, () => {
+            const expression: string = `() => if true then 1 else ""`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Function,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+                isNullable: false,
+                parameters: [],
+                returnType: TypeUtils.anyUnionFactory([
+                    TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Text, false),
+                ]),
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`(a, b as number, c as nullable number, optional d) => 1`, () => {
+            const expression: string = `(a, b as number, c as nullable number, optional d) => 1`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Function,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+                isNullable: false,
+                parameters: [
+                    {
+                        isNullable: true,
+                        isOptional: false,
+                        maybeType: undefined,
+                    },
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Type.TypeKind.Number,
+                    },
+                    {
+                        isNullable: true,
+                        isOptional: false,
+                        maybeType: Type.TypeKind.Number,
+                    },
+                    {
+                        isNullable: true,
+                        isOptional: true,
+                        maybeType: undefined,
+                    },
+                ],
+                returnType: TypeUtils.genericFactory(Type.TypeKind.Number, false),
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.FunctionType}`, () => {
         it(`type function`, () => {
             const expression: string = `type function`;
             const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Function, false);
@@ -295,7 +358,24 @@ describe(`Inspection - Scope - Type`, () => {
                     kind: Type.TypeKind.Function,
                     maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
                     isNullable: false,
-                    parameterTypes: [],
+                    parameters: [],
+                    returnType: TypeUtils.genericFactory(Type.TypeKind.Text, false),
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`WIP type function (foo as number, bar as nullable text) as text`, () => {
+            const expression: string = `type function (foo as number, bar as nullable text) as text`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Function,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+                    isNullable: false,
+                    parameters: [],
                     returnType: TypeUtils.genericFactory(Type.TypeKind.Text, false),
                 },
             };

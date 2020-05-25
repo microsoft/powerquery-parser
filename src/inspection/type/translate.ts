@@ -1,7 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, CommonError, isNever, MapUtils, ResultUtils, shouldNeverBeReached } from "../../common";
+import {
+    ArrayUtils,
+    CommonError,
+    isNever,
+    MapUtils,
+    ResultUtils,
+    shouldNeverBeReached,
+    TypeScriptUtils,
+} from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { Type, TypeInspector, TypeUtils } from "../../type";
@@ -685,12 +693,14 @@ function translateFunctionExpression(state: TypeInspectionState, xorNode: TXorNo
         kind: Type.TypeKind.Function,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
         isNullable: false,
-        parameterTypes: inspectedFunctionExpression.parameters.map(
+        // TODO: Maybe rework this to not use TypeInspector. This would save a map call at the cost of complexity.
+        parameters: inspectedFunctionExpression.parameters.map(
             (parameter: TypeInspector.InspectedFunctionParameter) => {
-                return TypeUtils.genericFactory(
-                    parameter.maybeType !== undefined ? parameter.maybeType : Type.TypeKind.Unknown,
-                    parameter.isNullable,
-                );
+                return {
+                    isNullable: parameter.isNullable,
+                    isOptional: parameter.isOptional,
+                    maybeType: parameter.maybeType,
+                };
             },
         ),
         returnType,
@@ -727,10 +737,12 @@ function translateFunctionType(
         return TypeUtils.unknownFactory();
     }
 
-    const parameterTypes: ReadonlyArray<Type.TType> = NodeIdMapIterator.arrayWrapperCsvXorNodes(
+    const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.arrayWrapperCsvXorNodes(
         state.nodeIdMapCollection,
         maybeArrayWrapper,
-    ).map((parameter: TXorNode) => translateXorNode(state, parameter));
+    )
+        .map((parameter: TXorNode) => TypeUtils.inspectParameter(state.nodeIdMapCollection, parameter))
+        .filter(TypeScriptUtils.isDefined);
 
     const returnType: Type.TType = translateFromChildAttributeIndex(state, xorNode, 2);
 
@@ -742,7 +754,7 @@ function translateFunctionType(
             kind: Type.TypeKind.Function,
             maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
             isNullable: false,
-            parameterTypes,
+            parameters: parameterTypes,
             returnType,
         },
     };
@@ -904,9 +916,11 @@ function translateParameter(state: TypeInspectionState, xorNode: TXorNode): Type
         Ast.NodeKind.Constant,
     ]);
 
+    const maybeParameterType: Type.TType | undefined = translateFromChildAttributeIndex(state, xorNode, 2);
+
     return {
-        ...translateFromChildAttributeIndex(state, xorNode, 2),
-        isNullable: maybeOptionalConstant !== undefined,
+        ...maybeParameterType,
+        isNullable: maybeOptionalConstant !== undefined || maybeParameterType.isNullable,
     };
 }
 

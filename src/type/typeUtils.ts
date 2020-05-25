@@ -5,6 +5,7 @@ import { Type } from ".";
 import { ArrayUtils, isNever, MapUtils } from "../common";
 import { ParameterScopeItem } from "../inspection";
 import { Ast } from "../language";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
 
 export function genericFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolean): Type.IPrimitiveType<T> {
     return {
@@ -402,8 +403,32 @@ export function equalDefinedFunction(left: Type.DefinedFunction, right: Type.Def
     return (
         left.isNullable === right.isNullable &&
         equalType(left.returnType, right.returnType) &&
-        equalTypes(left.parameterTypes, right.parameterTypes)
+        equalDefinedFunctionParameters(left.parameters, right.parameters)
     );
+}
+
+export function equalDefinedFunctionParameters(
+    left: ReadonlyArray<Type.FunctionParameter>,
+    right: ReadonlyArray<Type.FunctionParameter>,
+): boolean {
+    if (left.length !== right.length) {
+        return false;
+    }
+
+    const numParameters: number = left.length;
+    for (let index: number = 0; index < numParameters; index += 1) {
+        const nthLeft: Type.FunctionParameter = left[index];
+        const nthRight: Type.FunctionParameter = right[index];
+        if (
+            nthLeft.isNullable !== nthRight.isNullable ||
+            nthLeft.isOptional !== nthRight.isOptional ||
+            nthLeft.maybeType !== nthRight.maybeType
+        ) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
@@ -444,6 +469,92 @@ export function equalPrimaryExpressionTable(
     right: Type.PrimaryExpressionTable,
 ): boolean {
     return equalType(left.type, right.type);
+}
+
+export function inspectParameter(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    parameter: TXorNode,
+): Type.FunctionParameter | undefined {
+    switch (parameter.kind) {
+        case XorNodeKind.Ast:
+            return inspectAstParameter(parameter.node as Ast.IParameter<Ast.AsNullablePrimitiveType>);
+
+        case XorNodeKind.Context:
+            return inspectContextParameter(nodeIdMapCollection, parameter.node);
+
+        default:
+            throw isNever(parameter);
+    }
+}
+
+function inspectAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>): Type.FunctionParameter {
+    let isNullable: boolean;
+    let maybeType: Type.TypeKind | undefined;
+
+    const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = node.maybeParameterType;
+    if (maybeParameterType !== undefined) {
+        const simplified: Type.SimplifiedNullablePrimitiveType = simplifyNullablePrimitiveType(maybeParameterType);
+        isNullable = simplified.isNullable;
+        maybeType = simplified.typeKind;
+    } else {
+        isNullable = true;
+        maybeType = undefined;
+    }
+
+    return {
+        isNullable,
+        isOptional: node.maybeOptionalConstant !== undefined,
+        maybeType,
+    };
+}
+
+function inspectContextParameter(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    parameter: ParseContext.Node,
+): Type.FunctionParameter | undefined {
+    let isOptional: boolean;
+    let isNullable: boolean;
+    let maybeType: Type.TypeKind | undefined;
+
+    const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+        nodeIdMapCollection,
+        parameter.id,
+        1,
+        [Ast.NodeKind.Identifier],
+    );
+    if (maybeName === undefined) {
+        return undefined;
+    }
+
+    const maybeOptional: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+        nodeIdMapCollection,
+        parameter.id,
+        0,
+        [Ast.NodeKind.Constant],
+    );
+    isOptional = maybeOptional !== undefined;
+
+    const maybeParameterType: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+        nodeIdMapCollection,
+        parameter.id,
+        2,
+        undefined,
+    );
+    if (maybeParameterType !== undefined) {
+        const parameterType: Ast.AsNullablePrimitiveType = maybeParameterType as Ast.AsNullablePrimitiveType;
+        const simplified: Type.SimplifiedNullablePrimitiveType = simplifyNullablePrimitiveType(parameterType);
+        isNullable = simplified.isNullable;
+        maybeType = simplified.typeKind;
+    } else {
+        isNullable = true;
+        maybeType = undefined;
+    }
+
+    return {
+        isOptional,
+        isNullable,
+        maybeType,
+    };
 }
 
 const AnyConstant: Type.Any = {

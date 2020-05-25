@@ -98,7 +98,7 @@ export interface AnyUnion extends IExtendedType {
 export interface DefinedFunction extends IExtendedType {
     readonly kind: TypeKind.Function;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedFunction;
-    readonly parameterTypes: ReadonlyArray<TType>;
+    readonly parameters: ReadonlyArray<FunctionParameter>;
     readonly returnType: TType;
 }
 
@@ -143,4 +143,10 @@ export interface PrimaryExpressionTable extends IExtendedType {
 export interface SimplifiedNullablePrimitiveType {
     readonly typeKind: TypeKind;
     readonly isNullable: boolean;
+}
+
+export interface FunctionParameter {
+    readonly isOptional: boolean;
+    readonly isNullable: boolean;
+    readonly maybeType: TypeKind | undefined;
 }

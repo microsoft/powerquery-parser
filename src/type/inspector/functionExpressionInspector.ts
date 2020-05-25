@@ -2,21 +2,18 @@
 // Licensed under the MIT license.
 
 import { Type, TypeUtils } from "..";
-import { CommonError, isNever } from "../../common";
+import { CommonError } from "../../common";
 import { Ast } from "../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 
 export interface InspectedFunctionExpression {
     readonly parameters: ReadonlyArray<InspectedFunctionParameter>;
     readonly returnType: Type.TType;
 }
 
-export interface InspectedFunctionParameter {
+export interface InspectedFunctionParameter extends Type.FunctionParameter {
     readonly id: number;
     readonly name: Ast.Identifier;
-    readonly isOptional: boolean;
-    readonly isNullable: boolean;
-    readonly maybeType: Type.TypeKind | undefined;
 }
 
 export function inspectFunctionExpression(
@@ -35,12 +32,26 @@ export function inspectFunctionExpression(
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const maybeExaminable: InspectedFunctionParameter | undefined = examineParameter(
+        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+            nodeIdMapCollection,
+            parameter.node.id,
+            1,
+            [Ast.NodeKind.Identifier],
+        ) as Ast.Identifier;
+        if (maybeName === undefined) {
+            break;
+        }
+
+        const maybeExaminable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
             nodeIdMapCollection,
             parameter,
         );
         if (maybeExaminable !== undefined) {
-            examinedParameters.push(maybeExaminable);
+            examinedParameters.push({
+                ...maybeExaminable,
+                id: parameter.node.id,
+                name: maybeName,
+            });
         }
     }
 
@@ -95,98 +106,4 @@ function functionParameterXorNodes(
     return maybeWrappedContent === undefined
         ? []
         : NodeIdMapIterator.arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeWrappedContent);
-}
-
-function examineParameter(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    parameter: TXorNode,
-): InspectedFunctionParameter | undefined {
-    switch (parameter.kind) {
-        case XorNodeKind.Ast:
-            return examineAstParameter(parameter.node as Ast.IParameter<Ast.AsNullablePrimitiveType>);
-
-        case XorNodeKind.Context:
-            return examineContextParameter(nodeIdMapCollection, parameter.node);
-
-        default:
-            throw isNever(parameter);
-    }
-}
-
-function examineAstParameter(node: Ast.IParameter<Ast.AsNullablePrimitiveType>): InspectedFunctionParameter {
-    let isNullable: boolean;
-    let maybeType: Type.TypeKind | undefined;
-
-    const maybeParameterType: Ast.AsNullablePrimitiveType | undefined = node.maybeParameterType;
-    if (maybeParameterType !== undefined) {
-        const simplified: Type.SimplifiedNullablePrimitiveType = TypeUtils.simplifyNullablePrimitiveType(
-            maybeParameterType,
-        );
-        isNullable = simplified.isNullable;
-        maybeType = simplified.typeKind;
-    } else {
-        isNullable = true;
-        maybeType = undefined;
-    }
-
-    return {
-        id: node.id,
-        name: node.name,
-        isOptional: node.maybeOptionalConstant !== undefined,
-        isNullable,
-        maybeType,
-    };
-}
-
-function examineContextParameter(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    parameter: ParseContext.Node,
-): InspectedFunctionParameter | undefined {
-    let name: Ast.Identifier;
-    let isOptional: boolean;
-    let isNullable: boolean;
-    let maybeType: Type.TypeKind | undefined;
-
-    const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
-        nodeIdMapCollection,
-        parameter.id,
-        1,
-        [Ast.NodeKind.Identifier],
-    );
-    if (maybeName === undefined) {
-        return undefined;
-    }
-    name = maybeName as Ast.Identifier;
-
-    const maybeOptional: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
-        nodeIdMapCollection,
-        parameter.id,
-        0,
-        [Ast.NodeKind.Constant],
-    );
-    isOptional = maybeOptional !== undefined;
-
-    const maybeParameterType: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
-        nodeIdMapCollection,
-        parameter.id,
-        2,
-        undefined,
-    );
-    if (maybeParameterType !== undefined) {
-        const parameterType: Ast.AsNullablePrimitiveType = maybeParameterType as Ast.AsNullablePrimitiveType;
-        const simplified: Type.SimplifiedNullablePrimitiveType = TypeUtils.simplifyNullablePrimitiveType(parameterType);
-        isNullable = simplified.isNullable;
-        maybeType = simplified.typeKind;
-    } else {
-        isNullable = true;
-        maybeType = undefined;
-    }
-
-    return {
-        id: parameter.id,
-        name,
-        isOptional,
-        isNullable,
-        maybeType,
-    };
 }
