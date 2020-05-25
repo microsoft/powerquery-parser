@@ -153,6 +153,30 @@ export function fieldProjectionFieldNames(
     return result;
 }
 
+export function fieldSpecificationListCsvXorNodes(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    fieldSpecificationList: TXorNode,
+): ReadonlyArray<TXorNode> {
+    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
+        fieldSpecificationList,
+        Ast.NodeKind.FieldSpecificationList,
+    );
+    if (maybeErr !== undefined) {
+        throw maybeErr;
+    }
+
+    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+        nodeIdMapCollection,
+        fieldSpecificationList,
+        Ast.NodeKind.ArrayWrapper,
+    );
+    if (maybeArrayWrapper === undefined) {
+        return [];
+    }
+
+    return arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeArrayWrapper);
+}
+
 export function listItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorNode): ReadonlyArray<TXorNode> {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(list, [
         Ast.NodeKind.ListExpression,

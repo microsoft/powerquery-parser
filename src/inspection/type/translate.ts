@@ -849,7 +849,10 @@ function translateInvokeExpression(state: TypeInspectionState, xorNode: TXorNode
     }
 }
 
-function translateListType(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedListType | Type.Unknown {
+function translateListType(
+    state: TypeInspectionState,
+    xorNode: TXorNode,
+): Type.DefinedType<Type.DefinedListType> | Type.Unknown {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.ListType,
@@ -871,9 +874,14 @@ function translateListType(state: TypeInspectionState, xorNode: TXorNode): Type.
 
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
         isNullable: false,
-        itemType,
+        primaryType: {
+            kind: Type.TypeKind.Type,
+            maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+            isNullable: false,
+            itemType,
+        },
     };
 }
 
@@ -990,8 +998,8 @@ function translateRecordType(
     const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
-        1,
-        [Ast.NodeKind.RecordType],
+        0,
+        [Ast.NodeKind.FieldSpecificationList],
     );
     if (maybeFields === undefined) {
         return TypeUtils.unknownFactory();
@@ -1306,9 +1314,12 @@ function examineFieldSpecificationList(state: TypeInspectionState, xorNode: TXor
     }
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-
     const fields: [string, Type.TType][] = [];
-    for (const fieldSpecification of NodeIdMapIterator.arrayWrapperCsvXorNodes(nodeIdMapCollection, xorNode)) {
+
+    for (const fieldSpecification of NodeIdMapIterator.fieldSpecificationListCsvXorNodes(
+        nodeIdMapCollection,
+        xorNode,
+    )) {
         const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
             nodeIdMapCollection,
             fieldSpecification.node.id,
@@ -1323,6 +1334,7 @@ function examineFieldSpecificationList(state: TypeInspectionState, xorNode: TXor
         const type: Type.TType = translateFieldSpecification(state, fieldSpecification);
         fields.push([name, type]);
     }
+
     const isOpen: boolean =
         NodeIdMapUtils.maybeAstChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 3, [
             Ast.NodeKind.Constant,

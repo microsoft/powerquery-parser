@@ -50,7 +50,7 @@ function expectParseNodeOk(
 ): Type.TType {
     const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, leafNodeIds, nodeId);
     if (!ResultUtils.isOk(triedType)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedType) - ${triedType.error}`);
+        throw new Error(`AssertFailed: ResultUtils.isOk(triedType) - ${triedType.error.message}`);
     }
 
     return triedType.value;
@@ -130,7 +130,7 @@ describe(`Inspection - Scope - Type`, () => {
     describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
         it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
             const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
-            const expected: ScopeTypeByKey = new Map([
+            const expected: ScopeTypeByKey = new Map<string, Type.TType>([
                 ["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
                 ["bar", TypeUtils.genericFactory(Type.TypeKind.Number, true)],
             ]);
@@ -203,7 +203,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map([["a", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
+                fields: new Map<string, Type.TType>([["a", TypeUtils.genericFactory(Type.TypeKind.Number, false)]]),
                 isOpen: false,
             };
             expectParseOkNodeTypeEqual(expression, expected);
@@ -227,7 +227,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map([["a", TypeUtils.anyFactory()]]),
+                fields: new Map<string, Type.TType>([["a", TypeUtils.anyFactory()]]),
                 isOpen: false,
             };
             expectParseOkNodeTypeEqual(expression, expected);
@@ -239,7 +239,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map([["a", TypeUtils.anyFactory()]]),
+                fields: new Map<string, Type.TType>([["a", TypeUtils.anyFactory()]]),
                 isOpen: false,
             };
             expectParseOkNodeTypeEqual(expression, expected);
@@ -413,55 +413,13 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
-    describe(`${Ast.NodeKind.LiteralExpression}`, () => {
-        it(`true`, () => {
-            const expression: string = "true";
-            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
-            expectParseOkNodeTypeEqual(expression, expected);
-        });
-
-        it(`false`, () => {
-            const expression: string = "false";
-            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
-            expectParseOkNodeTypeEqual(expression, expected);
-        });
-
-        it(`1`, () => {
-            const expression: string = "1";
-            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
-            expectParseOkNodeTypeEqual(expression, expected);
-        });
-
-        it(`null`, () => {
-            const expression: string = "null";
-            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Null, true);
-            expectParseOkNodeTypeEqual(expression, expected);
-        });
-
-        it(`{}`, () => {
-            const expression: string = `{}`;
-            const expected: Type.TType = {
-                kind: Type.TypeKind.List,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
-                isNullable: false,
-                elements: [],
-            };
-            expectParseOkNodeTypeEqual(expression, expected);
-        });
-        it(`[]`, () => {
-            const expression: string = `[]`;
-            const expected: Type.TType = {
-                kind: Type.TypeKind.Record,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-                isNullable: false,
-                fields: new Map<string, Type.TType>(),
-                isOpen: false,
-            };
-            expectParseOkNodeTypeEqual(expression, expected);
-        });
-    });
-
     describe(`${Ast.NodeKind.IfExpression}`, () => {
+        it(`if true then true else false`, () => {
+            const expression: string = `if true then true else false`;
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
         it(`if true then 1 else false`, () => {
             const expression: string = `if true then 1 else false`;
             const expected: Type.TType = {
@@ -526,6 +484,123 @@ describe(`Inspection - Scope - Type`, () => {
                 ],
             };
             expectParseErrNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.IsExpression}`, () => {
+        it(`1 is text`, () => {
+            const expression: string = `1 is text`;
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.IsNullablePrimitiveType}`, () => {
+        it(`1 is nullable text`, () => {
+            const expression: string = `1 is nullable text`;
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.ListExpression}`, () => {
+        it(`{1}`, () => {
+            const expression: string = `{1}`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.List,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+                isNullable: false,
+                elements: [TypeUtils.genericFactory(Type.TypeKind.Number, false)],
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`{1, ""}`, () => {
+            const expression: string = `{1, ""}`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.List,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+                isNullable: false,
+                elements: [
+                    TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                    TypeUtils.genericFactory(Type.TypeKind.Text, false),
+                ],
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.ListType}`, () => {
+        it(`type { number }`, () => {
+            const expression: string = `type { number }`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Type,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+                    isNullable: false,
+                    itemType: TypeUtils.genericFactory(Type.TypeKind.Number, false),
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.LiteralExpression}`, () => {
+        it(`true`, () => {
+            const expression: string = "true";
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`false`, () => {
+            const expression: string = "false";
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`1`, () => {
+            const expression: string = "1";
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, false);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`null`, () => {
+            const expression: string = "null";
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Null, true);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`{}`, () => {
+            const expression: string = `{}`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.List,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+                isNullable: false,
+                elements: [],
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+        it(`[]`, () => {
+            const expression: string = `[]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                isNullable: false,
+                fields: new Map<string, Type.TType>(),
+                isOpen: false,
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.NullableType}`, () => {
+        it(`type nullable number`, () => {
+            const expression: string = "type nullable number";
+            const expected: Type.TType = TypeUtils.genericFactory(Type.TypeKind.Number, true);
+            expectParseOkNodeTypeEqual(expression, expected);
         });
     });
 
@@ -612,6 +687,62 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.RecordType}`, () => {
+        it(`type [foo]`, () => {
+            const expression: string = `type [foo]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Record,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                    isNullable: false,
+                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    isOpen: false,
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`WIP type [foo, ...]`, () => {
+            const expression: string = `type [foo]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Record,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                    isNullable: false,
+                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    isOpen: true,
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`type [foo = number, bar as nullable text]`, () => {
+            const expression: string = `type [foo = number, bar as nullable text]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Record,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                    isNullable: false,
+                    fields: new Map<string, Type.TType>([
+                        ["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
+                        ["bar", TypeUtils.genericFactory(Type.TypeKind.Text, true)],
+                    ]),
+                    isOpen: false,
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
         describe(`any is allowed`, () => {
             it(`${Ast.NodeKind.InvokeExpression}`, () => {
@@ -657,14 +788,14 @@ describe(`Inspection - Scope - Type`, () => {
                             kind: Type.TypeKind.Record,
                             maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                             isNullable: false,
-                            fields: new Map([["foo", TypeUtils.anyFactory()]]),
+                            fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
                             isOpen: false,
                         },
                         {
                             kind: Type.TypeKind.Table,
                             maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
                             isNullable: false,
-                            fields: new Map([["foo", TypeUtils.anyFactory()]]),
+                            fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
                             isOpen: false,
                         },
                     ],
