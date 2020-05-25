@@ -7,7 +7,7 @@ import {
     isNever,
     MapUtils,
     ResultUtils,
-    shouldNeverBeReached,
+    shouldNeverBeReachedTypescript,
     TypeScriptUtils,
 } from "../../common";
 import { Ast, AstUtils } from "../../language";
@@ -1240,7 +1240,7 @@ function translateRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecor
             | [Type.DefinedRecord, Type.DefinedRecord]
             | [Type.DefinedTable, Type.DefinedTable]);
     } else {
-        throw shouldNeverBeReached();
+        throw shouldNeverBeReachedTypescript();
     }
 }
 

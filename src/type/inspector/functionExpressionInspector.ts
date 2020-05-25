@@ -3,7 +3,7 @@
 
 import { Type, TypeUtils } from "..";
 import { CommonError } from "../../common";
-import { Ast } from "../../language";
+import { Ast, AstUtils } from "../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 
 export interface InspectedFunctionExpression {
@@ -65,11 +65,11 @@ export function inspectFunctionExpression(
     let isReturnNullable: boolean;
     let returnType: Type.TypeKind;
     if (maybeReturnType !== undefined) {
-        const simplified: Type.SimplifiedNullablePrimitiveType = TypeUtils.simplifyNullablePrimitiveType(
+        const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(
             maybeReturnType as Ast.AsNullablePrimitiveType,
         );
         isReturnNullable = simplified.isNullable;
-        returnType = simplified.typeKind;
+        returnType = TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
     } else {
         isReturnNullable = true;
         returnType = Type.TypeKind.Any;

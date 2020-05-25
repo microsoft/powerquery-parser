@@ -5,6 +5,86 @@ import { CommonError, isNever } from "../../common";
 import { Ast } from "../ast";
 import { TokenKind } from "../token";
 
+export interface SimplifiedType {
+    readonly isNullable: boolean;
+    readonly primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind;
+}
+
+export function simplifyType(type: Ast.TType): SimplifiedType {
+    let isNullable: boolean;
+    let primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind;
+
+    switch (type.kind) {
+        case Ast.NodeKind.PrimitiveType:
+            isNullable = false;
+            primitiveTypeConstantKind = type.primitiveType.constantKind;
+            break;
+
+        case Ast.NodeKind.NullableType:
+            isNullable = true;
+            primitiveTypeConstantKind = simplifyType(type.paired).primitiveTypeConstantKind;
+            break;
+
+        case Ast.NodeKind.FunctionType:
+            isNullable = false;
+            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.Function;
+            break;
+
+        case Ast.NodeKind.ListType:
+            isNullable = false;
+            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.List;
+            break;
+
+        case Ast.NodeKind.RecordType:
+            isNullable = false;
+            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.Record;
+            break;
+
+        case Ast.NodeKind.TableType:
+            isNullable = false;
+            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.Table;
+            break;
+
+        default:
+            const details: {} = {
+                nodeId: type.id,
+                nodeKind: type.kind,
+            };
+            throw new CommonError.InvariantError("this should never be reached", details);
+    }
+
+    return {
+        isNullable,
+        primitiveTypeConstantKind,
+    };
+}
+
+export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveType): SimplifiedType {
+    let isNullable: boolean;
+    let primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind;
+
+    const nullablePrimitiveType: Ast.TNullablePrimitiveType = node.paired;
+    switch (nullablePrimitiveType.kind) {
+        case Ast.NodeKind.NullablePrimitiveType:
+            isNullable = true;
+            primitiveTypeConstantKind = nullablePrimitiveType.paired.primitiveType.constantKind;
+            break;
+
+        case Ast.NodeKind.PrimitiveType:
+            isNullable = false;
+            primitiveTypeConstantKind = nullablePrimitiveType.primitiveType.constantKind;
+            break;
+
+        default:
+            throw isNever(nullablePrimitiveType);
+    }
+
+    return {
+        primitiveTypeConstantKind,
+        isNullable,
+    };
+}
+
 export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Plus:

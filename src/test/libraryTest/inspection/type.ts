@@ -365,8 +365,8 @@ describe(`Inspection - Scope - Type`, () => {
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
-        it(`WIP type function (foo as number, bar as nullable text) as text`, () => {
-            const expression: string = `type function (foo as number, bar as nullable text) as text`;
+        it(`type function (foo as number, bar as nullable text, optional baz as date) as text`, () => {
+            const expression: string = `type function (foo as number, bar as nullable text, optional baz as date) as text`;
             const expected: Type.TType = {
                 kind: Type.TypeKind.Type,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
@@ -375,7 +375,23 @@ describe(`Inspection - Scope - Type`, () => {
                     kind: Type.TypeKind.Function,
                     maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
                     isNullable: false,
-                    parameters: [],
+                    parameters: [
+                        {
+                            isNullable: false,
+                            isOptional: false,
+                            maybeType: Type.TypeKind.Number,
+                        },
+                        {
+                            isNullable: true,
+                            isOptional: false,
+                            maybeType: Type.TypeKind.Text,
+                        },
+                        {
+                            isNullable: false,
+                            isOptional: true,
+                            maybeType: Type.TypeKind.Date,
+                        },
+                    ],
                     returnType: TypeUtils.genericFactory(Type.TypeKind.Text, false),
                 },
             };
