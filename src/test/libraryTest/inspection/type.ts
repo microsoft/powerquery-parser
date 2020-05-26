@@ -817,6 +817,62 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.TableType}`, () => {
+        it(`type table [foo]`, () => {
+            const expression: string = `type table [foo]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Table,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                    isNullable: false,
+                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    isOpen: false,
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`type table [foo]`, () => {
+            const expression: string = `type table [foo]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Table,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                    isNullable: false,
+                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    isOpen: false,
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`type table [foo = number, bar = nullable text]`, () => {
+            const expression: string = `type table [foo = number, bar = nullable text]`;
+            const expected: Type.TType = {
+                kind: Type.TypeKind.Type,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+                isNullable: false,
+                primaryType: {
+                    kind: Type.TypeKind.Table,
+                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                    isNullable: false,
+                    fields: new Map<string, Type.TType>([
+                        ["foo", TypeUtils.genericFactory(Type.TypeKind.Number, false)],
+                        ["bar", TypeUtils.genericFactory(Type.TypeKind.Text, true)],
+                    ]),
+                    isOpen: false,
+                },
+            };
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.UnaryExpression}`, () => {
         it(`+1`, () => {
             const expression: string = `+1`;
