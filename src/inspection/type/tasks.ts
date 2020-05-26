@@ -8,27 +8,31 @@ import { CommonSettings } from "../../settings";
 import { Type } from "../../type";
 import { ScopeById, ScopeItemByKey } from "../scope";
 import { getOrCreateScope, getOrCreateType, inspectXorNode } from "./inspectType";
-import { ScopeTypeById, ScopeTypeByKey, TypeInspectionState } from "./type";
+import { ScopeTypeByKey, TypeById, TypeInspectionState } from "./type";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
 export type TriedType = Result<Type.TType, CommonError.CommonError>;
+
+export interface TypeCache {
+    readonly scopeById: ScopeById;
+    readonly typeById: TypeById;
+}
 
 export function tryScopeType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
-    maybeScopeById: ScopeById | undefined = new Map(),
-    maybeScopeTypeById: ScopeTypeById | undefined = new Map(),
+    maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedScopeType {
     const state: TypeInspectionState = {
         settings,
-        givenTypeById: maybeScopeTypeById !== undefined ? maybeScopeTypeById : new Map(),
+        givenTypeById: maybeTypeCache !== undefined ? maybeTypeCache.typeById : new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
         leafNodeIds,
-        scopeById: maybeScopeById !== undefined ? maybeScopeById : new Map(),
+        scopeById: maybeTypeCache !== undefined ? maybeTypeCache.scopeById : new Map(),
     };
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state, nodeId));
@@ -39,16 +43,15 @@ export function tryType(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
-    maybeScopeById: ScopeById | undefined = new Map(),
-    maybeScopeTypeById: ScopeTypeById | undefined = new Map(),
+    maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedType {
     const state: TypeInspectionState = {
         settings,
-        givenTypeById: maybeScopeTypeById !== undefined ? maybeScopeTypeById : new Map(),
+        givenTypeById: maybeTypeCache !== undefined ? maybeTypeCache.scopeById : new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
         leafNodeIds,
-        scopeById: maybeScopeById !== undefined ? maybeScopeById : new Map(),
+        scopeById: maybeTypeCache !== undefined ? maybeTypeCache.typeById : new Map(),
     };
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>

@@ -8,12 +8,12 @@ import { ScopeById } from "../scope";
 
 export type ScopeTypeByKey = Map<string, Type.TType>;
 
-export type ScopeTypeById = Map<number, Type.TType>;
+export type TypeById = Map<number, Type.TType>;
 
 export interface TypeInspectionState {
     readonly settings: CommonSettings;
-    readonly givenTypeById: ScopeTypeById;
-    readonly deltaTypeById: ScopeTypeById;
+    readonly givenTypeById: TypeById;
+    readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     scopeById: ScopeById;

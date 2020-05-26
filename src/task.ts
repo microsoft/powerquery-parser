@@ -143,8 +143,10 @@ export function tryInspection<S extends IParserState = IParserState>(
         nodeIdMapCollection,
         leafNodeIds,
         ancestry[0].node.id,
-        scopeById,
-        undefined,
+        {
+            scopeById,
+            typeById: new Map(),
+        },
     );
     if (ResultUtils.isErr(triedScopeType)) {
         return triedScopeType;
