@@ -14,6 +14,7 @@ export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
 export type TriedType = Result<Type.TType, CommonError.CommonError>;
 
+// A cache that can be re-used for successive calls under the same document.
 export interface TypeCache {
     readonly scopeById: ScopeById;
     readonly typeById: TypeById;
