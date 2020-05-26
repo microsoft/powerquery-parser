@@ -196,6 +196,8 @@ export function maybeContextChildByAttributeIndex(
     }
 }
 
+// Returns the previous sibling of the given recursive expression.
+// Commonly used for things like getting the identifier name used in an InvokeExpression.
 export function expectRecursiveExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, nodeId);
     const arrayWrapper: TXorNode = expectParentXorNode(nodeIdMapCollection, nodeId, [Ast.NodeKind.ArrayWrapper]);
