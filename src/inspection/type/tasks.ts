@@ -7,7 +7,7 @@ import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { Type } from "../../type";
 import { ScopeById, ScopeItemByKey } from "../scope";
-import { getOrCreateScope, getOrCreateType, translateXorNode } from "./translate";
+import { getOrCreateScope, getOrCreateType, inspectXorNode } from "./inspectType";
 import { ScopeTypeById, ScopeTypeByKey, TypeInspectionState } from "./type";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
@@ -52,7 +52,7 @@ export function tryType(
     };
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        translateXorNode(state, NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, nodeId)),
+        inspectXorNode(state, NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, nodeId)),
     );
 }
 
