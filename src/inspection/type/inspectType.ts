@@ -848,7 +848,7 @@ function inspectInvokeExpression(state: TypeInspectionState, xorNode: TXorNode):
 function inspectListType(
     state: TypeInspectionState,
     xorNode: TXorNode,
-): Type.DefinedType<Type.DefinedListType> | Type.Unknown {
+): Type.DefinedType<Type.ListType> | Type.Unknown {
     const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
         xorNode,
         Ast.NodeKind.ListType,
@@ -874,7 +874,7 @@ function inspectListType(
         isNullable: false,
         primaryType: {
             kind: Type.TypeKind.Type,
-            maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+            maybeExtendedKind: Type.ExtendedTypeKind.ListType,
             isNullable: false,
             itemType,
         },

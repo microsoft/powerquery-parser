@@ -539,7 +539,7 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 primaryType: {
                     kind: Type.TypeKind.Type,
-                    maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+                    maybeExtendedKind: Type.ExtendedTypeKind.ListType,
                     isNullable: false,
                     itemType: TypeUtils.genericFactory(Type.TypeKind.Number, false),
                 },

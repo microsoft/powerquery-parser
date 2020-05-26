@@ -354,9 +354,6 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
         case Type.ExtendedTypeKind.DefinedList:
             return equalDefinedList(left, right as Type.DefinedList);
 
-        case Type.ExtendedTypeKind.DefinedListType:
-            return equalDefinedListType(left, right as Type.DefinedListType);
-
         case Type.ExtendedTypeKind.DefinedRecord:
             return equalDefinedRecord(left, right as Type.DefinedRecord);
 
@@ -365,6 +362,9 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
 
         case Type.ExtendedTypeKind.DefinedType:
             return equalDefinedType(left, right as Type.DefinedType<T>);
+
+        case Type.ExtendedTypeKind.ListType:
+            return equalListType(left, right as Type.ListType);
 
         case Type.ExtendedTypeKind.PrimaryExpressionTable:
             return equalPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
@@ -421,10 +421,6 @@ export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList
     );
 }
 
-export function equalDefinedListType(left: Type.DefinedListType, right: Type.DefinedListType): boolean {
-    return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
-}
-
 export function equalDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
         left.isNullable === right.isNullable &&
@@ -441,6 +437,10 @@ export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTa
 
 export function equalDefinedType<T extends Type.TType>(left: Type.DefinedType<T>, right: Type.DefinedType<T>): boolean {
     return left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType);
+}
+
+export function equalListType(left: Type.ListType, right: Type.ListType): boolean {
+    return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
 }
 
 export function equalPrimaryExpressionTable(
