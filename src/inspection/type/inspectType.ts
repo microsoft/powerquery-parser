@@ -92,7 +92,6 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
     let result: Type.TType;
     switch (xorNode.node.kind) {
         case Ast.NodeKind.ArrayWrapper:
-        case Ast.NodeKind.Csv:
         case Ast.NodeKind.FieldSpecificationList:
         case Ast.NodeKind.GeneralizedIdentifier:
         case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
@@ -126,6 +125,11 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
         case Ast.NodeKind.AsExpression:
         case Ast.NodeKind.SectionMember:
             result = inspectFromChildAttributeIndex(state, xorNode, 2);
+            break;
+
+        case Ast.NodeKind.Csv:
+        case Ast.NodeKind.MetadataExpression:
+            result = inspectFromChildAttributeIndex(state, xorNode, 0);
             break;
 
         case Ast.NodeKind.ListExpression:
@@ -221,10 +225,6 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.NotImplementedExpression:
             result = TypeUtils.noneFactory();
-            break;
-
-        case Ast.NodeKind.MetadataExpression:
-            result = inspectFromChildAttributeIndex(state, xorNode, 0);
             break;
 
         case Ast.NodeKind.Parameter:
