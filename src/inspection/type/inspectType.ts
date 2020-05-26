@@ -99,11 +99,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
         case Ast.NodeKind.IdentifierPairedExpression:
         case Ast.NodeKind.ParameterList:
         case Ast.NodeKind.Section:
-            const details: {} = {
-                nodeId: xorNode.node.id,
-                nodeKind: xorNode.node.kind,
-            };
-            throw new CommonError.InvariantError(`this should never be a scope item`, details);
+            return TypeUtils.notApplicableFactory();
 
         case Ast.NodeKind.AsType:
         case Ast.NodeKind.AsNullablePrimitiveType:
@@ -1289,7 +1285,7 @@ function unionFields([leftType, rightType]:
     };
 }
 
-// recursively flattens all AnyUnion.unionedTypePairs into a single array,
+// Recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
 // then calls all(...) on the mapped values.
 function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType) => boolean): boolean {

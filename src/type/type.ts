@@ -31,6 +31,7 @@ export type Function = IPrimitiveType<TypeKind.Function>;
 export type List = IPrimitiveType<TypeKind.List>;
 export type Logical = IPrimitiveType<TypeKind.Logical>;
 export type None = IPrimitiveType<TypeKind.None>;
+export type NotApplicable = IPrimitiveType<TypeKind.NotApplicable>;
 export type Null = IPrimitiveType<TypeKind.Null>;
 export type Number = IPrimitiveType<TypeKind.Number>;
 export type Record = IPrimitiveType<TypeKind.Record>;
@@ -41,7 +42,6 @@ export type Type = IPrimitiveType<TypeKind.Type>;
 export type Unknown = IPrimitiveType<TypeKind.Unknown>;
 
 export const enum TypeKind {
-    Action = "Action",
     Any = "Any",
     AnyNonNull = "AnyNonNull",
     Binary = "Binary",
@@ -58,8 +58,18 @@ export const enum TypeKind {
     Record = "Record",
     Table = "Table",
     Text = "Text",
-    Time = "Time",
     Type = "Type",
+
+    // Types that are not defined in the standard.
+    Action = "Action",
+    Time = "Time",
+
+    // Some NodeKinds are non-typeable, such as ArrayWrapper.
+    // NodeKinds can contain non-typeable and still be typeable.
+    // Eg. a RecordExpression's fields are stored in an ArrayWrapper yet still can be typed.
+    NotApplicable = "NotApplicable",
+    // Something that can't be typed due to a lack of information.
+    // Eg. '[', a RecordExpression which the user hasn't entered any fields for.
     Unknown = "Unknown",
 }
 

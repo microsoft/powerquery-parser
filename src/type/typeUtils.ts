@@ -69,6 +69,10 @@ export function noneFactory(): Type.None {
     return NoneConstant;
 }
 
+export function notApplicableFactory(): Type.NotApplicable {
+    return NotApplicableConstant;
+}
+
 export function nullFactory(): Type.Null {
     return NullConstant;
 }
@@ -233,6 +237,7 @@ export function maybePrimitiveTypeConstantKindFromTypeKind(
         case Type.TypeKind.Type:
             return Ast.PrimitiveTypeConstantKind.Type;
 
+        case Type.TypeKind.NotApplicable:
         case Type.TypeKind.Unknown:
             return undefined;
 
@@ -556,6 +561,12 @@ const AnyConstant: Type.Any = {
 
 const NoneConstant: Type.None = {
     kind: Type.TypeKind.None,
+    maybeExtendedKind: undefined,
+    isNullable: false,
+};
+
+const NotApplicableConstant: Type.NotApplicable = {
+    kind: Type.TypeKind.NotApplicable,
     maybeExtendedKind: undefined,
     isNullable: false,
 };
