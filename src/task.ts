@@ -28,7 +28,7 @@ export interface InspectionOk {
     readonly autocomplete: Inspection.Autocomplete;
     readonly maybeInvokeExpression: Inspection.InvokeExpression | undefined;
     readonly scope: Inspection.ScopeItemByKey;
-    readonly scopeType: Inspection.ScopeTypeMap;
+    readonly scopeType: Inspection.ScopeTypeByKey;
 }
 
 export type TriedLexParse<S extends IParserState = IParserState> = Result<
@@ -120,7 +120,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     const activeNode: ActiveNode = maybeActiveNode;
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
 
-    const triedScope: Inspection.TriedScopeForRoot = Inspection.tryScopeForRoot(
+    const triedScope: Inspection.TriedScope = Inspection.tryScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -130,9 +130,24 @@ export function tryInspection<S extends IParserState = IParserState>(
     if (ResultUtils.isErr(triedScope)) {
         return triedScope;
     }
-    const scope: Inspection.ScopeItemByKey = triedScope.value;
+    const scopeById: Inspection.ScopeById = triedScope.value;
+    const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestry[0].node.id);
+    if (maybeScope === undefined) {
+        const details: {} = { nodeId: ancestry[0].node.id };
+        throw new CommonError.InvariantError(`expected nodeId in scopeById`, details);
+    }
+    const scope: Inspection.ScopeItemByKey = maybeScope;
 
-    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(settings, nodeIdMapCollection, scope);
+    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        ancestry[0].node.id,
+        {
+            scopeById,
+            typeById: new Map(),
+        },
+    );
     if (ResultUtils.isErr(triedScopeType)) {
         return triedScopeType;
     }
@@ -160,7 +175,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         maybeActiveNode,
         autocomplete: triedAutocomplete.value,
         maybeInvokeExpression: triedInvokeExpression.value,
-        scope: triedScope.value,
+        scope,
         scopeType: triedScopeType.value,
     });
 }

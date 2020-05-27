@@ -1,5 +1,18 @@
 import { CommonError } from ".";
 
+export function all<T>(
+    collection: ReadonlyArray<T>,
+    predicateFn: (value: T) => boolean = (value: T) => !!value,
+): boolean {
+    for (const element of collection) {
+        if (!predicateFn(element)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
     return removeAtIndex(collection, collection.indexOf(element));
 }
@@ -28,4 +41,48 @@ export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) =
     }
 
     return undefined;
+}
+
+export function isSubset<T>(
+    largerCollection: ReadonlyArray<T>,
+    smallerCollection: ReadonlyArray<T>,
+    valueCmpFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
+): boolean {
+    if (smallerCollection.length > largerCollection.length) {
+        return false;
+    }
+
+    for (const smallerCollectionValue of smallerCollection) {
+        let foundMatch: boolean = false;
+        for (const largerCollectionValue of largerCollection) {
+            if (valueCmpFn(smallerCollectionValue, largerCollectionValue)) {
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if (foundMatch === false) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+export function split<T>(
+    collection: ReadonlyArray<T>,
+    splitFn: (value: T) => boolean,
+): [ReadonlyArray<T>, ReadonlyArray<T>] {
+    const left: T[] = [];
+    const right: T[] = [];
+
+    for (const value of collection) {
+        if (splitFn(value) === true) {
+            left.push(value);
+        } else {
+            right.push(value);
+        }
+    }
+
+    return [left, right];
 }

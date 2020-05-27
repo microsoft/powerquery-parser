@@ -706,8 +706,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     // UNSAFE MARKER
     //
     // Purpose of code block:
-    //      Shift the start of ParserContext from the default location (which doesn't include head),
-    //      to the left so that head is also included.
+    //      Shift the start of ParserContext to an earlier location so the head is included.
     //
     // Why are you trying to avoid a safer approach?
     //      There isn't one? At least not without refactoring in ways which will make things messier.
@@ -716,6 +715,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     //      I'm only mutating start location in the recursive expression to one already parsed, the head.
     mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[recursiveTokenIndexStart];
     mutableContext.tokenIndexStart = recursiveTokenIndexStart;
+    mutableContext.attributeCounter = 1;
 
     // Update attribute index for the head Ast.TNode
     const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
@@ -735,7 +735,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, recursiveArrayNodeKind);
 
-    const recursiveExpressions: Ast.TRecursivePrimaryExpression[] = [];
+    const recursiveExpressions: (Ast.InvokeExpression | Ast.ItemAccessExpression | Ast.TFieldAccessExpression)[] = [];
     let continueReadingValues: boolean = true;
     while (continueReadingValues) {
         const maybeCurrentTokenKind: Language.TokenKind | undefined = state.maybeCurrentTokenKind;
@@ -745,17 +745,19 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
         } else if (maybeCurrentTokenKind === Language.TokenKind.LeftBrace) {
             recursiveExpressions.push(parser.readItemAccessExpression(state, parser));
         } else if (maybeCurrentTokenKind === Language.TokenKind.LeftBracket) {
-            const bracketExpression: Ast.TRecursivePrimaryExpression = readBracketDisambiguation(state, parser, [
+            const bracketExpression: Ast.TFieldAccessExpression = readBracketDisambiguation(state, parser, [
                 BracketDisambiguation.FieldProjection,
                 BracketDisambiguation.FieldSelection,
-            ]) as Ast.TRecursivePrimaryExpression;
+            ]) as Ast.TFieldAccessExpression;
             recursiveExpressions.push(bracketExpression);
         } else {
             continueReadingValues = false;
         }
     }
 
-    const recursiveArray: Ast.IArrayWrapper<Ast.TRecursivePrimaryExpression> = {
+    const recursiveArray: Ast.IArrayWrapper<
+        Ast.InvokeExpression | Ast.ItemAccessExpression | Ast.TFieldAccessExpression
+    > = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
         kind: recursiveArrayNodeKind,
         isLeaf: false,
@@ -1368,7 +1370,7 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
     );
     const fields: Ast.ICsv<Ast.FieldSpecification>[] = [];
     let continueReadingValues: boolean = true;
-    let maybeOpenRecordMarkerConstant: Ast.IConstant<Ast.MiscConstantKind.Ellipsis> | undefined = undefined;
+    let isOnOpenRecordMarker: boolean = false;
 
     const fieldArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, fieldArrayNodeKind);
@@ -1381,14 +1383,10 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
 
         if (IParserStateUtils.isOnTokenKind(state, Language.TokenKind.Ellipsis)) {
             if (allowOpenMarker) {
-                if (maybeOpenRecordMarkerConstant) {
+                if (isOnOpenRecordMarker) {
                     throw fieldSpecificationListReadError(state, false);
                 } else {
-                    maybeOpenRecordMarkerConstant = readTokenKindAsConstant(
-                        state,
-                        Language.TokenKind.Ellipsis,
-                        Ast.MiscConstantKind.Ellipsis,
-                    );
+                    isOnOpenRecordMarker = true;
                     continueReadingValues = false;
                 }
             } else {
@@ -1412,11 +1410,6 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
                 parser,
             );
 
-            const maybeCommaConstant:
-                | Ast.IConstant<Ast.MiscConstantKind.Comma>
-                | undefined = maybeReadTokenKindAsConstant(state, Language.TokenKind.Comma, Ast.MiscConstantKind.Comma);
-            continueReadingValues = maybeCommaConstant !== undefined;
-
             const field: Ast.FieldSpecification = {
                 ...IParserStateUtils.expectContextNodeMetadata(state),
                 kind: fieldSpecificationNodeKind,
@@ -1426,6 +1419,11 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
                 maybeFieldTypeSpecification,
             };
             IParserStateUtils.endContext(state, field);
+
+            const maybeCommaConstant:
+                | Ast.IConstant<Ast.MiscConstantKind.Comma>
+                | undefined = maybeReadTokenKindAsConstant(state, Language.TokenKind.Comma, Ast.MiscConstantKind.Comma);
+            continueReadingValues = maybeCommaConstant !== undefined;
 
             const csv: Ast.ICsv<Ast.FieldSpecification> = {
                 ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1448,6 +1446,15 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
         isLeaf: false,
     };
     IParserStateUtils.endContext(state, fieldArray);
+
+    let maybeOpenRecordMarkerConstant: Ast.IConstant<Ast.MiscConstantKind.Ellipsis> | undefined = undefined;
+    if (isOnOpenRecordMarker) {
+        maybeOpenRecordMarkerConstant = readTokenKindAsConstant(
+            state,
+            Language.TokenKind.Ellipsis,
+            Ast.MiscConstantKind.Ellipsis,
+        );
+    }
 
     const rightBracketConstant: Ast.IConstant<Ast.WrapperConstantKind.RightBracket> = readTokenKindAsConstant(
         state,

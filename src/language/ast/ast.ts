@@ -53,7 +53,6 @@ export const enum NodeKind {
     RecordLiteral = "RecordLiteral",
     RecordType = "RecordType",
     RecursivePrimaryExpression = "RecursivePrimaryExpression",
-    RecursivePrimaryExpressionArray = "RecursivePrimaryExpressionArray",
     RelationalExpression = "RelationalExpression",
     Section = "Section",
     SectionMember = "SectionMember",
@@ -540,7 +539,7 @@ export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
     readonly isLeaf: false;
     readonly head: TPrimaryExpression;
-    readonly recursiveExpressions: IArrayWrapper<TRecursivePrimaryExpression>;
+    readonly recursiveExpressions: IArrayWrapper<InvokeExpression | ItemAccessExpression | TFieldAccessExpression>;
 }
 
 export interface TypePrimaryType

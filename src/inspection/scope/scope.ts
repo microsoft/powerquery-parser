@@ -3,7 +3,8 @@
 
 import { CommonError, Result, ResultUtils } from "../../common";
 import { Ast } from "../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
+import { getLocalizationTemplates } from "../../localization";
+import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { TypeInspector, TypeUtils } from "../../type";
 import {
@@ -13,7 +14,6 @@ import {
     SectionMemberScopeItem,
     TScopeItem,
 } from "./scopeItem";
-import { getLocalizationTemplates } from "../../localization";
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
@@ -36,20 +36,21 @@ export function tryScope(
     );
 }
 
-export function tryScopeForRoot(
+export function tryScopeItems(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    ancestry: ReadonlyArray<TXorNode>,
+    nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedScopeForRoot {
-    if (ancestry.length === 0) {
-        throw new CommonError.InvariantError(`ancestry.length should be non-zero`);
-    }
-
-    const rootId: number = ancestry[0].node.id;
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
+        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(nodeIdMapCollection, nodeId);
+        if (ancestry.length === 0) {
+            return new Map();
+        }
+        const rootId: number = ancestry[0].node.id;
+
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
         const maybeScope: ScopeItemByKey | undefined = inspected.get(rootId);
         if (maybeScope === undefined) {
@@ -59,6 +60,16 @@ export function tryScopeForRoot(
 
         return maybeScope;
     });
+}
+
+interface ScopeInspectionState {
+    readonly settings: CommonSettings;
+    readonly givenScope: ScopeById;
+    readonly deltaScope: ScopeById;
+    readonly ancestry: ReadonlyArray<TXorNode>;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+    ancestryIndex: number;
 }
 
 function inspectScope(
@@ -107,16 +118,6 @@ function inspectScope(
     return state.deltaScope;
 }
 
-interface ScopeInspectionState {
-    readonly settings: CommonSettings;
-    readonly givenScope: ScopeById;
-    readonly deltaScope: ScopeById;
-    readonly ancestry: ReadonlyArray<TXorNode>;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
-    ancestryIndex: number;
-}
-
 function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
@@ -163,7 +164,8 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
                 "_",
                 {
                     kind: ScopeItemKind.Each,
-                    recursive: false,
+                    id: eachExpr.node.id,
+                    isRecursive: false,
                     eachExpression: eachExpr,
                 },
             ],
@@ -195,7 +197,8 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
                 parameter.name.literal,
                 {
                     kind: ScopeItemKind.Parameter,
-                    recursive: false,
+                    id: parameter.id,
+                    isRecursive: false,
                     name: parameter.name,
                     isOptional: parameter.isOptional,
                     isNullable: parameter.isNullable,
@@ -359,8 +362,9 @@ function getOrCreateScope(
     // Cache and return.
     const maybeGivenScope: ScopeItemByKey | undefined = state.givenScope.get(nodeId);
     if (maybeGivenScope !== undefined) {
-        state.deltaScope.set(nodeId, { ...maybeGivenScope });
-        return maybeGivenScope;
+        const shallowCopy: ScopeItemByKey = new Map(maybeGivenScope.entries());
+        state.deltaScope.set(nodeId, shallowCopy);
+        return shallowCopy;
     }
 
     if (maybeDefaultScope !== undefined) {
@@ -402,23 +406,23 @@ function getOrCreateScope(
 function scopeItemsFromKeyValuePairs<T extends TScopeItem, I extends Ast.Identifier | Ast.GeneralizedIdentifier>(
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<I>>,
     ancestorKeyNodeId: number,
-    factoryFn: (keyValuePair: NodeIdMapIterator.KeyValuePair<I>, recursive: boolean) => T,
+    factoryFn: (keyValuePair: NodeIdMapIterator.KeyValuePair<I>, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     return keyValuePairs
         .filter((keyValuePair: NodeIdMapIterator.KeyValuePair<I>) => keyValuePair.maybeValue !== undefined)
         .map((keyValuePair: NodeIdMapIterator.KeyValuePair<I>) => {
-            const isRecursive: boolean = ancestorKeyNodeId === keyValuePair.key.id;
-            return [keyValuePair.keyLiteral, factoryFn(keyValuePair, isRecursive)];
+            return [keyValuePair.keyLiteral, factoryFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id)];
         });
 }
 
 function sectionMemberScopeItemFactory(
     keyValuePair: NodeIdMapIterator.KeyValuePair<Ast.Identifier>,
-    recursive: boolean,
+    isRecursive: boolean,
 ): SectionMemberScopeItem {
     return {
         kind: ScopeItemKind.SectionMember,
-        recursive,
+        id: keyValuePair.source.node.id,
+        isRecursive,
         key: keyValuePair.key,
         maybeValue: keyValuePair.maybeValue,
     };
@@ -426,11 +430,12 @@ function sectionMemberScopeItemFactory(
 
 function keyValuePairScopeItemFactory<T extends Ast.Identifier | Ast.GeneralizedIdentifier>(
     keyValuePair: NodeIdMapIterator.KeyValuePair<T>,
-    recursive: boolean,
+    isRecursive: boolean,
 ): KeyValuePairScopeItem {
     return {
         kind: ScopeItemKind.KeyValuePair,
-        recursive,
+        id: keyValuePair.source.node.id,
+        isRecursive,
         key: keyValuePair.key,
         maybeValue: keyValuePair.maybeValue,
     };
