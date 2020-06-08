@@ -1454,13 +1454,16 @@ function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNo
 
     const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, identifier.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
-    if (maybeScopeItem === undefined) {
-        throw new CommonError.InvariantError(`maybeScopeItem should be at least an instance of Undefined`);
-    }
-    const scopeItem: TScopeItem = maybeScopeItem;
-    if (scopeItem.isRecursive !== isIdentifierRecurisve) {
+
+    if (
+        // If the identifier couldn't be found in the generated scope,
+        // then either the scope generation is incorrect or it's an external identifier (eg. Odbc.Database).
+        maybeScopeItem === undefined ||
+        maybeScopeItem.isRecursive !== isIdentifierRecurisve
+    ) {
         return undefined;
     }
+    const scopeItem: TScopeItem = maybeScopeItem;
 
     let maybeNextXorNode: undefined | TXorNode;
     switch (scopeItem.kind) {
