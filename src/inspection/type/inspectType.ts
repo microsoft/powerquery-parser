@@ -192,7 +192,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.IsExpression:
-            result = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
             break;
 
         case Ast.NodeKind.InvokeExpression:
@@ -200,7 +200,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
-            result = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
             break;
 
         case Ast.NodeKind.ItemAccessExpression:
@@ -319,7 +319,7 @@ function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): 
         if (maybeAllowedTypeKinds === undefined) {
             return TypeUtils.noneFactory();
         } else if (maybeAllowedTypeKinds.size === 1) {
-            return TypeUtils.genericFactory(maybeAllowedTypeKinds.values().next().value, leftType.isNullable);
+            return TypeUtils.primitiveTypeFactory(maybeAllowedTypeKinds.values().next().value, leftType.isNullable);
         } else {
             const unionedTypePairs: Type.TType[] = [];
             for (const kind of maybeAllowedTypeKinds.values()) {
@@ -352,7 +352,7 @@ function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): 
         ) {
             return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
         } else {
-            return TypeUtils.genericFactory(resultTypeKind, leftType.isNullable || rightType.isNullable);
+            return TypeUtils.primitiveTypeFactory(resultTypeKind, leftType.isNullable || rightType.isNullable);
         }
     }
 }
@@ -371,61 +371,61 @@ function inspectConstant(xorNode: TXorNode): Type.TType {
     const constant: Ast.TConstant = xorNode.node as Ast.TConstant;
     switch (constant.constantKind) {
         case Ast.PrimitiveTypeConstantKind.Action:
-            return TypeUtils.genericFactory(Type.TypeKind.Action, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Action, false);
 
         case Ast.PrimitiveTypeConstantKind.Any:
             return TypeUtils.anyFactory();
 
         case Ast.PrimitiveTypeConstantKind.AnyNonNull:
-            return TypeUtils.genericFactory(Type.TypeKind.AnyNonNull, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.AnyNonNull, false);
 
         case Ast.PrimitiveTypeConstantKind.Binary:
-            return TypeUtils.genericFactory(Type.TypeKind.Binary, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Binary, false);
 
         case Ast.PrimitiveTypeConstantKind.Date:
-            return TypeUtils.genericFactory(Type.TypeKind.Date, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Date, false);
 
         case Ast.PrimitiveTypeConstantKind.DateTime:
-            return TypeUtils.genericFactory(Type.TypeKind.DateTime, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.DateTime, false);
 
         case Ast.PrimitiveTypeConstantKind.DateTimeZone:
-            return TypeUtils.genericFactory(Type.TypeKind.DateTimeZone, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.DateTimeZone, false);
 
         case Ast.PrimitiveTypeConstantKind.Duration:
-            return TypeUtils.genericFactory(Type.TypeKind.Duration, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Duration, false);
 
         case Ast.PrimitiveTypeConstantKind.Function:
-            return TypeUtils.genericFactory(Type.TypeKind.Function, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Function, false);
 
         case Ast.PrimitiveTypeConstantKind.List:
-            return TypeUtils.genericFactory(Type.TypeKind.List, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.List, false);
 
         case Ast.PrimitiveTypeConstantKind.Logical:
-            return TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
 
         case Ast.PrimitiveTypeConstantKind.None:
-            return TypeUtils.genericFactory(Type.TypeKind.None, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.None, false);
 
         case Ast.PrimitiveTypeConstantKind.Null:
             return TypeUtils.noneFactory();
 
         case Ast.PrimitiveTypeConstantKind.Number:
-            return TypeUtils.genericFactory(Type.TypeKind.Number, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Number, false);
 
         case Ast.PrimitiveTypeConstantKind.Record:
-            return TypeUtils.genericFactory(Type.TypeKind.Record, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false);
 
         case Ast.PrimitiveTypeConstantKind.Table:
-            return TypeUtils.genericFactory(Type.TypeKind.Table, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false);
 
         case Ast.PrimitiveTypeConstantKind.Text:
-            return TypeUtils.genericFactory(Type.TypeKind.Text, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Text, false);
 
         case Ast.PrimitiveTypeConstantKind.Time:
-            return TypeUtils.genericFactory(Type.TypeKind.Time, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Time, false);
 
         case Ast.PrimitiveTypeConstantKind.Type:
-            return TypeUtils.genericFactory(Type.TypeKind.Type, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Type, false);
 
         default:
             return TypeUtils.unknownFactory();
@@ -451,7 +451,7 @@ function inspectErrorHandlingExpression(state: TypeInspectionState, xorNode: TXo
         inspectFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
             ? inspectXorNode(state, maybeOtherwiseExpression)
-            : TypeUtils.genericFactory(Type.TypeKind.Record, false),
+            : TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
     ]);
 }
 
@@ -895,7 +895,7 @@ function inspectLiteralExpression(xorNode: TXorNode): Type.TType {
             // We already checked it's a Ast Literal Expression.
             const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
             const typeKind: Type.TypeKind = TypeUtils.typeKindFromLiteralKind(literalKind);
-            return TypeUtils.genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
+            return TypeUtils.primitiveTypeFactory(typeKind, literalKind === Ast.LiteralKind.Null);
 
         case XorNodeKind.Context:
             return TypeUtils.unknownFactory();
@@ -968,7 +968,7 @@ function inspectRangeExpression(state: TypeInspectionState, xorNode: TXorNode): 
         if (maybeLeftType.isNullable === true || maybeRightType.isNullable === true) {
             return TypeUtils.noneFactory();
         } else {
-            return TypeUtils.genericFactory(maybeLeftType.kind, maybeLeftType.isNullable);
+            return TypeUtils.primitiveTypeFactory(maybeLeftType.kind, maybeLeftType.isNullable);
         }
     } else if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
         return TypeUtils.noneFactory();
@@ -1216,7 +1216,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
     }
     // '[] & []' or '#table() & #table()'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
-        return TypeUtils.genericFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
+        return TypeUtils.primitiveTypeFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
     }
     // '[key=value] & []' or '#table(...) & #table()`
     // '[] & [key=value]' or `#table() & #table(...)`

@@ -36,16 +36,16 @@ describe(`TypeUtils`, () => {
     describe(`dedupe`, () => {
         it(`dedupe - generic, identical`, () => {
             const result: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.genericFactory(Type.TypeKind.Record, false),
-                TypeUtils.genericFactory(Type.TypeKind.Record, false),
+                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
+                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
             ]);
             expect(result.length).to.equal(1);
         });
 
         it(`dedupe - generic, mixed`, () => {
             const result: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.genericFactory(Type.TypeKind.Record, false),
-                TypeUtils.genericFactory(Type.TypeKind.Record, true),
+                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
+                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, true),
             ]);
             expect(result.length).to.equal(2);
         });
@@ -53,12 +53,12 @@ describe(`TypeUtils`, () => {
         it(`dedupe - ${Type.ExtendedTypeKind.AnyUnion}, generic`, () => {
             const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
                 TypeUtils.anyUnionFactory([
-                    TypeUtils.genericFactory(Type.TypeKind.Record, false),
-                    TypeUtils.genericFactory(Type.TypeKind.Table, false),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false),
                 ]),
                 TypeUtils.anyUnionFactory([
-                    TypeUtils.genericFactory(Type.TypeKind.Record, false),
-                    TypeUtils.genericFactory(Type.TypeKind.Table, false),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false),
                 ]),
             ]);
             expect(actual.length).to.equal(1);
@@ -68,12 +68,12 @@ describe(`TypeUtils`, () => {
         it(`dedupe - ${Type.ExtendedTypeKind.AnyUnion}, mixed nullability`, () => {
             const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
                 TypeUtils.anyUnionFactory([
-                    TypeUtils.genericFactory(Type.TypeKind.Record, true),
-                    TypeUtils.genericFactory(Type.TypeKind.Table, true),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, true),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, true),
                 ]),
                 TypeUtils.anyUnionFactory([
-                    TypeUtils.genericFactory(Type.TypeKind.Record, false),
-                    TypeUtils.genericFactory(Type.TypeKind.Table, false),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
+                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false),
                 ]),
             ]);
             expect(actual.length).to.equal(2);
@@ -85,8 +85,8 @@ describe(`TypeUtils`, () => {
 
         it(`dedupe - simplify single AnyUnion.unionedTypes to TType`, () => {
             const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.anyUnionFactory([TypeUtils.genericFactory(Type.TypeKind.Record, false)]),
-                TypeUtils.anyUnionFactory([TypeUtils.genericFactory(Type.TypeKind.Record, false)]),
+                TypeUtils.anyUnionFactory([TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false)]),
+                TypeUtils.anyUnionFactory([TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false)]),
             ]);
             expect(actual.length).to.equal(1);
             expectGenericType(actual[0], Type.TypeKind.Record);
