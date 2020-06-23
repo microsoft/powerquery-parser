@@ -146,7 +146,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             result = inspectRecord(state, xorNode);
             break;
 
-        // TODO: how should error handling be typed?
+        // TODO: how should error raising be typed?
         case Ast.NodeKind.ErrorRaisingExpression:
             result = Type.AnyInstance;
             break;
