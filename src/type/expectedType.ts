@@ -69,12 +69,8 @@ const Expression: Type.AnyUnion = {
     unionedTypePairs: [NullablePrimitive],
 };
 
-const MType: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: false,
-    unionedTypePairs: [NullablePrimitive],
-};
+const TType: Type.TType = 0 as any;
+const TTypeExpression: Type.TType = 0 as any;
 
 const AnyLiteral: Type.AnyUnion = {
     kind: Type.TypeKind.Any,
@@ -112,6 +108,11 @@ export function expectedType(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: n
         case Ast.NodeKind.FieldProjection:
         case Ast.NodeKind.FieldSelector:
         case Ast.NodeKind.FieldSpecificationList:
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral:
+        case Ast.NodeKind.LiteralExpression:
+        case Ast.NodeKind.RecordLiteral:
+        case Ast.NodeKind.RecordType:
             return Type.NotApplicableInstance;
 
         case Ast.NodeKind.ArithmeticExpression:
@@ -162,7 +163,7 @@ export function expectedType(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: n
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return MType;
+                    return TType;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -245,7 +246,7 @@ export function expectedType(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: n
                     return Type.NotApplicableInstance;
 
                 case 2:
-                    return MType;
+                    return TType;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -257,7 +258,7 @@ export function expectedType(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: n
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return MType;
+                    return TType;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -310,16 +311,82 @@ export function expectedType(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: n
                     throw unknownChildIndexError(parentXorNode, childIndex);
             }
 
-        case Ast.NodeKind.InvokeExpression:
         case Ast.NodeKind.IsNullablePrimitiveType:
+            switch (childIndex) {
+                case 0:
+                    return Type.NotApplicableInstance;
+
+                case 1:
+                    return NullablePrimitive;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
         case Ast.NodeKind.ItemAccessExpression:
+            switch (childIndex) {
+                case 0:
+                case 2:
+                case 3:
+                    return Type.NotApplicableInstance;
+
+                case 1:
+                    return Expression;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
         case Ast.NodeKind.LetExpression:
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.ListLiteral:
+            switch (childIndex) {
+                case 0:
+                case 1:
+                case 2:
+                    return Type.NotApplicableInstance;
+
+                case 3:
+                    return Expression;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
         case Ast.NodeKind.ListType:
-        case Ast.NodeKind.LiteralExpression:
+            switch (childIndex) {
+                case 0:
+                case 2:
+                    return Type.NotApplicableInstance;
+
+                case 1:
+                    return TType;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
         case Ast.NodeKind.MetadataExpression:
+            switch (childIndex) {
+                case 1:
+                    return Type.NotApplicableInstance;
+
+                case 0:
+                case 2:
+                    return TTypeExpression;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
         case Ast.NodeKind.NotImplementedExpression:
+            switch (childIndex) {
+                case 0:
+                    return Type.NotApplicableInstance;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
+        case Ast.NodeKind.InvokeExpression:
         case Ast.NodeKind.NullablePrimitiveType:
         case Ast.NodeKind.NullableType:
         case Ast.NodeKind.OtherwiseExpression:
@@ -329,8 +396,6 @@ export function expectedType(ancestry: ReadonlyArray<TXorNode>, ancestryIndex: n
         case Ast.NodeKind.PrimitiveType:
         case Ast.NodeKind.RangeExpression:
         case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.RecordLiteral:
-        case Ast.NodeKind.RecordType:
         case Ast.NodeKind.RecursivePrimaryExpression:
         case Ast.NodeKind.TableType:
         case Ast.NodeKind.TypePrimaryType:
