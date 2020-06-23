@@ -48,11 +48,11 @@ export function maybePreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
-    maybeNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode | undefined {
     const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex - n];
-    if (maybeXorNode !== undefined && maybeNodeKinds !== undefined) {
-        return maybeNodeKinds.indexOf(maybeXorNode.node.kind) !== -1 ? maybeXorNode : undefined;
+    if (maybeXorNode !== undefined && maybeAllowedNodeKinds !== undefined) {
+        return maybeAllowedNodeKinds.indexOf(maybeXorNode.node.kind) !== -1 ? maybeXorNode : undefined;
     } else {
         return maybeXorNode;
     }
