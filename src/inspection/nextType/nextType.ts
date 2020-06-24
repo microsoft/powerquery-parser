@@ -1,18 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError } from "../../common";
-import { NodeIdMap, NodeIdMapIterator, TXorNode, NodeIdMapUtils } from "../../parser";
-import { ScopeItemByKey } from "../scope";
-import { Type, expectedNextType } from "../../type";
+import { CommonError, Result, ResultUtils } from "../../common";
+import { getLocalizationTemplates } from "../../localization";
+import { AncestryUtils, NodeIdMap, NodeIdMapIterator, TXorNode } from "../../parser";
+import { CommonSettings } from "../../settings";
+import { expectedNextType, Type } from "../../type";
 
-export function tryNextType(collection: NodeIdMap.Collection, )
+export function tryNextType(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeId: number,
+): Result<Type.TType | undefined, CommonError.CommonError> {
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
+        widestType(nodeIdMapCollection.childIdsById, AncestryUtils.expectAncestry(nodeIdMapCollection, leafNodeId)),
+    );
+}
 
 // Traverse up the ancestry so long as the node is an only child.
 // Along the way find what type is expected as the nth child of a node's kind.
 // The last type generated this way should have the widest typing,
 // which then can be used for type hinting.
-export function widestType(childIdsById: NodeIdMap.ChildIdsById, ancestry: ReadonlyArray<TXorNode>): Type.TType | undefined {
+export function widestType(
+    childIdsById: NodeIdMap.ChildIdsById,
+    ancestry: ReadonlyArray<TXorNode>,
+): Type.TType | undefined {
     const upperBound: number = ancestry.length - 2;
     let bestMatch: Type.TType | undefined;
 
@@ -36,4 +48,3 @@ export function widestType(childIdsById: NodeIdMap.ChildIdsById, ancestry: Reado
 
     return bestMatch;
 }
-
