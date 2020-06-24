@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { CommonError, isNever } from "../common";
+import { Assert, CommonError } from "../common";
 import { Ast } from "../language";
 import { TXorNode } from "../parser";
 
@@ -399,7 +399,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
             }
 
         default:
-            throw isNever(parentXorNode.node);
+            throw Assert.isNever(parentXorNode.node);
     }
 }
 

@@ -3,7 +3,7 @@
 
 import "mocha";
 import { Inspection } from "../../..";
-import { isNever, ResultUtils } from "../../../common";
+import { Assert, ResultUtils } from "../../../common";
 import { Position, ScopeItemByKey, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
@@ -102,7 +102,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
             };
 
         default:
-            throw isNever(scopeItem);
+            throw Assert.isNever(scopeItem);
     }
 }
 

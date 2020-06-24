@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { CommonError, isNever, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
@@ -338,7 +338,7 @@ export function readExpression<S extends IParserState = IParserState>(state: S, 
                     return parser.readLogicalExpression(state, parser);
 
                 default:
-                    throw isNever(disambiguation);
+                    throw Assert.isNever(disambiguation);
             }
 
         default:
@@ -2601,7 +2601,7 @@ export function readBracketDisambiguation<S extends IParserState = IParserState>
             return parser.readRecordExpression(state, parser);
 
         default:
-            throw isNever(disambiguation);
+            throw Assert.isNever(disambiguation);
     }
 }
 
