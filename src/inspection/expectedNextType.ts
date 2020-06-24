@@ -1,19 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../../common";
-import { getLocalizationTemplates } from "../../localization";
-import { AncestryUtils, NodeIdMap, NodeIdMapIterator, TXorNode } from "../../parser";
-import { CommonSettings } from "../../settings";
-import { expectedNextType, Type } from "../../type";
+import { CommonError, Result, ResultUtils } from "../common";
+import { getLocalizationTemplates } from "../localization";
+import { NodeIdMap, NodeIdMapIterator, TXorNode } from "../parser";
+import { CommonSettings } from "../settings";
+import { expectedNextType, Type } from "../type";
 
-export function tryNextType(
+export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
+
+export function tryInspectExpectedType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeId: number,
-): Result<Type.TType | undefined, CommonError.CommonError> {
+    ancestry: ReadonlyArray<TXorNode>,
+): TriedExpectedType {
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        widestType(nodeIdMapCollection.childIdsById, AncestryUtils.expectAncestry(nodeIdMapCollection, leafNodeId)),
+        maybeExpectedType(nodeIdMapCollection.childIdsById, ancestry),
     );
 }
 
@@ -21,7 +23,7 @@ export function tryNextType(
 // Along the way find what type is expected as the nth child of a node's kind.
 // The last type generated this way should have the widest typing,
 // which then can be used for type hinting.
-export function widestType(
+export function maybeExpectedType(
     childIdsById: NodeIdMap.ChildIdsById,
     ancestry: ReadonlyArray<TXorNode>,
 ): Type.TType | undefined {
