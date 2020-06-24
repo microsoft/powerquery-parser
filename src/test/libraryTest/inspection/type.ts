@@ -153,7 +153,7 @@ describe(`Inspection - Scope - Type`, () => {
 
         it(`1 as any`, () => {
             const expression: string = `1 as any`;
-            const expected: Type.TType = TypeUtils.anyFactory();
+            const expected: Type.TType = Type.AnyInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
     });
@@ -191,7 +191,7 @@ describe(`Inspection - Scope - Type`, () => {
     describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
         it(`error 1`, () => {
             const expression: string = `error 1`;
-            const expected: Type.TType = TypeUtils.anyFactory();
+            const expected: Type.TType = Type.AnyInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
     });
@@ -213,13 +213,13 @@ describe(`Inspection - Scope - Type`, () => {
 
         it(`[a=1][[b]]`, () => {
             const expression: string = `[a=1][[b]]`;
-            const expected: Type.TType = TypeUtils.noneFactory();
+            const expected: Type.TType = Type.NoneInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
         it(`[a=1][[b]]?`, () => {
             const expression: string = `[a=1][[b]]?`;
-            const expected: Type.TType = TypeUtils.nullFactory();
+            const expected: Type.TType = Type.NullInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
@@ -229,7 +229,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map<string, Type.TType>([["a", TypeUtils.anyFactory()]]),
+                fields: new Map<string, Type.TType>([["a", Type.AnyInstance]]),
                 isOpen: false,
             };
             expectParseOkNodeTypeEqual(expression, expected);
@@ -241,7 +241,7 @@ describe(`Inspection - Scope - Type`, () => {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields: new Map<string, Type.TType>([["a", TypeUtils.anyFactory()]]),
+                fields: new Map<string, Type.TType>([["a", Type.AnyInstance]]),
                 isOpen: false,
             };
             expectParseOkNodeTypeEqual(expression, expected);
@@ -257,25 +257,25 @@ describe(`Inspection - Scope - Type`, () => {
 
         it(`[a=1][b]`, () => {
             const expression: string = `[a=1][b]`;
-            const expected: Type.TType = TypeUtils.noneFactory();
+            const expected: Type.TType = Type.NoneInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
         it(`[a=1][b]?`, () => {
             const expression: string = `[a=1][b]?`;
-            const expected: Type.TType = TypeUtils.nullFactory();
+            const expected: Type.TType = Type.NullInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
         it(`(1 as record)[a]`, () => {
             const expression: string = `(1 as record)[a]`;
-            const expected: Type.TType = TypeUtils.anyFactory();
+            const expected: Type.TType = Type.AnyInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
 
         it(`(1 as record)[a]?`, () => {
             const expression: string = `(1 as record)[a]?`;
-            const expected: Type.TType = TypeUtils.anyFactory();
+            const expected: Type.TType = Type.AnyInstance;
             expectParseOkNodeTypeEqual(expression, expected);
         });
     });
@@ -452,19 +452,19 @@ describe(`Inspection - Scope - Type`, () => {
 
         it(`if`, () => {
             const expression: string = `if`;
-            const expected: Type.TType = TypeUtils.unknownFactory();
+            const expected: Type.TType = Type.UnknownInstance;
             expectParseErrNodeTypeEqual(expression, expected);
         });
 
         it(`if "a"`, () => {
             const expression: string = `if "a"`;
-            const expected: Type.TType = TypeUtils.noneFactory();
+            const expected: Type.TType = Type.NoneInstance;
             expectParseErrNodeTypeEqual(expression, expected);
         });
 
         it(`if true or "a"`, () => {
             const expression: string = `if true or "a"`;
-            const expected: Type.TType = TypeUtils.noneFactory();
+            const expected: Type.TType = Type.NoneInstance;
             expectParseErrNodeTypeEqual(expression, expected);
         });
 
@@ -710,7 +710,7 @@ describe(`Inspection - Scope - Type`, () => {
                     kind: Type.TypeKind.Record,
                     maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                     isNullable: false,
-                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    fields: new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
                     isOpen: false,
                 },
             };
@@ -727,7 +727,7 @@ describe(`Inspection - Scope - Type`, () => {
                     kind: Type.TypeKind.Record,
                     maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                     isNullable: false,
-                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    fields: new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
                     isOpen: true,
                 },
             };
@@ -784,7 +784,7 @@ describe(`Inspection - Scope - Type`, () => {
 
                 it("[a=1][b]?", () => {
                     const expression: string = `[a=1][b]?`;
-                    const expected: Type.TType = TypeUtils.nullFactory();
+                    const expected: Type.TType = Type.NullInstance;
                     expectParseOkNodeTypeEqual(expression, expected);
                 });
             });
@@ -800,14 +800,14 @@ describe(`Inspection - Scope - Type`, () => {
                             kind: Type.TypeKind.Record,
                             maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
                             isNullable: false,
-                            fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                            fields: new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
                             isOpen: false,
                         },
                         {
                             kind: Type.TypeKind.Table,
                             maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
                             isNullable: false,
-                            fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                            fields: new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
                             isOpen: false,
                         },
                     ],
@@ -840,7 +840,7 @@ describe(`Inspection - Scope - Type`, () => {
                     kind: Type.TypeKind.Table,
                     maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
                     isNullable: false,
-                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    fields: new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
                     isOpen: false,
                 },
             };
@@ -857,7 +857,7 @@ describe(`Inspection - Scope - Type`, () => {
                     kind: Type.TypeKind.Table,
                     maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
                     isNullable: false,
-                    fields: new Map<string, Type.TType>([["foo", TypeUtils.anyFactory()]]),
+                    fields: new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
                     isOpen: false,
                 },
             };

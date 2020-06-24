@@ -21,10 +21,6 @@ export function primitiveTypeFactory<T extends Type.TypeKind>(typeKind: T, isNul
     return maybeValue;
 }
 
-export function anyFactory(): Type.Any {
-    return AnyConstant;
-}
-
 export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>, dedupeTypes: boolean = true): Type.TType {
     const simplified: ReadonlyArray<Type.TType> = dedupe(unionedTypePairs, dedupeTypes);
     if (simplified.length === 1) {
@@ -67,25 +63,9 @@ export function definedTableFactory(
     };
 }
 
-export function unknownFactory(): Type.Unknown {
-    return UnknownConstant;
-}
-
-export function noneFactory(): Type.None {
-    return NoneConstant;
-}
-
-export function notApplicableFactory(): Type.NotApplicable {
-    return NotApplicableConstant;
-}
-
-export function nullFactory(): Type.Null {
-    return NullConstant;
-}
-
 export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
     if (parameter.maybeType === undefined) {
-        return unknownFactory();
+        return Type.NoneInstance;
     }
 
     return {
@@ -669,33 +649,3 @@ function inspectContextParameter(
         maybeType,
     };
 }
-
-const AnyConstant: Type.Any = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const NoneConstant: Type.None = {
-    kind: Type.TypeKind.None,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const NotApplicableConstant: Type.NotApplicable = {
-    kind: Type.TypeKind.NotApplicable,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const NullConstant: Type.Null = {
-    kind: Type.TypeKind.Null,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const UnknownConstant: Type.Unknown = {
-    kind: Type.TypeKind.Unknown,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};

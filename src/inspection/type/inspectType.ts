@@ -91,7 +91,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
         case Ast.NodeKind.IdentifierPairedExpression:
         case Ast.NodeKind.ParameterList:
         case Ast.NodeKind.Section:
-            return TypeUtils.notApplicableFactory();
+            return Type.NotApplicableInstance;
 
         case Ast.NodeKind.AsType:
         case Ast.NodeKind.AsNullablePrimitiveType:
