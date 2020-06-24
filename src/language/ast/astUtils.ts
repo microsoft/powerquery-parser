@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever } from "../../common";
+import { Assert, CommonError } from "../../common";
 import { Ast } from "../ast";
 import { TokenKind } from "../token";
 
@@ -76,7 +76,7 @@ export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveTyp
             break;
 
         default:
-            throw isNever(nullablePrimitiveType);
+            throw Assert.isNever(nullablePrimitiveType);
     }
 
     return {
@@ -248,7 +248,7 @@ export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpression
             return 30;
 
         default:
-            throw isNever(operator);
+            throw Assert.isNever(operator);
     }
 }
 
@@ -291,7 +291,7 @@ export function primitiveTypeConstantKindFrom(
             return node.primitiveType.constantKind;
 
         default:
-            throw isNever(node);
+            throw Assert.isNever(node);
     }
 }
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from ".";
-import { CommonError, isNever, MapUtils } from "../../common";
+import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast } from "../../language";
 
 export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
@@ -350,7 +350,7 @@ export function arrayWrapperCsvXorNodes(
             }
 
             default:
-                throw isNever(csvXorNode);
+                throw Assert.isNever(csvXorNode);
         }
     }
 

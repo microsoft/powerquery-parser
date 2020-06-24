@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { ArrayUtils, isNever, MapUtils } from "../common";
+import { ArrayUtils, MapUtils, Assert } from "../common";
 import { ParameterScopeItem } from "../inspection";
 import { Ast, AstUtils } from "../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
@@ -172,7 +172,7 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
             return Type.TypeKind.Text;
 
         default:
-            throw isNever(literalKind);
+            throw Assert.isNever(literalKind);
     }
 }
 
@@ -242,7 +242,7 @@ export function maybePrimitiveTypeConstantKindFromTypeKind(
             return undefined;
 
         default:
-            throw isNever(typeKind);
+            throw Assert.isNever(typeKind);
     }
 }
 
@@ -308,7 +308,7 @@ export function typeKindFromPrimitiveTypeConstantKind(
             return Type.TypeKind.Type;
 
         default:
-            throw isNever(primitiveTypeConstantKind);
+            throw Assert.isNever(primitiveTypeConstantKind);
     }
 }
 
@@ -370,7 +370,7 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
             return equalPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
 
         default:
-            throw isNever(left);
+            throw Assert.isNever(left);
     }
 }
 
@@ -462,7 +462,7 @@ export function inspectParameter(
             return inspectContextParameter(nodeIdMapCollection, parameter.node);
 
         default:
-            throw isNever(parameter);
+            throw Assert.isNever(parameter);
     }
 }
 
@@ -490,7 +490,7 @@ function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
             }
 
             default:
-                throw isNever(parameterType);
+                throw Assert.isNever(parameterType);
         }
     } else {
         isNullable = true;

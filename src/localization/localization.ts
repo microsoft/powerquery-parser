@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Language } from "..";
-import { isNever, StringUtils } from "../common";
+import { Assert, StringUtils } from "../common";
 import { Lexer, LexError } from "../lexer";
 import { ParseError } from "../parser";
 import { TokenWithColumnNumber } from "../parser/error";
@@ -181,7 +181,7 @@ export function localizeTokenKind(
             return localizationTemplates.tokenKind_stringLiteral;
 
         default:
-            throw isNever(tokenKind);
+            throw Assert.isNever(tokenKind);
     }
 }
 
@@ -220,7 +220,7 @@ export const Localization: ILocalization = {
                 return templates.error_lex_badLineNumber_2_lessThanZero;
 
             default:
-                throw isNever(kind);
+                throw Assert.isNever(kind);
         }
     },
 
@@ -248,7 +248,7 @@ export const Localization: ILocalization = {
                 return templates.error_lex_badRange_1_lineNumberEnd_greaterThanLineLength;
 
             default:
-                throw isNever(kind);
+                throw Assert.isNever(kind);
         }
     },
 
@@ -270,7 +270,7 @@ export const Localization: ILocalization = {
                 return templates.error_lex_expectedKind_3_numeric;
 
             default:
-                throw isNever(kind);
+                throw Assert.isNever(kind);
         }
     },
 
@@ -298,7 +298,7 @@ export const Localization: ILocalization = {
                 return templates.error_lex_unterminatedMultilineToken_3_string;
 
             default:
-                throw isNever(kind);
+                throw Assert.isNever(kind);
         }
     },
 
@@ -311,7 +311,7 @@ export const Localization: ILocalization = {
                 return templates.error_parse_csvContinuation_2_letExpression;
 
             default:
-                throw isNever(kind);
+                throw Assert.isNever(kind);
         }
     },
 

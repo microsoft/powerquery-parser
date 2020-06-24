@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from ".";
-import { CommonError, isNever, Result, ResultUtils } from "./common";
+import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { StartOfDoctumentKeywords } from "./inspection";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Ast } from "./language";
@@ -243,7 +243,7 @@ export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
         } else if (triedLexParse.error instanceof ParseError.ParseError) {
             return triedLexParse as TriedParse<S>;
         } else {
-            throw isNever(triedLexParse.error);
+            throw Assert.isNever(triedLexParse.error);
         }
     } else {
         const lexParseOk: LexParseOk<S> = triedLexParse.value;

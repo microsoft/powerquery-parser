@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, isNever, Result } from ".";
+import { Assert, CommonError, Result } from ".";
 import { Ast } from "../language";
 import { ILocalizationTemplates } from "../localization";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
@@ -183,7 +183,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
             return result;
         }
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 

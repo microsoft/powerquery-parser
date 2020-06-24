@@ -4,7 +4,7 @@
 import { Naive } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
 import { Language } from "../..";
-import { ArrayUtils, CommonError, isNever, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -236,7 +236,7 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
             return Ast.NodeKind.LogicalExpression;
 
         default:
-            throw isNever(operator);
+            throw Assert.isNever(operator);
     }
 }
 

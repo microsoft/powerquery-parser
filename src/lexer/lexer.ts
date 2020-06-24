@@ -4,8 +4,8 @@
 import { LexError } from ".";
 import { Language } from "..";
 import {
+    Assert,
     CommonError,
-    isNever,
     PartialResult,
     PartialResultKind,
     PartialResultUtils,
@@ -270,7 +270,7 @@ export function isErrorLine(line: TLine): line is TErrorLine {
             return false;
 
         default:
-            throw isNever(line);
+            throw Assert.isNever(line);
     }
 }
 
@@ -477,7 +477,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
             break;
 
         default:
-            throw isNever(line);
+            throw Assert.isNever(line);
     }
 
     const untouchedLine: UntouchedLine = line;
@@ -532,7 +532,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
                     break;
 
                 default:
-                    throw isNever(lineMode);
+                    throw Assert.isNever(lineMode);
             }
 
             lineMode = readOutcome.lineMode;
@@ -630,7 +630,7 @@ function updateLineState(
             };
 
         default:
-            throw isNever(tokenizePartialResult);
+            throw Assert.isNever(tokenizePartialResult);
     }
 }
 
