@@ -3,44 +3,58 @@
 
 import { CommonError } from "../../common";
 import { NodeIdMap, NodeIdMapIterator, TXorNode } from "../../parser";
+import { ScopeItemByKey } from "../scope";
+import { Type, expectedNextType } from "../../type";
 
-function maybeTopSingleChild(
-    childIdsById: NodeIdMap.ChildIdsById,
-    ancestry: ReadonlyArray<TXorNode>,
-): TXorNode | undefined {
-    const numAncestors: number = ancestry.length;
-    if (numAncestors < 2) {
-        return undefined;
-    } else if (numAncestors === 2) {
-        return ancestry[1];
-    }
+function getBestMatch(ancestry: ReadonlyArray<TXorNode>): TXorNode | undefined {
+    const upperBound = ancestry.length - 2;
+    let bestMatch: TXorNode | undefined;
 
-    let maybeBestMatch: TXorNode | undefined;
-    for (let index: number = 2; index < numAncestors - 1; index += 1) {
-        const parent: TXorNode | undefined = ancestry[index + 1];
+    for (let index: number = 0; index < upperBound; index += 1) {
+        const parent: TXorNode = ancestry[index + 1];
         const child: TXorNode = ancestry[index];
 
-        const siblingNodes: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(childIdsById, parent.node.id);
-
-        const childIndex: number = siblingNodes.indexOf(child.node.id);
-        if (childIndex === -1) {
-            const details: {} = {
-                parentNodeId: parent.node.id,
-                childNodeId: child.node.id,
-            };
-            throw new CommonError.InvariantError("expected child node to be in the parent's list of children", details);
-        }
-
-        const isOnlyChild: boolean = siblingNodes.length === 1;
-        if (isOnlyChild === false) {
-            break;
-        }
-
-        maybeBestMatch = parent;
+        const allowedType: Type.TType = expectedNextType(parent, child.node.maybeAttributeIndex)
     }
-
-    return maybeBestMatch;
 }
+
+// function maybeTopSingleChild(
+//     childIdsById: NodeIdMap.ChildIdsById,
+//     ancestry: ReadonlyArray<TXorNode>,
+// ): TXorNode | undefined {
+//     const numAncestors: number = ancestry.length;
+//     if (numAncestors < 2) {
+//         return undefined;
+//     } else if (numAncestors === 2) {
+//         return ancestry[1];
+//     }
+
+//     let maybeBestMatch: TXorNode | undefined;
+//     for (let index: number = 2; index < numAncestors - 1; index += 1) {
+//         const parent: TXorNode | undefined = ancestry[index + 1];
+//         const child: TXorNode = ancestry[index];
+
+//         const siblingNodes: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(childIdsById, parent.node.id);
+
+//         const childIndex: number = siblingNodes.indexOf(child.node.id);
+//         if (childIndex === -1) {
+//             const details: {} = {
+//                 parentNodeId: parent.node.id,
+//                 childNodeId: child.node.id,
+//             };
+//             throw new CommonError.InvariantError("expected child node to be in the parent's list of children", details);
+//         }
+
+//         const isOnlyChild: boolean = siblingNodes.length === 1;
+//         if (isOnlyChild === false) {
+//             break;
+//         }
+
+//         maybeBestMatch = parent;
+//     }
+
+//     return maybeBestMatch;
+// }
 
 // function inspectXorNode(xorNode: TXorNode): Type.TType {
 //     switch (xorNode.node.kind) {
