@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Language } from "../..";
-import { isNever } from "../../common";
+import { Assert } from "../../common";
 import { Ast } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position } from "./position";
@@ -16,7 +16,7 @@ export function isBeforeXorNode(position: Position, xorNode: TXorNode, isBoundIn
             return isBeforeContextNode(position, xorNode.node, isBoundIncluded);
 
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
@@ -41,7 +41,7 @@ export function isInXorNode(
             );
 
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
@@ -54,7 +54,7 @@ export function isOnXorNodeStart(position: Position, xorNode: TXorNode): boolean
             return isOnContextNodeStart(position, xorNode.node);
 
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
@@ -71,7 +71,7 @@ export function isOnXorNodeEnd(
             return isOnContextNodeEnd(nodeIdMapCollection, position, xorNode.node);
 
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
@@ -89,7 +89,7 @@ export function isAfterXorNode(
             return isAfterContextNode(nodeIdMapCollection, position, xorNode.node, isBoundIncluded);
 
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 

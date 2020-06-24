@@ -4,7 +4,7 @@
 import { NodeIdMapIterator } from ".";
 import { ParseContext } from "..";
 import { Language } from "../..";
-import { CommonError, isNever, MapUtils } from "../../common";
+import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast } from "../../language";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
@@ -571,7 +571,7 @@ export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXor
         }
 
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 

@@ -1,15 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    ArrayUtils,
-    CommonError,
-    isNever,
-    MapUtils,
-    ResultUtils,
-    shouldNeverBeReachedTypescript,
-    TypeScriptUtils,
-} from "../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
 import { Type, TypeInspector, TypeUtils } from "../../type";
@@ -77,7 +69,7 @@ export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeIt
             return TypeUtils.unknownFactory();
 
         default:
-            throw isNever(scopeItem);
+            throw Assert.isNever(scopeItem);
     }
 }
 
@@ -252,7 +244,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         default:
-            throw isNever(xorNode.node);
+            throw Assert.isNever(xorNode.node);
     }
 
     state.deltaTypeById.set(xorNodeId, result);
@@ -606,7 +598,7 @@ function helperForinspectFieldSelector(
                     return helperForinspectFieldSelector(state, previousSiblingType.type, fieldName, isOptional);
 
                 default:
-                    throw isNever(previousSiblingType);
+                    throw Assert.isNever(previousSiblingType);
             }
 
         default:
@@ -901,7 +893,7 @@ function inspectLiteralExpression(xorNode: TXorNode): Type.TType {
             return TypeUtils.unknownFactory();
 
         default:
-            throw isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
@@ -1244,7 +1236,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
             | [Type.DefinedRecord, Type.DefinedRecord]
             | [Type.DefinedTable, Type.DefinedTable]);
     } else {
-        throw shouldNeverBeReachedTypescript();
+        throw Assert.shouldNeverBeReachedTypescript();
     }
 }
 
@@ -1376,7 +1368,7 @@ function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TX
             break;
 
         default:
-            throw isNever(deferenced);
+            throw Assert.isNever(deferenced);
     }
 
     const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, deferenced.id);
@@ -1411,7 +1403,7 @@ function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TX
             return undefined;
 
         default:
-            throw isNever(scopeItem);
+            throw Assert.isNever(scopeItem);
     }
 
     if (maybeNextXorNode === undefined) {
@@ -1449,7 +1441,7 @@ function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNo
             break;
 
         default:
-            throw isNever(identifier);
+            throw Assert.isNever(identifier);
     }
 
     const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, identifier.id);
@@ -1481,7 +1473,7 @@ function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNo
             break;
 
         default:
-            throw isNever(scopeItem);
+            throw Assert.isNever(scopeItem);
     }
 
     if (maybeNextXorNode === undefined) {
