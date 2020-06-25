@@ -12,6 +12,8 @@
       "args": [
         "--debug",
         "--colors",
+        "-g",
+        "WIP",
         "--timeout",
         "999999",
         "-r",

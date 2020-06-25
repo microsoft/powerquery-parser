@@ -6,10 +6,6 @@ import "mocha";
 import "mocha";
 import { Type, TypeUtils } from "../../../type";
 
-function isAnyUnion(value: Type.TType): value is Type.AnyUnion {
-    return value.kind === Type.TypeKind.Any && value.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion;
-}
-
 function expectGenericType(value: Type.TType, kind: Type.TypeKind): void {
     if (value.kind !== kind) {
         throw new Error(`expected ${kind} but found ${value.kind}`);
@@ -18,78 +14,86 @@ function expectGenericType(value: Type.TType, kind: Type.TypeKind): void {
 
 function expectGenericUnionedTypes(
     actual: ReadonlyArray<Type.TType>,
-    expected: ReadonlyArray<ReadonlyArray<Type.TypeKind>>,
+    expected: ReadonlyArray<[Type.TypeKind, boolean]>,
 ): void {
-    const simplifiedActual: Type.TypeKind[][] = [];
-
-    for (const type of actual) {
-        if (!isAnyUnion(type)) {
-            throw new Error(`all values in actual were expected to to be of type ${Type.ExtendedTypeKind.AnyUnion}`);
-        }
-        simplifiedActual.push(type.unionedTypePairs.map((value: Type.TType) => value.kind));
+    if (actual.length !== 1) {
+        throw new Error(`did you forget to call dedupe 'actual'?`);
+    } else if (actual[0].maybeExtendedKind !== Type.ExtendedTypeKind.AnyUnion) {
+        throw new Error(`actual isn't an AnyUnion`);
     }
 
-    expect(simplifiedActual).deep.equal(expected);
+    const simplifiedActual: [Type.TypeKind, boolean][] = actual[0].unionedTypePairs.map((value: Type.TType) => [
+        value.kind,
+        value.isNullable,
+    ]);
+    expect(simplifiedActual.sort()).deep.equal([...expected].sort());
 }
 
 describe(`TypeUtils`, () => {
     describe(`dedupe`, () => {
-        it(`dedupe - generic, identical`, () => {
-            const result: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
-                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
-            ]);
+        it(`generic, identical`, () => {
+            const result: ReadonlyArray<Type.TType> = TypeUtils.dedupe([Type.RecordInstance, Type.RecordInstance]);
             expect(result.length).to.equal(1);
         });
 
-        it(`dedupe - generic, mixed`, () => {
+        it(`generic, mixed`, () => {
             const result: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
-                TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, true),
+                Type.RecordInstance,
+                Type.NullableRecordInstance,
             ]);
             expect(result.length).to.equal(2);
         });
 
-        it(`dedupe - ${Type.ExtendedTypeKind.AnyUnion}, generic`, () => {
+        it(`${Type.ExtendedTypeKind.AnyUnion}, generic`, () => {
             const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.anyUnionFactory([
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false),
-                ]),
-                TypeUtils.anyUnionFactory([
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false),
-                ]),
+                TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NullableTableInstance]),
+                TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NullableTableInstance]),
             ]);
-            expect(actual.length).to.equal(1);
-            expectGenericUnionedTypes(actual, [[Type.TypeKind.Record, Type.TypeKind.Table]]);
-        });
-
-        it(`dedupe - ${Type.ExtendedTypeKind.AnyUnion}, mixed nullability`, () => {
-            const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.anyUnionFactory([
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, true),
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, true),
-                ]),
-                TypeUtils.anyUnionFactory([
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
-                    TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false),
-                ]),
-            ]);
-            expect(actual.length).to.equal(2);
             expectGenericUnionedTypes(actual, [
-                [Type.TypeKind.Record, Type.TypeKind.Table],
-                [Type.TypeKind.Record, Type.TypeKind.Table],
+                [Type.TypeKind.Record, false],
+                [Type.TypeKind.Table, true],
             ]);
         });
 
-        it(`dedupe - simplify single AnyUnion.unionedTypes to TType`, () => {
+        it(`${Type.ExtendedTypeKind.AnyUnion}, mixed nullability`, () => {
             const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
-                TypeUtils.anyUnionFactory([TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false)]),
-                TypeUtils.anyUnionFactory([TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false)]),
+                TypeUtils.anyUnionFactory([Type.NullableRecordInstance, Type.NullableTableInstance]),
+                TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NullableTableInstance]),
+            ]);
+            expectGenericUnionedTypes(actual, [
+                [Type.TypeKind.Record, true],
+                [Type.TypeKind.Table, true],
+                [Type.TypeKind.Record, false],
+            ]);
+        });
+
+        it(`simplify single AnyUnion.unionedTypes to TType`, () => {
+            const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+                TypeUtils.anyUnionFactory([Type.RecordInstance]),
+                TypeUtils.anyUnionFactory([Type.RecordInstance]),
             ]);
             expect(actual.length).to.equal(1);
             expectGenericType(actual[0], Type.TypeKind.Record);
         });
+
+        it(`WIP flatten multi level AnyUnion to single AnyUnion`, () => {
+            const actual: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+                TypeUtils.anyUnionFactory([
+                    Type.RecordInstance,
+                    TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NumberInstance]),
+                ]),
+                TypeUtils.anyUnionFactory([Type.RecordInstance]),
+            ]);
+            expectGenericUnionedTypes(actual, [
+                [Type.TypeKind.Record, false],
+                [Type.TypeKind.Number, false],
+                [Type.TypeKind.Record, false],
+            ]);
+        });
+    });
+
+    it(`simplify anyUnionFactory`, () => {
+        const actual: Type.TType = TypeUtils.anyUnionFactory([Type.RecordInstance]) as Type.AnyUnion;
+        expectGenericType(actual, Type.TypeKind.Record);
     });
 });

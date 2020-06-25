@@ -21,8 +21,8 @@ export function primitiveTypeFactory<T extends Type.TypeKind>(typeKind: T, isNul
     return maybeValue;
 }
 
-export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>, dedupeTypes: boolean = true): Type.TType {
-    const simplified: ReadonlyArray<Type.TType> = dedupe(unionedTypePairs, dedupeTypes);
+export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.TType {
+    const simplified: ReadonlyArray<Type.TType> = dedupe(unionedTypePairs);
     if (simplified.length === 1) {
         return simplified[0];
     }
@@ -75,67 +75,72 @@ export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
     };
 }
 
-export function dedupe(types: ReadonlyArray<Type.TType>, combineAnys: boolean = true): ReadonlyArray<Type.TType> {
-    const buckets: Map<string, Type.TType[]> = new Map();
-
-    for (const current of types) {
-        const key: string = `${current.kind},${current.maybeExtendedKind}`;
-        const maybeColllection: Type.TType[] | undefined = buckets.get(key);
-        // First type of TypeKind
-        if (maybeColllection === undefined) {
-            buckets.set(key, [current]);
+export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
+    return types.reduce((partial: Type.TType[], current: Type.TType) => {
+        if (
+            partial.indexOf(current) === -1 &&
+            partial.find((type: Type.TType) => equalType(current, type) === undefined)
+        ) {
+            partial.push(current);
         }
-        // In the bucket for type.kind, check if it's the first with a deep equals comparison.
-        else if (maybeColllection.find((type: Type.TType) => equalType(current, type)) === undefined) {
-            maybeColllection.push(current);
-        }
-    }
-
-    if (combineAnys === true) {
-        const anyUnionKey: string = `${Type.TypeKind.Any},${Type.ExtendedTypeKind.AnyUnion}`;
-        const maybeAnyUnions: ReadonlyArray<Type.TType> | undefined = buckets.get(anyUnionKey);
-        if (maybeAnyUnions !== undefined) {
-            buckets.set(anyUnionKey, [...combineAnyUnions(maybeAnyUnions as ReadonlyArray<Type.AnyUnion>)]);
-        }
-    }
-
-    const result: Type.TType[] = [];
-    for (types of buckets.values()) {
-        result.push(...types);
-    }
-
-    return result;
+        return partial;
+    }, []);
 }
 
-export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.TType> {
-    const [nullable, nonNullable]: [ReadonlyArray<Type.AnyUnion>, ReadonlyArray<Type.AnyUnion>] = ArrayUtils.split(
-        anyUnions,
-        (value: Type.AnyUnion) => value.isNullable === true,
-    );
-
-    const flattenedNullable: ReadonlyArray<Type.TType> = nullable
-        .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
-        .reduce((flattened: Type.TType[], types: ReadonlyArray<Type.TType>, _currentIndex, _array): Type.TType[] => {
-            flattened.push(...types);
-            return flattened;
-        }, []);
-    const flattenedNonNullable: ReadonlyArray<Type.TType> = nonNullable
-        .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
-        .reduce((flattened: Type.TType[], types: ReadonlyArray<Type.TType>, _currentIndex, _array): Type.TType[] => {
-            flattened.push(...types);
-            return flattened;
-        }, []);
-
-    const result: Type.TType[] = [];
-    if (flattenedNullable.length !== 0) {
-        result.push(anyUnionFactory(flattenedNullable, false));
-    }
-    if (flattenedNonNullable.length !== 0) {
-        result.push(anyUnionFactory(flattenedNonNullable, false));
+export function flattenAnyUnionTypes(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
+    const newUnionedTypePairs: Type.TType[] = [];
+    for (const item of anyUnion.unionedTypePairs) {
+        if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+            newUnionedTypePairs.push(...flattenAnyUnionTypes(item));
+        } else {
+            newUnionedTypePairs.push(item);
+        }
     }
 
-    return result;
+    return newUnionedTypePairs;
 }
+
+// export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.TType> {
+//     const [nullable, nonNullable]: [ReadonlyArray<Type.AnyUnion>, ReadonlyArray<Type.AnyUnion>] = ArrayUtils.split(
+//         anyUnions,
+//         (value: Type.AnyUnion) => value.isNullable === true,
+//     );
+
+//     const flattenedNullable: ReadonlyArray<Type.TType> = nullable
+//         .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
+//         .reduce((partial: Type.TType[], types: ReadonlyArray<Type.TType>): Type.TType[] => {
+//             for (const element of types) {
+//                 partial.push(
+//                     element.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
+//                         ? flattenAnyUnionTypes(element)
+//                         : element,
+//                 );
+//             }
+//             return partial;
+//         }, []);
+//     const flattenedNonNullable: ReadonlyArray<Type.TType> = nonNullable
+//         .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
+//         .reduce((partial: Type.TType[], types: ReadonlyArray<Type.TType>): Type.TType[] => {
+//             for (const element of types) {
+//                 partial.push(
+//                     element.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
+//                         ? flattenAnyUnionTypes(element)
+//                         : element,
+//                 );
+//             }
+//             return partial;
+//         }, []);
+
+//     const result: Type.TType[] = [];
+//     if (flattenedNullable.length !== 0) {
+//         result.push(anyUnionFactory(flattenedNullable, false));
+//     }
+//     if (flattenedNonNullable.length !== 0) {
+//         result.push(anyUnionFactory(flattenedNonNullable, false));
+//     }
+
+//     return result;
+// }
 
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
