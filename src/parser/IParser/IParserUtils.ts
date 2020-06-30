@@ -11,10 +11,10 @@ export function tryRead<State extends IParserState = IParserState>(
     state: State,
     parser: IParser<State>,
 ): TriedParse<State> {
-    let node: Ast.TNode;
+    let root: Ast.TNode;
 
     try {
-        node = parser.read(state, parser);
+        root = parser.read(state, parser);
     } catch (err) {
         let convertedError: ParseError.TParseError<State>;
         if (ParseError.isTInnerParseError(err)) {
@@ -36,7 +36,7 @@ export function tryRead<State extends IParserState = IParserState>(
     }
 
     return ResultUtils.okFactory({
-        ast: node,
+        root,
         nodeIdMapCollection: state.contextState.nodeIdMapCollection,
         leafNodeIds: state.contextState.leafNodeIds,
         state,

@@ -19,7 +19,7 @@ export const enum BracketDisambiguation {
 }
 
 export interface ParseOk<S extends IParserState = IParserState> {
-    readonly ast: Ast.TNode;
+    readonly root: Ast.TNode;
     readonly state: S;
 }
 
