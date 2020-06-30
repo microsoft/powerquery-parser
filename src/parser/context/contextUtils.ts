@@ -115,7 +115,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
 
     if (state.maybeRoot?.id === astNode.id) {
         if (state.nodeIdMapCollection.contextNodeById.size) {
-            throw new CommonError.InvariantError(`the root context shouldn't end untill all context nodes are closed`);
+            throw new CommonError.InvariantError(`the root context shouldn't end until all other context nodes have ended`);
         }
     }
 
