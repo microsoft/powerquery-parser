@@ -76,22 +76,98 @@ export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
 }
 
 export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
-    return types.reduce((partial: Type.TType[], current: Type.TType) => {
-        if (
-            partial.indexOf(current) === -1 &&
-            partial.find((type: Type.TType) => equalType(current, type) === undefined)
-        ) {
-            partial.push(current);
+    const anyUnionTypes: Type.AnyUnion[] = [];
+    const partial: Type.TType[] = [];
+
+    for (const item of types) {
+        if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+            if (typeNotInArray(anyUnionTypes, item)) {
+                anyUnionTypes.push(item);
+            }
+        } else if (typeNotInArray(partial, item)) {
+            partial.push(item);
         }
+    }
+
+    if (anyUnionTypes.length === 0) {
         return partial;
-    }, []);
+    }
+
+    const dedupedAnyUnion: Type.TType = dedupeAnyUnions(anyUnionTypes);
+    // Merge the return of dedupeAnyUnions into partial
+    if (dedupedAnyUnion.maybeExtendedKind !== Type.ExtendedTypeKind.AnyUnion) {
+        if (typeNotInArray(partial, dedupedAnyUnion)) {
+            partial.push(dedupedAnyUnion);
+        }
+
+        return partial;
+    }
+    // Merge partial into the return of dedupeAnyUnions
+    else {
+        let isNullableEncountered: boolean = false;
+        const typesNotInDedupedAnyUnion: Type.TType[] = [];
+
+        for (const item of partial) {
+            if (typeNotInArray(dedupedAnyUnion.unionedTypePairs, item)) {
+                if (item.isNullable) {
+                    isNullableEncountered = true;
+                }
+                typesNotInDedupedAnyUnion.push(item);
+            }
+        }
+
+        return [
+            {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: isNullableEncountered,
+                unionedTypePairs: [...dedupedAnyUnion.unionedTypePairs, ...typesNotInDedupedAnyUnion],
+            },
+        ];
+    }
 }
 
-export function flattenAnyUnionTypes(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
-    const newUnionedTypePairs: Type.TType[] = [];
+// Combines all given AnyUnions into either:
+//  * a single AnyUnion
+//  * a single Type.TType that is not an AnyUnion
+// The first case is the most common.
+// The second happens if several AnyUnion consist only of one unique type, then it should be simplified to that type.
+export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.TType {
+    const simplified: Type.TType[] = [];
+    let isNullable = false;
+
+    for (const anyUnion of anyUnions) {
+        for (const type of flattenUnionedTypePairs(anyUnion)) {
+            if (type.isNullable === true) {
+                isNullable = true;
+            }
+            if (typeNotInArray(simplified, type)) {
+                simplified.push(type);
+            }
+        }
+    }
+
+    // Second case
+    if (simplified.length === 1) {
+        return simplified[0];
+    }
+
+    // First Case
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+        isNullable,
+        unionedTypePairs: simplified,
+    };
+}
+
+// Recursively flattens out all unionedTypePairs into an array.
+export function flattenUnionedTypePairs(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
+    let newUnionedTypePairs: Type.TType[] = [];
+
     for (const item of anyUnion.unionedTypePairs) {
         if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-            newUnionedTypePairs.push(...flattenAnyUnionTypes(item));
+            newUnionedTypePairs = newUnionedTypePairs.concat(flattenUnionedTypePairs(item));
         } else {
             newUnionedTypePairs.push(item);
         }
@@ -99,6 +175,19 @@ export function flattenAnyUnionTypes(anyUnion: Type.AnyUnion): ReadonlyArray<Typ
 
     return newUnionedTypePairs;
 }
+
+// export function flattenAnyUnionTypes(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
+//     const newUnionedTypePairs: Type.TType[] = [];
+//     for (const item of anyUnion.unionedTypePairs) {
+//         if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+//             newUnionedTypePairs.push(...flattenAnyUnionTypes(item));
+//         } else {
+//             newUnionedTypePairs.push(item);
+//         }
+//     }
+
+//     return newUnionedTypePairs;
+// }
 
 // export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.TType> {
 //     const [nullable, nonNullable]: [ReadonlyArray<Type.AnyUnion>, ReadonlyArray<Type.AnyUnion>] = ArrayUtils.split(
@@ -653,4 +742,13 @@ function inspectContextParameter(
         isNullable,
         maybeType,
     };
+}
+
+function typeNotInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
+    return (
+        // Fast comparison
+        collection.indexOf(item) === -1 &&
+        // Deep comparison
+        collection.find((type: Type.TType) => equalType(item, type) === undefined) === undefined
+    );
 }
