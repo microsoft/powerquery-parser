@@ -64,70 +64,6 @@ export type TPrimitiveType =
     | Type
     | Unknown;
 
-export const AnyInstance: IPrimitiveType<TypeKind.Any> = primitiveTypeFactory(TypeKind.Any, false);
-export const AnyNonNullInstance: IPrimitiveType<TypeKind.AnyNonNull> = primitiveTypeFactory(TypeKind.AnyNonNull, false);
-export const BinaryInstance: IPrimitiveType<TypeKind.Binary> = primitiveTypeFactory(TypeKind.Binary, false);
-export const DateInstance: IPrimitiveType<TypeKind.Date> = primitiveTypeFactory(TypeKind.Date, false);
-export const DateTimeInstance: IPrimitiveType<TypeKind.DateTime> = primitiveTypeFactory(TypeKind.DateTime, false);
-export const DateTimeZoneInstance: IPrimitiveType<TypeKind.DateTimeZone> = primitiveTypeFactory(
-    TypeKind.DateTimeZone,
-    false,
-);
-export const DurationInstance: IPrimitiveType<TypeKind.Duration> = primitiveTypeFactory(TypeKind.Duration, false);
-export const FunctionInstance: IPrimitiveType<TypeKind.Function> = primitiveTypeFactory(TypeKind.Function, false);
-export const ListInstance: IPrimitiveType<TypeKind.List> = primitiveTypeFactory(TypeKind.List, false);
-export const LogicalInstance: IPrimitiveType<TypeKind.Logical> = primitiveTypeFactory(TypeKind.Logical, false);
-export const NoneInstance: IPrimitiveType<TypeKind.None> = primitiveTypeFactory(TypeKind.None, false);
-export const NullInstance: IPrimitiveType<TypeKind.Null> = primitiveTypeFactory(TypeKind.Null, false);
-export const NumberInstance: IPrimitiveType<TypeKind.Number> = primitiveTypeFactory(TypeKind.Number, false);
-export const RecordInstance: IPrimitiveType<TypeKind.Record> = primitiveTypeFactory(TypeKind.Record, false);
-export const TableInstance: IPrimitiveType<TypeKind.Table> = primitiveTypeFactory(TypeKind.Table, false);
-export const TextInstance: IPrimitiveType<TypeKind.Text> = primitiveTypeFactory(TypeKind.Text, false);
-export const TypeInstance: IPrimitiveType<TypeKind.Type> = primitiveTypeFactory(TypeKind.Type, false);
-export const ActionInstance: IPrimitiveType<TypeKind.Action> = primitiveTypeFactory(TypeKind.Action, false);
-export const TimeInstance: IPrimitiveType<TypeKind.Time> = primitiveTypeFactory(TypeKind.Time, false);
-export const NotApplicableInstance: IPrimitiveType<TypeKind.NotApplicable> = primitiveTypeFactory(
-    TypeKind.NotApplicable,
-    false,
-);
-export const UnknownInstance: IPrimitiveType<TypeKind.Unknown> = primitiveTypeFactory(TypeKind.Unknown, false);
-
-export const NullableAnyInstance: IPrimitiveType<TypeKind.Any> = primitiveTypeFactory(TypeKind.Any, true);
-export const NullableBinaryInstance: IPrimitiveType<TypeKind.Binary> = primitiveTypeFactory(TypeKind.Binary, true);
-export const NullableDateInstance: IPrimitiveType<TypeKind.Date> = primitiveTypeFactory(TypeKind.Date, true);
-export const NullableDateTimeInstance: IPrimitiveType<TypeKind.DateTime> = primitiveTypeFactory(
-    TypeKind.DateTime,
-    true,
-);
-export const NullableDateTimeZoneInstance: IPrimitiveType<TypeKind.DateTimeZone> = primitiveTypeFactory(
-    TypeKind.DateTimeZone,
-    true,
-);
-export const NullableDurationInstance: IPrimitiveType<TypeKind.Duration> = primitiveTypeFactory(
-    TypeKind.Duration,
-    true,
-);
-export const NullableFunctionInstance: IPrimitiveType<TypeKind.Function> = primitiveTypeFactory(
-    TypeKind.Function,
-    true,
-);
-export const NullableListInstance: IPrimitiveType<TypeKind.List> = primitiveTypeFactory(TypeKind.List, true);
-export const NullableLogicalInstance: IPrimitiveType<TypeKind.Logical> = primitiveTypeFactory(TypeKind.Logical, true);
-export const NullableNoneInstance: IPrimitiveType<TypeKind.None> = primitiveTypeFactory(TypeKind.None, true);
-export const NullableNullInstance: IPrimitiveType<TypeKind.Null> = primitiveTypeFactory(TypeKind.Null, true);
-export const NullableNumberInstance: IPrimitiveType<TypeKind.Number> = primitiveTypeFactory(TypeKind.Number, true);
-export const NullableRecordInstance: IPrimitiveType<TypeKind.Record> = primitiveTypeFactory(TypeKind.Record, true);
-export const NullableTableInstance: IPrimitiveType<TypeKind.Table> = primitiveTypeFactory(TypeKind.Table, true);
-export const NullableTextInstance: IPrimitiveType<TypeKind.Text> = primitiveTypeFactory(TypeKind.Text, true);
-export const NullableTypeInstance: IPrimitiveType<TypeKind.Type> = primitiveTypeFactory(TypeKind.Type, true);
-export const NullableActionInstance: IPrimitiveType<TypeKind.Action> = primitiveTypeFactory(TypeKind.Action, true);
-export const NullableTimeInstance: IPrimitiveType<TypeKind.Time> = primitiveTypeFactory(TypeKind.Time, true);
-export const NullableNotApplicableInstance: IPrimitiveType<TypeKind.NotApplicable> = primitiveTypeFactory(
-    TypeKind.NotApplicable,
-    true,
-);
-export const NullableUnknownInstance: IPrimitiveType<TypeKind.Unknown> = primitiveTypeFactory(TypeKind.Unknown, true);
-
 export const enum TypeKind {
     Any = "Any",
     AnyNonNull = "AnyNonNull",
@@ -248,6 +184,205 @@ export interface FunctionParameter {
     readonly maybeType: TypeKind | undefined;
 }
 
+export const AnyInstance: IPrimitiveType<TypeKind.Any> = primitiveTypeFactory(TypeKind.Any, false);
+export const AnyNonNullInstance: IPrimitiveType<TypeKind.AnyNonNull> = primitiveTypeFactory(TypeKind.AnyNonNull, false);
+export const BinaryInstance: IPrimitiveType<TypeKind.Binary> = primitiveTypeFactory(TypeKind.Binary, false);
+export const DateInstance: IPrimitiveType<TypeKind.Date> = primitiveTypeFactory(TypeKind.Date, false);
+export const DateTimeInstance: IPrimitiveType<TypeKind.DateTime> = primitiveTypeFactory(TypeKind.DateTime, false);
+export const DateTimeZoneInstance: IPrimitiveType<TypeKind.DateTimeZone> = primitiveTypeFactory(
+    TypeKind.DateTimeZone,
+    false,
+);
+export const DurationInstance: IPrimitiveType<TypeKind.Duration> = primitiveTypeFactory(TypeKind.Duration, false);
+export const FunctionInstance: IPrimitiveType<TypeKind.Function> = primitiveTypeFactory(TypeKind.Function, false);
+export const ListInstance: IPrimitiveType<TypeKind.List> = primitiveTypeFactory(TypeKind.List, false);
+export const LogicalInstance: IPrimitiveType<TypeKind.Logical> = primitiveTypeFactory(TypeKind.Logical, false);
+export const NoneInstance: IPrimitiveType<TypeKind.None> = primitiveTypeFactory(TypeKind.None, false);
+export const NullInstance: IPrimitiveType<TypeKind.Null> = primitiveTypeFactory(TypeKind.Null, false);
+export const NumberInstance: IPrimitiveType<TypeKind.Number> = primitiveTypeFactory(TypeKind.Number, false);
+export const RecordInstance: IPrimitiveType<TypeKind.Record> = primitiveTypeFactory(TypeKind.Record, false);
+export const TableInstance: IPrimitiveType<TypeKind.Table> = primitiveTypeFactory(TypeKind.Table, false);
+export const TextInstance: IPrimitiveType<TypeKind.Text> = primitiveTypeFactory(TypeKind.Text, false);
+export const TypePrimitiveInstance: IPrimitiveType<TypeKind.Type> = primitiveTypeFactory(TypeKind.Type, false);
+export const ActionInstance: IPrimitiveType<TypeKind.Action> = primitiveTypeFactory(TypeKind.Action, false);
+export const TimeInstance: IPrimitiveType<TypeKind.Time> = primitiveTypeFactory(TypeKind.Time, false);
+export const NotApplicableInstance: IPrimitiveType<TypeKind.NotApplicable> = primitiveTypeFactory(
+    TypeKind.NotApplicable,
+    false,
+);
+export const UnknownInstance: IPrimitiveType<TypeKind.Unknown> = primitiveTypeFactory(TypeKind.Unknown, false);
+
+export const NullableAnyInstance: IPrimitiveType<TypeKind.Any> = primitiveTypeFactory(TypeKind.Any, true);
+export const NullableBinaryInstance: IPrimitiveType<TypeKind.Binary> = primitiveTypeFactory(TypeKind.Binary, true);
+export const NullableDateInstance: IPrimitiveType<TypeKind.Date> = primitiveTypeFactory(TypeKind.Date, true);
+export const NullableDateTimeInstance: IPrimitiveType<TypeKind.DateTime> = primitiveTypeFactory(
+    TypeKind.DateTime,
+    true,
+);
+export const NullableDateTimeZoneInstance: IPrimitiveType<TypeKind.DateTimeZone> = primitiveTypeFactory(
+    TypeKind.DateTimeZone,
+    true,
+);
+export const NullableDurationInstance: IPrimitiveType<TypeKind.Duration> = primitiveTypeFactory(
+    TypeKind.Duration,
+    true,
+);
+export const NullableFunctionInstance: IPrimitiveType<TypeKind.Function> = primitiveTypeFactory(
+    TypeKind.Function,
+    true,
+);
+export const NullableListInstance: IPrimitiveType<TypeKind.List> = primitiveTypeFactory(TypeKind.List, true);
+export const NullableLogicalInstance: IPrimitiveType<TypeKind.Logical> = primitiveTypeFactory(TypeKind.Logical, true);
+export const NullableNoneInstance: IPrimitiveType<TypeKind.None> = primitiveTypeFactory(TypeKind.None, true);
+export const NullableNullInstance: IPrimitiveType<TypeKind.Null> = primitiveTypeFactory(TypeKind.Null, true);
+export const NullableNumberInstance: IPrimitiveType<TypeKind.Number> = primitiveTypeFactory(TypeKind.Number, true);
+export const NullableRecordInstance: IPrimitiveType<TypeKind.Record> = primitiveTypeFactory(TypeKind.Record, true);
+export const NullableTableInstance: IPrimitiveType<TypeKind.Table> = primitiveTypeFactory(TypeKind.Table, true);
+export const NullableTextInstance: IPrimitiveType<TypeKind.Text> = primitiveTypeFactory(TypeKind.Text, true);
+export const NullableTypeInstance: IPrimitiveType<TypeKind.Type> = primitiveTypeFactory(TypeKind.Type, true);
+export const NullableActionInstance: IPrimitiveType<TypeKind.Action> = primitiveTypeFactory(TypeKind.Action, true);
+export const NullableTimeInstance: IPrimitiveType<TypeKind.Time> = primitiveTypeFactory(TypeKind.Time, true);
+export const NullableNotApplicableInstance: IPrimitiveType<TypeKind.NotApplicable> = primitiveTypeFactory(
+    TypeKind.NotApplicable,
+    true,
+);
+export const NullableUnknownInstance: IPrimitiveType<TypeKind.Unknown> = primitiveTypeFactory(TypeKind.Unknown, true);
+
+export const PrimitiveInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable: false,
+    unionedTypePairs: [
+        ActionInstance,
+        AnyInstance,
+        AnyNonNullInstance,
+        BinaryInstance,
+        DateInstance,
+        DateTimeInstance,
+        DateTimeZoneInstance,
+        DurationInstance,
+        FunctionInstance,
+        ListInstance,
+        LogicalInstance,
+        NoneInstance,
+        NotApplicableInstance,
+        NullInstance,
+        NumberInstance,
+        RecordInstance,
+        TableInstance,
+        TextInstance,
+        TimeInstance,
+        TypePrimitiveInstance,
+    ],
+};
+
+export const NullablePrimitiveInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable: true,
+    unionedTypePairs: [
+        NullableActionInstance,
+        NullableAnyInstance,
+        NullableBinaryInstance,
+        NullableDateInstance,
+        NullableDateTimeInstance,
+        NullableDateTimeZoneInstance,
+        NullableDurationInstance,
+        NullableFunctionInstance,
+        NullableListInstance,
+        NullableLogicalInstance,
+        NullableNoneInstance,
+        NullableNotApplicableInstance,
+        NullableNullInstance,
+        NullableNumberInstance,
+        NullableRecordInstance,
+        NullableTableInstance,
+        NullableTextInstance,
+        NullableTimeInstance,
+        NullableTypeInstance,
+    ],
+};
+
+export const ExpressionInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable: PrimitiveInstance.isNullable || NullablePrimitiveInstance.isNullable,
+    unionedTypePairs: [...PrimitiveInstance.unionedTypePairs, ...NullablePrimitiveInstance.unionedTypePairs],
+};
+
+export const LiteralExpressionInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable:
+        LogicalInstance.isNullable || NumberInstance.isNullable || TextInstance.isNullable || NullInstance.isNullable,
+    unionedTypePairs: [LogicalInstance, NumberInstance, TextInstance, NullInstance],
+};
+
+export const PrimaryExpressionInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable: LiteralExpressionInstance.isNullable || ListInstance.isNullable || RecordInstance.isNullable,
+    unionedTypePairs: [...LiteralExpressionInstance.unionedTypePairs, ListInstance, RecordInstance],
+};
+
+export const PrimaryTypeInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable: true,
+    unionedTypePairs: [
+        ...PrimitiveInstance.unionedTypePairs.map((value: TType) => definedTypeFactory(value, value.isNullable)),
+        ...NullablePrimitiveInstance.unionedTypePairs.map((value: TType) =>
+            definedTypeFactory(value, value.isNullable),
+        ),
+        definedTypeFactory(RecordInstance, true),
+        definedTypeFactory(RecordInstance, false),
+        definedTypeFactory(ListInstance, true),
+        definedTypeFactory(ListInstance, false),
+        definedTypeFactory(FunctionInstance, true),
+        definedTypeFactory(FunctionInstance, false),
+        definedTypeFactory(TableInstance, true),
+        definedTypeFactory(TableInstance, false),
+    ],
+};
+
+export const TypeProductionInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable: ExpressionInstance.isNullable || PrimaryTypeInstance.isNullable,
+    unionedTypePairs: [...ExpressionInstance.unionedTypePairs, ...PrimaryTypeInstance.unionedTypePairs],
+};
+
+export const TypeExpressionInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable: PrimaryExpressionInstance.isNullable || PrimaryTypeInstance.isNullable,
+    unionedTypePairs: [PrimaryExpressionInstance, PrimaryTypeInstance],
+};
+
+export const AnyLiteralInstance: AnyUnion = {
+    kind: TypeKind.Any,
+    maybeExtendedKind: ExtendedTypeKind.AnyUnion,
+    isNullable:
+        RecordInstance.isNullable ||
+        ListInstance.isNullable ||
+        LogicalInstance.isNullable ||
+        NumberInstance.isNullable ||
+        TextInstance.isNullable ||
+        NullInstance.isNullable,
+    unionedTypePairs: [RecordInstance, ListInstance, LogicalInstance, NumberInstance, TextInstance, NullInstance],
+};
+
+function definedTypeFactory<T extends TType>(primaryType: T, isNullable: boolean): DefinedType<T> {
+    return {
+        kind: TypeKind.Type,
+        maybeExtendedKind: ExtendedTypeKind.DefinedType,
+        isNullable,
+        primaryType,
+    };
+}
+
+// Designed to create singletons.
+// The exported primitiveTypeFactory in typeUtils should map back to the singletons generated in this file.
 function primitiveTypeFactory<T extends TypeKind>(typeKind: T, isNullable: boolean): IPrimitiveType<T> {
     return {
         kind: typeKind,

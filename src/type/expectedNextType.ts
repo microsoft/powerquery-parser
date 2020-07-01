@@ -38,7 +38,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
             switch (childIndex) {
                 case 0:
                 case 2:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 case 1:
                     return Type.NotApplicableInstance;
@@ -51,13 +51,13 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
         case Ast.NodeKind.IsExpression:
             switch (childIndex) {
                 case 0:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 case 1:
                     return Type.NotApplicableInstance;
 
                 case 2:
-                    return NullablePrimitive;
+                    return Type.NullablePrimitiveInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -79,7 +79,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return TType;
+                    return Type.TypeProductionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -91,7 +91,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return NullablePrimitive;
+                    return Type.NullablePrimitiveInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -103,7 +103,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -115,7 +115,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 case 2:
                     return Type.NotApplicableInstance;
@@ -135,7 +135,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 2:
-                    return AnyLiteral;
+                    return Type.AnyLiteralInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -149,7 +149,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 2:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -162,7 +162,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 2:
-                    return TType;
+                    return Type.TypeProductionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -174,7 +174,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return TType;
+                    return Type.TypeProductionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -187,10 +187,10 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return NullablePrimitive;
+                    return Type.NullablePrimitiveInstance;
 
                 case 3:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -203,7 +203,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 2:
-                    return NullablePrimitive;
+                    return Type.NullablePrimitiveInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -221,7 +221,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
 
                 case 3:
                 case 5:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -233,7 +233,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return NullablePrimitive;
+                    return Type.NullablePrimitiveInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -247,7 +247,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -261,7 +261,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 3:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -274,7 +274,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return TType;
+                    return Type.TypeProductionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -287,7 +287,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
 
                 case 0:
                 case 2:
-                    return TypeExpression;
+                    return Type.TypeExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -308,7 +308,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return Primitive;
+                    return Type.PrimitiveInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -320,7 +320,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return TType;
+                    return Type.TypeProductionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -332,7 +332,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -345,7 +345,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -355,7 +355,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
             switch (childIndex) {
                 case 0:
                 case 2:
-                    return Expression;
+                    return Type.ExpressionInstance;
 
                 case 1:
                     return Type.NotApplicableInstance;
@@ -368,7 +368,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
             switch (childIndex) {
                 case 1:
                 case 2:
-                    return PrimaryExpression;
+                    return Type.PrimaryExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -380,7 +380,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return PrimaryType;
+                    return Type.PrimaryTypeInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -392,7 +392,7 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
                     return Type.NotApplicableInstance;
 
                 case 1:
-                    return TypeExpression;
+                    return Type.TypeExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -401,147 +401,6 @@ export function expectedNextType(parentXorNode: TXorNode, childIndex: number): a
         default:
             throw Assert.isNever(parentXorNode.node);
     }
-}
-
-const Primitive: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: false,
-    unionedTypePairs: [
-        Type.ActionInstance,
-        Type.AnyInstance,
-        Type.AnyNonNullInstance,
-        Type.BinaryInstance,
-        Type.DateInstance,
-        Type.DateTimeInstance,
-        Type.DateTimeZoneInstance,
-        Type.DurationInstance,
-        Type.FunctionInstance,
-        Type.ListInstance,
-        Type.LogicalInstance,
-        Type.NoneInstance,
-        Type.NotApplicableInstance,
-        Type.NullInstance,
-        Type.NumberInstance,
-        Type.RecordInstance,
-        Type.TableInstance,
-        Type.TextInstance,
-        Type.TimeInstance,
-        Type.TypeInstance,
-    ],
-};
-
-const NullablePrimitive: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: true,
-    unionedTypePairs: [
-        Type.NullableActionInstance,
-        Type.NullableAnyInstance,
-        Type.NullableBinaryInstance,
-        Type.NullableDateInstance,
-        Type.NullableDateTimeInstance,
-        Type.NullableDateTimeZoneInstance,
-        Type.NullableDurationInstance,
-        Type.NullableFunctionInstance,
-        Type.NullableListInstance,
-        Type.NullableLogicalInstance,
-        Type.NullableNoneInstance,
-        Type.NullableNotApplicableInstance,
-        Type.NullableNullInstance,
-        Type.NullableNumberInstance,
-        Type.NullableRecordInstance,
-        Type.NullableTableInstance,
-        Type.NullableTextInstance,
-        Type.NullableTimeInstance,
-        Type.NullableTypeInstance,
-    ],
-};
-
-const Expression: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: Primitive.isNullable || NullablePrimitive.isNullable,
-    unionedTypePairs: [...Primitive.unionedTypePairs, ...NullablePrimitive.unionedTypePairs],
-};
-
-const LiteralExpression: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable:
-        Type.LogicalInstance.isNullable ||
-        Type.NumberInstance.isNullable ||
-        Type.TextInstance.isNullable ||
-        Type.NullInstance.isNullable,
-    unionedTypePairs: [Type.LogicalInstance, Type.NumberInstance, Type.TextInstance, Type.NullInstance],
-};
-
-const PrimaryExpression: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: LiteralExpression.isNullable || Type.ListInstance.isNullable || Type.RecordInstance.isNullable,
-    unionedTypePairs: [...LiteralExpression.unionedTypePairs, Type.ListInstance, Type.RecordInstance],
-};
-
-const PrimaryType: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: true,
-    unionedTypePairs: [
-        ...Primitive.unionedTypePairs.map((value: Type.TType) => typeFactory(value, value.isNullable)),
-        ...NullablePrimitive.unionedTypePairs.map((value: Type.TType) => typeFactory(value, value.isNullable)),
-        typeFactory(Type.RecordInstance, true),
-        typeFactory(Type.RecordInstance, false),
-        typeFactory(Type.ListInstance, true),
-        typeFactory(Type.ListInstance, false),
-        typeFactory(Type.FunctionInstance, true),
-        typeFactory(Type.FunctionInstance, false),
-        typeFactory(Type.TableInstance, true),
-        typeFactory(Type.TableInstance, false),
-    ],
-};
-
-const TType: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: Expression.isNullable || PrimaryType.isNullable,
-    unionedTypePairs: [...Expression.unionedTypePairs, ...PrimaryType.unionedTypePairs],
-};
-
-const TypeExpression: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable: PrimaryExpression.isNullable || PrimaryType.isNullable,
-    unionedTypePairs: [PrimaryExpression, PrimaryType],
-};
-
-const AnyLiteral: Type.AnyUnion = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-    isNullable:
-        Type.RecordInstance.isNullable ||
-        Type.ListInstance.isNullable ||
-        Type.LogicalInstance.isNullable ||
-        Type.NumberInstance.isNullable ||
-        Type.TextInstance.isNullable ||
-        Type.NullInstance.isNullable,
-    unionedTypePairs: [
-        Type.RecordInstance,
-        Type.ListInstance,
-        Type.LogicalInstance,
-        Type.NumberInstance,
-        Type.TextInstance,
-        Type.NullInstance,
-    ],
-};
-
-function typeFactory<T extends Type.TType>(primaryType: T, isNullable: boolean): Type.DefinedType<T> {
-    return {
-        kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
-        isNullable,
-        primaryType,
-    };
 }
 
 function unknownChildIndexError(parent: TXorNode, childIndex: number): CommonError.InvariantError {

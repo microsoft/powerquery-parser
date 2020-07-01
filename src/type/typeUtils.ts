@@ -511,7 +511,7 @@ export const primitiveTypeConstantMap: Map<string, Type.IPrimitiveType> = new Ma
     [primitiveTypeMapKey(Type.RecordInstance.kind, Type.RecordInstance.isNullable), Type.RecordInstance],
     [primitiveTypeMapKey(Type.TableInstance.kind, Type.TableInstance.isNullable), Type.TableInstance],
     [primitiveTypeMapKey(Type.TextInstance.kind, Type.TextInstance.isNullable), Type.TextInstance],
-    [primitiveTypeMapKey(Type.TypeInstance.kind, Type.TypeInstance.isNullable), Type.TypeInstance],
+    [primitiveTypeMapKey(Type.TypePrimitiveInstance.kind, Type.TypePrimitiveInstance.isNullable), Type.TypePrimitiveInstance],
     [primitiveTypeMapKey(Type.ActionInstance.kind, Type.ActionInstance.isNullable), Type.ActionInstance],
     [primitiveTypeMapKey(Type.TimeInstance.kind, Type.TimeInstance.isNullable), Type.TimeInstance],
     [
