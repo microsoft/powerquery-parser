@@ -338,19 +338,25 @@ export function typeKindFromPrimitiveTypeConstantKind(
 }
 
 export function equalType(left: Type.TType, right: Type.TType): boolean {
-    if (left.kind !== right.kind) {
+    if (left === right) {
+        return true;
+    } else if (
+        left.kind !== right.kind ||
+        left.maybeExtendedKind !== right.maybeExtendedKind ||
+        left.isNullable !== right.isNullable
+    ) {
         return false;
     } else if (left.maybeExtendedKind !== undefined && right.maybeExtendedKind !== undefined) {
         return equalExtendedTypes(left, right);
-    } else if (left.isNullable !== right.isNullable) {
-        return false;
     } else {
         return true;
     }
 }
 
 export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
-    if (leftTypes.length !== rightTypes.length) {
+    if (leftTypes === rightTypes) {
+        return true;
+    } else if (leftTypes.length !== rightTypes.length) {
         return false;
     }
 
@@ -365,7 +371,9 @@ export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: Rea
 }
 
 export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
-    if (left.maybeExtendedKind !== right.maybeExtendedKind) {
+    if (left === right) {
+        return true;
+    } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
         return false;
     }
 
@@ -400,14 +408,18 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
 }
 
 export function equalAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
-    return left.isNullable === right.isNullable && equalTypes(left.unionedTypePairs, right.unionedTypePairs);
+    return (
+        left === right ||
+        (left.isNullable === right.isNullable && equalTypes(left.unionedTypePairs, right.unionedTypePairs))
+    );
 }
 
 export function equalDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
     return (
-        left.isNullable === right.isNullable &&
-        equalType(left.returnType, right.returnType) &&
-        equalDefinedFunctionParameters(left.parameters, right.parameters)
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            equalType(left.returnType, right.returnType) &&
+            equalDefinedFunctionParameters(left.parameters, right.parameters))
     );
 }
 
@@ -415,7 +427,9 @@ export function equalDefinedFunctionParameters(
     left: ReadonlyArray<Type.FunctionParameter>,
     right: ReadonlyArray<Type.FunctionParameter>,
 ): boolean {
-    if (left.length !== right.length) {
+    if (left === right) {
+        return true;
+    } else if (left.length !== right.length) {
         return false;
     }
 
@@ -436,7 +450,9 @@ export function equalDefinedFunctionParameters(
 }
 
 export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
-    if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
+    if (left === right) {
+        return true;
+    } else if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
         return false;
     }
 
@@ -448,31 +464,33 @@ export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList
 
 export function equalDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
-        left.isNullable === right.isNullable &&
-        MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType)
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType))
     );
 }
 
 export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
     return (
-        left.isNullable === right.isNullable &&
-        MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType)
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType))
     );
 }
 
 export function equalDefinedType<T extends Type.TType>(left: Type.DefinedType<T>, right: Type.DefinedType<T>): boolean {
-    return left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType);
+    return left === right || (left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType));
 }
 
 export function equalListType(left: Type.ListType, right: Type.ListType): boolean {
-    return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
+    return left === right || (left.isNullable === right.isNullable && equalType(left.itemType, right.itemType));
 }
 
 export function equalPrimaryExpressionTable(
     left: Type.PrimaryExpressionTable,
     right: Type.PrimaryExpressionTable,
 ): boolean {
-    return equalType(left.type, right.type);
+    return left === right || equalType(left.type, right.type);
 }
 
 export function inspectParameter(
@@ -491,7 +509,7 @@ export function inspectParameter(
     }
 }
 
-export const primitiveTypeConstantMap: Map<string, Type.IPrimitiveType> = new Map<string, Type.IPrimitiveType>([
+export const primitiveTypeConstantMap: ReadonlyMap<string, Type.IPrimitiveType> = new Map<string, Type.IPrimitiveType>([
     [primitiveTypeMapKey(Type.AnyInstance.kind, Type.AnyInstance.isNullable), Type.AnyInstance],
     [primitiveTypeMapKey(Type.AnyNonNullInstance.kind, Type.AnyNonNullInstance.isNullable), Type.AnyNonNullInstance],
     [primitiveTypeMapKey(Type.BinaryInstance.kind, Type.BinaryInstance.isNullable), Type.BinaryInstance],
@@ -511,7 +529,10 @@ export const primitiveTypeConstantMap: Map<string, Type.IPrimitiveType> = new Ma
     [primitiveTypeMapKey(Type.RecordInstance.kind, Type.RecordInstance.isNullable), Type.RecordInstance],
     [primitiveTypeMapKey(Type.TableInstance.kind, Type.TableInstance.isNullable), Type.TableInstance],
     [primitiveTypeMapKey(Type.TextInstance.kind, Type.TextInstance.isNullable), Type.TextInstance],
-    [primitiveTypeMapKey(Type.TypePrimitiveInstance.kind, Type.TypePrimitiveInstance.isNullable), Type.TypePrimitiveInstance],
+    [
+        primitiveTypeMapKey(Type.TypePrimitiveInstance.kind, Type.TypePrimitiveInstance.isNullable),
+        Type.TypePrimitiveInstance,
+    ],
     [primitiveTypeMapKey(Type.ActionInstance.kind, Type.ActionInstance.isNullable), Type.ActionInstance],
     [primitiveTypeMapKey(Type.TimeInstance.kind, Type.TimeInstance.isNullable), Type.TimeInstance],
     [
