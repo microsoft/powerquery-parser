@@ -2,9 +2,28 @@
 // Licensed under the MIT license.
 
 import { CommonError } from ".";
+import { Result, Ok, Err, ResultUtils } from "./result";
 
 export function isNever(_: never): never {
     throw new CommonError.InvariantError(`should never be reached`);
+}
+
+export function isDefined<T>(value: T | undefined): asserts value is NonNullable<T> {
+    if (value === undefined) {
+        throw new CommonError.InvariantError(`assert failed, expected value to be defined`);
+    }
+}
+
+export function isOk<T, E>(result: Result<T, E>): asserts result is Ok<T> {
+    if (!ResultUtils.isOk(result)) {
+        throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`);
+    }
+}
+
+export function isErr<T, E>(result: Result<T, E>): asserts result is Err<E> {
+    if (!ResultUtils.isErr(result)) {
+        throw new CommonError.InvariantError(`assert failed, result expected to be an Err`);
+    }
 }
 
 export function shouldNeverBeReachedTypescript(): CommonError.InvariantError {

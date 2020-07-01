@@ -5,11 +5,11 @@ import { CommonError, Result, ResultUtils } from "../common";
 import { getLocalizationTemplates } from "../localization";
 import { NodeIdMap, NodeIdMapIterator, TXorNode } from "../parser";
 import { CommonSettings } from "../settings";
-import { expectedNextType, Type } from "../type";
+import { expectedType, Type } from "../type";
 
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 
-export function tryInspectExpectedType(
+export function tryExpectedType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     ancestry: ReadonlyArray<TXorNode>,
@@ -42,7 +42,7 @@ export function maybeExpectedType(
             throw new CommonError.InvariantError(`Expected child to have an attribute index.`);
         }
 
-        const allowedType: Type.TType = expectedNextType(parent, child.node.maybeAttributeIndex);
+        const allowedType: Type.TType = expectedType(parent, child.node.maybeAttributeIndex);
         if (allowedType.kind !== Type.TypeKind.NotApplicable) {
             bestMatch = allowedType;
         }
