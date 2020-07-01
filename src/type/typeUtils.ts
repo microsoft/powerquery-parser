@@ -176,61 +176,6 @@ export function flattenUnionedTypePairs(anyUnion: Type.AnyUnion): ReadonlyArray<
     return newUnionedTypePairs;
 }
 
-// export function flattenAnyUnionTypes(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
-//     const newUnionedTypePairs: Type.TType[] = [];
-//     for (const item of anyUnion.unionedTypePairs) {
-//         if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-//             newUnionedTypePairs.push(...flattenAnyUnionTypes(item));
-//         } else {
-//             newUnionedTypePairs.push(item);
-//         }
-//     }
-
-//     return newUnionedTypePairs;
-// }
-
-// export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.TType> {
-//     const [nullable, nonNullable]: [ReadonlyArray<Type.AnyUnion>, ReadonlyArray<Type.AnyUnion>] = ArrayUtils.split(
-//         anyUnions,
-//         (value: Type.AnyUnion) => value.isNullable === true,
-//     );
-
-//     const flattenedNullable: ReadonlyArray<Type.TType> = nullable
-//         .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
-//         .reduce((partial: Type.TType[], types: ReadonlyArray<Type.TType>): Type.TType[] => {
-//             for (const element of types) {
-//                 partial.push(
-//                     element.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
-//                         ? flattenAnyUnionTypes(element)
-//                         : element,
-//                 );
-//             }
-//             return partial;
-//         }, []);
-//     const flattenedNonNullable: ReadonlyArray<Type.TType> = nonNullable
-//         .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
-//         .reduce((partial: Type.TType[], types: ReadonlyArray<Type.TType>): Type.TType[] => {
-//             for (const element of types) {
-//                 partial.push(
-//                     element.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
-//                         ? flattenAnyUnionTypes(element)
-//                         : element,
-//                 );
-//             }
-//             return partial;
-//         }, []);
-
-//     const result: Type.TType[] = [];
-//     if (flattenedNullable.length !== 0) {
-//         result.push(anyUnionFactory(flattenedNullable, false));
-//     }
-//     if (flattenedNonNullable.length !== 0) {
-//         result.push(anyUnionFactory(flattenedNonNullable, false));
-//     }
-
-//     return result;
-// }
-
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
     switch (literalKind) {
         case Ast.LiteralKind.List:
