@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
-import { Traverse, Assert } from "../../../common";
+import { Assert, Traverse } from "../../../common";
 import { Ast } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
 import { IParser, IParserState } from "../../../parser";
