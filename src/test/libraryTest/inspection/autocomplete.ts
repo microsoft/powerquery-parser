@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection, Language } from "../../..";
-import { ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { Position, StartOfDoctumentKeywords, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
@@ -34,9 +34,7 @@ function expectAutocompleteOk<S extends IParserState>(
         maybeActiveNode,
         maybeParseError,
     );
-    if (!ResultUtils.isOk(triedInspect)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspect): ${triedInspect.error.message}`);
-    }
+    Assert.isOk(triedInspect);
     return triedInspect.value;
 }
 

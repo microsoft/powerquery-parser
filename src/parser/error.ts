@@ -126,8 +126,12 @@ export interface TokenWithColumnNumber {
     readonly columnNumber: number;
 }
 
-export function isTParseError<S extends IParserState = IParserState>(x: any): x is TParseError<S> {
-    return x instanceof ParseError || x instanceof CommonError.CommonError;
+export function isParseError<S extends IParserState = IParserState>(error: any): error is ParseError<S> {
+    return error instanceof ParseError;
+}
+
+export function isTParseError<S extends IParserState = IParserState>(error: any): error is TParseError<S> {
+    return error instanceof ParseError || error instanceof CommonError.CommonError;
 }
 
 export function isTInnerParseError(x: any): x is TInnerParseError {

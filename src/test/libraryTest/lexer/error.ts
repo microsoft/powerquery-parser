@@ -3,16 +3,14 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
 
 function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, `bar`);
-    if (!ResultUtils.isErr(triedLexerUpdate)) {
-        throw new Error(`AssertFailed: ResultUtils.isErr(triedLexerUpdate): ${JSON.stringify(state)}`);
-    }
+    Assert.isErr(triedLexerUpdate);
 
     const error: LexError.LexError = triedLexerUpdate.error;
     if (!(error.innerError instanceof LexError.BadLineNumberError)) {
@@ -48,9 +46,7 @@ function expectExpectedKind(text: string, expectedKind: LexError.ExpectedKind): 
 function expectBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeKind): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateRange(state, range, `bar`);
-    if (!ResultUtils.isErr(triedLexerUpdate)) {
-        throw new Error(`AssertFailed: ResultUtils.isErr(triedLexerUpdate): ${JSON.stringify(state)}`);
-    }
+    Assert.isErr(triedLexerUpdate);
 
     const error: LexError.LexError = triedLexerUpdate.error;
     if (!(error.innerError instanceof LexError.BadRangeError)) {
@@ -69,9 +65,7 @@ function expectUnterminatedMultilineTokenKind(
 ): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (!ResultUtils.isErr(triedSnapshot)) {
-        throw new Error(`AssertFailed: ResultUtils.isErr(triedSnapshot): ${JSON.stringify(state)}`);
-    }
+    Assert.isErr(triedSnapshot);
 
     const error: LexError.TLexError = triedSnapshot.error;
     if (!(error.innerError instanceof LexError.UnterminatedMultilineTokenError)) {

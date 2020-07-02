@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { TriedLexerUpdate } from "../../../lexer/lexer";
 import { DefaultSettings } from "../../../settings";
@@ -29,22 +29,13 @@ class MockDocument2 {
 
     public applyChange(text: string, range: Lexer.Range): void {
         const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateRange(this.lexerState, range, text);
-
-        if (!ResultUtils.isOk(triedLexerUpdate)) {
-            const stringifyedResult: string = JSON.stringify(triedLexerUpdate, undefined, 4);
-            throw new Error(`AssertFailed: ResultUtils.isOk(triedLexerUpdate) ${stringifyedResult}`);
-        }
-
+        Assert.isOk(triedLexerUpdate);
         this.lexerState = triedLexerUpdate.value;
     }
 
     public getText(): string {
         const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(this.lexerState);
-
-        if (!ResultUtils.isOk(triedLexerSnapshot)) {
-            const stringifyedResult: string = JSON.stringify(triedLexerSnapshot, undefined, 4);
-            throw new Error(`AssertFailed: ResultUtils.isOk(triedLexerSnapshot) ${stringifyedResult}`);
-        }
+        Assert.isOk(triedLexerSnapshot);
 
         return triedLexerSnapshot.value.text;
     }

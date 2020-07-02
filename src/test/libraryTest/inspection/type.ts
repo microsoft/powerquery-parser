@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection, Task } from "../../..";
-import { ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
@@ -28,9 +28,7 @@ function expectParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 function expectParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     const parseErr: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
     const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.root.maybeNode;
-    if (maybeRoot === undefined) {
-        throw new Error(`AssertFailed: maybeRoot !== undefined`);
-    }
+    Assert.isDefined(maybeRoot);
 
     const actual: Type.TType = expectParseNodeOk(
         DefaultSettings,
@@ -49,9 +47,7 @@ function expectParseNodeOk(
     nodeId: number,
 ): Type.TType {
     const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, leafNodeIds, nodeId);
-    if (!ResultUtils.isOk(triedType)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedType) - ${triedType.error.message}`);
-    }
+    Assert.isOk(triedType);
 
     return triedType.value;
 }
@@ -83,9 +79,7 @@ function expectParseOkScopeTypeOk(
         leafNodeIds,
         position,
     );
-    if (maybeActiveNode === undefined) {
-        throw new Error(`AssertFailed: maybeActiveNode !== undefined`);
-    }
+    Assert.isDefined(maybeActiveNode);
 
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
         settings,
@@ -93,9 +87,7 @@ function expectParseOkScopeTypeOk(
         leafNodeIds,
         maybeActiveNode.ancestry[0].node.id,
     );
-    if (!ResultUtils.isOk(triedScopeType)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeType) - ${triedScopeType.error}`);
-    }
+    Assert.isOk(triedScopeType);
 
     return triedScopeType.value;
 }
