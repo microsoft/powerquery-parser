@@ -715,6 +715,6 @@ function typeNotInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType)
         // Fast comparison
         collection.indexOf(item) === -1 &&
         // Deep comparison
-        collection.find((type: Type.TType) => equalType(item, type) === undefined) === undefined
+        collection.find((type: Type.TType) => equalType(item, type)) === undefined
     );
 }
