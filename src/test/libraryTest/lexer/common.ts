@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import { Language } from "../../..";
-import { ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
 
@@ -103,10 +103,8 @@ export function expectLexOk(text: string): Lexer.State {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     if (Lexer.isErrorState(state)) {
         const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
-        if (!(maybeErrorLineMap !== undefined)) {
-            throw new Error(`AssertFailed: maybeErrorLineMap !== undefined`);
-        }
-        const errorLines: Lexer.ErrorLineMap = maybeErrorLineMap;
+        Assert.isDefined(maybeErrorLineMap);
+        const errorLines: ReadonlyArray<number> = [...maybeErrorLineMap.keys()];
 
         const details: {} = { errorLines };
         throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, undefined, 4)}`);
@@ -118,8 +116,7 @@ export function expectLexOk(text: string): Lexer.State {
 export function expectLexerSnapshot(text: string): LexerSnapshot {
     const state: Lexer.State = expectLexOk(text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-    if (!ResultUtils.isOk(triedSnapshot)) {
-        throw new Error("AssertFailed: ResultUtils.isOk(triedSnapshot)");
-    }
+    Assert.isOk(triedSnapshot);
+
     return triedSnapshot.value;
 }

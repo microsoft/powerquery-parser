@@ -3,7 +3,7 @@
 
 import "mocha";
 import { Inspection } from "../../..";
-import { Assert, ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { Position, ScopeItemByKey, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
@@ -152,9 +152,7 @@ function expectScopeForNodeOk(
         activeNode.ancestry[0].node.id,
         undefined,
     );
-    if (!ResultUtils.isOk(triedScopeInspection)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedScopeInspection): ${triedScopeInspection.error.message}`);
-    }
+    Assert.isOk(triedScopeInspection);
     return triedScopeInspection.value;
 }
 
