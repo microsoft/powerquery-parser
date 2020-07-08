@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError } from ".";
+import { CommonError, Assert } from ".";
 
 export function expectGet<K, V>(map: Map<K, V>, key: K): V {
     const maybeValue: V | undefined = map.get(key);
-    if (maybeValue === undefined) {
-        const details: {} = { key };
-        throw new CommonError.InvariantError(`key not found in given map`, details);
-    }
+    Assert.isDefined(maybeValue, `key not found in given map`, { key: key });
+
     return maybeValue;
 }
 
@@ -41,11 +39,7 @@ export function pick<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): Map<K, V> {
 
     for (const key of keys) {
         const maybeValue: V | undefined = map.get(key);
-        if (maybeValue === undefined) {
-            const details: {} = { key };
-            throw new CommonError.InvariantError(`key from keys is not found in map`, details);
-        }
-
+        Assert.isDefined(maybeValue, `key from keys is not found in map`, { key });
         newMap.set(key, maybeValue);
     }
 
