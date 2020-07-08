@@ -4,10 +4,18 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection, Task } from "..";
-import { ResultUtils } from "../common";
+import { Assert } from "../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../lexer";
 import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../parser";
 import { LexSettings, ParseSettings } from "../settings";
+
+export function assertParseError<S extends IParserState = IParserState>(
+    error: Error,
+): asserts error is ParseError.ParseError<S> {
+    if (!ParseError.isParseError(error)) {
+        throw new Error(`expected triedParse to return a ParseError.ParseError`);
+    }
+}
 
 export function expectDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
     const actual: Y = actualFactoryFn(partial);
@@ -34,9 +42,7 @@ export function expectLexParseOk<S extends IParserState = IParserState>(
     text: string,
 ): Task.LexParseOk<S> {
     const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
-    if (!ResultUtils.isOk(triedLexParse)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
-    }
+    Assert.isOk(triedLexParse);
     return triedLexParse.value;
 }
 
@@ -45,14 +51,8 @@ export function expectParseErr<S extends IParserState = IParserState>(
     text: string,
 ): ParseError.ParseError<S> {
     const triedParse: TriedParse<S> = expectTriedParse(settings, text);
-    if (!ResultUtils.isErr(triedParse)) {
-        throw new Error(`AssertFailed: ResultUtils.Err(triedParse)`);
-    }
-
-    if (!(triedParse.error instanceof ParseError.ParseError)) {
-        throw new Error(`AssertFailed: triedParse.error instanceof ParseError: ${triedParse.error.message}`);
-    }
-
+    Assert.isErr(triedParse);
+    assertParseError(triedParse.error);
     return triedParse.error;
 }
 
@@ -61,9 +61,7 @@ export function expectParseOk<S extends IParserState = IParserState>(
     text: string,
 ): ParseOk<S> {
     const triedParse: TriedParse<S> = expectTriedParse(settings, text);
-    if (!ResultUtils.isOk(triedParse)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedParse): ${triedParse.error.message}`);
-    }
+    Assert.isOk(triedParse);
     return triedParse.value;
 }
 
@@ -74,15 +72,10 @@ function expectTriedParse<S extends IParserState = IParserState>(
     text: string,
 ): TriedParse<S> {
     const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
-    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
-    if (!(maybeErrorLineMap === undefined)) {
-        throw new Error(`AssertFailed: maybeErrorLineMap === undefined`);
-    }
+    Assert.isUndefined(Lexer.maybeErrorLineMap(lexerState));
 
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
-    if (!ResultUtils.isOk(triedSnapshot)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedSnapshot): ${triedSnapshot.error.message}`);
-    }
+    Assert.isOk(triedSnapshot);
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
     const parserState: S = settings.newParserState(settings, lexerSnapshot);

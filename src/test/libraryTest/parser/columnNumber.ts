@@ -7,6 +7,7 @@ import { IParserState, ParseError } from "../../../parser";
 import { TokenWithColumnNumber } from "../../../parser/error";
 import { DefaultSettings } from "../../../settings";
 import { expectParseErr } from "../../common";
+import { Assert } from "../../../common";
 
 function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
     const error: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
@@ -25,10 +26,7 @@ function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
 
 function expectErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
     const error: ParseError.ExpectedTokenKindError = expectExpectedTokenKindError(text);
-
-    if (!(error.maybeFoundToken !== undefined)) {
-        throw new Error(`AssertFailed: error.maybeFoundToken !== undefined`);
-    }
+    Assert.isDefined(error.maybeFoundToken);
     const foundToken: TokenWithColumnNumber = error.maybeFoundToken;
 
     expect(foundToken.token.positionStart.codeUnit).to.equal(codeUnit, "codeUnit");
