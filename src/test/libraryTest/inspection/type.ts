@@ -19,7 +19,7 @@ function expectParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.state.contextState.leafNodeIds,
-        lexParseOk.ast.id,
+        lexParseOk.root.id,
     );
 
     expect(actual).deep.equal(expected);
@@ -27,7 +27,7 @@ function expectParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 
 function expectParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     const parseErr: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
-    const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.root.maybeNode;
+    const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
     Assert.isDefined(maybeRoot);
 
     const actual: Type.TType = expectParseNodeOk(

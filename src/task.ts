@@ -13,6 +13,7 @@ import {
     IParserState,
     IParserUtils,
     NodeIdMap,
+    NodeIdMapUtils,
     ParseContext,
     ParseError,
     ParseOk,
@@ -229,7 +230,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
 export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     triedLexParse: TriedLexParse<S>,
 ): TriedParse<S> | undefined {
-    let ast: Ast.TNode;
+    let root: Ast.TNode;
     let leafNodeIds: ReadonlyArray<number>;
     let nodeIdMapCollection: NodeIdMap.Collection;
     let state: S;
@@ -247,16 +248,54 @@ export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
         }
     } else {
         const lexParseOk: LexParseOk<S> = triedLexParse.value;
-        ast = lexParseOk.ast;
+        root = lexParseOk.root;
         nodeIdMapCollection = lexParseOk.state.contextState.nodeIdMapCollection;
         leafNodeIds = lexParseOk.state.contextState.leafNodeIds;
         state = lexParseOk.state;
     }
 
     return ResultUtils.okFactory({
-        ast,
+        root,
         leafNodeIds,
         nodeIdMapCollection,
         state,
     });
+}
+
+export function rootFromTriedLexParse<S extends IParserState = IParserState>(
+    triedLexParse: TriedLexParse<S>,
+): TXorNode | undefined {
+    if (ResultUtils.isOk(triedLexParse)) {
+        return NodeIdMapUtils.xorNodeFromAst(triedLexParse.value.root);
+    }
+
+    if (triedLexParse.error instanceof LexError.LexError) {
+        return undefined;
+    } else if (triedLexParse.error instanceof CommonError.CommonError) {
+        return undefined;
+    } else {
+        const maybeContextNode: ParseContext.Node | undefined = triedLexParse.error.state.contextState.maybeRoot;
+        return maybeContextNode !== undefined ? NodeIdMapUtils.xorNodeFromContext(maybeContextNode) : undefined;
+    }
+}
+
+export function rootFromTriedLexParseInspect<S extends IParserState = IParserState>(
+    triedLexInspectParseInspect: TriedLexParseInspect<S>,
+): TXorNode | undefined {
+    if (ResultUtils.isOk(triedLexInspectParseInspect)) {
+        const maybeActiveNode: ActiveNode | undefined = triedLexInspectParseInspect.value.maybeActiveNode;
+        return maybeActiveNode !== undefined && maybeActiveNode.ancestry.length
+            ? maybeActiveNode.ancestry[0]
+            : undefined;
+    }
+
+    if (triedLexInspectParseInspect.error instanceof LexError.LexError) {
+        return undefined;
+    } else if (triedLexInspectParseInspect.error instanceof CommonError.CommonError) {
+        return undefined;
+    } else {
+        const maybeContextNode: ParseContext.Node | undefined =
+            triedLexInspectParseInspect.error.state.contextState.maybeRoot;
+        return maybeContextNode !== undefined ? NodeIdMapUtils.xorNodeFromContext(maybeContextNode) : undefined;
+    }
 }

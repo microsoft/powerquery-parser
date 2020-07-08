@@ -27,14 +27,10 @@ import { Ast } from "../../language";
 //  With the third child being a yet-to-be evaluated Context of NodeKind.Csv
 
 export interface State {
-    readonly root: Root;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
+    maybeRoot: Node | undefined;
     idCounter: number;
     leafNodeIds: number[];
-}
-
-export interface Root {
-    maybeNode: Node | undefined;
 }
 
 export interface Node {

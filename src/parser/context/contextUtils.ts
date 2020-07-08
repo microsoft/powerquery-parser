@@ -10,9 +10,6 @@ import { Node, State } from "./context";
 
 export function newState(): State {
     return {
-        root: {
-            maybeNode: undefined,
-        },
         nodeIdMapCollection: {
             astNodeById: new Map(),
             contextNodeById: new Map(),
@@ -20,6 +17,7 @@ export function newState(): State {
             childIdsById: new Map(),
             maybeRightMostLeaf: undefined,
         },
+        maybeRoot: undefined,
         idCounter: 0,
         leafNodeIds: [],
     };
@@ -76,8 +74,8 @@ export function startContext(
         maybeAttributeIndex,
     };
     nodeIdMapCollection.contextNodeById.set(nodeId, contextNode);
-    if (state.root.maybeNode === undefined) {
-        state.root.maybeNode = contextNode;
+    if (state.maybeRoot === undefined) {
+        state.maybeRoot = contextNode;
     }
 
     return contextNode;
@@ -112,6 +110,12 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         ) {
             const unsafeNodeIdMapCollection: TypeScriptUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
             unsafeNodeIdMapCollection.maybeRightMostLeaf = astNode;
+        }
+    }
+
+    if (state.maybeRoot?.id === astNode.id) {
+        if (state.nodeIdMapCollection.contextNodeById.size) {
+            throw new CommonError.InvariantError(`the root context shouldn't end until all other context nodes have ended`);
         }
     }
 
@@ -205,7 +209,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
             const maybeChildContext: Node | undefined = contextNodeById.get(childId);
             if (maybeChildContext) {
                 const childContext: Node = maybeChildContext;
-                state.root.maybeNode = childContext;
+                state.maybeRoot = childContext;
             }
         }
         // Not a leaf node, not the Root node.
