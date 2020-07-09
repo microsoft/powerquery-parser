@@ -8,9 +8,16 @@ export function isNever(_: never): never {
     throw new CommonError.InvariantError(`should never be reached`);
 }
 
-export function isDefined<T>(value: T | undefined): asserts value is NonNullable<T> {
-    if (value === undefined) {
-        throw new CommonError.InvariantError(`assert failed, expected value to be defined`);
+export function isDefined<T>(
+    maybeValue: T | undefined,
+    maybeMessage?: string,
+    maybeDetails?: {},
+): asserts maybeValue is NonNullable<T> {
+    if (maybeValue === undefined) {
+        throw new CommonError.InvariantError(
+            maybeMessage ?? `assert failed, expected value to be defined`,
+            maybeDetails,
+        );
     }
 }
 
