@@ -330,10 +330,8 @@ export const PrimaryTypeInstance: AnyUnion = {
     maybeExtendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: true,
     unionedTypePairs: [
-        ...PrimitiveInstance.unionedTypePairs.map((value: TType) => definedTypeFactory(value, value.isNullable)),
-        ...NullablePrimitiveInstance.unionedTypePairs.map((value: TType) =>
-            definedTypeFactory(value, value.isNullable),
-        ),
+        ...PrimitiveInstance.unionedTypePairs,
+        ...NullablePrimitiveInstance.unionedTypePairs,
         definedTypeFactory(RecordInstance, true),
         definedTypeFactory(RecordInstance, false),
         definedTypeFactory(ListInstance, true),
