@@ -38,7 +38,7 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): any {
             switch (childIndex) {
                 case 0:
                 case 2:
-                    return Type.ExpressionInstance;
+                    return Type.TypeExpressionInstance;
 
                 case 1:
                     return Type.NotApplicableInstance;
@@ -51,7 +51,7 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): any {
         case Ast.NodeKind.IsExpression:
             switch (childIndex) {
                 case 0:
-                    return Type.ExpressionInstance;
+                    return Type.TypeExpressionInstance;
 
                 case 1:
                     return Type.NotApplicableInstance;
