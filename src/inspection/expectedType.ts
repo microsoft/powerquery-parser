@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../common";
+import { CommonError, Result, ResultUtils, Assert } from "../common";
 import { getLocalizationTemplates } from "../localization";
-import { NodeIdMap, NodeIdMapIterator, TXorNode } from "../parser";
+import { NodeIdMap, NodeIdMapIterator, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { expectedType, Type } from "../type";
 
@@ -27,20 +27,16 @@ export function maybeExpectedType(
     childIdsById: NodeIdMap.ChildIdsById,
     ancestry: ReadonlyArray<TXorNode>,
 ): Type.TType | undefined {
-    const upperBound: number = ancestry.length - 2;
+    const upperBound: number = ancestry.length - 1;
     let bestMatch: Type.TType | undefined;
 
     for (let index: number = 0; index < upperBound; index += 1) {
         const parent: TXorNode = ancestry[index + 1];
         const child: TXorNode = ancestry[index];
 
-        if (NodeIdMapIterator.expectChildIds(childIdsById, parent.node.id).length > 1) {
-            continue;
-        }
-
-        if (child.node.maybeAttributeIndex === undefined) {
-            throw new CommonError.InvariantError(`Expected child to have an attribute index.`);
-        }
+        Assert.isDefined(child.node.maybeAttributeIndex, `Expected child to have an attribute index.`, {
+            childId: child.node.id,
+        });
 
         const allowedType: Type.TType = expectedType(parent, child.node.maybeAttributeIndex);
         if (allowedType.kind !== Type.TypeKind.NotApplicable) {

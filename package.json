@@ -10,7 +10,7 @@
     ],
     "scripts": {
         "build": "node_modules\\.bin\\tsc",
-        "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/libraryTest/**/*.ts",
+        "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -g WIP -r ts-node/register src/test/libraryTest/**/*.ts",
         "test:resources": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/resourceTest/**/*.ts",
         "lint": "npm run lint:prettier && npm run lint:tslint",
         "lint:prettier": ".\\node_modules\\.bin\\prettier --config \".prettierrc\" --list-different src\\**\\*.ts",

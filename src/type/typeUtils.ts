@@ -77,37 +77,32 @@ export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
 
 export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
     const anyUnionTypes: Type.AnyUnion[] = [];
-    const partial: Type.TType[] = [];
+    const notAnyUnionTypes: Type.TType[] = [];
 
     for (const item of types) {
         if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
             if (typeNotInArray(anyUnionTypes, item)) {
                 anyUnionTypes.push(item);
             }
-        } else if (typeNotInArray(partial, item)) {
-            partial.push(item);
+        } else if (typeNotInArray(notAnyUnionTypes, item)) {
+            notAnyUnionTypes.push(item);
         }
     }
 
     if (anyUnionTypes.length === 0) {
-        return partial;
+        return notAnyUnionTypes;
     }
 
+    // Merge the return of dedupeAnyUnions and notAnyUnionTypes.
     const dedupedAnyUnion: Type.TType = dedupeAnyUnions(anyUnionTypes);
-    // Merge the return of dedupeAnyUnions into partial
-    if (dedupedAnyUnion.maybeExtendedKind !== Type.ExtendedTypeKind.AnyUnion) {
-        if (typeNotInArray(partial, dedupedAnyUnion)) {
-            partial.push(dedupedAnyUnion);
-        }
 
-        return partial;
-    }
-    // Merge partial into the return of dedupeAnyUnions
-    else {
+    // dedupedAnyUnion is an AnyUnion.
+    // Since the return will contain an anyUnion we should merge all notAnyUnionTypes into the AnyUnion.
+    if (dedupedAnyUnion.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
         let isNullableEncountered: boolean = false;
         const typesNotInDedupedAnyUnion: Type.TType[] = [];
 
-        for (const item of partial) {
+        for (const item of notAnyUnionTypes) {
             if (typeNotInArray(dedupedAnyUnion.unionedTypePairs, item)) {
                 if (item.isNullable) {
                     isNullableEncountered = true;
@@ -124,6 +119,15 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
                 unionedTypePairs: [...dedupedAnyUnion.unionedTypePairs, ...typesNotInDedupedAnyUnion],
             },
         ];
+    }
+    // dedupedAnyUnion is not an AnyUnion.
+    // Merge dedupedAnyUnion into notAnyUnionTypes.
+    else {
+        if (typeNotInArray(notAnyUnionTypes, dedupedAnyUnion)) {
+            notAnyUnionTypes.push(dedupedAnyUnion);
+        }
+
+        return notAnyUnionTypes;
     }
 }
 

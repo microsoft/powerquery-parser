@@ -9,44 +9,6 @@ import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScope
 import * as BinOpExpression from "./binOpExpression";
 import { TypeInspectionState } from "./type";
 
-export function getOrCreateType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
-    const nodeId: number = scopeItem.id;
-
-    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeGivenType !== undefined) {
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeDeltaType !== undefined) {
-        return maybeDeltaType;
-    }
-
-    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
-    return scopeType;
-}
-
-export function getOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
-    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
-    if (maybeScope !== undefined) {
-        return maybeScope;
-    }
-
-    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
-    const triedScope: TriedScopeForRoot = tryScopeItems(
-        state.settings,
-        state.nodeIdMapCollection,
-        state.leafNodeIds,
-        ancestry[0].node.id,
-        state.scopeById,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        throw triedScope.error;
-    }
-
-    return triedScope.value;
-}
-
 export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
@@ -249,6 +211,44 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
 
     state.deltaTypeById.set(xorNodeId, result);
     return result;
+}
+
+export function getOrCreateType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+    const nodeId: number = scopeItem.id;
+
+    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeGivenType !== undefined) {
+        return maybeGivenType;
+    }
+
+    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeDeltaType !== undefined) {
+        return maybeDeltaType;
+    }
+
+    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
+    return scopeType;
+}
+
+export function getOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
+    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
+    if (maybeScope !== undefined) {
+        return maybeScope;
+    }
+
+    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
+    const triedScope: TriedScopeForRoot = tryScopeItems(
+        state.settings,
+        state.nodeIdMapCollection,
+        state.leafNodeIds,
+        ancestry[0].node.id,
+        state.scopeById,
+    );
+    if (ResultUtils.isErr(triedScope)) {
+        throw triedScope.error;
+    }
+
+    return triedScope.value;
 }
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
