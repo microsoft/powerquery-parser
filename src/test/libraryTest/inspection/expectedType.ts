@@ -59,7 +59,7 @@ function expectExpectedTypeOk(
 
     const triedExpectedType: Inspection.TriedExpectedType = Inspection.tryExpectedType(
         DefaultSettings,
-        maybeActiveNode.ancestry,
+        maybeActiveNode,
     );
 
     Assert.isOk(triedExpectedType);
@@ -77,7 +77,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
             expect(TypeUtils.equalType(actual, expected));
         });
 
-        it(`if | true then 1 else 1`, () => {
+        it(`WIP if | true then 1 else 1`, () => {
             const textWithPipe: string = "if | true then 1 else 1";
             const expected: Type.TType = Type.LogicalInstance;
             const actual: Type.TType | undefined = expectParseOkExpectedTypeOk(textWithPipe);

@@ -4,6 +4,15 @@
 import { CommonError } from ".";
 import { Result, Ok, Err, ResultUtils } from "./result";
 
+export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is true {
+    if (value !== true) {
+        throw new CommonError.InvariantError(
+            maybeMessage ?? `assert failed, expected value to be defined`,
+            maybeDetails,
+        );
+    }
+}
+
 export function isNever(_: never): never {
     throw new CommonError.InvariantError(`should never be reached`);
 }
