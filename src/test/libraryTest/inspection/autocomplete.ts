@@ -617,4 +617,12 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
     });
+
+    describe(`Other`, () => {
+        it(`let a = 1 |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 |`);
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In, Language.KeywordKind.Meta];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+    });
 });
