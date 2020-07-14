@@ -67,20 +67,22 @@ function expectExpectedTypeOk(
 }
 
 describe(`Inspection - Scope - ExpectedType`, () => {
-    describe(`${Ast.NodeKind.IfExpression}`, () => {
-        it(`if |`, () => {
-            const textWithPipe: string = "if |";
+    describe(`${Ast.NodeKind.IfExpression} - Parse Ok`, () => {
+        it(`if | true then 1 else 1`, () => {
+            const textWithPipe: string = "if | true then 1 else 1";
             const expected: Type.TType = Type.LogicalInstance;
-            const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = expectParseOkExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.equalType(actual, expected));
         });
+    });
 
-        it(`WIP if | true then 1 else 1`, () => {
-            const textWithPipe: string = "if | true then 1 else 1";
+    describe(`${Ast.NodeKind.IfExpression} - Parse Err`, () => {
+        it(`if |`, () => {
+            const textWithPipe: string = "if |";
             const expected: Type.TType = Type.LogicalInstance;
-            const actual: Type.TType | undefined = expectParseOkExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.equalType(actual, expected));

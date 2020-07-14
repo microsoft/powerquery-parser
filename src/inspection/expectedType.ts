@@ -3,10 +3,10 @@
 
 import { Assert, CommonError, Result, ResultUtils } from "../common";
 import { getLocalizationTemplates } from "../localization";
-import { TXorNode } from "../parser";
+import { TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { expectedType, Type } from "../type";
-import { ActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeLeafKind } from "./activeNode";
 
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 
@@ -30,8 +30,12 @@ export function maybeExpectedType(activeNode: ActiveNode): Type.TType | undefine
         Assert.isDefined(child.node.maybeAttributeIndex, `Expected child to have an attribute index.`, {
             childId: child.node.id,
         });
+        const attributeIndex: number =
+            parent.kind === XorNodeKind.Ast && activeNode.leafKind === ActiveNodeLeafKind.AfterAst
+                ? child.node.maybeAttributeIndex + 1
+                : child.node.maybeAttributeIndex;
 
-        const allowedType: Type.TType = expectedType(parent, child.node.maybeAttributeIndex);
+        const allowedType: Type.TType = expectedType(parent, attributeIndex);
         if (allowedType.kind !== Type.TypeKind.NotApplicable) {
             bestMatch = allowedType;
         }
