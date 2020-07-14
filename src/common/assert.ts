@@ -21,6 +21,19 @@ export function isDefined<T>(
     }
 }
 
+export function isUndefined<T>(
+    maybeValue: T | undefined,
+    maybeMessage?: string,
+    maybeDetails?: {},
+): asserts maybeValue is undefined {
+    if (maybeValue !== undefined) {
+        throw new CommonError.InvariantError(
+            maybeMessage ?? `assert failed, expected value to be defined`,
+            maybeDetails,
+        );
+    }
+}
+
 export function isOk<T, E>(result: Result<T, E>): asserts result is Ok<T> {
     if (!ResultUtils.isOk(result)) {
         throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`);

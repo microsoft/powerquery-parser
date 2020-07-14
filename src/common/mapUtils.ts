@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Assert } from ".";
+import { Assert } from ".";
 
 export function expectGet<K, V>(map: Map<K, V>, key: K): V {
     const maybeValue: V | undefined = map.get(key);

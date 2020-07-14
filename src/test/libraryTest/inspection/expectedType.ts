@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Inspection, Task } from "../../..";
+import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
@@ -59,7 +59,6 @@ function expectExpectedTypeOk(
 
     const triedExpectedType: Inspection.TriedExpectedType = Inspection.tryExpectedType(
         DefaultSettings,
-        nodeIdMapCollection,
         maybeActiveNode.ancestry,
     );
 
@@ -73,6 +72,15 @@ describe(`Inspection - Scope - ExpectedType`, () => {
             const textWithPipe: string = "if |";
             const expected: Type.TType = Type.LogicalInstance;
             const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
+
+            Assert.isDefined(actual);
+            expect(TypeUtils.equalType(actual, expected));
+        });
+
+        it(`if | true then 1 else 1`, () => {
+            const textWithPipe: string = "if | true then 1 else 1";
+            const expected: Type.TType = Type.LogicalInstance;
+            const actual: Type.TType | undefined = expectParseOkExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.equalType(actual, expected));
