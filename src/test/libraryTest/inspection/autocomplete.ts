@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection, Language } from "../../..";
 import { Assert } from "../../../common";
-import { Position, StartOfDoctumentKeywords, TriedAutocomplete } from "../../../inspection";
+import { Position, StartOfDocumentKeywords, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError } from "../../../parser";
@@ -25,7 +25,7 @@ function expectAutocompleteOk<S extends IParserState>(
         position,
     );
     if (maybeActiveNode === undefined) {
-        return StartOfDoctumentKeywords;
+        return StartOfDocumentKeywords;
     }
 
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
@@ -535,8 +535,8 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
 
-        it(`let x = |`, () => {
-            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = |`);
+        it(`() => |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`() => |`);
             const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });

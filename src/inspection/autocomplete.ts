@@ -15,7 +15,7 @@ export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
-export const StartOfDoctumentKeywords: ReadonlyArray<Language.KeywordKind> = [
+export const StartOfDocumentKeywords: ReadonlyArray<Language.KeywordKind> = [
     ...ExpressionKeywords,
     Language.KeywordKind.Section,
 ];
@@ -142,7 +142,7 @@ function handleEdgeCases(
         activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
-        inspected = StartOfDoctumentKeywords;
+        inspected = StartOfDocumentKeywords;
     }
 
     if (
