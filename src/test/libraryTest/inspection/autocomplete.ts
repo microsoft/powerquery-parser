@@ -610,7 +610,9 @@ describe(`Inspection - Autocomplete`, () => {
         });
 
         it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, () => {
-            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; x = |`);
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                `section foo; a = () => true; b = "string"; c = 1; d = |;`,
+            );
             const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
