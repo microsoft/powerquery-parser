@@ -10,19 +10,15 @@
       "name": "Debug Library Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
-        "--debug",
+        "--inspect",
         "--colors",
         "-g",
         "WIP",
         "--timeout",
         "999999",
-        "-g",
-        "WIP",
-        "-r",
-        "ts-node/register",
-        "${workspaceFolder}/src/test/libraryTest/**/*.ts"
+        "${workspaceFolder}/lib/test/libraryTest/**/*.js"
       ],
-      "preLaunchTask": "build",
+      "preLaunchTask": "watch",
       "internalConsoleOptions": "openOnSessionStart"
     },
     {
@@ -31,7 +27,7 @@
       "name": "Debug Resource Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
-        "--debug",
+        "--inspect",
         "--colors",
         "--timeout",
         "999999",

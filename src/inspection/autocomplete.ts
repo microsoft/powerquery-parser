@@ -15,7 +15,7 @@ export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
-export const StartOfDoctumentKeywords: ReadonlyArray<Language.KeywordKind> = [
+export const StartOfDocumentKeywords: ReadonlyArray<Language.KeywordKind> = [
     ...ExpressionKeywords,
     Language.KeywordKind.Section,
 ];
@@ -142,7 +142,7 @@ function handleEdgeCases(
         activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
-        inspected = StartOfDoctumentKeywords;
+        inspected = StartOfDocumentKeywords;
     }
 
     if (
@@ -172,6 +172,7 @@ const ExpressionAutocomplete: ReadonlyArray<Language.KeywordKind> = ExpressionKe
 const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1),
     createMapKey(Ast.NodeKind.GeneralizedIdentifierPairedExpression, 2),
+    createMapKey(Ast.NodeKind.FunctionExpression, 3),
     createMapKey(Ast.NodeKind.IdentifierPairedExpression, 2),
     createMapKey(Ast.NodeKind.IfExpression, 1),
     createMapKey(Ast.NodeKind.IfExpression, 3),
@@ -194,6 +195,9 @@ const AutocompleteConstantMap: Map<string, Language.KeywordKind> = new Map<strin
     [createMapKey(Ast.NodeKind.IfExpression, 0), Language.KeywordKind.If],
     [createMapKey(Ast.NodeKind.IfExpression, 2), Language.KeywordKind.Then],
     [createMapKey(Ast.NodeKind.IfExpression, 4), Language.KeywordKind.Else],
+
+    // Ast.NodeKind.LetExpression
+    [createMapKey(Ast.NodeKind.LetExpression, 2), Language.KeywordKind.In],
 
     // Ast.NodeKind.OtherwiseExpression
     [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), Language.KeywordKind.Otherwise],

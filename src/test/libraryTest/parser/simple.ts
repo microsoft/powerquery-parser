@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
-import { ResultUtils, Traverse } from "../../../common";
+import { Assert, Traverse } from "../../../common";
 import { Ast } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
 import { IParser, IParserState } from "../../../parser";
@@ -35,16 +35,13 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     >(
         state,
         lexParseOk.state.contextState.nodeIdMapCollection,
-        lexParseOk.ast,
+        lexParseOk.root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
         Traverse.expectExpandAllAstChildren,
         undefined,
     );
-
-    if (!ResultUtils.isOk(triedTraverse)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedTraverse): ${triedTraverse.error.message}`);
-    }
+    Assert.isOk(triedTraverse);
 
     return triedTraverse.value;
 }
@@ -65,21 +62,16 @@ function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequire
     >(
         state,
         lexParseOk.state.contextState.nodeIdMapCollection,
-        lexParseOk.ast,
+        lexParseOk.root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
         Traverse.expectExpandAllAstChildren,
         nthNodeEarlyExit,
     );
 
-    if (!ResultUtils.isOk(triedTraverse)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedTraverse): ${triedTraverse.error.message}`);
-    }
-    const maybeAstNode: Ast.TNode | undefined = triedTraverse.value;
-    if (!(maybeAstNode !== undefined)) {
-        throw new Error(`AssertFailed: maybeAstNode !== undefined`);
-    }
-    const astNode: Ast.TNode = maybeAstNode;
+    Assert.isOk(triedTraverse);
+    Assert.isDefined(triedTraverse.value);
+    const astNode: Ast.TNode = triedTraverse.value;
 
     return astNode as N & Ast.TNode;
 }
@@ -121,9 +113,7 @@ describe("Parser.AbridgedNode", () => {
                 customSettings,
                 "(a as number, optional b as text)",
             );
-            if (!ResultUtils.isOk(triedLexParse)) {
-                throw new Error(`AssertFailed: ResultUtils.isOk(triedLexParse): ${triedLexParse.error.message}`);
-            }
+            Assert.isOk(triedLexParse);
         });
     });
 

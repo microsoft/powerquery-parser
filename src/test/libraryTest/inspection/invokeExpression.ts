@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
-import { ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { IParserState, NodeIdMap, ParseContext } from "../../../parser";
@@ -22,9 +22,7 @@ function expectInvokeExpressionOk(
         leafNodeIds,
         position,
     );
-    if (!(maybeActiveNode !== undefined)) {
-        throw new Error(`AssertedFailed: maybeActiveNode !== undefined`);
-    }
+    Assert.isDefined(maybeActiveNode);
     const activeNode: ActiveNode = maybeActiveNode;
 
     const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
@@ -32,9 +30,7 @@ function expectInvokeExpressionOk(
         nodeIdMapCollection,
         activeNode,
     );
-    if (!ResultUtils.isOk(triedInspect)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspect): ${triedInspect.error.message}`);
-    }
+    Assert.isOk(triedInspect);
     return triedInspect.value;
 }
 
@@ -64,10 +60,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             text,
             position,
         );
-        if (!(inspected !== undefined)) {
-            throw new Error(`AssertFailed: inspected !== undefined`);
-        }
-
+        Assert.isDefined(inspected);
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).to.equal(undefined, "expected no arguments");
     });
@@ -79,10 +72,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             text,
             position,
         );
-        if (!(inspected !== undefined)) {
-            throw new Error(`AssertFailed: inspected !== undefined`);
-        }
-
+        Assert.isDefined(inspected);
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).to.equal(undefined, "expected no arguments");
     });
@@ -94,9 +84,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             text,
             position,
         );
-        if (!(inspected !== undefined)) {
-            throw new Error(`AssertFailed: inspected !== undefined`);
-        }
+        Assert.isDefined(inspected);
 
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).not.equal(undefined, "expected arguments");
@@ -111,9 +99,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             text,
             position,
         );
-        if (!(inspected !== undefined)) {
-            throw new Error(`AssertFailed: inspected !== undefined`);
-        }
+        Assert.isDefined(inspected);
 
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).not.equal(undefined, "expected arguments");
@@ -128,9 +114,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             text,
             position,
         );
-        if (!(inspected !== undefined)) {
-            throw new Error(`AssertFailed: inspected !== undefined`);
-        }
+        Assert.isDefined(inspected);
 
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).not.equal(undefined, "expected arguments");

@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { ResultUtils } from "../../../common";
+import { Assert } from "../../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { TriedLexerUpdate } from "../../../lexer/lexer";
 import { expectLexOk } from "./common";
@@ -25,10 +25,7 @@ function expectAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLi
 function expectLexerUpdateRangeOk(originalText: string, newText: string, range: Lexer.Range): Lexer.State {
     const state: Lexer.State = expectLexOk(originalText);
     const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateRange(state, range, newText);
-    if (!ResultUtils.isOk(triedLexerUpdate)) {
-        const stringifyedResult: string = JSON.stringify(triedLexerUpdate, undefined, 4);
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexerUpdate) ${stringifyedResult}`);
-    }
+    Assert.isOk(triedLexerUpdate);
 
     return triedLexerUpdate.value;
 }
@@ -44,10 +41,7 @@ function expectLexerUpdateLine(
     expectAbridgedTLexerLine(state, expectedOriginal);
 
     const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, newText);
-    if (!ResultUtils.isOk(triedLexerUpdate)) {
-        const stringifyedResult: string = JSON.stringify(triedLexerUpdate, undefined, 4);
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedLexerUpdate) ${stringifyedResult}`);
-    }
+    Assert.isOk(triedLexerUpdate);
 
     state = triedLexerUpdate.value;
     expectAbridgedTLexerLine(triedLexerUpdate.value, expectedUpdate);
@@ -218,11 +212,7 @@ describe(`Lexer.Incremental`, () => {
             const state: Lexer.State = expectLexerUpdateRangeOk(original, "X", range);
 
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-            if (!ResultUtils.isOk(triedSnapshot)) {
-                throw new Error(
-                    `AssertFailed: ResultUtils.isOk(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`,
-                );
-            }
+            Assert.isOk(triedSnapshot);
             const snapshot: LexerSnapshot = triedSnapshot.value;
             expect(snapshot.text).equals(`foo\nbXr\nbaz`, "expected snapshot text doesn't match");
         });
@@ -243,11 +233,7 @@ describe(`Lexer.Incremental`, () => {
             expect(state.lines.length).to.equal(3);
 
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-            if (!ResultUtils.isOk(triedSnapshot)) {
-                throw new Error(
-                    `AssertFailed: ResultUtils.isOK(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`,
-                );
-            }
+            Assert.isOk(triedSnapshot);
             const snapshot: LexerSnapshot = triedSnapshot.value;
             expect(snapshot.text).equals(`fOO\nBaz\nboo`, "expected snapshot text doesn't match");
         });
@@ -269,11 +255,7 @@ describe(`Lexer.Incremental`, () => {
             expect(state.lines.length).to.equal(2);
 
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
-            if (!ResultUtils.isOk(triedSnapshot)) {
-                throw new Error(
-                    `AssertFailed: ResultUtils.isOk(triedSnapshot) ${JSON.stringify(triedSnapshot, undefined, 4)}`,
-                );
-            }
+            Assert.isOk(triedSnapshot);
             const snapshot: LexerSnapshot = triedSnapshot.value;
             expect(snapshot.text).equals("faz\nboo", "expected snapshot text doesn't match");
         });

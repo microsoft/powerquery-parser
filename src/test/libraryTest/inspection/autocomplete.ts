@@ -4,8 +4,8 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection, Language } from "../../..";
-import { ResultUtils } from "../../../common";
-import { Position, StartOfDoctumentKeywords, TriedAutocomplete } from "../../../inspection";
+import { Assert } from "../../../common";
+import { Position, StartOfDocumentKeywords, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError } from "../../../parser";
@@ -25,7 +25,7 @@ function expectAutocompleteOk<S extends IParserState>(
         position,
     );
     if (maybeActiveNode === undefined) {
-        return StartOfDoctumentKeywords;
+        return StartOfDocumentKeywords;
     }
 
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
@@ -34,9 +34,7 @@ function expectAutocompleteOk<S extends IParserState>(
         maybeActiveNode,
         maybeParseError,
     );
-    if (!ResultUtils.isOk(triedInspect)) {
-        throw new Error(`AssertFailed: ResultUtils.isOk(triedInspect): ${triedInspect.error.message}`);
-    }
+    Assert.isOk(triedInspect);
     return triedInspect.value;
 }
 
@@ -537,8 +535,8 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
 
-        it(`let x = |`, () => {
-            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = |`);
+        it(`() => |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`() => |`);
             const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
@@ -612,8 +610,32 @@ describe(`Inspection - Autocomplete`, () => {
         });
 
         it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, () => {
-            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; x = |`);
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(
+                `section foo; a = () => true; b = "string"; c = 1; d = |;`,
+            );
             const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.LetExpression}`, () => {
+        it(`let a = 1 |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 |`);
+            // TODO: meta should be valid keyword here
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`let a = 1 m|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 m|`);
+            // TODO: meta should be valid keyword here
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        });
+
+        it(`let a = 1, |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1, |`);
+            const expected: ReadonlyArray<Language.KeywordKind> = [];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
     });

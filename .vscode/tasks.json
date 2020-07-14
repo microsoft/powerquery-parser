@@ -14,6 +14,15 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "watch",
+            "type": "typescript",
+            "tsconfig": "tsconfig.json",
+            "option": "watch",
+            "problemMatcher": "$tsc-watch",
+            "group": "build",
+            "isBackground": true
         }
     ]
 }
