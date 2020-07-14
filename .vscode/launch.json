@@ -12,8 +12,6 @@
       "args": [
         "--inspect",
         "--colors",
-        "-g",
-        "WIP",
         "--timeout",
         "999999",
         "${workspaceFolder}/lib/test/libraryTest/**/*.js"
