@@ -355,19 +355,13 @@ export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.
     }
 }
 
-export function isPairedWrapperConstantKinds(x: Ast.TConstantKind, y: Ast.TConstantKind): boolean {
-    if (x.length !== 1 || y.length !== 1) {
-        return false;
-    }
-
-    // If given x === ')' and y === '(', then swap positions.
-    const low: Ast.TConstantKind = x < y ? x : y;
-    const high: Ast.TConstantKind = low === x ? y : x;
+export function isPairedWrapperConstantKinds(left: Ast.TConstantKind, right: Ast.TConstantKind): boolean {
+    Assert.isTrue(left < right, `the first argument should be 'less than' the second, eg. '[' < ']`);
 
     return (
-        (low === Ast.WrapperConstantKind.LeftBrace && high === Ast.WrapperConstantKind.RightBrace) ||
-        (low === Ast.WrapperConstantKind.LeftBracket && high === Ast.WrapperConstantKind.RightBracket) ||
-        (low === Ast.WrapperConstantKind.LeftParenthesis && high === Ast.WrapperConstantKind.RightParenthesis)
+        (left === Ast.WrapperConstantKind.LeftBrace && right === Ast.WrapperConstantKind.RightBrace) ||
+        (left === Ast.WrapperConstantKind.LeftBracket && right === Ast.WrapperConstantKind.RightBracket) ||
+        (left === Ast.WrapperConstantKind.LeftParenthesis && right === Ast.WrapperConstantKind.RightParenthesis)
     );
 }
 
