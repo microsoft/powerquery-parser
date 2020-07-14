@@ -7,7 +7,7 @@ import { Ast } from "../language";
 import { TXorNode } from "../parser";
 
 // For a given parent node, what is the expected type for a child at a given index?
-export function expectedType(parentXorNode: TXorNode, childIndex: number): any {
+export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.TType {
     switch (parentXorNode.node.kind) {
         case Ast.NodeKind.ArrayWrapper:
         case Ast.NodeKind.Constant:
