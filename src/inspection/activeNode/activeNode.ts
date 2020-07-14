@@ -11,6 +11,7 @@ import { Position } from "../position";
 //  'foo(12|' -> The context is the numeric literal.
 //  `foo(12,|' -> The context is the second (and currently empty) argument of an invoke expression.
 export interface ActiveNode {
+    readonly leafKind: ActiveNodeLeafKind;
     // Position in a text editor.
     readonly position: Position;
     // A full parental ancestry of the root.
@@ -18,4 +19,12 @@ export interface ActiveNode {
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the root if it's some sort of identifier Ast.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+}
+
+export const enum ActiveNodeLeafKind {
+    AfterAst = "AfterAst",
+    Anchored = "Anchored",
+    Context = "Context",
+    OnAst = "OnAst",
+    ShiftedRight = "ShiftedRight",
 }
