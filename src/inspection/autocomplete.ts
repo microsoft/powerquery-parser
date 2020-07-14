@@ -143,6 +143,13 @@ function handleEdgeCases(
         activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
         inspected = StartOfDocumentKeywords;
+    } else if (
+        maybeParseErrorToken === undefined &&
+        activeNode.ancestry.length >= 2 &&
+        activeNode.ancestry[0].node.kind === Ast.NodeKind.LiteralExpression &&
+        activeNode.ancestry[1].node.kind === Ast.NodeKind.LogicalExpression
+    ) {
+        inspected = ExpressionKeywords;
     }
 
     if (
