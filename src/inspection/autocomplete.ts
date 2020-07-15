@@ -98,6 +98,10 @@ function traverseAncestors(
                 maybeInspected = autocompleteErrorHandlingExpression(activeNode.position, child, maybeParseErrorToken);
                 break;
 
+            case Ast.NodeKind.LetExpression:
+                maybeInspected = autocompleteLetExpression(activeNode, child, maybeParseErrorToken);
+                break;
+
             case Ast.NodeKind.ListExpression:
                 maybeInspected = autocompleteListExpression(activeNode, child, index);
                 break;
@@ -184,7 +188,16 @@ function handleEdgeCases(
         // `if true then 1 e|` shouldn't be checked.
         !(ancestry[0].node.maybeAttributeIndex === 4 && ancestry[1].node.kind === Ast.NodeKind.IfExpression) &&
         // `try x o|` shouldn't be checked.
-        !(ancestry[0].node.maybeAttributeIndex === 1 && ancestry[1].node.kind === Ast.NodeKind.ErrorHandlingExpression)
+        !(
+            ancestry[0].node.maybeAttributeIndex === 1 && ancestry[1].node.kind === Ast.NodeKind.ErrorHandlingExpression
+        ) &&
+        // trailing LetExpression
+        !(
+            ancestry[0].kind === XorNodeKind.Context &&
+            ancestry[0].node.maybeAttributeIndex === 2 &&
+            ancestry[0].node.kind === Ast.NodeKind.Constant &&
+            ancestry[1].node.kind === Ast.NodeKind.LetExpression
+        )
     ) {
         maybeInspected = trailingConjunctionKeywords(activeNode, maybeParseErrorToken.data);
     }
@@ -352,6 +365,14 @@ function autocompleteErrorHandlingExpression(
     } else {
         return undefined;
     }
+}
+
+function autocompleteLetExpression(
+    _activeNode: ActiveNode,
+    _child: TXorNode,
+    _ancestryIndex: number,
+): ReadonlyArray<Language.KeywordKind> | undefined {
+    throw new Error();
 }
 
 function autocompleteListExpression(
