@@ -44,6 +44,14 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
         ? ParseError.maybeTokenFrom(maybeParseError.innerError)
         : undefined;
 
+    const maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined = handleEdgeCases(
+        activeNode,
+        maybeParseErrorToken,
+    );
+    if (maybeInspected !== undefined) {
+        return maybeInspected;
+    }
+
     let maybePositionName: string | undefined;
     if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, leaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
@@ -65,12 +73,7 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
         maybeParseErrorToken,
     );
 
-    const inspected: ReadonlyArray<Language.KeywordKind> = handleEdgeCases(
-        autocomplete,
-        activeNode,
-        maybeParseErrorToken,
-    );
-    return filterRecommendations(inspected, maybePositionName);
+    return filterRecommendations(autocomplete, maybePositionName);
 }
 
 // Travel the ancestry path in Active node in [parent, child] pairs.
@@ -130,29 +133,63 @@ function traverseAncestors(
 }
 
 function handleEdgeCases(
-    inspected: ReadonlyArray<Language.KeywordKind>,
     activeNode: ActiveNode,
     maybeParseErrorToken: Language.Token | undefined,
-): ReadonlyArray<Language.KeywordKind> {
-    // Check if they're typing for the first time at the start of the file,
-    // which defaults to searching for an identifier.
+): ReadonlyArray<Language.KeywordKind> | undefined {
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    let maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined;
+
+    // The user is typing in a new file, which the parser defaults to searching for an identifier.
+    // `l|` -> `let`
     if (
         maybeParseErrorToken === undefined &&
-        activeNode.ancestry.length === 2 &&
-        activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
-        activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
+        ancestry.length === 2 &&
+        ancestry[0].kind === XorNodeKind.Ast &&
+        ancestry[0].node.kind === Ast.NodeKind.Identifier &&
+        ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
-        inspected = StartOfDocumentKeywords;
+        const identifier: string = ancestry[0].node.literal;
+        maybeInspected = StartOfDocumentKeywords.filter((keywordKind: Language.KeywordKind) =>
+            keywordKind.startsWith(identifier),
+        );
     }
 
-    if (
+    // `(_ |) => _` -> `(_ as) => _`
+    else if (
+        ancestry[0].kind === XorNodeKind.Ast &&
+        ancestry[0].node.kind === Ast.NodeKind.Identifier &&
+        ancestry[1].node.kind === Ast.NodeKind.Parameter &&
+        PositionUtils.isAfterAstNode(activeNode.position, ancestry[0].node, false)
+    ) {
+        maybeInspected = [Language.KeywordKind.As];
+    }
+
+    // `(foo a|) => foo` -> `(foo as) => foo
+    else if (
+        maybeParseErrorToken?.data === "a" &&
+        ancestry[0].kind === XorNodeKind.Context &&
+        ancestry[0].node.kind === Ast.NodeKind.Constant &&
+        ancestry[1].node.kind === Ast.NodeKind.ParameterList &&
+        ancestry[2].node.kind === Ast.NodeKind.FunctionExpression
+    ) {
+        maybeInspected = trailingConjunctionKeywords(activeNode, maybeParseErrorToken.data, [Language.KeywordKind.As]);
+    }
+
+    // The user is typing beyond what was succesfully parsed.
+    // Autocomplete conjunction keywords ('as', 'or', etc.).
+    // `if foo o|` -> `if foo or`
+    else if (
         maybeParseErrorToken !== undefined &&
-        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
+        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true) &&
+        // `if true then 1 e|` shouldn't be checked.
+        !(ancestry[0].node.maybeAttributeIndex === 4 && ancestry[1].node.kind === Ast.NodeKind.IfExpression) &&
+        // `try x o|` shouldn't be checked.
+        !(ancestry[0].node.maybeAttributeIndex === 1 && ancestry[1].node.kind === Ast.NodeKind.ErrorHandlingExpression)
     ) {
-        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
+        maybeInspected = trailingConjunctionKeywords(activeNode, maybeParseErrorToken.data);
     }
 
-    return inspected;
+    return maybeInspected;
 }
 
 function filterRecommendations(
@@ -217,43 +254,30 @@ const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Langua
     ["m", [Language.KeywordKind.Meta]],
 ]);
 
-function updateWithParseErrorToken(
-    inspected: ReadonlyArray<Language.KeywordKind>,
+function trailingConjunctionKeywords(
     activeNode: ActiveNode,
-    parseErrorToken: Language.Token,
-): ReadonlyArray<Language.KeywordKind> {
-    const parseErrorTokenData: string = parseErrorToken.data;
-    const maybeAllowedKeywords:
+    trailingText: string,
+    maybeAllowedKeywords:
         | ReadonlyArray<Language.KeywordKind>
-        | undefined = PartialConjunctionKeywordAutocompleteMap.get(parseErrorTokenData[0].toLocaleLowerCase());
+        | undefined = PartialConjunctionKeywordAutocompleteMap.get(trailingText[0].toLocaleLowerCase()),
+): ReadonlyArray<Language.KeywordKind> | undefined {
     if (maybeAllowedKeywords === undefined) {
-        return inspected;
+        return undefined;
     }
     const allowedKeywords: ReadonlyArray<Language.KeywordKind> = maybeAllowedKeywords;
 
+    const inspected: Language.KeywordKind[] = [];
     for (const ancestor of activeNode.ancestry) {
         if (NodeIdMapUtils.isTUnaryType(ancestor)) {
-            return updateUsingConjunctionKeywords(inspected, parseErrorTokenData, allowedKeywords);
+            for (const keyword of allowedKeywords) {
+                if (keyword.startsWith(trailingText) && inspected.indexOf(keyword) === -1) {
+                    inspected.push(keyword);
+                }
+            }
         }
     }
 
     return inspected;
-}
-
-// Given a list of possible conjunction keywords, update inspected with any matching conjunction keywords.
-function updateUsingConjunctionKeywords(
-    inspected: ReadonlyArray<Language.KeywordKind>,
-    parseErrorTokenData: string,
-    allowedKeywords: ReadonlyArray<Language.KeywordKind>,
-): ReadonlyArray<Language.KeywordKind> {
-    const newAllowedAutocompleteKeywords: Language.KeywordKind[] = [...inspected];
-    for (const keyword of allowedKeywords) {
-        if (keyword.startsWith(parseErrorTokenData) && newAllowedAutocompleteKeywords.indexOf(keyword) === -1) {
-            newAllowedAutocompleteKeywords.push(keyword);
-        }
-    }
-
-    return newAllowedAutocompleteKeywords;
 }
 
 // A tuple can't easily be used as a Map key as it does a shallow comparison.
