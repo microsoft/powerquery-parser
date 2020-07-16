@@ -138,7 +138,7 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
 // The second happens if several AnyUnion consist only of one unique type, then it should be simplified to that type.
 export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.TType {
     const simplified: Type.TType[] = [];
-    let isNullable = false;
+    let isNullable: boolean = false;
 
     for (const anyUnion of anyUnions) {
         for (const type of flattenUnionedTypePairs(anyUnion)) {
