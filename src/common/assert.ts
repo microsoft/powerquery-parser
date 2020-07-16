@@ -4,26 +4,48 @@
 import { CommonError } from ".";
 import { Err, Ok, Result, ResultUtils } from "./result";
 
+export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is true {
+    if (value !== true) {
+        throw new CommonError.InvariantError(
+            maybeMessage ?? `assert failed, expected value to be defined`,
+            maybeDetails,
+        );
+    }
+}
+
 export function isNever(_: never): never {
     throw new CommonError.InvariantError(`should never be reached`);
 }
 
-export function isDefined<T>(value: T | undefined): asserts value is NonNullable<T> {
-    if (value === undefined) {
-        throw new CommonError.InvariantError(`assert failed, expected value to be defined`);
+export function isDefined<T>(
+    maybeValue: T | undefined,
+    maybeMessage?: string,
+    maybeDetails?: {},
+): asserts maybeValue is NonNullable<T> {
+    if (maybeValue === undefined) {
+        throw new CommonError.InvariantError(
+            maybeMessage ?? `assert failed, expected value to be defined`,
+            maybeDetails,
+        );
     }
 }
 
-export function isUndefined<T>(value: T | undefined): asserts value is undefined {
-    if (value !== undefined) {
-        throw new CommonError.InvariantError(`assert failed, expected value to be undefined`);
+export function isUndefined<T>(
+    maybeValue: T | undefined,
+    maybeMessage?: string,
+    maybeDetails?: {},
+): asserts maybeValue is undefined {
+    if (maybeValue !== undefined) {
+        throw new CommonError.InvariantError(
+            maybeMessage ?? `assert failed, expected value to be defined`,
+            maybeDetails,
+        );
     }
 }
 
 export function isOk<T, E>(result: Result<T, E>): asserts result is Ok<T> {
     if (!ResultUtils.isOk(result)) {
-        const details: {} = { error: result.error };
-        throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`, details);
+        throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`);
     }
 }
 
