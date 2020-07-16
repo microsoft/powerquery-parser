@@ -13,12 +13,12 @@ import {
     IParserState,
     IParserUtils,
     NodeIdMap,
-    NodeIdMapUtils,
     ParseContext,
     ParseError,
     ParseOk,
     TriedParse,
     TXorNode,
+    XorNodeUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 
@@ -266,7 +266,7 @@ export function rootFromTriedLexParse<S extends IParserState = IParserState>(
     triedLexParse: TriedLexParse<S>,
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexParse)) {
-        return NodeIdMapUtils.xorNodeFromAst(triedLexParse.value.root);
+        return XorNodeUtils.astFactory(triedLexParse.value.root);
     }
 
     if (triedLexParse.error instanceof LexError.LexError) {
@@ -275,7 +275,7 @@ export function rootFromTriedLexParse<S extends IParserState = IParserState>(
         return undefined;
     } else {
         const maybeContextNode: ParseContext.Node | undefined = triedLexParse.error.state.contextState.maybeRoot;
-        return maybeContextNode !== undefined ? NodeIdMapUtils.xorNodeFromContext(maybeContextNode) : undefined;
+        return maybeContextNode !== undefined ? XorNodeUtils.contextFactory(maybeContextNode) : undefined;
     }
 }
 
@@ -294,6 +294,6 @@ export function rootFromTriedLexParseInspect<S extends IParserState = IParserSta
     } else {
         const maybeContextNode: ParseContext.Node | undefined =
             triedLexInspectParseInspect.error.state.contextState.maybeRoot;
-        return maybeContextNode !== undefined ? NodeIdMapUtils.xorNodeFromContext(maybeContextNode) : undefined;
+        return maybeContextNode !== undefined ? XorNodeUtils.contextFactory(maybeContextNode) : undefined;
     }
 }

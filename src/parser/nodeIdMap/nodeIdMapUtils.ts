@@ -1,27 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMapIterator } from ".";
+import { NodeIdMapIterator, XorNodeUtils } from ".";
 import { ParseContext } from "..";
 import { Language } from "../..";
 import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast } from "../../language";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
-
-export function xorNodeFromAst(node: Ast.TNode): TXorNode {
-    return {
-        kind: XorNodeKind.Ast,
-        node,
-    };
-}
-
-export function xorNodeFromContext(node: ParseContext.Node): TXorNode {
-    return {
-        kind: XorNodeKind.Context,
-        node,
-    };
-}
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
@@ -52,7 +38,7 @@ export function maybeParentXorNode(
 ): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = maybeParentAstNode(nodeIdMapCollection, childId, maybeAllowedNodeKinds);
     if (maybeAstNode !== undefined) {
-        return xorNodeFromAst(maybeAstNode);
+        return XorNodeUtils.astFactory(maybeAstNode);
     }
 
     const maybeContextNode: ParseContext.Node | undefined = maybeParentContextNode(
@@ -61,7 +47,7 @@ export function maybeParentXorNode(
         maybeAllowedNodeKinds,
     );
     if (maybeContextNode !== undefined) {
-        return xorNodeFromContext(maybeContextNode);
+        return XorNodeUtils.contextFactory(maybeContextNode);
     }
 
     return undefined;

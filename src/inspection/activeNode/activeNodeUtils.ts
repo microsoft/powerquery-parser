@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, AstUtils } from "../../language";
-import { AncestryUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { AncestryUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
@@ -32,13 +32,13 @@ export function maybeActiveNode(
 
     let maybeLeaf: TXorNode | undefined;
     if (astSearch.maybeShiftedNode !== undefined) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeShiftedNode);
+        maybeLeaf = XorNodeUtils.astFactory(astSearch.maybeShiftedNode);
     } else if (astSearch.maybeNode !== undefined && isAnchorNode(position, astSearch.maybeNode)) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
+        maybeLeaf = XorNodeUtils.astFactory(astSearch.maybeNode);
     } else if (maybeContextSearch !== undefined) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextSearch);
+        maybeLeaf = XorNodeUtils.contextFactory(maybeContextSearch);
     } else if (astSearch.maybeNode !== undefined) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeNode);
+        maybeLeaf = XorNodeUtils.astFactory(astSearch.maybeNode);
     } else {
         maybeLeaf = undefined;
     }
