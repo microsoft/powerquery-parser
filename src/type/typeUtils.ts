@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { ArrayUtils, MapUtils, Assert } from "../common";
+import { ArrayUtils, Assert, MapUtils } from "../common";
 import { ParameterScopeItem } from "../inspection";
 import { Ast, AstUtils } from "../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
