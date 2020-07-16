@@ -83,7 +83,7 @@ export function maybeParentAstNode(
     }
     const parent: Ast.TNode = maybeParent;
 
-    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(parent.kind) === -1) {
+    if (maybeAllowedNodeKinds?.indexOf(parent.kind) === -1) {
         return undefined;
     }
 
@@ -106,7 +106,7 @@ export function maybeParentContextNode(
     }
     const parent: ParseContext.Node = maybeParent;
 
-    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(parent.kind) === -1) {
+    if (maybeAllowedNodeKinds?.indexOf(parent.kind) === -1) {
         return undefined;
     }
 
@@ -140,7 +140,7 @@ export function maybeXorChildByAttributeIndex(
         const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
             // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
-            if (maybeChildNodeKinds !== undefined && maybeChildNodeKinds.indexOf(xorNode.node.kind) === -1) {
+            if (maybeChildNodeKinds?.indexOf(xorNode.node.kind) === -1) {
                 const details: {} = {
                     childId,
                     expectedAny: maybeChildNodeKinds,
@@ -591,7 +591,7 @@ export function maybeWrappedContentAst(
     const maybeAst: TXorNode | undefined = maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [
         maybeChildNodeKind,
     ]);
-    return maybeAst !== undefined && maybeAst.kind === XorNodeKind.Ast ? maybeAst.node : undefined;
+    return maybeAst?.kind === XorNodeKind.Ast ? maybeAst.node : undefined;
 }
 
 export function maybeArrayWrapperContent(nodeIdMapCollection: Collection, wrapped: TXorNode): TXorNode | undefined {

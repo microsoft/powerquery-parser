@@ -284,9 +284,7 @@ export function rootFromTriedLexParseInspect<S extends IParserState = IParserSta
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexInspectParseInspect)) {
         const maybeActiveNode: ActiveNode | undefined = triedLexInspectParseInspect.value.maybeActiveNode;
-        return maybeActiveNode !== undefined && maybeActiveNode.ancestry.length
-            ? maybeActiveNode.ancestry[0]
-            : undefined;
+        return maybeActiveNode?.ancestry.length ? maybeActiveNode.ancestry[0] : undefined;
     }
 
     if (triedLexInspectParseInspect.error instanceof LexError.LexError) {

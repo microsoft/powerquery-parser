@@ -137,8 +137,7 @@ function positionAstSearch(
             (candidate.kind === Ast.NodeKind.Constant &&
                 ShiftRightConstantKinds.indexOf(candidate.constantKind) !== -1) ||
             // let x=|1
-            (maybeCurrentOnOrBefore !== undefined &&
-                maybeCurrentOnOrBefore.kind === Ast.NodeKind.Constant &&
+            (maybeCurrentOnOrBefore?.kind === Ast.NodeKind.Constant &&
                 ShiftRightConstantKinds.indexOf(maybeCurrentOnOrBefore.constantKind) !== -1)
         ) {
             isBoundIncluded = false;
@@ -168,14 +167,13 @@ function positionAstSearch(
     }
 
     // Might need to shift.
-    if (maybeCurrentOnOrBefore !== undefined && maybeCurrentOnOrBefore.kind === Ast.NodeKind.Constant) {
+    if (maybeCurrentOnOrBefore?.kind === Ast.NodeKind.Constant) {
         const currentOnOrBefore: Ast.TConstant = maybeCurrentOnOrBefore;
 
         // Requires a shift into an empty ArrayWrapper.
         if (
             DrilldownConstantKind.indexOf(maybeCurrentOnOrBefore.constantKind) !== -1 &&
-            maybeCurrentAfter !== undefined &&
-            maybeCurrentAfter.kind === Ast.NodeKind.Constant &&
+            maybeCurrentAfter?.kind === Ast.NodeKind.Constant &&
             AstUtils.isPairedWrapperConstantKinds(maybeCurrentOnOrBefore.constantKind, maybeCurrentAfter.constantKind)
         ) {
             const parent: Ast.TNode = NodeIdMapUtils.expectParentAstNode(nodeIdMapCollection, currentOnOrBefore.id, [

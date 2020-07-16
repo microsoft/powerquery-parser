@@ -88,8 +88,8 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     }
 
     for (const nodeId of newAstNodeIds.sort().reverse()) {
-        const maybeParent: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
-        const parentWillBeDeleted: boolean = maybeParent !== undefined && maybeParent >= backupIdCounter;
+        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
+        const parentWillBeDeleted: boolean = maybeParentId !== undefined && maybeParentId >= backupIdCounter;
         ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
     for (const nodeId of newContextNodeIds.sort().reverse()) {

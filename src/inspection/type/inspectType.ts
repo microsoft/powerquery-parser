@@ -1225,11 +1225,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         };
     }
     // '[foo=value] & [bar=value] or #table(...) & #table(...)'
-    else if (
-        leftType.maybeExtendedKind !== undefined &&
-        rightType.maybeExtendedKind !== undefined &&
-        leftType.maybeExtendedKind === rightType.maybeExtendedKind
-    ) {
+    else if (leftType?.maybeExtendedKind === rightType?.maybeExtendedKind) {
         // The cast should be safe since the first if statement tests their the same kind,
         // and the above checks if they're the same extended kind.
         return unionFields([leftType, rightType] as
