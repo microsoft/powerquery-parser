@@ -146,48 +146,48 @@ export interface ILocalizationTemplates {
 }
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
-    [Locale.bg_BG, bg_BG],
-    [Locale.ca_EZ, ca_ES],
-    [Locale.cs_CZ, cs_CZ],
-    [Locale.da_DK, da_DK],
-    [Locale.de_DE, de_DE],
-    [Locale.el_GR, el_GR],
-    [Locale.en_US, en_US],
-    [Locale.es_ES, es_ES],
-    [Locale.et_EE, et_EE],
-    [Locale.eu_ES, eu_ES],
-    [Locale.fi_FI, fi_FI],
-    [Locale.fr_FR, fr_FR],
-    [Locale.gl_ES, gl_ES],
-    [Locale.hi_IN, hi_IN],
-    [Locale.hr_HR, hr_HR],
-    [Locale.hu_HU, hu_HU],
-    [Locale.id_ID, id_ID],
-    [Locale.it_IT, it_IT],
-    [Locale.ja_JP, ja_JP],
-    [Locale.kk_KZ, kk_KZ],
-    [Locale.ko_KR, ko_KR],
-    [Locale.lt_LT, lt_LT],
-    [Locale.lv_LV, lv_LV],
-    [Locale.ms_MY, ms_MY],
-    [Locale.nb_NO, nb_NO],
-    [Locale.nl_NL, nl_NL],
-    [Locale.pl_PL, pl_PL],
-    [Locale.pt_BR, pt_BR],
-    [Locale.pt_PT, pt_PT],
-    [Locale.ro_RO, ro_RO],
-    [Locale.ru_RU, ru_RU],
-    [Locale.sk_SK, sk_SK],
-    [Locale.sl_SI, sl_SI],
-    [Locale.sr_Cyrl_RS, sr_Cyrl_RS],
-    [Locale.sr_Latn_RS, sr_Latn_RS],
-    [Locale.sv_SE, sv_SE],
-    [Locale.th_TH, th_TH],
-    [Locale.tr_TR, tr_TR],
-    [Locale.uk_UA, uk_UA],
-    [Locale.vi_VN, vi_VN],
-    [Locale.zh_CN, zh_CN],
-    [Locale.zh_TW, zh_TW],
+    [Locale.bg_BG.toLowerCase(), bg_BG],
+    [Locale.ca_EZ.toLowerCase(), ca_ES],
+    [Locale.cs_CZ.toLowerCase(), cs_CZ],
+    [Locale.da_DK.toLowerCase(), da_DK],
+    [Locale.de_DE.toLowerCase(), de_DE],
+    [Locale.el_GR.toLowerCase(), el_GR],
+    [Locale.en_US.toLowerCase(), en_US],
+    [Locale.es_ES.toLowerCase(), es_ES],
+    [Locale.et_EE.toLowerCase(), et_EE],
+    [Locale.eu_ES.toLowerCase(), eu_ES],
+    [Locale.fi_FI.toLowerCase(), fi_FI],
+    [Locale.fr_FR.toLowerCase(), fr_FR],
+    [Locale.gl_ES.toLowerCase(), gl_ES],
+    [Locale.hi_IN.toLowerCase(), hi_IN],
+    [Locale.hr_HR.toLowerCase(), hr_HR],
+    [Locale.hu_HU.toLowerCase(), hu_HU],
+    [Locale.id_ID.toLowerCase(), id_ID],
+    [Locale.it_IT.toLowerCase(), it_IT],
+    [Locale.ja_JP.toLowerCase(), ja_JP],
+    [Locale.kk_KZ.toLowerCase(), kk_KZ],
+    [Locale.ko_KR.toLowerCase(), ko_KR],
+    [Locale.lt_LT.toLowerCase(), lt_LT],
+    [Locale.lv_LV.toLowerCase(), lv_LV],
+    [Locale.ms_MY.toLowerCase(), ms_MY],
+    [Locale.nb_NO.toLowerCase(), nb_NO],
+    [Locale.nl_NL.toLowerCase(), nl_NL],
+    [Locale.pl_PL.toLowerCase(), pl_PL],
+    [Locale.pt_BR.toLowerCase(), pt_BR],
+    [Locale.pt_PT.toLowerCase(), pt_PT],
+    [Locale.ro_RO.toLowerCase(), ro_RO],
+    [Locale.ru_RU.toLowerCase(), ru_RU],
+    [Locale.sk_SK.toLowerCase(), sk_SK],
+    [Locale.sl_SI.toLowerCase(), sl_SI],
+    [Locale.sr_Cyrl_RS.toLowerCase(), sr_Cyrl_RS],
+    [Locale.sr_Latn_RS.toLowerCase(), sr_Latn_RS],
+    [Locale.sv_SE.toLowerCase(), sv_SE],
+    [Locale.th_TH.toLowerCase(), th_TH],
+    [Locale.tr_TR.toLowerCase(), tr_TR],
+    [Locale.uk_UA.toLowerCase(), uk_UA],
+    [Locale.vi_VN.toLowerCase(), vi_VN],
+    [Locale.zh_CN.toLowerCase(), zh_CN],
+    [Locale.zh_TW.toLowerCase(), zh_TW],
 ]);
 
 export const DefaultLocale: Locale = Locale.en_US;
@@ -195,19 +195,5 @@ export const DefaultLocale: Locale = Locale.en_US;
 export const DefaultTemplates: ILocalizationTemplates = en_US;
 
 export function getLocalizationTemplates(locale: string): ILocalizationTemplates {
-    const maybeTemplates: ILocalizationTemplates | undefined = TemplatesByLocale.get(locale);
-    if (maybeTemplates !== undefined) {
-        return maybeTemplates;
-    }
-
-    // It might be a case sensitivity issue. There isn't a built-in case insensitive map so we need to iterate.
-    // This shouldn't normally be a big performance impact since it's fallback behavior.
-    const lowerLocale: string = locale.toLowerCase();
-    for (const [key, templates] of TemplatesByLocale.entries()) {
-        if (key.toLowerCase() === lowerLocale) {
-            return templates;
-        }
-    }
-
-    return DefaultTemplates;
+    return TemplatesByLocale.get(locale.toLowerCase()) || DefaultTemplates;
 }
