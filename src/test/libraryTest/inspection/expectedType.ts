@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { Ast } from "../../../language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { Type, TypeUtils } from "../../../type";
-import { expectTextWithPosition, expectParseOk, expectParseErr } from "../../common";
-import { expect } from "chai";
-import { Ast } from "../../../language";
+import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
 function expectParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
     const [textWithoutPipe, position]: [string, Position] = expectTextWithPosition(textWithPipe);

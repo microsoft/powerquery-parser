@@ -5,7 +5,7 @@ import { Assert } from ".";
 
 export function expectGet<K, V>(map: Map<K, V>, key: K): V {
     const maybeValue: V | undefined = map.get(key);
-    Assert.isDefined(maybeValue, `key not found in given map`, { key: key });
+    Assert.isDefined(maybeValue, `key not found in given map`, { key });
 
     return maybeValue;
 }
