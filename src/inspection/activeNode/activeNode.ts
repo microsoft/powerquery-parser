@@ -22,9 +22,9 @@ export interface ActiveNode {
 }
 
 export const enum ActiveNodeLeafKind {
-    AfterAst = "AfterAst",
+    AfterAstNode = "AfterAstNode",
     Anchored = "Anchored",
-    Context = "Context",
-    OnAst = "OnAst",
+    ContextNode = "Context",
+    OnAstNode = "OnAstNode",
     ShiftedRight = "ShiftedRight",
 }

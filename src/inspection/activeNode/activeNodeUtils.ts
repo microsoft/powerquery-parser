@@ -22,16 +22,24 @@ import { ActiveNode, ActiveNodeLeafKind } from "./activeNode";
 //
 // Sometimes we don't want to shift at all.
 // Nodes that prevent shifting are called anchor nodes.
+// '[foo = bar|' should be anchored on the identifier 'bar' and not the context node for the ']' constant.
 export function maybeActiveNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): ActiveNode | undefined {
-    const astSearch: AstNodeSearch = astNodeSearch(nodeIdMapCollection, leafNodeIds, position);
-    const maybeContextNode: ParseContext.Node | undefined = contextNodeSearch(nodeIdMapCollection, astSearch);
+    // Search for the closest Ast node on or to the left of Position, as well as the closest shifted right Ast node.
+    const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, leafNodeIds, position);
+    // Search for the closest Context node on or to the right of the closest Ast node.
+    const maybeContextNode: ParseContext.Node | undefined = maybeFindContextNode(nodeIdMapCollection, astSearch);
 
     let maybeLeaf: TXorNode | undefined;
     let leafKind: ActiveNodeLeafKind;
+    // Order of node priority:
+    //  * shifted
+    //  * anchor
+    //  * Context
+    //  * Ast
     if (astSearch.maybeShiftedRightNode !== undefined) {
         maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeShiftedRightNode);
         leafKind = ActiveNodeLeafKind.ShiftedRight;
@@ -43,12 +51,12 @@ export function maybeActiveNode(
         leafKind = ActiveNodeLeafKind.Anchored;
     } else if (maybeContextNode !== undefined) {
         maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextNode);
-        leafKind = ActiveNodeLeafKind.Context;
+        leafKind = ActiveNodeLeafKind.ContextNode;
     } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
         maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeBestOnOrBeforeNode);
         leafKind = PositionUtils.isAfterAstNode(position, astSearch.maybeBestOnOrBeforeNode, false)
-            ? ActiveNodeLeafKind.AfterAst
-            : ActiveNodeLeafKind.OnAst;
+            ? ActiveNodeLeafKind.AfterAstNode
+            : ActiveNodeLeafKind.OnAstNode;
     } else {
         return undefined;
     }
@@ -123,7 +131,7 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
     }
 }
 
-function astNodeSearch(
+function maybeFindAstNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
@@ -145,8 +153,7 @@ function astNodeSearch(
             (candidate.kind === Ast.NodeKind.Constant &&
                 ShiftRightConstantKinds.indexOf(candidate.constantKind) !== -1) ||
             // let x=|1
-            (maybeBestOnOrBeforeNode !== undefined &&
-                maybeBestOnOrBeforeNode.kind === Ast.NodeKind.Constant &&
+            (maybeBestOnOrBeforeNode?.kind === Ast.NodeKind.Constant &&
                 ShiftRightConstantKinds.indexOf(maybeBestOnOrBeforeNode.constantKind) !== -1)
         ) {
             isBoundIncluded = false;
@@ -163,25 +170,22 @@ function astNodeSearch(
             }
         }
         // Check if after position.
-        else {
-            if (
-                maybeBestAfter === undefined ||
-                candidate.tokenRange.tokenIndexStart < maybeBestAfter.tokenRange.tokenIndexStart
-            ) {
-                maybeBestAfter = candidate;
-            }
+        else if (
+            maybeBestAfter === undefined ||
+            candidate.tokenRange.tokenIndexStart < maybeBestAfter.tokenRange.tokenIndexStart
+        ) {
+            maybeBestAfter = candidate;
         }
     }
 
     // Might need to shift.
-    if (maybeBestOnOrBeforeNode !== undefined && maybeBestOnOrBeforeNode.kind === Ast.NodeKind.Constant) {
+    if (maybeBestOnOrBeforeNode?.kind === Ast.NodeKind.Constant) {
         const currentOnOrBefore: Ast.TConstant = maybeBestOnOrBeforeNode;
 
         // Requires a shift into an empty ArrayWrapper.
         if (
             DrilldownConstantKind.indexOf(maybeBestOnOrBeforeNode.constantKind) !== -1 &&
-            maybeBestAfter !== undefined &&
-            maybeBestAfter.kind === Ast.NodeKind.Constant &&
+            maybeBestAfter?.kind === Ast.NodeKind.Constant &&
             AstUtils.isPairedWrapperConstantKinds(maybeBestOnOrBeforeNode.constantKind, maybeBestAfter.constantKind)
         ) {
             const parent: Ast.TNode = NodeIdMapUtils.expectParentAstNode(nodeIdMapCollection, currentOnOrBefore.id, [
@@ -217,7 +221,7 @@ function astNodeSearch(
     };
 }
 
-function contextNodeSearch(
+function maybeFindContextNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     astNodeSearch: AstNodeSearch,
 ): ParseContext.Node | undefined {

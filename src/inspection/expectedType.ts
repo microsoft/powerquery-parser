@@ -31,7 +31,7 @@ export function maybeExpectedType(activeNode: ActiveNode): Type.TType | undefine
             childId: child.node.id,
         });
         const attributeIndex: number =
-            parent.kind === XorNodeKind.Ast && activeNode.leafKind === ActiveNodeLeafKind.AfterAst
+            parent.kind === XorNodeKind.Ast && activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode
                 ? child.node.maybeAttributeIndex + 1
                 : child.node.maybeAttributeIndex;
 
