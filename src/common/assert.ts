@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from ".";
-import { Result, Ok, Err, ResultUtils } from "./result";
+import { Err, Ok, Result, ResultUtils } from "./result";
 
 export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is true {
     if (value !== true) {
