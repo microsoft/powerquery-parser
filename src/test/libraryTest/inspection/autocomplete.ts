@@ -257,6 +257,20 @@ describe(`Inspection - Autocomplete`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+        // it(`let x = (_ |) => a in x`, () => {
+        //     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = (_ |) => a in x`);
+        //     const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.As];
+        //     expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        // });
+
+        // it(`let x = (_ a|) => a in`, () => {
+        //     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = (_ a|) => a in`);
+        //     const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.As];
+        //     expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        // });
+    });
+
     describe(`${Ast.NodeKind.IfExpression}`, () => {
         it(`if|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if|`);
@@ -619,19 +633,19 @@ describe(`Inspection - Autocomplete`, () => {
     });
 
     describe(`${Ast.NodeKind.LetExpression}`, () => {
-        it(`let a = 1 |`, () => {
-            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 |`);
+        it(`WIP let a = 1 o|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 o|`);
             // TODO: meta should be valid keyword here
             const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
         });
 
-        it(`let a = 1 m|`, () => {
-            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 m|`);
-            // TODO: meta should be valid keyword here
-            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
-            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
-        });
+        // it(`let a = 1 m|`, () => {
+        //     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 m|`);
+        //     // TODO: meta should be valid keyword here
+        //     const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
+        //     expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).deep.equal(expected);
+        // });
 
         it(`let a = 1, |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1, |`);

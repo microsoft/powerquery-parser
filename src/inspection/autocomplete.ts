@@ -2,11 +2,20 @@
 // Licensed under the MIT license.
 
 import { Language } from "..";
-import { CommonError, Result } from "../common";
+import { CommonError, Result, Assert } from "../common";
 import { ResultUtils } from "../common/result";
 import { Ast, ExpressionKeywords } from "../language";
 import { getLocalizationTemplates } from "../localization";
-import { AncestryUtils, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
+import {
+    AncestryUtils,
+    IParserState,
+    NodeIdMap,
+    NodeIdMapUtils,
+    ParseError,
+    TXorNode,
+    XorNodeKind,
+    NodeIdMapIterator,
+} from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -68,8 +77,8 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
     }
 
     const autocomplete: ReadonlyArray<Language.KeywordKind> = traverseAncestors(
-        activeNode,
         nodeIdMapCollection,
+        activeNode,
         maybeParseErrorToken,
     );
 
@@ -81,8 +90,8 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
 function traverseAncestors(
-    activeNode: ActiveNode,
     nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
     maybeParseErrorToken: Language.Token | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
@@ -99,7 +108,14 @@ function traverseAncestors(
                 break;
 
             case Ast.NodeKind.LetExpression:
-                maybeInspected = autocompleteLetExpression(activeNode, child, maybeParseErrorToken);
+                maybeInspected = autocompleteLetExpression(
+                    nodeIdMapCollection,
+                    activeNode,
+                    parent,
+                    child,
+                    index,
+                    maybeParseErrorToken,
+                );
                 break;
 
             case Ast.NodeKind.ListExpression:
@@ -368,10 +384,25 @@ function autocompleteErrorHandlingExpression(
 }
 
 function autocompleteLetExpression(
+    nodeIdMapCollection: NodeIdMap.Collection,
     _activeNode: ActiveNode,
-    _child: TXorNode,
+    parent: TXorNode,
+    child: TXorNode,
     _ancestryIndex: number,
+    _maybeParseErrorToken: Language.Token | undefined,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
+    if (child.kind === XorNodeKind.Context && child.node.maybeAttributeIndex === 2) {
+        const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
+            Ast.Identifier
+        >> = NodeIdMapIterator.letKeyValuePairs(nodeIdMapCollection, parent);
+        if (keyValuePairs.length === 0) {
+            return undefined;
+        }
+
+        const maybeLastValue = keyValuePairs[keyValuePairs.length - 1].maybeValue;
+        Assert.isDefined(maybeLastValue);
+    }
+
     throw new Error();
 }
 
