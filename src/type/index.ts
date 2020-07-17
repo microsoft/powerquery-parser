@@ -6,3 +6,4 @@ import * as Type from "./type";
 import * as TypeUtils from "./typeUtils";
 
 export { Type, TypeInspector, TypeUtils };
+export * from "./expectedType";

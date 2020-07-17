@@ -3,11 +3,11 @@
 
 import { CommonError, Result, ResultUtils } from "../common";
 import { Ast } from "../language";
+import { getLocalizationTemplates } from "../localization";
 import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
-import { getLocalizationTemplates } from "../localization";
 
 export type TriedInvokeExpression = Result<InvokeExpression | undefined, CommonError.CommonError>;
 

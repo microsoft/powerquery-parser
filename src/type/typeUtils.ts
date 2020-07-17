@@ -2,25 +2,27 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { ArrayUtils, MapUtils, Assert } from "../common";
+import { ArrayUtils, Assert, CommonError, MapUtils } from "../common";
 import { ParameterScopeItem } from "../inspection";
 import { Ast, AstUtils } from "../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
 
-export function genericFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolean): Type.IPrimitiveType<T> {
-    return {
-        kind: typeKind,
-        maybeExtendedKind: undefined,
-        isNullable,
-    };
+export function primitiveTypeFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolean): Type.IPrimitiveType {
+    const key: string = primitiveTypeMapKey(typeKind, isNullable);
+    const maybeValue: Type.IPrimitiveType | undefined = primitiveTypeConstantMap.get(key);
+    if (maybeValue === undefined) {
+        const details: {} = {
+            typeKind,
+            isNullable,
+        };
+        throw new CommonError.InvariantError(`unknown [typeKind, isNullable] key`, details);
+    }
+
+    return maybeValue;
 }
 
-export function anyFactory(): Type.Any {
-    return AnyConstant;
-}
-
-export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>, dedupeTypes: boolean = true): Type.TType {
-    const simplified: ReadonlyArray<Type.TType> = dedupe(unionedTypePairs, dedupeTypes);
+export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.TType {
+    const simplified: ReadonlyArray<Type.TType> = dedupe(unionedTypePairs);
     if (simplified.length === 1) {
         return simplified[0];
     }
@@ -61,25 +63,9 @@ export function definedTableFactory(
     };
 }
 
-export function unknownFactory(): Type.Unknown {
-    return UnknownConstant;
-}
-
-export function noneFactory(): Type.None {
-    return NoneConstant;
-}
-
-export function notApplicableFactory(): Type.NotApplicable {
-    return NotApplicableConstant;
-}
-
-export function nullFactory(): Type.Null {
-    return NullConstant;
-}
-
 export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
     if (parameter.maybeType === undefined) {
-        return unknownFactory();
+        return Type.NoneInstance;
     }
 
     return {
@@ -89,66 +75,109 @@ export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
     };
 }
 
-export function dedupe(types: ReadonlyArray<Type.TType>, combineAnys: boolean = true): ReadonlyArray<Type.TType> {
-    const buckets: Map<string, Type.TType[]> = new Map();
+export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
+    const anyUnionTypes: Type.AnyUnion[] = [];
+    const notAnyUnionTypes: Type.TType[] = [];
 
-    for (const current of types) {
-        const key: string = `${current.kind},${current.maybeExtendedKind}`;
-        const maybeColllection: Type.TType[] | undefined = buckets.get(key);
-        // First type of TypeKind
-        if (maybeColllection === undefined) {
-            buckets.set(key, [current]);
-        }
-        // In the bucket for type.kind, check if it's the first with a deep equals comparison.
-        else if (maybeColllection.find((type: Type.TType) => equalType(current, type)) === undefined) {
-            maybeColllection.push(current);
+    for (const item of types) {
+        if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+            if (typeNotInArray(anyUnionTypes, item)) {
+                anyUnionTypes.push(item);
+            }
+        } else if (typeNotInArray(notAnyUnionTypes, item)) {
+            notAnyUnionTypes.push(item);
         }
     }
 
-    if (combineAnys === true) {
-        const anyUnionKey: string = `${Type.TypeKind.Any},${Type.ExtendedTypeKind.AnyUnion}`;
-        const maybeAnyUnions: ReadonlyArray<Type.TType> | undefined = buckets.get(anyUnionKey);
-        if (maybeAnyUnions !== undefined) {
-            buckets.set(anyUnionKey, [...combineAnyUnions(maybeAnyUnions as ReadonlyArray<Type.AnyUnion>)]);
+    if (anyUnionTypes.length === 0) {
+        return notAnyUnionTypes;
+    }
+
+    // Merge the return of dedupeAnyUnions and notAnyUnionTypes.
+    const dedupedAnyUnion: Type.TType = dedupeAnyUnions(anyUnionTypes);
+
+    // dedupedAnyUnion is an AnyUnion.
+    // Since the return will contain an anyUnion we should merge all notAnyUnionTypes into the AnyUnion.
+    if (dedupedAnyUnion.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+        let isNullableEncountered: boolean = false;
+        const typesNotInDedupedAnyUnion: Type.TType[] = [];
+
+        for (const item of notAnyUnionTypes) {
+            if (typeNotInArray(dedupedAnyUnion.unionedTypePairs, item)) {
+                if (item.isNullable) {
+                    isNullableEncountered = true;
+                }
+                typesNotInDedupedAnyUnion.push(item);
+            }
         }
-    }
 
-    const result: Type.TType[] = [];
-    for (types of buckets.values()) {
-        result.push(...types);
+        return [
+            {
+                kind: Type.TypeKind.Any,
+                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: isNullableEncountered,
+                unionedTypePairs: [...dedupedAnyUnion.unionedTypePairs, ...typesNotInDedupedAnyUnion],
+            },
+        ];
     }
+    // dedupedAnyUnion is not an AnyUnion.
+    // Merge dedupedAnyUnion into notAnyUnionTypes.
+    else {
+        if (typeNotInArray(notAnyUnionTypes, dedupedAnyUnion)) {
+            notAnyUnionTypes.push(dedupedAnyUnion);
+        }
 
-    return result;
+        return notAnyUnionTypes;
+    }
 }
 
-export function combineAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): ReadonlyArray<Type.TType> {
-    const [nullable, nonNullable]: [ReadonlyArray<Type.AnyUnion>, ReadonlyArray<Type.AnyUnion>] = ArrayUtils.split(
-        anyUnions,
-        (value: Type.AnyUnion) => value.isNullable === true,
-    );
+// Combines all given AnyUnions into either:
+//  * a single AnyUnion
+//  * a single Type.TType that is not an AnyUnion
+// The first case is the most common.
+// The second happens if several AnyUnion consist only of one unique type, then it should be simplified to that type.
+export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.TType {
+    const simplified: Type.TType[] = [];
+    let isNullable: boolean = false;
 
-    const flattenedNullable: ReadonlyArray<Type.TType> = nullable
-        .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
-        .reduce((flattened: Type.TType[], types: ReadonlyArray<Type.TType>, _currentIndex, _array): Type.TType[] => {
-            flattened.push(...types);
-            return flattened;
-        }, []);
-    const flattenedNonNullable: ReadonlyArray<Type.TType> = nonNullable
-        .map((anyUnion: Type.AnyUnion) => anyUnion.unionedTypePairs)
-        .reduce((flattened: Type.TType[], types: ReadonlyArray<Type.TType>, _currentIndex, _array): Type.TType[] => {
-            flattened.push(...types);
-            return flattened;
-        }, []);
-
-    const result: Type.TType[] = [];
-    if (flattenedNullable.length !== 0) {
-        result.push(anyUnionFactory(flattenedNullable, false));
-    }
-    if (flattenedNonNullable.length !== 0) {
-        result.push(anyUnionFactory(flattenedNonNullable, false));
+    for (const anyUnion of anyUnions) {
+        for (const type of flattenUnionedTypePairs(anyUnion)) {
+            if (type.isNullable === true) {
+                isNullable = true;
+            }
+            if (typeNotInArray(simplified, type)) {
+                simplified.push(type);
+            }
+        }
     }
 
-    return result;
+    // Second case
+    if (simplified.length === 1) {
+        return simplified[0];
+    }
+
+    // First Case
+    return {
+        kind: Type.TypeKind.Any,
+        maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+        isNullable,
+        unionedTypePairs: simplified,
+    };
+}
+
+// Recursively flattens out all unionedTypePairs into an array.
+export function flattenUnionedTypePairs(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
+    let newUnionedTypePairs: Type.TType[] = [];
+
+    for (const item of anyUnion.unionedTypePairs) {
+        if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
+            newUnionedTypePairs = newUnionedTypePairs.concat(flattenUnionedTypePairs(item));
+        } else {
+            newUnionedTypePairs.push(item);
+        }
+    }
+
+    return newUnionedTypePairs;
 }
 
 export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
@@ -313,19 +342,25 @@ export function typeKindFromPrimitiveTypeConstantKind(
 }
 
 export function equalType(left: Type.TType, right: Type.TType): boolean {
-    if (left.kind !== right.kind) {
+    if (left === right) {
+        return true;
+    } else if (
+        left.kind !== right.kind ||
+        left.maybeExtendedKind !== right.maybeExtendedKind ||
+        left.isNullable !== right.isNullable
+    ) {
         return false;
     } else if (left.maybeExtendedKind !== undefined && right.maybeExtendedKind !== undefined) {
         return equalExtendedTypes(left, right);
-    } else if (left.isNullable !== right.isNullable) {
-        return false;
     } else {
         return true;
     }
 }
 
 export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
-    if (leftTypes.length !== rightTypes.length) {
+    if (leftTypes === rightTypes) {
+        return true;
+    } else if (leftTypes.length !== rightTypes.length) {
         return false;
     }
 
@@ -340,7 +375,9 @@ export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: Rea
 }
 
 export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
-    if (left.maybeExtendedKind !== right.maybeExtendedKind) {
+    if (left === right) {
+        return true;
+    } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
         return false;
     }
 
@@ -375,14 +412,18 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
 }
 
 export function equalAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
-    return left.isNullable === right.isNullable && equalTypes(left.unionedTypePairs, right.unionedTypePairs);
+    return (
+        left === right ||
+        (left.isNullable === right.isNullable && equalTypes(left.unionedTypePairs, right.unionedTypePairs))
+    );
 }
 
 export function equalDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
     return (
-        left.isNullable === right.isNullable &&
-        equalType(left.returnType, right.returnType) &&
-        equalDefinedFunctionParameters(left.parameters, right.parameters)
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            equalType(left.returnType, right.returnType) &&
+            equalDefinedFunctionParameters(left.parameters, right.parameters))
     );
 }
 
@@ -390,7 +431,9 @@ export function equalDefinedFunctionParameters(
     left: ReadonlyArray<Type.FunctionParameter>,
     right: ReadonlyArray<Type.FunctionParameter>,
 ): boolean {
-    if (left.length !== right.length) {
+    if (left === right) {
+        return true;
+    } else if (left.length !== right.length) {
         return false;
     }
 
@@ -411,7 +454,9 @@ export function equalDefinedFunctionParameters(
 }
 
 export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
-    if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
+    if (left === right) {
+        return true;
+    } else if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
         return false;
     }
 
@@ -423,31 +468,33 @@ export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList
 
 export function equalDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
-        left.isNullable === right.isNullable &&
-        MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType)
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType))
     );
 }
 
 export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
     return (
-        left.isNullable === right.isNullable &&
-        MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType)
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType))
     );
 }
 
 export function equalDefinedType<T extends Type.TType>(left: Type.DefinedType<T>, right: Type.DefinedType<T>): boolean {
-    return left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType);
+    return left === right || (left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType));
 }
 
 export function equalListType(left: Type.ListType, right: Type.ListType): boolean {
-    return left.isNullable === right.isNullable && equalType(left.itemType, right.itemType);
+    return left === right || (left.isNullable === right.isNullable && equalType(left.itemType, right.itemType));
 }
 
 export function equalPrimaryExpressionTable(
     left: Type.PrimaryExpressionTable,
     right: Type.PrimaryExpressionTable,
 ): boolean {
-    return equalType(left.type, right.type);
+    return left === right || equalType(left.type, right.type);
 }
 
 export function inspectParameter(
@@ -464,6 +511,120 @@ export function inspectParameter(
         default:
             throw Assert.isNever(parameter);
     }
+}
+
+export const primitiveTypeConstantMap: ReadonlyMap<string, Type.IPrimitiveType> = new Map<string, Type.IPrimitiveType>([
+    [primitiveTypeMapKey(Type.AnyInstance.kind, Type.AnyInstance.isNullable), Type.AnyInstance],
+    [primitiveTypeMapKey(Type.AnyNonNullInstance.kind, Type.AnyNonNullInstance.isNullable), Type.AnyNonNullInstance],
+    [primitiveTypeMapKey(Type.BinaryInstance.kind, Type.BinaryInstance.isNullable), Type.BinaryInstance],
+    [primitiveTypeMapKey(Type.DateInstance.kind, Type.DateInstance.isNullable), Type.DateInstance],
+    [primitiveTypeMapKey(Type.DateTimeInstance.kind, Type.DateTimeInstance.isNullable), Type.DateTimeInstance],
+    [
+        primitiveTypeMapKey(Type.DateTimeZoneInstance.kind, Type.DateTimeZoneInstance.isNullable),
+        Type.DateTimeZoneInstance,
+    ],
+    [primitiveTypeMapKey(Type.DurationInstance.kind, Type.DurationInstance.isNullable), Type.DurationInstance],
+    [primitiveTypeMapKey(Type.FunctionInstance.kind, Type.FunctionInstance.isNullable), Type.FunctionInstance],
+    [primitiveTypeMapKey(Type.ListInstance.kind, Type.ListInstance.isNullable), Type.ListInstance],
+    [primitiveTypeMapKey(Type.LogicalInstance.kind, Type.LogicalInstance.isNullable), Type.LogicalInstance],
+    [primitiveTypeMapKey(Type.NoneInstance.kind, Type.NoneInstance.isNullable), Type.NoneInstance],
+    [primitiveTypeMapKey(Type.NullInstance.kind, Type.NullInstance.isNullable), Type.NullInstance],
+    [primitiveTypeMapKey(Type.NumberInstance.kind, Type.NumberInstance.isNullable), Type.NumberInstance],
+    [primitiveTypeMapKey(Type.RecordInstance.kind, Type.RecordInstance.isNullable), Type.RecordInstance],
+    [primitiveTypeMapKey(Type.TableInstance.kind, Type.TableInstance.isNullable), Type.TableInstance],
+    [primitiveTypeMapKey(Type.TextInstance.kind, Type.TextInstance.isNullable), Type.TextInstance],
+    [
+        primitiveTypeMapKey(Type.TypePrimitiveInstance.kind, Type.TypePrimitiveInstance.isNullable),
+        Type.TypePrimitiveInstance,
+    ],
+    [primitiveTypeMapKey(Type.ActionInstance.kind, Type.ActionInstance.isNullable), Type.ActionInstance],
+    [primitiveTypeMapKey(Type.TimeInstance.kind, Type.TimeInstance.isNullable), Type.TimeInstance],
+    [
+        primitiveTypeMapKey(Type.NotApplicableInstance.kind, Type.NotApplicableInstance.isNullable),
+        Type.NotApplicableInstance,
+    ],
+    [primitiveTypeMapKey(Type.UnknownInstance.kind, Type.UnknownInstance.isNullable), Type.UnknownInstance],
+    [primitiveTypeMapKey(Type.NullableAnyInstance.kind, Type.NullableAnyInstance.isNullable), Type.NullableAnyInstance],
+    [
+        primitiveTypeMapKey(Type.NullableBinaryInstance.kind, Type.NullableBinaryInstance.isNullable),
+        Type.NullableBinaryInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableDateInstance.kind, Type.NullableDateInstance.isNullable),
+        Type.NullableDateInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableDateTimeInstance.kind, Type.NullableDateTimeInstance.isNullable),
+        Type.NullableDateTimeInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableDateTimeZoneInstance.kind, Type.NullableDateTimeZoneInstance.isNullable),
+        Type.NullableDateTimeZoneInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableDurationInstance.kind, Type.NullableDurationInstance.isNullable),
+        Type.NullableDurationInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableFunctionInstance.kind, Type.NullableFunctionInstance.isNullable),
+        Type.NullableFunctionInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableListInstance.kind, Type.NullableListInstance.isNullable),
+        Type.NullableListInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableLogicalInstance.kind, Type.NullableLogicalInstance.isNullable),
+        Type.NullableLogicalInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableNoneInstance.kind, Type.NullableNoneInstance.isNullable),
+        Type.NullableNoneInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableNullInstance.kind, Type.NullableNullInstance.isNullable),
+        Type.NullableNullInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableNumberInstance.kind, Type.NullableNumberInstance.isNullable),
+        Type.NullableNumberInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableRecordInstance.kind, Type.NullableRecordInstance.isNullable),
+        Type.NullableRecordInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableTableInstance.kind, Type.NullableTableInstance.isNullable),
+        Type.NullableTableInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableTextInstance.kind, Type.NullableTextInstance.isNullable),
+        Type.NullableTextInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableTypeInstance.kind, Type.NullableTypeInstance.isNullable),
+        Type.NullableTypeInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableActionInstance.kind, Type.NullableActionInstance.isNullable),
+        Type.NullableActionInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableTimeInstance.kind, Type.NullableTimeInstance.isNullable),
+        Type.NullableTimeInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableNotApplicableInstance.kind, Type.NullableNotApplicableInstance.isNullable),
+        Type.NullableNotApplicableInstance,
+    ],
+    [
+        primitiveTypeMapKey(Type.NullableUnknownInstance.kind, Type.NullableUnknownInstance.isNullable),
+        Type.NullableUnknownInstance,
+    ],
+]);
+
+export function primitiveTypeMapKey(typeKind: Type.TypeKind, isNullable: boolean): string {
+    return `${typeKind},${isNullable}`;
 }
 
 function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
@@ -553,32 +714,11 @@ function inspectContextParameter(
     };
 }
 
-const AnyConstant: Type.Any = {
-    kind: Type.TypeKind.Any,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const NoneConstant: Type.None = {
-    kind: Type.TypeKind.None,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const NotApplicableConstant: Type.NotApplicable = {
-    kind: Type.TypeKind.NotApplicable,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const NullConstant: Type.Null = {
-    kind: Type.TypeKind.Null,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
-
-const UnknownConstant: Type.Unknown = {
-    kind: Type.TypeKind.Unknown,
-    maybeExtendedKind: undefined,
-    isNullable: false,
-};
+function typeNotInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
+    return (
+        // Fast comparison
+        collection.indexOf(item) === -1 &&
+        // Deep comparison
+        collection.find((type: Type.TType) => equalType(item, type)) === undefined
+    );
+}

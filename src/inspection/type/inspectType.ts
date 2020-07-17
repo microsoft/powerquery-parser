@@ -9,44 +9,6 @@ import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScope
 import * as BinOpExpression from "./binOpExpression";
 import { TypeInspectionState } from "./type";
 
-export function getOrCreateType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
-    const nodeId: number = scopeItem.id;
-
-    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeGivenType !== undefined) {
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeDeltaType !== undefined) {
-        return maybeDeltaType;
-    }
-
-    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
-    return scopeType;
-}
-
-export function getOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
-    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
-    if (maybeScope !== undefined) {
-        return maybeScope;
-    }
-
-    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
-    const triedScope: TriedScopeForRoot = tryScopeItems(
-        state.settings,
-        state.nodeIdMapCollection,
-        state.leafNodeIds,
-        ancestry[0].node.id,
-        state.scopeById,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        throw triedScope.error;
-    }
-
-    return triedScope.value;
-}
-
 export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
@@ -54,7 +16,7 @@ export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeIt
 
         case ScopeItemKind.KeyValuePair:
             return scopeItem.maybeValue === undefined
-                ? TypeUtils.unknownFactory()
+                ? Type.UnknownInstance
                 : inspectXorNode(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Parameter:
@@ -62,11 +24,11 @@ export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeIt
 
         case ScopeItemKind.SectionMember:
             return scopeItem.maybeValue === undefined
-                ? TypeUtils.unknownFactory()
+                ? Type.UnknownInstance
                 : inspectXorNode(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Undefined:
-            return TypeUtils.unknownFactory();
+            return Type.UnknownInstance;
 
         default:
             throw Assert.isNever(scopeItem);
@@ -91,7 +53,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
         case Ast.NodeKind.IdentifierPairedExpression:
         case Ast.NodeKind.ParameterList:
         case Ast.NodeKind.Section:
-            return TypeUtils.notApplicableFactory();
+            return Type.NotApplicableInstance;
 
         case Ast.NodeKind.AsType:
         case Ast.NodeKind.AsNullablePrimitiveType:
@@ -138,9 +100,9 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             result = inspectRecord(state, xorNode);
             break;
 
-        // TODO: how should error handling be typed?
+        // TODO: how should error raising be typed?
         case Ast.NodeKind.ErrorRaisingExpression:
-            result = TypeUtils.anyFactory();
+            result = Type.AnyInstance;
             break;
 
         case Ast.NodeKind.Constant:
@@ -184,7 +146,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.IsExpression:
-            result = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
             break;
 
         case Ast.NodeKind.InvokeExpression:
@@ -192,11 +154,11 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
-            result = TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
             break;
 
         case Ast.NodeKind.ItemAccessExpression:
-            result = TypeUtils.anyFactory();
+            result = Type.AnyInstance;
             break;
 
         case Ast.NodeKind.LetExpression:
@@ -212,7 +174,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.NotImplementedExpression:
-            result = TypeUtils.noneFactory();
+            result = Type.NoneInstance;
             break;
 
         case Ast.NodeKind.Parameter:
@@ -251,6 +213,44 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
     return result;
 }
 
+export function getOrCreateType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+    const nodeId: number = scopeItem.id;
+
+    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeGivenType !== undefined) {
+        return maybeGivenType;
+    }
+
+    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeDeltaType !== undefined) {
+        return maybeDeltaType;
+    }
+
+    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
+    return scopeType;
+}
+
+export function getOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
+    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
+    if (maybeScope !== undefined) {
+        return maybeScope;
+    }
+
+    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
+    const triedScope: TriedScopeForRoot = tryScopeItems(
+        state.settings,
+        state.nodeIdMapCollection,
+        state.leafNodeIds,
+        ancestry[0].node.id,
+        state.scopeById,
+    );
+    if (ResultUtils.isErr(triedScope)) {
+        throw triedScope.error;
+    }
+
+    return triedScope.value;
+}
+
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 
 interface ExaminedFieldSpecificationList {
@@ -269,7 +269,7 @@ function inspectFromChildAttributeIndex(
         attributeIndex,
         undefined,
     );
-    return maybeXorNode !== undefined ? inspectXorNode(state, maybeXorNode) : TypeUtils.unknownFactory();
+    return maybeXorNode !== undefined ? inspectXorNode(state, maybeXorNode) : Type.UnknownInstance;
 }
 
 function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -293,7 +293,7 @@ function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): 
 
     // ''
     if (maybeLeft === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
@@ -309,9 +309,9 @@ function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): 
             partialLookupKey,
         );
         if (maybeAllowedTypeKinds === undefined) {
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
         } else if (maybeAllowedTypeKinds.size === 1) {
-            return TypeUtils.genericFactory(maybeAllowedTypeKinds.values().next().value, leftType.isNullable);
+            return TypeUtils.primitiveTypeFactory(maybeAllowedTypeKinds.values().next().value, leftType.isNullable);
         } else {
             const unionedTypePairs: Type.TType[] = [];
             for (const kind of maybeAllowedTypeKinds.values()) {
@@ -333,7 +333,7 @@ function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): 
         const key: string = BinOpExpression.lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: Type.TypeKind | undefined = BinOpExpression.Lookup.get(key);
         if (maybeResultTypeKind === undefined) {
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
         }
         const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
 
@@ -344,7 +344,7 @@ function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): 
         ) {
             return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
         } else {
-            return TypeUtils.genericFactory(resultTypeKind, leftType.isNullable || rightType.isNullable);
+            return TypeUtils.primitiveTypeFactory(resultTypeKind, leftType.isNullable || rightType.isNullable);
         }
     }
 }
@@ -357,70 +357,70 @@ function inspectConstant(xorNode: TXorNode): Type.TType {
     if (maybeErr !== undefined) {
         throw maybeErr;
     } else if (xorNode.kind === XorNodeKind.Context) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const constant: Ast.TConstant = xorNode.node as Ast.TConstant;
     switch (constant.constantKind) {
         case Ast.PrimitiveTypeConstantKind.Action:
-            return TypeUtils.genericFactory(Type.TypeKind.Action, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Action, false);
 
         case Ast.PrimitiveTypeConstantKind.Any:
-            return TypeUtils.anyFactory();
+            return Type.AnyInstance;
 
         case Ast.PrimitiveTypeConstantKind.AnyNonNull:
-            return TypeUtils.genericFactory(Type.TypeKind.AnyNonNull, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.AnyNonNull, false);
 
         case Ast.PrimitiveTypeConstantKind.Binary:
-            return TypeUtils.genericFactory(Type.TypeKind.Binary, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Binary, false);
 
         case Ast.PrimitiveTypeConstantKind.Date:
-            return TypeUtils.genericFactory(Type.TypeKind.Date, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Date, false);
 
         case Ast.PrimitiveTypeConstantKind.DateTime:
-            return TypeUtils.genericFactory(Type.TypeKind.DateTime, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.DateTime, false);
 
         case Ast.PrimitiveTypeConstantKind.DateTimeZone:
-            return TypeUtils.genericFactory(Type.TypeKind.DateTimeZone, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.DateTimeZone, false);
 
         case Ast.PrimitiveTypeConstantKind.Duration:
-            return TypeUtils.genericFactory(Type.TypeKind.Duration, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Duration, false);
 
         case Ast.PrimitiveTypeConstantKind.Function:
-            return TypeUtils.genericFactory(Type.TypeKind.Function, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Function, false);
 
         case Ast.PrimitiveTypeConstantKind.List:
-            return TypeUtils.genericFactory(Type.TypeKind.List, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.List, false);
 
         case Ast.PrimitiveTypeConstantKind.Logical:
-            return TypeUtils.genericFactory(Type.TypeKind.Logical, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
 
         case Ast.PrimitiveTypeConstantKind.None:
-            return TypeUtils.genericFactory(Type.TypeKind.None, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.None, false);
 
         case Ast.PrimitiveTypeConstantKind.Null:
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
 
         case Ast.PrimitiveTypeConstantKind.Number:
-            return TypeUtils.genericFactory(Type.TypeKind.Number, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Number, false);
 
         case Ast.PrimitiveTypeConstantKind.Record:
-            return TypeUtils.genericFactory(Type.TypeKind.Record, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false);
 
         case Ast.PrimitiveTypeConstantKind.Table:
-            return TypeUtils.genericFactory(Type.TypeKind.Table, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Table, false);
 
         case Ast.PrimitiveTypeConstantKind.Text:
-            return TypeUtils.genericFactory(Type.TypeKind.Text, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Text, false);
 
         case Ast.PrimitiveTypeConstantKind.Time:
-            return TypeUtils.genericFactory(Type.TypeKind.Time, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Time, false);
 
         case Ast.PrimitiveTypeConstantKind.Type:
-            return TypeUtils.genericFactory(Type.TypeKind.Type, false);
+            return TypeUtils.primitiveTypeFactory(Type.TypeKind.Type, false);
 
         default:
-            return TypeUtils.unknownFactory();
+            return Type.UnknownInstance;
     }
 }
 
@@ -443,7 +443,7 @@ function inspectErrorHandlingExpression(state: TypeInspectionState, xorNode: TXo
         inspectFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
             ? inspectXorNode(state, maybeOtherwiseExpression)
-            : TypeUtils.genericFactory(Type.TypeKind.Record, false),
+            : TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
     ]);
 }
 
@@ -481,7 +481,7 @@ function inspectFieldProjectionHelper(
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any: {
             const newFields: Map<string, Type.Any> = new Map(
-                projectedFieldNames.map((fieldName: string) => [fieldName, TypeUtils.anyFactory()]),
+                projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
             );
             return {
                 kind: Type.TypeKind.Any,
@@ -512,7 +512,7 @@ function inspectFieldProjectionHelper(
             // Create a DefinedRecord/DefinedTable with the projected fields.
             if (previousSiblingType.maybeExtendedKind === undefined) {
                 const newFields: Map<string, Type.Any> = new Map(
-                    projectedFieldNames.map((fieldName: string) => [fieldName, TypeUtils.anyFactory()]),
+                    projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
                 );
                 return previousSiblingType.kind === Type.TypeKind.Record
                     ? TypeUtils.definedRecordFactory(false, newFields, false)
@@ -527,7 +527,7 @@ function inspectFieldProjectionHelper(
         }
 
         default:
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
     }
 }
 
@@ -546,7 +546,7 @@ function inspectFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Ty
         Ast.NodeKind.GeneralizedIdentifier,
     );
     if (maybeFieldName === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
     const fieldName: string = (maybeFieldName as Ast.GeneralizedIdentifier).literal;
 
@@ -571,16 +571,16 @@ function helperForinspectFieldSelector(
 ): Type.TType {
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any:
-            return TypeUtils.anyFactory();
+            return Type.AnyInstance;
 
         case Type.TypeKind.Unknown:
-            return TypeUtils.unknownFactory();
+            return Type.UnknownInstance;
 
         case Type.TypeKind.Record:
         case Type.TypeKind.Table:
             switch (previousSiblingType.maybeExtendedKind) {
                 case undefined:
-                    return TypeUtils.anyFactory();
+                    return Type.AnyInstance;
 
                 case Type.ExtendedTypeKind.DefinedRecord:
                 case Type.ExtendedTypeKind.DefinedTable: {
@@ -588,9 +588,9 @@ function helperForinspectFieldSelector(
                     if (maybeNamedField !== undefined) {
                         return maybeNamedField;
                     } else if (previousSiblingType.isOpen) {
-                        return TypeUtils.anyFactory();
+                        return Type.AnyInstance;
                     } else {
-                        return isOptional ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
+                        return isOptional ? Type.NullInstance : Type.NoneInstance;
                     }
                 }
 
@@ -602,7 +602,7 @@ function helperForinspectFieldSelector(
             }
 
         default:
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
     }
 }
 
@@ -624,7 +624,7 @@ function inspectFieldSpecification(state: TypeInspectionState, xorNode: TXorNode
 
     return maybeFieldTypeSpecification !== undefined
         ? inspectXorNode(state, maybeFieldTypeSpecification)
-        : TypeUtils.anyFactory();
+        : Type.AnyInstance;
 }
 
 function inspectFunctionExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -666,7 +666,7 @@ function inspectFunctionExpression(state: TypeInspectionState, xorNode: TXorNode
     }
     // If the stated return type doesn't match the expression's type then it's None.
     else if (inspectedReturnType.kind !== expressionType.kind) {
-        return TypeUtils.noneFactory();
+        return Type.NoneInstance;
     }
     // If the expression's type can't be known, then assume it's the stated return type.
     else if (expressionType.kind === Type.TypeKind.Unknown) {
@@ -713,7 +713,7 @@ function inspectFunctionType(
         Ast.NodeKind.ParameterList,
     ]);
     if (maybeParameters === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
@@ -722,7 +722,7 @@ function inspectFunctionType(
         Ast.NodeKind.ArrayWrapper,
     );
     if (maybeArrayWrapper === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.arrayWrapperCsvXorNodes(
@@ -756,11 +756,11 @@ function inspectIdentifier(state: TypeInspectionState, xorNode: TXorNode): Type.
     if (maybeErr !== undefined) {
         throw maybeErr;
     } else if (xorNode.kind === XorNodeKind.Context) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
-    return dereferencedType !== undefined ? dereferencedType : TypeUtils.unknownFactory();
+    return dereferencedType !== undefined ? dereferencedType : Type.UnknownInstance;
 }
 
 function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -771,11 +771,11 @@ function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNo
     if (maybeErr !== undefined) {
         throw maybeErr;
     } else if (xorNode.kind === XorNodeKind.Context) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
-    return dereferencedType !== undefined ? dereferencedType : TypeUtils.unknownFactory();
+    return dereferencedType !== undefined ? dereferencedType : Type.UnknownInstance;
 }
 
 function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -789,7 +789,7 @@ function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Typ
 
     const conditionType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 1);
     if (conditionType.kind === Type.TypeKind.Unknown) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
     // Any is allowed so long as AnyUnion only contains Any or Logical.
     else if (conditionType.kind === Type.TypeKind.Any) {
@@ -800,10 +800,10 @@ function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Typ
                 (type: Type.TType) => type.kind === Type.TypeKind.Logical || type.kind === Type.TypeKind.Any,
             )
         ) {
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
         }
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
-        return TypeUtils.noneFactory();
+        return Type.NoneInstance;
     }
 
     const trueExprType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 3);
@@ -827,13 +827,13 @@ function inspectInvokeExpression(state: TypeInspectionState, xorNode: TXorNode):
     );
     const previousSiblingType: Type.TType = inspectXorNode(state, previousSibling);
     if (previousSiblingType.kind === Type.TypeKind.Any) {
-        return TypeUtils.anyFactory();
+        return Type.AnyInstance;
     } else if (previousSiblingType.kind !== Type.TypeKind.Function) {
-        return TypeUtils.noneFactory();
+        return Type.NoneInstance;
     } else if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
         return previousSiblingType.returnType;
     } else {
-        return TypeUtils.anyFactory();
+        return Type.AnyInstance;
     }
 }
 
@@ -856,7 +856,7 @@ function inspectListType(
         undefined,
     );
     if (maybeListItem === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
     const itemType: Type.TType = inspectXorNode(state, maybeListItem);
 
@@ -887,10 +887,10 @@ function inspectLiteralExpression(xorNode: TXorNode): Type.TType {
             // We already checked it's a Ast Literal Expression.
             const literalKind: Ast.LiteralKind = (xorNode.node as Ast.LiteralExpression).literalKind;
             const typeKind: Type.TypeKind = TypeUtils.typeKindFromLiteralKind(literalKind);
-            return TypeUtils.genericFactory(typeKind, literalKind === Ast.LiteralKind.Null);
+            return TypeUtils.primitiveTypeFactory(typeKind, literalKind === Ast.LiteralKind.Null);
 
         case XorNodeKind.Context:
-            return TypeUtils.unknownFactory();
+            return Type.UnknownInstance;
 
         default:
             throw Assert.isNever(xorNode);
@@ -928,7 +928,7 @@ function inspectPrimitiveType(xorNode: TXorNode): Type.TType {
     if (maybeErr !== undefined) {
         throw maybeErr;
     } else if (xorNode.kind === XorNodeKind.Context) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const kind: Type.TypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(
@@ -954,20 +954,20 @@ function inspectRangeExpression(state: TypeInspectionState, xorNode: TXorNode): 
     const maybeRightType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 2);
 
     if (maybeLeftType === undefined || maybeRightType === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     } else if (maybeLeftType.kind === Type.TypeKind.Number && maybeRightType.kind === Type.TypeKind.Number) {
         // TODO: handle isNullable better
         if (maybeLeftType.isNullable === true || maybeRightType.isNullable === true) {
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
         } else {
-            return TypeUtils.genericFactory(maybeLeftType.kind, maybeLeftType.isNullable);
+            return TypeUtils.primitiveTypeFactory(maybeLeftType.kind, maybeLeftType.isNullable);
         }
     } else if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
-        return TypeUtils.noneFactory();
+        return Type.NoneInstance;
     } else if (maybeLeftType.kind === Type.TypeKind.Unknown || maybeRightType.kind === Type.TypeKind.Unknown) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     } else {
-        return TypeUtils.noneFactory();
+        return Type.NoneInstance;
     }
 }
 
@@ -990,7 +990,7 @@ function inspectRecordType(
         [Ast.NodeKind.FieldSpecificationList],
     );
     if (maybeFields === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     return {
@@ -1022,7 +1022,7 @@ function inspectRecursivePrimaryExpression(state: TypeInspectionState, xorNode: 
         undefined,
     );
     if (maybeHead === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const headType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 0);
@@ -1036,7 +1036,7 @@ function inspectRecursivePrimaryExpression(state: TypeInspectionState, xorNode: 
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeArrayWrapper === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const maybeExpressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.expectXorChildren(
@@ -1044,7 +1044,7 @@ function inspectRecursivePrimaryExpression(state: TypeInspectionState, xorNode: 
         maybeArrayWrapper.node.id,
     );
     if (maybeExpressions === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     let leftType: Type.TType = headType;
@@ -1075,7 +1075,7 @@ function inspectTableType(
         undefined,
     );
     if (maybeRowType === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     if (maybeRowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
@@ -1121,7 +1121,7 @@ function inspectUnaryExpression(state: TypeInspectionState, xorNode: TXorNode): 
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeOperatorsWrapper === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
@@ -1131,7 +1131,7 @@ function inspectUnaryExpression(state: TypeInspectionState, xorNode: TXorNode): 
         undefined,
     );
     if (maybeExpression === undefined) {
-        return TypeUtils.unknownFactory();
+        return Type.UnknownInstance;
     }
 
     // Only certain operators are allowed depending on the type.
@@ -1143,7 +1143,7 @@ function inspectUnaryExpression(state: TypeInspectionState, xorNode: TXorNode): 
     } else if (expressionType.kind === Type.TypeKind.Logical) {
         expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Not];
     } else {
-        return TypeUtils.noneFactory();
+        return Type.NoneInstance;
     }
 
     const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeAstChildren(
@@ -1152,7 +1152,7 @@ function inspectUnaryExpression(state: TypeInspectionState, xorNode: TXorNode): 
     ) as ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>>;
     for (const operator of operators) {
         if (expectedUnaryOperatorKinds.indexOf(operator.constantKind) === -1) {
-            return TypeUtils.noneFactory();
+            return Type.NoneInstance;
         }
     }
 
@@ -1185,7 +1185,7 @@ function inspectRecord(state: TypeInspectionState, xorNode: TXorNode): Type.Defi
         if (keyValuePair.maybeValue) {
             fields.set(keyValuePair.keyLiteral, inspectXorNode(state, keyValuePair.maybeValue));
         } else {
-            fields.set(keyValuePair.keyLiteral, TypeUtils.unknownFactory());
+            fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
         }
     }
 
@@ -1208,7 +1208,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
     }
     // '[] & []' or '#table() & #table()'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
-        return TypeUtils.genericFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
+        return TypeUtils.primitiveTypeFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
     }
     // '[key=value] & []' or '#table(...) & #table()`
     // '[] & [key=value]' or `#table() & #table(...)`
@@ -1251,7 +1251,7 @@ function reducedFieldsToKeys(
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
 
     if (current.isOpen === false && ArrayUtils.isSubset(currentFieldNames, keys) === false) {
-        return isOptional ? TypeUtils.nullFactory() : TypeUtils.noneFactory();
+        return isOptional ? Type.NullInstance : Type.NoneInstance;
     }
 
     return {
@@ -1379,7 +1379,7 @@ function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TX
     const scopeItem: TScopeItem = maybeScopeItem;
     // TODO: handle recursive identifiers
     if (scopeItem.isRecursive === true) {
-        return TypeUtils.anyFactory();
+        return Type.AnyInstance;
     }
 
     let maybeNextXorNode: undefined | TXorNode;
