@@ -21,6 +21,7 @@ import {
     XorNodeUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
+import { Type } from "./type";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
@@ -30,6 +31,7 @@ export interface InspectionOk {
     readonly maybeInvokeExpression: Inspection.InvokeExpression | undefined;
     readonly scope: Inspection.ScopeItemByKey;
     readonly scopeType: Inspection.ScopeTypeByKey;
+    readonly maybeExpectedType: Type.TType | undefined;
 }
 
 export type TriedLexParse<S extends IParserState = IParserState> = Result<
@@ -116,42 +118,11 @@ export function tryInspection<S extends IParserState = IParserState>(
             maybeInvokeExpression: undefined,
             scope: new Map(),
             scopeType: new Map(),
+            maybeExpectedType: undefined,
         });
     }
     const activeNode: ActiveNode = maybeActiveNode;
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
-
-    const triedScope: Inspection.TriedScope = Inspection.tryScope(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestry,
-        undefined,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        return triedScope;
-    }
-    const scopeById: Inspection.ScopeById = triedScope.value;
-    const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestry[0].node.id);
-    if (maybeScope === undefined) {
-        const details: {} = { nodeId: ancestry[0].node.id };
-        throw new CommonError.InvariantError(`expected nodeId in scopeById`, details);
-    }
-    const scope: Inspection.ScopeItemByKey = maybeScope;
-
-    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestry[0].node.id,
-        {
-            scopeById,
-            typeById: new Map(),
-        },
-    );
-    if (ResultUtils.isErr(triedScopeType)) {
-        return triedScopeType;
-    }
 
     const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
@@ -172,12 +143,47 @@ export function tryInspection<S extends IParserState = IParserState>(
         return triedInvokeExpression;
     }
 
+    const triedScope: Inspection.TriedScope = Inspection.tryScope(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        ancestry,
+        undefined,
+    );
+    if (ResultUtils.isErr(triedScope)) {
+        return triedScope;
+    }
+    const scopeById: Inspection.ScopeById = triedScope.value;
+    const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestry[0].node.id);
+    Assert.isDefined(maybeScope, `expected nodeId in scopeById`, { nodeId: ancestry[0].node.id });
+    const scope: Inspection.ScopeItemByKey = maybeScope;
+
+    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        ancestry[0].node.id,
+        {
+            scopeById,
+            typeById: new Map(),
+        },
+    );
+    if (ResultUtils.isErr(triedScopeType)) {
+        return triedScopeType;
+    }
+
+    const triedExpectedType: Inspection.TriedExpectedType = Inspection.tryExpectedType(settings, activeNode);
+    if (ResultUtils.isErr(triedExpectedType)) {
+        return triedExpectedType;
+    }
+
     return ResultUtils.okFactory({
         maybeActiveNode,
         autocomplete: triedAutocomplete.value,
         maybeInvokeExpression: triedInvokeExpression.value,
         scope,
         scopeType: triedScopeType.value,
+        maybeExpectedType: triedExpectedType.value,
     });
 }
 
