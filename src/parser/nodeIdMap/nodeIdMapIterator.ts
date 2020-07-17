@@ -143,7 +143,7 @@ export function fieldProjectionFieldNames(
             selector,
             Ast.NodeKind.GeneralizedIdentifier,
         );
-        if (maybeIdentifier === undefined || maybeIdentifier.kind !== XorNodeKind.Ast) {
+        if (maybeIdentifier?.kind !== XorNodeKind.Ast) {
             break;
         } else {
             result.push((maybeIdentifier.node as Ast.GeneralizedIdentifier).literal);

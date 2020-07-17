@@ -195,5 +195,5 @@ export const DefaultLocale: Locale = Locale.en_US;
 export const DefaultTemplates: ILocalizationTemplates = en_US;
 
 export function getLocalizationTemplates(locale: string): ILocalizationTemplates {
-    return TemplatesByLocale.get(locale.toLowerCase()) || DefaultTemplates;
+    return TemplatesByLocale.get(locale.toLowerCase()) ?? DefaultTemplates;
 }

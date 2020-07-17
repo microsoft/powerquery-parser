@@ -1446,8 +1446,7 @@ function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNo
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier (eg. Odbc.Database).
-        maybeScopeItem === undefined ||
-        maybeScopeItem.isRecursive !== isIdentifierRecurisve
+        maybeScopeItem?.isRecursive !== isIdentifierRecurisve
     ) {
         return undefined;
     }

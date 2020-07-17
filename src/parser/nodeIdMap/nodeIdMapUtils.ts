@@ -155,11 +155,7 @@ export function maybeAstChildByAttributeIndex(
         maybeChildNodeKinds,
     );
 
-    if (maybeNode === undefined || maybeNode.kind === XorNodeKind.Context) {
-        return undefined;
-    } else {
-        return maybeNode.node;
-    }
+    return maybeNode?.kind === XorNodeKind.Ast ? maybeNode.node : undefined;
 }
 
 export function maybeContextChildByAttributeIndex(
@@ -175,11 +171,7 @@ export function maybeContextChildByAttributeIndex(
         maybeChildNodeKinds,
     );
 
-    if (maybeNode === undefined || maybeNode.kind === XorNodeKind.Ast) {
-        return undefined;
-    } else {
-        return maybeNode.node;
-    }
+    return maybeNode?.kind === XorNodeKind.Context ? maybeNode.node : undefined;
 }
 
 // Returns the previous sibling of the given recursive expression.

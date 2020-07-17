@@ -187,7 +187,7 @@ export function isOnTokenKind(
 export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstantKind): boolean {
     if (isOnTokenKind(state, Language.TokenKind.Identifier)) {
         const currentToken: Language.Token = state.lexerSnapshot.tokens[state.tokenIndex];
-        if (currentToken === undefined || currentToken.data === undefined) {
+        if (currentToken?.data === undefined) {
             const details: {} = { currentToken };
             throw new CommonError.InvariantError(`expected data on Token`, details);
         }

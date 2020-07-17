@@ -2,7 +2,15 @@
 // Licensed under the MIT license.
 
 import { Ast, AstUtils } from "../../language";
-import { AncestryUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../../parser";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapUtils,
+    ParseContext,
+    TXorNode,
+    XorNodeKind,
+    XorNodeUtils,
+} from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode } from "./activeNode";
 
