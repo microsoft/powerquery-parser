@@ -1,27 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMapIterator } from ".";
+import { NodeIdMapIterator, XorNodeUtils } from ".";
 import { ParseContext } from "..";
 import { Language } from "../..";
 import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast } from "../../language";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
-
-export function xorNodeFromAst(node: Ast.TNode): TXorNode {
-    return {
-        kind: XorNodeKind.Ast,
-        node,
-    };
-}
-
-export function xorNodeFromContext(node: ParseContext.Node): TXorNode {
-    return {
-        kind: XorNodeKind.Context,
-        node,
-    };
-}
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(nodeId);
@@ -52,7 +38,7 @@ export function maybeParentXorNode(
 ): TXorNode | undefined {
     const maybeAstNode: Ast.TNode | undefined = maybeParentAstNode(nodeIdMapCollection, childId, maybeAllowedNodeKinds);
     if (maybeAstNode !== undefined) {
-        return xorNodeFromAst(maybeAstNode);
+        return XorNodeUtils.astFactory(maybeAstNode);
     }
 
     const maybeContextNode: ParseContext.Node | undefined = maybeParentContextNode(
@@ -61,7 +47,7 @@ export function maybeParentXorNode(
         maybeAllowedNodeKinds,
     );
     if (maybeContextNode !== undefined) {
-        return xorNodeFromContext(maybeContextNode);
+        return XorNodeUtils.contextFactory(maybeContextNode);
     }
 
     return undefined;
@@ -83,7 +69,7 @@ export function maybeParentAstNode(
     }
     const parent: Ast.TNode = maybeParent;
 
-    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(parent.kind) === -1) {
+    if (maybeAllowedNodeKinds?.indexOf(parent.kind) === -1) {
         return undefined;
     }
 
@@ -106,7 +92,7 @@ export function maybeParentContextNode(
     }
     const parent: ParseContext.Node = maybeParent;
 
-    if (maybeAllowedNodeKinds !== undefined && maybeAllowedNodeKinds.indexOf(parent.kind) === -1) {
+    if (maybeAllowedNodeKinds?.indexOf(parent.kind) === -1) {
         return undefined;
     }
 
@@ -140,7 +126,7 @@ export function maybeXorChildByAttributeIndex(
         const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
             // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
-            if (maybeChildNodeKinds !== undefined && maybeChildNodeKinds.indexOf(xorNode.node.kind) === -1) {
+            if (maybeChildNodeKinds?.indexOf(xorNode.node.kind) === -1) {
                 const details: {} = {
                     childId,
                     expectedAny: maybeChildNodeKinds,
@@ -169,11 +155,7 @@ export function maybeAstChildByAttributeIndex(
         maybeChildNodeKinds,
     );
 
-    if (maybeNode === undefined || maybeNode.kind === XorNodeKind.Context) {
-        return undefined;
-    } else {
-        return maybeNode.node;
-    }
+    return maybeNode?.kind === XorNodeKind.Ast ? maybeNode.node : undefined;
 }
 
 export function maybeContextChildByAttributeIndex(
@@ -189,11 +171,7 @@ export function maybeContextChildByAttributeIndex(
         maybeChildNodeKinds,
     );
 
-    if (maybeNode === undefined || maybeNode.kind === XorNodeKind.Ast) {
-        return undefined;
-    } else {
-        return maybeNode.node;
-    }
+    return maybeNode?.kind === XorNodeKind.Context ? maybeNode.node : undefined;
 }
 
 // Returns the previous sibling of the given recursive expression.
@@ -591,7 +569,7 @@ export function maybeWrappedContentAst(
     const maybeAst: TXorNode | undefined = maybeXorChildByAttributeIndex(nodeIdMapCollection, wrapped.node.id, 1, [
         maybeChildNodeKind,
     ]);
-    return maybeAst !== undefined && maybeAst.kind === XorNodeKind.Ast ? maybeAst.node : undefined;
+    return maybeAst?.kind === XorNodeKind.Ast ? maybeAst.node : undefined;
 }
 
 export function maybeArrayWrapperContent(nodeIdMapCollection: Collection, wrapped: TXorNode): TXorNode | undefined {

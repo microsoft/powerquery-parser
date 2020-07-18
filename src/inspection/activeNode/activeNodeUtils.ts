@@ -2,7 +2,15 @@
 // Licensed under the MIT license.
 
 import { Ast, AstUtils } from "../../language";
-import { AncestryUtils, NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapUtils,
+    ParseContext,
+    TXorNode,
+    XorNodeKind,
+    XorNodeUtils,
+} from "../../parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode, ActiveNodeLeafKind } from "./activeNode";
 
@@ -41,19 +49,19 @@ export function maybeActiveNode(
     //  * Context
     //  * Ast
     if (astSearch.maybeShiftedRightNode !== undefined) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeShiftedRightNode);
+        maybeLeaf = XorNodeUtils.astFactory(astSearch.maybeShiftedRightNode);
         leafKind = ActiveNodeLeafKind.ShiftedRight;
     } else if (
         astSearch.maybeBestOnOrBeforeNode !== undefined &&
         isAnchorNode(position, astSearch.maybeBestOnOrBeforeNode)
     ) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = XorNodeUtils.astFactory(astSearch.maybeBestOnOrBeforeNode);
         leafKind = ActiveNodeLeafKind.Anchored;
     } else if (maybeContextNode !== undefined) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromContext(maybeContextNode);
+        maybeLeaf = XorNodeUtils.contextFactory(maybeContextNode);
         leafKind = ActiveNodeLeafKind.ContextNode;
     } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
-        maybeLeaf = NodeIdMapUtils.xorNodeFromAst(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = XorNodeUtils.astFactory(astSearch.maybeBestOnOrBeforeNode);
         leafKind = PositionUtils.isAfterAstNode(position, astSearch.maybeBestOnOrBeforeNode, false)
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
