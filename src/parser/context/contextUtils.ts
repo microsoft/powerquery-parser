@@ -297,7 +297,7 @@ function removeOrReplaceChildId(
         childIdsById.delete(parentId);
     }
 
-    const maybeParent: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(parentId) || undefined;
+    const maybeParent: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(parentId);
     if (maybeParent !== undefined && maybeReplacementId === undefined) {
         maybeParent.attributeCounter -= 1;
     }

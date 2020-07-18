@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind } from ".";
+import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast } from "../../language";
 
@@ -143,7 +143,7 @@ export function fieldProjectionFieldNames(
             selector,
             Ast.NodeKind.GeneralizedIdentifier,
         );
-        if (maybeIdentifier === undefined || maybeIdentifier.kind !== XorNodeKind.Ast) {
+        if (maybeIdentifier?.kind !== XorNodeKind.Ast) {
             break;
         } else {
             result.push((maybeIdentifier.node as Ast.GeneralizedIdentifier).literal);
@@ -225,10 +225,10 @@ export function sectionMemberKeyValuePairs(
         return (section.node as Ast.Section).sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
             const namePairedExpression: Ast.IdentifierPairedExpression = sectionMember.namePairedExpression;
             return {
-                source: NodeIdMapUtils.xorNodeFromAst(namePairedExpression),
+                source: XorNodeUtils.astFactory(namePairedExpression),
                 key: namePairedExpression.key,
                 keyLiteral: namePairedExpression.key.literal,
-                maybeValue: NodeIdMapUtils.xorNodeFromAst(namePairedExpression.value),
+                maybeValue: XorNodeUtils.astFactory(namePairedExpression.value),
             };
         });
     }
@@ -330,7 +330,7 @@ export function arrayWrapperCsvXorNodes(
 
     if (arrayWrapper.kind === XorNodeKind.Ast) {
         return (arrayWrapper.node as Ast.TCsvArray).elements.map((wrapper: Ast.TCsv) =>
-            NodeIdMapUtils.xorNodeFromAst(wrapper.node),
+            XorNodeUtils.astFactory(wrapper.node),
         );
     }
 
@@ -338,7 +338,7 @@ export function arrayWrapperCsvXorNodes(
     for (const csvXorNode of expectXorChildren(nodeIdMapCollection, arrayWrapper.node.id)) {
         switch (csvXorNode.kind) {
             case XorNodeKind.Ast:
-                partial.push(NodeIdMapUtils.xorNodeFromAst((csvXorNode.node as Ast.TCsv).node));
+                partial.push(XorNodeUtils.astFactory((csvXorNode.node as Ast.TCsv).node));
                 break;
 
             case XorNodeKind.Context: {

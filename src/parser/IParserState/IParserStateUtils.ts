@@ -88,8 +88,8 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     }
 
     for (const nodeId of newAstNodeIds.sort().reverse()) {
-        const maybeParent: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
-        const parentWillBeDeleted: boolean = maybeParent !== undefined && maybeParent >= backupIdCounter;
+        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
+        const parentWillBeDeleted: boolean = maybeParentId !== undefined && maybeParentId >= backupIdCounter;
         ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
     for (const nodeId of newContextNodeIds.sort().reverse()) {
@@ -187,7 +187,7 @@ export function isOnTokenKind(
 export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstantKind): boolean {
     if (isOnTokenKind(state, Language.TokenKind.Identifier)) {
         const currentToken: Language.Token = state.lexerSnapshot.tokens[state.tokenIndex];
-        if (currentToken === undefined || currentToken.data === undefined) {
+        if (currentToken?.data === undefined) {
             const details: {} = { currentToken };
             throw new CommonError.InvariantError(`expected data on Token`, details);
         }

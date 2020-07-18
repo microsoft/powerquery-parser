@@ -169,8 +169,7 @@ export function tryUpdateRange(state: State, range: Range, text: string): TriedL
     lastSplitLine.lineTerminator = lineEnd.lineTerminator;
 
     const maybePreviousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
-    const previousLineModeEnd: LineMode =
-        maybePreviousLine !== undefined ? maybePreviousLine.lineModeEnd : LineMode.Default;
+    const previousLineModeEnd: LineMode = maybePreviousLine?.lineModeEnd ?? LineMode.Default;
     const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         state.localizationTemplates,
         splitLines,

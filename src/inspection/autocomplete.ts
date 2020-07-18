@@ -467,7 +467,7 @@ function autocompleteSectionMember<S extends IParserState = IParserState>(
         );
 
         // Name hasn't been parsed yet so we can exit.
-        if (maybeName === undefined || maybeName.kind !== XorNodeKind.Ast) {
+        if (maybeName?.kind !== XorNodeKind.Ast) {
             return undefined;
         }
 
