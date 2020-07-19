@@ -127,6 +127,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
         nodeIdMapCollection,
+        leafNodeIds,
         activeNode,
         maybeParseError,
     );

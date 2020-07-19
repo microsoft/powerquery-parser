@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Language } from "..";
-import { CommonError, Result, Assert } from "../common";
+import { Assert, CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { Ast, ExpressionKeywords } from "../language";
 import { getLocalizationTemplates } from "../localization";
@@ -17,7 +17,7 @@ import {
     XorNodeKind,
 } from "../parser";
 import { CommonSettings } from "../settings";
-import { ActiveNode, ActiveNodeUtils } from "./activeNode";
+import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
 export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
@@ -51,6 +51,7 @@ interface InspectAutocompleteState<S extends IParserState = IParserState> {
     readonly activeNode: ActiveNode;
     readonly maybeParseError: ParseError.ParseError<S> | undefined;
     readonly maybeParseErrorToken: Language.Token | undefined;
+    readonly recursionTriggeringNodeIds: ReadonlyArray<number>;
     parent: TXorNode;
     child: TXorNode;
     ancestryIndex: number;
@@ -74,14 +75,15 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
     if (maybeInspected !== undefined) {
         return maybeInspected;
     }
-    Assert.isTrue(activeNode.ancestry.length >= 2, "activeNode.ancestry.length >= 2");
 
+    Assert.isTrue(activeNode.ancestry.length >= 2, "activeNode.ancestry.length >= 2");
     const state: InspectAutocompleteState = {
         nodeIdMapCollection,
         leafNodeIds,
         activeNode,
         maybeParseError,
         maybeParseErrorToken: maybeParseError ? ParseError.maybeTokenFrom(maybeParseError.innerError) : undefined,
+        recursionTriggeringNodeIds: [],
         parent: activeNode.ancestry[1],
         child: activeNode.ancestry[0],
         ancestryIndex: 0,
@@ -386,16 +388,23 @@ function autocompleteErrorHandlingExpression<S extends IParserState = IParserSta
 function autocompleteLetExpression<S extends IParserState = IParserState>(
     state: InspectAutocompleteState<S>,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
+    // LetExpressions can trigger another inspection which will always hit the same LetExpression.
+    // Make sure that it doesn't trigger an infinite recursive call.
+    if (state.recursionTriggeringNodeIds.indexOf(state.parent.node.id) !== -1) {
+        return autocompleteDefault(state);
+    }
+
     const child: TXorNode = state.child;
 
     if (child.kind === XorNodeKind.Context && child.node.maybeAttributeIndex === 2) {
-        return autocompleteLastKeyValuePair(
+        const maybeInpsected: ReadonlyArray<Language.KeywordKind> | undefined = autocompleteLastKeyValuePair(
             state,
             NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, state.parent),
         );
-    } else {
-        return autocompleteDefault(state);
+        return maybeInpsected !== undefined ? [...maybeInpsected, Language.KeywordKind.In] : undefined;
     }
+
+    return autocompleteDefault(state);
 }
 
 function autocompleteListExpression<S extends IParserState = IParserState>(
@@ -488,11 +497,13 @@ function autocompleteLastKeyValuePair<S extends IParserState = IParserState>(
         return undefined;
     }
 
+    // Grab the last value (if one exists)
     const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].maybeValue;
     if (maybeLastValue === undefined) {
         return undefined;
     }
 
+    // Grab the right-most Ast node in the last value.
     const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
         state.nodeIdMapCollection,
         maybeLastValue.node.id,
@@ -502,10 +513,26 @@ function autocompleteLastKeyValuePair<S extends IParserState = IParserState>(
         return undefined;
     }
 
-    // const maybeRightMostXorLeafForLastValue:
-    ActiveNodeUtils.maybeActiveNode(state.nodeIdMapCollection, state.leafNodeIds);
+    // Start a new autocomplete inspection where the ActiveNode's ancestry is the right-most Ast node in the last value.
+    const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(
+        state.nodeIdMapCollection,
+        maybeRightMostAstLeafForLastValue.id,
+    );
+    Assert.isTrue(shiftedAncestry.length >= 2, "shiftedAncestry.length >= 2");
+    const shiftedActiveNode: ActiveNode = {
+        ...state.activeNode,
+        ancestry: shiftedAncestry,
+    };
+    const inspected: ReadonlyArray<Language.KeywordKind> = inspectAutocomplete(
+        state.nodeIdMapCollection,
+        state.leafNodeIds,
+        shiftedActiveNode,
+        state.maybeParseError,
+    );
 
-    return inspectAutocomplete(state.nodeIdMapCollection, state.activeNode, state.maybeParseError);
+    return shiftedActiveNode.maybeIdentifierUnderPosition
+        ? trailingConjunctionKeywords(shiftedActiveNode, shiftedActiveNode.maybeIdentifierUnderPosition.literal)
+        : inspected;
 }
 
 function autocompleteDefault<S extends IParserState = IParserState>(
