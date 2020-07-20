@@ -18,7 +18,7 @@ import {
     XorNodeUtils,
 } from "../parser";
 import { CommonSettings } from "../settings";
-import { ActiveNode, ActiveNodeLeafKind } from "./activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
 export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
@@ -73,7 +73,7 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
         maybeParseErrorToken: maybeParseError ? ParseError.maybeTokenFrom(maybeParseError.innerError) : undefined,
         recursionTriggeringNodeIds: [],
         parent: activeNode.ancestry[1],
-        child: activeNode.ancestry[0],
+        child: ActiveNodeUtils.expectLeaf(activeNode),
         ancestryIndex: 0,
     };
 
@@ -82,19 +82,20 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
         return maybeAutocomplete;
     }
 
-    const leaf: TXorNode = activeNode.ancestry[0];
+    const ancestryLeaf: TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
     let maybePositionName: string | undefined;
-    if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, leaf, false, true)) {
+    if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
             maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
         }
         // Matches 'null', 'true', and 'false'.
         else if (
-            leaf.kind === XorNodeKind.Ast &&
-            leaf.node.kind === Ast.NodeKind.LiteralExpression &&
-            (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null)
+            ancestryLeaf.kind === XorNodeKind.Ast &&
+            ancestryLeaf.node.kind === Ast.NodeKind.LiteralExpression &&
+            (ancestryLeaf.node.literalKind === Ast.LiteralKind.Logical ||
+                ancestryLeaf.node.literalKind === Ast.LiteralKind.Null)
         ) {
-            maybePositionName = leaf.node.literal;
+            maybePositionName = ancestryLeaf.node.literal;
         }
     }
 
@@ -306,23 +307,21 @@ function handleConjunctions(
     autocomplete: ReadonlyArray<Language.KeywordKind>,
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
-    const activeNodeRoot: TXorNode = activeNode.ancestry[0];
-
     if (activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode) {
-        return handleConjunctionsForAfterAst(activeNodeRoot, autocomplete, maybeTrailingText);
+        return handleConjunctionsForAfterAst(activeNode, autocomplete, maybeTrailingText);
     } else if (activeNode.leafKind === ActiveNodeLeafKind.ContextNode) {
-        return handleConjunctionsForAfterContext(activeNodeRoot, autocomplete, maybeTrailingText);
+        return handleConjunctionsForAfterContext(activeNode, autocomplete, maybeTrailingText);
     } else {
         return autocomplete;
     }
 }
 
 function handleConjunctionsForAfterAst(
-    activeNodeRoot: TXorNode,
+    activeNode: ActiveNode,
     autocomplete: ReadonlyArray<Language.KeywordKind>,
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
-    if (!XorNodeUtils.isTUnaryType(activeNodeRoot)) {
+    if (!XorNodeUtils.isTUnaryType(ActiveNodeUtils.expectLeaf(activeNode))) {
         return autocomplete;
     } else if (maybeTrailingText !== undefined) {
         const maybeAllowedKeywords:
@@ -343,11 +342,11 @@ function handleConjunctionsForAfterAst(
 }
 
 function handleConjunctionsForAfterContext(
-    activeNodeRoot: TXorNode,
+    activeNode: ActiveNode,
     autocomplete: ReadonlyArray<Language.KeywordKind>,
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
-    if (!XorNodeUtils.isTUnaryType(activeNodeRoot)) {
+    if (!XorNodeUtils.isTUnaryType(ActiveNodeUtils.expectLeaf(activeNode))) {
         return autocomplete;
     }
 

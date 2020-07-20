@@ -19,6 +19,7 @@ import {
     TriedParse,
     TXorNode,
     XorNodeUtils,
+    AncestryUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 import { Type } from "./type";
@@ -123,6 +124,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     }
     const activeNode: ActiveNode = maybeActiveNode;
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
+    const ancestryLeaf: TXorNode = AncestryUtils.expectLeaf(ancestry);
 
     const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
@@ -155,15 +157,15 @@ export function tryInspection<S extends IParserState = IParserState>(
         return triedScope;
     }
     const scopeById: Inspection.ScopeById = triedScope.value;
-    const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestry[0].node.id);
-    Assert.isDefined(maybeScope, `expected nodeId in scopeById`, { nodeId: ancestry[0].node.id });
+    const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestryLeaf.node.id);
+    Assert.isDefined(maybeScope, `expected nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
     const scope: Inspection.ScopeItemByKey = maybeScope;
 
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
-        ancestry[0].node.id,
+        ancestryLeaf.node.id,
         {
             scopeById,
             typeById: new Map(),

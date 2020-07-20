@@ -87,7 +87,7 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        it("x a|", () => {
+        it("WIP x a|", () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`x a|`);
             const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.And, Language.KeywordKind.As];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
