@@ -233,7 +233,14 @@ describe(`Inspection - Autocomplete`, () => {
 
         it(`try true |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true |`);
-            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.Otherwise];
+            const expected: ReadonlyArray<Language.KeywordKind> = [
+                Language.KeywordKind.And,
+                Language.KeywordKind.As,
+                Language.KeywordKind.Is,
+                Language.KeywordKind.Meta,
+                Language.KeywordKind.Or,
+                Language.KeywordKind.Otherwise,
+            ];
             expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
     });

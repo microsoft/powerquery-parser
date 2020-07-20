@@ -322,20 +322,13 @@ function handleConjunctionsForAfterAst(
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
     if (!XorNodeUtils.isTUnaryType(ActiveNodeUtils.expectLeaf(activeNode))) {
-        return autocomplete;
-    } else if (maybeTrailingText !== undefined) {
-        const maybeAllowedKeywords:
-            | ReadonlyArray<Language.KeywordKind>
-            | undefined = PartialConjunctionKeywordAutocompleteMap.get(maybeTrailingText[0].toLocaleLowerCase());
-
-        if (maybeAllowedKeywords !== undefined) {
-            return ArrayUtils.concatUnique(
-                autocomplete,
-                maybeAllowedKeywords.filter((keyword: Language.KeywordKind) => keyword.startsWith(maybeTrailingText)),
-            );
+        if (maybeTrailingText !== undefined) {
+            return autocompleteFromTrailingText(autocomplete, maybeTrailingText);
         } else {
             return autocomplete;
         }
+    } else if (maybeTrailingText !== undefined) {
+        return autocompleteFromTrailingText(autocomplete, maybeTrailingText);
     } else {
         return ArrayUtils.concatUnique(autocomplete, ConjunctionKeywords);
     }
@@ -354,21 +347,27 @@ function handleConjunctionsForAfterContext(
         return autocomplete;
     }
 
+    return autocompleteFromTrailingText(autocomplete, maybeTrailingText);
+}
+
+function autocompleteFromTrailingText(
+    autocomplete: ReadonlyArray<Language.KeywordKind>,
+    trailingText: string,
+): ReadonlyArray<Language.KeywordKind> {
+    Assert.isTrue(trailingText.length > 0, "trailingText.length > 0");
+
     const maybeAllowedKeywords:
         | ReadonlyArray<Language.KeywordKind>
-        | undefined = PartialConjunctionKeywordAutocompleteMap.get(maybeTrailingText[0].toLocaleLowerCase());
-    if (maybeAllowedKeywords === undefined) {
+        | undefined = PartialConjunctionKeywordAutocompleteMap.get(trailingText[0].toLocaleLowerCase());
+
+    if (maybeAllowedKeywords !== undefined) {
+        return ArrayUtils.concatUnique(
+            autocomplete,
+            maybeAllowedKeywords.filter((keyword: Language.KeywordKind) => keyword.startsWith(trailingText)),
+        );
+    } else {
         return autocomplete;
     }
-
-    const newAutocomplete: Language.KeywordKind[] = [];
-    for (const keyword of maybeAllowedKeywords) {
-        if (keyword.startsWith(maybeTrailingText)) {
-            newAutocomplete.push(keyword);
-        }
-    }
-
-    return newAutocomplete.length ? ArrayUtils.concatUnique(autocomplete, newAutocomplete) : autocomplete;
 }
 
 function autocompleteKeywordConstant(
