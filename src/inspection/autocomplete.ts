@@ -64,23 +64,11 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
     activeNode: ActiveNode,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
-    Assert.isTrue(activeNode.ancestry.length >= 2, "activeNode.ancestry.length >= 2");
-    const state: InspectAutocompleteState = {
-        nodeIdMapCollection,
-        leafNodeIds,
-        activeNode,
-        maybeParseError,
-        maybeParseErrorToken: maybeParseError ? ParseError.maybeTokenFrom(maybeParseError.innerError) : undefined,
-        recursionTriggeringNodeIds: [],
-        parent: activeNode.ancestry[1],
-        child: ActiveNodeUtils.expectLeaf(activeNode),
-        ancestryIndex: 0,
-    };
-
-    const maybeAutocomplete: ReadonlyArray<Language.KeywordKind> | undefined = handleEdgeCases(state);
-    if (maybeAutocomplete !== undefined) {
-        return maybeAutocomplete;
-    }
+    const maybeParseErrorToken: Language.Token | undefined = maybeParseError
+        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
+        : undefined;
+    const maybeTrailingText: string | undefined =
+        maybeParseErrorToken?.data ?? activeNode.maybeIdentifierUnderPosition?.literal;
 
     const ancestryLeaf: TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
     let maybePositionName: string | undefined;
@@ -99,16 +87,37 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
         }
     }
 
-    const maybeTrailingText: string | undefined =
-        state.maybeParseErrorToken?.data ?? state.activeNode.maybeIdentifierUnderPosition?.literal;
+    if (activeNode.ancestry.length < 2) {
+        return filterRecommendations(handleConjunctions(activeNode, [], maybeTrailingText), maybePositionName);
+    }
 
-    const autocomplete: ReadonlyArray<Language.KeywordKind> = handleConjunctions(
+    const state: InspectAutocompleteState = {
+        nodeIdMapCollection,
+        leafNodeIds,
+        activeNode,
+        maybeParseError,
+        maybeParseErrorToken,
+        recursionTriggeringNodeIds: [],
+        parent: activeNode.ancestry[1],
+        child: ActiveNodeUtils.expectLeaf(activeNode),
+        ancestryIndex: 0,
+    };
+
+    const maybeEarlyExitInspected: ReadonlyArray<Language.KeywordKind> | undefined = handleEdgeCases(state);
+    if (maybeEarlyExitInspected !== undefined) {
+        return maybeEarlyExitInspected;
+    }
+
+    const inspected: ReadonlyArray<Language.KeywordKind> = handleConjunctions(
         state.activeNode,
         traverseAncestors(state),
         maybeTrailingText,
     );
 
-    return filterRecommendations(autocomplete, maybePositionName);
+    return filterRecommendations(
+        handleConjunctions(state.activeNode, traverseAncestors(state), maybeTrailingText),
+        maybePositionName,
+    );
 }
 
 // Travel the ancestry path in Active node in [parent, child] pairs.
@@ -304,54 +313,54 @@ function filterRecommendations(
 
 function handleConjunctions(
     activeNode: ActiveNode,
-    autocomplete: ReadonlyArray<Language.KeywordKind>,
+    inspected: ReadonlyArray<Language.KeywordKind>,
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
     if (activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode) {
-        return handleConjunctionsForAfterAst(activeNode, autocomplete, maybeTrailingText);
+        return handleConjunctionsForAfterAst(activeNode, inspected, maybeTrailingText);
     } else if (activeNode.leafKind === ActiveNodeLeafKind.ContextNode) {
-        return handleConjunctionsForAfterContext(activeNode, autocomplete, maybeTrailingText);
+        return handleConjunctionsForAfterContext(activeNode, inspected, maybeTrailingText);
     } else {
-        return autocomplete;
+        return inspected;
     }
 }
 
 function handleConjunctionsForAfterAst(
     activeNode: ActiveNode,
-    autocomplete: ReadonlyArray<Language.KeywordKind>,
+    inspected: ReadonlyArray<Language.KeywordKind>,
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
     if (!XorNodeUtils.isTUnaryType(ActiveNodeUtils.expectLeaf(activeNode))) {
         if (maybeTrailingText !== undefined) {
-            return autocompleteFromTrailingText(autocomplete, maybeTrailingText);
+            return autocompleteFromTrailingText(inspected, maybeTrailingText);
         } else {
-            return autocomplete;
+            return inspected;
         }
     } else if (maybeTrailingText !== undefined) {
-        return autocompleteFromTrailingText(autocomplete, maybeTrailingText);
+        return autocompleteFromTrailingText(inspected, maybeTrailingText);
     } else {
-        return ArrayUtils.concatUnique(autocomplete, ConjunctionKeywords);
+        return ArrayUtils.concatUnique(inspected, ConjunctionKeywords);
     }
 }
 
 function handleConjunctionsForAfterContext(
     activeNode: ActiveNode,
-    autocomplete: ReadonlyArray<Language.KeywordKind>,
+    inspected: ReadonlyArray<Language.KeywordKind>,
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
     if (!XorNodeUtils.isTUnaryType(ActiveNodeUtils.expectLeaf(activeNode))) {
-        return autocomplete;
+        return inspected;
     }
 
     if (maybeTrailingText === undefined) {
-        return autocomplete;
+        return inspected;
     }
 
-    return autocompleteFromTrailingText(autocomplete, maybeTrailingText);
+    return autocompleteFromTrailingText(inspected, maybeTrailingText);
 }
 
 function autocompleteFromTrailingText(
-    autocomplete: ReadonlyArray<Language.KeywordKind>,
+    inspected: ReadonlyArray<Language.KeywordKind>,
     trailingText: string,
 ): ReadonlyArray<Language.KeywordKind> {
     Assert.isTrue(trailingText.length > 0, "trailingText.length > 0");
@@ -362,11 +371,11 @@ function autocompleteFromTrailingText(
 
     if (maybeAllowedKeywords !== undefined) {
         return ArrayUtils.concatUnique(
-            autocomplete,
+            inspected,
             maybeAllowedKeywords.filter((keyword: Language.KeywordKind) => keyword.startsWith(trailingText)),
         );
     } else {
-        return autocomplete;
+        return inspected;
     }
 }
 
