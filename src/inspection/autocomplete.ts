@@ -122,6 +122,7 @@ function traverseAncestors<S extends IParserState = IParserState>(
 
     let maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined;
     for (let ancestryIndex: number = 1; ancestryIndex < numNodes; ancestryIndex += 1) {
+        state.ancestryIndex = ancestryIndex;
         state.parent = ancestry[ancestryIndex];
         state.child = ancestry[ancestryIndex - 1];
 
@@ -305,39 +306,70 @@ function handleConjunctions(
     autocomplete: ReadonlyArray<Language.KeywordKind>,
     maybeTrailingText: string | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
+    const activeNodeRoot: TXorNode = activeNode.ancestry[0];
+
     if (activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode) {
-        return XorNodeUtils.isTUnaryType(activeNode.ancestry[0])
-            ? ArrayUtils.concatUnique(autocomplete, ConjunctionKeywords)
-            : autocomplete;
+        return handleConjunctionsForAfterAst(activeNodeRoot, autocomplete, maybeTrailingText);
     } else if (activeNode.leafKind === ActiveNodeLeafKind.ContextNode) {
-        for (const ancestor of activeNode.ancestry) {
-            if (XorNodeUtils.isTUnaryType(ancestor)) {
-                if (maybeTrailingText === undefined) {
-                    return ArrayUtils.concatUnique(autocomplete, ConjunctionKeywords);
-                }
-                const maybeAllowedKeywords:
-                    | ReadonlyArray<Language.KeywordKind>
-                    | undefined = PartialConjunctionKeywordAutocompleteMap.get(
-                    maybeTrailingText[0].toLocaleLowerCase(),
-                );
-                if (maybeAllowedKeywords === undefined) {
-                    return autocomplete;
-                }
-
-                const newAutocomplete: Language.KeywordKind[] = [];
-                for (const keyword of maybeAllowedKeywords) {
-                    if (keyword.startsWith(maybeTrailingText)) {
-                        newAutocomplete.push(keyword);
-                    }
-                }
-                return newAutocomplete.length ? ArrayUtils.concatUnique(autocomplete, newAutocomplete) : autocomplete;
-            }
-        }
-
-        return autocomplete;
+        return handleConjunctionsForAfterContext(activeNodeRoot, autocomplete, maybeTrailingText);
     } else {
         return autocomplete;
     }
+}
+
+function handleConjunctionsForAfterAst(
+    activeNodeRoot: TXorNode,
+    autocomplete: ReadonlyArray<Language.KeywordKind>,
+    maybeTrailingText: string | undefined,
+): ReadonlyArray<Language.KeywordKind> {
+    if (!XorNodeUtils.isTUnaryType(activeNodeRoot)) {
+        return autocomplete;
+    } else if (maybeTrailingText !== undefined) {
+        const maybeAllowedKeywords:
+            | ReadonlyArray<Language.KeywordKind>
+            | undefined = PartialConjunctionKeywordAutocompleteMap.get(maybeTrailingText[0].toLocaleLowerCase());
+
+        if (maybeAllowedKeywords !== undefined) {
+            return ArrayUtils.concatUnique(
+                autocomplete,
+                maybeAllowedKeywords.filter((keyword: Language.KeywordKind) => keyword.startsWith(maybeTrailingText)),
+            );
+        } else {
+            return autocomplete;
+        }
+    } else {
+        return ArrayUtils.concatUnique(autocomplete, ConjunctionKeywords);
+    }
+}
+
+function handleConjunctionsForAfterContext(
+    activeNodeRoot: TXorNode,
+    autocomplete: ReadonlyArray<Language.KeywordKind>,
+    maybeTrailingText: string | undefined,
+): ReadonlyArray<Language.KeywordKind> {
+    if (!XorNodeUtils.isTUnaryType(activeNodeRoot)) {
+        return autocomplete;
+    }
+
+    if (maybeTrailingText === undefined) {
+        return autocomplete;
+    }
+
+    const maybeAllowedKeywords:
+        | ReadonlyArray<Language.KeywordKind>
+        | undefined = PartialConjunctionKeywordAutocompleteMap.get(maybeTrailingText[0].toLocaleLowerCase());
+    if (maybeAllowedKeywords === undefined) {
+        return autocomplete;
+    }
+
+    const newAutocomplete: Language.KeywordKind[] = [];
+    for (const keyword of maybeAllowedKeywords) {
+        if (keyword.startsWith(maybeTrailingText)) {
+            newAutocomplete.push(keyword);
+        }
+    }
+
+    return newAutocomplete.length ? ArrayUtils.concatUnique(autocomplete, newAutocomplete) : autocomplete;
 }
 
 function autocompleteKeywordConstant(

@@ -165,7 +165,7 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        it("try true oth|", () => {
+        it("WIP try true oth|", () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true oth|`);
             const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.Otherwise];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
@@ -617,7 +617,7 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        it(`WIP section; x = |`, () => {
+        it(`section; x = |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; x = |`);
             const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
