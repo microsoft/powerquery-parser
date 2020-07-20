@@ -17,6 +17,17 @@ export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T)
     return removeAtIndex(collection, collection.indexOf(element));
 }
 
+export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
+    const partial: T[] = [...left];
+    for (const element of right) {
+        if (partial.indexOf(element) === -1) {
+            partial.push(element);
+        }
+    }
+
+    return partial;
+}
+
 export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
     if (index < 0 || index >= collection.length) {
         const details: {} = {
@@ -46,7 +57,7 @@ export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) =
 export function isSubset<T>(
     largerCollection: ReadonlyArray<T>,
     smallerCollection: ReadonlyArray<T>,
-    valueCmpFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
+    equalityFn: (left: T, right: T) => boolean = (left: T, right: T) => left === right,
 ): boolean {
     if (smallerCollection.length > largerCollection.length) {
         return false;
@@ -55,7 +66,7 @@ export function isSubset<T>(
     for (const smallerCollectionValue of smallerCollection) {
         let foundMatch: boolean = false;
         for (const largerCollectionValue of largerCollection) {
-            if (valueCmpFn(smallerCollectionValue, largerCollectionValue)) {
+            if (equalityFn(smallerCollectionValue, largerCollectionValue)) {
                 foundMatch = true;
                 break;
             }
