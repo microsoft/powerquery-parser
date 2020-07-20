@@ -266,16 +266,17 @@ describe(`Inspection - Autocomplete`, () => {
     });
 
     describe(`${Ast.NodeKind.FunctionExpression}`, () => {
-        // it(`let x = (_ |) => a in x`, () => {
-        //     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = (_ |) => a in x`);
-        //     const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.As];
-        //     expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
-        // });
-        // it(`let x = (_ a|) => a in`, () => {
-        //     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = (_ a|) => a in`);
-        //     const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.As];
-        //     expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
-        // });
+        it(`let x = (_ |) => a in x`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = (_ |) => a in x`);
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.As];
+            expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
+
+        it(`let x = (_ a|) => a in`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let x = (_ a|) => a in`);
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.As];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
     });
 
     describe(`${Ast.NodeKind.IfExpression}`, () => {

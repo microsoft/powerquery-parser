@@ -167,7 +167,7 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
         ancestryIndex: 0,
     };
 
-    const maybeEarlyExitInspected: ReadonlyArray<Language.KeywordKind> | undefined = handleEdgeCases(state);
+    const maybeEarlyExitInspected: ReadonlyArray<Language.KeywordKind> | undefined = maybeEdgeCase(state);
     if (maybeEarlyExitInspected !== undefined) {
         return maybeEarlyExitInspected;
     }
@@ -238,7 +238,7 @@ function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | unde
     return [nodeKind, maybeAttributeIndex].join(",");
 }
 
-function handleEdgeCases(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const maybeParseErrorToken: Language.Token | undefined = state.maybeParseErrorToken;
@@ -269,16 +269,16 @@ function handleEdgeCases(state: InspectAutocompleteState): ReadonlyArray<Languag
         maybeInspected = [Language.KeywordKind.As];
     }
 
-    // // `(foo a|) => foo` -> `(foo as) => foo
-    // else if (
-    //     maybeParseErrorToken?.data === "a" &&
-    //     ancestry[0].kind === XorNodeKind.Context &&
-    //     ancestry[0].node.kind === Ast.NodeKind.Constant &&
-    //     ancestry[1].node.kind === Ast.NodeKind.ParameterList &&
-    //     ancestry[2].node.kind === Ast.NodeKind.FunctionExpression
-    // ) {
-    //     maybeInspected = trailingConjunctionKeywords(activeNode, maybeParseErrorToken.data, [Language.KeywordKind.As]);
-    // }
+    // `(foo a|) => foo` -> `(foo as) => foo
+    else if (
+        maybeParseErrorToken?.data === "a" &&
+        ancestry[0].kind === XorNodeKind.Context &&
+        ancestry[0].node.kind === Ast.NodeKind.Constant &&
+        ancestry[1].node.kind === Ast.NodeKind.ParameterList &&
+        ancestry[2].node.kind === Ast.NodeKind.FunctionExpression
+    ) {
+        maybeInspected = [Language.KeywordKind.As];
+    }
 
     return maybeInspected;
 }
@@ -310,14 +310,14 @@ function handleConjunctions(
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
     if (!XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
         if (maybeTrailingText !== undefined) {
-            return autocompleteFromTrailingText(inspected, maybeTrailingText);
+            return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
         } else {
             return inspected;
         }
     } else if (maybeTrailingText !== undefined) {
-        return autocompleteFromTrailingText(inspected, maybeTrailingText);
+        return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
     } else if (maybeTrailingText !== undefined) {
-        return autocompleteFromTrailingText(inspected, maybeTrailingText);
+        return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
     } else if (activeNodeLeaf.kind === XorNodeKind.Ast) {
         return ArrayUtils.concatUnique(inspected, ConjunctionKeywords);
     } else {
@@ -328,16 +328,15 @@ function handleConjunctions(
 function autocompleteFromTrailingText(
     inspected: ReadonlyArray<Language.KeywordKind>,
     trailingText: TrailingText,
+    maybeAllowedKeywords: ReadonlyArray<Language.KeywordKind> | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
     if (trailingText.isInOrOnPosition === false) {
         return inspected;
     }
-
     Assert.isTrue(trailingText.text.length > 0, "trailingText.length > 0");
 
-    const maybeAllowedKeywords:
-        | ReadonlyArray<Language.KeywordKind>
-        | undefined = PartialConjunctionKeywordAutocompleteMap.get(trailingText.text[0].toLocaleLowerCase());
+    maybeAllowedKeywords =
+        maybeAllowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(trailingText.text[0].toLocaleLowerCase());
 
     if (maybeAllowedKeywords !== undefined) {
         return ArrayUtils.concatUnique(
