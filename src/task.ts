@@ -9,6 +9,7 @@ import { Ast } from "./language";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { getLocalizationTemplates } from "./localization";
 import {
+    AncestryUtils,
     IParser,
     IParserState,
     IParserUtils,
@@ -19,7 +20,6 @@ import {
     TriedParse,
     TXorNode,
     XorNodeUtils,
-    AncestryUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
 import { Type } from "./type";
