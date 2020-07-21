@@ -42,17 +42,22 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
     }
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        inspectAutocomplete(nodeIdMapCollection, leafNodeIds, maybeActiveNode, maybeParseError),
+        inspectAutocomplete(
+            nodeIdMapCollection,
+            leafNodeIds,
+            maybeActiveNode,
+            maybeParseError !== undefined ? ParseError.maybeTokenFrom(maybeParseError.innerError) : undefined,
+        ),
     );
 }
 
-interface InspectAutocompleteState<S extends IParserState = IParserState> {
+interface InspectAutocompleteState {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     readonly activeNode: ActiveNode;
-    readonly maybeParseError: ParseError.ParseError<S> | undefined;
-    readonly maybeParseErrorToken: Language.Token | undefined;
     readonly recursionTriggeringNodeIds: ReadonlyArray<number>;
+    readonly maybeParseErrorToken: Language.Token | undefined;
+    readonly maybeTrailingText: TrailingText | undefined;
     parent: TXorNode;
     child: TXorNode;
     ancestryIndex: number;
@@ -122,15 +127,12 @@ const ConjunctionKeywords: ReadonlyArray<Language.KeywordKind> = [
     Language.KeywordKind.Or,
 ];
 
-function inspectAutocomplete<S extends IParserState = IParserState>(
+function inspectAutocomplete(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
-    maybeParseError: ParseError.ParseError<S> | undefined,
+    maybeParseErrorToken: Language.Token | undefined,
 ): ReadonlyArray<Language.KeywordKind> {
-    const maybeParseErrorToken: Language.Token | undefined = maybeParseError
-        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
-        : undefined;
     const maybeTrailingText: TrailingText | undefined =
         maybeParseErrorToken !== undefined ? trailingTextFactory(activeNode, maybeParseErrorToken) : undefined;
 
@@ -159,9 +161,9 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
         nodeIdMapCollection,
         leafNodeIds,
         activeNode,
-        maybeParseError,
-        maybeParseErrorToken,
         recursionTriggeringNodeIds: [],
+        maybeParseErrorToken,
+        maybeTrailingText,
         parent: activeNode.ancestry[1],
         child: ActiveNodeUtils.expectLeaf(activeNode),
         ancestryIndex: 0,
@@ -179,10 +181,9 @@ function inspectAutocomplete<S extends IParserState = IParserState>(
 }
 
 function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Language.Token): TrailingText {
-    const isInOrOnPosition: boolean = PositionUtils.isInToken(activeNode.position, parseErrorToken, false, true);
     return {
         text: parseErrorToken.data,
-        isInOrOnPosition,
+        isInOrOnPosition: PositionUtils.isInToken(activeNode.position, parseErrorToken, false, true),
     };
 }
 
@@ -190,9 +191,7 @@ function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Language.T
 // Without zipping the values we wouldn't know what we're completing for.
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
-function traverseAncestors<S extends IParserState = IParserState>(
-    state: InspectAutocompleteState<S>,
-): ReadonlyArray<Language.KeywordKind> {
+function traverseAncestors(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> {
     const ancestry: ReadonlyArray<TXorNode> = state.activeNode.ancestry;
     const numNodes: number = ancestry.length;
 
@@ -365,8 +364,8 @@ function autocompleteKeywordConstant(
     return [keywordKind];
 }
 
-function autocompleteErrorHandlingExpression<S extends IParserState = IParserState>(
-    state: InspectAutocompleteState<S>,
+function autocompleteErrorHandlingExpression(
+    state: InspectAutocompleteState,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
     const position: Position = state.activeNode.position;
     const child: TXorNode = state.child;
@@ -415,9 +414,7 @@ function autocompleteErrorHandlingExpression<S extends IParserState = IParserSta
     }
 }
 
-function autocompleteLetExpression<S extends IParserState = IParserState>(
-    state: InspectAutocompleteState<S>,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
     if (state.recursionTriggeringNodeIds.indexOf(state.parent.node.id) !== -1) {
@@ -431,21 +428,17 @@ function autocompleteLetExpression<S extends IParserState = IParserState>(
             state,
             NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, state.parent),
         );
-        if (maybeInpsected === undefined) {
+        if (maybeInpsected === undefined || state.maybeTrailingText !== undefined) {
             return undefined;
         }
 
-        const partial: Language.KeywordKind[] = [...maybeInpsected, Language.KeywordKind.In];
-
-        return partial;
+        return [...maybeInpsected, Language.KeywordKind.In];
     }
 
     return autocompleteDefault(state);
 }
 
-function autocompleteListExpression<S extends IParserState = IParserState>(
-    state: InspectAutocompleteState<S>,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const ancestryIndex: number = state.ancestryIndex;
     const child: TXorNode = state.child;
@@ -483,9 +476,7 @@ function autocompleteListExpression<S extends IParserState = IParserState>(
 
 // Test if 'shared' could be what's being typed. Eg.
 // 'section s' -> could either be interpreted as either the 'shared' keyword, or the key-value-pair key is 's'.
-function autocompleteSectionMember<S extends IParserState = IParserState>(
-    state: InspectAutocompleteState<S>,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     // SectionMember.namePairedExpression
     if (state.child.node.maybeAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
@@ -525,8 +516,8 @@ function autocompleteSectionMember<S extends IParserState = IParserState>(
     return [];
 }
 
-function autocompleteLastKeyValuePair<S extends IParserState = IParserState>(
-    state: InspectAutocompleteState<S>,
+function autocompleteLastKeyValuePair(
+    state: InspectAutocompleteState,
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<Ast.GeneralizedIdentifier | Ast.Identifier>>,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
     if (keyValuePairs.length === 0) {
@@ -563,15 +554,13 @@ function autocompleteLastKeyValuePair<S extends IParserState = IParserState>(
         state.nodeIdMapCollection,
         state.leafNodeIds,
         shiftedActiveNode,
-        state.maybeParseError,
+        state.maybeParseErrorToken,
     );
 
     return inspected;
 }
 
-function autocompleteDefault<S extends IParserState = IParserState>(
-    state: InspectAutocompleteState<S>,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteDefault(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const child: TXorNode = state.child;
     const key: string = createMapKey(state.parent.node.kind, child.node.maybeAttributeIndex);

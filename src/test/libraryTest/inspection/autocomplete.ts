@@ -153,7 +153,7 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        it("WIP try true o |", () => {
+        it("try true o |", () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`try true o |`);
             const expected: ReadonlyArray<Language.KeywordKind> = [];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
@@ -543,7 +543,6 @@ describe(`Inspection - Autocomplete`, () => {
         });
     });
 
-    // Map the ordering of tests to autocomplete.ts::AutocompleteExpressionKeys
     describe(`AutocompleteExpression`, () => {
         it(`error |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`error |`);
@@ -662,16 +661,15 @@ describe(`Inspection - Autocomplete`, () => {
 
         it(`let a = 1 o|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 o|`);
-            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.Or, Language.KeywordKind.In];
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.Or];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        // it(`let a = 1 m|`, () => {
-        //     const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 m|`);
-        //     // TODO: meta should be valid keyword here
-        //     const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
-        //     expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
-        // });
+        it(`let a = 1 m|`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1 m|`);
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.Meta];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
 
         it(`let a = 1, |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1, |`);
