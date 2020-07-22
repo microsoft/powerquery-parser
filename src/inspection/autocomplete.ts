@@ -55,7 +55,6 @@ interface InspectAutocompleteState {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     readonly activeNode: ActiveNode;
-    readonly recursionTriggeringNodeIds: ReadonlyArray<number>;
     readonly maybeParseErrorToken: Language.Token | undefined;
     readonly maybeTrailingText: TrailingText | undefined;
     parent: TXorNode;
@@ -161,7 +160,6 @@ function inspectAutocomplete(
         nodeIdMapCollection,
         leafNodeIds,
         activeNode,
-        recursionTriggeringNodeIds: [],
         maybeParseErrorToken,
         maybeTrailingText,
         parent: activeNode.ancestry[1],
@@ -417,10 +415,6 @@ function autocompleteErrorHandlingExpression(
 function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
-    if (state.recursionTriggeringNodeIds.indexOf(state.parent.node.id) !== -1) {
-        return autocompleteDefault(state);
-    }
-
     const child: TXorNode = state.child;
 
     if (child.kind === XorNodeKind.Context && child.node.maybeAttributeIndex === 2) {
@@ -455,7 +449,12 @@ function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyAr
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestryUtils.expectNthPreviousXorNode(
+        activeNode.ancestry,
+        ancestryIndex,
+        3,
+        undefined,
+    );
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -464,7 +463,7 @@ function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyAr
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 4, undefined)
+            ? AncestryUtils.expectNthPreviousXorNode(activeNode.ancestry, ancestryIndex, 4, undefined)
             : nodeOrComma;
 
     if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
@@ -495,7 +494,7 @@ function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArr
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
+        const maybeName: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
             state.activeNode.ancestry,
             state.ancestryIndex,
             2,

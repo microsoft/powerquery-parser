@@ -640,6 +640,12 @@ describe(`Inspection - Autocomplete`, () => {
     });
 
     describe(`${Ast.NodeKind.LetExpression}`, () => {
+        it(`let a = |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = |`);
+            const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
+
         it(`let a = 1|`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1|`);
             const expected: ReadonlyArray<Language.KeywordKind> = [];
@@ -673,6 +679,24 @@ describe(`Inspection - Autocomplete`, () => {
 
         it(`let a = 1, |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = 1, |`);
+            const expected: ReadonlyArray<Language.KeywordKind> = [];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
+
+        it(`let a = let b = |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = let b = |`);
+            const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
+
+        it(`let a = let b = 1 |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = let b = 1 |`);
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
+
+        it(`WIP let a = let b = 1, |`, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = let b = 1, |`);
             const expected: ReadonlyArray<Language.KeywordKind> = [];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });

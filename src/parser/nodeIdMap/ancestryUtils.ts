@@ -19,13 +19,13 @@ export function expectAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId
     return NodeIdMapIterator.expectXorNodes(nodeIdMapCollection, ancestryIds);
 }
 
-export function expectPreviousXorNode(
+export function expectNthPreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybePreviousXorNode(ancestry, ancestryIndex, n);
+    const maybeXorNode: TXorNode | undefined = maybeNthPreviousXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError(`no previous node`);
     }
@@ -44,7 +44,7 @@ export function expectPreviousXorNode(
     return maybeXorNode;
 }
 
-export function maybePreviousXorNode(
+export function maybeNthPreviousXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
@@ -58,13 +58,13 @@ export function maybePreviousXorNode(
     }
 }
 
-export function expectNextXorNode(
+export function expectNthNextXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybeNextXorNode(ancestry, ancestryIndex, n);
+    const maybeXorNode: TXorNode | undefined = maybeNthNextXorNode(ancestry, ancestryIndex, n);
     if (maybeXorNode === undefined) {
         throw new CommonError.InvariantError(`no next node`);
     }
@@ -83,7 +83,7 @@ export function expectNextXorNode(
     return maybeXorNode;
 }
 
-export function maybeNextXorNode(
+export function maybeNthNextXorNode(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,

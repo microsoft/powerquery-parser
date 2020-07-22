@@ -131,9 +131,12 @@ function inspectInvokeExpressionArguments(
     nodeIndex: number,
 ): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, 1, [
-        Ast.NodeKind.ArrayWrapper,
-    ]);
+    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
+        activeNode.ancestry,
+        nodeIndex,
+        1,
+        [Ast.NodeKind.ArrayWrapper],
+    );
     if (maybeCsvArray === undefined) {
         return undefined;
     }
@@ -148,7 +151,7 @@ function inspectInvokeExpressionArguments(
         return undefined;
     }
 
-    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
+    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
         activeNode.ancestry,
         nodeIndex,
         2,
