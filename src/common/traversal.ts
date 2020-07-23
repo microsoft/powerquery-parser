@@ -4,7 +4,7 @@
 import { Assert, CommonError, Result } from ".";
 import { Ast } from "../language";
 import { ILocalizationTemplates } from "../localization";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../parser";
 import { ResultUtils } from "./result";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
@@ -133,12 +133,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
-                return {
-                    kind: XorNodeKind.Ast,
-                    node: childAstNode,
-                };
-            });
+            return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.astFactory);
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
@@ -150,33 +145,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
             if (maybeChildIds !== undefined) {
                 const childIds: ReadonlyArray<number> = maybeChildIds;
                 for (const childId of childIds) {
-                    const maybeAstChild: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(childId);
-                    if (maybeAstChild) {
-                        const astChild: Ast.TNode = maybeAstChild;
-                        result.push({
-                            kind: XorNodeKind.Ast,
-                            node: astChild,
-                        });
-                        continue;
-                    }
-
-                    const maybeContextChild: ParseContext.Node | undefined = nodeIdMapCollection.contextNodeById.get(
-                        childId,
-                    );
-                    if (maybeContextChild) {
-                        const contextChild: ParseContext.Node = maybeContextChild;
-                        result.push({
-                            kind: XorNodeKind.Context,
-                            node: contextChild,
-                        });
-                        continue;
-                    }
-
-                    const details: {} = { nodeId: childId };
-                    throw new CommonError.InvariantError(
-                        `nodeId should be found in either astNodesById or contextNodesById`,
-                        details,
-                    );
+                    result.push(NodeIdMapUtils.expectXorNode(nodeIdMapCollection, childId));
                 }
             }
 

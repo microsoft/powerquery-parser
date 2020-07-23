@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext } from "../";
 import { Language } from "../..";
-import { CommonError, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
@@ -85,6 +85,13 @@ export function startContext(
 export function endContext(state: State, contextNode: Node, astNode: Ast.TNode): Node | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
+    if (state.maybeRoot?.id === astNode.id) {
+        Assert.isTrue(
+            state.nodeIdMapCollection.contextNodeById.size === 1,
+            "the root context shouldn't end until all other contexts are closed",
+        );
+    }
+
     contextNode.isClosed = true;
 
     if (astNode.isLeaf) {
@@ -97,9 +104,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
 
     // Move nodeId from contextNodeMap to astNodeMap.
-    if (!nodeIdMapCollection.contextNodeById.delete(contextNode.id)) {
-        throw new CommonError.InvariantError(`can't end a context that doesn't belong to state`);
-    }
+    MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, contextNode.id);
     nodeIdMapCollection.astNodeById.set(astNode.id, astNode);
 
     // Update maybeRightMostLeaf when applicable
@@ -113,14 +118,6 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         }
     }
 
-    if (state.maybeRoot?.id === astNode.id) {
-        if (state.nodeIdMapCollection.contextNodeById.size) {
-            throw new CommonError.InvariantError(
-                `the root context shouldn't end until all other context nodes have ended`,
-            );
-        }
-    }
-
     return maybeParentNode;
 }
 
@@ -129,11 +126,7 @@ export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boo
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-
-    if (!astNodeById.has(nodeId)) {
-        const details: {} = { nodeId };
-        throw new CommonError.InvariantError(`Ast nodeId not in state.`, details);
-    }
+    MapUtils.assertHas(astNodeById, nodeId);
 
     // If Node was a leaf node, remove it from the list of leaf nodes.
     removeLeafOrNoop(state, nodeId);
@@ -142,26 +135,17 @@ export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boo
     const maybeChildIds: ReadonlyArray<number> | undefined = childIdsById.get(nodeId);
 
     // Not a leaf node.
-    if (maybeChildIds !== undefined) {
-        const childIds: ReadonlyArray<number> = maybeChildIds;
-        const details: {} = {
-            childIds,
-            nodeId,
-        };
-        throw new CommonError.InvariantError(`Ast maybeChildIds !== undefined`, details);
-    }
+    Assert.isUndefined(maybeChildIds, `cannot delete Ast if it has children`, { nodeId, childIds: maybeChildIds });
+
     // Is a leaf node, not root node.
     // Delete the node from the list of children under the node's parent.
-    else if (maybeParentId) {
+    if (maybeParentId) {
         const parentId: number = maybeParentId;
-        if (astNodeById.has(parentId) && !parentWillBeDeleted) {
-            const details: {} = {
-                parentId,
-                nodeId,
-            };
-            throw new CommonError.InvariantError(`parent is a Ast node not marked for deletion`, details);
-        }
-
+        Assert.isFalse(
+            astNodeById.has(maybeParentId) && !parentWillBeDeleted,
+            `parent is an Ast node not marked for deletion`,
+            { parentId, nodeId },
+        );
         removeOrReplaceChildId(nodeIdMapCollection, parentId, nodeId, undefined);
     }
     // Else is root node, is leaf node.
@@ -195,13 +179,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
     // Not a leaf node.
     if (maybeChildIds !== undefined) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        if (childIds.length !== 1) {
-            const details: {} = {
-                childIds,
-                nodeId,
-            };
-            throw new CommonError.InvariantError(`Context childIds.length !== 0`, details);
-        }
+        ArrayUtils.assertNonZeroLength(childIds);
         const childId: number = childIds[0];
 
         // Not a leaf node, is the Root node.
@@ -261,14 +239,10 @@ function removeOrReplaceChildId(
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
     const childIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(childIdsById, parentId);
-    const replacementIndex: number = childIds.indexOf(childId);
-    if (replacementIndex === -1) {
-        const details: {} = {
-            parentId,
-            childId,
-        };
-        throw new CommonError.InvariantError(`childId isn't a child of parentId`, details);
-    }
+    const replacementIndex: number = ArrayUtils.assertIn(childIds, childId, `childId isn't a child of parentId`, {
+        childId,
+        parentId,
+    });
 
     const beforeChildId: ReadonlyArray<number> = childIds.slice(0, replacementIndex);
     const afterChildId: ReadonlyArray<number> = childIds.slice(replacementIndex + 1);

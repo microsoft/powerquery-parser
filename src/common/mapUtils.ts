@@ -45,3 +45,11 @@ export function pick<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): Map<K, V> {
 
     return newMap;
 }
+
+export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+    Assert.isTrue(map.delete(key), maybeMessage ?? `delete failed as key is absent`, { key });
+}
+
+export function assertHas<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+    Assert.isTrue(map.has(key), maybeMessage ?? `key is absent`, { key });
+}

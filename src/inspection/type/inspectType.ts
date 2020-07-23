@@ -281,13 +281,10 @@ function inspectFromChildAttributeIndex(
 }
 
 function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    if (!AstUtils.isTBinOpExpressionKind(xorNode.node.kind)) {
-        const details: {} = {
-            nodeId: xorNode.node.id,
-            nodeKind: xorNode.node.kind,
-        };
-        throw new CommonError.InvariantError(`xorNode isn't a TBinOpExpression`, details);
-    }
+    Assert.isTrue(AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
+        nodeId: xorNode.node.id,
+        nodeKind: xorNode.node.kind,
+    });
 
     const parentId: number = xorNode.node.id;
     const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(state.nodeIdMapCollection, parentId);
@@ -724,7 +721,7 @@ function inspectIdentifier(state: TypeInspectionState, xorNode: TXorNode): Type.
     }
 
     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
-    return dereferencedType !== undefined ? dereferencedType : Type.UnknownInstance;
+    return dereferencedType ?? Type.UnknownInstance;
 }
 
 function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -735,7 +732,7 @@ function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNo
     }
 
     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
-    return dereferencedType !== undefined ? dereferencedType : Type.UnknownInstance;
+    return dereferencedType ?? Type.UnknownInstance;
 }
 
 function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -1218,11 +1215,12 @@ function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TX
     const maybeDeferenced: TXorNode | undefined = maybeDereferencedIdentifier(state, xorNode);
     if (maybeDeferenced === undefined) {
         return undefined;
-    } else if (maybeDeferenced.kind !== XorNodeKind.Ast) {
-        throw new CommonError.InvariantError(`${maybeDereferencedIdentifier.name} should only return Ast identifiers`);
     }
-
     XorNodeUtils.assertAnyAstNodeKind(maybeDeferenced, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
+    Assert.isTrue(maybeDeferenced.kind === XorNodeKind.Ast, `deferencedIdentifier should only return Ast nodes`, {
+        deferencedNodeId: maybeDeferenced.node.id,
+        deferencedNodeKind: maybeDeferenced.node.kind,
+    });
 
     const deferenced: Ast.Identifier | Ast.IdentifierExpression = maybeDeferenced.node as
         | Ast.Identifier

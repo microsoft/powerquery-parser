@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../common";
+import { Assert, CommonError, Result, ResultUtils } from "../common";
 import { Ast } from "../language";
 import { getLocalizationTemplates } from "../localization";
 import {
@@ -56,7 +56,7 @@ function inspectInvokeExpression(
 
         return {
             xorNode,
-            maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
+            maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode),
             maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
         };
     }
@@ -80,8 +80,10 @@ function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boole
     return true;
 }
 
-function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): string | undefined {
-    const invokeExpr: TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId);
+function maybeInvokeExpressionName(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    invokeExpr: TXorNode,
+): string | undefined {
     XorNodeUtils.assertAstNodeKind(invokeExpr, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
@@ -104,16 +106,11 @@ function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, no
             undefined,
         );
         if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-            if (headXorNode.kind !== XorNodeKind.Ast) {
-                const details: {} = {
-                    identifierExpressionNodeId: headXorNode.node.id,
-                    invokeExpressionNodeId: invokeExpr.node.id,
-                };
-                throw new CommonError.InvariantError(
-                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
-                    details,
-                );
-            }
+            Assert.isTrue(
+                headXorNode.kind === XorNodeKind.Ast,
+                `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                { identifierExpressionNodeId: headXorNode.node.id, invokeExpressionNodeId: invokeExpr.node.id },
+            );
 
             const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
             maybeName =
@@ -156,8 +153,7 @@ function inspectInvokeExpressionArguments(
         2,
         [Ast.NodeKind.Csv],
     );
-    const maybePositionArgumentIndex: number | undefined =
-        maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;
+    const maybePositionArgumentIndex: number | undefined = maybeAncestorCsv?.node.maybeAttributeIndex;
 
     return {
         numArguments,

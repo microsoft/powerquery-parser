@@ -71,7 +71,7 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
                 isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 keyNodeId: scopeItem.key.id,
-                maybeValueNodeId: scopeItem.maybeValue !== undefined ? scopeItem.maybeValue.node.id : undefined,
+                maybeValueNodeId: scopeItem.maybeValue?.node.id,
             };
 
         case ScopeItemKind.Parameter:

@@ -6,10 +6,13 @@ import { Err, Ok, Result, ResultUtils } from "./result";
 
 export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is true {
     if (value !== true) {
-        throw new CommonError.InvariantError(
-            maybeMessage ?? `assert failed, expected value to be defined`,
-            maybeDetails,
-        );
+        throw new CommonError.InvariantError(maybeMessage ?? `assert failed, expected value to be true`, maybeDetails);
+    }
+}
+
+export function isFalse(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is false {
+    if (value !== false) {
+        throw new CommonError.InvariantError(maybeMessage ?? `assert failed, expected value to be false`, maybeDetails);
     }
 }
 
@@ -37,7 +40,7 @@ export function isUndefined<T>(
 ): asserts maybeValue is undefined {
     if (maybeValue !== undefined) {
         throw new CommonError.InvariantError(
-            maybeMessage ?? `assert failed, expected value to be defined`,
+            maybeMessage ?? `assert failed, expected value to be undefined`,
             maybeDetails,
         );
     }

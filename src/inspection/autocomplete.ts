@@ -472,13 +472,11 @@ function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyAr
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
         return undefined;
-    } else if (child.node.maybeAttributeIndex !== 1) {
-        const details: {} = {
-            nodeId: child.node.id,
-            maybeAttributeIndex: child.node.maybeAttributeIndex,
-        };
-        throw new CommonError.InvariantError(`maybeAttributeIndex not in range [0, 2]`, details);
     }
+    Assert.isTrue(child.node.maybeAttributeIndex === 1, `must be in range [0, 2]`, {
+        nodeId: child.node.id,
+        maybeAttributeIndex: child.node.maybeAttributeIndex,
+    });
 
     // ListExpression -> ArrayWrapper -> Csv -> X
     const nodeOrComma: TXorNode = AncestryUtils.expectNthPreviousXorNode(

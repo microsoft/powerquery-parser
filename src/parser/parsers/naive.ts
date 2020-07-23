@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
@@ -155,11 +155,8 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
     // If both fail then return the error which parsed more tokens.
     try {
         document = parser.readExpression(state, parser);
-        const maybeErr: Error | undefined =
-            IParserStateUtils.testNoMoreTokens(state) || IParserStateUtils.testNoOpenContext(state);
-        if (maybeErr) {
-            throw maybeErr;
-        }
+        IParserStateUtils.assertNoMoreTokens(state);
+        IParserStateUtils.assertNoOpenContext(state);
     } catch (expressionError) {
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
@@ -178,11 +175,8 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
 
         try {
             document = readSectionDocument(state, parser);
-            const maybeErr: Error | undefined =
-                IParserStateUtils.testNoMoreTokens(state) || IParserStateUtils.testNoOpenContext(state);
-            if (maybeErr) {
-                throw maybeErr;
-            }
+            IParserStateUtils.assertNoMoreTokens(state);
+            IParserStateUtils.assertNoOpenContext(state);
         } catch (sectionError) {
             let triedError: Error;
             if (expressionErrorStateBackup.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
@@ -664,9 +658,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     // meaning the parent/child mapping for contexts are in reverse order.
     // The clean up for that happens here.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    if (state.maybeCurrentContextNode === undefined) {
-        throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
-    }
+    Assert.isDefined(state.maybeCurrentContextNode);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
     const maybeHeadParentId: number | undefined = nodeIdMapCollection.parentIdById.get(head.id);
@@ -678,15 +670,11 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
             nodeIdMapCollection.childIdsById,
             headParentId,
         );
-        const replacementIndex: number = parentChildIds.indexOf(head.id);
-        if (replacementIndex === -1) {
-            const details: {} = {
-                parentNodeId: headParentId,
-                childNodeId: head.id,
-            };
-            throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
-        }
-
+        const replacementIndex: number = ArrayUtils.assertIn(
+            parentChildIds,
+            head.id,
+            `node isn't a child of parentNode`,
+        );
         nodeIdMapCollection.childIdsById.set(headParentId, [
             ...parentChildIds.slice(0, replacementIndex),
             ...parentChildIds.slice(replacementIndex + 1),
@@ -811,11 +799,10 @@ export function readLiteralExpression<S extends IParserState = IParserState>(
         | Ast.LiteralKind.Null
         | Ast.LiteralKind.Text
         | undefined = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
-    if (maybeLiteralKind === undefined) {
-        throw new CommonError.InvariantError(
-            `couldn't convert TokenKind=${state.maybeCurrentTokenKind} into LiteralKind`,
-        );
-    }
+
+    Assert.isDefined(maybeLiteralKind, `couldn't convert TokenKind into LiteralKind`, {
+        maybeCurrentTokenKind: state.maybeCurrentTokenKind,
+    });
 
     const literal: string = readToken(state);
     const astNode: Ast.LiteralExpression = {
@@ -2414,14 +2401,10 @@ function readWrapped<
 
 export function readToken<S extends IParserState = IParserState>(state: S): string {
     const tokens: ReadonlyArray<Language.Token> = state.lexerSnapshot.tokens;
-
-    if (state.tokenIndex >= tokens.length) {
-        const details: {} = {
-            tokenIndex: state.tokenIndex,
-            "tokens.length": tokens.length,
-        };
-        throw new CommonError.InvariantError("index beyond tokens.length", details);
-    }
+    Assert.isFalse(state.tokenIndex >= tokens.length, `index is beyond tokens.length`, {
+        tokenIndex: state.tokenIndex,
+        tokensLength: tokens.length,
+    });
 
     const data: string = tokens[state.tokenIndex].data;
     state.tokenIndex += 1;
@@ -2452,13 +2435,7 @@ export function readTokenKindAsConstant<S extends IParserState, ConstantKind ext
     }
 
     const tokenData: string = readToken(state);
-    if (tokenData !== constantKind) {
-        const details: {} = {
-            tokenData,
-            constantKind,
-        };
-        throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
-    }
+    Assert.isTrue(tokenData === constantKind, `expected tokenData to equal constantKind`, { tokenData, constantKind });
 
     const astNode: Ast.TConstant & Ast.IConstant<ConstantKind> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -2481,13 +2458,10 @@ export function maybeReadTokenKindAsConstant<S extends IParserState, ConstantKin
         IParserStateUtils.startContext(state, nodeKind);
 
         const tokenData: string = readToken(state);
-        if (tokenData !== constantKind) {
-            const details: {} = {
-                tokenData,
-                constantKind,
-            };
-            throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
-        }
+        Assert.isTrue(tokenData === constantKind, `expected tokenData to equal constantKind`, {
+            tokenData,
+            constantKind,
+        });
 
         const astNode: Ast.TConstant & Ast.IConstant<ConstantKind> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -2524,10 +2498,7 @@ function readConstantKind<S extends IParserState, ConstantKind extends Ast.TCons
         state,
         constantKind,
     );
-    if (!maybeConstant) {
-        const details: {} = { constantKind };
-        throw new CommonError.InvariantError(`couldn't convert constantKind`, details);
-    }
+    Assert.isDefined(maybeConstant, `couldn't conver constantKind`, { constantKind });
 
     return maybeConstant;
 }
@@ -2584,11 +2555,7 @@ export function readBracketDisambiguation<S extends IParserState = IParserState>
         throw triedDisambiguation.error;
     }
     const disambiguation: BracketDisambiguation = triedDisambiguation.value;
-    if (allowedVariants.indexOf(disambiguation) === -1) {
-        throw new CommonError.InvariantError(
-            `grammar doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
-        );
-    }
+    ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
 
     switch (disambiguation) {
         case BracketDisambiguation.FieldProjection:

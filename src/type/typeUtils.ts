@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { ArrayUtils, Assert, CommonError, MapUtils } from "../common";
+import { ArrayUtils, Assert, MapUtils } from "../common";
 import { ParameterScopeItem } from "../inspection";
 import { Ast, AstUtils } from "../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
@@ -10,13 +10,7 @@ import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "
 export function primitiveTypeFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolean): Type.IPrimitiveType {
     const key: string = primitiveTypeMapKey(typeKind, isNullable);
     const maybeValue: Type.IPrimitiveType | undefined = primitiveTypeConstantMap.get(key);
-    if (maybeValue === undefined) {
-        const details: {} = {
-            typeKind,
-            isNullable,
-        };
-        throw new CommonError.InvariantError(`unknown [typeKind, isNullable] key`, details);
-    }
+    Assert.isDefined(maybeValue, `unknown [typeKind, isNullable] key`, { typeKind, isNullable });
 
     return maybeValue;
 }

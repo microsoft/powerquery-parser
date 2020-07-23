@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { getLocalizationTemplates } from "../../localization";
-import { NodeIdMap, NodeIdMapUtils } from "../../parser";
+import { NodeIdMap, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { Type } from "../../type";
 import { ScopeById, ScopeItemByKey } from "../scope";
@@ -29,11 +29,11 @@ export function tryScopeType(
 ): TriedScopeType {
     const state: TypeInspectionState = {
         settings,
-        givenTypeById: maybeTypeCache !== undefined ? maybeTypeCache.typeById : new Map(),
+        givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
         leafNodeIds,
-        scopeById: maybeTypeCache !== undefined ? maybeTypeCache.scopeById : new Map(),
+        scopeById: maybeTypeCache?.scopeById ?? new Map(),
     };
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state, nodeId));
@@ -43,21 +43,19 @@ export function tryType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    nodeId: number,
+    xorNode: TXorNode,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedType {
     const state: TypeInspectionState = {
         settings,
-        givenTypeById: maybeTypeCache !== undefined ? maybeTypeCache.scopeById : new Map(),
+        givenTypeById: maybeTypeCache?.scopeById ?? new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
         leafNodeIds,
-        scopeById: maybeTypeCache !== undefined ? maybeTypeCache.typeById : new Map(),
+        scopeById: maybeTypeCache?.typeById ?? new Map(),
     };
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        inspectXorNode(state, NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, nodeId)),
-    );
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectXorNode(state, xorNode));
 }
 
 function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeTypeByKey {
@@ -76,10 +74,7 @@ function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeType
     const result: ScopeTypeByKey = new Map();
     for (const [key, scopeItem] of scopeItemByKey.entries()) {
         const maybeType: Type.TType | undefined = state.givenTypeById.get(scopeItem.id);
-        if (maybeType === undefined) {
-            const details: {} = { nodeId: scopeItem.id };
-            throw new CommonError.InvariantError(`expected nodeId to be in givenTypeById`, details);
-        }
+        Assert.isDefined(maybeType, `expected nodeId to be in givenTypeById`, { nodeId: scopeItem.id });
 
         result.set(key, maybeType);
     }

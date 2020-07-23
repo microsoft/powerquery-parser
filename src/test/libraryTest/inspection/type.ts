@@ -8,7 +8,7 @@ import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
-import { IParserState, NodeIdMap, ParseContext, ParseError } from "../../../parser";
+import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
 import { Type, TypeUtils } from "../../../type";
 import { expectLexParseOk, expectParseErr, expectTextWithPosition } from "../../common";
@@ -19,7 +19,7 @@ function expectParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.state.contextState.leafNodeIds,
-        lexParseOk.root.id,
+        XorNodeUtils.astFactory(lexParseOk.root),
     );
 
     expect(actual).deep.equal(expected);
@@ -34,7 +34,7 @@ function expectParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
         DefaultSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
-        maybeRoot.id,
+        XorNodeUtils.contextFactory(maybeRoot),
     );
 
     expect(actual).deep.equal(expected);
@@ -44,9 +44,9 @@ function expectParseNodeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    nodeId: number,
+    xorNode: TXorNode,
 ): Type.TType {
-    const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, leafNodeIds, nodeId);
+    const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, leafNodeIds, xorNode);
     Assert.isOk(triedType);
 
     return triedType.value;

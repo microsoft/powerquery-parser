@@ -4,7 +4,7 @@
 import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from ".";
 import { ParseContext } from "..";
 import { Language } from "../..";
-import { Assert, CommonError, MapUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils } from "../../common";
 import { Ast } from "../../language";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
@@ -155,13 +155,8 @@ export function maybeXorChildByAttributeIndex(
         const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
             // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
-            if (maybeChildNodeKinds?.indexOf(xorNode.node.kind) === -1) {
-                const details: {} = {
-                    childId,
-                    expectedAny: maybeChildNodeKinds,
-                    actual: xorNode.node.kind,
-                };
-                throw new CommonError.InvariantError(`incorrect node kind for attribute`, details);
+            if (maybeChildNodeKinds !== undefined) {
+                ArrayUtils.assertIn(maybeChildNodeKinds, xorNode.node.kind);
             }
 
             return xorNode;
@@ -446,8 +441,8 @@ export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeI
 }
 
 // Contains at least one parsed token.
-export function hasParsedToken(nodeIdMapCollection: Collection, xorNode: TXorNode): boolean {
-    let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(xorNode.node.id);
+export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number): boolean {
+    let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
 
     while (maybeChildIds !== undefined) {
         const numChildren: number = maybeChildIds.length;

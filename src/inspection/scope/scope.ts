@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
 import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../parser";
@@ -49,14 +49,10 @@ export function tryScopeItems(
         if (ancestry.length === 0) {
             return new Map();
         }
-        const rootId: number = ancestry[0].node.id;
 
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
-        const maybeScope: ScopeItemByKey | undefined = inspected.get(rootId);
-        if (maybeScope === undefined) {
-            const details: {} = { rootId };
-            throw new CommonError.InvariantError(`expected rootId in scope result`, details);
-        }
+        const maybeScope: ScopeItemByKey | undefined = inspected.get(nodeId);
+        Assert.isDefined(maybeScope, `expected nodeId in scope result`, { nodeId });
 
         return maybeScope;
     });
