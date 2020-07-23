@@ -4,7 +4,7 @@
 import { Assert, CommonError, Result } from ".";
 import { Ast } from "../language";
 import { ILocalizationTemplates } from "../localization";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../parser";
 import { ResultUtils } from "./result";
 
 export type TriedTraverse<ResultType> = Result<ResultType, CommonError.CommonError>;
@@ -133,12 +133,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(childAstNode => {
-                return {
-                    kind: XorNodeKind.Ast,
-                    node: childAstNode,
-                };
-            });
+            return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.astFactory);
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
@@ -153,10 +148,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
                     const maybeAstChild: Ast.TNode | undefined = nodeIdMapCollection.astNodeById.get(childId);
                     if (maybeAstChild) {
                         const astChild: Ast.TNode = maybeAstChild;
-                        result.push({
-                            kind: XorNodeKind.Ast,
-                            node: astChild,
-                        });
+                        result.push(XorNodeUtils.astFactory(astChild));
                         continue;
                     }
 
@@ -165,10 +157,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
                     );
                     if (maybeContextChild) {
                         const contextChild: ParseContext.Node = maybeContextChild;
-                        result.push({
-                            kind: XorNodeKind.Context,
-                            node: contextChild,
-                        });
+                        result.push(XorNodeUtils.contextFactory(contextChild));
                         continue;
                     }
 
