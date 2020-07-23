@@ -1,4 +1,4 @@
-import { CommonError } from ".";
+import { Assert } from ".";
 
 export function all<T>(
     collection: ReadonlyArray<T>,
@@ -29,13 +29,10 @@ export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>)
 }
 
 export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
-    if (index < 0 || index >= collection.length) {
-        const details: {} = {
-            index,
-            collectionLength: collection.length,
-        };
-        throw new CommonError.InvariantError(`index not within array bounds`, details);
-    }
+    Assert.isTrue(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
+        index,
+        collectionLength: collection.length,
+    });
 
     return [...collection.slice(0, index), ...collection.slice(index + 1)];
 }

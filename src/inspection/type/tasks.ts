@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { getLocalizationTemplates } from "../../localization";
 import { NodeIdMap, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
@@ -74,10 +74,7 @@ function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeType
     const result: ScopeTypeByKey = new Map();
     for (const [key, scopeItem] of scopeItemByKey.entries()) {
         const maybeType: Type.TType | undefined = state.givenTypeById.get(scopeItem.id);
-        if (maybeType === undefined) {
-            const details: {} = { nodeId: scopeItem.id };
-            throw new CommonError.InvariantError(`expected nodeId to be in givenTypeById`, details);
-        }
+        Assert.isDefined(maybeType, `expected nodeId to be in givenTypeById`, { nodeId: scopeItem.id });
 
         result.set(key, maybeType);
     }

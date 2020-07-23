@@ -365,18 +365,18 @@ export function isPairedWrapperConstantKinds(left: Ast.TConstantKind, right: Ast
     );
 }
 
-export function testAnyNodeKind(
-    node: Ast.TNode,
-    allowedNodeKinds: ReadonlyArray<Ast.NodeKind>,
-): CommonError.InvariantError | undefined {
-    if (allowedNodeKinds.indexOf(node.kind) !== -1) {
-        return undefined;
-    }
+export function assertNodeKind(node: Ast.TNode, expectedNodeKind: Ast.NodeKind): void {
+    Assert.isTrue(node.kind === expectedNodeKind, `node.kind === expectedNodeKind`, {
+        expectedNodeKind,
+        actualNodeKind: node.kind,
+        actualNodeId: node.id,
+    });
+}
 
-    const details: {} = {
+export function assertAnyNodeKind(node: Ast.TNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
+    Assert.isTrue(allowedNodeKinds.indexOf(node.kind) !== -1, `allowedNodeKinds.indexOf(node.kind) !== -1`, {
         allowedNodeKinds,
         actualNodeKind: node.kind,
         actualNodeId: node.id,
-    };
-    return new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
+    });
 }

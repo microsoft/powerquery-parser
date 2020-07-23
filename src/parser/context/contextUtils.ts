@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext } from "../";
 import { Language } from "../..";
-import { CommonError, TypeScriptUtils } from "../../common";
+import { CommonError, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
@@ -97,9 +97,7 @@ export function endContext(state: State, contextNode: Node, astNode: Ast.TNode):
         maybeParentId !== undefined ? nodeIdMapCollection.contextNodeById.get(maybeParentId) : undefined;
 
     // Move nodeId from contextNodeMap to astNodeMap.
-    if (!nodeIdMapCollection.contextNodeById.delete(contextNode.id)) {
-        throw new CommonError.InvariantError(`can't end a context that doesn't belong to state`);
-    }
+    MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, contextNode.id);
     nodeIdMapCollection.astNodeById.set(astNode.id, astNode);
 
     // Update maybeRightMostLeaf when applicable

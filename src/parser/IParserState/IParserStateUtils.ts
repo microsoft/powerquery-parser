@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { CommonError } from "../../common";
+import { Assert, CommonError } from "../../common";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
@@ -118,11 +118,7 @@ export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void 
 }
 
 export function endContext(state: IParserState, astNode: Ast.TNode): void {
-    if (state.maybeCurrentContextNode === undefined) {
-        throw new CommonError.InvariantError(
-            `maybeContextNode should be truthy, can't end a context if it doesn't exist.`,
-        );
-    }
+    Assert.isDefined(state.maybeCurrentContextNode, `can't end a context if one doesn't exist`);
 
     const maybeParentOfContextNode: ParseContext.Node | undefined = ParseContextUtils.endContext(
         state.contextState,
@@ -135,14 +131,9 @@ export function endContext(state: IParserState, astNode: Ast.TNode): void {
 export function deleteContext(state: IParserState, maybeNodeId: number | undefined): void {
     let nodeId: number;
     if (maybeNodeId === undefined) {
-        if (state.maybeCurrentContextNode === undefined) {
-            throw new CommonError.InvariantError(
-                `maybeContextNode should be truthy, can't delete a context if it doesn't exist.`,
-            );
-        } else {
-            const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
-            nodeId = currentContextNode.id;
-        }
+        Assert.isDefined(state.maybeCurrentContextNode, `can't delete a context if one doesn't exist`);
+        const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
+        nodeId = currentContextNode.id;
     } else {
         nodeId = maybeNodeId;
     }
@@ -151,9 +142,7 @@ export function deleteContext(state: IParserState, maybeNodeId: number | undefin
 }
 
 export function incrementAttributeCounter(state: IParserState): void {
-    if (state.maybeCurrentContextNode === undefined) {
-        throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
-    }
+    Assert.isDefined(state.maybeCurrentContextNode, `state.maybeCurrentContextNode`);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
     currentContextNode.attributeCounter += 1;
 }
@@ -163,13 +152,7 @@ export function incrementAttributeCounter(state: IParserState): void {
 // -------------------------
 
 export function isTokenKind(state: IParserState, tokenKind: Language.TokenKind, tokenIndex: number): boolean {
-    const maybeToken: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
-
-    if (maybeToken) {
-        return maybeToken.kind === tokenKind;
-    } else {
-        return false;
-    }
+    return state.lexerSnapshot.tokens[tokenIndex]?.kind === tokenKind ?? false;
 }
 
 export function isNextTokenKind(state: IParserState, tokenKind: Language.TokenKind): boolean {
@@ -200,13 +183,12 @@ export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstan
 }
 
 export function isOnGeneralizedIdentifierStart(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
-    const maybeToken: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
-    if (maybeToken === undefined) {
+    const maybeTokenKind: Language.TokenKind | undefined = state.lexerSnapshot.tokens[tokenIndex]?.kind;
+    if (maybeTokenKind === undefined) {
         return false;
     }
-    const tokenKind: Language.TokenKind = maybeToken.kind;
 
-    switch (tokenKind) {
+    switch (maybeTokenKind) {
         case Language.TokenKind.Identifier:
         case Language.TokenKind.KeywordAnd:
         case Language.TokenKind.KeywordAs:
@@ -268,30 +250,22 @@ export function isRecursivePrimaryExpressionNext(
 // -----------------------------
 
 export function expectContextNodeMetadata(state: IParserState): ContextNodeMetadata {
-    if (state.maybeCurrentContextNode === undefined) {
-        throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
-    }
+    Assert.isDefined(state.maybeCurrentContextNode);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
-    const maybeTokenStart: Language.Token | undefined = currentContextNode.maybeTokenStart;
-    if (maybeTokenStart === undefined) {
-        throw new CommonError.InvariantError(`maybeTokenStart should be truthy`);
-    }
-    const tokenStart: Language.Token = maybeTokenStart;
+    Assert.isDefined(currentContextNode.maybeTokenStart);
+    const tokenStart: Language.Token = currentContextNode.maybeTokenStart;
 
     // inclusive token index
     const tokenIndexEnd: number = state.tokenIndex - 1;
     const maybeTokenEnd: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndexEnd];
-    if (maybeTokenEnd === undefined) {
-        throw new CommonError.InvariantError(`maybeTokenEnd should be truthy`);
-    }
-    const tokenEnd: Language.Token = maybeTokenEnd;
+    Assert.isDefined(maybeTokenEnd);
 
     const tokenRange: Language.TokenRange = {
         tokenIndexStart: currentContextNode.tokenIndexStart,
         tokenIndexEnd,
         positionStart: tokenStart.positionStart,
-        positionEnd: tokenEnd.positionEnd,
+        positionEnd: maybeTokenEnd.positionEnd,
     };
 
     const contextNode: ParseContext.Node = state.maybeCurrentContextNode;
@@ -305,12 +279,9 @@ export function expectContextNodeMetadata(state: IParserState): ContextNodeMetad
 export function expectTokenAt(state: IParserState, tokenIndex: number): Language.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const maybeToken: Language.Token | undefined = lexerSnapshot.tokens[tokenIndex];
+    Assert.isDefined(maybeToken, undefined, { tokenIndex });
 
-    if (maybeToken) {
-        return maybeToken;
-    } else {
-        throw new CommonError.InvariantError(`${expectTokenAt.name}: this.tokens[${tokenIndex}] is falsey`);
-    }
+    return maybeToken;
 }
 
 // -------------------------------
@@ -380,29 +351,23 @@ export function testIsOnAnyTokenKind(
     }
 }
 
-export function testNoMoreTokens(state: IParserState): ParseError.UnusedTokensRemainError | undefined {
-    if (state.tokenIndex !== state.lexerSnapshot.tokens.length) {
-        const token: Language.Token = expectTokenAt(state, state.tokenIndex);
-        return new ParseError.UnusedTokensRemainError(
-            state.localizationTemplates,
-            token,
-            state.lexerSnapshot.graphemePositionStartFrom(token),
-        );
-    } else {
-        return undefined;
+export function assertNoMoreTokens(state: IParserState): void {
+    if (state.tokenIndex === state.lexerSnapshot.tokens.length) {
+        return;
     }
+
+    const token: Language.Token = expectTokenAt(state, state.tokenIndex);
+    throw new ParseError.UnusedTokensRemainError(
+        state.localizationTemplates,
+        token,
+        state.lexerSnapshot.graphemePositionStartFrom(token),
+    );
 }
 
-export function testNoOpenContext(state: IParserState): CommonError.InvariantError | undefined {
-    if (state.maybeCurrentContextNode !== undefined) {
-        const details: {} = { maybeContextNode: state.maybeCurrentContextNode };
-        return new CommonError.InvariantError(
-            "maybeContextNode should be falsey, there shouldn't be an open context",
-            details,
-        );
-    } else {
-        return undefined;
-    }
+export function assertNoOpenContext(state: IParserState): void {
+    Assert.isUndefined(state.maybeCurrentContextNode !== undefined, undefined, {
+        contextNodeId: state.maybeCurrentContextNode?.id,
+    });
 }
 
 // -------------------------------------

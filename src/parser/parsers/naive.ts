@@ -155,11 +155,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
     // If both fail then return the error which parsed more tokens.
     try {
         document = parser.readExpression(state, parser);
-        const maybeErr: Error | undefined =
-            IParserStateUtils.testNoMoreTokens(state) || IParserStateUtils.testNoOpenContext(state);
-        if (maybeErr) {
-            throw maybeErr;
-        }
+        IParserStateUtils.assertNoOpenContext(state);
     } catch (expressionError) {
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
@@ -178,11 +174,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
 
         try {
             document = readSectionDocument(state, parser);
-            const maybeErr: Error | undefined =
-                IParserStateUtils.testNoMoreTokens(state) || IParserStateUtils.testNoOpenContext(state);
-            if (maybeErr) {
-                throw maybeErr;
-            }
+            IParserStateUtils.assertNoOpenContext(state);
         } catch (sectionError) {
             let triedError: Error;
             if (expressionErrorStateBackup.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
@@ -664,9 +656,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     // meaning the parent/child mapping for contexts are in reverse order.
     // The clean up for that happens here.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    if (state.maybeCurrentContextNode === undefined) {
-        throw new CommonError.InvariantError(`maybeCurrentContextNode should be truthy`);
-    }
+    Assert.isDefined(state.maybeCurrentContextNode);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
     const maybeHeadParentId: number | undefined = nodeIdMapCollection.parentIdById.get(head.id);
@@ -679,13 +669,10 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
             headParentId,
         );
         const replacementIndex: number = parentChildIds.indexOf(head.id);
-        if (replacementIndex === -1) {
-            const details: {} = {
-                parentNodeId: headParentId,
-                childNodeId: head.id,
-            };
-            throw new CommonError.InvariantError(`node isn't a child of parentNode`, details);
-        }
+        Assert.isFalse(replacementIndex === -1, `node isn't a child of parentNode`, {
+            parentNodeId: headParentId,
+            childNodeId: head.id,
+        });
 
         nodeIdMapCollection.childIdsById.set(headParentId, [
             ...parentChildIds.slice(0, replacementIndex),
@@ -811,11 +798,10 @@ export function readLiteralExpression<S extends IParserState = IParserState>(
         | Ast.LiteralKind.Null
         | Ast.LiteralKind.Text
         | undefined = AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
-    if (maybeLiteralKind === undefined) {
-        throw new CommonError.InvariantError(
-            `couldn't convert TokenKind=${state.maybeCurrentTokenKind} into LiteralKind`,
-        );
-    }
+
+    Assert.isDefined(maybeLiteralKind, `couldn't convert TokenKind into LiteralKind`, {
+        maybeCurrentTokenKind: state.maybeCurrentTokenKind,
+    });
 
     const literal: string = readToken(state);
     const astNode: Ast.LiteralExpression = {

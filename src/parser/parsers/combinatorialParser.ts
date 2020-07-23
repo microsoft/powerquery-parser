@@ -4,7 +4,7 @@
 import { Naive } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
 import { Language } from "../..";
-import { ArrayUtils, Assert, CommonError, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -189,13 +189,10 @@ function readBinOpExpression<S extends IParserState = IParserState>(
     }
 
     const lastExpression: Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType = expressions[0];
-    if (!AstUtils.isTBinOpExpression(lastExpression)) {
-        const details: {} = {
-            lastExpressionId: lastExpression.id,
-            lastExpressionKind: lastExpression.kind,
-        };
-        throw new CommonError.InvariantError(`lastExpression should be a TBinOpExpression`, details);
-    }
+    Assert.isTrue(AstUtils.isTBinOpExpression(lastExpression), `lastExpression should be a TBinOpExpression`, {
+        lastExpressionId: lastExpression.id,
+        lastExpressionKind: lastExpression.kind,
+    });
     nodeIdMapCollection.childIdsById.set(placeholderContextId, [lastExpression.id]);
     nodeIdMapCollection.parentIdById.set(lastExpression.id, placeholderContextId);
 
