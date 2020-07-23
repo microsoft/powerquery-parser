@@ -724,7 +724,7 @@ function inspectIdentifier(state: TypeInspectionState, xorNode: TXorNode): Type.
     }
 
     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
-    return dereferencedType !== undefined ? dereferencedType : Type.UnknownInstance;
+    return dereferencedType ?? Type.UnknownInstance;
 }
 
 function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
@@ -735,7 +735,7 @@ function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNo
     }
 
     const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
-    return dereferencedType !== undefined ? dereferencedType : Type.UnknownInstance;
+    return dereferencedType ?? Type.UnknownInstance;
 }
 
 function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {

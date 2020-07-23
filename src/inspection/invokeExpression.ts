@@ -56,7 +56,7 @@ function inspectInvokeExpression(
 
         return {
             xorNode,
-            maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode.node.id),
+            maybeName: maybeInvokeExpressionName(nodeIdMapCollection, xorNode),
             maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
         };
     }
@@ -80,8 +80,10 @@ function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boole
     return true;
 }
 
-function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): string | undefined {
-    const invokeExpr: TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId);
+function maybeInvokeExpressionName(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    invokeExpr: TXorNode,
+): string | undefined {
     XorNodeUtils.assertAstNodeKind(invokeExpr, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
@@ -156,8 +158,7 @@ function inspectInvokeExpressionArguments(
         2,
         [Ast.NodeKind.Csv],
     );
-    const maybePositionArgumentIndex: number | undefined =
-        maybeAncestorCsv !== undefined ? maybeAncestorCsv.node.maybeAttributeIndex : undefined;
+    const maybePositionArgumentIndex: number | undefined = maybeAncestorCsv?.node.maybeAttributeIndex;
 
     return {
         numArguments,

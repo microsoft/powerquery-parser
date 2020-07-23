@@ -34,7 +34,7 @@ export function newState<S extends IParserState = IParserState>(
         lexerSnapshot,
         tokenIndex: 0,
         maybeCurrentToken,
-        maybeCurrentTokenKind: maybeCurrentToken !== undefined ? maybeCurrentToken.kind : undefined,
+        maybeCurrentTokenKind: maybeCurrentToken?.kind,
         contextState: ParseContextUtils.newState(),
         maybeCurrentContextNode: undefined,
     };
@@ -59,7 +59,7 @@ export function fastStateBackup(state: IParserState): FastStateBackup {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
-        maybeContextNodeId: state.maybeCurrentContextNode !== undefined ? state.maybeCurrentContextNode.id : undefined,
+        maybeContextNodeId: state.maybeCurrentContextNode?.id,
     };
 }
 
@@ -67,7 +67,7 @@ export function fastStateBackup(state: IParserState): FastStateBackup {
 export function applyFastStateBackup(state: IParserState, backup: FastStateBackup): void {
     state.tokenIndex = backup.tokenIndex;
     state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
-    state.maybeCurrentTokenKind = state.maybeCurrentToken !== undefined ? state.maybeCurrentToken.kind : undefined;
+    state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
 
     const contextState: ParseContext.State = state.contextState;
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;

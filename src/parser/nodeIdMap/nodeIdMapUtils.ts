@@ -446,8 +446,8 @@ export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeI
 }
 
 // Contains at least one parsed token.
-export function hasParsedToken(nodeIdMapCollection: Collection, xorNode: TXorNode): boolean {
-    let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(xorNode.node.id);
+export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number): boolean {
+    let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);
 
     while (maybeChildIds !== undefined) {
         const numChildren: number = maybeChildIds.length;
