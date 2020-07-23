@@ -79,6 +79,10 @@ export function maybeActiveNode(
     };
 }
 
+export function expectLeaf(activeNode: ActiveNode): TXorNode {
+    return AncestryUtils.expectLeaf(activeNode.ancestry);
+}
+
 interface AstNodeSearch {
     readonly maybeBestOnOrBeforeNode: Ast.TNode | undefined;
     readonly maybeShiftedRightNode: Ast.TNode | undefined;

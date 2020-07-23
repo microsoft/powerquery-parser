@@ -3,7 +3,15 @@
 
 import { ArrayUtils, Assert, CommonError, MapUtils, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
-import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../parser";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeKind,
+    XorNodeUtils,
+} from "../../parser";
 import { Type, TypeInspector, TypeUtils } from "../../type";
 import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScopeItem } from "../scope";
 import * as BinOpExpression from "./binOpExpression";
@@ -350,13 +358,9 @@ function inspectBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): 
 }
 
 function inspectConstant(xorNode: TXorNode): Type.TType {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.Constant,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    } else if (xorNode.kind === XorNodeKind.Context) {
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Constant);
+
+    if (xorNode.kind === XorNodeKind.Context) {
         return Type.UnknownInstance;
     }
 
@@ -425,13 +429,7 @@ function inspectConstant(xorNode: TXorNode): Type.TType {
 }
 
 function inspectErrorHandlingExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.ErrorHandlingExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
     const maybeOtherwiseExpression:
         | TXorNode
@@ -448,13 +446,7 @@ function inspectErrorHandlingExpression(state: TypeInspectionState, xorNode: TXo
 }
 
 function inspectFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.FieldProjection,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.fieldProjectionFieldNames(
         state.nodeIdMapCollection,
@@ -532,13 +524,7 @@ function inspectFieldProjectionHelper(
 }
 
 function inspectFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.FieldSelector,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSelector);
 
     const maybeFieldName: Ast.TNode | undefined = NodeIdMapUtils.maybeWrappedContentAst(
         state.nodeIdMapCollection,
@@ -607,13 +593,7 @@ function helperForinspectFieldSelector(
 }
 
 function inspectFieldSpecification(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.FieldSpecification,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecification);
 
     const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -628,13 +608,7 @@ function inspectFieldSpecification(state: TypeInspectionState, xorNode: TXorNode
 }
 
 function inspectFunctionExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.FunctionExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionExpression);
 
     const inspectedFunctionExpression: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
         state.nodeIdMapCollection,
@@ -699,13 +673,7 @@ function inspectFunctionType(
     state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.DefinedFunction> | Type.Unknown {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.FunctionType,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionType);
 
     const maybeParameters:
         | TXorNode
@@ -749,13 +717,9 @@ function inspectFunctionType(
 }
 
 function inspectIdentifier(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.Identifier,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    } else if (xorNode.kind === XorNodeKind.Context) {
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Identifier);
+
+    if (xorNode.kind === XorNodeKind.Context) {
         return Type.UnknownInstance;
     }
 
@@ -764,13 +728,9 @@ function inspectIdentifier(state: TypeInspectionState, xorNode: TXorNode): Type.
 }
 
 function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.IdentifierExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    } else if (xorNode.kind === XorNodeKind.Context) {
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IdentifierExpression);
+
+    if (xorNode.kind === XorNodeKind.Context) {
         return Type.UnknownInstance;
     }
 
@@ -779,13 +739,7 @@ function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNo
 }
 
 function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.IfExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IfExpression);
 
     const conditionType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 1);
     if (conditionType.kind === Type.TypeKind.Unknown) {
@@ -813,13 +767,7 @@ function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Typ
 }
 
 function inspectInvokeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.InvokeExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.InvokeExpression);
 
     const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
@@ -841,13 +789,7 @@ function inspectListType(
     state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.ListType> | Type.Unknown {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.ListType,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ListType);
 
     const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -874,13 +816,7 @@ function inspectListType(
 }
 
 function inspectLiteralExpression(xorNode: TXorNode): Type.TType {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.LiteralExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.LiteralExpression);
 
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
@@ -898,13 +834,7 @@ function inspectLiteralExpression(xorNode: TXorNode): Type.TType {
 }
 
 function inspectParameter(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.Parameter,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Parameter);
 
     const maybeOptionalConstant:
         | Ast.TNode
@@ -921,13 +851,9 @@ function inspectParameter(state: TypeInspectionState, xorNode: TXorNode): Type.T
 }
 
 function inspectPrimitiveType(xorNode: TXorNode): Type.TType {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.PrimitiveType,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    } else if (xorNode.kind === XorNodeKind.Context) {
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.PrimitiveType);
+
+    if (xorNode.kind === XorNodeKind.Context) {
         return Type.UnknownInstance;
     }
 
@@ -942,13 +868,7 @@ function inspectPrimitiveType(xorNode: TXorNode): Type.TType {
 }
 
 function inspectRangeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.RangeExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RangeExpression);
 
     const maybeLeftType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 0);
     const maybeRightType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 2);
@@ -975,13 +895,7 @@ function inspectRecordType(
     state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.DefinedRecord> | Type.Unknown {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.RecordType,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecordType);
 
     const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -1007,13 +921,7 @@ function inspectRecordType(
 }
 
 function inspectRecursivePrimaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.RecursivePrimaryExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
     const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -1060,13 +968,7 @@ function inspectTableType(
     state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.DefinedTable | Type.PrimaryExpressionTable> | Type.Unknown {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.TableType,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.TableType);
 
     const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         state.nodeIdMapCollection,
@@ -1106,13 +1008,7 @@ function inspectTableType(
 }
 
 function inspectUnaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.UnaryExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeOperatorsWrapper:
@@ -1172,13 +1068,7 @@ function inspectList(state: TypeInspectionState, xorNode: TXorNode): Type.Define
 }
 
 function inspectRecord(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstAnyNodeKind(xorNode, [
-        Ast.NodeKind.RecordExpression,
-        Ast.NodeKind.RecordLiteral,
-    ]);
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     const fields: Map<string, Type.TType> = new Map();
     for (const keyValuePair of NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, xorNode)) {
@@ -1289,13 +1179,7 @@ function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType)
 }
 
 function examineFieldSpecificationList(state: TypeInspectionState, xorNode: TXorNode): ExaminedFieldSpecificationList {
-    const maybeErr: undefined | CommonError.InvariantError = NodeIdMapUtils.testAstNodeKind(
-        xorNode,
-        Ast.NodeKind.FieldSpecificationList,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const fields: [string, Type.TType][] = [];
@@ -1338,13 +1222,8 @@ function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TX
         throw new CommonError.InvariantError(`${maybeDereferencedIdentifier.name} should only return Ast identifiers`);
     }
 
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(maybeDeferenced, [
-        Ast.NodeKind.Identifier,
-        Ast.NodeKind.IdentifierExpression,
-    ]);
-    if (maybeErr) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAnyAstNodeKind(maybeDeferenced, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
+
     const deferenced: Ast.Identifier | Ast.IdentifierExpression = maybeDeferenced.node as
         | Ast.Identifier
         | Ast.IdentifierExpression;
@@ -1409,13 +1288,9 @@ function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TX
 }
 
 function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNode): TXorNode | undefined {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(xorNode, [
-        Ast.NodeKind.Identifier,
-        Ast.NodeKind.IdentifierExpression,
-    ]);
-    if (maybeErr) {
-        throw maybeErr;
-    } else if (xorNode.kind === XorNodeKind.Context) {
+    XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
+
+    if (xorNode.kind === XorNodeKind.Context) {
         return undefined;
     }
     const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as

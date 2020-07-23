@@ -2,13 +2,23 @@
 // Licensed under the MIT license.
 
 import { Language } from "..";
-import { CommonError, Result } from "../common";
+import { ArrayUtils, Assert, CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
 import { Ast, ExpressionKeywords } from "../language";
 import { getLocalizationTemplates } from "../localization";
-import { AncestryUtils, IParserState, NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind } from "../parser";
+import {
+    AncestryUtils,
+    IParserState,
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    ParseError,
+    TXorNode,
+    XorNodeKind,
+    XorNodeUtils,
+} from "../parser";
 import { CommonSettings } from "../settings";
-import { ActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
 export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
@@ -23,148 +33,38 @@ export const StartOfDocumentKeywords: ReadonlyArray<Language.KeywordKind> = [
 export function tryAutocomplete<S extends IParserState = IParserState>(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
     maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
-    if (maybeActiveNode === undefined) {
+    if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
         return ResultUtils.okFactory([...ExpressionAutocomplete, Language.KeywordKind.Section]);
     }
+
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        inspectAutocomplete(nodeIdMapCollection, maybeActiveNode, maybeParseError),
+        inspectAutocomplete(
+            nodeIdMapCollection,
+            leafNodeIds,
+            maybeActiveNode,
+            maybeParseError !== undefined ? ParseError.maybeTokenFrom(maybeParseError.innerError) : undefined,
+        ),
     );
 }
 
-function inspectAutocomplete<S extends IParserState = IParserState>(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode,
-    maybeParseError: ParseError.ParseError<S> | undefined,
-): ReadonlyArray<Language.KeywordKind> {
-    const leaf: TXorNode = activeNode.ancestry[0];
-    const maybeParseErrorToken: Language.Token | undefined = maybeParseError
-        ? ParseError.maybeTokenFrom(maybeParseError.innerError)
-        : undefined;
-
-    let maybePositionName: string | undefined;
-    if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, leaf, false, true)) {
-        if (activeNode.maybeIdentifierUnderPosition !== undefined) {
-            maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
-        }
-        // Matches 'null', 'true', and 'false'.
-        else if (
-            leaf.kind === XorNodeKind.Ast &&
-            leaf.node.kind === Ast.NodeKind.LiteralExpression &&
-            (leaf.node.literalKind === Ast.LiteralKind.Logical || leaf.node.literalKind === Ast.LiteralKind.Null)
-        ) {
-            maybePositionName = leaf.node.literal;
-        }
-    }
-
-    const autocomplete: ReadonlyArray<Language.KeywordKind> = traverseAncestors(
-        activeNode,
-        nodeIdMapCollection,
-        maybeParseErrorToken,
-    );
-
-    const inspected: ReadonlyArray<Language.KeywordKind> = handleEdgeCases(
-        autocomplete,
-        activeNode,
-        maybeParseErrorToken,
-    );
-    return filterRecommendations(inspected, maybePositionName);
+interface InspectAutocompleteState {
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+    readonly activeNode: ActiveNode;
+    readonly maybeParseErrorToken: Language.Token | undefined;
+    readonly maybeTrailingText: TrailingText | undefined;
+    parent: TXorNode;
+    child: TXorNode;
+    ancestryIndex: number;
 }
 
-// Travel the ancestry path in Active node in [parent, child] pairs.
-// Without zipping the values we wouldn't know what we're completing for.
-// For example 'if true |' gives us a pair something like [IfExpression, Constant].
-// We can now know we failed to parse a 'then' constant.
-function traverseAncestors(
-    activeNode: ActiveNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    maybeParseErrorToken: Language.Token | undefined,
-): ReadonlyArray<Language.KeywordKind> {
-    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const numNodes: number = ancestry.length;
-
-    let maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined;
-    for (let index: number = 1; index < numNodes; index += 1) {
-        const parent: TXorNode = ancestry[index];
-        const child: TXorNode = ancestry[index - 1];
-
-        switch (parent.node.kind) {
-            case Ast.NodeKind.ErrorHandlingExpression:
-                maybeInspected = autocompleteErrorHandlingExpression(activeNode.position, child, maybeParseErrorToken);
-                break;
-
-            case Ast.NodeKind.ListExpression:
-                maybeInspected = autocompleteListExpression(activeNode, child, index);
-                break;
-
-            case Ast.NodeKind.SectionMember:
-                maybeInspected = autocompleteSectionMember(nodeIdMapCollection, activeNode, parent, child, index);
-                break;
-
-            default: {
-                const key: string = createMapKey(parent.node.kind, child.node.maybeAttributeIndex);
-                if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
-                    if (
-                        child.kind === XorNodeKind.Context ||
-                        PositionUtils.isBeforeAstNode(activeNode.position, child.node, false)
-                    ) {
-                        maybeInspected = ExpressionAutocomplete;
-                    }
-                } else {
-                    const maybeMappedKeywordKind: Language.KeywordKind | undefined = AutocompleteConstantMap.get(key);
-                    if (maybeMappedKeywordKind) {
-                        maybeInspected = autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind);
-                    }
-                }
-            }
-        }
-
-        if (maybeInspected !== undefined) {
-            return maybeInspected;
-        }
-    }
-
-    return [];
-}
-
-function handleEdgeCases(
-    inspected: ReadonlyArray<Language.KeywordKind>,
-    activeNode: ActiveNode,
-    maybeParseErrorToken: Language.Token | undefined,
-): ReadonlyArray<Language.KeywordKind> {
-    // Check if they're typing for the first time at the start of the file,
-    // which defaults to searching for an identifier.
-    if (
-        maybeParseErrorToken === undefined &&
-        activeNode.ancestry.length === 2 &&
-        activeNode.ancestry[0].node.kind === Ast.NodeKind.Identifier &&
-        activeNode.ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
-    ) {
-        inspected = StartOfDocumentKeywords;
-    }
-
-    if (
-        maybeParseErrorToken !== undefined &&
-        PositionUtils.isInToken(activeNode.position, maybeParseErrorToken, false, true)
-    ) {
-        inspected = updateWithParseErrorToken(inspected, activeNode, maybeParseErrorToken);
-    }
-
-    return inspected;
-}
-
-function filterRecommendations(
-    inspected: ReadonlyArray<Language.KeywordKind>,
-    maybePositionName: string | undefined,
-): ReadonlyArray<Language.KeywordKind> {
-    if (maybePositionName === undefined) {
-        return inspected;
-    }
-
-    const positionName: string = maybePositionName;
-    return inspected.filter((kind: Language.KeywordKind) => kind.startsWith(positionName));
+interface TrailingText {
+    readonly text: string;
+    readonly isInOrOnPosition: boolean;
 }
 
 const ExpressionAutocomplete: ReadonlyArray<Language.KeywordKind> = ExpressionKeywords;
@@ -213,55 +113,240 @@ const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Langua
     ReadonlyArray<Language.KeywordKind>
 >([
     ["a", [Language.KeywordKind.And, Language.KeywordKind.As]],
-    ["o", [Language.KeywordKind.Or]],
+    ["i", [Language.KeywordKind.Is]],
     ["m", [Language.KeywordKind.Meta]],
+    ["o", [Language.KeywordKind.Or]],
 ]);
 
-function updateWithParseErrorToken(
-    inspected: ReadonlyArray<Language.KeywordKind>,
-    activeNode: ActiveNode,
-    parseErrorToken: Language.Token,
-): ReadonlyArray<Language.KeywordKind> {
-    const parseErrorTokenData: string = parseErrorToken.data;
-    const maybeAllowedKeywords:
-        | ReadonlyArray<Language.KeywordKind>
-        | undefined = PartialConjunctionKeywordAutocompleteMap.get(parseErrorTokenData[0].toLocaleLowerCase());
-    if (maybeAllowedKeywords === undefined) {
-        return inspected;
-    }
-    const allowedKeywords: ReadonlyArray<Language.KeywordKind> = maybeAllowedKeywords;
+const ConjunctionKeywords: ReadonlyArray<Language.KeywordKind> = [
+    Language.KeywordKind.And,
+    Language.KeywordKind.As,
+    Language.KeywordKind.Is,
+    Language.KeywordKind.Meta,
+    Language.KeywordKind.Or,
+];
 
-    for (const ancestor of activeNode.ancestry) {
-        if (NodeIdMapUtils.isTUnaryType(ancestor)) {
-            return updateUsingConjunctionKeywords(inspected, parseErrorTokenData, allowedKeywords);
+function inspectAutocomplete(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    activeNode: ActiveNode,
+    maybeParseErrorToken: Language.Token | undefined,
+): ReadonlyArray<Language.KeywordKind> {
+    const maybeTrailingText: TrailingText | undefined =
+        maybeParseErrorToken !== undefined ? trailingTextFactory(activeNode, maybeParseErrorToken) : undefined;
+
+    const ancestryLeaf: TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
+    let maybePositionName: string | undefined;
+    if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
+        if (activeNode.maybeIdentifierUnderPosition !== undefined) {
+            maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
+        }
+        // Matches 'null', 'true', and 'false'.
+        else if (
+            ancestryLeaf.kind === XorNodeKind.Ast &&
+            ancestryLeaf.node.kind === Ast.NodeKind.LiteralExpression &&
+            (ancestryLeaf.node.literalKind === Ast.LiteralKind.Logical ||
+                ancestryLeaf.node.literalKind === Ast.LiteralKind.Null)
+        ) {
+            maybePositionName = ancestryLeaf.node.literal;
         }
     }
 
-    return inspected;
+    if (activeNode.ancestry.length < 2) {
+        return filterRecommendations(handleConjunctions(activeNode, [], maybeTrailingText), maybePositionName);
+    }
+
+    const state: InspectAutocompleteState = {
+        nodeIdMapCollection,
+        leafNodeIds,
+        activeNode,
+        maybeParseErrorToken,
+        maybeTrailingText,
+        parent: activeNode.ancestry[1],
+        child: ActiveNodeUtils.expectLeaf(activeNode),
+        ancestryIndex: 0,
+    };
+
+    const maybeEarlyExitInspected: ReadonlyArray<Language.KeywordKind> | undefined = maybeEdgeCase(state);
+    if (maybeEarlyExitInspected !== undefined) {
+        return maybeEarlyExitInspected;
+    }
+
+    return filterRecommendations(
+        handleConjunctions(state.activeNode, traverseAncestors(state), maybeTrailingText),
+        maybePositionName,
+    );
 }
 
-// Given a list of possible conjunction keywords, update inspected with any matching conjunction keywords.
-function updateUsingConjunctionKeywords(
-    inspected: ReadonlyArray<Language.KeywordKind>,
-    parseErrorTokenData: string,
-    allowedKeywords: ReadonlyArray<Language.KeywordKind>,
-): ReadonlyArray<Language.KeywordKind> {
-    const newAllowedAutocompleteKeywords: Language.KeywordKind[] = [...inspected];
-    for (const keyword of allowedKeywords) {
-        if (keyword.startsWith(parseErrorTokenData) && newAllowedAutocompleteKeywords.indexOf(keyword) === -1) {
-            newAllowedAutocompleteKeywords.push(keyword);
+function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Language.Token): TrailingText {
+    return {
+        text: parseErrorToken.data,
+        isInOrOnPosition: PositionUtils.isInToken(activeNode.position, parseErrorToken, false, true),
+    };
+}
+
+// Travel the ancestry path in Active node in [parent, child] pairs.
+// Without zipping the values we wouldn't know what we're completing for.
+// For example 'if true |' gives us a pair something like [IfExpression, Constant].
+// We can now know we failed to parse a 'then' constant.
+function traverseAncestors(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> {
+    const ancestry: ReadonlyArray<TXorNode> = state.activeNode.ancestry;
+    const numNodes: number = ancestry.length;
+
+    let maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined;
+    for (let ancestryIndex: number = 1; ancestryIndex < numNodes; ancestryIndex += 1) {
+        state.ancestryIndex = ancestryIndex;
+        state.parent = ancestry[ancestryIndex];
+        state.child = ancestry[ancestryIndex - 1];
+
+        switch (state.parent.node.kind) {
+            case Ast.NodeKind.ErrorHandlingExpression:
+                maybeInspected = autocompleteErrorHandlingExpression(state);
+                break;
+
+            case Ast.NodeKind.IdentifierPairedExpression:
+                maybeInspected = autocompleteIdentifierPairedExpression(state);
+                break;
+
+            case Ast.NodeKind.LetExpression:
+                maybeInspected = autocompleteLetExpression(state);
+                break;
+
+            case Ast.NodeKind.ListExpression:
+                maybeInspected = autocompleteListExpression(state);
+                break;
+
+            case Ast.NodeKind.SectionMember:
+                maybeInspected = autocompleteSectionMember(state);
+                break;
+
+            default:
+                maybeInspected = autocompleteDefault(state);
+        }
+
+        if (maybeInspected !== undefined) {
+            return maybeInspected;
         }
     }
 
-    return newAllowedAutocompleteKeywords;
+    return [];
 }
 
 // A tuple can't easily be used as a Map key as it does a shallow comparison.
 // The work around is to stringify the tuple key, even though we lose typing by doing so.
-// Hopefully by having a 'createMapKey' function this will prevent bugs.
 // [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
 function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | undefined): string {
     return [nodeKind, maybeAttributeIndex].join(",");
+}
+
+function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+    const activeNode: ActiveNode = state.activeNode;
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const maybeParseErrorToken: Language.Token | undefined = state.maybeParseErrorToken;
+    let maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined;
+
+    // The user is typing in a new file, which the parser defaults to searching for an identifier.
+    // `l|` -> `let`
+    if (
+        maybeParseErrorToken === undefined &&
+        ancestry.length === 2 &&
+        ancestry[0].kind === XorNodeKind.Ast &&
+        ancestry[0].node.kind === Ast.NodeKind.Identifier &&
+        ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
+    ) {
+        const identifier: string = ancestry[0].node.literal;
+        maybeInspected = StartOfDocumentKeywords.filter((keywordKind: Language.KeywordKind) =>
+            keywordKind.startsWith(identifier),
+        );
+    }
+
+    // `(_ |) => _` -> `(_ as) => _`
+    else if (
+        ancestry[0].kind === XorNodeKind.Ast &&
+        ancestry[0].node.kind === Ast.NodeKind.Identifier &&
+        ancestry[1].node.kind === Ast.NodeKind.Parameter &&
+        PositionUtils.isAfterAstNode(activeNode.position, ancestry[0].node, false)
+    ) {
+        maybeInspected = [Language.KeywordKind.As];
+    }
+
+    // `(foo a|) => foo` -> `(foo as) => foo
+    else if (
+        maybeParseErrorToken?.data === "a" &&
+        ancestry[0].kind === XorNodeKind.Context &&
+        ancestry[0].node.kind === Ast.NodeKind.Constant &&
+        ancestry[1].node.kind === Ast.NodeKind.ParameterList &&
+        ancestry[2].node.kind === Ast.NodeKind.FunctionExpression
+    ) {
+        maybeInspected = [Language.KeywordKind.As];
+    }
+
+    return maybeInspected;
+}
+
+function filterRecommendations(
+    inspected: ReadonlyArray<Language.KeywordKind>,
+    maybePositionName: string | undefined,
+): ReadonlyArray<Language.KeywordKind> {
+    if (maybePositionName === undefined) {
+        return inspected;
+    }
+
+    const positionName: string = maybePositionName;
+    return inspected.filter((kind: Language.KeywordKind) => kind.startsWith(positionName));
+}
+
+function handleConjunctions(
+    activeNode: ActiveNode,
+    inspected: ReadonlyArray<Language.KeywordKind>,
+    maybeTrailingText: TrailingText | undefined,
+): ReadonlyArray<Language.KeywordKind> {
+    if (
+        activeNode.leafKind !== ActiveNodeLeafKind.AfterAstNode &&
+        activeNode.leafKind !== ActiveNodeLeafKind.ContextNode
+    ) {
+        return inspected;
+    }
+
+    const activeNodeLeaf: TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
+    if (!XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
+        if (maybeTrailingText !== undefined) {
+            return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
+        } else {
+            return inspected;
+        }
+    } else if (maybeTrailingText !== undefined) {
+        return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
+    } else if (maybeTrailingText !== undefined) {
+        return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
+    } else if (activeNodeLeaf.kind === XorNodeKind.Ast) {
+        return ArrayUtils.concatUnique(inspected, ConjunctionKeywords);
+    } else {
+        return inspected;
+    }
+}
+
+function autocompleteFromTrailingText(
+    inspected: ReadonlyArray<Language.KeywordKind>,
+    trailingText: TrailingText,
+    maybeAllowedKeywords: ReadonlyArray<Language.KeywordKind> | undefined,
+): ReadonlyArray<Language.KeywordKind> {
+    if (trailingText.isInOrOnPosition === false) {
+        return inspected;
+    }
+    Assert.isTrue(trailingText.text.length > 0, "trailingText.length > 0");
+
+    maybeAllowedKeywords =
+        maybeAllowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(trailingText.text[0].toLocaleLowerCase());
+
+    if (maybeAllowedKeywords !== undefined) {
+        return ArrayUtils.concatUnique(
+            inspected,
+            maybeAllowedKeywords.filter((keyword: Language.KeywordKind) => keyword.startsWith(trailingText.text)),
+        );
+    } else {
+        return inspected;
+    }
 }
 
 function autocompleteKeywordConstant(
@@ -278,15 +363,16 @@ function autocompleteKeywordConstant(
         return PositionUtils.isOnAstNodeEnd(activeNode.position, child.node) ? [] : [keywordKind];
     }
 
-    // !isBeforeXorNode && child.kind === XorNodeKind.Context
     return [keywordKind];
 }
 
 function autocompleteErrorHandlingExpression(
-    position: Position,
-    child: TXorNode,
-    maybeParseErrorToken: Language.Token | undefined,
+    state: InspectAutocompleteState,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
+    const position: Position = state.activeNode.position;
+    const child: TXorNode = state.child;
+    const maybeParseErrorToken: Language.Token | undefined = state.maybeParseErrorToken;
+
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
         return [Language.KeywordKind.Try];
@@ -330,11 +416,59 @@ function autocompleteErrorHandlingExpression(
     }
 }
 
-function autocompleteListExpression(
-    activeNode: ActiveNode,
-    child: TXorNode,
-    ancestryIndex: number,
+function autocompleteIdentifierPairedExpression(
+    state: InspectAutocompleteState,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
+    const childAttributeIndex: number | undefined = state.child.node.maybeAttributeIndex;
+
+    // `section; s|`
+    // `section; [] |`
+    if (
+        childAttributeIndex === 0 &&
+        AncestryUtils.maybeNextXorNode(state.activeNode.ancestry, state.ancestryIndex, [Ast.NodeKind.SectionMember])
+    ) {
+        return [Language.KeywordKind.Shared];
+    } else if (childAttributeIndex !== 2) {
+        return [];
+    }
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(
+        state.nodeIdMapCollection,
+        state.child.node.id,
+    );
+    // `x = |`
+    // `x = |1`
+    if (maybeLeaf === undefined || PositionUtils.isBeforeAstNode(state.activeNode.position, maybeLeaf, false)) {
+        return ExpressionKeywords;
+    } else {
+        return undefined;
+    }
+}
+
+function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+    // LetExpressions can trigger another inspection which will always hit the same LetExpression.
+    // Make sure that it doesn't trigger an infinite recursive call.
+    const child: TXorNode = state.child;
+
+    if (child.kind === XorNodeKind.Context && child.node.maybeAttributeIndex === 2) {
+        const maybeInpsected: ReadonlyArray<Language.KeywordKind> | undefined = autocompleteLastKeyValuePair(
+            state,
+            NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, state.parent),
+        );
+        if (maybeInpsected === undefined || state.maybeTrailingText !== undefined) {
+            return undefined;
+        }
+
+        return [...maybeInpsected, Language.KeywordKind.In];
+    }
+
+    return autocompleteDefault(state);
+}
+
+function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+    const activeNode: ActiveNode = state.activeNode;
+    const ancestryIndex: number = state.ancestryIndex;
+    const child: TXorNode = state.child;
+
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
         return undefined;
@@ -347,7 +481,12 @@ function autocompleteListExpression(
     }
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestryUtils.expectNthPreviousXorNode(
+        activeNode.ancestry,
+        ancestryIndex,
+        3,
+        undefined,
+    );
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -356,7 +495,7 @@ function autocompleteListExpression(
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? AncestryUtils.expectPreviousXorNode(activeNode.ancestry, ancestryIndex, 4, undefined)
+            ? AncestryUtils.expectNthPreviousXorNode(activeNode.ancestry, ancestryIndex, 4, undefined)
             : nodeOrComma;
 
     if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
@@ -368,21 +507,18 @@ function autocompleteListExpression(
 
 // Test if 'shared' could be what's being typed. Eg.
 // 'section s' -> could either be interpreted as either the 'shared' keyword, or the key-value-pair key is 's'.
-function autocompleteSectionMember(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode,
-    parent: TXorNode,
-    child: TXorNode,
-    ancestryIndex: number,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     // SectionMember.namePairedExpression
-    if (child.node.maybeAttributeIndex === 2) {
+    if (state.child.node.maybeAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
         const maybeSharedConstant:
             | TXorNode
-            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, parent.node.id, 1, [
-            Ast.NodeKind.Constant,
-        ]);
+            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            state.nodeIdMapCollection,
+            state.parent.node.id,
+            1,
+            [Ast.NodeKind.Constant],
+        );
 
         // 'shared' was parsed so we can exit.
         if (maybeSharedConstant !== undefined) {
@@ -390,9 +526,9 @@ function autocompleteSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
-            activeNode.ancestry,
-            ancestryIndex,
+        const maybeName: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
+            state.activeNode.ancestry,
+            state.ancestryIndex,
             2,
             [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
         );
@@ -409,4 +545,85 @@ function autocompleteSectionMember(
     }
 
     return [];
+}
+
+function autocompleteLastKeyValuePair(
+    state: InspectAutocompleteState,
+    keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<Ast.GeneralizedIdentifier | Ast.Identifier>>,
+): ReadonlyArray<Language.KeywordKind> | undefined {
+    if (keyValuePairs.length === 0) {
+        return undefined;
+    }
+
+    // Grab the last value (if one exists)
+    const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].maybeValue;
+    if (maybeLastValue === undefined) {
+        return undefined;
+    }
+
+    // Grab the right-most Ast node in the last value.
+    const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
+        state.nodeIdMapCollection,
+        maybeLastValue.node.id,
+        undefined,
+    );
+    if (maybeRightMostAstLeafForLastValue === undefined) {
+        return undefined;
+    }
+
+    // Start a new autocomplete inspection where the ActiveNode's ancestry is the right-most Ast node in the last value.
+    const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(
+        state.nodeIdMapCollection,
+        maybeRightMostAstLeafForLastValue.id,
+    );
+    Assert.isTrue(shiftedAncestry.length >= 2, "shiftedAncestry.length >= 2");
+    const shiftedActiveNode: ActiveNode = {
+        ...state.activeNode,
+        ancestry: shiftedAncestry,
+    };
+    const inspected: ReadonlyArray<Language.KeywordKind> = inspectAutocomplete(
+        state.nodeIdMapCollection,
+        state.leafNodeIds,
+        shiftedActiveNode,
+        state.maybeParseErrorToken,
+    );
+
+    return inspected;
+}
+
+function autocompleteDefault(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+    const activeNode: ActiveNode = state.activeNode;
+    const child: TXorNode = state.child;
+    const key: string = createMapKey(state.parent.node.kind, child.node.maybeAttributeIndex);
+
+    if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
+        return autocompleteDefaultExpression(state);
+    } else {
+        const maybeMappedKeywordKind: Language.KeywordKind | undefined = AutocompleteConstantMap.get(key);
+        return maybeMappedKeywordKind !== undefined
+            ? autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind)
+            : undefined;
+    }
+}
+
+function autocompleteDefaultExpression(
+    state: InspectAutocompleteState,
+): ReadonlyArray<Language.KeywordKind> | undefined {
+    const activeNode: ActiveNode = state.activeNode;
+    const child: TXorNode = state.child;
+
+    // '[x=|1]
+    if (activeNode.leafKind === ActiveNodeLeafKind.ShiftedRight) {
+        return ExpressionKeywords;
+    }
+    // `if 1|`
+    else if (
+        child.kind === XorNodeKind.Ast &&
+        child.node.kind === Ast.NodeKind.LiteralExpression &&
+        child.node.literalKind === Ast.LiteralKind.Numeric
+    ) {
+        return [];
+    }
+
+    return ExpressionKeywords;
 }

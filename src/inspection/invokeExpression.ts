@@ -4,7 +4,15 @@
 import { CommonError, Result, ResultUtils } from "../common";
 import { Ast } from "../language";
 import { getLocalizationTemplates } from "../localization";
-import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeKind } from "../parser";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeKind,
+    XorNodeUtils,
+} from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
@@ -74,13 +82,7 @@ function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boole
 
 function maybeInvokeExpressionName(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): string | undefined {
     const invokeExpr: TXorNode = NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId);
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        invokeExpr,
-        Ast.NodeKind.InvokeExpression,
-    );
-    if (maybeErr) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(invokeExpr, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
@@ -131,7 +133,7 @@ function inspectInvokeExpressionArguments(
     nodeIndex: number,
 ): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, 1, [
+    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeCsvArray === undefined) {
@@ -148,7 +150,7 @@ function inspectInvokeExpressionArguments(
         return undefined;
     }
 
-    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(
+    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
         activeNode.ancestry,
         nodeIndex,
         2,
