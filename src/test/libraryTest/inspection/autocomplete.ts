@@ -286,7 +286,7 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        it(`if |`, () => {
+        it(` if |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if |`);
             const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
@@ -307,6 +307,12 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if i|f`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if i|f`);
             const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.If];
+            expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
+        });
+
+        it(`if if | `, () => {
+            const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`if if |`);
+            const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
@@ -494,7 +500,7 @@ describe(`Inspection - Autocomplete`, () => {
             expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        it(`+[a=| 1]`, () => {
+        it(`+[a=|1]`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`+[a=| 1]`);
             const expected: ReadonlyArray<Language.KeywordKind> = Language.ExpressionKeywords;
             expect(expectParseOkAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
@@ -614,7 +620,7 @@ describe(`Inspection - Autocomplete`, () => {
     describe(`${Ast.NodeKind.SectionMember}`, () => {
         it(`section; [] |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`section; [] |`);
-            const expected: ReadonlyArray<Language.KeywordKind> = [];
+            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.Shared];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
@@ -691,11 +697,18 @@ describe(`Inspection - Autocomplete`, () => {
 
         it(`let a = let b = 1 |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = let b = 1 |`);
-            const expected: ReadonlyArray<Language.KeywordKind> = [Language.KeywordKind.In];
+            const expected: ReadonlyArray<Language.KeywordKind> = [
+                Language.KeywordKind.And,
+                Language.KeywordKind.As,
+                Language.KeywordKind.In,
+                Language.KeywordKind.Is,
+                Language.KeywordKind.Meta,
+                Language.KeywordKind.Or,
+            ];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);
         });
 
-        it(`WIP let a = let b = 1, |`, () => {
+        it(`let a = let b = 1, |`, () => {
             const [text, position]: [string, Inspection.Position] = expectTextWithPosition(`let a = let b = 1, |`);
             const expected: ReadonlyArray<Language.KeywordKind> = [];
             expect(expectParseErrAutocompleteOk(DefaultSettings, text, position)).to.have.members(expected);

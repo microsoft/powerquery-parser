@@ -4,7 +4,7 @@
 import { CommonError, Result, ResultUtils } from "../../common";
 import { Ast } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
-import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
+import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { TypeInspector, TypeUtils } from "../../type";
 import {
@@ -147,14 +147,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        eachExpr,
-        Ast.NodeKind.EachExpression,
-    );
-    if (maybeErr) {
-        throw maybeErr;
-    }
-
+    XorNodeUtils.assertAstNodeKind(eachExpr, Ast.NodeKind.EachExpression);
     expandChildScope(
         state,
         eachExpr,
@@ -175,13 +168,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 }
 
 function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode): void {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        fnExpr,
-        Ast.NodeKind.FunctionExpression,
-    );
-    if (maybeErr) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
 
     // Propegates the parent's scope.
     const scope: ScopeItemByKey = getOrCreateScope(state, fnExpr.node.id, undefined);
@@ -214,13 +201,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
 }
 
 function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): void {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        letExpr,
-        Ast.NodeKind.LetExpression,
-    );
-    if (maybeErr) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(letExpr, Ast.NodeKind.LetExpression);
 
     // Propegates the parent's scope.
     const scope: ScopeItemByKey = getOrCreateScope(state, letExpr.node.id, undefined);
@@ -241,13 +222,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
 }
 
 function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: TXorNode): void {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(record, [
-        Ast.NodeKind.RecordExpression,
-        Ast.NodeKind.RecordLiteral,
-    ]);
-    if (maybeErr) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAnyAstNodeKind(record, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     // Propegates the parent's scope.
     const scope: ScopeItemByKey = getOrCreateScope(state, record.node.id, undefined);
@@ -259,13 +234,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
 }
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        section,
-        Ast.NodeKind.Section,
-    );
-    if (maybeErr) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(section, Ast.NodeKind.Section);
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier

@@ -95,13 +95,7 @@ export function letKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     letExpression: TXorNode,
 ): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        letExpression,
-        Ast.NodeKind.LetExpression,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(letExpression, Ast.NodeKind.LetExpression);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
         nodeIdMapCollection,
@@ -116,13 +110,7 @@ export function fieldProjectionFieldSelectors(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldProjection: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        fieldProjection,
-        Ast.NodeKind.FieldProjection,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(fieldProjection, Ast.NodeKind.FieldProjection);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(
         nodeIdMapCollection,
@@ -157,13 +145,7 @@ export function fieldSpecificationListCsvXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldSpecificationList: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        fieldSpecificationList,
-        Ast.NodeKind.FieldSpecificationList,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(fieldSpecificationList, Ast.NodeKind.FieldSpecificationList);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
         nodeIdMapCollection,
@@ -178,13 +160,7 @@ export function fieldSpecificationListCsvXorNodes(
 }
 
 export function listItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorNode): ReadonlyArray<TXorNode> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(list, [
-        Ast.NodeKind.ListExpression,
-        Ast.NodeKind.ListLiteral,
-    ]);
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAnyAstNodeKind(list, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(nodeIdMapCollection, list);
     return maybeArrayWrapper === undefined ? [] : arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeArrayWrapper);
@@ -194,13 +170,7 @@ export function recordKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     record: TXorNode,
 ): ReadonlyArray<KeyValuePair<Ast.GeneralizedIdentifier>> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstAnyNodeKind(record, [
-        Ast.NodeKind.RecordExpression,
-        Ast.NodeKind.RecordLiteral,
-    ]);
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAnyAstNodeKind(record, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(
         nodeIdMapCollection,
@@ -213,13 +183,7 @@ export function sectionMemberKeyValuePairs(
     nodeIdMapCollection: NodeIdMap.Collection,
     section: TXorNode,
 ): ReadonlyArray<KeyValuePair<Ast.Identifier>> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        section,
-        Ast.NodeKind.Section,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(section, Ast.NodeKind.Section);
 
     if (section.kind === XorNodeKind.Ast) {
         return (section.node as Ast.Section).sectionMembers.elements.map((sectionMember: Ast.SectionMember) => {
@@ -320,13 +284,7 @@ export function arrayWrapperCsvXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     arrayWrapper: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        arrayWrapper,
-        Ast.NodeKind.ArrayWrapper,
-    );
-    if (maybeErr !== undefined) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(arrayWrapper, Ast.NodeKind.ArrayWrapper);
 
     if (arrayWrapper.kind === XorNodeKind.Ast) {
         return (arrayWrapper.node as Ast.TCsvArray).elements.map((wrapper: Ast.TCsv) =>

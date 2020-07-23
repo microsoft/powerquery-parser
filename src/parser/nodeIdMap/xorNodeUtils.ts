@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseContext } from "..";
+import { CommonError } from "../../common";
 import { Ast } from "../../language";
 import { TXorNode, XorNodeKind } from "./xorNode";
 
@@ -46,4 +47,30 @@ export function isTPrimaryExpression(xorNode: TXorNode): boolean {
 
 export function isTFieldAccessExpression(xorNode: TXorNode): boolean {
     return xorNode.node.kind === Ast.NodeKind.FieldSelector || xorNode.node.kind === Ast.NodeKind.FieldProjection;
+}
+
+export function assertAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): void {
+    if (xorNode.node.kind === expected) {
+        return;
+    }
+
+    const details: {} = {
+        expectedNodeKind: expected,
+        actualAstNodeKind: xorNode.node.kind,
+        xorNodeId: xorNode.node.id,
+    };
+    throw new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
+}
+
+export function assertAnyAstNodeKind(xorNode: TXorNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
+    if (allowedNodeKinds.indexOf(xorNode.node.kind) !== -1) {
+        return undefined;
+    }
+
+    const details: {} = {
+        allowedNodeKinds,
+        actualAstNodeKind: xorNode.node.kind,
+        actualXorNodeId: xorNode.node.id,
+    };
+    throw new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
 }

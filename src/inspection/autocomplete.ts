@@ -204,6 +204,10 @@ function traverseAncestors(state: InspectAutocompleteState): ReadonlyArray<Langu
                 maybeInspected = autocompleteErrorHandlingExpression(state);
                 break;
 
+            case Ast.NodeKind.IdentifierPairedExpression:
+                maybeInspected = autocompleteIdentifierPairedExpression(state);
+                break;
+
             case Ast.NodeKind.LetExpression:
                 maybeInspected = autocompleteLetExpression(state);
                 break;
@@ -412,6 +416,34 @@ function autocompleteErrorHandlingExpression(
     }
 }
 
+function autocompleteIdentifierPairedExpression(
+    state: InspectAutocompleteState,
+): ReadonlyArray<Language.KeywordKind> | undefined {
+    const childAttributeIndex: number | undefined = state.child.node.maybeAttributeIndex;
+
+    // `section; s|`
+    // `section; [] |`
+    if (
+        childAttributeIndex === 0 &&
+        AncestryUtils.maybeNextXorNode(state.activeNode.ancestry, state.ancestryIndex, [Ast.NodeKind.SectionMember])
+    ) {
+        return [Language.KeywordKind.Shared];
+    } else if (childAttributeIndex !== 2) {
+        return [];
+    }
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(
+        state.nodeIdMapCollection,
+        state.child.node.id,
+    );
+    // `x = |`
+    // `x = |1`
+    if (maybeLeaf === undefined || PositionUtils.isBeforeAstNode(state.activeNode.position, maybeLeaf, false)) {
+        return ExpressionKeywords;
+    } else {
+        return undefined;
+    }
+}
+
 function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
@@ -565,20 +597,35 @@ function autocompleteDefault(state: InspectAutocompleteState): ReadonlyArray<Lan
     const key: string = createMapKey(state.parent.node.kind, child.node.maybeAttributeIndex);
 
     if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
-        if (
-            child.kind === XorNodeKind.Context ||
-            PositionUtils.isBeforeAstNode(activeNode.position, child.node, false)
-        ) {
-            return ExpressionAutocomplete;
-        } else {
-            return undefined;
-        }
+        return autocompleteDefaultExpression(state);
     } else {
         const maybeMappedKeywordKind: Language.KeywordKind | undefined = AutocompleteConstantMap.get(key);
-        if (maybeMappedKeywordKind) {
-            return autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind);
-        } else {
-            return undefined;
-        }
+        return maybeMappedKeywordKind !== undefined
+            ? autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind)
+            : undefined;
     }
+}
+
+function autocompleteDefaultExpression(
+    state: InspectAutocompleteState,
+): ReadonlyArray<Language.KeywordKind> | undefined {
+    const activeNode: ActiveNode = state.activeNode;
+    const parent: TXorNode = state.parent;
+    const child: TXorNode = state.child;
+    const x: boolean = NodeIdMapUtils.hasParsedToken(state.nodeIdMapCollection, child);
+
+    // '[x=|1]
+    if (activeNode.leafKind === ActiveNodeLeafKind.ShiftedRight) {
+        return ExpressionKeywords;
+    }
+    // `if 1|`
+    else if (
+        child.kind === XorNodeKind.Ast &&
+        child.node.kind === Ast.NodeKind.LiteralExpression &&
+        child.node.literalKind === Ast.LiteralKind.Numeric
+    ) {
+        return [];
+    }
+
+    return ExpressionKeywords;
 }

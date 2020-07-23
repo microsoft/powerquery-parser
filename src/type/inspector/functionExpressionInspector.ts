@@ -4,7 +4,7 @@
 import { Type, TypeUtils } from "..";
 import { CommonError } from "../../common";
 import { Ast, AstUtils } from "../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../../parser";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../parser";
 
 export interface InspectedFunctionExpression {
     readonly parameters: ReadonlyArray<InspectedFunctionParameter>;
@@ -20,13 +20,7 @@ export function inspectFunctionExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): InspectedFunctionExpression {
-    const maybeErr: CommonError.InvariantError | undefined = NodeIdMapUtils.testAstNodeKind(
-        fnExpr,
-        Ast.NodeKind.FunctionExpression,
-    );
-    if (maybeErr) {
-        throw maybeErr;
-    }
+    XorNodeUtils.assertAstNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
 
     const examinedParameters: InspectedFunctionParameter[] = [];
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
