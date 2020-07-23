@@ -13,7 +13,7 @@ export function assertParseError<S extends IParserState = IParserState>(
     error: Error,
 ): asserts error is ParseError.ParseError<S> {
     if (!ParseError.isParseError(error)) {
-        throw new Error(`expected triedParse to return a ParseError.ParseError`);
+        throw new Error(`expected triedParse to return a ParseError.ParseError: ${error.message}`);
     }
 }
 

@@ -365,7 +365,7 @@ export function assertNoMoreTokens(state: IParserState): void {
 }
 
 export function assertNoOpenContext(state: IParserState): void {
-    Assert.isUndefined(state.maybeCurrentContextNode !== undefined, undefined, {
+    Assert.isUndefined(state.maybeCurrentContextNode, undefined, {
         contextNodeId: state.maybeCurrentContextNode?.id,
     });
 }

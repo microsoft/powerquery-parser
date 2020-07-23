@@ -29,7 +29,7 @@ export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>)
 }
 
 export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
-    Assert.isTrue(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
+    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
         index,
         collectionLength: collection.length,
     });

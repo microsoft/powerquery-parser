@@ -25,8 +25,17 @@ export function tryRead<State extends IParserState = IParserState>(
         return ResultUtils.errFactory(convertedError);
     }
 
-    IParserStateUtils.assertNoOpenContext(state);
-    IParserStateUtils.assertNoMoreTokens(state);
+    try {
+        IParserStateUtils.assertNoOpenContext(state);
+    } catch (err) {
+        return ResultUtils.errFactory(new CommonError.CommonError(err));
+    }
+
+    try {
+        IParserStateUtils.assertNoMoreTokens(state);
+    } catch (err) {
+        return ResultUtils.errFactory(new ParseError.ParseError(err, state));
+    }
 
     return ResultUtils.okFactory({
         root,
