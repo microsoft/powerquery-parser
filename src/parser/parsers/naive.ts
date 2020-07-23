@@ -155,6 +155,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
     // If both fail then return the error which parsed more tokens.
     try {
         document = parser.readExpression(state, parser);
+        IParserStateUtils.assertNoMoreTokens(state);
         IParserStateUtils.assertNoOpenContext(state);
     } catch (expressionError) {
         // Fast backup deletes context state, but we want to preserve it for the case
@@ -174,6 +175,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
 
         try {
             document = readSectionDocument(state, parser);
+            IParserStateUtils.assertNoMoreTokens(state);
             IParserStateUtils.assertNoOpenContext(state);
         } catch (sectionError) {
             let triedError: Error;
