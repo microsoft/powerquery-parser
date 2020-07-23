@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import { Type, TypeUtils } from "..";
-import { CommonError } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../parser";
 

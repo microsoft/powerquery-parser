@@ -610,9 +610,7 @@ function autocompleteDefaultExpression(
     state: InspectAutocompleteState,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
-    const parent: TXorNode = state.parent;
     const child: TXorNode = state.child;
-    const x: boolean = NodeIdMapUtils.hasParsedToken(state.nodeIdMapCollection, child);
 
     // '[x=|1]
     if (activeNode.leafKind === ActiveNodeLeafKind.ShiftedRight) {
