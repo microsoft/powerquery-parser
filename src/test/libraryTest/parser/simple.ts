@@ -700,7 +700,7 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    it(`WIP Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral`, () => {
+    it(`Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral`, () => {
         const text: string = `[x=1] section;`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.Section, undefined],
@@ -1400,7 +1400,7 @@ describe("Parser.AbridgedNode", () => {
             expectAbridgeNodes(text, expected);
         });
 
-        it(`WIP [] section;`, () => {
+        it(`[] section;`, () => {
             const text: string = `[] section;`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.Section, undefined],

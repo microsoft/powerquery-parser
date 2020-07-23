@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../common";
+import { Assert, CommonError, Result, ResultUtils } from "../common";
 import { Ast } from "../language";
 import { getLocalizationTemplates } from "../localization";
 import {
@@ -106,16 +106,11 @@ function maybeInvokeExpressionName(
             undefined,
         );
         if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-            if (headXorNode.kind !== XorNodeKind.Ast) {
-                const details: {} = {
-                    identifierExpressionNodeId: headXorNode.node.id,
-                    invokeExpressionNodeId: invokeExpr.node.id,
-                };
-                throw new CommonError.InvariantError(
-                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
-                    details,
-                );
-            }
+            Assert.isTrue(
+                headXorNode.kind === XorNodeKind.Ast,
+                `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+                { identifierExpressionNodeId: headXorNode.node.id, invokeExpressionNodeId: invokeExpr.node.id },
+            );
 
             const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
             maybeName =

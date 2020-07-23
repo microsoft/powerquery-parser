@@ -94,3 +94,20 @@ export function split<T>(
 
     return [left, right];
 }
+
+export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?: string, maybeDetails?: {}): number {
+    const index: number = collection.indexOf(item);
+    Assert.isTrue(index !== -1, maybeMessage, maybeDetails ?? { item });
+
+    return index;
+}
+
+export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: {}): void {
+    Assert.isTrue(
+        collection.length > 0,
+        maybeMessage ?? `collection should have at least one element in it`,
+        maybeDetails ?? {
+            collectionLength: collection.length,
+        },
+    );
+}

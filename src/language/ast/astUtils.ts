@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError } from "../../common";
+import { ArrayUtils, Assert, CommonError } from "../../common";
 import { Ast } from "../ast";
 import { TokenKind } from "../token";
 
@@ -374,7 +374,7 @@ export function assertNodeKind(node: Ast.TNode, expectedNodeKind: Ast.NodeKind):
 }
 
 export function assertAnyNodeKind(node: Ast.TNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
-    Assert.isTrue(allowedNodeKinds.indexOf(node.kind) !== -1, `allowedNodeKinds.indexOf(node.kind) !== -1`, {
+    ArrayUtils.assertIn(allowedNodeKinds, node.kind, undefined, {
         allowedNodeKinds,
         actualNodeKind: node.kind,
         actualNodeId: node.id,

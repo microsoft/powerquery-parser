@@ -3,7 +3,7 @@
 
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
-import { CommonError, Pattern } from ".";
+import { Assert, CommonError, Pattern } from ".";
 import { KeywordKind, Keywords } from "../language";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
@@ -223,10 +223,7 @@ export function expectFormat(template: string, args: Map<string, string>): strin
 
     for (const [key, value] of args.entries()) {
         const formatKey: string = `{${key}}`;
-        if (template.indexOf(formatKey) === -1) {
-            throw new CommonError.InvariantError(`unknown format key`, { formatKey });
-        }
-
+        Assert.isTrue(template.indexOf(formatKey) !== -1, `unknown formatKey`, { formatKey });
         result = result.replace(formatKey, value);
     }
 

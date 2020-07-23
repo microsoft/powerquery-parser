@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseContext } from "..";
-import { CommonError } from "../../common";
+import { ArrayUtils, Assert } from "../../common";
 import { Ast } from "../../language";
 import { TXorNode, XorNodeKind } from "./xorNode";
 
@@ -50,27 +50,12 @@ export function isTFieldAccessExpression(xorNode: TXorNode): boolean {
 }
 
 export function assertAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): void {
-    if (xorNode.node.kind === expected) {
-        return;
-    }
-
-    const details: {} = {
-        expectedNodeKind: expected,
-        actualAstNodeKind: xorNode.node.kind,
-        xorNodeId: xorNode.node.id,
-    };
-    throw new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
+    Assert.isTrue(xorNode.node.kind === expected, `xorNode.node.kind === expected`, {
+        xorNodeKind: xorNode.node.kind,
+        expected,
+    });
 }
 
 export function assertAnyAstNodeKind(xorNode: TXorNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
-    if (allowedNodeKinds.indexOf(xorNode.node.kind) !== -1) {
-        return undefined;
-    }
-
-    const details: {} = {
-        allowedNodeKinds,
-        actualAstNodeKind: xorNode.node.kind,
-        actualXorNodeId: xorNode.node.id,
-    };
-    throw new CommonError.InvariantError(`incorrect Ast.NodeKind`, details);
+    ArrayUtils.assertIn(allowedNodeKinds, xorNode.node.kind, `incorrect Ast NodeKind`);
 }

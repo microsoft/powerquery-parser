@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
@@ -670,12 +670,11 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
             nodeIdMapCollection.childIdsById,
             headParentId,
         );
-        const replacementIndex: number = parentChildIds.indexOf(head.id);
-        Assert.isFalse(replacementIndex === -1, `node isn't a child of parentNode`, {
-            parentNodeId: headParentId,
-            childNodeId: head.id,
-        });
-
+        const replacementIndex: number = ArrayUtils.assertIn(
+            parentChildIds,
+            head.id,
+            `node isn't a child of parentNode`,
+        );
         nodeIdMapCollection.childIdsById.set(headParentId, [
             ...parentChildIds.slice(0, replacementIndex),
             ...parentChildIds.slice(replacementIndex + 1),
@@ -2402,14 +2401,10 @@ function readWrapped<
 
 export function readToken<S extends IParserState = IParserState>(state: S): string {
     const tokens: ReadonlyArray<Language.Token> = state.lexerSnapshot.tokens;
-
-    if (state.tokenIndex >= tokens.length) {
-        const details: {} = {
-            tokenIndex: state.tokenIndex,
-            "tokens.length": tokens.length,
-        };
-        throw new CommonError.InvariantError("index beyond tokens.length", details);
-    }
+    Assert.isFalse(state.tokenIndex >= tokens.length, `index is beyond tokens.length`, {
+        tokenIndex: state.tokenIndex,
+        tokensLength: tokens.length,
+    });
 
     const data: string = tokens[state.tokenIndex].data;
     state.tokenIndex += 1;
@@ -2440,13 +2435,7 @@ export function readTokenKindAsConstant<S extends IParserState, ConstantKind ext
     }
 
     const tokenData: string = readToken(state);
-    if (tokenData !== constantKind) {
-        const details: {} = {
-            tokenData,
-            constantKind,
-        };
-        throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
-    }
+    Assert.isTrue(tokenData === constantKind, `expected tokenData to equal constantKind`, { tokenData, constantKind });
 
     const astNode: Ast.TConstant & Ast.IConstant<ConstantKind> = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -2469,13 +2458,10 @@ export function maybeReadTokenKindAsConstant<S extends IParserState, ConstantKin
         IParserStateUtils.startContext(state, nodeKind);
 
         const tokenData: string = readToken(state);
-        if (tokenData !== constantKind) {
-            const details: {} = {
-                tokenData,
-                constantKind,
-            };
-            throw new CommonError.InvariantError("expected tokenData to be equal to constantKind", details);
-        }
+        Assert.isTrue(tokenData === constantKind, `expected tokenData to equal constantKind`, {
+            tokenData,
+            constantKind,
+        });
 
         const astNode: Ast.TConstant & Ast.IConstant<ConstantKind> = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -2512,10 +2498,7 @@ function readConstantKind<S extends IParserState, ConstantKind extends Ast.TCons
         state,
         constantKind,
     );
-    if (!maybeConstant) {
-        const details: {} = { constantKind };
-        throw new CommonError.InvariantError(`couldn't convert constantKind`, details);
-    }
+    Assert.isDefined(maybeConstant, `couldn't conver constantKind`, { constantKind });
 
     return maybeConstant;
 }
@@ -2572,11 +2555,7 @@ export function readBracketDisambiguation<S extends IParserState = IParserState>
         throw triedDisambiguation.error;
     }
     const disambiguation: BracketDisambiguation = triedDisambiguation.value;
-    if (allowedVariants.indexOf(disambiguation) === -1) {
-        throw new CommonError.InvariantError(
-            `grammar doesn't allow remaining BracketDisambiguation: ${disambiguation}`,
-        );
-    }
+    ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
 
     switch (disambiguation) {
         case BracketDisambiguation.FieldProjection:
