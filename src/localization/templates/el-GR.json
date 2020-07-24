@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "τελεστής \"μικρότερο από ή ίσο με\" ('<=')",
   "tokenKind_minus": "μείον <'-'>",
   "tokenKind_notEqual": "τελεστής \"δεν ισούται με\" ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "αριθμητική λεκτική σταθερά",
   "tokenKind_plus": "τελεστής πρόσθεσης <'+'>",

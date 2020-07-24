@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "operátor menšie ako alebo rovná sa ('<=')",
   "tokenKind_minus": "mínus <'-'>",
   "tokenKind_notEqual": "operátor nerovnosti ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "číselný literál",
   "tokenKind_plus": "operátor sčítania <'+'>",

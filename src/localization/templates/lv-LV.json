@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "operators Mazāks par vai vienāds ar ('<=')",
   "tokenKind_minus": "mīnuss <'-'>",
   "tokenKind_notEqual": "operators Nav vienāds ar ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "skaitliskais literālis",
   "tokenKind_plus": "saskaitīšanas operators <'+'>",

@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "küçüktür veya eşittir işleci ('<=')",
   "tokenKind_minus": "eksi <'-'>",
   "tokenKind_notEqual": "eşit değildir işleci ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "sayısal değişmez değer",
   "tokenKind_plus": "toplama işleci <'+'>",

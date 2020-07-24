@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "ตัวดำเนินการน้อยกว่าหรือเท่ากับ ('<=')",
   "tokenKind_minus": "ลบ <'-'>",
   "tokenKind_notEqual": "ตัวดำเนินการไม่เท่ากับ ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "สัญพจน์ตัวเลข",
   "tokenKind_plus": "ตัวดำเนินการเพิ่มเติม <'+'>",

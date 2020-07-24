@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "pienempi tai yhtä suuri kuin -operaattori ('<=')",
   "tokenKind_minus": "miinus <'-'>",
   "tokenKind_notEqual": "eri suuri kuin -operaattori ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numeerinen literaali",
   "tokenKind_plus": "lisäämisoperaattori <'+'>",

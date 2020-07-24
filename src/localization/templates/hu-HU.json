@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "kisebb vagy egyenlő ('<=')",
   "tokenKind_minus": "mínuszjel <'-'>",
   "tokenKind_notEqual": "nem egyenlő ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerikus literál",
   "tokenKind_plus": "összeadásjel <'+'>",

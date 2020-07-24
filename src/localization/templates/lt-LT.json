@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "ženklas Mažiau už arba lygu ('<=')",
   "tokenKind_minus": "minusas <'-'>",
   "tokenKind_notEqual": "nelygybės ženklas ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "skaitinis literalas",
   "tokenKind_plus": "sudėties ženklas <'+'>",

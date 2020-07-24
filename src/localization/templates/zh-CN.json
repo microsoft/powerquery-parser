@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "小于等于号运算符 ('<=')",
   "tokenKind_minus": "减号 <'-'>",
   "tokenKind_notEqual": "不等于号运算符 ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "数字文本",
   "tokenKind_plus": "加号运算符 <'+'>",

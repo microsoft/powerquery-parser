@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "оператор \"менше або дорівнює\" ('<=')",
   "tokenKind_minus": "мінус <'-'>",
   "tokenKind_notEqual": "оператор \"не дорівнює\" ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "числовий літерал",
   "tokenKind_plus": "оператор додавання <'+'>",

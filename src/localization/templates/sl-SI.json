@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "operator za manjše kot ali enako ('<=')",
   "tokenKind_minus": "minus <'-'>",
   "tokenKind_notEqual": "operator za ni enako kot ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "številski niz",
   "tokenKind_plus": "operator za ni enako <'+'>",

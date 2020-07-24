@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "toán tử nhỏ hơn hoặc bằng ('<=')",
   "tokenKind_minus": "trừ <'-'>",
   "tokenKind_notEqual": "toán tử không bằng ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "ký tự số",
   "tokenKind_plus": "toán tử cộng <'+'>",

@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "operatore minore o uguale a ('<=')",
   "tokenKind_minus": "meno <'-'>",
   "tokenKind_notEqual": "operatore non uguale a ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "valore letterale numerico",
   "tokenKind_plus": "operatore addizione <'+'>",

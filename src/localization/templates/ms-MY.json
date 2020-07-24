@@ -87,6 +87,7 @@
   "tokenKind_lessThanEqualTo": "operator kurang daripada atau sama dengan ('<=')",
   "tokenKind_minus": "tolak <'-'>",
   "tokenKind_notEqual": "operator tidak sama dengan ('<>')",
+  "tokenKind_nullCoalescing": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "literal angka",
   "tokenKind_plus": "operator tambah <'+'>",
