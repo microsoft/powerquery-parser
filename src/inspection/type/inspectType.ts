@@ -181,6 +181,10 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             result = inspectLiteralExpression(xorNode);
             break;
 
+        case Ast.NodeKind.NullCoalescingExpression:
+            result = inspectNullCoalescingExpression(state, xorNode);
+            break;
+
         case Ast.NodeKind.NotImplementedExpression:
             result = Type.NoneInstance;
             break;
@@ -828,6 +832,17 @@ function inspectLiteralExpression(xorNode: TXorNode): Type.TType {
         default:
             throw Assert.isNever(xorNode);
     }
+}
+
+function inspectNullCoalescingExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.NullCoalescingExpression);
+
+    const maybeLeftType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 0);
+    const maybeRightType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 2);
+
+    return maybeLeftType !== undefined || maybeRightType !== undefined
+        ? TypeUtils.anyUnionFactory([maybeLeftType, maybeRightType])
+        : Type.UnknownInstance;
 }
 
 function inspectParameter(state: TypeInspectionState, xorNode: TXorNode): Type.TType {

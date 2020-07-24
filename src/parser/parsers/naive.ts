@@ -298,21 +298,28 @@ export function readSectionMember<S extends IParserState = IParserState>(
 // ------------------------------------------
 
 export function readExpression<S extends IParserState = IParserState>(state: S, parser: IParser<S>): Ast.TExpression {
+    let expression: Ast.TExpression;
+
     switch (state.maybeCurrentTokenKind) {
         case Language.TokenKind.KeywordEach:
-            return parser.readEachExpression(state, parser);
+            expression = parser.readEachExpression(state, parser);
+            break;
 
         case Language.TokenKind.KeywordLet:
-            return parser.readLetExpression(state, parser);
+            expression = parser.readLetExpression(state, parser);
+            break;
 
         case Language.TokenKind.KeywordIf:
-            return parser.readIfExpression(state, parser);
+            expression = parser.readIfExpression(state, parser);
+            break;
 
         case Language.TokenKind.KeywordError:
-            return parser.readErrorRaisingExpression(state, parser);
+            expression = parser.readErrorRaisingExpression(state, parser);
+            break;
 
         case Language.TokenKind.KeywordTry:
-            return parser.readErrorHandlingExpression(state, parser);
+            expression = parser.readErrorHandlingExpression(state, parser);
+            break;
 
         case Language.TokenKind.LeftParenthesis:
             const triedDisambiguation: Result<
@@ -326,18 +333,25 @@ export function readExpression<S extends IParserState = IParserState>(state: S, 
 
             switch (disambiguation) {
                 case ParenthesisDisambiguation.FunctionExpression:
-                    return parser.readFunctionExpression(state, parser);
+                    expression = parser.readFunctionExpression(state, parser);
+                    break;
 
                 case ParenthesisDisambiguation.ParenthesizedExpression:
-                    return parser.readLogicalExpression(state, parser);
+                    expression = parser.readLogicalExpression(state, parser);
+                    break;
 
                 default:
                     throw Assert.isNever(disambiguation);
             }
+            break;
 
         default:
-            return parser.readLogicalExpression(state, parser);
+            expression = parser.readLogicalExpression(state, parser);
     }
+
+    return IParserStateUtils.isOnTokenKind(state, Language.TokenKind.NullCoalescing)
+        ? parser.readNullCoalescingExpression(state, parser, expression)
+        : expression;
 }
 
 // --------------------------------------------------
@@ -2536,6 +2550,18 @@ function maybeReadLiteralAttributes<S extends IParserState = IParserState>(
         IParserStateUtils.incrementAttributeCounter(state);
         return undefined;
     }
+}
+
+// ------------------------------------
+// ---------- NullCoalescing ----------
+// ------------------------------------
+
+export function readNullCoalescingExpression<S extends IParserState = IParserState>(
+    _state: S,
+    _parser: IParser<S>,
+    _left: Ast.TExpression,
+): Ast.NullCoalescingExpression {
+    throw new Error();
 }
 
 // -------------------------------------------------------

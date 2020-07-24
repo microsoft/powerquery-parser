@@ -157,6 +157,13 @@ export interface IParser<State extends IParserState = IParserState> {
     readonly readAnyLiteral: (state: State, parser: IParser<State>) => Ast.TAnyLiteral;
     readonly readPrimitiveType: (state: State, parser: IParser<State>) => Ast.PrimitiveType;
 
+    // NullCoalescing
+    readonly readNullCoalescingExpression: (
+        state: State,
+        Parser: IParser<State>,
+        left: Ast.TExpression,
+    ) => Ast.NullCoalescingExpression;
+
     // Disambiguation
     readonly disambiguateBracket: (
         state: State,

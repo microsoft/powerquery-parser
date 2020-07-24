@@ -5,6 +5,7 @@ import { Type } from ".";
 import { Assert, CommonError } from "../common";
 import { Ast } from "../language";
 import { TXorNode } from "../parser";
+import { NotApplicableInstance } from "./type";
 
 // For a given parent node, what is the expected type for a child at a given index?
 export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.TType {
@@ -297,6 +298,19 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
             switch (childIndex) {
                 case 0:
                     return Type.NotApplicableInstance;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
+        case Ast.NodeKind.NullCoalescingExpression:
+            switch (childIndex) {
+                case 0:
+                case 2:
+                    return Type.ExpressionInstance;
+
+                case 1:
+                    return NotApplicableInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
