@@ -144,9 +144,9 @@ export function deleteContext(state: IParserState, maybeNodeId: number | undefin
 // There are a few situation where a child is parsed before its parent,
 // for example, a null coalescing expression: `x ?? y`.
 //
-// First an undeterminate length expression is parsed first, then the null coalescing operator is reached.
-// The left hand side should be a component of the null coalescing expression,
-// but standard parsing behavior causes that to be flipped.
+// First, an undeterminate length expression is parsed first, then the null coalescing operator `??` is encountered.
+// The left hand side is a component of the null coalescing expression, but the default parsing behavior would cause
+// the null coalescing expression to the child of previously parsed expression.
 //
 // This function should be called only immediately after starting a new context for the delayed parent.
 export function swapChildAndParent(state: IParserState, childId: number): void {
@@ -198,23 +198,26 @@ export function swapChildAndParent(state: IParserState, childId: number): void {
 
     const parent: TypeScriptUtils.StripReadonly<Ast.TNode> = nodeIdMapCollection.astNodeById.get(parentId)!;
     const child: TypeScriptUtils.StripReadonly<ParseContext.Node> = nodeIdMapCollection.contextNodeById.get(childId)!;
-    parent.maybeAttributeIndex = 0;
+    child.id = parent.id;
     child.attributeCounter = 1;
     child.tokenIndexStart = parent.tokenRange.tokenIndexStart;
     child.maybeTokenStart = state.lexerSnapshot.tokens[parent.tokenRange.tokenIndexStart];
-    child.id = parent.id;
+    child.maybeAttributeIndex = parent.maybeAttributeIndex;
+    parent.maybeAttributeIndex = 0;
 
     state.contextState.idCounter = child.id;
-    const triedUpdateId: Traverse.TriedTraverse<null> = Traverse.tryTraverseAst<Traverse.IState<null>, null>(
+    const triedUpdateId: Traverse.TriedTraverse<undefined> = Traverse.tryTraverseAst<
+        Traverse.IState<undefined>,
+        undefined
+    >(
         {
             localizationTemplates: state.localizationTemplates,
-            // tslint:disable-next-line: no-null-keyword
-            result: null,
+            result: undefined,
         },
         nodeIdMapCollection,
         parent,
         Traverse.VisitNodeStrategy.BreadthFirst,
-        (_: Traverse.IState<null>, node: Ast.TNode) => {
+        (_: Traverse.IState<undefined>, node: Ast.TNode) => {
             const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = node;
             mutableNode.id = ParseContextUtils.nextId(state.contextState);
         },
