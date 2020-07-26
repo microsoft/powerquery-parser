@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { Assert, CommonError } from "../../common";
+import { ArrayUtils, Assert, CommonError, Traverse, TypeScriptUtils } from "../../common";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
@@ -139,6 +139,89 @@ export function deleteContext(state: IParserState, maybeNodeId: number | undefin
     }
 
     state.maybeCurrentContextNode = ParseContextUtils.deleteContext(state.contextState, nodeId);
+}
+
+// There are a few situation where a child is parsed before its parent,
+// for example, a null coalescing expression: `x ?? y`.
+//
+// First an undeterminate length expression is parsed first, then the null coalescing operator is reached.
+// The left hand side should be a component of the null coalescing expression,
+// but standard parsing behavior causes that to be flipped.
+//
+// This function should be called only immediately after starting a new context for the delayed parent.
+export function swapChildAndParent(state: IParserState, childId: number): void {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+
+    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(childId);
+    Assert.isDefined(maybeParentId, undefined, { childId });
+    const parentId: number = maybeParentId;
+
+    // A grandparent doesn't exist iff the parent is the root node.
+    const maybeGrandparentId: number | undefined = nodeIdMapCollection.parentIdById.get(parentId);
+    const details: {} = {
+        parentId,
+        childId,
+        maybeGrandparentId,
+    };
+    Assert.isTrue(nodeIdMapCollection.astNodeById.has(parentId), `parent must be a fully parsed Ast node`, details);
+    Assert.isTrue(nodeIdMapCollection.contextNodeById.has(childId), `child must be a context state`);
+    Assert.isFalse(
+        nodeIdMapCollection.childIdsById.has(childId),
+        `child context node can't have any children`,
+        details,
+    );
+
+    // Update child maps
+    nodeIdMapCollection.childIdsById.set(
+        parentId,
+        ArrayUtils.removeFirstInstance(nodeIdMapCollection.childIdsById.get(parentId)!, childId),
+    );
+    nodeIdMapCollection.childIdsById.set(childId, [parentId]);
+    if (maybeGrandparentId !== undefined) {
+        nodeIdMapCollection.childIdsById.set(
+            maybeGrandparentId,
+            ArrayUtils.replaceFirstInstance(
+                nodeIdMapCollection.childIdsById.get(maybeGrandparentId)!,
+                parentId,
+                childId,
+            ),
+        );
+    }
+
+    // Update parent maps
+    nodeIdMapCollection.parentIdById.set(parentId, childId);
+    if (maybeGrandparentId !== undefined) {
+        nodeIdMapCollection.parentIdById.set(childId, maybeGrandparentId);
+    } else {
+        nodeIdMapCollection.parentIdById.delete(childId);
+    }
+
+    const parent: TypeScriptUtils.StripReadonly<Ast.TNode> = nodeIdMapCollection.astNodeById.get(parentId)!;
+    const child: TypeScriptUtils.StripReadonly<ParseContext.Node> = nodeIdMapCollection.contextNodeById.get(childId)!;
+    parent.maybeAttributeIndex = 0;
+    child.attributeCounter = 1;
+    child.tokenIndexStart = parent.tokenRange.tokenIndexStart;
+    child.maybeTokenStart = state.lexerSnapshot.tokens[parent.tokenRange.tokenIndexStart];
+    child.id = parent.id;
+
+    state.contextState.idCounter = child.id;
+    const triedUpdateId: Traverse.TriedTraverse<null> = Traverse.tryTraverseAst<Traverse.IState<null>, null>(
+        {
+            localizationTemplates: state.localizationTemplates,
+            // tslint:disable-next-line: no-null-keyword
+            result: null,
+        },
+        nodeIdMapCollection,
+        parent,
+        Traverse.VisitNodeStrategy.BreadthFirst,
+        (_: Traverse.IState<null>, node: Ast.TNode) => {
+            const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = node;
+            mutableNode.id = ParseContextUtils.nextId(state.contextState);
+        },
+        Traverse.expectExpandAllAstChildren,
+        undefined,
+    );
+    Assert.isOk(triedUpdateId);
 }
 
 export function incrementAttributeCounter(state: IParserState): void {
@@ -320,9 +403,9 @@ export function testCsvContinuationDanglingComma(
     }
 }
 
-// ---------------------------
-// ---------- Tests ----------
-// ---------------------------
+// -------------------------------------
+// ---------- Asserts / Tests ----------
+// -------------------------------------
 
 export function testIsOnTokenKind(
     state: IParserState,

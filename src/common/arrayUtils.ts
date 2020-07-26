@@ -17,6 +17,10 @@ export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T)
     return removeAtIndex(collection, collection.indexOf(element));
 }
 
+export function replaceFirstInstance<T>(collection: ReadonlyArray<T>, oldValue: T, newValue: T): T[] {
+    return replaceAtIndex(collection, newValue, collection.indexOf(oldValue));
+}
+
 export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
     const partial: T[] = [...left];
     for (const element of right) {
@@ -35,6 +39,15 @@ export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T
     });
 
     return [...collection.slice(0, index), ...collection.slice(index + 1)];
+}
+
+export function replaceAtIndex<T>(collection: ReadonlyArray<T>, value: T, index: number): T[] {
+    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
+        index,
+        collectionLength: collection.length,
+    });
+
+    return [...collection.slice(0, index), value, ...collection.slice(index + 1)];
 }
 
 export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) => boolean): T | undefined {
