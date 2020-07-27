@@ -668,72 +668,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    // The head of the recursive primary expression is created before the recursive primary expression,
-    // meaning the parent/child mapping for contexts are in reverse order.
-    // The clean up for that happens here.
-    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    Assert.isDefined(state.maybeCurrentContextNode);
-    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
-
-    const maybeHeadParentId: number | undefined = nodeIdMapCollection.parentIdById.get(head.id);
-    if (maybeHeadParentId !== undefined) {
-        const headParentId: number = maybeHeadParentId;
-
-        // Remove head as a child of its current parent.
-        const parentChildIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(
-            nodeIdMapCollection.childIdsById,
-            headParentId,
-        );
-        const replacementIndex: number = ArrayUtils.assertIn(
-            parentChildIds,
-            head.id,
-            `node isn't a child of parentNode`,
-        );
-        nodeIdMapCollection.childIdsById.set(headParentId, [
-            ...parentChildIds.slice(0, replacementIndex),
-            ...parentChildIds.slice(replacementIndex + 1),
-        ]);
-    }
-
-    // Update mappings for head.
-    nodeIdMapCollection.astNodeById.set(head.id, head);
-    nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
-
-    // Mark head as a child of the recursive primary expression context (currentContextNode).
-    nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
-
-    // Update start positions for recursive primary expression context
-    const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
-    const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.Node> = currentContextNode;
-    // UNSAFE MARKER
-    //
-    // Purpose of code block:
-    //      Shift the start of ParserContext to an earlier location so the head is included.
-    //
-    // Why are you trying to avoid a safer approach?
-    //      There isn't one? At least not without refactoring in ways which will make things messier.
-    //
-    // Why is it safe?
-    //      I'm only mutating start location in the recursive expression to one already parsed, the head.
-    mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[recursiveTokenIndexStart];
-    mutableContext.tokenIndexStart = recursiveTokenIndexStart;
-    mutableContext.attributeCounter = 1;
-
-    // Update attribute index for the head Ast.TNode
-    const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
-    // UNSAFE MARKER
-    //
-    // Purpose of code block:
-    //      The head might not have `maybeAttributeIndex === 0` set.
-    //
-    // Why are you trying to avoid a safer approach?
-    //      Prevent the cost of a shallow copy.
-    //
-    // Why is it safe?
-    //      It's a shallow copy, plus one attribute change.
-    mutableHead.maybeAttributeIndex = 0;
-
-    // Begin normal parsing behavior.
+    IParserStateUtils.swapCurrentChildAndParent(state);
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, recursiveArrayNodeKind);
 

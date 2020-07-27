@@ -4,10 +4,65 @@
 import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from ".";
 import { ParseContext } from "..";
 import { Language } from "../..";
-import { ArrayUtils, Assert, CommonError, MapUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast } from "../../language";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
+import { ParseContextUtils } from "../context";
+import { expect } from "chai";
+import { IParserState } from "../IParserState";
+
+export function assertDeleteXorNode(nodeIdMapCollection: Collection, xorNode: TXorNode): void {
+    assertDeleteXorNodeId(nodeIdMapCollection, xorNode.node.id);
+}
+
+export function assertDeleteXorNodeId(nodeIdMapCollection: Collection, nodeId: number): void {
+    Assert.isFalse(nodeIdMapCollection.childIdsById.has(nodeId));
+    Assert.isTrue(
+        nodeIdMapCollection.astNodeById.delete(nodeId) || nodeIdMapCollection.contextNodeById.delete(nodeId),
+        "nodeIdMapCollection.astNodeById.delete(nodeId) || nodeIdMapCollection.contextNodeById.delete(nodeId)",
+    );
+
+    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
+    if (maybeParentId !== undefined) {
+        const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
+            nodeIdMapCollection.childIdsById,
+            maybeParentId,
+            `nodeId has a parent, so parentId should have nodeId as a child`,
+            { nodeId, parentId: maybeParentId },
+        );
+        nodeIdMapCollection.childIdsById.set(maybeParentId, ArrayUtils.removeFirstInstance(childrenOfParent, nodeId));
+    }
+}
+
+export function assertReplaceXorNodeId(nodeIdMapCollection: Collection, oldId: number, newNode: TXorNode): void {
+    Assert.isFalse(nodeIdMapCollection.childIdsById.has(oldId));
+    Assert.isTrue(
+        nodeIdMapCollection.astNodeById.delete(oldId) || nodeIdMapCollection.contextNodeById.delete(oldId),
+        "nodeIdMapCollection.astNodeById.delete(nodeId) || nodeIdMapCollection.contextNodeById.delete(nodeId)",
+    );
+
+    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
+    if (maybeParentId !== undefined) {
+        const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
+            nodeIdMapCollection.childIdsById,
+            maybeParentId,
+            `nodeId has a parent, so parentId should have nodeId as a child`,
+            { nodeId: oldId, parentId: maybeParentId },
+        );
+        nodeIdMapCollection.childIdsById.set(maybeParentId, ArrayUtils.removeFirstInstance(childrenOfParent, oldId));
+    }
+}
+
+export function assertSetNewXorNode(nodeIdMapCollection: Collection, xorNode: TXorNode): void {
+    if (xorNode.kind === XorNodeKind.Ast) {
+        MapUtils.assertNotHas(nodeIdMapCollection.astNodeById, xorNode.node.id);
+        nodeIdMapCollection.astNodeById.set(xorNode.node.id, xorNode.node);
+    } else {
+        MapUtils.assertNotHas(nodeIdMapCollection.contextNodeById, xorNode.node.id);
+        nodeIdMapCollection.contextNodeById.set(xorNode.node.id, xorNode.node);
+    }
+}
 
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return MapUtils.expectGet(astNodeById, nodeId);
@@ -472,6 +527,78 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
     }
 
     return false;
+}
+
+// Used to help reset a node's id for recursive node kinds,
+// such as NullCoealescingExpression or RecursivePrimaryExpression.
+//
+// Assumes parseContextState has its idCounter counter set correctly beforehand.
+//
+// Returns the nodeId of the new root.
+export function recalculateId(nodeIdMapCollection: Collection, parserState: IParserState, nodeStart: TXorNode): number {
+    // A helper stack we use for recursively visiting children nodes.
+    const oldNodeIdByNewNodeId: Map<number, number> = new Map();
+    let nodeStack: TXorNode[] = [nodeStart];
+    let currentNode: TXorNode | undefined = nodeStack.pop();
+    while (currentNode !== undefined) {
+        const newNodeId: number = ParseContextUtils.nextId(parserState.contextState);
+        oldNodeIdByNewNodeId.set(newNodeId, currentNode.node.id);
+
+        const childrenOfCurrentNode: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
+            nodeIdMapCollection,
+            currentNode.node.id,
+        );
+        const reversedChildrenOfCurrentNode: ReadonlyArray<TXorNode> = [...childrenOfCurrentNode].reverse();
+        nodeStack = nodeStack.concat(reversedChildrenOfCurrentNode);
+
+        currentNode = nodeStack.pop();
+    }
+
+    updateNodeIds(nodeIdMapCollection, oldNodeIdByNewNodeId);
+    return Math.min(...oldNodeIdByNewNodeId.keys());
+}
+
+export function updateNodeIds(nodeIdMapCollection: Collection, oldNodeIdByNewNodeId: Map<number, number>): void {
+    for (const newNodeId of [...oldNodeIdByNewNodeId.keys()].sort().reverse()) {
+        const oldNodeId: number = MapUtils.assertGet(oldNodeIdByNewNodeId, newNodeId);
+        const oldNode: TXorNode = expectXorNode(nodeIdMapCollection, oldNodeId);
+        const newNode: TXorNode = {
+            ...oldNode,
+            node: {
+                ...oldNode.node,
+                id: newNodeId,
+            },
+        } as TXorNode;
+
+        assertReplaceNode(nodeIdMapCollection, oldNodeId, newNode);
+    }
+}
+
+export function assertReplaceNode(nodeIdMapCollection: Collection, oldNodeId: number, newNode: TXorNode): void {
+    Assert.isTrue(
+        nodeIdMapCollection.astNodeById.delete(oldNodeId) || nodeIdMapCollection.contextNodeById.delete(oldNodeId),
+        `nodeIdMapCollection.astNodeById.delete(oldNodeId) || nodeIdMapCollection.contextNodeById.delete(oldNodeId)`,
+    );
+
+    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldNodeId);
+    if (maybeParentId !== undefined) {
+        const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
+            nodeIdMapCollection.childIdsById,
+            maybeParentId,
+            `oldNodeId has a parent, so parentId should have oldNode as a child`,
+            { oldNodeId, parentId: maybeParentId },
+        );
+        nodeIdMapCollection.childIdsById.set(
+            maybeParentId,
+            ArrayUtils.replaceFirstInstance(childrenOfParent, oldNodeId, newNode.node.id),
+        );
+    }
+
+    if (newNode.kind === XorNodeKind.Ast) {
+        nodeIdMapCollection.astNodeById.set(newNode.node.id, newNode.node);
+    } else {
+        nodeIdMapCollection.contextNodeById.set(newNode.node.id, newNode.node);
+    }
 }
 
 export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {

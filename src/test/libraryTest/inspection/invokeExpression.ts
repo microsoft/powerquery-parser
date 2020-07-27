@@ -53,7 +53,7 @@ function expectParseErrInvokeExpressionOk<S extends IParserState = IParserState>
 }
 
 describe(`subset Inspection - InvokeExpression`, () => {
-    it("single invoke expression, no parameters", () => {
+    it("WIP single invoke expression, no parameters", () => {
         const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(|)");
         const inspected: InvokeExpression | undefined = expectParseOkInvokeExpressionOk(
             DefaultSettings,

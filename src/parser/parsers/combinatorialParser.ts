@@ -304,7 +304,7 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
     // We should only reach this code block if a primary expression was read.
     const primaryExpression: Ast.TPrimaryExpression = maybePrimaryExpression;
     if (IParserStateUtils.isRecursivePrimaryExpressionNext(state, state.tokenIndex)) {
-        return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
+    return parser.readRecursivePrimaryExpression(state, parser, primaryExpression);
     } else {
         return primaryExpression;
     }

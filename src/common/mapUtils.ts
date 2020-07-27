@@ -47,9 +47,19 @@ export function pick<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): Map<K, V> {
 }
 
 export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
-    Assert.isTrue(map.delete(key), maybeMessage ?? `delete failed as key is absent`, { key });
+    Assert.isTrue(map.delete(key), maybeMessage ?? `failed to delete, key is absent`, { key });
+}
+
+export function assertGet<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, details?: {}): V {
+    const maybeValue: V | undefined = map.get(key);
+    Assert.isDefined(maybeValue, maybeMessage ?? `failed to get, key is absent`, details ?? { key });
+    return maybeValue;
 }
 
 export function assertHas<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
     Assert.isTrue(map.has(key), maybeMessage ?? `key is absent`, { key });
+}
+
+export function assertNotHas<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+    Assert.isFalse(map.has(key), maybeMessage ?? `key is present`, { key });
 }
