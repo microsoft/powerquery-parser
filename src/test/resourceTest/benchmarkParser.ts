@@ -63,6 +63,8 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readSectionMember),
 
     // 12.2.3.1 Expressions
+    readNullCoalescingExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+        traceFunction(state, parser, state.baseParser.readNullCoalescingExpression),
     readExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readExpression),
 
@@ -244,14 +246,6 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readAnyLiteral),
     readPrimitiveType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readPrimitiveType),
-
-    // NullCoalescing
-    readNullCoalescingExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>, left: Ast.TExpression) => {
-        const readNullCoalescingExpressionLambda: () => Ast.NullCoalescingExpression = () =>
-            state.baseParser.readNullCoalescingExpression(state, (parser as unknown) as IParser<IParserState>, left);
-
-        return traceFunction(state, parser, readNullCoalescingExpressionLambda);
-    },
 
     // Disambiguation
     disambiguateBracket: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>

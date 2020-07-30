@@ -64,6 +64,10 @@ export function expectXorNodes(
     return nodeIds.map(nodeId => NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId));
 }
 
+export function maybeChildIds(childIdsById: NodeIdMap.ChildIdsById, nodeId: number): ReadonlyArray<number> | undefined {
+    return childIdsById.get(nodeId);
+}
+
 export function expectChildIds(childIdsById: NodeIdMap.ChildIdsById, nodeId: number): ReadonlyArray<number> {
     return MapUtils.expectGet(childIdsById, nodeId);
 }

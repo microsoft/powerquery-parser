@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "\"hau baino txikiagoa edo berdina\" eragilea ('<=')",
   "tokenKind_minus": "minus ikurra (<'-'>)",
   "tokenKind_notEqual": "\"ez da honen berdina\" eragilea ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "zenbakizko balio literala",
   "tokenKind_plus": "batuketaren eragilea (<'+'>)",

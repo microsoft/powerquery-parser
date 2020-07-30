@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "operator za manje jednako ('<=')",
   "tokenKind_minus": "minus <'-'>",
   "tokenKind_notEqual": "operator nejednakosti ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerička doslovna vrijednost",
   "tokenKind_plus": "operator zbrajanja <'+'>",

@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "से कम या के बराबर ऑपरेटर ('<=')",
   "tokenKind_minus": "ऋण <'-'>",
   "tokenKind_notEqual": "इसके बराबर नहीं ऑपरेटर ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "सांख्यिक अक्षरशः",
   "tokenKind_plus": "धनात्मक ऑपरेटर <'+'>",

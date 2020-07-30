@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "оператор \"меньше или равно\" ('<=')",
   "tokenKind_minus": "минус <'-'>",
   "tokenKind_notEqual": "оператор \"не равно\" ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "числовой литерал",
   "tokenKind_plus": "оператор сложения <'+'>",

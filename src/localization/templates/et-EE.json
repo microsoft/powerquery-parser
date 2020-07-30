@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "märk väiksem kui või võrdne ('<=')",
   "tokenKind_minus": "miinusmärk <'-'>",
   "tokenKind_notEqual": "märk ei võrdu ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "arvliteraal",
   "tokenKind_plus": "liitmismärk <'+'>",

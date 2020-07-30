@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "小於或等於運算子 ('<=')",
   "tokenKind_minus": "減號 <'-'>",
   "tokenKind_notEqual": "不等於運算子 ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "數值常值",
   "tokenKind_plus": "加法運算子 <'+'>",

@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "mindre end eller lig med-operatør ('<=')",
   "tokenKind_minus": "minus <'-'>",
   "tokenKind_notEqual": "ikke lig med-operatør ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerisk konstant",
   "tokenKind_plus": "Tilføjelsesoperatør <'+'>",

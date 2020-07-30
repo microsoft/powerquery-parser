@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "kleiner-dan-of-gelijkteken ('<=')",
   "tokenKind_minus": "min <'-'>",
   "tokenKind_notEqual": "niet-gelijk-aan-teken ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerieke letterlijke waarde",
   "tokenKind_plus": "plusteken <'+'>",

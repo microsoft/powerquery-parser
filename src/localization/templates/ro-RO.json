@@ -87,7 +87,7 @@
   "tokenKind_lessThanEqualTo": "operator „mai mic sau egal” ('<=')",
   "tokenKind_minus": "minus <'-'>",
   "tokenKind_notEqual": "operator „nu este egal” ('<>')",
-  "tokenKind_nullCoalescing": "TODO",
+  "tokenKind_nullCoalescingOperator": "TODO",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "valoare literală numerică",
   "tokenKind_plus": "operator de adunare <'+'>",
