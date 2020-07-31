@@ -578,6 +578,97 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
     const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorNodes(nodeIdMapCollection, [
         ...newNodeIdByOldNodeId.keys(),
     ]);
+    const newIds: ReadonlyArray<number> = [...newNodeIdByOldNodeId.values()];
+    const nodesTouched: Set<number> = new Set();
+
+    const partialCollection: Collection = {
+        astNodeById: new Map(),
+        childIdsById: new Map(),
+        contextNodeById: new Map(),
+        maybeRightMostLeaf: undefined,
+        parentIdById: new Map(),
+    };
+    for (const xorNode of xorNodes) {
+        const oldId: number = xorNode.node.id;
+        const newId: number = newNodeIdByOldNodeId.get(oldId)!;
+
+        if (xorNode.kind === XorNodeKind.Ast) {
+            partialCollection.astNodeById.set(newId, xorNode.node);
+        } else {
+            partialCollection.contextNodeById.set(newId, xorNode.node);
+        }
+
+        const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(oldId);
+        if (maybeChildIds !== undefined) {
+            // tslint:disable-next-line: prefer-array-literal
+            const childIds: number[] = new Array(maybeChildIds.length);
+            for (const childId of maybeChildIds) {
+                const newChildId: number = newNodeIdByOldNodeId.get(childId) ?? childId;
+                childIds.push(newChildId);
+            }
+            partialCollection.childIdsById.set(newId, childIds);
+        }
+
+        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
+        if (maybeParentId !== undefined) {
+            partialCollection.parentIdById.set(newId, newNodeIdByOldNodeId.get(oldId) ?? maybeParentId);
+
+            if (!partialCollection.childIdsById.has(maybeParentId)) {
+                const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
+                    nodeIdMapCollection.childIdsById,
+                    maybeParentId,
+                );
+                partialCollection.childIdsById.set(
+                    maybeParentId,
+                    ArrayUtils.replaceFirstInstance(childrenOfParent, oldId, newId).map(
+                        childId => newNodeIdByOldNodeId.get(childId) ?? childId,
+                    ),
+                );
+            }
+        }
+    }
+
+    for (const xorNode of xorNodes) {
+        const oldId: number = xorNode.node.id;
+        const newId: number = newNodeIdByOldNodeId.get(oldId)!;
+
+        if (xorNode.kind === XorNodeKind.Ast) {
+            const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = xorNode.node;
+            mutableNode.id = newId;
+            nodeIdMapCollection.astNodeById.set(newId, mutableNode);
+            if (!partialCollection.astNodeById.has(oldId)) {
+                nodeIdMapCollection.astNodeById.delete(oldId);
+            }
+        } else {
+            const mutableNode: TypeScriptUtils.StripReadonly<ParseContext.Node> = xorNode.node;
+            mutableNode.id = newId;
+            nodeIdMapCollection.contextNodeById.set(newId, mutableNode);
+            if (!partialCollection.contextNodeById.has(oldId)) {
+                nodeIdMapCollection.contextNodeById.delete(oldId);
+            }
+        }
+
+        const maybeParentId: number | undefined = partialCollection.parentIdById.get(newId);
+        if (maybeParentId !== undefined) {
+            nodeIdMapCollection.parentIdById.set(newId, maybeParentId);
+            if (!partialCollection.parentIdById.has(oldId)) {
+                MapUtils.assertDelete(nodeIdMapCollection.parentIdById, oldId);
+            }
+        } else {
+            MapUtils.assertDelete(nodeIdMapCollection.parentIdById, oldId);
+        }
+
+        const maybeChildIds: ReadonlyArray<number> | undefined = partialCollection.childIdsById.get(newId);
+        if (maybeChildIds !== undefined) {
+            nodeIdMapCollection.childIdsById.set(newId, maybeChildIds);
+            if (!partialCollection.parentIdById.has(oldId)) {
+                MapUtils.assertDelete(nodeIdMapCollection.childIdsById, oldId);
+            }
+        } else {
+            MapUtils.assertDelete(nodeIdMapCollection.childIdsById, oldId);
+        }
+    }
+
     for (const xorNode of xorNodes) {
         const oldNodeId: number = xorNode.node.id;
         const newNodeId: number = MapUtils.expectGet(newNodeIdByOldNodeId, oldNodeId);
