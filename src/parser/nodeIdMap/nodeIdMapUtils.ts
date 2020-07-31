@@ -556,31 +556,9 @@ export function recalculateId(nodeIdMapCollection: Collection, parserState: IPar
 }
 
 export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNodeId: Map<number, number>): void {
-    // const modifiedMap: Map<string,
-    // const mapItems: [number, number][] = [...newNodeIdByOldNodeId.entries()];
-    // key = new id
-    // value = old id
-    // const descendingByOldNodeId: ReadonlyArray<[number, number]> = mapItems.sort(
-    //     ([leftOldId, _leftNewId]: [number, number], [rightOldId, _rightNewId]: [number, number]) =>
-    //         rightOldId - leftOldId,
-    // );
-    // const readonly updatedNo
-    // const descendingByNewNodeId: ReadonlyArray<[number, number]> = mapItems.sort(
-    //     ([_leftOldId, leftNewId]: [number, number], [_rightOldId, rightNewId]: [number, number]) =>
-    //         rightNewId - leftNewId,
-    // );
-
-    const setNewAstIds: number[] = [];
-    const setNewContextIds: number[] = [];
-    const setNewParentIds: number[] = [];
-    const setNewChildrenIds: number[] = [];
-
     const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorNodes(nodeIdMapCollection, [
         ...newNodeIdByOldNodeId.keys(),
     ]);
-    const newIds: ReadonlyArray<number> = [...newNodeIdByOldNodeId.values()];
-    const nodesTouched: Set<number> = new Set();
-
     const partialCollection: Collection = {
         astNodeById: new Map(),
         childIdsById: new Map(),
@@ -599,31 +577,27 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
         }
 
         const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(oldId);
-        if (maybeChildIds !== undefined) {
-            // tslint:disable-next-line: prefer-array-literal
-            const childIds: number[] = new Array(maybeChildIds.length);
-            for (const childId of maybeChildIds) {
-                const newChildId: number = newNodeIdByOldNodeId.get(childId) ?? childId;
-                childIds.push(newChildId);
-            }
-            partialCollection.childIdsById.set(newId, childIds);
+        if (maybeChildIds !== undefined && !partialCollection.childIdsById.has(newId)) {
+            const newChildIds: ReadonlyArray<number> = maybeChildIds.map(
+                (childId: number) => newNodeIdByOldNodeId.get(childId) ?? childId,
+            );
+            partialCollection.childIdsById.set(newId, newChildIds);
         }
 
-        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
-        if (maybeParentId !== undefined) {
-            partialCollection.parentIdById.set(newId, newNodeIdByOldNodeId.get(oldId) ?? maybeParentId);
+        const maybeOldParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
+        if (maybeOldParentId !== undefined) {
+            const newParentId: number = newNodeIdByOldNodeId.get(maybeOldParentId) ?? maybeOldParentId;
+            partialCollection.parentIdById.set(newId, newParentId);
 
-            if (!partialCollection.childIdsById.has(maybeParentId)) {
-                const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
+            if (!partialCollection.childIdsById.has(newParentId)) {
+                const oldChildIdsOfParent: ReadonlyArray<number> = MapUtils.assertGet(
                     nodeIdMapCollection.childIdsById,
-                    maybeParentId,
+                    maybeOldParentId,
                 );
-                partialCollection.childIdsById.set(
-                    maybeParentId,
-                    ArrayUtils.replaceFirstInstance(childrenOfParent, oldId, newId).map(
-                        childId => newNodeIdByOldNodeId.get(childId) ?? childId,
-                    ),
+                const newChildIdsOfParent: ReadonlyArray<number> = oldChildIdsOfParent.map(
+                    (childId: number) => newNodeIdByOldNodeId.get(childId) ?? childId,
                 );
+                partialCollection.childIdsById.set(newId, newChildIdsOfParent);
             }
         }
     }
@@ -667,131 +641,6 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
         } else {
             MapUtils.assertDelete(nodeIdMapCollection.childIdsById, oldId);
         }
-    }
-
-    for (const xorNode of xorNodes) {
-        const oldNodeId: number = xorNode.node.id;
-        const newNodeId: number = MapUtils.expectGet(newNodeIdByOldNodeId, oldNodeId);
-        if (xorNode.kind === XorNodeKind.Ast) {
-            // A previous iteration might have already updated oldNodeId. Don't bulldoze over it.
-            if (!setNewAstIds.includes(oldNodeId)) {
-                MapUtils.assertDelete(nodeIdMapCollection.astNodeById, oldNodeId);
-            }
-            setNewAstIds.push(newNodeId);
-
-            // Mutate the node's Id and update the map to reflect the updated Id.
-            const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = xorNode.node;
-            mutableNode.id = newNodeId;
-            nodeIdMapCollection.astNodeById.set(newNodeId, mutableNode);
-        } else {
-            // A previous iteration might have already updated oldNodeId. Don't bulldoze over it.
-            if (!setNewContextIds.includes(oldNodeId)) {
-                MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, oldNodeId);
-            }
-            setNewContextIds.push(newNodeId);
-
-            // Mutate the node's Id and update the map to reflect the updated Id.
-            const mutableNode: TypeScriptUtils.StripReadonly<ParseContext.Node> = xorNode.node;
-            mutableNode.id = newNodeId;
-            nodeIdMapCollection.contextNodeById.set(newNodeId, mutableNode);
-        }
-
-        const maybeOldParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldNodeId);
-        if (maybeOldParentId !== undefined) {
-            const newParentId: number = newNodeIdByOldNodeId.get(maybeOldParentId) || maybeOldParentId;
-            if (!setNewParentIds.includes(oldNodeId)) {
-                nodeIdMapCollection.parentIdById.delete(oldNodeId);
-            }
-            nodeIdMapCollection.parentIdById.set(newNodeId, newParentId);
-            setNewParentIds.push(newNodeId);
-
-            // const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
-            //     nodeIdMapCollection.childIdsById,
-            //     maybeOldParentId,
-            // );
-            // if (childrenOfParent.includes(oldNodeId)) {
-            //     nodeIdMapCollection.childIdsById.set(
-            //         maybeOldParentId,
-            //         ArrayUtils.replaceFirstInstance(childrenOfParent, oldNodeId, newNodeId),
-            //     );
-            // }
-        }
-
-        const maybeOldChildren: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(oldNodeId);
-        if (maybeOldChildren !== undefined) {
-            if (!setNewChildrenIds.includes(oldNodeId)) {
-                nodeIdMapCollection.childIdsById.delete(oldNodeId);
-            }
-            const newChildren: ReadonlyArray<number> = maybeOldChildren.map(
-                (oldChildId: number) => newNodeIdByOldNodeId.get(oldChildId) || oldChildId,
-            );
-            nodeIdMapCollection.childIdsById.set(newNodeId, newChildren);
-            setNewChildrenIds.push(newNodeId);
-
-            for (const childId of maybeOldChildren) {
-                const newChildId: number = newNodeIdByOldNodeId.get(childId) || childId;
-                nodeIdMapCollection.parentIdById.set(newChildId, newNodeId);
-            }
-        }
-    }
-
-    // const oldNodeIdsinDescendingOrder: ReadonlyArray<number> = [...oldNodeIdByNewNodeId.values()].sort().reverse();
-    // for (const [newNodeId, oldNodeId] of descendingByOldNodeId) {
-    //     const xorNode: TXorNode = expectXorNode(nodeIdMapCollection, oldNodeId);
-
-    //     if (xorNode.kind === XorNodeKind.Ast) {
-    //         MapUtils.assertDelete(nodeIdMapCollection.astNodeById, oldNodeId);
-    //         const mutableNode: TypeScriptUtils.StripReadonly<Ast.TNode> = xorNode.node;
-    //         mutableNode.id = newNodeId;
-    //     } else {
-    //         MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, oldNodeId);
-    //         const mutableNode: TypeScriptUtils.StripReadonly<ParseContext.Node> = xorNode.node;
-    //         mutableNode.id = newNodeId;
-    //     }
-    // }
-
-    // for (const [newNodeId, oldNodeId] of descendingByNewNodeId) {
-    //     const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldNodeId);
-    //     if (maybeParentId !== undefined) {
-    //         nodeIdMapCollection.parentIdById.delete(oldNodeId);
-    //         nodeIdMapCollection.parentIdById.set(newNodeId, maybeParentId);
-    //         nodeIdMapCollection.childIdsById.set(
-    //             maybeParentId,
-    //             ArrayUtils.replaceFirstInstance(
-    //                 MapUtils.assertGet(nodeIdMapCollection.childIdsById, maybeParentId),
-    //                 oldNodeId,
-    //                 newNodeId,
-    //             ),
-    //         );
-    //     }
-
-    //     const maybeChildren: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(oldNodeId);
-    //     if (maybeChildren !== undefined) {
-    //         nodeIdMapCollection.childIdsById.delete(oldNodeId);
-    //         nodeIdMapCollection.childIdsById.set(newNodeId, maybeChildren);
-    //     }
-    // }
-}
-
-export function assertReplaceNode(nodeIdMapCollection: Collection, oldNodeId: number, newNode: TXorNode): void {
-    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldNodeId);
-    if (maybeParentId !== undefined) {
-        const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
-            nodeIdMapCollection.childIdsById,
-            maybeParentId,
-            `oldNodeId has a parent, so parentId should have oldNode as a child`,
-            { oldNodeId, parentId: maybeParentId },
-        );
-        nodeIdMapCollection.childIdsById.set(
-            maybeParentId,
-            ArrayUtils.replaceFirstInstance(childrenOfParent, oldNodeId, newNode.node.id),
-        );
-    }
-
-    if (newNode.kind === XorNodeKind.Ast) {
-        nodeIdMapCollection.astNodeById.set(newNode.node.id, newNode.node);
-    } else {
-        nodeIdMapCollection.contextNodeById.set(newNode.node.id, newNode.node);
     }
 }
 
