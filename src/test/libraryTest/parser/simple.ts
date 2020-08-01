@@ -1228,6 +1228,18 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
+    it(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
+        const text: string = `1 ?? a`;
+        const expected: ReadonlyArray<AbridgedNode> = [
+            [Ast.NodeKind.NullCoalescingExpression, undefined],
+            [Ast.NodeKind.LiteralExpression, 0],
+            [Ast.NodeKind.Constant, 1],
+            [Ast.NodeKind.IdentifierExpression, 2],
+            [Ast.NodeKind.Identifier, 1],
+        ];
+        expectAbridgeNodes(text, expected);
+    });
+
     // Ast.NodeKind.OtherwiseExpression covered by `${Ast.NodeKind.ErrorHandlingExpression} otherwise`
 
     // Ast.NodeKind.Parameter covered by many
