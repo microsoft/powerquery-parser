@@ -782,7 +782,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(`WIP ${Ast.NodeKind.InvokeExpression}`, () => {
+    it(`${Ast.NodeKind.InvokeExpression}`, () => {
         const text: string = `foo()`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.RecursivePrimaryExpression, undefined],
