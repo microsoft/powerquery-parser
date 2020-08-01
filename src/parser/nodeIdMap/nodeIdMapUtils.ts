@@ -6,8 +6,6 @@ import { ParseContext } from "..";
 import { Language } from "../..";
 import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast } from "../../language";
-import { ParseContextUtils } from "../context";
-import { IParserState } from "../IParserState";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
 
@@ -34,7 +32,7 @@ export function assertDeleteXorNodeId(nodeIdMapCollection: Collection, nodeId: n
     }
 }
 
-export function assertReplaceXorNodeId(nodeIdMapCollection: Collection, oldId: number, newNode: TXorNode): void {
+export function assertReplaceXorNodeId(nodeIdMapCollection: Collection, oldId: number): void {
     Assert.isFalse(nodeIdMapCollection.childIdsById.has(oldId));
     Assert.isTrue(
         nodeIdMapCollection.astNodeById.delete(oldId) || nodeIdMapCollection.contextNodeById.delete(oldId),
