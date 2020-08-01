@@ -8,7 +8,7 @@ import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
 import { ParseSettings } from "../../settings";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
+import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
 export interface FastStateBackup {
@@ -145,37 +145,6 @@ export function incrementAttributeCounter(state: IParserState): void {
     Assert.isDefined(state.maybeCurrentContextNode, `state.maybeCurrentContextNode`);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
     currentContextNode.attributeCounter += 1;
-}
-
-// Recalculates the id numbers of the Ast, starting with the given TXorNode and continuing for all of its children.
-// Used to help reset a node's id for recursive node kinds, such as RecursivePrimaryExpression.
-//
-// Mutates the NodeIdMap.Collection and the TXorNodes it holds.
-// Assumes the given arguments are valid as this function does no validation.
-export function recalculateId(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    parserState: IParserState,
-    nodeStart: TXorNode,
-): void {
-    // A helper stack we use for recursively visiting children nodes.
-    const newNodeIdByOldNodeId: Map<number, number> = new Map();
-    let nodeStack: TXorNode[] = [nodeStart];
-    let currentNode: TXorNode | undefined = nodeStack.pop();
-    while (currentNode !== undefined) {
-        const newNodeId: number = ParseContextUtils.nextId(parserState.contextState);
-        newNodeIdByOldNodeId.set(currentNode.node.id, newNodeId);
-
-        const childrenOfCurrentNode: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
-            nodeIdMapCollection,
-            currentNode.node.id,
-        );
-        const reversedChildrenOfCurrentNode: ReadonlyArray<TXorNode> = [...childrenOfCurrentNode].reverse();
-        nodeStack = nodeStack.concat(reversedChildrenOfCurrentNode);
-
-        currentNode = nodeStack.pop();
-    }
-
-    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId);
 }
 
 // -------------------------

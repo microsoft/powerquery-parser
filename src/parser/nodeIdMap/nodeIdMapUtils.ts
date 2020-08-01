@@ -526,9 +526,58 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
     return false;
 }
 
+// Mutates the NodeIdMap.Collection by reshuffling the TXorNode.node.id numbers.
+// The result will maintain the invariant where IDs are assigned
+// sequentially in order of when the node was parsed in the Ast.
+//
+// Assumes the initial NodeIdMap.Collection state is valid.
+// It will not validate that the invariant holds true for nodes not under nodeStart.
+export function reassignIds(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    // parserState: IParserState,
+    nodeStart: TXorNode,
+): void {
+    const visitedXorNodes: TXorNode[] = [];
+    const nodeIds: number[] = [];
+
+    // A helper stack used to recursively visit all nodes under nodeStart.
+    // const newNodeIdByOldNodeId: Map<number, number> = new Map();
+    let nodeStack: TXorNode[] = [];
+    let currentNode: TXorNode | undefined = nodeStart;
+
+    while (currentNode !== undefined) {
+        nodeIds.push(currentNode.node.id);
+        visitedXorNodes.push(currentNode);
+        // const newNodeId: number = ParseContextUtils.nextId(parserState.contextState);
+        // newNodeIdByOldNodeId.set(currentNode.node.id, newNodeId);
+
+        const childrenOfCurrentNode: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
+            nodeIdMapCollection,
+            currentNode.node.id,
+        );
+        const reversedChildrenOfCurrentNode: ReadonlyArray<TXorNode> = [...childrenOfCurrentNode].reverse();
+        nodeStack = nodeStack.concat(reversedChildrenOfCurrentNode);
+
+        currentNode = nodeStack.pop();
+    }
+
+    nodeIds.sort((left: number, right: number) => left - right);
+    const newNodeIdByOldNodeId: Map<number, number> = new Map(
+        visitedXorNodes.map((xorNode: TXorNode, index: number) => {
+            return [xorNode.node.id, nodeIds[index]];
+        }),
+    );
+
+    updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId);
+}
+
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
 // Assumes the given arguments are valid as this function does no validation.
 export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNodeId: Map<number, number>): void {
+    if (newNodeIdByOldNodeId.size === 0) {
+        return;
+    }
+
     // We'll be iterating over them twice, so grab them once.
     const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorNodes(nodeIdMapCollection, [
         ...newNodeIdByOldNodeId.keys(),

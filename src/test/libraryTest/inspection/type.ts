@@ -794,7 +794,7 @@ describe(`Inspection - Scope - Type`, () => {
                     expectParseOkNodeTypeEqual(expression, expected);
                 });
 
-                it("a[b]?", () => {
+                it("WIP a[b]?", () => {
                     const expression: string = `[a=1][b]?`;
                     const expected: Type.TType = Type.NullInstance;
                     expectParseOkNodeTypeEqual(expression, expected);
