@@ -528,11 +528,11 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
     return false;
 }
 
-// Recalculates id of an ast if it was reshaped.
-// Assumes parseContextState had its idCounter counter set correctly beforehand.
+// Recalculates the id numbers of the Ast, starting with the given TXorNode and continuing for all of its children.
+// Used to help reset a node's id for recursive node kinds, such as RecursivePrimaryExpression.
 //
-// Used to help reset a node's id for recursive node kinds,
-// such as NullCoealescingExpression or RecursivePrimaryExpression.
+// Mutates the NodeIdMap.Collection and the TXorNodes it holds.
+// Assumes the given arguments are valid before as this function does no validation.
 export function recalculateId(nodeIdMapCollection: Collection, parserState: IParserState, nodeStart: TXorNode): void {
     // A helper stack we use for recursively visiting children nodes.
     const newNodeIdByOldNodeId: Map<number, number> = new Map();
@@ -555,10 +555,14 @@ export function recalculateId(nodeIdMapCollection: Collection, parserState: IPar
     updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId);
 }
 
+// Given a mapping of (existingId) => (newId) thism utates the NodeIdMap.Collection and the TXorNodes it holds.
 export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNodeId: Map<number, number>): void {
+    // We'll be iterating over them twice, so grab them once.
     const xorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorNodes(nodeIdMapCollection, [
         ...newNodeIdByOldNodeId.keys(),
     ]);
+
+    // Storage for the change delta before modifying nodeIdMapCollection.
     const partialCollection: Collection = {
         astNodeById: new Map(),
         childIdsById: new Map(),
@@ -566,6 +570,8 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
         maybeRightMostLeaf: undefined,
         parentIdById: new Map(),
     };
+
+    // Build up the change delta.
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
         const newId: number = newNodeIdByOldNodeId.get(oldId)!;
@@ -576,6 +582,8 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
             partialCollection.contextNodeById.set(newId, xorNode.node);
         }
 
+        // If the node has children and the change delta hasn't been calculated,
+        // then calculate the children for the change delta.
         const maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(oldId);
         if (maybeChildIds !== undefined && !partialCollection.childIdsById.has(newId)) {
             const newChildIds: ReadonlyArray<number> = maybeChildIds.map(
@@ -584,11 +592,15 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
             partialCollection.childIdsById.set(newId, newChildIds);
         }
 
+        // If the node has a parent,
+        // then calculate the updated parent for the change delta.
         const maybeOldParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
         if (maybeOldParentId !== undefined) {
             const newParentId: number = newNodeIdByOldNodeId.get(maybeOldParentId) ?? maybeOldParentId;
             partialCollection.parentIdById.set(newId, newParentId);
 
+            // If the parent has children and the change delta hasn't been calculated for the parent's children,
+            // then calculate the children for the change delta.
             if (!partialCollection.childIdsById.has(newParentId)) {
                 const oldChildIdsOfParent: ReadonlyArray<number> = MapUtils.assertGet(
                     nodeIdMapCollection.childIdsById,
@@ -597,11 +609,12 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
                 const newChildIdsOfParent: ReadonlyArray<number> = oldChildIdsOfParent.map(
                     (childId: number) => newNodeIdByOldNodeId.get(childId) ?? childId,
                 );
-                partialCollection.childIdsById.set(newId, newChildIdsOfParent);
+                partialCollection.childIdsById.set(newParentId, newChildIdsOfParent);
             }
         }
     }
 
+    // Apply the change delta
     for (const xorNode of xorNodes) {
         const oldId: number = xorNode.node.id;
         const newId: number = newNodeIdByOldNodeId.get(oldId)!;
@@ -629,7 +642,7 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
                 MapUtils.assertDelete(nodeIdMapCollection.parentIdById, oldId);
             }
         } else {
-            MapUtils.assertDelete(nodeIdMapCollection.parentIdById, oldId);
+            nodeIdMapCollection.parentIdById.delete(newId);
         }
 
         const maybeChildIds: ReadonlyArray<number> | undefined = partialCollection.childIdsById.get(newId);
@@ -639,7 +652,7 @@ export function updateNodeIds(nodeIdMapCollection: Collection, newNodeIdByOldNod
                 MapUtils.assertDelete(nodeIdMapCollection.childIdsById, oldId);
             }
         } else {
-            MapUtils.assertDelete(nodeIdMapCollection.childIdsById, oldId);
+            nodeIdMapCollection.childIdsById.delete(newId);
         }
     }
 }

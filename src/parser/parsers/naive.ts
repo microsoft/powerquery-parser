@@ -705,6 +705,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     Assert.isDefined(state.maybeCurrentContextNode);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
+    // Update parent attributes.
     const parentOfHeadId: number = MapUtils.assertGet(nodeIdMapCollection.parentIdById, head.id);
     nodeIdMapCollection.childIdsById.set(
         parentOfHeadId,

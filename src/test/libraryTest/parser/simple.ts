@@ -250,7 +250,7 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.Csv covered by many
 
-    it(Ast.NodeKind.EachExpression, () => {
+    it(`${Ast.NodeKind.EachExpression}`, () => {
         const text: string = `each 1`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.EachExpression, undefined],
@@ -315,7 +315,7 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    it(Ast.NodeKind.ErrorRaisingExpression, () => {
+    it(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
         const text: string = `error 1`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.ErrorRaisingExpression, undefined],
@@ -478,7 +478,7 @@ describe("Parser.AbridgedNode", () => {
     });
 
     describe(`${Ast.NodeKind.FieldSpecificationList}`, () => {
-        it(Ast.NodeKind.FieldSpecificationList, () => {
+        it(`${Ast.NodeKind.FieldSpecificationList}`, () => {
             const text: string = `type [x]`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.TypePrimaryType, undefined],
@@ -720,7 +720,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.GeneralizedIdentifierPairedExpression, () => {
+    it(`${Ast.NodeKind.GeneralizedIdentifierPairedExpression}`, () => {
         const text: string = `[x=1]`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.RecordExpression, undefined],
@@ -738,7 +738,7 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.Identifier covered by many
 
-    it(Ast.NodeKind.IdentifierExpression, () => {
+    it(`${Ast.NodeKind.IdentifierExpression}`, () => {
         const text: string = `@foo`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.IdentifierExpression, undefined],
@@ -748,7 +748,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.IdentifierPairedExpression, () => {
+    it(`${Ast.NodeKind.IdentifierPairedExpression}`, () => {
         const text: string = `section; x = 1;`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.Section, undefined],
@@ -765,7 +765,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.IfExpression, () => {
+    it(`${Ast.NodeKind.IfExpression}`, () => {
         const text: string = `if x then x else x`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.IfExpression, undefined],
@@ -782,7 +782,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.InvokeExpression, () => {
+    it(`WIP ${Ast.NodeKind.InvokeExpression}`, () => {
         const text: string = `foo()`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.RecursivePrimaryExpression, undefined],
@@ -827,7 +827,7 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    it(Ast.NodeKind.ItemAccessExpression, () => {
+    it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
         const text: string = `x{1}`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.RecursivePrimaryExpression, undefined],
@@ -878,7 +878,7 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    it(Ast.NodeKind.LetExpression, () => {
+    it(`${Ast.NodeKind.LetExpression}`, () => {
         const text: string = `let x = 1 in x`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.LetExpression, undefined],
@@ -1051,7 +1051,7 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    it(Ast.NodeKind.ListType, () => {
+    it(`${Ast.NodeKind.ListType}`, () => {
         const text: string = `type {number}`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.TypePrimaryType, undefined],
@@ -1181,7 +1181,7 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    it(Ast.NodeKind.MetadataExpression, () => {
+    it(`${Ast.NodeKind.MetadataExpression}`, () => {
         const text: string = `1 meta 1`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.MetadataExpression, undefined],
@@ -1192,7 +1192,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.NotImplementedExpression, () => {
+    it(`${Ast.NodeKind.NotImplementedExpression}`, () => {
         const text: string = `...`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.NotImplementedExpression, undefined],
@@ -1201,7 +1201,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.NullablePrimitiveType, () => {
+    it(`${Ast.NodeKind.NullablePrimitiveType}`, () => {
         const text: string = `1 is nullable number`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.IsExpression, undefined],
@@ -1215,7 +1215,7 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(Ast.NodeKind.NullableType, () => {
+    it(`${Ast.NodeKind.NullableType}`, () => {
         const text: string = `type nullable number`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.TypePrimaryType, undefined],
@@ -1234,7 +1234,7 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.ParameterList covered by many
 
-    it(Ast.NodeKind.ParenthesizedExpression, () => {
+    it(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
         const text: string = `(1)`;
         const expected: ReadonlyArray<AbridgedNode> = [
             [Ast.NodeKind.ParenthesizedExpression, undefined],
