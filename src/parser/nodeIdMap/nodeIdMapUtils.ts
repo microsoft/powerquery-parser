@@ -55,20 +55,20 @@ export function assertReplaceXorNodeId(nodeIdMapCollection: Collection, oldId: n
 
 export function assertSetNewXorNode(nodeIdMapCollection: Collection, xorNode: TXorNode): void {
     if (xorNode.kind === XorNodeKind.Ast) {
-        MapUtils.assertNotHas(nodeIdMapCollection.astNodeById, xorNode.node.id);
+        MapUtils.assertNotIn(nodeIdMapCollection.astNodeById, xorNode.node.id);
         nodeIdMapCollection.astNodeById.set(xorNode.node.id, xorNode.node);
     } else {
-        MapUtils.assertNotHas(nodeIdMapCollection.contextNodeById, xorNode.node.id);
+        MapUtils.assertNotIn(nodeIdMapCollection.contextNodeById, xorNode.node.id);
         nodeIdMapCollection.contextNodeById.set(xorNode.node.id, xorNode.node);
     }
 }
 
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
-    return MapUtils.expectGet(astNodeById, nodeId);
+    return MapUtils.assertGet(astNodeById, nodeId);
 }
 
 export function expectContextNode(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
-    return MapUtils.expectGet(contextNodeById, nodeId);
+    return MapUtils.assertGet(contextNodeById, nodeId);
 }
 
 export function maybeXorNode(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {

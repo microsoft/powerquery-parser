@@ -126,7 +126,7 @@ export function deleteAst(state: State, nodeId: number, parentWillBeDeleted: boo
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    MapUtils.assertHas(astNodeById, nodeId);
+    MapUtils.assertIn(astNodeById, nodeId);
 
     // If Node was a leaf node, remove it from the list of leaf nodes.
     removeLeafOrNoop(state, nodeId);

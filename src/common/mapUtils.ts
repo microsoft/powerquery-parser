@@ -3,13 +3,6 @@
 
 import { Assert } from ".";
 
-export function expectGet<K, V>(map: Map<K, V>, key: K): V {
-    const maybeValue: V | undefined = map.get(key);
-    Assert.isDefined(maybeValue, `key not found in given map`, { key });
-
-    return maybeValue;
-}
-
 export function equalMaps<K, V>(
     left: Map<K, V>,
     right: Map<K, V>,
@@ -56,10 +49,10 @@ export function assertGet<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, d
     return maybeValue;
 }
 
-export function assertHas<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+export function assertIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
     Assert.isTrue(map.has(key), maybeMessage ?? `key is absent`, { key });
 }
 
-export function assertNotHas<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+export function assertNotIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
     Assert.isFalse(map.has(key), maybeMessage ?? `key is present`, { key });
 }

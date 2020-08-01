@@ -69,7 +69,7 @@ export function maybeChildIds(childIdsById: NodeIdMap.ChildIdsById, nodeId: numb
 }
 
 export function expectChildIds(childIdsById: NodeIdMap.ChildIdsById, nodeId: number): ReadonlyArray<number> {
-    return MapUtils.expectGet(childIdsById, nodeId);
+    return MapUtils.assertGet(childIdsById, nodeId);
 }
 
 export function expectAstChildren(
