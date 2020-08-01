@@ -333,28 +333,21 @@ export function readNullCoalescingExpression<S extends IParserState = IParserSta
 }
 
 export function readExpression<S extends IParserState = IParserState>(state: S, parser: IParser<S>): Ast.TExpression {
-    let expression: Ast.TExpression;
-
     switch (state.maybeCurrentTokenKind) {
         case Language.TokenKind.KeywordEach:
-            expression = parser.readEachExpression(state, parser);
-            break;
+            return parser.readEachExpression(state, parser);
 
         case Language.TokenKind.KeywordLet:
-            expression = parser.readLetExpression(state, parser);
-            break;
+            return parser.readLetExpression(state, parser);
 
         case Language.TokenKind.KeywordIf:
-            expression = parser.readIfExpression(state, parser);
-            break;
+            return parser.readIfExpression(state, parser);
 
         case Language.TokenKind.KeywordError:
-            expression = parser.readErrorRaisingExpression(state, parser);
-            break;
+            return parser.readErrorRaisingExpression(state, parser);
 
         case Language.TokenKind.KeywordTry:
-            expression = parser.readErrorHandlingExpression(state, parser);
-            break;
+            return parser.readErrorHandlingExpression(state, parser);
 
         case Language.TokenKind.LeftParenthesis:
             const triedDisambiguation: Result<
@@ -368,23 +361,18 @@ export function readExpression<S extends IParserState = IParserState>(state: S, 
 
             switch (disambiguation) {
                 case ParenthesisDisambiguation.FunctionExpression:
-                    expression = parser.readFunctionExpression(state, parser);
-                    break;
+                    return parser.readFunctionExpression(state, parser);
 
                 case ParenthesisDisambiguation.ParenthesizedExpression:
-                    expression = parser.readLogicalExpression(state, parser);
-                    break;
+                    return parser.readLogicalExpression(state, parser);
 
                 default:
                     throw Assert.isNever(disambiguation);
             }
-            break;
 
         default:
-            expression = parser.readLogicalExpression(state, parser);
+            return parser.readLogicalExpression(state, parser);
     }
-
-    return expression;
 }
 
 // --------------------------------------------------
