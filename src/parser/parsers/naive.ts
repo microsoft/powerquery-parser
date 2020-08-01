@@ -728,7 +728,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
 
     // Recalculate ids after shuffling things around.
     state.contextState.idCounter = parentOfHeadId - 1;
-    NodeIdMapUtils.recalculateId(
+    IParserStateUtils.recalculateId(
         nodeIdMapCollection,
         state,
         NodeIdMapUtils.expectXorNode(
