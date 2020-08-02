@@ -1228,16 +1228,45 @@ describe("Parser.AbridgedNode", () => {
         expectAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
-        const text: string = `1 ?? a`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.NullCoalescingExpression, undefined],
-            [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.IdentifierExpression, 2],
-            [Ast.NodeKind.Identifier, 1],
-        ];
-        expectAbridgeNodes(text, expected);
+    describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
+        it(`1 ?? a`, () => {
+            const text: string = `1 ?? a`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.IdentifierExpression, 2],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+
+        it(`1 ?? 1 ?? 1`, () => {
+            const text: string = `1 ?? 1 ?? 1`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.NullCoalescingExpression, 2],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+
+        it(`1 ?? try ""`, () => {
+            const text: string = `1 ?? try ""`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Ast.NodeKind.LiteralExpression, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.ErrorHandlingExpression, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
     });
 
     // Ast.NodeKind.OtherwiseExpression covered by `${Ast.NodeKind.ErrorHandlingExpression} otherwise`

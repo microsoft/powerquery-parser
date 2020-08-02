@@ -328,7 +328,7 @@ export function readNullCoalescingExpression<S extends IParserState = IParserSta
             maybeCurrentTokenKind === Language.TokenKind.NullCoalescingOperator
                 ? Ast.MiscConstantKind.NullCoalescingOperator
                 : undefined,
-        () => parser.readArithmeticExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
     );
 }
 
