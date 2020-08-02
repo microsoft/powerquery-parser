@@ -9,58 +9,6 @@ import { Ast } from "../../language";
 import { AstNodeById, Collection, ContextNodeById } from "./nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "./xorNode";
 
-export function assertDeleteXorNode(nodeIdMapCollection: Collection, xorNode: TXorNode): void {
-    assertDeleteXorNodeId(nodeIdMapCollection, xorNode.node.id);
-}
-
-export function assertDeleteXorNodeId(nodeIdMapCollection: Collection, nodeId: number): void {
-    Assert.isFalse(nodeIdMapCollection.childIdsById.has(nodeId));
-    Assert.isTrue(
-        nodeIdMapCollection.astNodeById.delete(nodeId) || nodeIdMapCollection.contextNodeById.delete(nodeId),
-        "nodeIdMapCollection.astNodeById.delete(nodeId) || nodeIdMapCollection.contextNodeById.delete(nodeId)",
-    );
-
-    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
-    if (maybeParentId !== undefined) {
-        const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
-            nodeIdMapCollection.childIdsById,
-            maybeParentId,
-            `nodeId has a parent, so parentId should have nodeId as a child`,
-            { nodeId, parentId: maybeParentId },
-        );
-        nodeIdMapCollection.childIdsById.set(maybeParentId, ArrayUtils.removeFirstInstance(childrenOfParent, nodeId));
-    }
-}
-
-export function assertReplaceXorNodeId(nodeIdMapCollection: Collection, oldId: number): void {
-    Assert.isFalse(nodeIdMapCollection.childIdsById.has(oldId));
-    Assert.isTrue(
-        nodeIdMapCollection.astNodeById.delete(oldId) || nodeIdMapCollection.contextNodeById.delete(oldId),
-        "nodeIdMapCollection.astNodeById.delete(nodeId) || nodeIdMapCollection.contextNodeById.delete(nodeId)",
-    );
-
-    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(oldId);
-    if (maybeParentId !== undefined) {
-        const childrenOfParent: ReadonlyArray<number> = MapUtils.assertGet(
-            nodeIdMapCollection.childIdsById,
-            maybeParentId,
-            `nodeId has a parent, so parentId should have nodeId as a child`,
-            { nodeId: oldId, parentId: maybeParentId },
-        );
-        nodeIdMapCollection.childIdsById.set(maybeParentId, ArrayUtils.removeFirstInstance(childrenOfParent, oldId));
-    }
-}
-
-export function assertSetNewXorNode(nodeIdMapCollection: Collection, xorNode: TXorNode): void {
-    if (xorNode.kind === XorNodeKind.Ast) {
-        MapUtils.assertNotIn(nodeIdMapCollection.astNodeById, xorNode.node.id);
-        nodeIdMapCollection.astNodeById.set(xorNode.node.id, xorNode.node);
-    } else {
-        MapUtils.assertNotIn(nodeIdMapCollection.contextNodeById, xorNode.node.id);
-        nodeIdMapCollection.contextNodeById.set(xorNode.node.id, xorNode.node);
-    }
-}
-
 export function expectAstNode(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return MapUtils.assertGet(astNodeById, nodeId);
 }
