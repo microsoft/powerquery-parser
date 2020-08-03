@@ -1,8 +1,24 @@
 import os
 import shutil
 
-LOCALIZATION_DROP_DIR = r""
+LOCALIZATION_DIR = r"\\simpleloc\drops\Drops\PowerQuery_parser_2490\"
 POWERQUERY_PARSER_DIR = os.path.dirname(os.path.dirname(__file__))
+
+latest_dir = None
+for entry in os.scandir(LOCALIZATION_DIR):
+    if not entry.is_dir():
+        continue
+    elif latest_dir is None or latest_dir < entry:
+        latest_dir = entry
+
+assert latest_dir is not None
+
+LOCALIZATION_DROP_DIR = os.path.join(
+    latest_dir,
+    "BinDrops",
+    "Windows",
+    "bin",
+)
 
 for entry in os.scandir(LOCALIZATION_DROP_DIR):
     if not entry.is_dir():
