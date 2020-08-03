@@ -1,3 +1,7 @@
+# This script pulls in the latest localization drop provided by Microsoft
+# and will update the localization templates under "..\src\localization\templates".
+# It cannot be run by someone who does not have access to Microsoft's localization drops.
+
 import os
 import shutil
 import sys
