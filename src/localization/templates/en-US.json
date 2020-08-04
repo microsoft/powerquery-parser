@@ -260,6 +260,9 @@
     "tokenKind_minus": "minus <'-'>",
     "_tokenKind_minus.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'-'>\"}",
 
+    "tokenKind_nullCoalescing": "null coalescing <'??'>",
+    "_tokenKind_nullCoalescing.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'??'>\"}",
+
     "tokenKind_notEqual": "not equal to operator ('<>')",
     "_tokenKind_notEqual.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('<>')\"}",
 
