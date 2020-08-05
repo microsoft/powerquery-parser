@@ -32,6 +32,7 @@ export const enum UnterminatedKind {
 export class ParseError<S extends IParserState = IParserState> extends Error {
     constructor(readonly innerError: TInnerParseError, readonly state: S) {
         super(innerError.message);
+        Object.setPrototypeOf(this, ParseError.prototype);
     }
 }
 
@@ -42,6 +43,7 @@ export class ExpectedCsvContinuationError extends Error {
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_csvContinuation(templates, kind));
+        Object.setPrototypeOf(this, ExpectedCsvContinuationError.prototype);
     }
 }
 
@@ -52,6 +54,7 @@ export class ExpectedAnyTokenKindError extends Error {
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKinds, maybeFoundToken));
+        Object.setPrototypeOf(this, ExpectedAnyTokenKindError.prototype);
     }
 }
 
@@ -62,12 +65,14 @@ export class ExpectedTokenKindError extends Error {
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectTokenKind(templates, expectedTokenKind, maybeFoundToken));
+        Object.setPrototypeOf(this, ExpectedTokenKindError.prototype);
     }
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
     constructor(templates: ILocalizationTemplates, readonly maybeFoundToken: TokenWithColumnNumber | undefined) {
         super(Localization.error_parse_expectGeneralizedIdentifier(templates, maybeFoundToken));
+        Object.setPrototypeOf(this, ExpectedGeneralizedIdentifierError.prototype);
     }
 }
 
@@ -78,6 +83,7 @@ export class InvalidPrimitiveTypeError extends Error {
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_invalidPrimitiveType(templates, token));
+        Object.setPrototypeOf(this, InvalidPrimitiveTypeError.prototype);
     }
 }
 
@@ -88,6 +94,7 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_requiredParameterAfterOptional(templates));
+        Object.setPrototypeOf(this, RequiredParameterAfterOptionalParameterError.prototype);
     }
 }
 
@@ -98,6 +105,7 @@ export class UnterminatedBracketError extends Error {
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unterminated_bracket(templates));
+        Object.setPrototypeOf(this, UnterminatedBracketError.prototype);
     }
 }
 
@@ -108,6 +116,7 @@ export class UnterminatedParenthesesError extends Error {
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unterminated_parenthesis(templates));
+        Object.setPrototypeOf(this, UnterminatedParenthesesError.prototype);
     }
 }
 
@@ -118,6 +127,7 @@ export class UnusedTokensRemainError extends Error {
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unusedTokens(templates));
+        Object.setPrototypeOf(this, UnusedTokensRemainError.prototype);
     }
 }
 
