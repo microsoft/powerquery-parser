@@ -7,18 +7,21 @@ export type TInnerCommonError = InvariantError | UnknownError;
 export class CommonError extends Error {
     constructor(readonly innerError: TInnerCommonError) {
         super(innerError.message);
+        Object.setPrototypeOf(this, CommonError.prototype);
     }
 }
 
 export class InvariantError extends Error {
     constructor(readonly invariantBroken: string, readonly maybeDetails: any | undefined = undefined) {
         super(Localization.error_common_invariantError(DefaultTemplates, invariantBroken, maybeDetails));
+        Object.setPrototypeOf(this, InvariantError.prototype);
     }
 }
 
 export class UnknownError extends Error {
     constructor(templates: ILocalizationTemplates, readonly innerError: any) {
         super(Localization.error_common_unknown(templates, innerError));
+        Object.setPrototypeOf(this, UnknownError.prototype);
     }
 }
 

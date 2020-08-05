@@ -50,6 +50,7 @@ export const enum UnterminatedMultilineTokenKind {
 export class LexError extends Error {
     constructor(readonly innerError: TInnerLexError) {
         super(innerError.message);
+        Object.setPrototypeOf(this, LexError);
     }
 }
 
@@ -61,30 +62,35 @@ export class BadLineNumberError extends Error {
         readonly numLines: number,
     ) {
         super(Localization.error_lex_badLineNumber(templates, kind));
+        Object.setPrototypeOf(this, BadLineNumberError.prototype);
     }
 }
 
 export class BadRangeError extends Error {
     constructor(templates: ILocalizationTemplates, readonly range: Lexer.Range, readonly kind: BadRangeKind) {
         super(Localization.error_lex_badRange(templates, kind));
+        Object.setPrototypeOf(this, BadRangeError.prototype);
     }
 }
 
 export class BadStateError extends Error {
     constructor(templates: ILocalizationTemplates, readonly innerError: TLexError) {
         super(Localization.error_lex_badState(templates));
+        Object.setPrototypeOf(this, BadStateError.prototype);
     }
 }
 
 export class ErrorLineMapError extends Error {
     constructor(templates: ILocalizationTemplates, readonly errorLineMap: Lexer.ErrorLineMap) {
         super(Localization.error_lex_lineMap(templates, errorLineMap));
+        Object.setPrototypeOf(this, ErrorLineMapError.prototype);
     }
 }
 
 export class EndOfStreamError extends Error {
     constructor(templates: ILocalizationTemplates) {
         super(Localization.error_lex_endOfStream(templates));
+        Object.setPrototypeOf(this, EndOfStreamError.prototype);
     }
 }
 
@@ -95,18 +101,21 @@ export class ExpectedError extends Error {
         readonly kind: ExpectedKind,
     ) {
         super(Localization.error_lex_expectedKind(templates, kind));
+        Object.setPrototypeOf(this, ExpectedError.prototype);
     }
 }
 
 export class UnexpectedEofError extends Error {
     constructor(templates: ILocalizationTemplates, readonly graphemePosition: StringUtils.GraphemePosition) {
         super(Localization.error_lex_endOfStreamPartwayRead(templates));
+        Object.setPrototypeOf(this, UnexpectedEofError.prototype);
     }
 }
 
 export class UnexpectedReadError extends Error {
     constructor(templates: ILocalizationTemplates, readonly graphemePosition: StringUtils.GraphemePosition) {
         super(Localization.error_lex_unexpectedRead(templates));
+        Object.setPrototypeOf(this, UnexpectedReadError.prototype);
     }
 }
 
@@ -117,6 +126,7 @@ export class UnterminatedMultilineTokenError extends Error {
         readonly kind: UnterminatedMultilineTokenKind,
     ) {
         super(Localization.error_lex_unterminatedMultilineToken(templates, kind));
+        Object.setPrototypeOf(this, UnterminatedMultilineTokenError.prototype);
     }
 }
 
