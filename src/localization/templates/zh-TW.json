@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "右中括號 <']'>",
   "tokenKind_rightParenthesis": "右括弧 <')'>",
   "tokenKind_semicolon": "分號 <';'>",
-  "tokenKind_stringLiteral": "字串"
+  "tokenKind_textLiteral": "字串"
 }

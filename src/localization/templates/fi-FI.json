@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "oikea hakasulje <']'>",
   "tokenKind_rightParenthesis": "oikea sulje <')'>",
   "tokenKind_semicolon": "puolipiste <';'>",
-  "tokenKind_stringLiteral": "merkkijono"
+  "tokenKind_textLiteral": "merkkijono"
 }

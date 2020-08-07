@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "labā kvadrātiekava <']'>",
   "tokenKind_rightParenthesis": "labā iekava <')'>",
   "tokenKind_semicolon": "semikols <';'>",
-  "tokenKind_stringLiteral": "virkne"
+  "tokenKind_textLiteral": "virkne"
 }

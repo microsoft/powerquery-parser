@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "vierkante haak rechts <']'>",
   "tokenKind_rightParenthesis": "ronde haak rechts <')'>",
   "tokenKind_semicolon": "puntkomma <';'>",
-  "tokenKind_stringLiteral": "tekenreeks"
+  "tokenKind_textLiteral": "tekenreeks"
 }

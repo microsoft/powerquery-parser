@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "desna uglasta zagrada <']'>",
   "tokenKind_rightParenthesis": "desna zagrada <')'>",
   "tokenKind_semicolon": "tačka i zarez <';'>",
-  "tokenKind_stringLiteral": "niska"
+  "tokenKind_textLiteral": "niska"
 }

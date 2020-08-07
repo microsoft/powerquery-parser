@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "pravá hranatá zátvorka <']'>",
   "tokenKind_rightParenthesis": "pravá okrúhla zátvorka <')'>",
   "tokenKind_semicolon": "bodkočiarka <';'>",
-  "tokenKind_stringLiteral": "reťazec"
+  "tokenKind_textLiteral": "reťazec"
 }

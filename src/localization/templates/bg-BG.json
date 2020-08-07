@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "дясна квадратна скоба <']'>",
   "tokenKind_rightParenthesis": "дясна кръгла скоба <')'>",
   "tokenKind_semicolon": "точка и запетая <';'>",
-  "tokenKind_stringLiteral": "низ"
+  "tokenKind_textLiteral": "низ"
 }

@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "sağ köşeli ayraç <']'>",
   "tokenKind_rightParenthesis": "sağ ayraç <')'>",
   "tokenKind_semicolon": "noktalı virgül <';'>",
-  "tokenKind_stringLiteral": "dize"
+  "tokenKind_textLiteral": "dize"
 }

@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "dấu ngoặc vuông đóng <']'>",
   "tokenKind_rightParenthesis": "dấu ngoặc đơn đóng <')'>",
   "tokenKind_semicolon": "dấu chấm phẩy <';'>",
-  "tokenKind_stringLiteral": "xâu"
+  "tokenKind_textLiteral": "xâu"
 }

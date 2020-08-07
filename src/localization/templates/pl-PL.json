@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "zamykający nawias kwadratowy <']'>",
   "tokenKind_rightParenthesis": "zamykający nawias okrągły <')'>",
   "tokenKind_semicolon": "średnik <';'>",
-  "tokenKind_stringLiteral": "ciąg"
+  "tokenKind_textLiteral": "ciąg"
 }

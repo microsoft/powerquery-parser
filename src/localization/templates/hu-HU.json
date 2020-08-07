@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "jobb oldali szögletes zárójel <']'>",
   "tokenKind_rightParenthesis": "jobb oldali kerek zárójel <')'>",
   "tokenKind_semicolon": "pontosvessző <';'>",
-  "tokenKind_stringLiteral": "karakterlánc"
+  "tokenKind_textLiteral": "karakterlánc"
 }

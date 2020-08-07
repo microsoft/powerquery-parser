@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "corchete de cierre <']'>",
   "tokenKind_rightParenthesis": "paréntesis de cierre <')'>",
   "tokenKind_semicolon": "punto y coma <';'>",
-  "tokenKind_stringLiteral": "cadena"
+  "tokenKind_textLiteral": "cadena"
 }

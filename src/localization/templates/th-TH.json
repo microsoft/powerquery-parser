@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "วงเล็บเหลี่ยมขวา <']'>",
   "tokenKind_rightParenthesis": "วงเล็บขวา <')'>",
   "tokenKind_semicolon": "เครื่องหมายอัฒภาค <';'>",
-  "tokenKind_stringLiteral": "สตริง"
+  "tokenKind_textLiteral": "สตริง"
 }
