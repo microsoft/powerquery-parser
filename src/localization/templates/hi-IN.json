@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "दायाँ कोष्ठक <']'>",
   "tokenKind_rightParenthesis": "दायाँ लघुकोष्ठक <')'>",
   "tokenKind_semicolon": "अर्द्धविराम <';'>",
-  "tokenKind_stringLiteral": "स्ट्रिंग"
+  "tokenKind_textLiteral": "स्ट्रिंग"
 }

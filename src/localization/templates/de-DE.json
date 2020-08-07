@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "rechte eckige Klammer <']'>",
   "tokenKind_rightParenthesis": "rechte runde Klammer <')'>",
   "tokenKind_semicolon": "Semikolon <';'>",
-  "tokenKind_stringLiteral": "Zeichenfolge"
+  "tokenKind_textLiteral": "Zeichenfolge"
 }

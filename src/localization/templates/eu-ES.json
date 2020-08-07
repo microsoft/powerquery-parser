@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "eskuineko kortxetea (<']'>)",
   "tokenKind_rightParenthesis": "eskuineko parentesia (<')'>)",
   "tokenKind_semicolon": "Puntu eta koma (<';'>)",
-  "tokenKind_stringLiteral": "katea"
+  "tokenKind_textLiteral": "katea"
 }

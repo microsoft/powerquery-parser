@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "закрывающая квадратная скобка <']'>",
   "tokenKind_rightParenthesis": "закрывающая круглая скобка <')'>",
   "tokenKind_semicolon": "точка с запятой <';'>",
-  "tokenKind_stringLiteral": "строка"
+  "tokenKind_textLiteral": "строка"
 }

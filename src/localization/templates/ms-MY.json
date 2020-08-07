@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "tanda kurung kanan <']'>",
   "tokenKind_rightParenthesis": "tanda kurung kanan <')'>",
   "tokenKind_semicolon": "Koma bertitik <';'>",
-  "tokenKind_stringLiteral": "rentetan"
+  "tokenKind_textLiteral": "rentetan"
 }

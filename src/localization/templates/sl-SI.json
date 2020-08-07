@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "desni oglati oklepaj <']'>",
   "tokenKind_rightParenthesis": "desni okrogli oklepaj <')'>",
   "tokenKind_semicolon": "podpičje <';'>",
-  "tokenKind_stringLiteral": "niz"
+  "tokenKind_textLiteral": "niz"
 }

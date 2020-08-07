@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "claudàtor de tancament <']'>",
   "tokenKind_rightParenthesis": "parèntesi de tancament <')'>",
   "tokenKind_semicolon": "punt i coma <';'>",
-  "tokenKind_stringLiteral": "cadena"
+  "tokenKind_textLiteral": "cadena"
 }

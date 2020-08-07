@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "højre firkantet parentes <']'>",
   "tokenKind_rightParenthesis": "højre parentes <')'>",
   "tokenKind_semicolon": "semikolon <';'>",
-  "tokenKind_stringLiteral": "streng"
+  "tokenKind_textLiteral": "streng"
 }

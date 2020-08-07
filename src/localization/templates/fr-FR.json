@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "crochet droit <']'>",
   "tokenKind_rightParenthesis": "parenthèse droite <')'>",
   "tokenKind_semicolon": "point-virgule <';'>",
-  "tokenKind_stringLiteral": "chaîne"
+  "tokenKind_textLiteral": "chaîne"
 }

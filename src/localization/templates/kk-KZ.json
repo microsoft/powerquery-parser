@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "оң жақ тік жақша <']'>",
   "tokenKind_rightParenthesis": "оң жақ жақша <')'>",
   "tokenKind_semicolon": "нүктелі үтір <';'>",
-  "tokenKind_stringLiteral": "жол"
+  "tokenKind_textLiteral": "жол"
 }

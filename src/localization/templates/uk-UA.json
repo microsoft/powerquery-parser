@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "права квадратна дужка <']'>",
   "tokenKind_rightParenthesis": "права дужка <')'>",
   "tokenKind_semicolon": "крапка з комою <';'>",
-  "tokenKind_stringLiteral": "рядок"
+  "tokenKind_textLiteral": "рядок"
 }

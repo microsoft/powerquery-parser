@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "dešinysis laužtinis skliaustas <']'>",
   "tokenKind_rightParenthesis": "dešinysis skliaustas <')'>",
   "tokenKind_semicolon": "kabliataškis <';'>",
-  "tokenKind_stringLiteral": "eilutė"
+  "tokenKind_textLiteral": "eilutė"
 }

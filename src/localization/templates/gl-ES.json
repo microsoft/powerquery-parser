@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "corchete de peche <']'>",
   "tokenKind_rightParenthesis": "paréntese de peche <')'>",
   "tokenKind_semicolon": "punto e coma <';'>",
-  "tokenKind_stringLiteral": "cadea"
+  "tokenKind_textLiteral": "cadea"
 }

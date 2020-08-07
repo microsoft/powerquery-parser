@@ -95,5 +95,5 @@
   "tokenKind_rightBracket": "右角かっこ <']'>",
   "tokenKind_rightParenthesis": "右かっこ <')'>",
   "tokenKind_semicolon": "セミコロン <';'>",
-  "tokenKind_stringLiteral": "文字列"
+  "tokenKind_textLiteral": "文字列"
 }
