@@ -260,7 +260,7 @@
     "tokenKind_minus": "minus <'-'>",
     "_tokenKind_minus.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'-'>\"}",
 
-    "tokenKind_nullCoalescing": "null coalescing <'??'>",
+    "tokenKind_nullCoalescingOperator": "null coalescing operator <'??'>",
     "_tokenKind_nullCoalescing.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'??'>\"}",
 
     "tokenKind_notEqual": "not equal to operator ('<>')",
@@ -270,6 +270,7 @@
     "_tokenKind_nullLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'null'>\"}",
 
     "tokenKind_numericLiteral": "numeric literal",
+    "tokenKind_numericLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing.",
 
     "tokenKind_plus": "addition operator <'+'>",
     "_tokenKind_plus.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'+'>\"}",
@@ -289,6 +290,6 @@
     "tokenKind_semicolon": "semicolon <';'>",
     "_tokenKind_semicolon.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<';'>\"}",
 
-    "tokenKind_stringLiteral": "string",
-    "_tokenKind_stringLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing."
+    "tokenKind_textLiteral": "string",
+    "_tokenKind_textLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing."
 }
