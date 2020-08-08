@@ -6,10 +6,11 @@ export type TExtendedType =
     | AnyUnion
     | DefinedFunction
     | DefinedList
-    | ListType
     | DefinedRecord
     | DefinedTable
     | DefinedType<TType>
+    | ListType
+    | PartiallyDefinedList
     | PrimaryExpressionTable;
 export type TExtendedTypeKind =
     | TypeKind.Any
@@ -88,8 +89,7 @@ export const enum TypeKind {
     Time = "Time",
 
     // Some NodeKinds are non-typeable, such as ArrayWrapper.
-    // NodeKinds can contain non-typeable and still be typeable.
-    // Eg. a RecordExpression's fields are stored in an ArrayWrapper yet still can be typed.
+    // There can be nodes which are typable but contain non-typable childrne, such as RecordExpressions.
     NotApplicable = "NotApplicable",
     // Something that can't be typed due to a lack of information.
     // Eg. '[', a RecordExpression which the user hasn't entered any fields for.
@@ -104,6 +104,7 @@ export const enum ExtendedTypeKind {
     DefinedTable = "DefinedTable",
     DefinedType = "DefinedType",
     ListType = "ListType",
+    PartiallyDefinedList = "PartiallyDefinedList",
     PrimaryExpressionTable = "PrimaryExpressionTable",
 }
 
@@ -135,6 +136,7 @@ export interface DefinedFunction extends IExtendedType {
     readonly returnType: TType;
 }
 
+// A list which has a finite number of elements.
 export interface DefinedList extends IExtendedType {
     readonly kind: TypeKind.List;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedList;
@@ -165,6 +167,13 @@ export interface DefinedType<T extends TType> extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedType;
     readonly primaryType: T;
+}
+
+// A list which has elements of a certain type, but the number of elements is unknown.
+export interface PartiallyDefinedList extends IExtendedType {
+    readonly kind: TypeKind.List;
+    readonly maybeExtendedKind: ExtendedTypeKind.PartiallyDefinedList;
+    readonly typesAllowed: ReadonlyArray<TType>;
 }
 
 export interface PrimaryExpressionTable extends IExtendedType {
