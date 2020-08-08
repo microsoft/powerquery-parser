@@ -270,7 +270,7 @@
     "_tokenKind_nullLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'null'>\"}",
 
     "tokenKind_numericLiteral": "numeric literal",
-    "tokenKind_numericLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing.",
+    "_tokenKind_numericLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing.",
 
     "tokenKind_plus": "addition operator <'+'>",
     "_tokenKind_plus.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'+'>\"}",
