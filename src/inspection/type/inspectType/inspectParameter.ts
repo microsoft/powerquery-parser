@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { inspectFromChildAttributeIndex } from "./inspectType";
+import { inspectFromChildAttributeIndex } from "./common";
 
 export function inspectParameter(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Parameter);

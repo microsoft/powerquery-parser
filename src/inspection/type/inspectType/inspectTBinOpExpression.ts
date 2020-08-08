@@ -6,7 +6,7 @@ import { Ast, AstUtils } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { inspectXorNode } from "./inspectType";
+import { inspectXorNode } from "./common";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 

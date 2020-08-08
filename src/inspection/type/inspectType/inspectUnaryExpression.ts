@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { inspectXorNode } from "./inspectType";
+import { inspectXorNode } from "./common";
 
 export function inspectUnaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.UnaryExpression);

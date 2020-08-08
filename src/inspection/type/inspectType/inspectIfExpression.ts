@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { allForAnyUnion, inspectFromChildAttributeIndex } from "./inspectType";
+import { allForAnyUnion, inspectFromChildAttributeIndex } from "./common";
 
 export function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IfExpression);

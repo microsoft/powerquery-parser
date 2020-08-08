@@ -6,7 +6,7 @@ import { Ast } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { inspectFromChildAttributeIndex } from "./inspectType";
+import { inspectFromChildAttributeIndex } from "./common";
 
 export function inspectFunctionType(
     state: TypeInspectionState,

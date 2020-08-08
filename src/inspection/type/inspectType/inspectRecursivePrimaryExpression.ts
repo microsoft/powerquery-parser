@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { inspectFromChildAttributeIndex, inspectXorNode } from "./inspectType";
+import { inspectFromChildAttributeIndex, inspectXorNode } from "./common";
 
 export function inspectRecursivePrimaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);

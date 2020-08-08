@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { inspectXorNode } from "./inspectType";
+import { inspectXorNode } from "./common";
 
 export function inspectRecord(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
     XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);

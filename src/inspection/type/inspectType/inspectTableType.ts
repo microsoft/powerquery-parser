@@ -6,7 +6,7 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { TypeInspectionState } from "../type";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
-import { inspectXorNode } from "./inspectType";
+import { inspectXorNode } from "./common";
 
 export function inspectTableType(
     state: TypeInspectionState,

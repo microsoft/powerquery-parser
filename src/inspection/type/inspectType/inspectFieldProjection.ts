@@ -6,7 +6,7 @@ import { Ast } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
 import { TypeInspectionState } from "../type";
-import { inspectXorNode } from "./inspectType";
+import { inspectXorNode } from "./common";
 
 export function inspectFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
