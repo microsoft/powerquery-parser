@@ -397,6 +397,9 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
         case Type.ExtendedTypeKind.ListType:
             return equalListType(left, right as Type.ListType);
 
+        case Type.ExtendedTypeKind.PartiallyDefinedList:
+            return equalPartiallyDefinedList(left, right as Type.PartiallyDefinedList);
+
         case Type.ExtendedTypeKind.PrimaryExpressionTable:
             return equalPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
 
@@ -482,6 +485,20 @@ export function equalDefinedType<T extends Type.TType>(left: Type.DefinedType<T>
 
 export function equalListType(left: Type.ListType, right: Type.ListType): boolean {
     return left === right || (left.isNullable === right.isNullable && equalType(left.itemType, right.itemType));
+}
+
+export function equalPartiallyDefinedList(left: Type.PartiallyDefinedList, right: Type.PartiallyDefinedList): boolean {
+    if (left.typesAllowed.length !== right.typesAllowed.length) {
+        return false;
+    }
+
+    for (const leftType of left.typesAllowed) {
+        if (typeNotInArray(right.typesAllowed, leftType)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 export function equalPrimaryExpressionTable(
