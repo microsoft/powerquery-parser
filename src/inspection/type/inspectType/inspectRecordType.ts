@@ -4,7 +4,7 @@
 import { Ast } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
-import { TypeInspectionState } from "../type";
+import { TypeInspectionState } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
 export function inspectRecordType(

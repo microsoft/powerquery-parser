@@ -3,14 +3,13 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { Type, TypeUtils } from "../../../type";
+import { ExpectedType, Type, TypeUtils } from "../../../type";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
 function expectParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
@@ -57,7 +56,7 @@ function expectExpectedTypeOk(
     );
     Assert.isDefined(maybeActiveNode);
 
-    const triedExpectedType: Inspection.TriedExpectedType = Inspection.tryExpectedType(
+    const triedExpectedType: ExpectedType.TriedExpectedType = ExpectedType.tryExpectedType(
         DefaultSettings,
         maybeActiveNode,
     );

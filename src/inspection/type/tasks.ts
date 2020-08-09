@@ -7,8 +7,8 @@ import { NodeIdMap, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { Type } from "../../type";
 import { ScopeById, ScopeItemByKey } from "../scope";
-import { getOrCreateScope, getOrCreateType, inspectXorNode } from "./inspectType";
-import { ScopeTypeByKey, TypeById, TypeInspectionState } from "./type";
+import { ScopeTypeByKey } from "../scope";
+import { getOrCreateScope, getOrFindType, inspectXorNode, TypeById, TypeInspectionState } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
@@ -63,7 +63,7 @@ function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeType
 
     for (const scopeItem of scopeItemByKey.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
-            state.deltaTypeById.set(scopeItem.id, getOrCreateType(state, scopeItem));
+            state.deltaTypeById.set(scopeItem.id, getOrFindType(state, scopeItem));
         }
     }
 

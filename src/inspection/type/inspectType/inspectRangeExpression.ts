@@ -4,8 +4,7 @@
 import { Ast } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
-import { TypeInspectionState } from "../type";
-import { inspectFromChildAttributeIndex } from "./common";
+import { inspectFromChildAttributeIndex, TypeInspectionState } from "./common";
 
 export function inspectRangeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RangeExpression);

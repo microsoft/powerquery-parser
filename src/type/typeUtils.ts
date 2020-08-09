@@ -394,11 +394,11 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
         case Type.ExtendedTypeKind.DefinedType:
             return equalDefinedType(left, right as Type.DefinedType<T>);
 
+        case Type.ExtendedTypeKind.GenericList:
+            return equalPartiallyDefinedList(left, right as Type.GenericList);
+
         case Type.ExtendedTypeKind.ListType:
             return equalListType(left, right as Type.ListType);
-
-        case Type.ExtendedTypeKind.PartiallyDefinedList:
-            return equalPartiallyDefinedList(left, right as Type.PartiallyDefinedList);
 
         case Type.ExtendedTypeKind.PrimaryExpressionTable:
             return equalPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
@@ -487,7 +487,7 @@ export function equalListType(left: Type.ListType, right: Type.ListType): boolea
     return left === right || (left.isNullable === right.isNullable && equalType(left.itemType, right.itemType));
 }
 
-export function equalPartiallyDefinedList(left: Type.PartiallyDefinedList, right: Type.PartiallyDefinedList): boolean {
+export function equalPartiallyDefinedList(left: Type.GenericList, right: Type.GenericList): boolean {
     if (left.typesAllowed.length !== right.typesAllowed.length) {
         return false;
     }

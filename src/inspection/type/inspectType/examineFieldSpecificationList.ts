@@ -4,7 +4,7 @@
 import { Ast } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
-import { TypeInspectionState } from "../type";
+import { TypeInspectionState } from "./common";
 import { inspectFieldSpecification } from "./inspectFieldSpecification";
 
 export interface ExaminedFieldSpecificationList {

@@ -22,7 +22,7 @@ import {
     XorNodeUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
-import { Type } from "./type";
+import { ExpectedType, Type } from "./type";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
@@ -175,7 +175,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         return triedScopeType;
     }
 
-    const triedExpectedType: Inspection.TriedExpectedType = Inspection.tryExpectedType(settings, activeNode);
+    const triedExpectedType: ExpectedType.TriedExpectedType = ExpectedType.tryExpectedType(settings, activeNode);
     if (ResultUtils.isErr(triedExpectedType)) {
         return triedExpectedType;
     }

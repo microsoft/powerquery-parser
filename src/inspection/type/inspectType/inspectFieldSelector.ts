@@ -5,8 +5,7 @@ import { Assert } from "../../../common";
 import { Ast } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
-import { TypeInspectionState } from "../type";
-import { inspectXorNode } from "./common";
+import { inspectXorNode, TypeInspectionState } from "./common";
 
 export function inspectFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSelector);

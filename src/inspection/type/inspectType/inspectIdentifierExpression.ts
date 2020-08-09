@@ -4,8 +4,7 @@
 import { Ast } from "../../../language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
-import { TypeInspectionState } from "../type";
-import { maybeDereferencedIdentifierType } from "./common";
+import { maybeDereferencedIdentifierType, TypeInspectionState } from "./common";
 
 export function inspectIdentifierExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IdentifierExpression);

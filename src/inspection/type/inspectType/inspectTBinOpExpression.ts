@@ -5,8 +5,7 @@ import { Assert, CommonError } from "../../../common";
 import { Ast, AstUtils } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
-import { TypeInspectionState } from "../type";
-import { inspectXorNode } from "./common";
+import { inspectXorNode, TypeInspectionState } from "./common";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 

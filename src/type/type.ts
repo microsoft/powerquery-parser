@@ -10,7 +10,7 @@ export type TExtendedType =
     | DefinedTable
     | DefinedType<TType>
     | ListType
-    | PartiallyDefinedList
+    | GenericList
     | PrimaryExpressionTable;
 export type TExtendedTypeKind =
     | TypeKind.Any
@@ -104,7 +104,7 @@ export const enum ExtendedTypeKind {
     DefinedTable = "DefinedTable",
     DefinedType = "DefinedType",
     ListType = "ListType",
-    PartiallyDefinedList = "PartiallyDefinedList",
+    GenericList = "PartiallyDefinedList",
     PrimaryExpressionTable = "PrimaryExpressionTable",
 }
 
@@ -170,9 +170,10 @@ export interface DefinedType<T extends TType> extends IExtendedType {
 }
 
 // A list which has elements of a certain type, but the number of elements is unknown.
-export interface PartiallyDefinedList extends IExtendedType {
+// Think of IList<T>
+export interface GenericList extends IExtendedType {
     readonly kind: TypeKind.List;
-    readonly maybeExtendedKind: ExtendedTypeKind.PartiallyDefinedList;
+    readonly maybeExtendedKind: ExtendedTypeKind.GenericList;
     readonly typesAllowed: ReadonlyArray<TType>;
 }
 

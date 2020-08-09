@@ -4,8 +4,7 @@
 import { Ast } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
-import { TypeInspectionState } from "../type";
-import { inspectFromChildAttributeIndex, inspectXorNode } from "./common";
+import { inspectFromChildAttributeIndex, inspectXorNode, TypeInspectionState } from "./common";
 
 export function inspectErrorHandlingExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ErrorHandlingExpression);

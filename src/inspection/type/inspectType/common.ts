@@ -3,10 +3,10 @@
 
 import { Assert, ResultUtils } from "../../../common";
 import { Ast } from "../../../language";
-import { AncestryUtils, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { AncestryUtils, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { CommonSettings } from "../../../settings";
 import { Type, TypeUtils } from "../../../type";
-import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScopeItem } from "../../scope";
-import { TypeInspectionState } from "../type";
+import { ScopeById, ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScopeItem } from "../../scope";
 import { inspectConstant } from "./inspectConstant";
 import { inspectErrorHandlingExpression } from "./inspectErrorHandlingExpression";
 import { inspectFieldProjection } from "./inspectFieldProjection";
@@ -30,6 +30,17 @@ import { inspectRecursivePrimaryExpression } from "./inspectRecursivePrimaryExpr
 import { inspectTableType } from "./inspectTableType";
 import { inspectTBinOpExpression } from "./inspectTBinOpExpression";
 import { inspectUnaryExpression } from "./inspectUnaryExpression";
+
+export interface TypeInspectionState {
+    readonly settings: CommonSettings;
+    readonly givenTypeById: TypeById;
+    readonly deltaTypeById: TypeById;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+    scopeById: ScopeById;
+}
+
+export type TypeById = Map<number, Type.TType>;
 
 export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
@@ -235,7 +246,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
     return result;
 }
 
-export function getOrCreateType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+export function getOrFindType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
     const nodeId: number = scopeItem.id;
 
     const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);

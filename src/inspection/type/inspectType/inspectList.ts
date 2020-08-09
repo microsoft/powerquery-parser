@@ -3,8 +3,7 @@
 
 import { NodeIdMapIterator, TXorNode } from "../../../parser";
 import { Type } from "../../../type";
-import { TypeInspectionState } from "../type";
-import { inspectXorNode } from "./common";
+import { inspectXorNode, TypeInspectionState } from "./common";
 
 export function inspectList(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedList {
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
