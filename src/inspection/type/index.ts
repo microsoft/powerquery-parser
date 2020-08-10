@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as CheckType from "./checkType";
 import * as Type from "./inspectType";
+import * as TypeCheck from "./typeCheck";
 
-export { CheckType, Type };
+export { Type, TypeCheck };
 export * from "./tasks";

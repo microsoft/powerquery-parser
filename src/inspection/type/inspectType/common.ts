@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ResultUtils } from "../../../common";
+import { Assert, CommonError, Result, ResultUtils } from "../../../common";
 import { Ast } from "../../../language";
-import { AncestryUtils, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
 import { Type, TypeUtils } from "../../../type";
-import { ScopeById, ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScopeItem } from "../../scope";
+import { ScopeById, ScopeItemByKey, ScopeItemKind, tryScopeItems, TScopeItem } from "../../scope";
+import { TypeById } from "../common";
 import { inspectConstant } from "./inspectConstant";
 import { inspectErrorHandlingExpression } from "./inspectErrorHandlingExpression";
 import { inspectFieldProjection } from "./inspectFieldProjection";
@@ -40,7 +41,43 @@ export interface TypeInspectionState {
     scopeById: ScopeById;
 }
 
-export type TypeById = Map<number, Type.TType>;
+export function getOrFindScopeItemType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+    const nodeId: number = scopeItem.id;
+
+    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeGivenType !== undefined) {
+        return maybeGivenType;
+    }
+
+    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeDeltaType !== undefined) {
+        return maybeDeltaType;
+    }
+
+    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
+    return scopeType;
+}
+
+export function expectGetOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
+    const triedGetOrCreateScope: Result<ScopeItemByKey, CommonError.CommonError> = getOrCreateScope(state, nodeId);
+    if (ResultUtils.isErr(triedGetOrCreateScope)) {
+        throw triedGetOrCreateScope.error;
+    }
+
+    return triedGetOrCreateScope.value;
+}
+
+export function getOrCreateScope(
+    state: TypeInspectionState,
+    nodeId: number,
+): Result<ScopeItemByKey, CommonError.CommonError> {
+    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
+    if (maybeScope !== undefined) {
+        return ResultUtils.okFactory(maybeScope);
+    }
+
+    return tryScopeItems(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
+}
 
 export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
@@ -246,44 +283,6 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
     return result;
 }
 
-export function getOrFindType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
-    const nodeId: number = scopeItem.id;
-
-    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeGivenType !== undefined) {
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeDeltaType !== undefined) {
-        return maybeDeltaType;
-    }
-
-    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
-    return scopeType;
-}
-
-export function getOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
-    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
-    if (maybeScope !== undefined) {
-        return maybeScope;
-    }
-
-    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
-    const triedScope: TriedScopeForRoot = tryScopeItems(
-        state.settings,
-        state.nodeIdMapCollection,
-        state.leafNodeIds,
-        ancestry[0].node.id,
-        state.scopeById,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        throw triedScope.error;
-    }
-
-    return triedScope.value;
-}
-
 export function inspectFromChildAttributeIndex(
     state: TypeInspectionState,
     parentXorNode: TXorNode,
@@ -346,7 +345,7 @@ export function maybeDereferencedIdentifierType(state: TypeInspectionState, xorN
             throw Assert.isNever(deferenced);
     }
 
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, deferenced.id);
+    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, deferenced.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
     if (maybeScopeItem === undefined || (maybeScopeItem.isRecursive === true && isIdentifierRecurisve === false)) {
         return undefined;
@@ -415,7 +414,7 @@ function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNo
             throw Assert.isNever(identifier);
     }
 
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, identifier.id);
+    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, identifier.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
 
     if (

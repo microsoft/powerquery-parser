@@ -46,7 +46,12 @@ function expectParseNodeOk(
     leafNodeIds: ReadonlyArray<number>,
     xorNode: TXorNode,
 ): Type.TType {
-    const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, leafNodeIds, xorNode);
+    const triedType: Inspection.TriedType = Inspection.tryType(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        xorNode.node.id,
+    );
     Assert.isOk(triedType);
 
     return triedType.value;

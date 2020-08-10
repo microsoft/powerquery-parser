@@ -30,7 +30,9 @@ export function isTInnerCommonError(x: any): x is TInnerCommonError {
 }
 
 export function ensureCommonError(templates: ILocalizationTemplates, err: Error): CommonError {
-    if (isTInnerCommonError(err)) {
+    if (err instanceof CommonError) {
+        return err;
+    } else if (isTInnerCommonError(err)) {
         return new CommonError(err);
     } else {
         return new CommonError(new UnknownError(templates, err));

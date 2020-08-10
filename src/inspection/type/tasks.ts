@@ -3,12 +3,13 @@
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { getLocalizationTemplates } from "../../localization";
-import { NodeIdMap, TXorNode } from "../../parser";
+import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { Type } from "../../type";
 import { ScopeById, ScopeItemByKey } from "../scope";
 import { ScopeTypeByKey } from "../scope";
-import { getOrCreateScope, getOrFindType, inspectXorNode, TypeById, TypeInspectionState } from "./inspectType";
+import { TypeById } from "./common";
+import { expectGetOrCreateScope, getOrFindScopeItemType, inspectXorNode, TypeInspectionState } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
@@ -43,7 +44,7 @@ export function tryType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    xorNode: TXorNode,
+    nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedType {
     const state: TypeInspectionState = {
@@ -55,15 +56,17 @@ export function tryType(
         scopeById: maybeTypeCache?.typeById ?? new Map(),
     };
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectXorNode(state, xorNode));
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
+        inspectXorNode(state, NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId)),
+    );
 }
 
 function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeTypeByKey {
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, nodeId);
+    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, nodeId);
 
     for (const scopeItem of scopeItemByKey.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
-            state.deltaTypeById.set(scopeItem.id, getOrFindType(state, scopeItem));
+            state.deltaTypeById.set(scopeItem.id, getOrFindScopeItemType(state, scopeItem));
         }
     }
 
