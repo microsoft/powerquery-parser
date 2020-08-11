@@ -5,7 +5,7 @@ import { Type } from "..";
 import { Assert } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
-import { isEqualType } from "./equalType";
+import { isTypeInArray } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
 export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
@@ -14,10 +14,10 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
 
     for (const item of types) {
         if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-            if (typeNotInArray(anyUnionTypes, item)) {
+            if (!isTypeInArray(anyUnionTypes, item)) {
                 anyUnionTypes.push(item);
             }
-        } else if (typeNotInArray(notAnyUnionTypes, item)) {
+        } else if (!isTypeInArray(notAnyUnionTypes, item)) {
             notAnyUnionTypes.push(item);
         }
     }
@@ -36,7 +36,7 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
         const typesNotInDedupedAnyUnion: Type.TType[] = [];
 
         for (const item of notAnyUnionTypes) {
-            if (typeNotInArray(dedupedAnyUnion.unionedTypePairs, item)) {
+            if (!isTypeInArray(dedupedAnyUnion.unionedTypePairs, item)) {
                 if (item.isNullable) {
                     isNullableEncountered = true;
                 }
@@ -56,7 +56,7 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
     // dedupedAnyUnion is not an AnyUnion.
     // Merge dedupedAnyUnion into notAnyUnionTypes.
     else {
-        if (typeNotInArray(notAnyUnionTypes, dedupedAnyUnion)) {
+        if (!isTypeInArray(notAnyUnionTypes, dedupedAnyUnion)) {
             notAnyUnionTypes.push(dedupedAnyUnion);
         }
 
@@ -78,7 +78,7 @@ export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.T
             if (type.isNullable === true) {
                 isNullable = true;
             }
-            if (typeNotInArray(simplified, type)) {
+            if (!isTypeInArray(simplified, type)) {
                 simplified.push(type);
             }
         }
@@ -239,13 +239,4 @@ function inspectContextParameter(
         isNullable,
         maybeType,
     };
-}
-
-function typeNotInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
-    return (
-        // Fast comparison
-        collection.indexOf(item) === -1 &&
-        // Deep comparison
-        collection.find((type: Type.TType) => isEqualType(item, type)) === undefined
-    );
 }

@@ -30,7 +30,7 @@ export function isEqualTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: R
 
     const numTypes: number = leftTypes.length;
     for (let index: number = 0; index < numTypes; index += 1) {
-        if (isEqualType(leftTypes[index], rightTypes[index]) === false) {
+        if (!isTypeInArray(leftTypes, rightTypes[index])) {
             return false;
         }
     }
@@ -68,7 +68,7 @@ export function isEqualExtendedTypes<T extends Type.TType>(
             return isEqualDefinedType(left, right as Type.DefinedType<T>);
 
         case Type.ExtendedTypeKind.GenericList:
-            return isEqualPartiallyDefinedList(left, right as Type.GenericList);
+            return isEqualGenericList(left, right as Type.GenericList);
 
         case Type.ExtendedTypeKind.ListType:
             return isEqualListType(left, right as Type.ListType);
@@ -163,7 +163,7 @@ export function isEqualListType(left: Type.ListType, right: Type.ListType): bool
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
 }
 
-export function isEqualPartiallyDefinedList(left: Type.GenericList, right: Type.GenericList): boolean {
+export function isEqualGenericList(left: Type.GenericList, right: Type.GenericList): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.typeAllowed, right.typeAllowed));
 }
 
@@ -172,4 +172,9 @@ export function isEqualPrimaryExpressionTable(
     right: Type.PrimaryExpressionTable,
 ): boolean {
     return left === right || isEqualType(left.type, right.type);
+}
+
+export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
+    // Fast comparison then deep comparison
+    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) === undefined;
 }

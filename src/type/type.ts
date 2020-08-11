@@ -65,6 +65,8 @@ export type TPrimitiveType =
     | Type
     | Unknown;
 
+export type TList = List | GenericList | DefinedList;
+
 export const enum TypeKind {
     Any = "Any",
     AnyNonNull = "AnyNonNull",
