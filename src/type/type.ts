@@ -174,7 +174,7 @@ export interface DefinedType<T extends TType> extends IExtendedType {
 export interface GenericList extends IExtendedType {
     readonly kind: TypeKind.List;
     readonly maybeExtendedKind: ExtendedTypeKind.GenericList;
-    readonly typesAllowed: ReadonlyArray<TType>;
+    readonly typeAllowed: TType;
 }
 
 export interface PrimaryExpressionTable extends IExtendedType {
