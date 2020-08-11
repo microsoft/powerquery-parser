@@ -169,5 +169,5 @@ export function isEqualPrimaryExpressionTable(
 
 export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
     // Fast comparison then deep comparison
-    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) === undefined;
+    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
 }
