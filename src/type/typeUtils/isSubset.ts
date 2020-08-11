@@ -32,12 +32,10 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
         case Type.TypeKind.Function:
         case Type.TypeKind.Logical:
         case Type.TypeKind.Number:
+        case Type.TypeKind.Null:
         case Type.TypeKind.Text:
         case Type.TypeKind.Time:
             return (right.isNullable === true && left.kind === Type.TypeKind.Null) || isEqualType(left, right);
-
-        case Type.TypeKind.List:
-            return isSubsetOfList(left, right);
 
         case Type.TypeKind.Any:
             return isSubsetOfAny(left, right);
@@ -45,10 +43,14 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
         case Type.TypeKind.AnyNonNull:
             return left.kind !== Type.TypeKind.Null;
 
+        case Type.TypeKind.List:
+            return isSubsetOfList(left, right);
+
+        case Type.TypeKind.Record:
+            return isSubsetOfRecord(left, right);
+
         case Type.TypeKind.None:
             return false;
-
-        case Type.TypeKind.Null:
 
         default:
             throw Assert.isNever(right);
@@ -71,7 +73,25 @@ export function isSubsetOfAny(left: Type.TType, right: Type.Any | Type.AnyUnion)
     }
 }
 
-export function isSubsetOfList(left: Type.TType, right: Type.TList): boolean {
+export function isSubsetOfGenericList(left: Type.TType, right: Type.GenericList): boolean {
+    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return false;
+
+        case Type.ExtendedTypeKind.GenericList:
+        case Type.ExtendedTypeKind.DefinedList:
+            return isEqualType(left, right);
+
+        default:
+            throw Assert.isNever(left);
+    }
+}
+
+export function isSubsetOfList(left: Type.TType, right: Type.List | Type.GenericList | Type.DefinedList): boolean {
     if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -91,8 +111,25 @@ export function isSubsetOfList(left: Type.TType, right: Type.TList): boolean {
     }
 }
 
-export function isSubsetOfGenericList(left: Type.TType, right: Type.GenericList): boolean {
-    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+export function isSubsetOfRecord(left: Type.TType, right: Type.Record | Type.DefinedRecord): boolean {
+    if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (right.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.DefinedRecord:
+            return isSubsetOfDefinedRecord(left, right);
+
+        default:
+            throw Assert.isNever(right);
+    }
+}
+
+export function isSubsetOfDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
+    if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
 
@@ -100,9 +137,21 @@ export function isSubsetOfGenericList(left: Type.TType, right: Type.GenericList)
         case undefined:
             return false;
 
-        case Type.ExtendedTypeKind.GenericList:
-        case Type.ExtendedTypeKind.DefinedList:
-            return isEqualType(left, right);
+        case Type.ExtendedTypeKind.DefinedRecord: {
+            if (right.fields.size < left.fields.size || (left.isOpen === true && right.isOpen === false)) {
+                return false;
+            }
+
+            const rightFields: Map<string, Type.TType> = right.fields;
+            for (const [key, leftType] of left.fields.entries()) {
+                const maybeRightType: Type.TType | undefined = rightFields.get(key);
+                if (maybeRightType === undefined || isEqualType(leftType, maybeRightType)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         default:
             throw Assert.isNever(left);
