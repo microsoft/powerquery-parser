@@ -488,17 +488,7 @@ export function equalListType(left: Type.ListType, right: Type.ListType): boolea
 }
 
 export function equalPartiallyDefinedList(left: Type.GenericList, right: Type.GenericList): boolean {
-    if (left.typesAllowed.length !== right.typesAllowed.length) {
-        return false;
-    }
-
-    for (const leftType of left.typesAllowed) {
-        if (typeNotInArray(right.typesAllowed, leftType)) {
-            return false;
-        }
-    }
-
-    return true;
+    return left === right || (left.isNullable === right.isNullable && equalType(left.typeAllowed, right.typeAllowed));
 }
 
 export function equalPrimaryExpressionTable(
