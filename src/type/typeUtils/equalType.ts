@@ -4,7 +4,7 @@
 import { Type } from "..";
 import { ArrayUtils, Assert, MapUtils } from "../../common";
 
-export function equalType(left: Type.TType, right: Type.TType): boolean {
+export function isEqualType(left: Type.TType, right: Type.TType): boolean {
     if (left === right) {
         return true;
     } else if (
@@ -14,13 +14,14 @@ export function equalType(left: Type.TType, right: Type.TType): boolean {
     ) {
         return false;
     } else if (left.maybeExtendedKind !== undefined && right.maybeExtendedKind !== undefined) {
-        return equalExtendedTypes(left, right);
+        return isEqualExtendedTypes(left, right);
     } else {
         return true;
     }
 }
 
-export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
+// Does not care about ordering.
+export function isEqualTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
     if (leftTypes === rightTypes) {
         return true;
     } else if (leftTypes.length !== rightTypes.length) {
@@ -29,7 +30,7 @@ export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: Rea
 
     const numTypes: number = leftTypes.length;
     for (let index: number = 0; index < numTypes; index += 1) {
-        if (equalType(leftTypes[index], rightTypes[index]) === false) {
+        if (isEqualType(leftTypes[index], rightTypes[index]) === false) {
             return false;
         }
     }
@@ -37,7 +38,10 @@ export function equalTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: Rea
     return true;
 }
 
-export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
+export function isEqualExtendedTypes<T extends Type.TType>(
+    left: Type.TExtendedType,
+    right: Type.TExtendedType,
+): boolean {
     if (left === right) {
         return true;
     } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
@@ -46,54 +50,54 @@ export function equalExtendedTypes<T extends Type.TType>(left: Type.TExtendedTyp
 
     switch (left.maybeExtendedKind) {
         case Type.ExtendedTypeKind.AnyUnion:
-            return equalAnyUnion(left, right as Type.AnyUnion);
+            return isEqualAnyUnion(left, right as Type.AnyUnion);
 
         case Type.ExtendedTypeKind.DefinedFunction:
-            return equalDefinedFunction(left, right as Type.DefinedFunction);
+            return isEqualDefinedFunction(left, right as Type.DefinedFunction);
 
         case Type.ExtendedTypeKind.DefinedList:
-            return equalDefinedList(left, right as Type.DefinedList);
+            return isEqualDefinedList(left, right as Type.DefinedList);
 
         case Type.ExtendedTypeKind.DefinedRecord:
-            return equalDefinedRecord(left, right as Type.DefinedRecord);
+            return isEqualDefinedRecord(left, right as Type.DefinedRecord);
 
         case Type.ExtendedTypeKind.DefinedTable:
-            return equalDefinedTable(left, right as Type.DefinedTable);
+            return isEqualDefinedTable(left, right as Type.DefinedTable);
 
         case Type.ExtendedTypeKind.DefinedType:
-            return equalDefinedType(left, right as Type.DefinedType<T>);
+            return isEqualDefinedType(left, right as Type.DefinedType<T>);
 
         case Type.ExtendedTypeKind.GenericList:
-            return equalPartiallyDefinedList(left, right as Type.GenericList);
+            return isEqualPartiallyDefinedList(left, right as Type.GenericList);
 
         case Type.ExtendedTypeKind.ListType:
-            return equalListType(left, right as Type.ListType);
+            return isEqualListType(left, right as Type.ListType);
 
         case Type.ExtendedTypeKind.PrimaryExpressionTable:
-            return equalPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
+            return isEqualPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
 
         default:
             throw Assert.isNever(left);
     }
 }
 
-export function equalAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
+export function isEqualAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
     return (
         left === right ||
-        (left.isNullable === right.isNullable && equalTypes(left.unionedTypePairs, right.unionedTypePairs))
+        (left.isNullable === right.isNullable && isEqualTypes(left.unionedTypePairs, right.unionedTypePairs))
     );
 }
 
-export function equalDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
+export function isEqualDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            equalType(left.returnType, right.returnType) &&
-            equalDefinedFunctionParameters(left.parameters, right.parameters))
+            isEqualType(left.returnType, right.returnType) &&
+            isEqualDefinedFunctionParameters(left.parameters, right.parameters))
     );
 }
 
-export function equalDefinedFunctionParameters(
+export function isEqualDefinedFunctionParameters(
     left: ReadonlyArray<Type.FunctionParameter>,
     right: ReadonlyArray<Type.FunctionParameter>,
 ): boolean {
@@ -119,7 +123,7 @@ export function equalDefinedFunctionParameters(
     return true;
 }
 
-export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
+export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
     if (left === right) {
         return true;
     } else if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
@@ -128,41 +132,44 @@ export function equalDefinedList(left: Type.DefinedList, right: Type.DefinedList
 
     const rightElements: ReadonlyArray<Type.TType> = right.elements;
     return ArrayUtils.all(
-        left.elements.map((leftType: Type.TType, index: number) => equalType(leftType, rightElements[index])),
+        left.elements.map((leftType: Type.TType, index: number) => isEqualType(leftType, rightElements[index])),
     );
 }
 
-export function equalDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
+export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType))
+            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, isEqualType))
     );
 }
 
-export function equalDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
+export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, equalType))
+            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, isEqualType))
     );
 }
 
-export function equalDefinedType<T extends Type.TType>(left: Type.DefinedType<T>, right: Type.DefinedType<T>): boolean {
-    return left === right || (left.isNullable === right.isNullable && equalType(left.primaryType, right.primaryType));
+export function isEqualDefinedType<T extends Type.TType>(
+    left: Type.DefinedType<T>,
+    right: Type.DefinedType<T>,
+): boolean {
+    return left === right || (left.isNullable === right.isNullable && isEqualType(left.primaryType, right.primaryType));
 }
 
-export function equalListType(left: Type.ListType, right: Type.ListType): boolean {
-    return left === right || (left.isNullable === right.isNullable && equalType(left.itemType, right.itemType));
+export function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
+    return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
 }
 
-export function equalPartiallyDefinedList(left: Type.GenericList, right: Type.GenericList): boolean {
-    return left === right || (left.isNullable === right.isNullable && equalType(left.typeAllowed, right.typeAllowed));
+export function isEqualPartiallyDefinedList(left: Type.GenericList, right: Type.GenericList): boolean {
+    return left === right || (left.isNullable === right.isNullable && isEqualType(left.typeAllowed, right.typeAllowed));
 }
 
-export function equalPrimaryExpressionTable(
+export function isEqualPrimaryExpressionTable(
     left: Type.PrimaryExpressionTable,
     right: Type.PrimaryExpressionTable,
 ): boolean {
-    return left === right || equalType(left.type, right.type);
+    return left === right || isEqualType(left.type, right.type);
 }

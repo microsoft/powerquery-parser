@@ -73,7 +73,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
             const actual: Type.TType | undefined = expectParseOkExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
-            expect(TypeUtils.equalType(actual, expected));
+            expect(TypeUtils.isEqualType(actual, expected));
         });
     });
 
@@ -84,7 +84,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
             const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
-            expect(TypeUtils.equalType(actual, expected));
+            expect(TypeUtils.isEqualType(actual, expected));
         });
 
         it(`if 1 then |`, () => {
@@ -93,7 +93,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
             const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
-            expect(TypeUtils.equalType(actual, expected));
+            expect(TypeUtils.isEqualType(actual, expected));
         });
 
         it(`if 1 then 1 else |`, () => {
@@ -102,7 +102,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
             const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
-            expect(TypeUtils.equalType(actual, expected));
+            expect(TypeUtils.isEqualType(actual, expected));
         });
     });
 });

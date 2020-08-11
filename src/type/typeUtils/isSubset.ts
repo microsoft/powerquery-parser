@@ -3,7 +3,7 @@
 
 import { Type } from "..";
 import { Assert } from "../../common";
-import { equalType } from "./equalType";
+import { isEqualType } from "./equalType";
 
 // Returns `${left} is a subset of ${right}. Eg.
 // `Type.TextInstance is a subset of Type.AnyInstance` -> true
@@ -32,7 +32,7 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
         case Type.TypeKind.Number:
         case Type.TypeKind.Text:
         case Type.TypeKind.Time:
-            return (right.isNullable === true && left.kind === Type.TypeKind.Null) || equalType(left, right);
+            return (right.isNullable === true && left.kind === Type.TypeKind.Null) || isEqualType(left, right);
 
         case Type.TypeKind.Any:
             return isSubsetOfAny(left, right);

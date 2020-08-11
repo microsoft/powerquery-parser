@@ -5,7 +5,7 @@ import { Type } from "..";
 import { Assert } from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
-import { equalType } from "./equalType";
+import { isEqualType } from "./equalType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
 export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
@@ -246,6 +246,6 @@ function typeNotInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType)
         // Fast comparison
         collection.indexOf(item) === -1 &&
         // Deep comparison
-        collection.find((type: Type.TType) => equalType(item, type)) === undefined
+        collection.find((type: Type.TType) => isEqualType(item, type)) === undefined
     );
 }
