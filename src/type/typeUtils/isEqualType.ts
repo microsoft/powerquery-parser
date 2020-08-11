@@ -67,9 +67,6 @@ export function isEqualExtendedTypes<T extends Type.TType>(
         case Type.ExtendedTypeKind.DefinedType:
             return isEqualDefinedType(left, right as Type.DefinedType<T>);
 
-        case Type.ExtendedTypeKind.GenericList:
-            return isEqualGenericList(left, right as Type.GenericList);
-
         case Type.ExtendedTypeKind.ListType:
             return isEqualListType(left, right as Type.ListType);
 
@@ -161,10 +158,6 @@ export function isEqualDefinedType<T extends Type.TType>(
 
 export function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
-}
-
-export function isEqualGenericList(left: Type.GenericList, right: Type.GenericList): boolean {
-    return left === right || (left.isNullable === right.isNullable && isEqualType(left.typeAllowed, right.typeAllowed));
 }
 
 export function isEqualPrimaryExpressionTable(

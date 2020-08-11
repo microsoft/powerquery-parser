@@ -10,7 +10,6 @@ export type TExtendedType =
     | DefinedTable
     | DefinedType<TType>
     | ListType
-    | GenericList
     | PrimaryExpressionTable;
 export type TExtendedTypeKind =
     | TypeKind.Any
@@ -97,14 +96,23 @@ export const enum TypeKind {
 }
 
 export const enum ExtendedTypeKind {
+    // In Power Query if a function returns either `number` or `text` then it must have a return type of `any`.
+    // This is a narrower definition which restricts the type to the union `number | any`.
     AnyUnion = "AnyUnion",
     DefinedFunction = "DefinedFunction",
+    // A list of known size and types.
+    // Eg. `{1, "foo"}
     DefinedList = "DefinedList",
+    // A list of known fields and their types. Optionally considered an open record. Eg.
+    // An open record: `[a=1, b=2, ...]`
+    // A closed record: `[a=1, b=2]`
     DefinedRecord = "DefinedRecord",
+    // See details on DefinedRecord. They are functionally the same.
     DefinedTable = "DefinedTable",
     DefinedType = "DefinedType",
     ListType = "ListType",
-    GenericList = "PartiallyDefinedList",
+    // The docs say `table-type` only accepts a `field-specification-list` for `row-type`,
+    // but the parser also accepts primary-expression. This handles that edge case.
     PrimaryExpressionTable = "PrimaryExpressionTable",
 }
 
@@ -167,14 +175,6 @@ export interface DefinedType<T extends TType> extends IExtendedType {
     readonly kind: TypeKind.Type;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedType;
     readonly primaryType: T;
-}
-
-// A list which has elements of a certain type, but the number of elements is unknown.
-// Think of IList<T>
-export interface GenericList extends IExtendedType {
-    readonly kind: TypeKind.List;
-    readonly maybeExtendedKind: ExtendedTypeKind.GenericList;
-    readonly typeAllowed: TType;
 }
 
 export interface PrimaryExpressionTable extends IExtendedType {

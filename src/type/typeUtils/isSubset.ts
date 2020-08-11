@@ -49,6 +49,12 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
         case Type.TypeKind.Record:
             return isSubsetOfRecord(left, right);
 
+        case Type.TypeKind.Table:
+            return isSubsetOfTable(left, right);
+
+        case Type.TypeKind.Type:
+            return isSubsetOfType(left, right);
+
         case Type.TypeKind.None:
             return false;
 
@@ -73,8 +79,8 @@ export function isSubsetOfAny(left: Type.TType, right: Type.Any | Type.AnyUnion)
     }
 }
 
-export function isSubsetOfGenericList(left: Type.TType, right: Type.GenericList): boolean {
-    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+export function isSubsetOfDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
+    if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
 
@@ -82,16 +88,63 @@ export function isSubsetOfGenericList(left: Type.TType, right: Type.GenericList)
         case undefined:
             return false;
 
-        case Type.ExtendedTypeKind.GenericList:
-        case Type.ExtendedTypeKind.DefinedList:
-            return isEqualType(left, right);
+        case Type.ExtendedTypeKind.DefinedRecord: {
+            if (right.fields.size < left.fields.size || (left.isOpen === true && right.isOpen === false)) {
+                return false;
+            } else if (left.isOpen === false && right.isOpen === true) {
+                return true;
+            }
+
+            const rightFields: Map<string, Type.TType> = right.fields;
+            for (const [key, leftType] of left.fields.entries()) {
+                const maybeRightType: Type.TType | undefined = rightFields.get(key);
+                if (maybeRightType === undefined || isEqualType(leftType, maybeRightType)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         default:
             throw Assert.isNever(left);
     }
 }
 
-export function isSubsetOfList(left: Type.TType, right: Type.List | Type.GenericList | Type.DefinedList): boolean {
+export function isSubsetOfDefinedTable(left: Type.TType, right: Type.DefinedTable): boolean {
+    if (left.kind !== Type.TypeKind.Table || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+        case Type.ExtendedTypeKind.PrimaryExpressionTable:
+            return false;
+
+        case Type.ExtendedTypeKind.DefinedTable: {
+            if (right.fields.size < left.fields.size || (left.isOpen === true && right.isOpen === false)) {
+                return false;
+            } else if (left.isOpen === false && right.isOpen === true) {
+                return true;
+            }
+
+            const rightFields: Map<string, Type.TType> = right.fields;
+            for (const [key, leftType] of left.fields.entries()) {
+                const maybeRightType: Type.TType | undefined = rightFields.get(key);
+                if (maybeRightType === undefined || isEqualType(leftType, maybeRightType)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        default:
+            throw Assert.isNever(left);
+    }
+}
+
+export function isSubsetOfList(left: Type.TType, right: Type.List | Type.DefinedList): boolean {
     if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -99,9 +152,6 @@ export function isSubsetOfList(left: Type.TType, right: Type.List | Type.Generic
     switch (right.maybeExtendedKind) {
         case undefined:
             return true;
-
-        case Type.ExtendedTypeKind.GenericList:
-            return isSubsetOfGenericList(left, right);
 
         case Type.ExtendedTypeKind.DefinedList:
             return isEqualType(left, right);
@@ -128,32 +178,46 @@ export function isSubsetOfRecord(left: Type.TType, right: Type.Record | Type.Def
     }
 }
 
-export function isSubsetOfDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
-    if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
+export function isSubsetOfTable(
+    left: Type.TType,
+    right: Type.Table | Type.DefinedTable | Type.PrimaryExpressionTable,
+): boolean {
+    if (left.kind !== Type.TypeKind.Table || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
 
-    switch (left.maybeExtendedKind) {
+    switch (right.maybeExtendedKind) {
         case undefined:
-            return false;
-
-        case Type.ExtendedTypeKind.DefinedRecord: {
-            if (right.fields.size < left.fields.size || (left.isOpen === true && right.isOpen === false)) {
-                return false;
-            }
-
-            const rightFields: Map<string, Type.TType> = right.fields;
-            for (const [key, leftType] of left.fields.entries()) {
-                const maybeRightType: Type.TType | undefined = rightFields.get(key);
-                if (maybeRightType === undefined || isEqualType(leftType, maybeRightType)) {
-                    return false;
-                }
-            }
-
             return true;
-        }
+
+        case Type.ExtendedTypeKind.DefinedTable:
+            return isSubsetOfDefinedTable(left, right);
+
+        case Type.ExtendedTypeKind.PrimaryExpressionTable:
+            return isEqualType(left, right);
 
         default:
-            throw Assert.isNever(left);
+            throw Assert.isNever(right);
+    }
+}
+
+export function isSubsetOfType<T extends Type.TType>(
+    left: Type.TType,
+    right: Type.Type | Type.ListType | Type.DefinedType<T>,
+): boolean {
+    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (right.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.DefinedType:
+        case Type.ExtendedTypeKind.ListType:
+            return left.maybeExtendedKind === right.maybeExtendedKind ? isEqualType(left, right) : false;
+
+        default:
+            throw Assert.isNever(right);
     }
 }
