@@ -71,10 +71,6 @@ function inspectFieldProjectionHelper(
                 return previousSiblingType.kind === Type.TypeKind.Record
                     ? TypeUtils.definedRecordFactory(false, newFields, false)
                     : TypeUtils.definedTableFactory(false, newFields, false);
-            }
-            if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.PrimaryExpressionTable) {
-                // Dereference PrimaryExpressionTable.type and call the helper again.
-                return inspectFieldProjectionHelper(previousSiblingType.type, projectedFieldNames, isOptional);
             } else {
                 return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional);
             }

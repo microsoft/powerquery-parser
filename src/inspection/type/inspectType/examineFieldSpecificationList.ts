@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { TypeInspectionState } from "./common";
-import { inspectFieldSpecification } from "./inspectFieldSpecification";
+import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 
 export interface ExaminedFieldSpecificationList {
     readonly fields: Map<string, Type.TType>;
@@ -37,7 +37,7 @@ export function examineFieldSpecificationList(
             break;
         }
         const name: string = (maybeName as Ast.GeneralizedIdentifier).literal;
-        const type: Type.TType = inspectFieldSpecification(state, fieldSpecification);
+        const type: Type.TType = inspectTypeFieldSpecification(state, fieldSpecification);
         fields.push([name, type]);
     }
 

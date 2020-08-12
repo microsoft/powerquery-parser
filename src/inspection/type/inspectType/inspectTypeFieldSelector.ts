@@ -30,15 +30,6 @@ export function inspectTypeFieldSelector(state: TypeInspectionState, xorNode: TX
             Ast.NodeKind.Constant,
         ]) !== undefined;
 
-    return helperForinspectFieldSelector(state, previousSiblingType, fieldName, isOptional);
-}
-
-function helperForinspectFieldSelector(
-    state: TypeInspectionState,
-    previousSiblingType: Type.TType,
-    fieldName: string,
-    isOptional: boolean,
-): Type.TType {
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any:
             return Type.AnyInstance;
@@ -63,9 +54,6 @@ function helperForinspectFieldSelector(
                         return isOptional ? Type.NullInstance : Type.NoneInstance;
                     }
                 }
-
-                case Type.ExtendedTypeKind.PrimaryExpressionTable:
-                    return helperForinspectFieldSelector(state, previousSiblingType.type, fieldName, isOptional);
 
                 default:
                     throw Assert.isNever(previousSiblingType);
