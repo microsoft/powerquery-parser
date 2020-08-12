@@ -8,9 +8,9 @@ export type TExtendedType =
     | DefinedList
     | DefinedRecord
     | DefinedTable
-    | DefinedType<TType>
     | FunctionType
     | ListType
+    | PrimaryPrimitiveType
     | RecordType
     | TableType
     | TableTypePrimaryExpression;
@@ -119,7 +119,7 @@ export const enum ExtendedTypeKind {
     DefinedTable = "DefinedTable",
 
     // TODO delete
-    DefinedType = "DefinedType",
+    PrimaryPrimitiveType = "PrimaryPrimitiveType",
 
     // `type list { number }`
     ListType = "ListType",
@@ -194,10 +194,10 @@ export type DefinedTable = IExtendedType &
         readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
     };
 
-export interface DefinedType<T extends TType> extends IExtendedType {
+export interface PrimaryPrimitiveType extends IExtendedType {
     readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedType;
-    readonly primaryType: T;
+    readonly maybeExtendedKind: ExtendedTypeKind.PrimaryPrimitiveType;
+    readonly primitiveType: TPrimitiveType;
 }
 
 export type FunctionType = IExtendedType &

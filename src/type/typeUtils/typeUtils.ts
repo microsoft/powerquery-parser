@@ -163,6 +163,13 @@ export function isFieldSpecificationList(type: Type.TType): type is Type.TType &
     );
 }
 
+export function isFunctionSignature(type: Type.TType): type is Type.TType & Type.FunctionSignature {
+    return (
+        (type.kind === Type.TypeKind.Function && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) ||
+        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.FunctionType)
+    );
+}
+
 function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
     let isNullable: boolean;
     let maybeType: Type.TypeKind | undefined;

@@ -3,15 +3,15 @@
 
 import { Type } from "..";
 import { Assert, MapUtils } from "../../common";
-import { isEqualType } from "./isEqualType";
-import { isFieldSpecificationList } from "./typeUtils";
+import { isEqualDefinedList, isEqualFunctionSignature, isEqualType } from "./isEqualType";
+import { isFieldSpecificationList, isFunctionSignature } from "./typeUtils";
 
 // Returns `${left} is a subset of ${right}. Eg.
 // `Type.TextInstance is a subset of Type.AnyInstance` -> true
 // `Type.AnyInstance is a subset of Type.TextInstance` -> false
 // `Type.NullInstance is a subset of Type.AnyNonNull` -> false
 // `Type.TextInstance is a subset of Type.AnyUnion([Type.TextInstance, Type.NumberInstance])` -> true
-export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefined {
+export function isSubset(left: Type.TType, right: Type.TType): boolean | undefined {
     if (
         left.kind === Type.TypeKind.NotApplicable ||
         left.kind === Type.TypeKind.Unknown ||
@@ -43,7 +43,6 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
         case Type.TypeKind.AnyNonNull:
             return left.kind !== Type.TypeKind.Null;
 
-        // TODO: How should a function be a subset of another?
         case Type.TypeKind.Function:
             return isSubsetOfFunction(left, right);
 
@@ -68,18 +67,39 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
 }
 
 export function isSubsetOfAny(left: Type.TType, right: Type.Any | Type.AnyUnion): boolean {
+    if (left.kind !== Type.TypeKind.Any || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
     switch (right.maybeExtendedKind) {
         case undefined:
-            return true;
+            return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.AnyUnion:
             const anyChecks: ReadonlyArray<boolean | undefined> = right.unionedTypePairs.map((subtype: Type.TType) =>
-                isSusbset(left, subtype),
+                isSubset(left, subtype),
             );
             return anyChecks.includes(true);
 
         default:
             throw Assert.isNever(right);
+    }
+}
+
+export function isSubsetOfDefinedList(left: Type.TType, right: Type.DefinedList): boolean {
+    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.DefinedList:
+            return isEqualDefinedList(left, right);
+
+        default:
+            throw Assert.isNever(left);
     }
 }
 
@@ -90,7 +110,7 @@ export function isSubsetOfDefinedRecord(left: Type.TType, right: Type.DefinedRec
 
     switch (left.maybeExtendedKind) {
         case undefined:
-            return false;
+            return true;
 
         case Type.ExtendedTypeKind.DefinedRecord:
             return isSubsetOfFieldSpecificationList(left, right);
@@ -118,8 +138,8 @@ export function isSubsetOfDefinedTable(left: Type.TType, right: Type.DefinedTabl
     }
 }
 
-export function isSubsetOfFunction(left: Type.TType, right: Type.Function | Type.DefinedFunction): boolean | undefined {
-    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+export function isSubsetOfFunction(left: Type.TType, right: Type.Function | Type.DefinedFunction): boolean {
+    if (left.kind !== Type.TypeKind.Function || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
 
@@ -142,13 +162,136 @@ export function isSubsetOfList(left: Type.TType, right: Type.List | Type.Defined
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return true;
+            return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.DefinedList:
-            return isEqualType(left, right);
+            return isSubsetOfDefinedList(left, right);
 
         default:
             throw Assert.isNever(right);
+    }
+}
+
+export function isSubsetOfListType(left: Type.TType, right: Type.ListType): boolean {
+    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.ListType:
+            return isEqualType(left.itemType, right.itemType);
+
+        case Type.ExtendedTypeKind.FunctionType:
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+        case Type.ExtendedTypeKind.RecordType:
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+        case Type.ExtendedTypeKind.TableType:
+            return false;
+
+        default:
+            throw Assert.isNever(left);
+    }
+}
+
+export function isSubsetOfTableType(left: Type.TType, right: Type.TableType): boolean {
+    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.TableType:
+            return isSubsetOfFieldSpecificationList(left, right);
+
+        case Type.ExtendedTypeKind.ListType:
+        case Type.ExtendedTypeKind.FunctionType:
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+        case Type.ExtendedTypeKind.RecordType:
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            return false;
+
+        default:
+            throw Assert.isNever(left);
+    }
+}
+
+export function isSubsetOfTableTypePrimaryExpression(
+    left: Type.TType,
+    right: Type.TableTypePrimaryExpression,
+): boolean | undefined {
+    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            return isSubset(left.primaryExpression, right.primaryExpression);
+
+        case Type.ExtendedTypeKind.ListType:
+        case Type.ExtendedTypeKind.FunctionType:
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+        case Type.ExtendedTypeKind.RecordType:
+        case Type.ExtendedTypeKind.TableType:
+            return false;
+
+        default:
+            throw Assert.isNever(left);
+    }
+}
+
+export function isSubsetOfPrimaryPrimitiveType(left: Type.TType, right: Type.PrimaryPrimitiveType): boolean {
+    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            return left.primitiveType === right.primitiveType;
+
+        case Type.ExtendedTypeKind.ListType:
+        case Type.ExtendedTypeKind.FunctionType:
+        case Type.ExtendedTypeKind.RecordType:
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+        case Type.ExtendedTypeKind.TableType:
+            return false;
+
+        default:
+            throw Assert.isNever(left);
+    }
+}
+
+export function isSubsetOfRecordType(left: Type.TType, right: Type.RecordType): boolean {
+    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.RecordType:
+            return isSubsetOfFieldSpecificationList(left, right);
+
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+        case Type.ExtendedTypeKind.ListType:
+        case Type.ExtendedTypeKind.FunctionType:
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+        case Type.ExtendedTypeKind.TableType:
+            return false;
+
+        default:
+            throw Assert.isNever(left);
     }
 }
 
@@ -159,7 +302,7 @@ export function isSubsetOfRecord(left: Type.TType, right: Type.Record | Type.Def
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return true;
+            return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.DefinedRecord:
             return isSubsetOfDefinedRecord(left, right);
@@ -176,7 +319,7 @@ export function isSubsetOfTable(left: Type.TType, right: Type.Table | Type.Defin
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return true;
+            return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.DefinedTable:
             return isSubsetOfDefinedTable(left, right);
@@ -186,9 +329,16 @@ export function isSubsetOfTable(left: Type.TType, right: Type.Table | Type.Defin
     }
 }
 
-export function isSubsetOfType<T extends Type.TType>(
+export function isSubsetOfType(
     left: Type.TType,
-    right: Type.Type | Type.DefinedType<T> | Type.FunctionType | Type.ListType | Type.RecordType | Type.TableType,
+    right:
+        | Type.Type
+        | Type.FunctionType
+        | Type.ListType
+        | Type.PrimaryPrimitiveType
+        | Type.RecordType
+        | Type.TableType
+        | Type.TableTypePrimaryExpression,
 ): boolean | undefined {
     if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
         return false;
@@ -196,20 +346,25 @@ export function isSubsetOfType<T extends Type.TType>(
 
     switch (right.maybeExtendedKind) {
         case undefined:
-            return true;
-
-        case Type.ExtendedTypeKind.DefinedType:
-            return;
+            return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.FunctionType:
             return isSubsetOfFunctionSignature(left, right);
 
         case Type.ExtendedTypeKind.ListType:
-            return left.maybeExtendedKind === right.maybeExtendedKind ? isEqualType(left, right) : false;
+            return isSubsetOfListType(left, right);
+
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            return isSubsetOfPrimaryPrimitiveType(left, right);
 
         case Type.ExtendedTypeKind.RecordType:
+            return isSubsetOfRecordType(left, right);
+
         case Type.ExtendedTypeKind.TableType:
-            return isSubsetOfFieldSpecificationList(left, right);
+            return isSubsetOfTableType(left, right);
+
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            return isSubsetOfTableTypePrimaryExpression(left, right);
 
         default:
             throw Assert.isNever(right);
@@ -217,8 +372,8 @@ export function isSubsetOfType<T extends Type.TType>(
 }
 
 // TODO: decide what a subset of this should be
-function isSubsetOfFieldSpecificationList(left: Type.TType, right: Type.FieldSpecificationList): boolean {
-    if (!isFieldSpecificationList(left)) {
+function isSubsetOfFieldSpecificationList(left: Type.TType, right: Type.TType & Type.FieldSpecificationList): boolean {
+    if ((left.isNullable === true && right.isNullable === false) || !isFieldSpecificationList(left)) {
         return false;
     }
 
@@ -228,6 +383,10 @@ function isSubsetOfFieldSpecificationList(left: Type.TType, right: Type.FieldSpe
 }
 
 // TODO: decide what a subset of return type looks like
-function isSubsetOfFunctionSignature(_left: Type.TType, _right: Type.FunctionSignature): undefined {
-    return undefined;
+function isSubsetOfFunctionSignature(left: Type.TType, right: Type.TType & Type.FunctionSignature): boolean {
+    if ((left.isNullable === true && right.isNullable === false) || !isFunctionSignature(left)) {
+        return false;
+    }
+
+    return isEqualFunctionSignature(left, right);
 }
