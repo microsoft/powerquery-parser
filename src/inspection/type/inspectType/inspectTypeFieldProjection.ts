@@ -7,7 +7,7 @@ import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../..
 import { Type, TypeUtils } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.fieldProjectionFieldNames(

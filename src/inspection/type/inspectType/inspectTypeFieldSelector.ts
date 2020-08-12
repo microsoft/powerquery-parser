@@ -7,7 +7,7 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSelector);
 
     const maybeFieldName: Ast.TNode | undefined = NodeIdMapUtils.maybeWrappedContentAst(

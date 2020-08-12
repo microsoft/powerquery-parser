@@ -4,13 +4,13 @@
 import { Ast } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
-import { inspectFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
 
-export function inspectRangeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeRangeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RangeExpression);
 
-    const maybeLeftType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 0);
-    const maybeRightType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 2);
+    const maybeLeftType: Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const maybeRightType: Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     if (maybeLeftType === undefined || maybeRightType === undefined) {
         return Type.UnknownInstance;

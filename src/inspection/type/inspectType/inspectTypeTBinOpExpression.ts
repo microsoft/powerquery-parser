@@ -9,7 +9,7 @@ import { inspectXorNode, TypeInspectionState } from "./common";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 
-export function inspectTBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeTBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     Assert.isTrue(AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
         nodeKind: xorNode.node.kind,

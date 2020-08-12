@@ -6,7 +6,7 @@ import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectRecord(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
+export function inspectTypeRecord(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedRecord {
     XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     const fields: Map<string, Type.TType> = new Map();

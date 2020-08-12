@@ -6,7 +6,7 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectFieldSpecification(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFieldSpecification(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecification);
 
     const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(

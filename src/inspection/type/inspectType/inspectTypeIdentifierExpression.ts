@@ -6,8 +6,8 @@ import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { maybeDereferencedIdentifierType, TypeInspectionState } from "./common";
 
-export function inspectIdentifier(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Identifier);
+export function inspectTypeIdentifierExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IdentifierExpression);
 
     if (xorNode.kind === XorNodeKind.Context) {
         return Type.UnknownInstance;

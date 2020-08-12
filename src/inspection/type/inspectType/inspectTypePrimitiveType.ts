@@ -5,7 +5,7 @@ import { Ast } from "../../../language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
 
-export function inspectPrimitiveType(xorNode: TXorNode): Type.TType {
+export function inspectTypePrimitiveType(xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.PrimitiveType);
 
     if (xorNode.kind === XorNodeKind.Context) {

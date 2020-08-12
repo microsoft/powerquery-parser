@@ -6,7 +6,7 @@ import { Ast } from "../../../language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
 
-export function inspectLiteralExpression(xorNode: TXorNode): Type.TType {
+export function inspectTypeLiteralExpression(xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.LiteralExpression);
 
     switch (xorNode.kind) {

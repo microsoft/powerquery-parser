@@ -7,10 +7,10 @@ import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
-export function inspectTableType(
+export function inspectTypeTableType(
     state: TypeInspectionState,
     xorNode: TXorNode,
-): Type.DefinedType<Type.DefinedTable | Type.PrimaryExpressionTable> | Type.Unknown {
+): Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.TableType);
 
     const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
@@ -26,26 +26,16 @@ export function inspectTableType(
     if (maybeRowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
         return {
             kind: Type.TypeKind.Type,
-            maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+            maybeExtendedKind: Type.ExtendedTypeKind.TableType,
             isNullable: false,
-            primaryType: {
-                kind: Type.TypeKind.Table,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
-                isNullable: false,
-                ...examineFieldSpecificationList(state, maybeRowType),
-            },
+            ...examineFieldSpecificationList(state, maybeRowType),
         };
     } else {
         return {
             kind: Type.TypeKind.Type,
-            maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+            maybeExtendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
             isNullable: false,
-            primaryType: {
-                kind: Type.TypeKind.Table,
-                maybeExtendedKind: Type.ExtendedTypeKind.PrimaryExpressionTable,
-                isNullable: false,
-                type: inspectXorNode(state, maybeRowType),
-            },
+            primaryExpression: inspectXorNode(state, maybeRowType),
         };
     }
 }

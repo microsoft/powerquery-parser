@@ -6,7 +6,7 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectInvokeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeInvokeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.InvokeExpression);
 
     const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(

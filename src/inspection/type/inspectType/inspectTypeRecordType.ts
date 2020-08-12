@@ -7,10 +7,7 @@ import { Type } from "../../../type";
 import { TypeInspectionState } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
-export function inspectRecordType(
-    state: TypeInspectionState,
-    xorNode: TXorNode,
-): Type.DefinedType<Type.DefinedRecord> | Type.Unknown {
+export function inspectTypeRecordType(state: TypeInspectionState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecordType);
 
     const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
@@ -25,13 +22,8 @@ export function inspectRecordType(
 
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+        maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
         isNullable: false,
-        primaryType: {
-            kind: Type.TypeKind.Record,
-            maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-            isNullable: false,
-            ...examineFieldSpecificationList(state, maybeFields),
-        },
+        ...examineFieldSpecificationList(state, maybeFields),
     };
 }

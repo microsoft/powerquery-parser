@@ -4,9 +4,9 @@
 import { Ast } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
-import { inspectFromChildAttributeIndex, inspectXorNode, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectRecursivePrimaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeRecursivePrimaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
     const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
@@ -19,7 +19,7 @@ export function inspectRecursivePrimaryExpression(state: TypeInspectionState, xo
         return Type.UnknownInstance;
     }
 
-    const headType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 0);
+    const headType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     if (headType.kind === Type.TypeKind.None || headType.kind === Type.TypeKind.Unknown) {
         return headType;
     }

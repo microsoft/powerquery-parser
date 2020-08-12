@@ -9,8 +9,11 @@ export type TExtendedType =
     | DefinedRecord
     | DefinedTable
     | DefinedType<TType>
+    | FunctionType
     | ListType
-    | PrimaryExpressionTable;
+    | RecordType
+    | TableType
+    | TableTypePrimaryExpression;
 export type TExtendedTypeKind =
     | TypeKind.Any
     | TypeKind.Function
@@ -99,21 +102,40 @@ export const enum ExtendedTypeKind {
     // In Power Query if a function returns either `number` or `text` then it must have a return type of `any`.
     // This is a narrower definition which restricts the type to the union `number | any`.
     AnyUnion = "AnyUnion",
+
+    // A function with known paramaters and return type.
     DefinedFunction = "DefinedFunction",
+
     // A list of known size and types.
     // Eg. `{1, "foo"}
     DefinedList = "DefinedList",
+
     // A list of known fields and their types. Optionally considered an open record. Eg.
     // An open record: `[a=1, b=2, ...]`
     // A closed record: `[a=1, b=2]`
     DefinedRecord = "DefinedRecord",
+
     // See details on DefinedRecord. They are functionally the same.
     DefinedTable = "DefinedTable",
+
+    // TODO delete
     DefinedType = "DefinedType",
+
+    // `type list { number }`
     ListType = "ListType",
+
+    // `type record [ a, b = number, ...]`
+    RecordType = "RecordType",
+
+    // `type function (x as number, optional y) => number`
+    FunctionType = "FunctionType",
+
+    // `type table [a, b = text]
+    TableType = "TableType",
+
     // The docs say `table-type` only accepts a `field-specification-list` for `row-type`,
     // but the parser also accepts primary-expression. This handles that edge case.
-    PrimaryExpressionTable = "PrimaryExpressionTable",
+    TableTypePrimaryExpression = "TableTypePrimaryExpression",
 }
 
 export interface IType<T extends TypeKind = TypeKind> {
@@ -151,12 +173,6 @@ export interface DefinedList extends IExtendedType {
     readonly elements: ReadonlyArray<TType>;
 }
 
-export interface ListType extends IExtendedType {
-    readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.ListType;
-    readonly itemType: TType;
-}
-
 export interface DefinedRecord extends IExtendedType {
     readonly kind: TypeKind.Record;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
@@ -177,15 +193,42 @@ export interface DefinedType<T extends TType> extends IExtendedType {
     readonly primaryType: T;
 }
 
-export interface PrimaryExpressionTable extends IExtendedType {
-    readonly kind: TypeKind.Table;
-    readonly maybeExtendedKind: ExtendedTypeKind.PrimaryExpressionTable;
-    readonly type: TType;
+export interface FunctionType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.FunctionType;
+    readonly parameters: ReadonlyArray<FunctionParameter>;
+    readonly returnType: TType;
+}
+
+export interface ListType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.ListType;
+    readonly itemType: TType;
+}
+
+export interface RecordType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.RecordType;
+    readonly fields: Map<string, TType>;
+    readonly isOpen: boolean;
 }
 
 export interface SimplifiedNullablePrimitiveType {
     readonly typeKind: TypeKind;
     readonly isNullable: boolean;
+}
+
+export interface TableType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.TableType;
+    readonly fields: Map<string, TType>;
+    readonly isOpen: boolean;
+}
+
+export interface TableTypePrimaryExpression extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.TableTypePrimaryExpression;
+    readonly primaryExpression: TType;
 }
 
 export interface FunctionParameter {

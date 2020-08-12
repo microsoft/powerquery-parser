@@ -4,9 +4,9 @@
 import { Ast } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
-import { inspectFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
 
-export function inspectParameter(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeParameter(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Parameter);
 
     const maybeOptionalConstant:
@@ -15,7 +15,7 @@ export function inspectParameter(state: TypeInspectionState, xorNode: TXorNode):
         Ast.NodeKind.Constant,
     ]);
 
-    const maybeParameterType: Type.TType | undefined = inspectFromChildAttributeIndex(state, xorNode, 2);
+    const maybeParameterType: Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     return {
         ...maybeParameterType,

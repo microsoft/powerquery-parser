@@ -5,9 +5,9 @@ import { TypeScriptUtils } from "../../../common";
 import { Ast } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
-import { inspectFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
 
-export function inspectFunctionType(
+export function inspectTypeFunctionType(
     state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.DefinedFunction> | Type.Unknown {
@@ -38,7 +38,7 @@ export function inspectFunctionType(
         .map((parameter: TXorNode) => TypeUtils.inspectParameter(state.nodeIdMapCollection, parameter))
         .filter(TypeScriptUtils.isDefined);
 
-    const returnType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 2);
+    const returnType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     return {
         kind: Type.TypeKind.Type,

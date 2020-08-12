@@ -4,9 +4,9 @@
 import { Ast } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
-import { inspectFromChildAttributeIndex, inspectXorNode, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectErrorHandlingExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeErrorHandlingExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
     const maybeOtherwiseExpression:
@@ -16,7 +16,7 @@ export function inspectErrorHandlingExpression(state: TypeInspectionState, xorNo
     ]);
 
     return TypeUtils.anyUnionFactory([
-        inspectFromChildAttributeIndex(state, xorNode, 1),
+        inspectTypeFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
             ? inspectXorNode(state, maybeOtherwiseExpression)
             : TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),

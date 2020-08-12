@@ -4,9 +4,9 @@
 import { Ast } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeInspector } from "../../../type";
-import { allForAnyUnion, inspectFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { allForAnyUnion, inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
 
-export function inspectFunctionExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFunctionExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionExpression);
 
     const inspectedFunctionExpression: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
@@ -14,7 +14,7 @@ export function inspectFunctionExpression(state: TypeInspectionState, xorNode: T
         xorNode,
     );
     const inspectedReturnType: Type.TType = inspectedFunctionExpression.returnType;
-    const expressionType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 3);
+    const expressionType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
 
     // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
     // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),

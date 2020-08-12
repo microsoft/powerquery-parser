@@ -6,7 +6,7 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectListType(
+export function inspectTypeListType(
     state: TypeInspectionState,
     xorNode: TXorNode,
 ): Type.DefinedType<Type.ListType> | Type.Unknown {

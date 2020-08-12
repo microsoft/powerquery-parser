@@ -67,11 +67,20 @@ export function isEqualExtendedTypes<T extends Type.TType>(
         case Type.ExtendedTypeKind.DefinedType:
             return isEqualDefinedType(left, right as Type.DefinedType<T>);
 
+        case Type.ExtendedTypeKind.FunctionType:
+            return isEqualFunctionType(left, right as Type.FunctionType);
+
         case Type.ExtendedTypeKind.ListType:
             return isEqualListType(left, right as Type.ListType);
 
-        case Type.ExtendedTypeKind.PrimaryExpressionTable:
-            return isEqualPrimaryExpressionTable(left, right as Type.PrimaryExpressionTable);
+        case Type.ExtendedTypeKind.RecordType:
+            return isEqualRecordType(left, right as Type.RecordType);
+
+        case Type.ExtendedTypeKind.TableType:
+            return isEqualTableType(left, right as Type.TableType);
+
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            return isEqualTableTypePrimaryExpression(left, right as Type.TableTypePrimaryExpression);
 
         default:
             throw Assert.isNever(left);
@@ -156,18 +165,59 @@ export function isEqualDefinedType<T extends Type.TType>(
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.primaryType, right.primaryType));
 }
 
+export function isEqualFunctionType(left: Type.FunctionType, right: Type.FunctionType): boolean {
+    return (
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            isEqualType(left.returnType, right.returnType) &&
+            isEqualDefinedFunctionParameters(left.parameters, right.parameters))
+    );
+}
+
 export function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
 }
 
-export function isEqualPrimaryExpressionTable(
-    left: Type.PrimaryExpressionTable,
-    right: Type.PrimaryExpressionTable,
+export function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
+    return isEqualFieldSpecificationList(left, right);
+}
+
+export function isEqualTableType(left: Type.TableType, right: Type.TableType): boolean {
+    return isEqualFieldSpecificationList(left, right);
+}
+
+export function isEqualTableTypePrimaryExpression(
+    left: Type.TableTypePrimaryExpression,
+    right: Type.TableTypePrimaryExpression,
 ): boolean {
-    return left === right || isEqualType(left.type, right.type);
+    return left === right || isEqualType(left.primaryExpression, right.primaryExpression);
 }
 
 export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
     // Fast comparison then deep comparison
     return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
+}
+
+function isEqualFieldSpecificationList(
+    left: Type.RecordType | Type.TableType,
+    right: Type.RecordType | Type.TableType,
+): boolean {
+    if (left === right) {
+        return true;
+    } else if (
+        left.isNullable !== right.isNullable ||
+        left.isOpen !== right.isOpen ||
+        left.fields.size !== right.fields.size
+    ) {
+        return false;
+    }
+
+    for (const [key, leftValue] of left.fields.entries()) {
+        const maybeRightValue: Type.TType | undefined = right.fields.get(key);
+        if (maybeRightValue === undefined || !isEqualType(leftValue, maybeRightValue)) {
+            return false;
+        }
+    }
+
+    return true;
 }

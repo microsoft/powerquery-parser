@@ -4,12 +4,12 @@
 import { Ast } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
 import { Type, TypeUtils } from "../../../type";
-import { allForAnyUnion, inspectFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { allForAnyUnion, inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
 
-export function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IfExpression);
 
-    const conditionType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 1);
+    const conditionType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
     if (conditionType.kind === Type.TypeKind.Unknown) {
         return Type.UnknownInstance;
     }
@@ -28,8 +28,8 @@ export function inspectIfExpression(state: TypeInspectionState, xorNode: TXorNod
         return Type.NoneInstance;
     }
 
-    const trueExprType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 3);
-    const falseExprType: Type.TType = inspectFromChildAttributeIndex(state, xorNode, 5);
+    const trueExprType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const falseExprType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 5);
 
     return TypeUtils.anyUnionFactory([trueExprType, falseExprType]);
 }
