@@ -10,7 +10,7 @@ export function expectGet<K, V>(map: Map<K, V>, key: K): V {
     return maybeValue;
 }
 
-export function equalMaps<K, V>(
+export function isEqualMap<K, V>(
     left: Map<K, V>,
     right: Map<K, V>,
     valueCmpFn: (left: V, right: V) => boolean,
@@ -27,6 +27,25 @@ export function equalMaps<K, V>(
             return false;
         }
     }
+    return true;
+}
+
+export function isSubsetMap<K, V>(
+    left: Map<K, V>,
+    right: Map<K, V>,
+    valueCmpFn: (left: V, right: V) => boolean,
+): boolean {
+    if (left.size > right.size) {
+        return false;
+    }
+
+    for (const [key, leftType] of left.entries()) {
+        const maybeRightType: V | undefined = right.get(key);
+        if (maybeRightType === undefined || !valueCmpFn(leftType, maybeRightType)) {
+            return false;
+        }
+    }
+
     return true;
 }
 

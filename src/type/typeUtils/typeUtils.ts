@@ -154,6 +154,15 @@ export function inspectParameter(
     }
 }
 
+export function isFieldSpecificationList(type: Type.TType): type is Type.TType & Type.FieldSpecificationList {
+    return (
+        (type.kind === Type.TypeKind.Record && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord) ||
+        (type.kind === Type.TypeKind.Table && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable) ||
+        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.RecordType) ||
+        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.TableType)
+    );
+}
+
 function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
     let isNullable: boolean;
     let maybeType: Type.TypeKind | undefined;

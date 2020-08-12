@@ -146,7 +146,7 @@ export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.Defin
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, isEqualType))
+            MapUtils.isEqualMap<string, Type.TType>(left.fields, right.fields, isEqualType))
     );
 }
 
@@ -154,7 +154,7 @@ export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.Defined
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
-            MapUtils.equalMaps<string, Type.TType>(left.fields, right.fields, isEqualType))
+            MapUtils.isEqualMap<string, Type.TType>(left.fields, right.fields, isEqualType))
     );
 }
 
@@ -163,6 +163,26 @@ export function isEqualDefinedType<T extends Type.TType>(
     right: Type.DefinedType<T>,
 ): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.primaryType, right.primaryType));
+}
+
+export function isEqualFieldSpecificationList(
+    left: Type.FieldSpecificationList,
+    right: Type.FieldSpecificationList,
+): boolean {
+    if (left === right) {
+        return true;
+    } else if (left.isOpen !== right.isOpen || left.fields.size !== right.fields.size) {
+        return false;
+    }
+
+    for (const [key, leftValue] of left.fields.entries()) {
+        const maybeRightValue: Type.TType | undefined = right.fields.get(key);
+        if (maybeRightValue === undefined || !isEqualType(leftValue, maybeRightValue)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 export function isEqualFunctionType(left: Type.FunctionType, right: Type.FunctionType): boolean {
@@ -179,11 +199,11 @@ export function isEqualListType(left: Type.ListType, right: Type.ListType): bool
 }
 
 export function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
-    return isEqualFieldSpecificationList(left, right);
+    return left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right);
 }
 
 export function isEqualTableType(left: Type.TableType, right: Type.TableType): boolean {
-    return isEqualFieldSpecificationList(left, right);
+    return left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right);
 }
 
 export function isEqualTableTypePrimaryExpression(
@@ -196,28 +216,4 @@ export function isEqualTableTypePrimaryExpression(
 export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
     // Fast comparison then deep comparison
     return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
-}
-
-function isEqualFieldSpecificationList(
-    left: Type.RecordType | Type.TableType,
-    right: Type.RecordType | Type.TableType,
-): boolean {
-    if (left === right) {
-        return true;
-    } else if (
-        left.isNullable !== right.isNullable ||
-        left.isOpen !== right.isOpen ||
-        left.fields.size !== right.fields.size
-    ) {
-        return false;
-    }
-
-    for (const [key, leftValue] of left.fields.entries()) {
-        const maybeRightValue: Type.TType | undefined = right.fields.get(key);
-        if (maybeRightValue === undefined || !isEqualType(leftValue, maybeRightValue)) {
-            return false;
-        }
-    }
-
-    return true;
 }

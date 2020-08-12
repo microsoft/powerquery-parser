@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert } from "../../common";
+import { Assert, MapUtils } from "../../common";
 import { isEqualType } from "./isEqualType";
+import { isFieldSpecificationList } from "./typeUtils";
 
 // Returns `${left} is a subset of ${right}. Eg.
 // `Type.TextInstance is a subset of Type.AnyInstance` -> true
@@ -29,7 +30,6 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
         case Type.TypeKind.DateTime:
         case Type.TypeKind.DateTimeZone:
         case Type.TypeKind.Duration:
-        case Type.TypeKind.Function:
         case Type.TypeKind.Logical:
         case Type.TypeKind.Number:
         case Type.TypeKind.Null:
@@ -42,6 +42,10 @@ export function isSusbset(left: Type.TType, right: Type.TType): boolean | undefi
 
         case Type.TypeKind.AnyNonNull:
             return left.kind !== Type.TypeKind.Null;
+
+        // TODO: How should a function be a subset of another?
+        case Type.TypeKind.Function:
+            return isSubsetOfFunction(left, right);
 
         case Type.TypeKind.List:
             return isSubsetOfList(left, right);
@@ -88,23 +92,8 @@ export function isSubsetOfDefinedRecord(left: Type.TType, right: Type.DefinedRec
         case undefined:
             return false;
 
-        case Type.ExtendedTypeKind.DefinedRecord: {
-            if (right.fields.size < left.fields.size || (left.isOpen === true && right.isOpen === false)) {
-                return false;
-            } else if (left.isOpen === false && right.isOpen === true) {
-                return true;
-            }
-
-            const rightFields: Map<string, Type.TType> = right.fields;
-            for (const [key, leftType] of left.fields.entries()) {
-                const maybeRightType: Type.TType | undefined = rightFields.get(key);
-                if (maybeRightType === undefined || isEqualType(leftType, maybeRightType)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
+        case Type.ExtendedTypeKind.DefinedRecord:
+            return isSubsetOfFieldSpecificationList(left, right);
 
         default:
             throw Assert.isNever(left);
@@ -118,29 +107,31 @@ export function isSubsetOfDefinedTable(left: Type.TType, right: Type.DefinedTabl
 
     switch (left.maybeExtendedKind) {
         case undefined:
-        case Type.ExtendedTypeKind.PrimaryExpressionTable:
-            return false;
+            return true;
 
         case Type.ExtendedTypeKind.DefinedTable: {
-            if (right.fields.size < left.fields.size || (left.isOpen === true && right.isOpen === false)) {
-                return false;
-            } else if (left.isOpen === false && right.isOpen === true) {
-                return true;
-            }
-
-            const rightFields: Map<string, Type.TType> = right.fields;
-            for (const [key, leftType] of left.fields.entries()) {
-                const maybeRightType: Type.TType | undefined = rightFields.get(key);
-                if (maybeRightType === undefined || isEqualType(leftType, maybeRightType)) {
-                    return false;
-                }
-            }
-
-            return true;
+            return isSubsetOfFieldSpecificationList(left, right);
         }
 
         default:
             throw Assert.isNever(left);
+    }
+}
+
+export function isSubsetOfFunction(left: Type.TType, right: Type.Function | Type.DefinedFunction): boolean | undefined {
+    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (right.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.DefinedFunction:
+            return isSubsetOfFunctionSignature(left, right);
+
+        default:
+            throw Assert.isNever(right);
     }
 }
 
@@ -178,10 +169,7 @@ export function isSubsetOfRecord(left: Type.TType, right: Type.Record | Type.Def
     }
 }
 
-export function isSubsetOfTable(
-    left: Type.TType,
-    right: Type.Table | Type.DefinedTable | Type.PrimaryExpressionTable,
-): boolean {
+export function isSubsetOfTable(left: Type.TType, right: Type.Table | Type.DefinedTable): boolean {
     if (left.kind !== Type.TypeKind.Table || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -193,9 +181,6 @@ export function isSubsetOfTable(
         case Type.ExtendedTypeKind.DefinedTable:
             return isSubsetOfDefinedTable(left, right);
 
-        case Type.ExtendedTypeKind.PrimaryExpressionTable:
-            return isEqualType(left, right);
-
         default:
             throw Assert.isNever(right);
     }
@@ -203,8 +188,8 @@ export function isSubsetOfTable(
 
 export function isSubsetOfType<T extends Type.TType>(
     left: Type.TType,
-    right: Type.Type | Type.ListType | Type.DefinedType<T>,
-): boolean {
+    right: Type.Type | Type.DefinedType<T> | Type.FunctionType | Type.ListType | Type.RecordType | Type.TableType,
+): boolean | undefined {
     if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -214,10 +199,35 @@ export function isSubsetOfType<T extends Type.TType>(
             return true;
 
         case Type.ExtendedTypeKind.DefinedType:
+            return;
+
+        case Type.ExtendedTypeKind.FunctionType:
+            return isSubsetOfFunctionSignature(left, right);
+
         case Type.ExtendedTypeKind.ListType:
             return left.maybeExtendedKind === right.maybeExtendedKind ? isEqualType(left, right) : false;
+
+        case Type.ExtendedTypeKind.RecordType:
+        case Type.ExtendedTypeKind.TableType:
+            return isSubsetOfFieldSpecificationList(left, right);
 
         default:
             throw Assert.isNever(right);
     }
+}
+
+// TODO: decide what a subset of this should be
+function isSubsetOfFieldSpecificationList(left: Type.TType, right: Type.FieldSpecificationList): boolean {
+    if (!isFieldSpecificationList(left)) {
+        return false;
+    }
+
+    return MapUtils.isSubsetMap(left.fields, right.fields, (leftValue: Type.TType, rightValue: Type.TType) =>
+        isEqualType(leftValue, rightValue),
+    );
+}
+
+// TODO: decide what a subset of return type looks like
+function isSubsetOfFunctionSignature(_left: Type.TType, _right: Type.FunctionSignature): undefined {
+    return undefined;
 }

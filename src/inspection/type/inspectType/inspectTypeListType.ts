@@ -6,10 +6,7 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
-export function inspectTypeListType(
-    state: TypeInspectionState,
-    xorNode: TXorNode,
-): Type.DefinedType<Type.ListType> | Type.Unknown {
+export function inspectTypeListType(state: TypeInspectionState, xorNode: TXorNode): Type.ListType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ListType);
 
     const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
@@ -25,13 +22,8 @@ export function inspectTypeListType(
 
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+        maybeExtendedKind: Type.ExtendedTypeKind.ListType,
         isNullable: false,
-        primaryType: {
-            kind: Type.TypeKind.Type,
-            maybeExtendedKind: Type.ExtendedTypeKind.ListType,
-            isNullable: false,
-            itemType,
-        },
+        itemType,
     };
 }

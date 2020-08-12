@@ -144,13 +144,23 @@ export interface IType<T extends TypeKind = TypeKind> {
     readonly isNullable: boolean;
 }
 
-export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
-    readonly maybeExtendedKind: undefined;
-}
-
 export interface IExtendedType extends IType {
     readonly kind: TExtendedTypeKind;
     readonly maybeExtendedKind: ExtendedTypeKind;
+}
+
+export interface FieldSpecificationList {
+    readonly fields: Map<string, TType>;
+    readonly isOpen: boolean;
+}
+
+export interface FunctionSignature {
+    readonly parameters: ReadonlyArray<FunctionParameter>;
+    readonly returnType: TType;
+}
+
+export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
+    readonly maybeExtendedKind: undefined;
 }
 
 export interface AnyUnion extends IExtendedType {
@@ -159,12 +169,11 @@ export interface AnyUnion extends IExtendedType {
     readonly unionedTypePairs: ReadonlyArray<TType>;
 }
 
-export interface DefinedFunction extends IExtendedType {
-    readonly kind: TypeKind.Function;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedFunction;
-    readonly parameters: ReadonlyArray<FunctionParameter>;
-    readonly returnType: TType;
-}
+export type DefinedFunction = IExtendedType &
+    FunctionSignature & {
+        readonly kind: TypeKind.Function;
+        readonly maybeExtendedKind: ExtendedTypeKind.DefinedFunction;
+    };
 
 // A list which has a finite number of elements.
 export interface DefinedList extends IExtendedType {
@@ -173,19 +182,17 @@ export interface DefinedList extends IExtendedType {
     readonly elements: ReadonlyArray<TType>;
 }
 
-export interface DefinedRecord extends IExtendedType {
-    readonly kind: TypeKind.Record;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
-    readonly fields: Map<string, TType>;
-    readonly isOpen: boolean;
-}
+export type DefinedRecord = IExtendedType &
+    FieldSpecificationList & {
+        readonly kind: TypeKind.Record;
+        readonly maybeExtendedKind: ExtendedTypeKind.DefinedRecord;
+    };
 
-export interface DefinedTable extends IExtendedType {
-    readonly kind: TypeKind.Table;
-    readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
-    readonly fields: Map<string, TType>;
-    readonly isOpen: boolean;
-}
+export type DefinedTable = IExtendedType &
+    FieldSpecificationList & {
+        readonly kind: TypeKind.Table;
+        readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
+    };
 
 export interface DefinedType<T extends TType> extends IExtendedType {
     readonly kind: TypeKind.Type;
@@ -193,12 +200,11 @@ export interface DefinedType<T extends TType> extends IExtendedType {
     readonly primaryType: T;
 }
 
-export interface FunctionType extends IExtendedType {
-    readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.FunctionType;
-    readonly parameters: ReadonlyArray<FunctionParameter>;
-    readonly returnType: TType;
-}
+export type FunctionType = IExtendedType &
+    FunctionSignature & {
+        readonly kind: TypeKind.Type;
+        readonly maybeExtendedKind: ExtendedTypeKind.FunctionType;
+    };
 
 export interface ListType extends IExtendedType {
     readonly kind: TypeKind.Type;
@@ -206,24 +212,22 @@ export interface ListType extends IExtendedType {
     readonly itemType: TType;
 }
 
-export interface RecordType extends IExtendedType {
-    readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.RecordType;
-    readonly fields: Map<string, TType>;
-    readonly isOpen: boolean;
-}
+export type RecordType = IExtendedType &
+    FieldSpecificationList & {
+        readonly kind: TypeKind.Type;
+        readonly maybeExtendedKind: ExtendedTypeKind.RecordType;
+    };
 
 export interface SimplifiedNullablePrimitiveType {
     readonly typeKind: TypeKind;
     readonly isNullable: boolean;
 }
 
-export interface TableType extends IExtendedType {
-    readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.TableType;
-    readonly fields: Map<string, TType>;
-    readonly isOpen: boolean;
-}
+export type TableType = IExtendedType &
+    FieldSpecificationList & {
+        readonly kind: TypeKind.Type;
+        readonly maybeExtendedKind: ExtendedTypeKind.TableType;
+    };
 
 export interface TableTypePrimaryExpression extends IExtendedType {
     readonly kind: TypeKind.Type;
@@ -382,18 +386,7 @@ export const PrimaryTypeInstance: AnyUnion = {
     kind: TypeKind.Any,
     maybeExtendedKind: ExtendedTypeKind.AnyUnion,
     isNullable: true,
-    unionedTypePairs: [
-        ...PrimitiveInstance.unionedTypePairs,
-        ...NullablePrimitiveInstance.unionedTypePairs,
-        definedTypeFactory(RecordInstance, true),
-        definedTypeFactory(RecordInstance, false),
-        definedTypeFactory(ListInstance, true),
-        definedTypeFactory(ListInstance, false),
-        definedTypeFactory(FunctionInstance, true),
-        definedTypeFactory(FunctionInstance, false),
-        definedTypeFactory(TableInstance, true),
-        definedTypeFactory(TableInstance, false),
-    ],
+    unionedTypePairs: [...PrimitiveInstance.unionedTypePairs, ...NullablePrimitiveInstance.unionedTypePairs],
 };
 
 export const TypeProductionInstance: AnyUnion = {
@@ -423,17 +416,7 @@ export const AnyLiteralInstance: AnyUnion = {
     unionedTypePairs: [RecordInstance, ListInstance, LogicalInstance, NumberInstance, TextInstance, NullInstance],
 };
 
-function definedTypeFactory<T extends TType>(primaryType: T, isNullable: boolean): DefinedType<T> {
-    return {
-        kind: TypeKind.Type,
-        maybeExtendedKind: ExtendedTypeKind.DefinedType,
-        isNullable,
-        primaryType,
-    };
-}
-
-// Designed to create singletons.
-// The exported primitiveTypeFactory in typeUtils should map back to the singletons generated in this file.
+// Creates IPrimitiveType<T> singleton instances.
 function primitiveTypeFactory<T extends TypeKind>(typeKind: T, isNullable: boolean): IPrimitiveType<T> {
     return {
         kind: typeKind,

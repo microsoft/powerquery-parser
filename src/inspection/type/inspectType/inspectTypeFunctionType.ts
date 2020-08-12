@@ -10,7 +10,7 @@ import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./commo
 export function inspectTypeFunctionType(
     state: TypeInspectionState,
     xorNode: TXorNode,
-): Type.DefinedType<Type.DefinedFunction> | Type.Unknown {
+): Type.FunctionType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionType);
 
     const maybeParameters:
@@ -42,14 +42,9 @@ export function inspectTypeFunctionType(
 
     return {
         kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedType,
+        maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
         isNullable: false,
-        primaryType: {
-            kind: Type.TypeKind.Function,
-            maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
-            isNullable: false,
-            parameters: parameterTypes,
-            returnType,
-        },
+        parameters: parameterTypes,
+        returnType,
     };
 }
