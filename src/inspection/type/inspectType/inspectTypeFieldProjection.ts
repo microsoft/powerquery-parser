@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, MapUtils } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { Type, TypeUtils } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
 export function inspectTypeFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert, MapUtils } from "../../common";
+import { Assert, MapUtils } from "../../../common";
 import { isEqualDefinedList, isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./typeUtils";
 

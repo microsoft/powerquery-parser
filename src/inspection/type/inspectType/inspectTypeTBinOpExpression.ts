@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError } from "../../../common";
-import { Ast, AstUtils } from "../../../language";
+import { Ast, AstUtils, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
-import { Type, TypeUtils } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;

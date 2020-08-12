@@ -2,10 +2,9 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
-import { Type, TypeUtils } from "../../../type";
 import { ScopeById, ScopeItemByKey, ScopeItemKind, tryScopeItems, TScopeItem } from "../../scope";
 import { TypeById } from "../common";
 import { inspectTypeConstant } from "./inspectTypeConstant";

@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert } from "../../common";
-import { Ast, AstUtils } from "../../language";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { Assert } from "../../../common";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
+import { Ast, AstUtils } from "../../ast";
 import { isTypeInArray } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 

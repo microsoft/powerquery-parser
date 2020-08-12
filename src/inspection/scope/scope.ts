@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
-import { Ast } from "../../language";
+import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
 import {
     AncestryUtils,
@@ -14,7 +14,6 @@ import {
     XorNodeUtils,
 } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { Type, TypeInspector, TypeUtils } from "../../type";
 import {
     KeyValuePairScopeItem,
     ParameterScopeItem,

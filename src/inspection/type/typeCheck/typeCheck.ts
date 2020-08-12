@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../../common";
+import { Type } from "../../../language/type";
 import { getLocalizationTemplates } from "../../../localization";
 import { NodeIdMap } from "../../../parser";
 import { CommonSettings } from "../../../settings";
-import { Type } from "../../../type";
 import { TriedType, tryType, TypeCache } from "../tasks";
 
 export function tryTypeCheckNode(

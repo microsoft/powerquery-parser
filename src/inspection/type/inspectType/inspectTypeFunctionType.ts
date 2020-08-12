@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { TypeScriptUtils } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { Type, TypeUtils } from "../../../type";
 import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
 
 export function inspectTypeFunctionType(

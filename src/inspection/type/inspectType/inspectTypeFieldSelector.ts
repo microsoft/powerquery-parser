@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { Assert } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
 export function inspectTypeFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Type.TType {

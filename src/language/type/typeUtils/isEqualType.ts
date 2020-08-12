@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { ArrayUtils, Assert, MapUtils } from "../../common";
+import { ArrayUtils, Assert, MapUtils } from "../../../common";
 
 export function isEqualType(left: Type.TType, right: Type.TType): boolean {
     if (left === right) {

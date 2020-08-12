@@ -11,4 +11,3 @@ export * from "./lexer";
 export * from "./localization";
 export * from "./parser";
 export * from "./settings";
-export * from "./type";

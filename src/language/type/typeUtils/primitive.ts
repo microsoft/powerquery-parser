@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert } from "../../common";
-import { Ast } from "../../language";
+import { Assert } from "../../../common";
+import { Ast } from "../../ast";
 
 export function maybePrimitiveTypeConstantKindFromTypeKind(
     typeKind: Type.TypeKind,

@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
-import { Type, TypeUtils } from "../../../type";
 
 export function inspectTypeConstant(xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Constant);

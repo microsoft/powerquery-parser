@@ -7,10 +7,9 @@ import { Inspection, Task } from "../../..";
 import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { Ast } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
-import { Type, TypeUtils } from "../../../type";
 import { expectLexParseOk, expectParseErr, expectTextWithPosition } from "../../common";
 
 function expectParseOkNodeTypeEqual(text: string, expected: Type.TType): void {

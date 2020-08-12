@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Type, TypeUtils } from "..";
-import { Ast, AstUtils } from "../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../parser";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { Ast, AstUtils } from "../../ast";
 
 export interface InspectedFunctionExpression {
     readonly parameters: ReadonlyArray<InspectedFunctionParameter>;

@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { Assert, CommonError, Result, ResultUtils } from "../common";
-import { ActiveNode, ActiveNodeLeafKind } from "../inspection/activeNode";
-import { Ast } from "../language";
-import { getLocalizationTemplates } from "../localization";
-import { TXorNode, XorNodeKind } from "../parser";
-import { CommonSettings } from "../settings";
+import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { ActiveNode, ActiveNodeLeafKind } from "../../inspection/activeNode";
+import { Ast } from "../../language";
+import { getLocalizationTemplates } from "../../localization";
+import { TXorNode, XorNodeKind } from "../../parser";
+import { CommonSettings } from "../../settings";
 
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 

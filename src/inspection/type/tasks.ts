@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { Type } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
 import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { Type } from "../../type";
 import { ScopeById, ScopeItemByKey } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { TypeById } from "./common";

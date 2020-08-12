@@ -6,10 +6,9 @@ import "mocha";
 import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { Ast } from "../../../language";
+import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { ExpectedType, Type, TypeUtils } from "../../../type";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
 function expectParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {

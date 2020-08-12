@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../../language";
+import { Ast, Type } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { Type } from "../../../type";
 import { inspectTypeFromChildAttributeIndex, inspectXorNode, TypeInspectionState } from "./common";
 
 export function inspectTypeRecursivePrimaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {

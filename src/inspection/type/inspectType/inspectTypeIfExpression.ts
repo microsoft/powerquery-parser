@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
-import { Type, TypeUtils } from "../../../type";
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
 
 export function inspectTypeIfExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {

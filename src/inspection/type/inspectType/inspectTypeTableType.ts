@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../../language";
+import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 

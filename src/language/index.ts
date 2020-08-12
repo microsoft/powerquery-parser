@@ -5,3 +5,4 @@ export * from "./ast";
 export * from "./comment";
 export * from "./keyword";
 export * from "./token";
+export * from "./type";

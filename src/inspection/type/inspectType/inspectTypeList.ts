@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Type } from "../../../language/type";
 import { NodeIdMapIterator, TXorNode } from "../../../parser";
-import { Type } from "../../../type";
 import { inspectXorNode, TypeInspectionState } from "./common";
 
 export function inspectTypeList(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedList {
