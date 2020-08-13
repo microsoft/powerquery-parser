@@ -3,9 +3,9 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeParameter(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Parameter);
 
     const maybeOptionalConstant:

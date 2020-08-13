@@ -4,12 +4,9 @@
 import { TypeScriptUtils } from "../../../common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeFunctionType(
-    state: TypeInspectionState,
-    xorNode: TXorNode,
-): Type.FunctionType | Type.Unknown {
+export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNode): Type.FunctionType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionType);
 
     const maybeParameters:

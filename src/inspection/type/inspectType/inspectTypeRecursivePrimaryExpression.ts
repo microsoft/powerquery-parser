@@ -3,9 +3,9 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectTypeFromChildAttributeIndex, inspectXorNode, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXorNode } from "./common";
 
-export function inspectTypeRecursivePrimaryExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
     const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(

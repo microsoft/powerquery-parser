@@ -9,7 +9,7 @@ import { CommonSettings } from "../../settings";
 import { ScopeById, ScopeItemByKey } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { TypeById } from "./common";
-import { expectGetOrCreateScope, getOrFindScopeItemType, inspectXorNode, TypeInspectionState } from "./inspectType";
+import { expectGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXorNode } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
@@ -28,7 +28,7 @@ export function tryScopeType(
     nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedScopeType {
-    const state: TypeInspectionState = {
+    const state: InspectTypeState = {
         settings,
         givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
@@ -47,7 +47,7 @@ export function tryType(
     nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedType {
-    const state: TypeInspectionState = {
+    const state: InspectTypeState = {
         settings,
         givenTypeById: maybeTypeCache?.scopeById ?? new Map(),
         deltaTypeById: new Map(),
@@ -61,7 +61,7 @@ export function tryType(
     );
 }
 
-function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeTypeByKey {
+function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
     const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, nodeId);
 
     for (const scopeItem of scopeItemByKey.values()) {

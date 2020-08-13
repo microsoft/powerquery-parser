@@ -3,9 +3,9 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectXorNode, TypeInspectionState } from "./common";
+import { InspectTypeState, inspectXorNode } from "./common";
 
-export function inspectTypeInvokeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.InvokeExpression);
 
     const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(

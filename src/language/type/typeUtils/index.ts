@@ -3,6 +3,6 @@
 
 export * from "./isEqualType";
 export * from "./factories";
-export * from "./isSubset";
+export * from "./isCompatible";
 export * from "./primitive";
 export * from "./typeUtils";

@@ -3,9 +3,9 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectXorNode, TypeInspectionState } from "./common";
+import { InspectTypeState, inspectXorNode } from "./common";
 
-export function inspectTypeListType(state: TypeInspectionState, xorNode: TXorNode): Type.ListType | Type.Unknown {
+export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode): Type.ListType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ListType);
 
     const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(

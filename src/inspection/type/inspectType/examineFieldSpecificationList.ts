@@ -3,7 +3,7 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { TypeInspectionState } from "./common";
+import { InspectTypeState } from "./common";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 
 export interface ExaminedFieldSpecificationList {
@@ -13,7 +13,7 @@ export interface ExaminedFieldSpecificationList {
 
 // It's called an examination instead of inspection because it doesn't return TType.
 export function examineFieldSpecificationList(
-    state: TypeInspectionState,
+    state: InspectTypeState,
     xorNode: TXorNode,
 ): ExaminedFieldSpecificationList {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecificationList);

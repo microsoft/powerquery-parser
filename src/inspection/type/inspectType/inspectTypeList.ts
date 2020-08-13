@@ -3,9 +3,9 @@
 
 import { Type } from "../../../language/type";
 import { NodeIdMapIterator, TXorNode } from "../../../parser";
-import { inspectXorNode, TypeInspectionState } from "./common";
+import { InspectTypeState, inspectXorNode } from "./common";
 
-export function inspectTypeList(state: TypeInspectionState, xorNode: TXorNode): Type.DefinedList {
+export function inspectTypeList(state: InspectTypeState, xorNode: TXorNode): Type.DefinedList {
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
     const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => inspectXorNode(state, item));
 

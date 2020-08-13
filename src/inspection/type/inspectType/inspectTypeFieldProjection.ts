@@ -4,9 +4,9 @@
 import { ArrayUtils, MapUtils } from "../../../common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectXorNode, TypeInspectionState } from "./common";
+import { InspectTypeState, inspectXorNode } from "./common";
 
-export function inspectTypeFieldProjection(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.fieldProjectionFieldNames(

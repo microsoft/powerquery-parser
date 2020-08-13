@@ -3,9 +3,9 @@
 
 import { Ast, Type, TypeInspector } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
-import { allForAnyUnion, inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeFunctionExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionExpression);
 
     const inspectedFunctionExpression: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(

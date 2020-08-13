@@ -4,9 +4,9 @@
 import { Assert } from "../../../common";
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectXorNode, TypeInspectionState } from "./common";
+import { InspectTypeState, inspectXorNode } from "./common";
 
-export function inspectTypeFieldSelector(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSelector);
 
     const maybeFieldName: Ast.TNode | undefined = NodeIdMapUtils.maybeWrappedContentAst(

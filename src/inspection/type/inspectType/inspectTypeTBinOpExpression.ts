@@ -4,11 +4,11 @@
 import { Assert, CommonError } from "../../../common";
 import { Ast, AstUtils, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
-import { inspectXorNode, TypeInspectionState } from "./common";
+import { InspectTypeState, inspectXorNode } from "./common";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 
-export function inspectTypeTBinOpExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     Assert.isTrue(AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
         nodeKind: xorNode.node.kind,

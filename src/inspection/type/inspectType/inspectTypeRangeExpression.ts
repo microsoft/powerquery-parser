@@ -3,9 +3,9 @@
 
 import { Ast, Type, TypeUtils } from "../../../language";
 import { TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectTypeFromChildAttributeIndex, TypeInspectionState } from "./common";
+import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeRangeExpression(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RangeExpression);
 
     const maybeLeftType: Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);

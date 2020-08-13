@@ -31,7 +31,7 @@ import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 
-export interface TypeInspectionState {
+export interface InspectTypeState {
     readonly settings: CommonSettings;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
@@ -40,7 +40,7 @@ export interface TypeInspectionState {
     scopeById: ScopeById;
 }
 
-export function getOrFindScopeItemType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+export function getOrFindScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
     const nodeId: number = scopeItem.id;
 
     const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
@@ -57,7 +57,7 @@ export function getOrFindScopeItemType(state: TypeInspectionState, scopeItem: TS
     return scopeType;
 }
 
-export function expectGetOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
+export function expectGetOrCreateScope(state: InspectTypeState, nodeId: number): ScopeItemByKey {
     const triedGetOrCreateScope: Result<ScopeItemByKey, CommonError.CommonError> = getOrCreateScope(state, nodeId);
     if (ResultUtils.isErr(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope.error;
@@ -67,7 +67,7 @@ export function expectGetOrCreateScope(state: TypeInspectionState, nodeId: numbe
 }
 
 export function getOrCreateScope(
-    state: TypeInspectionState,
+    state: InspectTypeState,
     nodeId: number,
 ): Result<ScopeItemByKey, CommonError.CommonError> {
     const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
@@ -78,7 +78,7 @@ export function getOrCreateScope(
     return tryScopeItems(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
 }
 
-export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
             return inspectXorNode(state, scopeItem.eachExpression);
@@ -104,7 +104,7 @@ export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeIt
     }
 }
 
-export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectXorNode(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     const xorNodeId: number = xorNode.node.id;
     const maybeCached: Type.TType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
@@ -283,7 +283,7 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
 }
 
 export function inspectTypeFromChildAttributeIndex(
-    state: TypeInspectionState,
+    state: InspectTypeState,
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
@@ -311,7 +311,7 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
     );
 }
 
-export function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TXorNode): undefined | Type.TType {
+export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode: TXorNode): undefined | Type.TType {
     const maybeDeferenced: TXorNode | undefined = maybeDereferencedIdentifier(state, xorNode);
     if (maybeDeferenced === undefined) {
         return undefined;
@@ -385,7 +385,7 @@ export function maybeDereferencedIdentifierType(state: TypeInspectionState, xorN
     return inspectXorNode(state, maybeNextXorNode);
 }
 
-function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNode): TXorNode | undefined {
+function maybeDereferencedIdentifier(state: InspectTypeState, xorNode: TXorNode): TXorNode | undefined {
     XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
 
     if (xorNode.kind === XorNodeKind.Context) {

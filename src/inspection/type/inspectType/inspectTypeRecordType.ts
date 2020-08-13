@@ -3,10 +3,10 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { TypeInspectionState } from "./common";
+import { InspectTypeState } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
-export function inspectTypeRecordType(state: TypeInspectionState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
+export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecordType);
 
     const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(

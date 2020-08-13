@@ -3,11 +3,11 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectXorNode, TypeInspectionState } from "./common";
+import { InspectTypeState, inspectXorNode } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
 export function inspectTypeTableType(
-    state: TypeInspectionState,
+    state: InspectTypeState,
     xorNode: TXorNode,
 ): Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.TableType);
