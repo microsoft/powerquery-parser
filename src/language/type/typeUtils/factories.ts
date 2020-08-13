@@ -29,6 +29,41 @@ export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Ty
     };
 }
 
+export function definedFunctionFactory(
+    isNullable: boolean,
+    parameters: ReadonlyArray<Type.FunctionParameter>,
+    returnType: Type.TType,
+): Type.DefinedFunction {
+    return {
+        kind: Type.TypeKind.Function,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+        isNullable,
+        parameters,
+        returnType,
+    };
+}
+
+export function definedListFactory(isNullable: boolean, elements: ReadonlyArray<Type.TType>): Type.DefinedList {
+    return {
+        kind: Type.TypeKind.List,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+        isNullable,
+        elements,
+    };
+}
+
+export function definedListTypeFactory(
+    isNullable: boolean,
+    itemTypes: ReadonlyArray<Type.TType>,
+): Type.DefinedListType {
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedListType,
+        isNullable,
+        itemTypes,
+    };
+}
+
 export function definedRecordFactory(
     isNullable: boolean,
     fields: Map<string, Type.TType>,
@@ -57,6 +92,20 @@ export function definedTableFactory(
     };
 }
 
+export function functionTypeFactory(
+    isNullable: boolean,
+    parameters: ReadonlyArray<Type.FunctionParameter>,
+    returnType: Type.TType,
+): Type.FunctionType {
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
+        isNullable,
+        parameters,
+        returnType,
+    };
+}
+
 export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
     if (parameter.maybeType === undefined) {
         return Type.NoneInstance;
@@ -66,5 +115,66 @@ export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
         kind: typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
         maybeExtendedKind: undefined,
         isNullable: parameter.isNullable,
+    };
+}
+
+export function listTypeFactory(isNullable: boolean, itemType: Type.TType): Type.ListType {
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.ListType,
+        isNullable,
+        itemType,
+    };
+}
+
+export function primaryPrimitiveTypeFactory(
+    isNullable: boolean,
+    primitiveType: Type.TPrimitiveType,
+): Type.PrimaryPrimitiveType {
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.PrimaryPrimitiveType,
+        isNullable,
+        primitiveType,
+    };
+}
+
+export function recordTypeFactory(
+    isNullable: boolean,
+    fields: Map<string, Type.TType>,
+    isOpen: boolean,
+): Type.RecordType {
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
+        isNullable,
+        fields,
+        isOpen,
+    };
+}
+
+export function tableTypeFactory(
+    isNullable: boolean,
+    fields: Map<string, Type.TType>,
+    isOpen: boolean,
+): Type.TableType {
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.TableType,
+        isNullable,
+        fields,
+        isOpen,
+    };
+}
+
+export function tableTypePrimaryExpression(
+    isNullable: boolean,
+    primaryExpression: Type.TType,
+): Type.TableTypePrimaryExpression {
+    return {
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
+        isNullable,
+        primaryExpression,
     };
 }
