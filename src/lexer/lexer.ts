@@ -559,7 +559,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
         }
     }
 
-    let partialTokenizeResult: PartialResult<TokenizeChanges, LexError.TLexError>;
+    let partialTokenizeResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>;
     if (maybeError) {
         if (newTokens.length) {
             partialTokenizeResult = PartialResultUtils.mixedFactory(
@@ -585,7 +585,7 @@ function tokenize(localizationTemplates: ILocalizationTemplates, line: TLine, li
 // Takes the return from a tokenizeX function to updates the TLine's state.
 function updateLineState(
     line: TLine,
-    tokenizePartialResult: PartialResult<TokenizeChanges, LexError.TLexError>,
+    tokenizePartialResult: PartialResult<TokenizeChanges, TokenizeChanges, LexError.TLexError>,
 ): TLine {
     switch (tokenizePartialResult.kind) {
         case PartialResultKind.Ok: {
