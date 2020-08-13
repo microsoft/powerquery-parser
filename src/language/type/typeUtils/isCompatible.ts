@@ -38,25 +38,25 @@ export function isCompatible(left: Type.TType, right: Type.TType): boolean | und
             return (right.isNullable === true && left.kind === Type.TypeKind.Null) || isEqualType(left, right);
 
         case Type.TypeKind.Any:
-            return isCompatibleOfAny(left, right);
+            return isCompatibleWithAny(left, right);
 
         case Type.TypeKind.AnyNonNull:
             return left.kind !== Type.TypeKind.Null;
 
         case Type.TypeKind.Function:
-            return isCompatibleOfFunction(left, right);
+            return isCompatibleWithFunction(left, right);
 
         case Type.TypeKind.List:
-            return isCompatibleOfList(left, right);
+            return isCompatibleWithList(left, right);
 
         case Type.TypeKind.Record:
-            return isCompatibleOfRecord(left, right);
+            return isCompatibleWithRecord(left, right);
 
         case Type.TypeKind.Table:
-            return isCompatibleOfTable(left, right);
+            return isCompatibleWithTable(left, right);
 
         case Type.TypeKind.Type:
-            return isCompatibleOfType(left, right);
+            return isCompatibleWithType(left, right);
 
         case Type.TypeKind.None:
             return false;
@@ -66,7 +66,7 @@ export function isCompatible(left: Type.TType, right: Type.TType): boolean | und
     }
 }
 
-export function isCompatibleOfAny(left: Type.TType, right: Type.Any | Type.AnyUnion): boolean {
+export function isCompatibleWithAny(left: Type.TType, right: Type.Any | Type.AnyUnion): boolean {
     if (left.kind !== Type.TypeKind.Any || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -86,7 +86,7 @@ export function isCompatibleOfAny(left: Type.TType, right: Type.Any | Type.AnyUn
     }
 }
 
-export function isCompatibleOfDefinedList(left: Type.TType, right: Type.DefinedList): boolean {
+export function isCompatibleWithDefinedList(left: Type.TType, right: Type.DefinedList): boolean {
     if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -103,7 +103,7 @@ export function isCompatibleOfDefinedList(left: Type.TType, right: Type.DefinedL
     }
 }
 
-export function isCompatibleOfDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
+export function isCompatibleWithDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
     if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -113,14 +113,14 @@ export function isCompatibleOfDefinedRecord(left: Type.TType, right: Type.Define
             return true;
 
         case Type.ExtendedTypeKind.DefinedRecord:
-            return isCompatibleOfFieldSpecificationList(left, right);
+            return isCompatibleWithFieldSpecificationList(left, right);
 
         default:
             throw Assert.isNever(left);
     }
 }
 
-export function isCompatibleOfDefinedTable(left: Type.TType, right: Type.DefinedTable): boolean {
+export function isCompatibleWithDefinedTable(left: Type.TType, right: Type.DefinedTable): boolean {
     if (left.kind !== Type.TypeKind.Table || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -130,7 +130,7 @@ export function isCompatibleOfDefinedTable(left: Type.TType, right: Type.Defined
             return true;
 
         case Type.ExtendedTypeKind.DefinedTable: {
-            return isCompatibleOfFieldSpecificationList(left, right);
+            return isCompatibleWithFieldSpecificationList(left, right);
         }
 
         default:
@@ -138,7 +138,7 @@ export function isCompatibleOfDefinedTable(left: Type.TType, right: Type.Defined
     }
 }
 
-export function isCompatibleOfFunction(left: Type.TType, right: Type.Function | Type.DefinedFunction): boolean {
+export function isCompatibleWithFunction(left: Type.TType, right: Type.Function | Type.DefinedFunction): boolean {
     if (left.kind !== Type.TypeKind.Function || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -148,14 +148,14 @@ export function isCompatibleOfFunction(left: Type.TType, right: Type.Function | 
             return true;
 
         case Type.ExtendedTypeKind.DefinedFunction:
-            return isCompatibleOfFunctionSignature(left, right);
+            return isCompatibleWithFunctionSignature(left, right);
 
         default:
             throw Assert.isNever(right);
     }
 }
 
-export function isCompatibleOfList(left: Type.TType, right: Type.List | Type.DefinedList): boolean {
+export function isCompatibleWithList(left: Type.TType, right: Type.List | Type.DefinedList): boolean {
     if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -165,14 +165,14 @@ export function isCompatibleOfList(left: Type.TType, right: Type.List | Type.Def
             return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.DefinedList:
-            return isCompatibleOfDefinedList(left, right);
+            return isCompatibleWithDefinedList(left, right);
 
         default:
             throw Assert.isNever(right);
     }
 }
 
-export function isCompatibleOfListType(left: Type.TType, right: Type.ListType): boolean {
+export function isCompatibleWithListType(left: Type.TType, right: Type.ListType): boolean {
     if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -180,6 +180,9 @@ export function isCompatibleOfListType(left: Type.TType, right: Type.ListType): 
     switch (left.maybeExtendedKind) {
         case undefined:
             return true;
+
+        case Type.ExtendedTypeKind.DefinedListType:
+            return isDefinedListTypeCompatibleWithListType(left, right);
 
         case Type.ExtendedTypeKind.ListType:
             return isEqualType(left.itemType, right.itemType);
@@ -196,7 +199,34 @@ export function isCompatibleOfListType(left: Type.TType, right: Type.ListType): 
     }
 }
 
-export function isCompatibleOfTableType(left: Type.TType, right: Type.TableType): boolean {
+export function isCompatibleWithDefinedListType(left: Type.TType, right: Type.DefinedListType): boolean {
+    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+        return false;
+    }
+
+    switch (left.maybeExtendedKind) {
+        case undefined:
+            return true;
+
+        case Type.ExtendedTypeKind.DefinedListType:
+            return isEqualType(left, right);
+
+        case Type.ExtendedTypeKind.ListType:
+            return isDefinedListTypeCompatibleWithListType(right, left);
+
+        case Type.ExtendedTypeKind.FunctionType:
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+        case Type.ExtendedTypeKind.RecordType:
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+        case Type.ExtendedTypeKind.TableType:
+            return false;
+
+        default:
+            throw Assert.isNever(left);
+    }
+}
+
+export function isCompatibleWithTableType(left: Type.TType, right: Type.TableType): boolean {
     if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -206,8 +236,9 @@ export function isCompatibleOfTableType(left: Type.TType, right: Type.TableType)
             return true;
 
         case Type.ExtendedTypeKind.TableType:
-            return isCompatibleOfFieldSpecificationList(left, right);
+            return isCompatibleWithFieldSpecificationList(left, right);
 
+        case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.ListType:
         case Type.ExtendedTypeKind.FunctionType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
@@ -220,7 +251,7 @@ export function isCompatibleOfTableType(left: Type.TType, right: Type.TableType)
     }
 }
 
-export function isCompatibleOfTableTypePrimaryExpression(
+export function isCompatibleWithTableTypePrimaryExpression(
     left: Type.TType,
     right: Type.TableTypePrimaryExpression,
 ): boolean | undefined {
@@ -235,6 +266,7 @@ export function isCompatibleOfTableTypePrimaryExpression(
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
             return isCompatible(left.primaryExpression, right.primaryExpression);
 
+        case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.ListType:
         case Type.ExtendedTypeKind.FunctionType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
@@ -247,7 +279,7 @@ export function isCompatibleOfTableTypePrimaryExpression(
     }
 }
 
-export function isCompatibleOfPrimaryPrimitiveType(left: Type.TType, right: Type.PrimaryPrimitiveType): boolean {
+export function isCompatibleWithPrimaryPrimitiveType(left: Type.TType, right: Type.PrimaryPrimitiveType): boolean {
     if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -259,6 +291,7 @@ export function isCompatibleOfPrimaryPrimitiveType(left: Type.TType, right: Type
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
             return left.primitiveType === right.primitiveType;
 
+        case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.ListType:
         case Type.ExtendedTypeKind.FunctionType:
         case Type.ExtendedTypeKind.RecordType:
@@ -271,7 +304,7 @@ export function isCompatibleOfPrimaryPrimitiveType(left: Type.TType, right: Type
     }
 }
 
-export function isCompatibleOfRecordType(left: Type.TType, right: Type.RecordType): boolean {
+export function isCompatibleWithRecordType(left: Type.TType, right: Type.RecordType): boolean {
     if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -281,8 +314,9 @@ export function isCompatibleOfRecordType(left: Type.TType, right: Type.RecordTyp
             return true;
 
         case Type.ExtendedTypeKind.RecordType:
-            return isCompatibleOfFieldSpecificationList(left, right);
+            return isCompatibleWithFieldSpecificationList(left, right);
 
+        case Type.ExtendedTypeKind.DefinedListType:
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
         case Type.ExtendedTypeKind.ListType:
         case Type.ExtendedTypeKind.FunctionType:
@@ -295,7 +329,7 @@ export function isCompatibleOfRecordType(left: Type.TType, right: Type.RecordTyp
     }
 }
 
-export function isCompatibleOfRecord(left: Type.TType, right: Type.Record | Type.DefinedRecord): boolean {
+export function isCompatibleWithRecord(left: Type.TType, right: Type.Record | Type.DefinedRecord): boolean {
     if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -305,14 +339,14 @@ export function isCompatibleOfRecord(left: Type.TType, right: Type.Record | Type
             return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.DefinedRecord:
-            return isCompatibleOfDefinedRecord(left, right);
+            return isCompatibleWithDefinedRecord(left, right);
 
         default:
             throw Assert.isNever(right);
     }
 }
 
-export function isCompatibleOfTable(left: Type.TType, right: Type.Table | Type.DefinedTable): boolean {
+export function isCompatibleWithTable(left: Type.TType, right: Type.Table | Type.DefinedTable): boolean {
     if (left.kind !== Type.TypeKind.Table || (left.isNullable === true && right.isNullable === false)) {
         return false;
     }
@@ -322,23 +356,24 @@ export function isCompatibleOfTable(left: Type.TType, right: Type.Table | Type.D
             return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.DefinedTable:
-            return isCompatibleOfDefinedTable(left, right);
+            return isCompatibleWithDefinedTable(left, right);
 
         default:
             throw Assert.isNever(right);
     }
 }
 
-export function isCompatibleOfType(
+export function isCompatibleWithType(
     left: Type.TType,
     right:
-        | Type.Type
+        | Type.DefinedListType
         | Type.FunctionType
         | Type.ListType
         | Type.PrimaryPrimitiveType
         | Type.RecordType
         | Type.TableType
-        | Type.TableTypePrimaryExpression,
+        | Type.TableTypePrimaryExpression
+        | Type.Type,
 ): boolean | undefined {
     if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
         return false;
@@ -349,22 +384,25 @@ export function isCompatibleOfType(
             return left.maybeExtendedKind === undefined;
 
         case Type.ExtendedTypeKind.FunctionType:
-            return isCompatibleOfFunctionSignature(left, right);
+            return isCompatibleWithFunctionSignature(left, right);
 
         case Type.ExtendedTypeKind.ListType:
-            return isCompatibleOfListType(left, right);
+            return isCompatibleWithListType(left, right);
+
+        case Type.ExtendedTypeKind.DefinedListType:
+            return isCompatibleWithDefinedListType(left, right);
 
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-            return isCompatibleOfPrimaryPrimitiveType(left, right);
+            return isCompatibleWithPrimaryPrimitiveType(left, right);
 
         case Type.ExtendedTypeKind.RecordType:
-            return isCompatibleOfRecordType(left, right);
+            return isCompatibleWithRecordType(left, right);
 
         case Type.ExtendedTypeKind.TableType:
-            return isCompatibleOfTableType(left, right);
+            return isCompatibleWithTableType(left, right);
 
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-            return isCompatibleOfTableTypePrimaryExpression(left, right);
+            return isCompatibleWithTableTypePrimaryExpression(left, right);
 
         default:
             throw Assert.isNever(right);
@@ -372,7 +410,7 @@ export function isCompatibleOfType(
 }
 
 // TODO: decide what a compatible FieldSpecificationList should look like
-function isCompatibleOfFieldSpecificationList(
+function isCompatibleWithFieldSpecificationList(
     left: Type.TType,
     right: Type.TType & Type.FieldSpecificationList,
 ): boolean {
@@ -386,10 +424,18 @@ function isCompatibleOfFieldSpecificationList(
 }
 
 // TODO: decide what a compatible FieldSpecificationList should look like
-function isCompatibleOfFunctionSignature(left: Type.TType, right: Type.TType & Type.FunctionSignature): boolean {
+function isCompatibleWithFunctionSignature(left: Type.TType, right: Type.TType & Type.FunctionSignature): boolean {
     if ((left.isNullable === true && right.isNullable === false) || !isFunctionSignature(left)) {
         return false;
     }
 
     return isEqualFunctionSignature(left, right);
+}
+
+function isDefinedListTypeCompatibleWithListType(definedList: Type.DefinedListType, listType: Type.ListType): boolean {
+    const itemTypeCompatabilities: ReadonlyArray<boolean | undefined> = definedList.itemTypes.map(itemType =>
+        isCompatible(itemType, listType.itemType),
+    );
+    // !itemTypeCompatabilities.includes(undefined) && !itemTypeCompatabilities.includes(false);
+    return itemTypeCompatabilities.find(value => value === undefined || value === false) !== undefined;
 }

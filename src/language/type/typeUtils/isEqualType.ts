@@ -55,6 +55,9 @@ export function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExte
         case Type.ExtendedTypeKind.DefinedList:
             return isEqualDefinedList(left, right as Type.DefinedList);
 
+        case Type.ExtendedTypeKind.DefinedListType:
+            return isEqualDefinedListType(left, right as Type.DefinedListType);
+
         case Type.ExtendedTypeKind.DefinedRecord:
             return isEqualDefinedRecord(left, right as Type.DefinedRecord);
 
@@ -131,6 +134,19 @@ export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedLi
     const rightElements: ReadonlyArray<Type.TType> = right.elements;
     return ArrayUtils.all(
         left.elements.map((leftType: Type.TType, index: number) => isEqualType(leftType, rightElements[index])),
+    );
+}
+
+export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.DefinedListType): boolean {
+    if (left === right) {
+        return true;
+    } else if (left.itemTypes.length !== right.itemTypes.length || left.isNullable !== right.isNullable) {
+        return false;
+    }
+
+    const rightElements: ReadonlyArray<Type.TType> = right.itemTypes;
+    return ArrayUtils.all(
+        left.itemTypes.map((leftType: Type.TType, index: number) => isEqualType(leftType, rightElements[index])),
     );
 }
 

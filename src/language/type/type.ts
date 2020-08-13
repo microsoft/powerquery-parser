@@ -6,6 +6,7 @@ export type TExtendedType =
     | AnyUnion
     | DefinedFunction
     | DefinedList
+    | DefinedListType
     | DefinedRecord
     | DefinedTable
     | FunctionType
@@ -106,9 +107,12 @@ export const enum ExtendedTypeKind {
     // A function with known paramaters and return type.
     DefinedFunction = "DefinedFunction",
 
-    // A list of known size and types.
+    // A list of known size and types for each list element.
     // Eg. `{1, "foo"}
     DefinedList = "DefinedList",
+
+    // Is a narrower typing for ListType, used on DefinedList.
+    DefinedListType = "DefinedListType",
 
     // A list of known fields and their types. Optionally considered an open record. Eg.
     // An open record: `[a=1, b=2, ...]`
@@ -118,17 +122,17 @@ export const enum ExtendedTypeKind {
     // See details on DefinedRecord. They are functionally the same.
     DefinedTable = "DefinedTable",
 
-    // TODO delete
-    PrimaryPrimitiveType = "PrimaryPrimitiveType",
+    // `type function (x as number, optional y) => number`
+    FunctionType = "FunctionType",
 
     // `type list { number }`
     ListType = "ListType",
 
+    // `type number`
+    PrimaryPrimitiveType = "PrimaryPrimitiveType",
+
     // `type record [ a, b = number, ...]`
     RecordType = "RecordType",
-
-    // `type function (x as number, optional y) => number`
-    FunctionType = "FunctionType",
 
     // `type table [a, b = text]
     TableType = "TableType",
@@ -180,6 +184,13 @@ export interface DefinedList extends IExtendedType {
     readonly kind: TypeKind.List;
     readonly maybeExtendedKind: ExtendedTypeKind.DefinedList;
     readonly elements: ReadonlyArray<TType>;
+}
+
+// A ListType for DefinedList
+export interface DefinedListType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.DefinedListType;
+    readonly itemTypes: ReadonlyArray<TType>;
 }
 
 export type DefinedRecord = IExtendedType &
