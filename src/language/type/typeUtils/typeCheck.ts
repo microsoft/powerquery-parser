@@ -93,8 +93,6 @@ export function typeCheckListTypeWithDefinedListType(
         extraneousIndices,
         missingIndices,
     };
-
-    // return true;
 }
 
 export function typeCheckRecord(valueType: Type.DefinedRecord, schemaType: Type.RecordType): CheckedRecord {
