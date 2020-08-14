@@ -98,30 +98,12 @@ export function isEqualDefinedFunction(left: Type.DefinedFunction, right: Type.D
     return isEqualFunctionSignature(left, right);
 }
 
-export function isEqualDefinedFunctionParameters(
-    left: ReadonlyArray<Type.FunctionParameter>,
-    right: ReadonlyArray<Type.FunctionParameter>,
-): boolean {
-    if (left === right) {
-        return true;
-    } else if (left.length !== right.length) {
-        return false;
-    }
-
-    const numParameters: number = left.length;
-    for (let index: number = 0; index < numParameters; index += 1) {
-        const nthLeft: Type.FunctionParameter = left[index];
-        const nthRight: Type.FunctionParameter = right[index];
-        if (
-            nthLeft.isNullable !== nthRight.isNullable ||
-            nthLeft.isOptional !== nthRight.isOptional ||
-            nthLeft.maybeType !== nthRight.maybeType
-        ) {
-            return false;
-        }
-    }
-
-    return true;
+export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Type.FunctionParameter): boolean {
+    return (
+        left.isNullable !== right.isNullable ||
+        left.isOptional !== right.isOptional ||
+        left.maybeType !== right.maybeType
+    );
 }
 
 export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
@@ -195,6 +177,28 @@ export function isEqualFieldSpecificationList(
     return true;
 }
 
+export function isEqualFunctionParameters(
+    left: ReadonlyArray<Type.FunctionParameter>,
+    right: ReadonlyArray<Type.FunctionParameter>,
+): boolean {
+    if (left === right) {
+        return true;
+    } else if (left.length !== right.length) {
+        return false;
+    }
+
+    const numParameters: number = left.length;
+    for (let index: number = 0; index < numParameters; index += 1) {
+        const nthLeft: Type.FunctionParameter = left[index];
+        const nthRight: Type.FunctionParameter = right[index];
+        if (!isEqualFunctionParameter(nthLeft, nthRight)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export function isEqualFunctionSignature(
     left: Type.TType & Type.FunctionSignature,
     right: Type.TType & Type.FunctionSignature,
@@ -203,7 +207,7 @@ export function isEqualFunctionSignature(
         left === right ||
         (left.isNullable === right.isNullable &&
             isEqualType(left.returnType, right.returnType) &&
-            isEqualDefinedFunctionParameters(left.parameters, right.parameters))
+            isEqualFunctionParameters(left.parameters, right.parameters))
     );
 }
 

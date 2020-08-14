@@ -13,28 +13,21 @@ export function all<T>(
     return true;
 }
 
-export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
-    return removeAtIndex(collection, collection.indexOf(element));
+export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?: string, maybeDetails?: {}): number {
+    const index: number = collection.indexOf(item);
+    Assert.isTrue(index !== -1, maybeMessage, maybeDetails ?? { item });
+
+    return index;
 }
 
-export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
-    const partial: T[] = [...left];
-    for (const element of right) {
-        if (partial.indexOf(element) === -1) {
-            partial.push(element);
-        }
-    }
-
-    return partial;
-}
-
-export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
-    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
-        index,
-        collectionLength: collection.length,
-    });
-
-    return [...collection.slice(0, index), ...collection.slice(index + 1)];
+export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: {}): void {
+    Assert.isTrue(
+        collection.length > 0,
+        maybeMessage ?? `collection should have at least one element in it`,
+        maybeDetails ?? {
+            collectionLength: collection.length,
+        },
+    );
 }
 
 export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) => boolean): T | undefined {
@@ -77,6 +70,35 @@ export function isSubset<T>(
     return true;
 }
 
+export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
+    return removeAtIndex(collection, collection.indexOf(element));
+}
+
+export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
+    const partial: T[] = [...left];
+    for (const element of right) {
+        if (partial.indexOf(element) === -1) {
+            partial.push(element);
+        }
+    }
+
+    return partial;
+}
+
+export function range(size: number, startAt: number = 0): ReadonlyArray<number> {
+    // tslint:disable-next-line: prefer-array-literal
+    return [...Array(size).keys()].map(i => i + startAt);
+}
+
+export function removeAtIndex<T>(collection: ReadonlyArray<T>, index: number): T[] {
+    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
+        index,
+        collectionLength: collection.length,
+    });
+
+    return [...collection.slice(0, index), ...collection.slice(index + 1)];
+}
+
 export function split<T>(
     collection: ReadonlyArray<T>,
     splitFn: (value: T) => boolean,
@@ -93,21 +115,4 @@ export function split<T>(
     }
 
     return [left, right];
-}
-
-export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?: string, maybeDetails?: {}): number {
-    const index: number = collection.indexOf(item);
-    Assert.isTrue(index !== -1, maybeMessage, maybeDetails ?? { item });
-
-    return index;
-}
-
-export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: {}): void {
-    Assert.isTrue(
-        collection.length > 0,
-        maybeMessage ?? `collection should have at least one element in it`,
-        maybeDetails ?? {
-            collectionLength: collection.length,
-        },
-    );
 }

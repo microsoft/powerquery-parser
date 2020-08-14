@@ -153,6 +153,10 @@ export interface IExtendedType extends IType {
     readonly maybeExtendedKind: ExtendedTypeKind;
 }
 
+// ------------------------------------------
+// ---------- Non-IType Interfaces ----------
+// ------------------------------------------
+
 export interface FieldSpecificationList {
     readonly fields: Map<string, TType>;
     readonly isOpen: boolean;
@@ -166,6 +170,21 @@ export interface FunctionSignature {
 export interface IPrimitiveType<T extends TypeKind = TypeKind> extends IType<T> {
     readonly maybeExtendedKind: undefined;
 }
+
+export interface SimplifiedNullablePrimitiveType {
+    readonly typeKind: TypeKind;
+    readonly isNullable: boolean;
+}
+
+export interface FunctionParameter {
+    readonly isOptional: boolean;
+    readonly isNullable: boolean;
+    readonly maybeType: TypeKind | undefined;
+}
+
+// ------------------------------------------
+// ---------- Type Implementations ----------
+// ------------------------------------------
 
 export interface AnyUnion extends IExtendedType {
     readonly kind: TypeKind.Any;
@@ -205,12 +224,6 @@ export type DefinedTable = IExtendedType &
         readonly maybeExtendedKind: ExtendedTypeKind.DefinedTable;
     };
 
-export interface PrimaryPrimitiveType extends IExtendedType {
-    readonly kind: TypeKind.Type;
-    readonly maybeExtendedKind: ExtendedTypeKind.PrimaryPrimitiveType;
-    readonly primitiveType: TPrimitiveType;
-}
-
 export type FunctionType = IExtendedType &
     FunctionSignature & {
         readonly kind: TypeKind.Type;
@@ -223,16 +236,17 @@ export interface ListType extends IExtendedType {
     readonly itemType: TType;
 }
 
+export interface PrimaryPrimitiveType extends IExtendedType {
+    readonly kind: TypeKind.Type;
+    readonly maybeExtendedKind: ExtendedTypeKind.PrimaryPrimitiveType;
+    readonly primitiveType: TPrimitiveType;
+}
+
 export type RecordType = IExtendedType &
     FieldSpecificationList & {
         readonly kind: TypeKind.Type;
         readonly maybeExtendedKind: ExtendedTypeKind.RecordType;
     };
-
-export interface SimplifiedNullablePrimitiveType {
-    readonly typeKind: TypeKind;
-    readonly isNullable: boolean;
-}
 
 export type TableType = IExtendedType &
     FieldSpecificationList & {
@@ -246,11 +260,9 @@ export interface TableTypePrimaryExpression extends IExtendedType {
     readonly primaryExpression: TType;
 }
 
-export interface FunctionParameter {
-    readonly isOptional: boolean;
-    readonly isNullable: boolean;
-    readonly maybeType: TypeKind | undefined;
-}
+// -------------------------------------------------------
+// ---------- Non-nullable primitive singletons ----------
+// -------------------------------------------------------
 
 export const AnyInstance: IPrimitiveType<TypeKind.Any> = primitiveTypeFactory(TypeKind.Any, false);
 export const AnyNonNullInstance: IPrimitiveType<TypeKind.AnyNonNull> = primitiveTypeFactory(TypeKind.AnyNonNull, false);
@@ -279,6 +291,10 @@ export const NotApplicableInstance: IPrimitiveType<TypeKind.NotApplicable> = pri
     false,
 );
 export const UnknownInstance: IPrimitiveType<TypeKind.Unknown> = primitiveTypeFactory(TypeKind.Unknown, false);
+
+// ---------------------------------------------------
+// ---------- Nullable primitive singletons ----------
+// ---------------------------------------------------
 
 export const NullableAnyInstance: IPrimitiveType<TypeKind.Any> = primitiveTypeFactory(TypeKind.Any, true);
 export const NullableBinaryInstance: IPrimitiveType<TypeKind.Binary> = primitiveTypeFactory(TypeKind.Binary, true);
@@ -315,6 +331,10 @@ export const NullableNotApplicableInstance: IPrimitiveType<TypeKind.NotApplicabl
     true,
 );
 export const NullableUnknownInstance: IPrimitiveType<TypeKind.Unknown> = primitiveTypeFactory(TypeKind.Unknown, true);
+
+// ----------------------------------------------
+// ---------- Non-primitive singletons ----------
+// ----------------------------------------------
 
 export const PrimitiveInstance: AnyUnion = {
     kind: TypeKind.Any,
@@ -426,6 +446,10 @@ export const AnyLiteralInstance: AnyUnion = {
         NullInstance.isNullable,
     unionedTypePairs: [RecordInstance, ListInstance, LogicalInstance, NumberInstance, TextInstance, NullInstance],
 };
+
+// --------------------------------------
+// ---------- Helper functions ----------
+// --------------------------------------
 
 // Creates IPrimitiveType<T> singleton instances.
 function primitiveTypeFactory<T extends TypeKind>(typeKind: T, isNullable: boolean): IPrimitiveType<T> {
