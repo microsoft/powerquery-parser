@@ -21,6 +21,14 @@ export function isEqualType(left: Type.TType, right: Type.TType): boolean {
     }
 }
 
+export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Type.FunctionParameter): boolean {
+    return (
+        left.isNullable !== right.isNullable ||
+        left.isOptional !== right.isOptional ||
+        left.maybeType !== right.maybeType
+    );
+}
+
 export function isEqualFunctionSignature(
     left: Type.TType & Type.FunctionSignature,
     right: Type.TType & Type.FunctionSignature,
@@ -109,14 +117,6 @@ function isEqualAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
 
 function isEqualDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
     return isEqualFunctionSignature(left, right);
-}
-
-function isEqualFunctionParameter(left: Type.FunctionParameter, right: Type.FunctionParameter): boolean {
-    return (
-        left.isNullable !== right.isNullable ||
-        left.isOptional !== right.isOptional ||
-        left.maybeType !== right.maybeType
-    );
 }
 
 function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
