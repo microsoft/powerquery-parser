@@ -3,9 +3,8 @@
 
 import { expect } from "chai";
 import "mocha";
-import "mocha";
-import { Type, TypeUtils } from "../../../language/type";
-import { primitiveTypeFactory } from "../../../language/type/typeUtils";
+import { Type, TypeUtils } from "../../../../language/type";
+import { primitiveTypeFactory } from "../../../../language/type/typeUtils";
 
 interface AbridgedType {
     readonly kind: Type.TypeKind;

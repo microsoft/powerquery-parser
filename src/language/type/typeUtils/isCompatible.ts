@@ -19,7 +19,7 @@ export function isCompatible(left: Type.TType, right: Type.TType): boolean | und
         right.kind === Type.TypeKind.Unknown
     ) {
         return undefined;
-    } else if (left.kind === Type.TypeKind.Null && right.kind === Type.TypeKind.AnyNonNull) {
+    } else if (left.kind === Type.TypeKind.None || right.kind === Type.TypeKind.None) {
         return false;
     }
 
@@ -58,22 +58,15 @@ export function isCompatible(left: Type.TType, right: Type.TType): boolean | und
         case Type.TypeKind.Type:
             return isCompatibleWithType(left, right);
 
-        case Type.TypeKind.None:
-            return false;
-
         default:
             throw Assert.isNever(right);
     }
 }
 
-export function isCompatibleWithAny(left: Type.TType, right: Type.Any | Type.AnyUnion): boolean {
-    if (left.kind !== Type.TypeKind.Any || (left.isNullable === true && right.isNullable === false)) {
-        return false;
-    }
-
+function isCompatibleWithAny(left: Type.TType, right: Type.Any | Type.AnyUnion): boolean | undefined {
     switch (right.maybeExtendedKind) {
         case undefined:
-            return left.maybeExtendedKind === undefined;
+            return true;
 
         case Type.ExtendedTypeKind.AnyUnion:
             const anyChecks: ReadonlyArray<boolean | undefined> = right.unionedTypePairs.map((subtype: Type.TType) =>
@@ -86,8 +79,8 @@ export function isCompatibleWithAny(left: Type.TType, right: Type.Any | Type.Any
     }
 }
 
-export function isCompatibleWithDefinedList(left: Type.TType, right: Type.DefinedList): boolean {
-    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithDefinedList(left: Type.TType, right: Type.DefinedList): boolean {
+    if (left.kind !== Type.TypeKind.List) {
         return false;
     }
 
@@ -103,8 +96,8 @@ export function isCompatibleWithDefinedList(left: Type.TType, right: Type.Define
     }
 }
 
-export function isCompatibleWithDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
-    if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithDefinedRecord(left: Type.TType, right: Type.DefinedRecord): boolean {
+    if (left.kind !== Type.TypeKind.Record) {
         return false;
     }
 
@@ -120,8 +113,8 @@ export function isCompatibleWithDefinedRecord(left: Type.TType, right: Type.Defi
     }
 }
 
-export function isCompatibleWithDefinedTable(left: Type.TType, right: Type.DefinedTable): boolean {
-    if (left.kind !== Type.TypeKind.Table || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithDefinedTable(left: Type.TType, right: Type.DefinedTable): boolean {
+    if (left.kind !== Type.TypeKind.Table) {
         return false;
     }
 
@@ -138,8 +131,8 @@ export function isCompatibleWithDefinedTable(left: Type.TType, right: Type.Defin
     }
 }
 
-export function isCompatibleWithFunction(left: Type.TType, right: Type.Function | Type.DefinedFunction): boolean {
-    if (left.kind !== Type.TypeKind.Function || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithFunction(left: Type.TType, right: Type.Function | Type.DefinedFunction): boolean {
+    if (left.kind !== Type.TypeKind.Function) {
         return false;
     }
 
@@ -155,8 +148,8 @@ export function isCompatibleWithFunction(left: Type.TType, right: Type.Function 
     }
 }
 
-export function isCompatibleWithList(left: Type.TType, right: Type.List | Type.DefinedList): boolean {
-    if (left.kind !== Type.TypeKind.List || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithList(left: Type.TType, right: Type.List | Type.DefinedList): boolean {
+    if (left.kind !== Type.TypeKind.List) {
         return false;
     }
 
@@ -172,8 +165,8 @@ export function isCompatibleWithList(left: Type.TType, right: Type.List | Type.D
     }
 }
 
-export function isCompatibleWithListType(left: Type.TType, right: Type.ListType): boolean {
-    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithListType(left: Type.TType, right: Type.ListType): boolean {
+    if (left.kind !== Type.TypeKind.Type) {
         return false;
     }
 
@@ -199,8 +192,8 @@ export function isCompatibleWithListType(left: Type.TType, right: Type.ListType)
     }
 }
 
-export function isCompatibleWithDefinedListType(left: Type.TType, right: Type.DefinedListType): boolean {
-    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithDefinedListType(left: Type.TType, right: Type.DefinedListType): boolean {
+    if (left.kind !== Type.TypeKind.Type) {
         return false;
     }
 
@@ -226,8 +219,8 @@ export function isCompatibleWithDefinedListType(left: Type.TType, right: Type.De
     }
 }
 
-export function isCompatibleWithTableType(left: Type.TType, right: Type.TableType): boolean {
-    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithTableType(left: Type.TType, right: Type.TableType): boolean {
+    if (left.kind !== Type.TypeKind.Type) {
         return false;
     }
 
@@ -251,11 +244,11 @@ export function isCompatibleWithTableType(left: Type.TType, right: Type.TableTyp
     }
 }
 
-export function isCompatibleWithTableTypePrimaryExpression(
+function isCompatibleWithTableTypePrimaryExpression(
     left: Type.TType,
     right: Type.TableTypePrimaryExpression,
 ): boolean | undefined {
-    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+    if (left.kind !== Type.TypeKind.Type) {
         return false;
     }
 
@@ -279,8 +272,8 @@ export function isCompatibleWithTableTypePrimaryExpression(
     }
 }
 
-export function isCompatibleWithPrimaryPrimitiveType(left: Type.TType, right: Type.PrimaryPrimitiveType): boolean {
-    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithPrimaryPrimitiveType(left: Type.TType, right: Type.PrimaryPrimitiveType): boolean {
+    if (left.kind !== Type.TypeKind.Type) {
         return false;
     }
 
@@ -304,8 +297,8 @@ export function isCompatibleWithPrimaryPrimitiveType(left: Type.TType, right: Ty
     }
 }
 
-export function isCompatibleWithRecordType(left: Type.TType, right: Type.RecordType): boolean {
-    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithRecordType(left: Type.TType, right: Type.RecordType): boolean {
+    if (left.kind !== Type.TypeKind.Type) {
         return false;
     }
 
@@ -329,8 +322,8 @@ export function isCompatibleWithRecordType(left: Type.TType, right: Type.RecordT
     }
 }
 
-export function isCompatibleWithRecord(left: Type.TType, right: Type.Record | Type.DefinedRecord): boolean {
-    if (left.kind !== Type.TypeKind.Record || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithRecord(left: Type.TType, right: Type.Record | Type.DefinedRecord): boolean {
+    if (left.kind !== Type.TypeKind.Record) {
         return false;
     }
 
@@ -346,8 +339,8 @@ export function isCompatibleWithRecord(left: Type.TType, right: Type.Record | Ty
     }
 }
 
-export function isCompatibleWithTable(left: Type.TType, right: Type.Table | Type.DefinedTable): boolean {
-    if (left.kind !== Type.TypeKind.Table || (left.isNullable === true && right.isNullable === false)) {
+function isCompatibleWithTable(left: Type.TType, right: Type.Table | Type.DefinedTable): boolean {
+    if (left.kind !== Type.TypeKind.Table) {
         return false;
     }
 
@@ -363,7 +356,7 @@ export function isCompatibleWithTable(left: Type.TType, right: Type.Table | Type
     }
 }
 
-export function isCompatibleWithType(
+function isCompatibleWithType(
     left: Type.TType,
     right:
         | Type.DefinedListType
@@ -375,7 +368,7 @@ export function isCompatibleWithType(
         | Type.TableTypePrimaryExpression
         | Type.Type,
 ): boolean | undefined {
-    if (left.kind !== Type.TypeKind.Type || (left.isNullable === true && right.isNullable === false)) {
+    if (left.kind !== Type.TypeKind.Type) {
         return false;
     }
 

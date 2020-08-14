@@ -74,7 +74,7 @@ export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.T
     let isNullable: boolean = false;
 
     for (const anyUnion of anyUnions) {
-        for (const type of flattenUnionedTypePairs(anyUnion)) {
+        for (const type of flattenAnyUnion(anyUnion)) {
             if (type.isNullable === true) {
                 isNullable = true;
             }
@@ -99,12 +99,12 @@ export function dedupeAnyUnions(anyUnions: ReadonlyArray<Type.AnyUnion>): Type.T
 }
 
 // Recursively flattens out all unionedTypePairs into an array.
-export function flattenUnionedTypePairs(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
+export function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TType> {
     let newUnionedTypePairs: Type.TType[] = [];
 
     for (const item of anyUnion.unionedTypePairs) {
         if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-            newUnionedTypePairs = newUnionedTypePairs.concat(flattenUnionedTypePairs(item));
+            newUnionedTypePairs = newUnionedTypePairs.concat(flattenAnyUnion(item));
         } else {
             newUnionedTypePairs.push(item);
         }

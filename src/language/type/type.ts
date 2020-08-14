@@ -182,9 +182,9 @@ export interface FunctionParameter {
     readonly maybeType: TypeKind | undefined;
 }
 
-// ------------------------------------------
-// ---------- Type Implementations ----------
-// ------------------------------------------
+// -------------------------------------------
+// ---------- IType Implementations ----------
+// -------------------------------------------
 
 export interface AnyUnion extends IExtendedType {
     readonly kind: TypeKind.Any;
