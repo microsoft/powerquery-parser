@@ -5,7 +5,7 @@ import { Type } from "..";
 import { Assert } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
 import { Ast, AstUtils } from "../../ast";
-import { isTypeInArray } from "./isEqualType";
+import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
 export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
@@ -13,9 +13,19 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
     const notAnyUnionTypes: Type.TType[] = [];
 
     for (const item of types) {
-        if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-            if (!isTypeInArray(anyUnionTypes, item)) {
-                anyUnionTypes.push(item);
+        if (item.kind === Type.TypeKind.Any) {
+            switch (item.maybeExtendedKind) {
+                case undefined:
+                    return [Type.AnyInstance];
+
+                case Type.ExtendedTypeKind.AnyUnion:
+                    if (!isTypeInArray(anyUnionTypes, item)) {
+                        anyUnionTypes.push(item);
+                    }
+                    break;
+
+                default:
+                    throw Assert.isNever(item);
             }
         } else if (!isTypeInArray(notAnyUnionTypes, item)) {
             notAnyUnionTypes.push(item);
@@ -28,6 +38,9 @@ export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TTy
 
     // Merge the return of dedupeAnyUnions and notAnyUnionTypes.
     const dedupedAnyUnion: Type.TType = dedupeAnyUnions(anyUnionTypes);
+    if (dedupedAnyUnion.kind === Type.TypeKind.Any && dedupedAnyUnion.maybeExtendedKind === undefined) {
+        return [Type.AnyInstance];
+    }
 
     // dedupedAnyUnion is an AnyUnion.
     // Since the return will contain an anyUnion we should merge all notAnyUnionTypes into the AnyUnion.
@@ -103,8 +116,20 @@ export function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TTy
     let newUnionedTypePairs: Type.TType[] = [];
 
     for (const item of anyUnion.unionedTypePairs) {
-        if (item.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion) {
-            newUnionedTypePairs = newUnionedTypePairs.concat(flattenAnyUnion(item));
+        // If it's an Any primitive then we can do an early return.
+        // Else it's an AnyUnion so continue flattening the types.
+        if (item.kind === Type.TypeKind.Any) {
+            switch (item.maybeExtendedKind) {
+                case undefined:
+                    return [Type.AnyInstance];
+
+                case Type.ExtendedTypeKind.AnyUnion:
+                    newUnionedTypePairs = newUnionedTypePairs.concat(flattenAnyUnion(item));
+                    break;
+
+                default:
+                    throw Assert.isNever(item);
+            }
         } else {
             newUnionedTypePairs.push(item);
         }
@@ -152,6 +177,11 @@ export function inspectParameter(
         default:
             throw Assert.isNever(parameter);
     }
+}
+
+export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
+    // Fast comparison then deep comparison
+    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
 }
 
 export function isFieldSpecificationList(type: Type.TType): type is Type.TType & Type.FieldSpecificationList {

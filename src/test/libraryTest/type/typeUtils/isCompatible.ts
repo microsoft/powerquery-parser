@@ -56,5 +56,21 @@ describe(`TypeUtils - isCompatible`, () => {
             ]);
             expect(actual).deep.equal(expected);
         });
+
+        it(`AnyUnion, basic`, () => {
+            const actual: boolean | undefined = TypeUtils.isCompatible(
+                Type.TextInstance,
+                TypeUtils.anyUnionFactory([Type.TextInstance, Type.NumberInstance]),
+            );
+            expect(actual).to.equal(true, undefined);
+        });
+
+        it(`AnyUnion, contains any`, () => {
+            const actual: boolean | undefined = TypeUtils.isCompatible(
+                Type.TextInstance,
+                TypeUtils.anyUnionFactory([Type.TextInstance, Type.NumberInstance]),
+            );
+            expect(actual).to.equal(true, undefined);
+        });
     });
 });

@@ -3,7 +3,7 @@
 
 import { Type } from "..";
 import { Assert, MapUtils } from "../../../common";
-import { isEqualDefinedList, isEqualFunctionSignature, isEqualType } from "./isEqualType";
+import { isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./typeUtils";
 
 // Returns `${left} is compatible with ${right}. Eg.
@@ -89,7 +89,7 @@ function isCompatibleWithDefinedList(left: Type.TType, right: Type.DefinedList):
             return true;
 
         case Type.ExtendedTypeKind.DefinedList:
-            return isEqualDefinedList(left, right);
+            return isEqualType(left, right);
 
         default:
             throw Assert.isNever(left);

@@ -66,6 +66,14 @@ describe(`TypeUtils`, () => {
             expectAbridgedTypes(expected, actual);
         });
 
+        it(`early return with any primitive`, () => {
+            const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(
+                TypeUtils.dedupe([Type.AnyInstance, Type.NullableRecordInstance]),
+            );
+            const expected: ReadonlyArray<AbridgedType> = [Type.AnyInstance];
+            expectAbridgedTypes(expected, actual);
+        });
+
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
             const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
                 TypeUtils.anyUnionFactory([Type.RecordInstance, Type.RecordInstance]),
@@ -136,6 +144,44 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Number, false),
             ];
             expectAbridgedTypes(expected, actual);
+        });
+
+        it(`${Type.ExtendedTypeKind.AnyUnion}, flatten multi level AnyUnion to single AnyUnion`, () => {
+            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+                TypeUtils.anyUnionFactory([
+                    Type.RecordInstance,
+                    TypeUtils.anyUnionFactory([Type.RecordInstance, Type.NumberInstance]),
+                ]),
+                TypeUtils.anyUnionFactory([Type.RecordInstance]),
+            ]);
+
+            expect(deduped.length).to.equal(1);
+            const ttype: Type.TType = deduped[0];
+            assertTypeIsAnyUnion(ttype);
+
+            const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
+            const expected: ReadonlyArray<AbridgedType> = [
+                abridgedPrimitiveType(Type.TypeKind.Record, false),
+                abridgedPrimitiveType(Type.TypeKind.Number, false),
+            ];
+            expectAbridgedTypes(expected, actual);
+        });
+
+        it(`${Type.ExtendedTypeKind.AnyUnion}, early return with any primitive`, () => {
+            const deduped: ReadonlyArray<Type.TType> = TypeUtils.dedupe([
+                TypeUtils.anyUnionFactory([
+                    Type.RecordInstance,
+                    TypeUtils.anyUnionFactory([Type.AnyInstance, Type.NumberInstance]),
+                ]),
+                TypeUtils.anyUnionFactory([Type.RecordInstance]),
+            ]);
+
+            expect(deduped.length).to.equal(1);
+            const ttype: Type.TType = deduped[0];
+
+            const actual: AbridgedType = typeToAbridged(ttype);
+            const expected: AbridgedType = typeToAbridged(Type.AnyInstance);
+            expectAbridgedType(expected, actual);
         });
     });
 });

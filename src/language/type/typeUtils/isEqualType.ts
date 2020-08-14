@@ -3,6 +3,7 @@
 
 import { Type } from "..";
 import { ArrayUtils, Assert, MapUtils } from "../../../common";
+import { isTypeInArray } from "./typeUtils";
 
 export function isEqualType(left: Type.TType, right: Type.TType): boolean {
     if (left === right) {
@@ -20,8 +21,20 @@ export function isEqualType(left: Type.TType, right: Type.TType): boolean {
     }
 }
 
+export function isEqualFunctionSignature(
+    left: Type.TType & Type.FunctionSignature,
+    right: Type.TType & Type.FunctionSignature,
+): boolean {
+    return (
+        left === right ||
+        (left.isNullable === right.isNullable &&
+            isEqualType(left.returnType, right.returnType) &&
+            isEqualFunctionParameters(left.parameters, right.parameters))
+    );
+}
+
 // Does not care about ordering.
-export function isEqualTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
+function isEqualTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: ReadonlyArray<Type.TType>): boolean {
     if (leftTypes === rightTypes) {
         return true;
     } else if (leftTypes.length !== rightTypes.length) {
@@ -38,7 +51,7 @@ export function isEqualTypes(leftTypes: ReadonlyArray<Type.TType>, rightTypes: R
     return true;
 }
 
-export function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
+function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedType): boolean {
     if (left === right) {
         return true;
     } else if (left.maybeExtendedKind !== right.maybeExtendedKind) {
@@ -87,18 +100,18 @@ export function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExte
     }
 }
 
-export function isEqualAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
+function isEqualAnyUnion(left: Type.AnyUnion, right: Type.AnyUnion): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable && isEqualTypes(left.unionedTypePairs, right.unionedTypePairs))
     );
 }
 
-export function isEqualDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
+function isEqualDefinedFunction(left: Type.DefinedFunction, right: Type.DefinedFunction): boolean {
     return isEqualFunctionSignature(left, right);
 }
 
-export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Type.FunctionParameter): boolean {
+function isEqualFunctionParameter(left: Type.FunctionParameter, right: Type.FunctionParameter): boolean {
     return (
         left.isNullable !== right.isNullable ||
         left.isOptional !== right.isOptional ||
@@ -106,7 +119,7 @@ export function isEqualFunctionParameter(left: Type.FunctionParameter, right: Ty
     );
 }
 
-export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
+function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedList): boolean {
     if (left === right) {
         return true;
     } else if (left.elements.length !== right.elements.length || left.isNullable !== right.isNullable) {
@@ -119,7 +132,7 @@ export function isEqualDefinedList(left: Type.DefinedList, right: Type.DefinedLi
     );
 }
 
-export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.DefinedListType): boolean {
+function isEqualDefinedListType(left: Type.DefinedListType, right: Type.DefinedListType): boolean {
     if (left === right) {
         return true;
     } else if (left.itemTypes.length !== right.itemTypes.length || left.isNullable !== right.isNullable) {
@@ -132,7 +145,7 @@ export function isEqualDefinedListType(left: Type.DefinedListType, right: Type.D
     );
 }
 
-export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
+function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.DefinedRecord): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
@@ -140,7 +153,7 @@ export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.Defin
     );
 }
 
-export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
+function isEqualDefinedTable(left: Type.DefinedTable, right: Type.DefinedTable): boolean {
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
@@ -148,19 +161,13 @@ export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.Defined
     );
 }
 
-export function isEqualPrimaryPrimitiveType(
-    left: Type.PrimaryPrimitiveType,
-    right: Type.PrimaryPrimitiveType,
-): boolean {
+function isEqualPrimaryPrimitiveType(left: Type.PrimaryPrimitiveType, right: Type.PrimaryPrimitiveType): boolean {
     return (
         left === right || (left.isNullable === right.isNullable && isEqualType(left.primitiveType, right.primitiveType))
     );
 }
 
-export function isEqualFieldSpecificationList(
-    left: Type.FieldSpecificationList,
-    right: Type.FieldSpecificationList,
-): boolean {
+function isEqualFieldSpecificationList(left: Type.FieldSpecificationList, right: Type.FieldSpecificationList): boolean {
     if (left === right) {
         return true;
     } else if (left.isOpen !== right.isOpen || left.fields.size !== right.fields.size) {
@@ -177,7 +184,7 @@ export function isEqualFieldSpecificationList(
     return true;
 }
 
-export function isEqualFunctionParameters(
+function isEqualFunctionParameters(
     left: ReadonlyArray<Type.FunctionParameter>,
     right: ReadonlyArray<Type.FunctionParameter>,
 ): boolean {
@@ -199,42 +206,25 @@ export function isEqualFunctionParameters(
     return true;
 }
 
-export function isEqualFunctionSignature(
-    left: Type.TType & Type.FunctionSignature,
-    right: Type.TType & Type.FunctionSignature,
-): boolean {
-    return (
-        left === right ||
-        (left.isNullable === right.isNullable &&
-            isEqualType(left.returnType, right.returnType) &&
-            isEqualFunctionParameters(left.parameters, right.parameters))
-    );
-}
-
-export function isEqualFunctionType(left: Type.FunctionType, right: Type.FunctionType): boolean {
+function isEqualFunctionType(left: Type.FunctionType, right: Type.FunctionType): boolean {
     return isEqualFunctionSignature(left, right);
 }
 
-export function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
+function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
 }
 
-export function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
+function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
     return left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right);
 }
 
-export function isEqualTableType(left: Type.TableType, right: Type.TableType): boolean {
+function isEqualTableType(left: Type.TableType, right: Type.TableType): boolean {
     return left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right);
 }
 
-export function isEqualTableTypePrimaryExpression(
+function isEqualTableTypePrimaryExpression(
     left: Type.TableTypePrimaryExpression,
     right: Type.TableTypePrimaryExpression,
 ): boolean {
     return left === right || isEqualType(left.primaryExpression, right.primaryExpression);
-}
-
-export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
-    // Fast comparison then deep comparison
-    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
 }
