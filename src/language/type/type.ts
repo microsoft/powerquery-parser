@@ -92,29 +92,30 @@ export const enum TypeKind {
     Time = "Time",
 
     // Some NodeKinds are non-typeable, such as ArrayWrapper.
-    // There can be nodes which are typable but contain non-typable childrne, such as RecordExpressions.
+    // There can be nodes which are typable but contain non-typable children, such as RecordExpressions.
     NotApplicable = "NotApplicable",
     // Something that can't be typed due to a lack of information.
-    // Eg. '[', a RecordExpression which the user hasn't entered any fields for.
+    // Eg. '[', a RecordExpression where the user hasn't entered any fields for.
     Unknown = "Unknown",
 }
 
 export const enum ExtendedTypeKind {
-    // In Power Query if a function returns either `number` or `text` then it must have a return type of `any`.
-    // This is a narrower definition which restricts the type to the union `number | any`.
+    // In Power Query if you want a union type, such as when a function retursn either a `test` OR a `number`,
+    // then you're only option is to give it the 'any' type.
+    // This is a narrower definition which restricts that typing to the union `number | any`.
     AnyUnion = "AnyUnion",
 
-    // A function with known paramaters and return type.
+    // A function with known paramaters and a known return type.
     DefinedFunction = "DefinedFunction",
 
-    // A list of known size and types for each list element.
+    // A list of known size and a typing for each element in the list.
     // Eg. `{1, "foo"}
     DefinedList = "DefinedList",
 
-    // Is a narrower typing for ListType, used on DefinedList.
+    // A narrower typing for ListType, used to validate a DefinedList.
     DefinedListType = "DefinedListType",
 
-    // A list of known fields and their types. Optionally considered an open record. Eg.
+    // A list of known fields a typing for each field.
     // An open record: `[a=1, b=2, ...]`
     // A closed record: `[a=1, b=2]`
     DefinedRecord = "DefinedRecord",

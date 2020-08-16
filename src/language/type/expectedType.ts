@@ -15,8 +15,7 @@ export function tryExpectedType(settings: CommonSettings, activeNode: ActiveNode
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => maybeExpectedType(activeNode));
 }
 
-// Traverse up the ancestry so long as the node is an only child.
-// Along the way find what type is expected as the nth child of a node's kind.
+// Traverse up the ancestry and find what type is expected as the nth child of a node's kind.
 // The last type generated this way should have the widest typing,
 // which then can be used for type hinting.
 export function maybeExpectedType(activeNode: ActiveNode): Type.TType | undefined {
