@@ -6,20 +6,14 @@ import { Type } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
 import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { ScopeById, ScopeItemByKey } from "../scope";
+import { ScopeItemByKey } from "../scope";
 import { ScopeTypeByKey } from "../scope";
-import { TypeById } from "./common";
+import { TypeCache } from "./common";
 import { expectGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXorNode } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
 export type TriedType = Result<Type.TType, CommonError.CommonError>;
-
-// A cache that can be re-used for successive calls under the same document.
-export interface TypeCache {
-    readonly scopeById: ScopeById;
-    readonly typeById: TypeById;
-}
 
 export function tryScopeType(
     settings: CommonSettings,
