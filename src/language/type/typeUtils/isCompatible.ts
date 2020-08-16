@@ -63,6 +63,28 @@ export function isCompatible(left: Type.TType, right: Type.TType): boolean | und
     }
 }
 
+export function isCompatibleWithFunctionSignature(
+    left: Type.TType,
+    right: Type.TType & Type.FunctionSignature,
+): boolean {
+    if ((left.isNullable === true && right.isNullable === false) || !isFunctionSignature(left)) {
+        return false;
+    }
+
+    return isEqualFunctionSignature(left, right);
+}
+
+export function isCompatibleWithFunctionParameter(
+    left: Type.FunctionParameter,
+    right: Type.FunctionParameter,
+): boolean {
+    return (
+        left.isNullable === right.isNullable &&
+        left.isOptional === right.isOptional &&
+        (right.maybeType === undefined || left.maybeType === right.maybeType)
+    );
+}
+
 function isCompatibleWithAny(left: Type.TType, right: Type.Any | Type.AnyUnion): boolean | undefined {
     switch (right.maybeExtendedKind) {
         case undefined:
@@ -414,15 +436,6 @@ function isCompatibleWithFieldSpecificationList(
     return MapUtils.isSubsetMap(left.fields, right.fields, (leftValue: Type.TType, rightValue: Type.TType) =>
         isEqualType(leftValue, rightValue),
     );
-}
-
-// TODO: decide what a compatible FieldSpecificationList should look like
-function isCompatibleWithFunctionSignature(left: Type.TType, right: Type.TType & Type.FunctionSignature): boolean {
-    if ((left.isNullable === true && right.isNullable === false) || !isFunctionSignature(left)) {
-        return false;
-    }
-
-    return isEqualFunctionSignature(left, right);
 }
 
 function isDefinedListTypeCompatibleWithListType(definedList: Type.DefinedListType, listType: Type.ListType): boolean {
