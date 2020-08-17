@@ -60,11 +60,34 @@ export function typeCheckFunctionSignature(
     );
 }
 
-export function typeCheckRecord(valueType: Type.DefinedRecord, schemaType: Type.RecordType): CheckedRecord {
+export function typeCheckRecord(
+    valueType: Type.Record | Type.DefinedRecord,
+    schemaType: Type.RecordType,
+): CheckedRecord {
+    if (valueType.maybeExtendedKind === undefined) {
+        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()], schemaType.isOpen);
+    }
+
     return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
-export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.TableType): CheckedTable {
+function typeCheckRecordOrTableOrTablePrimitive(
+    schemaTypeKeys: ReadonlyArray<string>,
+    schemaTypeIsOpen: boolean,
+): CheckedRecord | CheckedTable {
+    return {
+        valid: [...schemaTypeKeys],
+        invalid: [],
+        extraneous: [],
+        missing: [],
+    };
+}
+
+export function typeCheckTable(valueType: Type.Table | Type.DefinedTable, schemaType: Type.TableType): CheckedTable {
+    if (valueType.maybeExtendedKind === undefined) {
+        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()], schemaType.isOpen);
+    }
+
     return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
@@ -110,7 +133,7 @@ function typeCheckGenericNumber<T>(
     };
 }
 
-export function typeCheckRecordOrTable(
+function typeCheckRecordOrTable(
     valueFields: Map<string, Type.TType>,
     schemaFields: Map<string, Type.TType>,
     schemaIsOpen: boolean,
