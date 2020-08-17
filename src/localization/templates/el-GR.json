@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "τελεστής \"μικρότερο από\" ('<')",
   "tokenKind_lessThanEqualTo": "τελεστής \"μικρότερο από ή ίσο με\" ('<=')",
   "tokenKind_minus": "μείον <'-'>",
+  "tokenKind_nullCoalescingOperator": "τελεστής ενοποίησης null <'??'>",
   "tokenKind_notEqual": "τελεστής \"δεν ισούται με\" ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "αριθμητική λεκτική σταθερά",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "δεξιά αγκύλη <']'>",
   "tokenKind_rightParenthesis": "δεξιά παρένθεση <')'>",
   "tokenKind_semicolon": "ελληνικό ερωτηματικό <';'>",
-  "tokenKind_textLiteral": "συμβολοσειρά"
+  "tokenKind_textLiteral": "κείμενο"
 }

@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "operator kurang daripada ('<')",
   "tokenKind_lessThanEqualTo": "operator kurang daripada atau sama dengan ('<=')",
   "tokenKind_minus": "tolak <'-'>",
+  "tokenKind_nullCoalescingOperator": "operator penggabungan nol <'??'>",
   "tokenKind_notEqual": "operator tidak sama dengan ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "literal angka",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "tanda kurung kanan <']'>",
   "tokenKind_rightParenthesis": "tanda kurung kanan <')'>",
   "tokenKind_semicolon": "Koma bertitik <';'>",
-  "tokenKind_textLiteral": "rentetan"
+  "tokenKind_textLiteral": "teks"
 }

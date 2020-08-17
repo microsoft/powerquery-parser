@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "operátor menšie ako ('<')",
   "tokenKind_lessThanEqualTo": "operátor menšie ako alebo rovná sa ('<=')",
   "tokenKind_minus": "mínus <'-'>",
+  "tokenKind_nullCoalescingOperator": "operátor zlúčenia s hodnotou null <'??'>",
   "tokenKind_notEqual": "operátor nerovnosti ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "číselný literál",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "pravá hranatá zátvorka <']'>",
   "tokenKind_rightParenthesis": "pravá okrúhla zátvorka <')'>",
   "tokenKind_semicolon": "bodkočiarka <';'>",
-  "tokenKind_textLiteral": "reťazec"
+  "tokenKind_textLiteral": "text"
 }

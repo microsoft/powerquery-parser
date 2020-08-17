@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "pienempi kuin -operaattori ('<')",
   "tokenKind_lessThanEqualTo": "pienempi tai yhtä suuri kuin -operaattori ('<=')",
   "tokenKind_minus": "miinus <'-'>",
+  "tokenKind_nullCoalescingOperator": "yhdistämisen tyhjäarvo <'??'>",
   "tokenKind_notEqual": "eri suuri kuin -operaattori ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numeerinen literaali",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "oikea hakasulje <']'>",
   "tokenKind_rightParenthesis": "oikea sulje <')'>",
   "tokenKind_semicolon": "puolipiste <';'>",
-  "tokenKind_textLiteral": "merkkijono"
+  "tokenKind_textLiteral": "teksti"
 }
