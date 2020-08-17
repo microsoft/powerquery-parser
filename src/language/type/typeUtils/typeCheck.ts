@@ -5,24 +5,24 @@ import { Type } from "..";
 import { ArrayUtils } from "../../../common";
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
 
-export interface Checked<T> {
+export interface IChecked<T> {
     readonly valid: ReadonlyArray<T>;
     readonly invalid: ReadonlyArray<T>;
     readonly extraneous: ReadonlyArray<T>;
     readonly missing: ReadonlyArray<T>;
 }
 
-export type CheckedDefinedList = Checked<number>;
+export type CheckedDefinedList = IChecked<number>;
 
-export interface CheckedFunction extends Checked<number> {
+export interface CheckedFunction extends IChecked<number> {
     readonly isReturnTypeCompatible: boolean;
 }
 
-export type CheckedFunctionSignature = Checked<number>;
+export type CheckedFunctionSignature = IChecked<number>;
 
-export type CheckedRecord = Checked<string>;
+export type CheckedRecord = IChecked<string>;
 
-export type CheckedTable = Checked<string>;
+export type CheckedTable = IChecked<string>;
 
 export function typeCheckListTypeWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): boolean {
     const schemaItemType: Type.TType = schemaType.itemType;
@@ -65,27 +65,24 @@ export function typeCheckRecord(
     schemaType: Type.RecordType,
 ): CheckedRecord {
     if (valueType.maybeExtendedKind === undefined) {
-        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()], schemaType.isOpen);
+        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()]);
     }
 
     return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
-function typeCheckRecordOrTableOrTablePrimitive(
-    schemaTypeKeys: ReadonlyArray<string>,
-    schemaTypeIsOpen: boolean,
-): CheckedRecord | CheckedTable {
+function typeCheckRecordOrTableOrTablePrimitive(schemaTypeKeys: ReadonlyArray<string>): CheckedRecord | CheckedTable {
     return {
-        valid: [...schemaTypeKeys],
+        valid: [],
         invalid: [],
         extraneous: [],
-        missing: [],
+        missing: schemaTypeKeys,
     };
 }
 
 export function typeCheckTable(valueType: Type.Table | Type.DefinedTable, schemaType: Type.TableType): CheckedTable {
     if (valueType.maybeExtendedKind === undefined) {
-        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()], schemaType.isOpen);
+        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()]);
     }
 
     return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
@@ -95,7 +92,7 @@ function typeCheckGenericNumber<T>(
     valueElements: ReadonlyArray<T>,
     schemaItemTypes: ReadonlyArray<T>,
     valueCmpFn: (left: T, right: T) => boolean | undefined,
-): Checked<number> {
+): IChecked<number> {
     const numElements: number = valueElements.length;
     const numItemTypes: number = schemaItemTypes.length;
 
@@ -137,11 +134,13 @@ function typeCheckRecordOrTable(
     valueFields: Map<string, Type.TType>,
     schemaFields: Map<string, Type.TType>,
     schemaIsOpen: boolean,
-): Checked<string> {
+): IChecked<string> {
     const validFields: string[] = [];
     const invalidFields: string[] = [];
     const extraneousFields: string[] = [];
-    const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(key => valueFields.has(key));
+    const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(
+        (key: string) => valueFields.has(key) === false,
+    );
 
     for (const [key, type] of valueFields.entries()) {
         const maybeSchemaValueType: Type.TType | undefined = schemaFields.get(key);
