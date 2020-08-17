@@ -206,6 +206,9 @@ export function maybeBinOpExpressionOperatorKindFrom(
         case TokenKind.KeywordMeta:
             return Ast.KeywordConstantKind.Meta;
 
+        case TokenKind.NullCoalescingOperator:
+            return Ast.MiscConstantKind.NullCoalescingOperator;
+
         default:
             return undefined;
     }

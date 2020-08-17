@@ -9,7 +9,7 @@ import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError } from "./parser";
 import { DefaultSettings } from "./settings";
 
-parseText(`if true then 1 else 2`);
+parseText(`let a = 1, b = "hello", c = () => 1 in c`);
 
 // @ts-ignore
 function parseText(text: string): void {
