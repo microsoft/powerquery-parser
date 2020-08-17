@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "operator „mniejsze niż” ('<')",
   "tokenKind_lessThanEqualTo": "operator „mniejsze niż lub równe” ('<=')",
   "tokenKind_minus": "minus <'-'>",
-  "tokenKind_nullCoalescing": "operator koalescencyjny dla wartości null <'??'>",
+  "tokenKind_nullCoalescingOperator": "operator koalescencyjny dla wartości null <'??'>",
   "tokenKind_notEqual": "operator „nie jest równe” ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "literał liczbowy",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "zamykający nawias kwadratowy <']'>",
   "tokenKind_rightParenthesis": "zamykający nawias okrągły <')'>",
   "tokenKind_semicolon": "średnik <';'>",
-  "tokenKind_stringLiteral": "ciąg"
+  "tokenKind_textLiteral": "tekst"
 }

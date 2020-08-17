@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "ženklas Mažiau už ('<')",
   "tokenKind_lessThanEqualTo": "ženklas Mažiau už arba lygu ('<=')",
   "tokenKind_minus": "minusas <'-'>",
-  "tokenKind_nullCoalescing": "neapibrėžtas susijungimas <'??'>",
+  "tokenKind_nullCoalescingOperator": "neapibrėžto susijungimo operatorius <'??'>",
   "tokenKind_notEqual": "nelygybės ženklas ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "skaitinis literalas",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "dešinysis laužtinis skliaustas <']'>",
   "tokenKind_rightParenthesis": "dešinysis skliaustas <')'>",
   "tokenKind_semicolon": "kabliataškis <';'>",
-  "tokenKind_stringLiteral": "eilutė"
+  "tokenKind_textLiteral": "tekstas"
 }

@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "operador \"més petit que\" ('<')",
   "tokenKind_lessThanEqualTo": "operador \"més petit o igual que\" ('<=')",
   "tokenKind_minus": "menys <'-'>",
-  "tokenKind_nullCoalescing": "<'??'> de fusió de NULL",
+  "tokenKind_nullCoalescingOperator": "operador de fusió de NULL <'??'>",
   "tokenKind_notEqual": "operador \"no és igual que\" ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "literal numèric",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "claudàtor de tancament <']'>",
   "tokenKind_rightParenthesis": "parèntesi de tancament <')'>",
   "tokenKind_semicolon": "punt i coma <';'>",
-  "tokenKind_stringLiteral": "cadena"
+  "tokenKind_textLiteral": "text"
 }

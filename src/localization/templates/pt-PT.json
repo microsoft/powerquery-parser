@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "operador menor do que ('<')",
   "tokenKind_lessThanEqualTo": "operador menor ou igual a ('<=')",
   "tokenKind_minus": "menos <'-'>",
-  "tokenKind_nullCoalescing": "agregação nula <'??'>",
+  "tokenKind_nullCoalescingOperator": "operador de união nulo <'??'>",
   "tokenKind_notEqual": "operador diferente de ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "literal numérico",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "parênteses reto direito <']'>",
   "tokenKind_rightParenthesis": "parênteses direito <')'>",
   "tokenKind_semicolon": "ponto e vírgula <';'>",
-  "tokenKind_stringLiteral": "cadeia"
+  "tokenKind_textLiteral": "texto"
 }

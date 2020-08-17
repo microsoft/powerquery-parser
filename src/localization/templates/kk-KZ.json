@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "кішірек операторы ('<')",
   "tokenKind_lessThanEqualTo": "кішірек немесе тең операторы ('<=')",
   "tokenKind_minus": "минус <'-'>",
-  "tokenKind_nullCoalescing": "<'??'> белгісіз мәнімен біріктіру",
+  "tokenKind_nullCoalescingOperator": "<'??'> белгісіз мәнімен біріктіру операторы",
   "tokenKind_notEqual": "тең емес операторы ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "сандық литерал",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "оң жақ тік жақша <']'>",
   "tokenKind_rightParenthesis": "оң жақ жақша <')'>",
   "tokenKind_semicolon": "нүктелі үтір <';'>",
-  "tokenKind_stringLiteral": "жол"
+  "tokenKind_textLiteral": "мәтін"
 }

@@ -180,7 +180,7 @@ export function localizeTokenKind(
         case Language.TokenKind.Semicolon:
             return localizationTemplates.tokenKind_semicolon;
         case Language.TokenKind.TextLiteral:
-            return localizationTemplates.tokenKind_stringLiteral;
+            return localizationTemplates.tokenKind_textLiteral;
 
         default:
             throw Assert.isNever(tokenKind);

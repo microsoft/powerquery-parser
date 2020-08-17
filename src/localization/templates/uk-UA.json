@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "оператора \"менше\" ('<')",
   "tokenKind_lessThanEqualTo": "оператор \"менше або дорівнює\" ('<=')",
   "tokenKind_minus": "мінус <'-'>",
-  "tokenKind_nullCoalescing": "Об’єднання Null-значень <'??'>",
+  "tokenKind_nullCoalescingOperator": "Оператор об’єднання Null-значень <'??'>",
   "tokenKind_notEqual": "оператор \"не дорівнює\" ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "числовий літерал",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "права квадратна дужка <']'>",
   "tokenKind_rightParenthesis": "права дужка <')'>",
   "tokenKind_semicolon": "крапка з комою <';'>",
-  "tokenKind_stringLiteral": "рядок"
+  "tokenKind_textLiteral": "текст"
 }

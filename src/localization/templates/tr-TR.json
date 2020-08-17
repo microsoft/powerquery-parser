@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "küçüktür işleci ('<')",
   "tokenKind_lessThanEqualTo": "küçüktür veya eşittir işleci ('<=')",
   "tokenKind_minus": "eksi <'-'>",
-  "tokenKind_nullCoalescing": "null birleştirme <'??'>",
+  "tokenKind_nullCoalescingOperator": "null birleştirme işleci <'??'>",
   "tokenKind_notEqual": "eşit değildir işleci ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "sayısal değişmez değer",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "sağ köşeli ayraç <']'>",
   "tokenKind_rightParenthesis": "sağ ayraç <')'>",
   "tokenKind_semicolon": "noktalı virgül <';'>",
-  "tokenKind_stringLiteral": "dize"
+  "tokenKind_textLiteral": "metin"
 }

@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "operator „mai mic” ('<')",
   "tokenKind_lessThanEqualTo": "operator „mai mic sau egal” ('<=')",
   "tokenKind_minus": "minus <'-'>",
-  "tokenKind_nullCoalescing": "fuzionare nul <'??'>",
+  "tokenKind_nullCoalescingOperator": "operator de fuzionare nul <'??'>",
   "tokenKind_notEqual": "operator „nu este egal” ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "valoare literală numerică",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "paranteză dreaptă dreapta <']'>",
   "tokenKind_rightParenthesis": "paranteză dreapta <')'>",
   "tokenKind_semicolon": "punct și virgulă <';'>",
-  "tokenKind_stringLiteral": "șir"
+  "tokenKind_textLiteral": "text"
 }

@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "\"より小さい\" 演算子 ('<')",
   "tokenKind_lessThanEqualTo": "\"以下\" 演算子 ('<=')",
   "tokenKind_minus": "マイナス <'-'>",
-  "tokenKind_nullCoalescing": "null 合体 <'??'>",
+  "tokenKind_nullCoalescingOperator": "null 合体演算子 <'??'>",
   "tokenKind_notEqual": "\"等しくない\" 演算子 ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "数値リテラル",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "右角かっこ <']'>",
   "tokenKind_rightParenthesis": "右かっこ <')'>",
   "tokenKind_semicolon": "セミコロン <';'>",
-  "tokenKind_stringLiteral": "文字列"
+  "tokenKind_textLiteral": "テキスト"
 }

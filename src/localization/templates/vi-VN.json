@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "toán tử nhỏ hơn ('<')",
   "tokenKind_lessThanEqualTo": "toán tử nhỏ hơn hoặc bằng ('<=')",
   "tokenKind_minus": "trừ <'-'>",
-  "tokenKind_nullCoalescing": "đã hợp nhất null <'??'>",
+  "tokenKind_nullCoalescingOperator": "toán tử liên kết null <'??'>",
   "tokenKind_notEqual": "toán tử không bằng ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "ký tự số",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "dấu ngoặc vuông đóng <']'>",
   "tokenKind_rightParenthesis": "dấu ngoặc đơn đóng <')'>",
   "tokenKind_semicolon": "dấu chấm phẩy <';'>",
-  "tokenKind_stringLiteral": "xâu"
+  "tokenKind_textLiteral": "văn bản"
 }

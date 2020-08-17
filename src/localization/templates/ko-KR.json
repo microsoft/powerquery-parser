@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "보다 작음 연산자('<')",
   "tokenKind_lessThanEqualTo": "작거나 같음 연산자('<=')",
   "tokenKind_minus": "빼기 <'-'>",
-  "tokenKind_nullCoalescing": "null 병합 <'??'>",
+  "tokenKind_nullCoalescingOperator": "null 병합 연산자 <'??'>",
   "tokenKind_notEqual": "같지 않음 연산자('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "숫자 리터럴",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "오른쪽 대괄호 <']'>",
   "tokenKind_rightParenthesis": "오른쪽 괄호 <')'>",
   "tokenKind_semicolon": "세미콜론 <';'>",
-  "tokenKind_stringLiteral": "문자열"
+  "tokenKind_textLiteral": "텍스트"
 }

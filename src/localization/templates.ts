@@ -143,7 +143,7 @@ export interface ILocalizationTemplates {
     readonly tokenKind_rightBracket: string;
     readonly tokenKind_rightParenthesis: string;
     readonly tokenKind_semicolon: string;
-    readonly tokenKind_stringLiteral: string;
+    readonly tokenKind_textLiteral: string;
 }
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([

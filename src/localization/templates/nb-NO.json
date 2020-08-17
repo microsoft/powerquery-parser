@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "mindre enn operator ('<')",
   "tokenKind_lessThanEqualTo": "mindre enn eller lik operator ('<=')",
   "tokenKind_minus": "minus <'-'>",
-  "tokenKind_nullCoalescing": "null-oppsamling <'??'>",
+  "tokenKind_nullCoalescingOperator": "null-oppsamlingsoperator <'??'>",
   "tokenKind_notEqual": "ikke lik operator ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerisk litteral",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "høyre hakeparentes <']'>",
   "tokenKind_rightParenthesis": "høyre parentes <')'>",
   "tokenKind_semicolon": "semikolon <';'>",
-  "tokenKind_stringLiteral": "streng"
+  "tokenKind_textLiteral": "tekst"
 }

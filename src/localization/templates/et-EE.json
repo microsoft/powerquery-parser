@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "märk väiksem kui ('<')",
   "tokenKind_lessThanEqualTo": "märk väiksem kui või võrdne ('<=')",
   "tokenKind_minus": "miinusmärk <'-'>",
-  "tokenKind_nullCoalescing": "tühi liitmine <'??'>",
+  "tokenKind_nullCoalescingOperator": "tühi liitmismärk <'??'>",
   "tokenKind_notEqual": "märk ei võrdu ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "arvliteraal",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "paremnurksulg <']'>",
   "tokenKind_rightParenthesis": "paremsulg <')'>",
   "tokenKind_semicolon": "semikoolon <';'>",
-  "tokenKind_stringLiteral": "String"
+  "tokenKind_textLiteral": "tekst"
 }

@@ -86,7 +86,7 @@
   "tokenKind_lessThan": "operator za manje od ('<')",
   "tokenKind_lessThanEqualTo": "operator za manje jednako ('<=')",
   "tokenKind_minus": "minus <'-'>",
-  "tokenKind_nullCoalescing": "Spajanje vrijednosti null <'??'>",
+  "tokenKind_nullCoalescingOperator": "Operator null spajanja <'??'>",
   "tokenKind_notEqual": "operator nejednakosti ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerička doslovna vrijednost",
@@ -96,5 +96,5 @@
   "tokenKind_rightBracket": "desna uglata zagrada <']'>",
   "tokenKind_rightParenthesis": "desna zagrada <')'>",
   "tokenKind_semicolon": "točka sa zarezom <';'>",
-  "tokenKind_stringLiteral": "niz"
+  "tokenKind_textLiteral": "tekst"
 }
