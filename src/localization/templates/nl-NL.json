@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "kleiner-dan-teken ('<')",
   "tokenKind_lessThanEqualTo": "kleiner-dan-of-gelijkteken ('<=')",
   "tokenKind_minus": "min <'-'>",
+  "tokenKind_nullCoalescingOperator": "operator voor samenvoegen van null-waarden <'??'>",
   "tokenKind_notEqual": "niet-gelijk-aan-teken ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerieke letterlijke waarde",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "vierkante haak rechts <']'>",
   "tokenKind_rightParenthesis": "ronde haak rechts <')'>",
   "tokenKind_semicolon": "puntkomma <';'>",
-  "tokenKind_textLiteral": "tekenreeks"
+  "tokenKind_textLiteral": "tekst"
 }
