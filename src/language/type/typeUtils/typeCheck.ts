@@ -42,7 +42,23 @@ export function typeCheckListTypeWithDefinedListType(
     return typeCheckGenericNumber(valueType.elements, schemaType.itemTypes, isCompatible);
 }
 
-export function typeCheckFunction(valueType: Type.DefinedFunction, schemaType: Type.FunctionType): CheckedFunction {
+export function typeCheckFunction(
+    valueType: Type.Function | Type.DefinedFunction,
+    schemaType: Type.FunctionType,
+): CheckedFunction {
+    if (valueType.maybeExtendedKind === undefined) {
+        return {
+            valid: [],
+            invalid: [],
+            extraneous: [],
+            missing: ArrayUtils.range(schemaType.parameters.length, 0),
+            isReturnTypeCompatible:
+                schemaType.returnType.kind === Type.TypeKind.Any &&
+                schemaType.returnType.maybeExtendedKind === undefined &&
+                schemaType.returnType.isNullable === false,
+        };
+    }
+
     return {
         ...typeCheckFunctionSignature(valueType, schemaType),
         isReturnTypeCompatible: isCompatible(valueType.returnType, schemaType.returnType) === true,
