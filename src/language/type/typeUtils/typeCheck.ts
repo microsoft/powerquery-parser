@@ -5,8 +5,6 @@ import { Type } from "..";
 import { ArrayUtils } from "../../../common";
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
 
-export type TSchemaType = Type.RecordType | Type.TableType | Type.ListType | Type.FunctionType;
-
 export interface Checked<T> {
     readonly valid: ReadonlyArray<T>;
     readonly invalid: ReadonlyArray<T>;
@@ -63,11 +61,11 @@ export function typeCheckFunctionSignature(
 }
 
 export function typeCheckRecord(valueType: Type.DefinedRecord, schemaType: Type.RecordType): CheckedRecord {
-    return typeCheckRecordOrTable(valueType.fields, schemaType.fields);
+    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
 export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.TableType): CheckedTable {
-    return typeCheckRecordOrTable(valueType.fields, schemaType.fields);
+    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
 function typeCheckGenericNumber<T>(
@@ -115,6 +113,7 @@ function typeCheckGenericNumber<T>(
 export function typeCheckRecordOrTable(
     valueFields: Map<string, Type.TType>,
     schemaFields: Map<string, Type.TType>,
+    schemaIsOpen: boolean,
 ): Checked<string> {
     const validFields: string[] = [];
     const invalidFields: string[] = [];
@@ -129,6 +128,8 @@ export function typeCheckRecordOrTable(
             } else {
                 invalidFields.push(key);
             }
+        } else if (schemaIsOpen === true) {
+            validFields.push(key);
         } else {
             extraneousFields.push(key);
         }
