@@ -83,7 +83,7 @@ describe(`TypeUtils`, () => {
             expect(deduped.length).to.equal(1);
 
             const actual: AbridgedType = typeToAbridged(deduped[0]);
-            const expected: AbridgedType = primitiveTypeFactory(Type.TypeKind.Record, false);
+            const expected: AbridgedType = primitiveTypeFactory(false, Type.TypeKind.Record);
             expectAbridgedType(expected, actual);
         });
 

@@ -18,7 +18,7 @@ export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXo
         if (maybeLeftType.isNullable === true || maybeRightType.isNullable === true) {
             return Type.NoneInstance;
         } else {
-            return TypeUtils.primitiveTypeFactory(maybeLeftType.kind, maybeLeftType.isNullable);
+            return TypeUtils.primitiveTypeFactory(maybeLeftType.isNullable, maybeLeftType.kind);
         }
     } else if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
         return Type.NoneInstance;

@@ -215,7 +215,7 @@ export function inspectXorNode(state: InspectTypeState, xorNode: TXorNode): Type
             break;
 
         case Ast.NodeKind.IsExpression:
-            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical);
             break;
 
         case Ast.NodeKind.InvokeExpression:
@@ -223,7 +223,7 @@ export function inspectXorNode(state: InspectTypeState, xorNode: TXorNode): Type
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
-            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical);
             break;
 
         case Ast.NodeKind.ItemAccessExpression:

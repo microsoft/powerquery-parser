@@ -7,10 +7,10 @@ import { ParameterScopeItem } from "../../../inspection";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey, typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 import { dedupe } from "./typeUtils";
 
-export function primitiveTypeFactory<T extends Type.TypeKind>(typeKind: T, isNullable: boolean): Type.IPrimitiveType {
-    const key: string = primitiveTypeMapKey(typeKind, isNullable);
+export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.IPrimitiveType {
+    const key: string = primitiveTypeMapKey(isNullable, typeKind);
     const maybeValue: Type.IPrimitiveType | undefined = PrimitiveTypeConstantMap.get(key);
-    Assert.isDefined(maybeValue, `unknown [typeKind, isNullable] key`, { typeKind, isNullable });
+    Assert.isDefined(maybeValue, `unknown [isNullable, typeKind] key`, { typeKind, isNullable });
 
     return maybeValue;
 }

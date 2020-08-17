@@ -18,6 +18,6 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
         inspectTypeFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
             ? inspectXorNode(state, maybeOtherwiseExpression)
-            : TypeUtils.primitiveTypeFactory(Type.TypeKind.Record, false),
+            : TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record),
     ]);
 }

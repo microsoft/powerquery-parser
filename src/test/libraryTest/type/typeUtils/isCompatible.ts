@@ -31,14 +31,14 @@ describe(`TypeUtils - isCompatible`, () => {
             const expected: ReadonlyArray<[Type.TypeKind, boolean]> = typeKinds.map(typeKind => [typeKind, true]);
             const actual: ReadonlyArray<[Type.TypeKind, boolean | undefined]> = typeKinds.map(typeKind => [
                 typeKind,
-                TypeUtils.isCompatible(TypeUtils.primitiveTypeFactory(typeKind, false), Type.AnyInstance),
+                TypeUtils.isCompatible(TypeUtils.primitiveTypeFactory(false, typeKind), Type.AnyInstance),
             ]);
             expect(actual).deep.equal(expected);
         });
 
         it(`TypeKinds expected to be false`, () => {
             const actual: boolean | undefined = TypeUtils.isCompatible(
-                TypeUtils.primitiveTypeFactory(Type.TypeKind.None, false),
+                TypeUtils.primitiveTypeFactory(false, Type.TypeKind.None),
                 Type.AnyInstance,
             );
             expect(actual).to.equal(false, undefined);
@@ -52,7 +52,7 @@ describe(`TypeUtils - isCompatible`, () => {
             ]);
             const actual: ReadonlyArray<[Type.TypeKind, boolean | undefined]> = typeKinds.map(typeKind => [
                 typeKind,
-                TypeUtils.isCompatible(TypeUtils.primitiveTypeFactory(typeKind, false), Type.AnyInstance),
+                TypeUtils.isCompatible(TypeUtils.primitiveTypeFactory(false, typeKind), Type.AnyInstance),
             ]);
             expect(actual).deep.equal(expected);
         });

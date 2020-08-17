@@ -42,7 +42,7 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
         if (maybeAllowedTypeKinds === undefined) {
             return Type.NoneInstance;
         } else if (maybeAllowedTypeKinds.size === 1) {
-            return TypeUtils.primitiveTypeFactory(maybeAllowedTypeKinds.values().next().value, leftType.isNullable);
+            return TypeUtils.primitiveTypeFactory(leftType.isNullable, maybeAllowedTypeKinds.values().next().value);
         } else {
             const unionedTypePairs: Type.TType[] = [];
             for (const kind of maybeAllowedTypeKinds.values()) {
@@ -75,7 +75,7 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
         ) {
             return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
         } else {
-            return TypeUtils.primitiveTypeFactory(resultTypeKind, leftType.isNullable || rightType.isNullable);
+            return TypeUtils.primitiveTypeFactory(leftType.isNullable || rightType.isNullable, resultTypeKind);
         }
     }
 }
@@ -90,7 +90,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
     }
     // '[] & []' or '#table() & #table()'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
-        return TypeUtils.primitiveTypeFactory(leftType.kind, leftType.isNullable || rightType.isNullable);
+        return TypeUtils.primitiveTypeFactory(leftType.isNullable || rightType.isNullable, leftType.kind);
     }
     // '[key=value] & []' or '#table(...) & #table()`
     // '[] & [key=value]' or `#table() & #table(...)`
