@@ -320,9 +320,9 @@ export function testCsvContinuationDanglingComma(
     }
 }
 
-// ---------------------------
-// ---------- Tests ----------
-// ---------------------------
+// -------------------------------------
+// ---------- Asserts / Tests ----------
+// -------------------------------------
 
 export function testIsOnTokenKind(
     state: IParserState,

@@ -247,6 +247,9 @@ export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpression
         case Ast.LogicalOperatorKind.Or:
             return 30;
 
+        case Ast.MiscConstantKind.NullCoalescingOperator:
+            return 20;
+
         default:
             throw Assert.isNever(operator);
     }

@@ -43,6 +43,7 @@ export const enum NodeKind {
     NotImplementedExpression = "NotImplementedExpression",
     NullablePrimitiveType = "NullablePrimitiveType",
     NullableType = "NullableType",
+    NullCoalescingExpression = "NullCoalescingExpression",
     OtherwiseExpression = "OtherwiseExpression",
     Parameter = "Parameter",
     ParameterList = "ParameterList",
@@ -143,6 +144,7 @@ export type TBinOpExpressionNodeKind =
     | NodeKind.EqualityExpression
     | NodeKind.IsExpression
     | NodeKind.LogicalExpression
+    | NodeKind.NullCoalescingExpression
     | NodeKind.MetadataExpression
     | NodeKind.RelationalExpression;
 
@@ -244,7 +246,8 @@ export type TExpression =
     | LetExpression
     | IfExpression
     | ErrorRaisingExpression
-    | ErrorHandlingExpression;
+    | ErrorHandlingExpression
+    | NullCoalescingExpression;
 
 // --------------------------------------------------
 // ---------- 12.2.3.2 Logical expressions ----------
@@ -560,6 +563,18 @@ export interface RecordLiteral
     readonly literalKind: LiteralKind.Record;
 }
 
+// ------------------------------------
+// ---------- NullCoalescing ----------
+// ------------------------------------
+
+export interface NullCoalescingExpression
+    extends IBinOpExpression<
+        NodeKind.NullCoalescingExpression,
+        TExpression,
+        MiscConstantKind.NullCoalescingOperator,
+        TExpression
+    > {}
+
 // -----------------------------------------
 // ---------- Abstract interfaces ----------
 // -----------------------------------------
@@ -627,6 +642,7 @@ export type TBinOpExpression =
     | IsExpression
     | LogicalExpression
     | MetadataExpression
+    | NullCoalescingExpression
     | RelationalExpression
     | TBinOpExpressionSubtype;
 
@@ -635,6 +651,7 @@ export type TBinOpExpressionOperator =
     | EqualityOperatorKind
     | LogicalOperatorKind
     | RelationalOperatorKind
+    | MiscConstantKind.NullCoalescingOperator
     | KeywordConstantKind.As
     | KeywordConstantKind.Is
     | KeywordConstantKind.Meta;
@@ -806,6 +823,7 @@ export const enum MiscConstantKind {
     Ellipsis = "...",
     Equal = "=",
     FatArrow = "=>",
+    NullCoalescingOperator = "??",
     Semicolon = ";",
     QuestionMark = "?",
 }

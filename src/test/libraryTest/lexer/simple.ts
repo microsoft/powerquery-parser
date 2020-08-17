@@ -148,6 +148,7 @@ type
 }
 @
 ?
+??
 =>
 ..
 ...`;
@@ -173,6 +174,7 @@ type
             [Language.TokenKind.RightBrace, `}`],
             [Language.TokenKind.AtSign, `@`],
             [Language.TokenKind.QuestionMark, `?`],
+            [Language.TokenKind.NullCoalescingOperator, `??`],
             [Language.TokenKind.FatArrow, `=>`],
             [Language.TokenKind.DotDot, `..`],
             [Language.TokenKind.Ellipsis, `...`],

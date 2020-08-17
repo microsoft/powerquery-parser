@@ -3,12 +3,21 @@
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
-import { ArrayUtils, Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../../common";
+import {
+    ArrayUtils,
+    Assert,
+    CommonError,
+    MapUtils,
+    Result,
+    ResultUtils,
+    StringUtils,
+    TypeScriptUtils,
+} from "../../common";
 import { Ast, AstUtils } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { NodeIdMapIterator } from "../nodeIdMap";
+import { NodeIdMapUtils } from "../nodeIdMap";
 
 type TriedReadPrimaryType = Result<
     Ast.TPrimaryType,
@@ -154,7 +163,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
     // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
     // If both fail then return the error which parsed more tokens.
     try {
-        document = parser.readExpression(state, parser);
+        document = parser.readNullCoalescingExpression(state, parser);
         IParserStateUtils.assertNoMoreTokens(state);
         IParserStateUtils.assertNoOpenContext(state);
     } catch (expressionError) {
@@ -296,6 +305,32 @@ export function readSectionMember<S extends IParserState = IParserState>(
 // ------------------------------------------
 // ---------- 12.2.3.1 Expressions ----------
 // ------------------------------------------
+
+// ------------------------------------
+// ---------- NullCoalescing ----------
+// ------------------------------------
+
+export function readNullCoalescingExpression<S extends IParserState = IParserState>(
+    state: S,
+    parser: IParser<S>,
+): Ast.TExpression {
+    return recursiveReadBinOpExpression<
+        S,
+        Ast.NodeKind.NullCoalescingExpression,
+        Ast.TExpression,
+        Ast.MiscConstantKind.NullCoalescingOperator,
+        Ast.TExpression
+    >(
+        state,
+        Ast.NodeKind.NullCoalescingExpression,
+        () => parser.readExpression(state, parser),
+        (maybeCurrentTokenKind: Language.TokenKind | undefined) =>
+            maybeCurrentTokenKind === Language.TokenKind.NullCoalescingOperator
+                ? Ast.MiscConstantKind.NullCoalescingOperator
+                : undefined,
+        () => parser.readNullCoalescingExpression(state, parser),
+    );
+}
 
 export function readExpression<S extends IParserState = IParserState>(state: S, parser: IParser<S>): Ast.TExpression {
     switch (state.maybeCurrentTokenKind) {
@@ -654,72 +689,41 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     const nodeKind: Ast.NodeKind.RecursivePrimaryExpression = Ast.NodeKind.RecursivePrimaryExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    // The head of the recursive primary expression is created before the recursive primary expression,
-    // meaning the parent/child mapping for contexts are in reverse order.
-    // The clean up for that happens here.
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
     Assert.isDefined(state.maybeCurrentContextNode);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
-    const maybeHeadParentId: number | undefined = nodeIdMapCollection.parentIdById.get(head.id);
-    if (maybeHeadParentId !== undefined) {
-        const headParentId: number = maybeHeadParentId;
-
-        // Remove head as a child of its current parent.
-        const parentChildIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(
-            nodeIdMapCollection.childIdsById,
-            headParentId,
-        );
-        const replacementIndex: number = ArrayUtils.assertIn(
-            parentChildIds,
-            head.id,
-            `node isn't a child of parentNode`,
-        );
-        nodeIdMapCollection.childIdsById.set(headParentId, [
-            ...parentChildIds.slice(0, replacementIndex),
-            ...parentChildIds.slice(replacementIndex + 1),
-        ]);
-    }
-
-    // Update mappings for head.
-    nodeIdMapCollection.astNodeById.set(head.id, head);
+    // Update parent attributes.
+    const parentOfHeadId: number = MapUtils.assertGet(nodeIdMapCollection.parentIdById, head.id);
+    nodeIdMapCollection.childIdsById.set(
+        parentOfHeadId,
+        ArrayUtils.removeFirstInstance(MapUtils.assertGet(nodeIdMapCollection.childIdsById, parentOfHeadId), head.id),
+    );
+    nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
     nodeIdMapCollection.parentIdById.set(head.id, currentContextNode.id);
 
-    // Mark head as a child of the recursive primary expression context (currentContextNode).
-    nodeIdMapCollection.childIdsById.set(currentContextNode.id, [head.id]);
-
-    // Update start positions for recursive primary expression context
-    const recursiveTokenIndexStart: number = head.tokenRange.tokenIndexStart;
+    const newTokenIndexStart: number = head.tokenRange.tokenIndexStart;
     const mutableContext: TypeScriptUtils.StripReadonly<ParseContext.Node> = currentContextNode;
-    // UNSAFE MARKER
-    //
-    // Purpose of code block:
-    //      Shift the start of ParserContext to an earlier location so the head is included.
-    //
-    // Why are you trying to avoid a safer approach?
-    //      There isn't one? At least not without refactoring in ways which will make things messier.
-    //
-    // Why is it safe?
-    //      I'm only mutating start location in the recursive expression to one already parsed, the head.
-    mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[recursiveTokenIndexStart];
-    mutableContext.tokenIndexStart = recursiveTokenIndexStart;
-    mutableContext.attributeCounter = 1;
-
-    // Update attribute index for the head Ast.TNode
     const mutableHead: TypeScriptUtils.StripReadonly<Ast.TPrimaryExpression> = head;
-    // UNSAFE MARKER
-    //
-    // Purpose of code block:
-    //      The head might not have `maybeAttributeIndex === 0` set.
-    //
-    // Why are you trying to avoid a safer approach?
-    //      Prevent the cost of a shallow copy.
-    //
-    // Why is it safe?
-    //      It's a shallow copy, plus one attribute change.
+
+    // Update token start to match the first parsed node under it, aka the head.
+    mutableContext.maybeTokenStart = state.lexerSnapshot.tokens[newTokenIndexStart];
+    mutableContext.tokenIndexStart = newTokenIndexStart;
+
+    // Update attribute counters.
+    mutableContext.attributeCounter = 1;
     mutableHead.maybeAttributeIndex = 0;
 
-    // Begin normal parsing behavior.
+    // Recalculate ids after shuffling things around.
+    NodeIdMapUtils.reassignIds(
+        nodeIdMapCollection,
+        NodeIdMapUtils.expectXorNode(
+            nodeIdMapCollection,
+            MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
+        ),
+    );
+
+    // Begin normal parsing.
     const recursiveArrayNodeKind: Ast.NodeKind.ArrayWrapper = Ast.NodeKind.ArrayWrapper;
     IParserStateUtils.startContext(state, recursiveArrayNodeKind);
 
@@ -858,7 +862,7 @@ export function readParenthesizedExpression<S extends IParserState = IParserStat
         Ast.NodeKind.ParenthesizedExpression,
         () =>
             readTokenKindAsConstant(state, Language.TokenKind.LeftParenthesis, Ast.WrapperConstantKind.LeftParenthesis),
-        () => parser.readExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
         () =>
             readTokenKindAsConstant(
                 state,
@@ -918,7 +922,7 @@ export function readInvokeExpression<S extends IParserState = IParserState>(
             // I'm adding an explicit type to stop it from (incorrectly) saying it's an error.
             readCsvArray<S, Ast.TExpression>(
                 state,
-                () => parser.readExpression(state, parser),
+                () => parser.readNullCoalescingExpression(state, parser),
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForParenthesis,
             ),
@@ -961,14 +965,14 @@ export function readListItem<S extends IParserState = IParserState>(state: S, pa
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const left: Ast.TExpression = parser.readExpression(state, parser);
+    const left: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
     if (IParserStateUtils.isOnTokenKind(state, Language.TokenKind.DotDot)) {
         const rangeConstant: Ast.IConstant<Ast.MiscConstantKind.DotDot> = readTokenKindAsConstant(
             state,
             Language.TokenKind.DotDot,
             Ast.MiscConstantKind.DotDot,
         );
-        const right: Ast.TExpression = parser.readExpression(state, parser);
+        const right: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
         const astNode: Ast.RangeExpression = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
@@ -1023,7 +1027,7 @@ export function readItemAccessExpression<S extends IParserState = IParserState>(
         state,
         Ast.NodeKind.ItemAccessExpression,
         () => readTokenKindAsConstant(state, Language.TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
-        () => parser.readExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
         () => readTokenKindAsConstant(state, Language.TokenKind.RightBrace, Ast.WrapperConstantKind.RightBrace),
         true,
     );
@@ -1099,7 +1103,7 @@ export function readFunctionExpression<S extends IParserState = IParserState>(
         Language.TokenKind.FatArrow,
         Ast.MiscConstantKind.FatArrow,
     );
-    const expression: Ast.TExpression = parser.readExpression(state, parser);
+    const expression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
 
     const astNode: Ast.FunctionExpression = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1155,7 +1159,7 @@ export function readEachExpression<S extends IParserState = IParserState>(
         state,
         Ast.NodeKind.EachExpression,
         () => readTokenKindAsConstant(state, Language.TokenKind.KeywordEach, Ast.KeywordConstantKind.Each),
-        () => parser.readExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
     );
 }
 
@@ -1186,7 +1190,7 @@ export function readLetExpression<S extends IParserState = IParserState>(
         Language.TokenKind.KeywordIn,
         Ast.KeywordConstantKind.In,
     );
-    const expression: Ast.TExpression = parser.readExpression(state, parser);
+    const expression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
 
     const astNode: Ast.LetExpression = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1217,21 +1221,21 @@ export function readIfExpression<S extends IParserState = IParserState>(
         Language.TokenKind.KeywordIf,
         Ast.KeywordConstantKind.If,
     );
-    const condition: Ast.TExpression = parser.readExpression(state, parser);
+    const condition: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
 
     const thenConstant: Ast.IConstant<Ast.KeywordConstantKind.Then> = readTokenKindAsConstant(
         state,
         Language.TokenKind.KeywordThen,
         Ast.KeywordConstantKind.Then,
     );
-    const trueExpression: Ast.TExpression = parser.readExpression(state, parser);
+    const trueExpression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
 
     const elseConstant: Ast.IConstant<Ast.KeywordConstantKind.Else> = readTokenKindAsConstant(
         state,
         Language.TokenKind.KeywordElse,
         Ast.KeywordConstantKind.Else,
     );
-    const falseExpression: Ast.TExpression = parser.readExpression(state, parser);
+    const falseExpression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
 
     const astNode: Ast.IfExpression = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1605,7 +1609,7 @@ export function readErrorRaisingExpression<S extends IParserState = IParserState
         state,
         Ast.NodeKind.ErrorRaisingExpression,
         () => readTokenKindAsConstant(state, Language.TokenKind.KeywordError, Ast.KeywordConstantKind.Error),
-        () => parser.readExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
     );
 }
 
@@ -1625,7 +1629,7 @@ export function readErrorHandlingExpression<S extends IParserState = IParserStat
         Language.TokenKind.KeywordTry,
         Ast.KeywordConstantKind.Try,
     );
-    const protectedExpression: Ast.TExpression = parser.readExpression(state, parser);
+    const protectedExpression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
 
     const otherwiseExpressionNodeKind: Ast.NodeKind.OtherwiseExpression = Ast.NodeKind.OtherwiseExpression;
     const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = maybeReadPairedConstant(
@@ -1633,7 +1637,7 @@ export function readErrorHandlingExpression<S extends IParserState = IParserStat
         otherwiseExpressionNodeKind,
         () => IParserStateUtils.isOnTokenKind(state, Language.TokenKind.KeywordOtherwise),
         () => readTokenKindAsConstant(state, Language.TokenKind.KeywordOtherwise, Ast.KeywordConstantKind.Otherwise),
-        () => parser.readExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
     );
 
     const astNode: Ast.ErrorHandlingExpression = {
@@ -2005,7 +2009,7 @@ export function readGeneralizedIdentifierPairedExpression<S extends IParserState
         state,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         () => parser.readGeneralizedIdentifier(state, parser),
-        () => parser.readExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
     );
 }
 
@@ -2017,7 +2021,7 @@ export function readIdentifierPairedExpression<S extends IParserState = IParserS
         state,
         Ast.NodeKind.IdentifierPairedExpression,
         () => parser.readIdentifier(state, parser),
-        () => parser.readExpression(state, parser),
+        () => parser.readNullCoalescingExpression(state, parser),
     );
 }
 

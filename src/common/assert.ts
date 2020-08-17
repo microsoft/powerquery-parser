@@ -48,7 +48,7 @@ export function isUndefined<T>(
 
 export function isOk<T, E>(result: Result<T, E>): asserts result is Ok<T> {
     if (!ResultUtils.isOk(result)) {
-        throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`);
+        throw new CommonError.InvariantError(`assert failed, result expected to be an Ok`, { error: result.error });
     }
 }
 

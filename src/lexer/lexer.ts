@@ -733,7 +733,12 @@ function tokenizeDefault(
     } else if (chr1 === ";") {
         token = readConstant(Language.LineTokenKind.Semicolon, text, positionStart, 1);
     } else if (chr1 === "?") {
-        token = readConstant(Language.LineTokenKind.QuestionMark, text, positionStart, 1);
+        const chr2: string | undefined = text[positionStart + 1];
+        if (chr2 === "?") {
+            token = readConstant(Language.LineTokenKind.NullCoalescing, text, positionStart, 2);
+        } else {
+            token = readConstant(Language.LineTokenKind.QuestionMark, text, positionStart, 1);
+        }
     } else if (chr1 === "@") {
         token = readConstant(Language.LineTokenKind.AtSign, text, positionStart, 1);
     } else if (chr1 === "[") {
@@ -749,7 +754,7 @@ function tokenizeDefault(
         token = read.token;
         lineMode = read.lineMode;
     } else if (chr1 === "0") {
-        const chr2: string = text[positionStart + 1];
+        const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "x" || chr2 === "X") {
             token = readHexLiteral(localizationTemplates, text, lineNumber, positionStart);
@@ -759,7 +764,7 @@ function tokenizeDefault(
     } else if ("1" <= chr1 && chr1 <= "9") {
         token = readNumericLiteral(localizationTemplates, text, lineNumber, positionStart);
     } else if (chr1 === ".") {
-        const chr2: string = text[positionStart + 1];
+        const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === undefined) {
             throw new LexError.UnexpectedEofError(
@@ -780,7 +785,7 @@ function tokenizeDefault(
             throw unexpectedReadError(localizationTemplates, text, lineNumber, positionStart);
         }
     } else if (chr1 === ">") {
-        const chr2: string = text[positionStart + 1];
+        const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "=") {
             token = readConstant(Language.LineTokenKind.GreaterThanEqualTo, text, positionStart, 2);
@@ -788,7 +793,7 @@ function tokenizeDefault(
             token = readConstant(Language.LineTokenKind.GreaterThan, text, positionStart, 1);
         }
     } else if (chr1 === "<") {
-        const chr2: string = text[positionStart + 1];
+        const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "=") {
             token = readConstant(Language.LineTokenKind.LessThanEqualTo, text, positionStart, 2);
@@ -798,7 +803,7 @@ function tokenizeDefault(
             token = readConstant(Language.LineTokenKind.LessThan, text, positionStart, 1);
         }
     } else if (chr1 === "=") {
-        const chr2: string = text[positionStart + 1];
+        const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === ">") {
             token = readConstant(Language.LineTokenKind.FatArrow, text, positionStart, 2);
@@ -806,7 +811,7 @@ function tokenizeDefault(
             token = readConstant(Language.LineTokenKind.Equal, text, positionStart, 1);
         }
     } else if (chr1 === "/") {
-        const chr2: string = text[positionStart + 1];
+        const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "/") {
             token = readLineComment(text, positionStart);
@@ -818,7 +823,7 @@ function tokenizeDefault(
             token = readConstant(Language.LineTokenKind.Division, text, positionStart, 1);
         }
     } else if (chr1 === "#") {
-        const chr2: string = text[positionStart + 1];
+        const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === '"') {
             const read: LineModeAlteringRead = readOrStartQuotedIdentifier(text, positionStart);

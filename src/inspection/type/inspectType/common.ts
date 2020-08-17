@@ -21,6 +21,7 @@ import { inspectInvokeExpression } from "./inspectInvokeExpression";
 import { inspectList } from "./inspectList";
 import { inspectListType } from "./inspectListType";
 import { inspectLiteralExpression } from "./inspectLiteralExpression";
+import { inspectNullCoalescingExpression } from "./inspectNullCoalescingExpression";
 import { inspectParameter } from "./inspectParameter";
 import { inspectPrimitiveType } from "./inspectPrimitiveType";
 import { inspectRangeExpression } from "./inspectRangeExpression";
@@ -197,6 +198,10 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
 
         case Ast.NodeKind.NotImplementedExpression:
             result = Type.NoneInstance;
+            break;
+
+        case Ast.NodeKind.NullCoalescingExpression:
+            result = inspectNullCoalescingExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.Parameter:

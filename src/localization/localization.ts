@@ -161,6 +161,8 @@ export function localizeTokenKind(
             return localizationTemplates.tokenKind_minus;
         case Language.TokenKind.NotEqual:
             return localizationTemplates.tokenKind_notEqual;
+        case Language.TokenKind.NullCoalescingOperator:
+            return localizationTemplates.tokenKind_nullCoalescingOperator;
         case Language.TokenKind.NullLiteral:
             return localizationTemplates.tokenKind_nullLiteral;
         case Language.TokenKind.NumericLiteral:

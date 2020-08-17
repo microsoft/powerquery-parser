@@ -34,23 +34,23 @@ describe("Parser.Children", () => {
         const text: string = `() as number => 1`;
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
-                childNodeIds: [2, 6, 10, 12],
-                id: 1,
+                childNodeIds: [3, 7, 11, 14],
+                id: 2,
                 kind: Ast.NodeKind.FunctionExpression,
             },
             {
-                childNodeIds: [3, 4, 5],
-                id: 2,
+                childNodeIds: [4, 5, 6],
+                id: 3,
                 kind: Ast.NodeKind.ParameterList,
             },
             {
-                childNodeIds: [7, 8],
-                id: 6,
+                childNodeIds: [8, 9],
+                id: 7,
                 kind: Ast.NodeKind.AsNullablePrimitiveType,
             },
             {
-                childNodeIds: [9],
-                id: 8,
+                childNodeIds: [10],
+                id: 9,
                 kind: Ast.NodeKind.PrimitiveType,
             },
         ];

@@ -598,6 +598,26 @@ describe(`Inspection - Scope - Type`, () => {
         });
     });
 
+    describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
+        it(`1 ?? 2`, () => {
+            const expression: string = `1 ?? 2`;
+            const expected: Type.TType = Type.NumberInstance;
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`1 ?? ""`, () => {
+            const expression: string = `1 ?? ""`;
+            const expected: Type.TType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.TextInstance]);
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+
+        it(`1 ?? (1 + "")`, () => {
+            const expression: string = `1 ?? (1 + "")`;
+            const expected: Type.TType = Type.NoneInstance;
+            expectParseOkNodeTypeEqual(expression, expected);
+        });
+    });
+
     describe(`${Ast.NodeKind.RecordExpression}`, () => {
         it(`[foo=1] & [bar=2]`, () => {
             const expression: string = `[foo=1] & [bar=2]`;
@@ -774,7 +794,7 @@ describe(`Inspection - Scope - Type`, () => {
                     expectParseOkNodeTypeEqual(expression, expected);
                 });
 
-                it("[a=1][b]?", () => {
+                it("a[b]?", () => {
                     const expression: string = `[a=1][b]?`;
                     const expected: Type.TType = Type.NullInstance;
                     expectParseOkNodeTypeEqual(expression, expected);

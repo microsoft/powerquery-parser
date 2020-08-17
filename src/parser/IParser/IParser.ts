@@ -40,6 +40,7 @@ export interface IParser<State extends IParserState = IParserState> {
     readonly readSectionMember: (state: State, parser: IParser<State>) => Ast.SectionMember;
 
     // 12.2.3.1 Expressions
+    readonly readNullCoalescingExpression: (state: State, Parser: IParser<State>) => Ast.TExpression;
     readonly readExpression: (state: State, parser: IParser<State>) => Ast.TExpression;
 
     // 12.2.3.2 Logical expressions
