@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { expect } from "chai";
 import "mocha";
 import { DefaultSettings } from "../../../settings";
 import { expectLexParseOk } from "../../common";
-import { expect } from "chai";
 
 describe("Parser.Children", () => {
     it(`let x = foo(){0} in x`, () => {
