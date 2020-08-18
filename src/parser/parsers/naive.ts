@@ -1190,7 +1190,7 @@ export function readLetExpression<S extends IParserState = IParserState>(
         Language.TokenKind.KeywordIn,
         Ast.KeywordConstantKind.In,
     );
-    const expression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+    const expression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.LetExpression = {
         ...IParserStateUtils.expectContextNodeMetadata(state),

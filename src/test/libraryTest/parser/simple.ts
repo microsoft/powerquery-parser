@@ -878,22 +878,44 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    it(`${Ast.NodeKind.LetExpression}`, () => {
-        const text: string = `let x = 1 in x`;
-        const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.LetExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Csv, 0],
-            [Ast.NodeKind.IdentifierPairedExpression, 0],
-            [Ast.NodeKind.Identifier, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.LiteralExpression, 2],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.IdentifierExpression, 3],
-            [Ast.NodeKind.Identifier, 1],
-        ];
-        expectAbridgeNodes(text, expected);
+    describe(`${Ast.NodeKind.LetExpression}`, () => {
+        it(`let x = 1 in x`, () => {
+            const text: string = `let x = 1 in x`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
+
+        it(`let x = 1 in try x`, () => {
+            const text: string = `let x = 1 in try x`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.ErrorHandlingExpression, 3],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.IdentifierExpression, 1],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            expectAbridgeNodes(text, expected);
+        });
     });
 
     describe(`${Ast.NodeKind.ListExpression}`, () => {
