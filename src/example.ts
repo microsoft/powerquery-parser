@@ -3,7 +3,7 @@
 
 /* tslint:disable:no-console */
 
-import { Task } from ".";
+import { Inspection, Task } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError } from "./parser";
