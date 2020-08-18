@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "kisebb, mint operátor ('<')",
   "tokenKind_lessThanEqualTo": "kisebb vagy egyenlő ('<=')",
   "tokenKind_minus": "mínuszjel <'-'>",
+  "tokenKind_nullCoalescingOperator": "null egyesítési operátor <'??'>",
   "tokenKind_notEqual": "nem egyenlő ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerikus literál",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "jobb oldali szögletes zárójel <']'>",
   "tokenKind_rightParenthesis": "jobb oldali kerek zárójel <')'>",
   "tokenKind_semicolon": "pontosvessző <';'>",
-  "tokenKind_textLiteral": "karakterlánc"
+  "tokenKind_textLiteral": "szöveg"
 }

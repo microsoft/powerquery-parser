@@ -232,6 +232,9 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
         case Ast.LogicalOperatorKind.Or:
             return Ast.NodeKind.LogicalExpression;
 
+        case Ast.MiscConstantKind.NullCoalescingOperator:
+            return Ast.NodeKind.NullCoalescingExpression;
+
         default:
             throw Assert.isNever(operator);
     }

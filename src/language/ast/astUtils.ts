@@ -206,6 +206,9 @@ export function maybeBinOpExpressionOperatorKindFrom(
         case TokenKind.KeywordMeta:
             return Ast.KeywordConstantKind.Meta;
 
+        case TokenKind.NullCoalescingOperator:
+            return Ast.MiscConstantKind.NullCoalescingOperator;
+
         default:
             return undefined;
     }
@@ -246,6 +249,9 @@ export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpression
 
         case Ast.LogicalOperatorKind.Or:
             return 30;
+
+        case Ast.MiscConstantKind.NullCoalescingOperator:
+            return 20;
 
         default:
             throw Assert.isNever(operator);
@@ -330,6 +336,7 @@ export function isTBinOpExpression(node: Ast.TNode): node is Ast.TBinOpExpressio
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.IsExpression:
         case Ast.NodeKind.LogicalExpression:
+        case Ast.NodeKind.NullCoalescingExpression:
         case Ast.NodeKind.MetadataExpression:
         case Ast.NodeKind.RelationalExpression:
             return true;

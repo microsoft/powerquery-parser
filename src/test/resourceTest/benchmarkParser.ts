@@ -63,6 +63,8 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readSectionMember),
 
     // 12.2.3.1 Expressions
+    readNullCoalescingExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+        traceFunction(state, parser, state.baseParser.readNullCoalescingExpression),
     readExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readExpression),
 

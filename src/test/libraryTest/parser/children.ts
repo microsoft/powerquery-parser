@@ -14,7 +14,7 @@ interface ChildIdsByIdEntry {
     readonly kind: Ast.NodeKind;
 }
 
-function acutalFactoryFn<S extends IParserState = IParserState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
+function actualFactoryFn<S extends IParserState = IParserState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
     const astNodeById: NodeIdMap.AstNodeById = lexParseOk.state.contextState.nodeIdMapCollection.astNodeById;
 
@@ -34,7 +34,7 @@ describe("Parser.Children", () => {
         const text: string = `() as number => 1`;
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
-                childNodeIds: [2, 6, 10, 12],
+                childNodeIds: [2, 6, 10, 13],
                 id: 1,
                 kind: Ast.NodeKind.FunctionExpression,
             },
@@ -54,6 +54,23 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.PrimitiveType,
             },
         ];
-        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, acutalFactoryFn);
+        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
+    });
+
+    it(`null ?? 1 ?? 2`, () => {
+        const text: string = `null ?? 1 ?? 2`;
+        const expected: ReadonlyArray<ChildIdsByIdEntry> = [
+            {
+                childNodeIds: [3, 4, 5],
+                id: 8,
+                kind: Ast.NodeKind.NullCoalescingExpression,
+            },
+            {
+                childNodeIds: [8, 6, 7],
+                id: 9,
+                kind: Ast.NodeKind.NullCoalescingExpression,
+            },
+        ];
+        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
     });
 });

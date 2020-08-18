@@ -134,6 +134,7 @@ export interface ILocalizationTemplates {
     readonly tokenKind_lessThanEqualTo: string;
     readonly tokenKind_minus: string;
     readonly tokenKind_notEqual: string;
+    readonly tokenKind_nullCoalescingOperator: string;
     readonly tokenKind_nullLiteral: string;
     readonly tokenKind_numericLiteral: string;
     readonly tokenKind_plus: string;

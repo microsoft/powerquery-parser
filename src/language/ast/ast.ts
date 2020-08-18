@@ -43,6 +43,7 @@ export const enum NodeKind {
     NotImplementedExpression = "NotImplementedExpression",
     NullablePrimitiveType = "NullablePrimitiveType",
     NullableType = "NullableType",
+    NullCoalescingExpression = "NullCoalescingExpression",
     OtherwiseExpression = "OtherwiseExpression",
     Parameter = "Parameter",
     ParameterList = "ParameterList",
@@ -143,6 +144,7 @@ export type TBinOpExpressionNodeKind =
     | NodeKind.EqualityExpression
     | NodeKind.IsExpression
     | NodeKind.LogicalExpression
+    | NodeKind.NullCoalescingExpression
     | NodeKind.MetadataExpression
     | NodeKind.RelationalExpression;
 
@@ -238,7 +240,7 @@ export interface SectionMember extends INode {
 // ------------------------------------------
 
 export type TExpression =
-    | TLogicalExpression
+    | TNullCoalescingExpression
     | EachExpression
     | FunctionExpression
     | LetExpression
@@ -627,6 +629,7 @@ export type TBinOpExpression =
     | IsExpression
     | LogicalExpression
     | MetadataExpression
+    | NullCoalescingExpression
     | RelationalExpression
     | TBinOpExpressionSubtype;
 
@@ -635,6 +638,7 @@ export type TBinOpExpressionOperator =
     | EqualityOperatorKind
     | LogicalOperatorKind
     | RelationalOperatorKind
+    | MiscConstantKind.NullCoalescingOperator
     | KeywordConstantKind.As
     | KeywordConstantKind.Is
     | KeywordConstantKind.Meta;
@@ -758,6 +762,24 @@ export interface IConstant<ConstantKind extends TConstantKind> extends INode {
 
 export type TConstant = IConstant<TConstantKind>;
 
+// ----------------------------------------------
+// ---------- NullCoalescingExpression ----------
+// ----------------------------------------------
+
+// This currently doesn't have a spot under the specification.
+// For now we'll dump it here.
+// TODO: find the proper place for these.
+
+export type TNullCoalescingExpression = NullCoalescingExpression | TLogicalExpression;
+
+export interface NullCoalescingExpression
+    extends IBinOpExpression<
+        NodeKind.NullCoalescingExpression,
+        TLogicalExpression,
+        MiscConstantKind.NullCoalescingOperator,
+        TLogicalExpression
+    > {}
+
 // ----------------------------------------
 // ---------- Re-used interfaces ----------
 // ----------------------------------------
@@ -806,6 +828,7 @@ export const enum MiscConstantKind {
     Ellipsis = "...",
     Equal = "=",
     FatArrow = "=>",
+    NullCoalescingOperator = "??",
     Semicolon = ";",
     QuestionMark = "?",
 }

@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "mindre än-operator ('<')",
   "tokenKind_lessThanEqualTo": "mindre än eller lika med-operator ('<=')",
   "tokenKind_minus": "minus <'-'>",
+  "tokenKind_nullCoalescingOperator": "null-sammanslagningsoperator <'??'>",
   "tokenKind_notEqual": "inte lika med-operator ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "numerisk literal",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "höger hakparentes <']'>",
   "tokenKind_rightParenthesis": "höger parentes <')'>",
   "tokenKind_semicolon": "semikolon <';'>",
-  "tokenKind_textLiteral": "sträng"
+  "tokenKind_textLiteral": "text"
 }

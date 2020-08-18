@@ -340,6 +340,19 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
                     throw unknownChildIndexError(parentXorNode, childIndex);
             }
 
+        case Ast.NodeKind.NullCoalescingExpression:
+            switch (childIndex) {
+                case 0:
+                case 2:
+                    return Type.ExpressionInstance;
+
+                case 1:
+                    return Type.NotApplicableInstance;
+
+                default:
+                    throw unknownChildIndexError(parentXorNode, childIndex);
+            }
+
         case Ast.NodeKind.NullablePrimitiveType:
             switch (childIndex) {
                 case 0:

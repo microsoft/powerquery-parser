@@ -351,14 +351,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 16,
+                        keyNodeId: 14,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -385,8 +385,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 10,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -399,15 +399,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 10,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 14,
-                        maybeValueNodeId: 17,
+                        keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -420,22 +420,22 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 10,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 14,
-                        maybeValueNodeId: 17,
+                        keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 21,
-                        maybeValueNodeId: 24,
+                        keyNodeId: 24,
+                        maybeValueNodeId: 28,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -454,8 +454,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 10,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -612,7 +612,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
                         isRecursive: false,
-                        keyNodeId: 15,
+                        keyNodeId: 16,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -633,7 +633,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 15,
+                        keyNodeId: 16,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -662,20 +662,20 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
                         isRecursive: false,
-                        keyNodeId: 15,
+                        keyNodeId: 16,
                     },
                     {
                         identifier: "z",
                         kind: ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 22,
+                        keyNodeId: 24,
                     },
                     {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 29,
-                        maybeValueNodeId: 32,
+                        keyNodeId: 31,
+                        maybeValueNodeId: 35,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -706,7 +706,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
                         isRecursive: false,
-                        keyNodeId: 15,
+                        keyNodeId: 16,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -727,7 +727,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 15,
+                        keyNodeId: 16,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -748,7 +748,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 15,
+                        keyNodeId: 16,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -764,7 +764,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -778,7 +778,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -792,7 +792,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -808,14 +808,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 16,
+                        keyNodeId: 14,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -831,14 +831,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 16,
+                        keyNodeId: 14,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -872,21 +872,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 19,
-                        maybeValueNodeId: 22,
+                        maybeValueNodeId: 23,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 26,
-                        maybeValueNodeId: 29,
+                        keyNodeId: 27,
+                        maybeValueNodeId: 31,
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 33,
-                        maybeValueNodeId: 36,
+                        keyNodeId: 35,
+                        maybeValueNodeId: 39,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -908,15 +908,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "foo",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 23,
-                        maybeValueNodeId: 26,
+                        keyNodeId: 25,
+                        maybeValueNodeId: 29,
                     },
                     {
                         identifier: "bar",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 30,
-                        maybeValueNodeId: 33,
+                        keyNodeId: 33,
+                        maybeValueNodeId: 37,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -938,22 +938,22 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "foo",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 23,
-                        maybeValueNodeId: 26,
+                        keyNodeId: 25,
+                        maybeValueNodeId: 29,
                     },
                     {
                         identifier: "bar",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 30,
-                        maybeValueNodeId: 33,
+                        keyNodeId: 33,
+                        maybeValueNodeId: 37,
                     },
                     {
                         identifier: "ham",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 13,
-                        maybeValueNodeId: 16,
+                        maybeValueNodeId: 17,
                     },
                 ];
                 expectDeepEqual(expectParseOkScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -969,7 +969,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -983,14 +983,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 16,
+                        keyNodeId: 14,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -1004,14 +1004,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 16,
+                        keyNodeId: 14,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -1027,14 +1027,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 16,
-                        maybeValueNodeId: 19,
+                        keyNodeId: 17,
+                        maybeValueNodeId: 21,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);
@@ -1050,7 +1050,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 9,
+                        maybeValueNodeId: 10,
                     },
                 ];
                 expectDeepEqual(expectParseErrScopeOk(DefaultSettings, text, position), expected, actualScopeFactoryFn);

@@ -86,6 +86,7 @@
   "tokenKind_lessThan": "оператор „мање од“ ('<')",
   "tokenKind_lessThanEqualTo": "оператор „мање од или једнако“ ('<=')",
   "tokenKind_minus": "минус <'-'>",
+  "tokenKind_nullCoalescingOperator": "оператор обједињавања без вредности <'??'>",
   "tokenKind_notEqual": "оператор „није једнако“ ('<>')",
   "tokenKind_nullLiteral": "<'null'>",
   "tokenKind_numericLiteral": "нумерички литерал",
@@ -95,5 +96,5 @@
   "tokenKind_rightBracket": "десна угласта заграда <']'>",
   "tokenKind_rightParenthesis": "десна заграда <')'>",
   "tokenKind_semicolon": "тачка и зарез <';'>",
-  "tokenKind_textLiteral": "ниска"
+  "tokenKind_textLiteral": "текст"
 }
