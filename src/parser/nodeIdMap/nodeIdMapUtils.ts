@@ -480,24 +480,15 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
 //
 // Assumes the initial NodeIdMap.Collection state is valid.
 // It will not validate that the invariant holds true for nodes not under nodeStart.
-export function reassignIds(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    // parserState: IParserState,
-    nodeStart: TXorNode,
-): void {
+export function recalculateIds(nodeIdMapCollection: NodeIdMap.Collection, nodeStart: TXorNode): Map<number, number> {
     const visitedXorNodes: TXorNode[] = [];
     const nodeIds: number[] = [];
 
-    // A helper stack used to recursively visit all nodes under nodeStart.
-    // const newNodeIdByOldNodeId: Map<number, number> = new Map();
     let nodeStack: TXorNode[] = [];
     let currentNode: TXorNode | undefined = nodeStart;
-
     while (currentNode !== undefined) {
         nodeIds.push(currentNode.node.id);
         visitedXorNodes.push(currentNode);
-        // const newNodeId: number = ParseContextUtils.nextId(parserState.contextState);
-        // newNodeIdByOldNodeId.set(currentNode.node.id, newNodeId);
 
         const childrenOfCurrentNode: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
             nodeIdMapCollection,
@@ -516,7 +507,7 @@ export function reassignIds(
         }),
     );
 
-    updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId);
+    return newNodeIdByOldNodeId;
 }
 
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
