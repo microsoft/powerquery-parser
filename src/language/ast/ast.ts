@@ -240,14 +240,13 @@ export interface SectionMember extends INode {
 // ------------------------------------------
 
 export type TExpression =
-    | TLogicalExpression
+    | TNullCoalescingExpression
     | EachExpression
     | FunctionExpression
     | LetExpression
     | IfExpression
     | ErrorRaisingExpression
-    | ErrorHandlingExpression
-    | NullCoalescingExpression;
+    | ErrorHandlingExpression;
 
 // --------------------------------------------------
 // ---------- 12.2.3.2 Logical expressions ----------
@@ -563,18 +562,6 @@ export interface RecordLiteral
     readonly literalKind: LiteralKind.Record;
 }
 
-// ------------------------------------
-// ---------- NullCoalescing ----------
-// ------------------------------------
-
-export interface NullCoalescingExpression
-    extends IBinOpExpression<
-        NodeKind.NullCoalescingExpression,
-        TExpression,
-        MiscConstantKind.NullCoalescingOperator,
-        TExpression
-    > {}
-
 // -----------------------------------------
 // ---------- Abstract interfaces ----------
 // -----------------------------------------
@@ -774,6 +761,24 @@ export interface IConstant<ConstantKind extends TConstantKind> extends INode {
 }
 
 export type TConstant = IConstant<TConstantKind>;
+
+// ----------------------------------------------
+// ---------- NullCoalescingExpression ----------
+// ----------------------------------------------
+
+// This currently doesn't have a spot under the specification.
+// For now we'll dump it here.
+// TODO: find the proper place for these.
+
+export type TNullCoalescingExpression = NullCoalescingExpression | TLogicalExpression;
+
+export interface NullCoalescingExpression
+    extends IBinOpExpression<
+        NodeKind.NullCoalescingExpression,
+        TLogicalExpression,
+        MiscConstantKind.NullCoalescingOperator,
+        TLogicalExpression
+    > {}
 
 // ----------------------------------------
 // ---------- Re-used interfaces ----------

@@ -163,7 +163,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
     // If Expression document fails (including UnusedTokensRemainError) then try parsing a SectionDocument.
     // If both fail then return the error which parsed more tokens.
     try {
-        document = parser.readNullCoalescingExpression(state, parser);
+        document = parser.readExpression(state, parser);
         IParserStateUtils.assertNoMoreTokens(state);
         IParserStateUtils.assertNoOpenContext(state);
     } catch (expressionError) {
@@ -317,18 +317,18 @@ export function readNullCoalescingExpression<S extends IParserState = IParserSta
     return recursiveReadBinOpExpression<
         S,
         Ast.NodeKind.NullCoalescingExpression,
-        Ast.TExpression,
+        Ast.TLogicalExpression,
         Ast.MiscConstantKind.NullCoalescingOperator,
-        Ast.TExpression
+        Ast.TLogicalExpression
     >(
         state,
         Ast.NodeKind.NullCoalescingExpression,
-        () => parser.readExpression(state, parser),
+        () => parser.readLogicalExpression(state, parser),
         (maybeCurrentTokenKind: Language.TokenKind | undefined) =>
             maybeCurrentTokenKind === Language.TokenKind.NullCoalescingOperator
                 ? Ast.MiscConstantKind.NullCoalescingOperator
                 : undefined,
-        () => parser.readExpression(state, parser),
+        () => parser.readLogicalExpression(state, parser),
     );
 }
 
@@ -364,14 +364,14 @@ export function readExpression<S extends IParserState = IParserState>(state: S, 
                     return parser.readFunctionExpression(state, parser);
 
                 case ParenthesisDisambiguation.ParenthesizedExpression:
-                    return parser.readLogicalExpression(state, parser);
+                    return parser.readNullCoalescingExpression(state, parser);
 
                 default:
                     throw Assert.isNever(disambiguation);
             }
 
         default:
-            return parser.readLogicalExpression(state, parser);
+            return parser.readNullCoalescingExpression(state, parser);
     }
 }
 
@@ -862,7 +862,7 @@ export function readParenthesizedExpression<S extends IParserState = IParserStat
         Ast.NodeKind.ParenthesizedExpression,
         () =>
             readTokenKindAsConstant(state, Language.TokenKind.LeftParenthesis, Ast.WrapperConstantKind.LeftParenthesis),
-        () => parser.readNullCoalescingExpression(state, parser),
+        () => parser.readExpression(state, parser),
         () =>
             readTokenKindAsConstant(
                 state,
@@ -922,7 +922,7 @@ export function readInvokeExpression<S extends IParserState = IParserState>(
             // I'm adding an explicit type to stop it from (incorrectly) saying it's an error.
             readCsvArray<S, Ast.TExpression>(
                 state,
-                () => parser.readNullCoalescingExpression(state, parser),
+                () => parser.readExpression(state, parser),
                 continueReadingValues,
                 testCsvContinuationDanglingCommaForParenthesis,
             ),
@@ -965,14 +965,14 @@ export function readListItem<S extends IParserState = IParserState>(state: S, pa
     const nodeKind: Ast.NodeKind.RangeExpression = Ast.NodeKind.RangeExpression;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const left: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+    const left: Ast.TExpression = parser.readExpression(state, parser);
     if (IParserStateUtils.isOnTokenKind(state, Language.TokenKind.DotDot)) {
         const rangeConstant: Ast.IConstant<Ast.MiscConstantKind.DotDot> = readTokenKindAsConstant(
             state,
             Language.TokenKind.DotDot,
             Ast.MiscConstantKind.DotDot,
         );
-        const right: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+        const right: Ast.TExpression = parser.readExpression(state, parser);
         const astNode: Ast.RangeExpression = {
             ...IParserStateUtils.expectContextNodeMetadata(state),
             kind: nodeKind,
@@ -1027,7 +1027,7 @@ export function readItemAccessExpression<S extends IParserState = IParserState>(
         state,
         Ast.NodeKind.ItemAccessExpression,
         () => readTokenKindAsConstant(state, Language.TokenKind.LeftBrace, Ast.WrapperConstantKind.LeftBrace),
-        () => parser.readNullCoalescingExpression(state, parser),
+        () => parser.readExpression(state, parser),
         () => readTokenKindAsConstant(state, Language.TokenKind.RightBrace, Ast.WrapperConstantKind.RightBrace),
         true,
     );
@@ -1103,7 +1103,7 @@ export function readFunctionExpression<S extends IParserState = IParserState>(
         Language.TokenKind.FatArrow,
         Ast.MiscConstantKind.FatArrow,
     );
-    const expression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+    const expression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.FunctionExpression = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1159,7 +1159,7 @@ export function readEachExpression<S extends IParserState = IParserState>(
         state,
         Ast.NodeKind.EachExpression,
         () => readTokenKindAsConstant(state, Language.TokenKind.KeywordEach, Ast.KeywordConstantKind.Each),
-        () => parser.readNullCoalescingExpression(state, parser),
+        () => parser.readExpression(state, parser),
     );
 }
 
@@ -1221,21 +1221,21 @@ export function readIfExpression<S extends IParserState = IParserState>(
         Language.TokenKind.KeywordIf,
         Ast.KeywordConstantKind.If,
     );
-    const condition: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+    const condition: Ast.TExpression = parser.readExpression(state, parser);
 
     const thenConstant: Ast.IConstant<Ast.KeywordConstantKind.Then> = readTokenKindAsConstant(
         state,
         Language.TokenKind.KeywordThen,
         Ast.KeywordConstantKind.Then,
     );
-    const trueExpression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+    const trueExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const elseConstant: Ast.IConstant<Ast.KeywordConstantKind.Else> = readTokenKindAsConstant(
         state,
         Language.TokenKind.KeywordElse,
         Ast.KeywordConstantKind.Else,
     );
-    const falseExpression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+    const falseExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const astNode: Ast.IfExpression = {
         ...IParserStateUtils.expectContextNodeMetadata(state),
@@ -1609,7 +1609,7 @@ export function readErrorRaisingExpression<S extends IParserState = IParserState
         state,
         Ast.NodeKind.ErrorRaisingExpression,
         () => readTokenKindAsConstant(state, Language.TokenKind.KeywordError, Ast.KeywordConstantKind.Error),
-        () => parser.readNullCoalescingExpression(state, parser),
+        () => parser.readExpression(state, parser),
     );
 }
 
@@ -1629,7 +1629,7 @@ export function readErrorHandlingExpression<S extends IParserState = IParserStat
         Language.TokenKind.KeywordTry,
         Ast.KeywordConstantKind.Try,
     );
-    const protectedExpression: Ast.TExpression = parser.readNullCoalescingExpression(state, parser);
+    const protectedExpression: Ast.TExpression = parser.readExpression(state, parser);
 
     const otherwiseExpressionNodeKind: Ast.NodeKind.OtherwiseExpression = Ast.NodeKind.OtherwiseExpression;
     const maybeOtherwiseExpression: Ast.OtherwiseExpression | undefined = maybeReadPairedConstant(
@@ -1637,7 +1637,7 @@ export function readErrorHandlingExpression<S extends IParserState = IParserStat
         otherwiseExpressionNodeKind,
         () => IParserStateUtils.isOnTokenKind(state, Language.TokenKind.KeywordOtherwise),
         () => readTokenKindAsConstant(state, Language.TokenKind.KeywordOtherwise, Ast.KeywordConstantKind.Otherwise),
-        () => parser.readNullCoalescingExpression(state, parser),
+        () => parser.readExpression(state, parser),
     );
 
     const astNode: Ast.ErrorHandlingExpression = {
@@ -2009,7 +2009,7 @@ export function readGeneralizedIdentifierPairedExpression<S extends IParserState
         state,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         () => parser.readGeneralizedIdentifier(state, parser),
-        () => parser.readNullCoalescingExpression(state, parser),
+        () => parser.readExpression(state, parser),
     );
 }
 
@@ -2021,7 +2021,7 @@ export function readIdentifierPairedExpression<S extends IParserState = IParserS
         state,
         Ast.NodeKind.IdentifierPairedExpression,
         () => parser.readIdentifier(state, parser),
-        () => parser.readNullCoalescingExpression(state, parser),
+        () => parser.readExpression(state, parser),
     );
 }
 

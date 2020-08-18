@@ -735,7 +735,7 @@ function tokenizeDefault(
     } else if (chr1 === "?") {
         const chr2: string | undefined = text[positionStart + 1];
         if (chr2 === "?") {
-            token = readConstant(Language.LineTokenKind.NullCoalescing, text, positionStart, 2);
+            token = readConstant(Language.LineTokenKind.NullCoalescingOperator, text, positionStart, 2);
         } else {
             token = readConstant(Language.LineTokenKind.QuestionMark, text, positionStart, 1);
         }

@@ -1245,25 +1245,12 @@ describe("Parser.AbridgedNode", () => {
             const text: string = `1 ?? 1 ?? 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
                 [Ast.NodeKind.NullCoalescingExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.NullCoalescingExpression, 2],
+                [Ast.NodeKind.NullCoalescingExpression, 0],
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
-            ];
-            expectAbridgeNodes(text, expected);
-        });
-
-        it(`1 ?? try ""`, () => {
-            const text: string = `1 ?? try ""`;
-            const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ErrorHandlingExpression, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             expectAbridgeNodes(text, expected);
         });
