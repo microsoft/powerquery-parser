@@ -715,12 +715,21 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     mutableHead.maybeAttributeIndex = 0;
 
     // Recalculate ids after shuffling things around.
-    NodeIdMapUtils.reassignIds(
+    const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
         nodeIdMapCollection,
         NodeIdMapUtils.expectXorNode(
             nodeIdMapCollection,
             MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
         ),
+    );
+    NodeIdMapUtils.updateNodeIds(nodeIdMapCollection, newNodeIdByOldNodeId);
+    // And be sure to update the leafNodeIds.
+    state.contextState.leafNodeIds = state.contextState.leafNodeIds.reduce(
+        (previousValue: number[], currentValue: number) => {
+            previousValue.push(newNodeIdByOldNodeId.get(currentValue) ?? currentValue);
+            return previousValue;
+        },
+        [],
     );
 
     // Begin normal parsing.
