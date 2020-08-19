@@ -2,11 +2,18 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
-import { Ast } from "../../language";
+import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
-import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../parser";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeKind,
+    XorNodeUtils,
+} from "../../parser";
 import { CommonSettings } from "../../settings";
-import { TypeInspector, TypeUtils } from "../../type";
 import {
     KeyValuePairScopeItem,
     ParameterScopeItem,
@@ -14,6 +21,8 @@ import {
     SectionMemberScopeItem,
     TScopeItem,
 } from "./scopeItem";
+
+export type ScopeTypeByKey = Map<string, Type.TType>;
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
@@ -56,6 +65,118 @@ export function tryScopeItems(
 
         return maybeScope;
     });
+}
+
+export function getOrCreateScopeItemByKey(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    nodeId: number,
+    // If a map is given, then it's mutated and returned. Else create and return a new instance.
+    maybeScopeById: ScopeById | undefined = undefined,
+): Result<ScopeItemByKey, CommonError.CommonError> {
+    const scopeById: ScopeById = maybeScopeById ?? new Map();
+    const maybeScope: ScopeItemByKey | undefined = scopeById.get(nodeId);
+    if (maybeScope !== undefined) {
+        return ResultUtils.okFactory(maybeScope);
+    }
+
+    const triedScope: TriedScopeForRoot = tryScopeItems(settings, nodeIdMapCollection, leafNodeIds, nodeId, scopeById);
+    if (ResultUtils.isErr(triedScope)) {
+        throw triedScope.error;
+    }
+
+    return triedScope;
+}
+
+export function maybeDereferencedIdentifier(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    xorNode: TXorNode,
+    // If a map is given, then it's mutated and returned. Else create and return a new instance.
+    maybeScopeById: ScopeById | undefined = undefined,
+): Result<TXorNode | undefined, CommonError.CommonError> {
+    XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
+    const scopeById: ScopeById = maybeScopeById ?? new Map();
+
+    if (xorNode.kind === XorNodeKind.Context) {
+        return ResultUtils.okFactory(undefined);
+    }
+    const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
+        | Ast.Identifier
+        | Ast.IdentifierExpression;
+
+    let identifierLiteral: string;
+    let isIdentifierRecurisve: boolean;
+
+    switch (identifier.kind) {
+        case Ast.NodeKind.Identifier:
+            identifierLiteral = identifier.literal;
+            isIdentifierRecurisve = false;
+            break;
+
+        case Ast.NodeKind.IdentifierExpression:
+            identifierLiteral = identifier.identifier.literal;
+            isIdentifierRecurisve = identifier.maybeInclusiveConstant !== undefined;
+            break;
+
+        default:
+            throw Assert.isNever(identifier);
+    }
+
+    const triedScopeItemByKey: Result<ScopeItemByKey, CommonError.CommonError> = getOrCreateScopeItemByKey(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        xorNode.node.id,
+        scopeById,
+    );
+    if (ResultUtils.isErr(triedScopeItemByKey)) {
+        return triedScopeItemByKey;
+    }
+    const scopeItemByKey: ScopeItemByKey = triedScopeItemByKey.value;
+    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
+
+    if (
+        // If the identifier couldn't be found in the generated scope,
+        // then either the scope generation is incorrect or it's an external identifier.
+        maybeScopeItem?.isRecursive !== isIdentifierRecurisve
+    ) {
+        return ResultUtils.okFactory(undefined);
+    }
+    const scopeItem: TScopeItem = maybeScopeItem;
+
+    let maybeNextXorNode: undefined | TXorNode;
+    switch (scopeItem.kind) {
+        case ScopeItemKind.Each:
+        case ScopeItemKind.Parameter:
+        case ScopeItemKind.Undefined:
+            break;
+
+        case ScopeItemKind.KeyValuePair:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
+
+        case ScopeItemKind.SectionMember:
+            maybeNextXorNode = scopeItem.maybeValue;
+            break;
+
+        default:
+            throw Assert.isNever(scopeItem);
+    }
+
+    if (maybeNextXorNode === undefined) {
+        return ResultUtils.okFactory(xorNode);
+    } else if (
+        maybeNextXorNode.kind !== XorNodeKind.Ast ||
+        (maybeNextXorNode.node.kind !== Ast.NodeKind.Identifier &&
+            maybeNextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
+    ) {
+        return ResultUtils.okFactory(xorNode);
+    } else {
+        return maybeDereferencedIdentifier(settings, nodeIdMapCollection, leafNodeIds, maybeNextXorNode, scopeById);
+    }
 }
 
 interface ScopeInspectionState {
@@ -138,7 +259,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
             break;
 
         default:
-            getOrCreateScope(state, xorNode.node.id, undefined);
+            localGetOrCreateScope(state, xorNode.node.id, undefined);
     }
 }
 
@@ -167,7 +288,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     XorNodeUtils.assertAstNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
 
     // Propegates the parent's scope.
-    const scope: ScopeItemByKey = getOrCreateScope(state, fnExpr.node.id, undefined);
+    const scope: ScopeItemByKey = localGetOrCreateScope(state, fnExpr.node.id, undefined);
 
     const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
         state.nodeIdMapCollection,
@@ -200,7 +321,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
     XorNodeUtils.assertAstNodeKind(letExpr, Ast.NodeKind.LetExpression);
 
     // Propegates the parent's scope.
-    const scope: ScopeItemByKey = getOrCreateScope(state, letExpr.node.id, undefined);
+    const scope: ScopeItemByKey = localGetOrCreateScope(state, letExpr.node.id, undefined);
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
@@ -221,7 +342,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
     XorNodeUtils.assertAnyAstNodeKind(record, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     // Propegates the parent's scope.
-    const scope: ScopeItemByKey = getOrCreateScope(state, record.node.id, undefined);
+    const scope: ScopeItemByKey = localGetOrCreateScope(state, record.node.id, undefined);
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.GeneralizedIdentifier
@@ -281,7 +402,7 @@ function expandScope(
     newEntries: ReadonlyArray<[string, TScopeItem]>,
     maybeDefaultScope: ScopeItemByKey | undefined,
 ): void {
-    const scope: ScopeItemByKey = getOrCreateScope(state, xorNode.node.id, maybeDefaultScope);
+    const scope: ScopeItemByKey = localGetOrCreateScope(state, xorNode.node.id, maybeDefaultScope);
     for (const [key, value] of newEntries) {
         scope.set(key, value);
     }
@@ -312,7 +433,7 @@ function expandChildScope(
 }
 
 // Any operation done on a scope should first invoke `scopeFor` for data integrity.
-function getOrCreateScope(
+function localGetOrCreateScope(
     state: ScopeInspectionState,
     nodeId: number,
     maybeDefaultScope: ScopeItemByKey | undefined,

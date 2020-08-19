@@ -1,38 +1,85 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ResultUtils } from "../../../common";
-import { Ast } from "../../../language";
-import { AncestryUtils, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
-import { Type, TypeUtils } from "../../../type";
-import { ScopeItemByKey, ScopeItemKind, TriedScopeForRoot, tryScopeItems, TScopeItem } from "../../scope";
-import { TypeInspectionState } from "../type";
-import { inspectConstant } from "./inspectConstant";
-import { inspectErrorHandlingExpression } from "./inspectErrorHandlingExpression";
-import { inspectFieldProjection } from "./inspectFieldProjection";
-import { inspectFieldSelector } from "./inspectFieldSelector";
-import { inspectFieldSpecification } from "./inspectFieldSpecification";
-import { inspectFunctionExpression } from "./inspectFunctionExpression";
-import { inspectFunctionType } from "./inspectFunctionType";
-import { inspectIdentifier } from "./inspectIdentifier";
-import { inspectIdentifierExpression } from "./inspectIdentifierExpression";
-import { inspectIfExpression } from "./inspectIfExpression";
-import { inspectInvokeExpression } from "./inspectInvokeExpression";
-import { inspectList } from "./inspectList";
-import { inspectListType } from "./inspectListType";
-import { inspectLiteralExpression } from "./inspectLiteralExpression";
-import { inspectNullCoalescingExpression } from "./inspectNullCoalescingExpression";
-import { inspectParameter } from "./inspectParameter";
-import { inspectPrimitiveType } from "./inspectPrimitiveType";
-import { inspectRangeExpression } from "./inspectRangeExpression";
-import { inspectRecord } from "./inspectRecord";
-import { inspectRecordType } from "./inspectRecordType";
-import { inspectRecursivePrimaryExpression } from "./inspectRecursivePrimaryExpression";
-import { inspectTableType } from "./inspectTableType";
-import { inspectTBinOpExpression } from "./inspectTBinOpExpression";
-import { inspectUnaryExpression } from "./inspectUnaryExpression";
+import { Assert, CommonError, Result, ResultUtils } from "../../../common";
+import { Ast, Type, TypeUtils } from "../../../language";
+import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { CommonSettings } from "../../../settings";
+import { ScopeById, ScopeItemByKey, ScopeItemKind, tryScopeItems, TScopeItem } from "../../scope";
+import { TypeById } from "../common";
+import { inspectTypeConstant } from "./inspectTypeConstant";
+import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
+import { inspectTypeFieldProjection } from "./inspectTypeFieldProjection";
+import { inspectTypeFieldSelector } from "./inspectTypeFieldSelector";
+import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
+import { inspectTypeFunctionExpression } from "./inspectTypeFunctionExpression";
+import { inspectTypeFunctionType } from "./inspectTypeFunctionType";
+import { inspectTypeIdentifier } from "./inspectTypeIdentifier";
+import { inspectTypeIdentifierExpression } from "./inspectTypeIdentifierExpression";
+import { inspectTypeIfExpression } from "./inspectTypeIfExpression";
+import { inspectTypeInvokeExpression } from "./inspectTypeInvokeExpression";
+import { inspectTypeList } from "./inspectTypeList";
+import { inspectTypeListType } from "./inspectTypeListType";
+import { inspectTypeLiteralExpression } from "./inspectTypeLiteralExpression";
+import { inspectTypeNullCoalescingExpression } from "./inspectTypeNullCoalescingExpression";
+import { inspectTypeParameter } from "./inspectTypeParameter";
+import { inspectTypePrimitiveType } from "./inspectTypePrimitiveType";
+import { inspectTypeRangeExpression } from "./inspectTypeRangeExpression";
+import { inspectTypeRecord } from "./inspectTypeRecord";
+import { inspectTypeRecordType } from "./inspectTypeRecordType";
+import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePrimaryExpression";
+import { inspectTypeTableType } from "./inspectTypeTableType";
+import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
+import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 
-export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
+export interface InspectTypeState {
+    readonly settings: CommonSettings;
+    readonly givenTypeById: TypeById;
+    readonly deltaTypeById: TypeById;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly leafNodeIds: ReadonlyArray<number>;
+    scopeById: ScopeById;
+}
+
+export function getOrFindScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
+    const nodeId: number = scopeItem.id;
+
+    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeGivenType !== undefined) {
+        return maybeGivenType;
+    }
+
+    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeDeltaType !== undefined) {
+        return maybeDeltaType;
+    }
+
+    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
+    return scopeType;
+}
+
+export function expectGetOrCreateScope(state: InspectTypeState, nodeId: number): ScopeItemByKey {
+    const triedGetOrCreateScope: Result<ScopeItemByKey, CommonError.CommonError> = getOrCreateScope(state, nodeId);
+    if (ResultUtils.isErr(triedGetOrCreateScope)) {
+        throw triedGetOrCreateScope.error;
+    }
+
+    return triedGetOrCreateScope.value;
+}
+
+export function getOrCreateScope(
+    state: InspectTypeState,
+    nodeId: number,
+): Result<ScopeItemByKey, CommonError.CommonError> {
+    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
+    if (maybeScope !== undefined) {
+        return ResultUtils.okFactory(maybeScope);
+    }
+
+    return tryScopeItems(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
+}
+
+export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
             return inspectXorNode(state, scopeItem.eachExpression);
@@ -58,7 +105,7 @@ export function inspectScopeItem(state: TypeInspectionState, scopeItem: TScopeIt
     }
 }
 
-export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): Type.TType {
+export function inspectXorNode(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     const xorNodeId: number = xorNode.node.id;
     const maybeCached: Type.TType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
@@ -85,42 +132,42 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
         case Ast.NodeKind.OtherwiseExpression:
         case Ast.NodeKind.ParenthesizedExpression:
         case Ast.NodeKind.TypePrimaryType:
-            result = inspectFromChildAttributeIndex(state, xorNode, 1);
+            result = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
             break;
 
         case Ast.NodeKind.ArithmeticExpression:
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
-            result = inspectTBinOpExpression(state, xorNode);
+            result = inspectTypeTBinOpExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.AsExpression:
         case Ast.NodeKind.SectionMember:
-            result = inspectFromChildAttributeIndex(state, xorNode, 2);
+            result = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
             break;
 
         case Ast.NodeKind.Csv:
         case Ast.NodeKind.MetadataExpression:
-            result = inspectFromChildAttributeIndex(state, xorNode, 0);
+            result = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
             break;
 
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral:
-            result = inspectList(state, xorNode);
+            result = inspectTypeList(state, xorNode);
             break;
 
         case Ast.NodeKind.NullableType:
         case Ast.NodeKind.NullablePrimitiveType:
             result = {
-                ...inspectFromChildAttributeIndex(state, xorNode, 1),
+                ...inspectTypeFromChildAttributeIndex(state, xorNode, 1),
                 isNullable: true,
             };
             break;
 
         case Ast.NodeKind.RecordLiteral:
         case Ast.NodeKind.RecordExpression:
-            result = inspectRecord(state, xorNode);
+            result = inspectTypeRecord(state, xorNode);
             break;
 
         // TODO: how should error raising be typed?
@@ -129,55 +176,55 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.Constant:
-            result = inspectConstant(xorNode);
+            result = inspectTypeConstant(xorNode);
             break;
 
         case Ast.NodeKind.ErrorHandlingExpression:
-            result = inspectErrorHandlingExpression(state, xorNode);
+            result = inspectTypeErrorHandlingExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.FieldProjection:
-            result = inspectFieldProjection(state, xorNode);
+            result = inspectTypeFieldProjection(state, xorNode);
             break;
 
         case Ast.NodeKind.FieldSelector:
-            result = inspectFieldSelector(state, xorNode);
+            result = inspectTypeFieldSelector(state, xorNode);
             break;
 
         case Ast.NodeKind.FieldSpecification:
-            result = inspectFieldSpecification(state, xorNode);
+            result = inspectTypeFieldSpecification(state, xorNode);
             break;
 
         case Ast.NodeKind.FunctionExpression:
-            result = inspectFunctionExpression(state, xorNode);
+            result = inspectTypeFunctionExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.FunctionType:
-            result = inspectFunctionType(state, xorNode);
+            result = inspectTypeFunctionType(state, xorNode);
             break;
 
         case Ast.NodeKind.Identifier:
-            result = inspectIdentifier(state, xorNode);
+            result = inspectTypeIdentifier(state, xorNode);
             break;
 
         case Ast.NodeKind.IdentifierExpression:
-            result = inspectIdentifierExpression(state, xorNode);
+            result = inspectTypeIdentifierExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.IfExpression:
-            result = inspectIfExpression(state, xorNode);
+            result = inspectTypeIfExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.IsExpression:
-            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical);
             break;
 
         case Ast.NodeKind.InvokeExpression:
-            result = inspectInvokeExpression(state, xorNode);
+            result = inspectTypeInvokeExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
-            result = TypeUtils.primitiveTypeFactory(Type.TypeKind.Logical, false);
+            result = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical);
             break;
 
         case Ast.NodeKind.ItemAccessExpression:
@@ -185,15 +232,15 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.LetExpression:
-            result = inspectFromChildAttributeIndex(state, xorNode, 3);
+            result = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
             break;
 
         case Ast.NodeKind.ListType:
-            result = inspectListType(state, xorNode);
+            result = inspectTypeListType(state, xorNode);
             break;
 
         case Ast.NodeKind.LiteralExpression:
-            result = inspectLiteralExpression(xorNode);
+            result = inspectTypeLiteralExpression(xorNode);
             break;
 
         case Ast.NodeKind.NotImplementedExpression:
@@ -201,35 +248,35 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
             break;
 
         case Ast.NodeKind.NullCoalescingExpression:
-            result = inspectNullCoalescingExpression(state, xorNode);
+            result = inspectTypeNullCoalescingExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.Parameter:
-            result = inspectParameter(state, xorNode);
+            result = inspectTypeParameter(state, xorNode);
             break;
 
         case Ast.NodeKind.PrimitiveType:
-            result = inspectPrimitiveType(xorNode);
+            result = inspectTypePrimitiveType(xorNode);
             break;
 
         case Ast.NodeKind.RangeExpression:
-            result = inspectRangeExpression(state, xorNode);
+            result = inspectTypeRangeExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.RecordType:
-            result = inspectRecordType(state, xorNode);
+            result = inspectTypeRecordType(state, xorNode);
             break;
 
         case Ast.NodeKind.RecursivePrimaryExpression:
-            result = inspectRecursivePrimaryExpression(state, xorNode);
+            result = inspectTypeRecursivePrimaryExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.TableType:
-            result = inspectTableType(state, xorNode);
+            result = inspectTypeTableType(state, xorNode);
             break;
 
         case Ast.NodeKind.UnaryExpression:
-            result = inspectUnaryExpression(state, xorNode);
+            result = inspectTypeUnaryExpression(state, xorNode);
             break;
 
         default:
@@ -240,46 +287,8 @@ export function inspectXorNode(state: TypeInspectionState, xorNode: TXorNode): T
     return result;
 }
 
-export function getOrCreateType(state: TypeInspectionState, scopeItem: TScopeItem): Type.TType {
-    const nodeId: number = scopeItem.id;
-
-    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeGivenType !== undefined) {
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeDeltaType !== undefined) {
-        return maybeDeltaType;
-    }
-
-    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
-    return scopeType;
-}
-
-export function getOrCreateScope(state: TypeInspectionState, nodeId: number): ScopeItemByKey {
-    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
-    if (maybeScope !== undefined) {
-        return maybeScope;
-    }
-
-    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(state.nodeIdMapCollection, nodeId);
-    const triedScope: TriedScopeForRoot = tryScopeItems(
-        state.settings,
-        state.nodeIdMapCollection,
-        state.leafNodeIds,
-        ancestry[0].node.id,
-        state.scopeById,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        throw triedScope.error;
-    }
-
-    return triedScope.value;
-}
-
-export function inspectFromChildAttributeIndex(
-    state: TypeInspectionState,
+export function inspectTypeFromChildAttributeIndex(
+    state: InspectTypeState,
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
@@ -307,7 +316,7 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
     );
 }
 
-export function maybeDereferencedIdentifierType(state: TypeInspectionState, xorNode: TXorNode): undefined | Type.TType {
+export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode: TXorNode): undefined | Type.TType {
     const maybeDeferenced: TXorNode | undefined = maybeDereferencedIdentifier(state, xorNode);
     if (maybeDeferenced === undefined) {
         return undefined;
@@ -340,7 +349,7 @@ export function maybeDereferencedIdentifierType(state: TypeInspectionState, xorN
             throw Assert.isNever(deferenced);
     }
 
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, deferenced.id);
+    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, deferenced.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
     if (maybeScopeItem === undefined || (maybeScopeItem.isRecursive === true && isIdentifierRecurisve === false)) {
         return undefined;
@@ -381,7 +390,7 @@ export function maybeDereferencedIdentifierType(state: TypeInspectionState, xorN
     return inspectXorNode(state, maybeNextXorNode);
 }
 
-function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNode): TXorNode | undefined {
+function maybeDereferencedIdentifier(state: InspectTypeState, xorNode: TXorNode): TXorNode | undefined {
     XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
 
     if (xorNode.kind === XorNodeKind.Context) {
@@ -409,7 +418,7 @@ function maybeDereferencedIdentifier(state: TypeInspectionState, xorNode: TXorNo
             throw Assert.isNever(identifier);
     }
 
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, identifier.id);
+    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, identifier.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
 
     if (

@@ -6,6 +6,7 @@ import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { StartOfDocumentKeywords } from "./inspection";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Ast } from "./language";
+import { ExpectedType, Type } from "./language";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { getLocalizationTemplates } from "./localization";
 import {
@@ -22,7 +23,6 @@ import {
     XorNodeUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings";
-import { Type } from "./type";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
@@ -175,7 +175,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         return triedScopeType;
     }
 
-    const triedExpectedType: Inspection.TriedExpectedType = Inspection.tryExpectedType(settings, activeNode);
+    const triedExpectedType: ExpectedType.TriedExpectedType = ExpectedType.tryExpectedType(settings, activeNode);
     if (ResultUtils.isErr(triedExpectedType)) {
         return triedExpectedType;
     }

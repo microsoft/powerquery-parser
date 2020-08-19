@@ -3,7 +3,7 @@
 
 // A tri-state Result. The additional third state is for when a job was partially completed before an error occured,
 // and the work done wants to be saved/returned.
-export type PartialResult<T, E> = PartialOk<T> | PartialMixed<T, E> | PartialErr<E>;
+export type PartialResult<O, M, E> = PartialOk<O> | PartialMixed<M, E> | PartialErr<E>;
 
 export const enum PartialResultKind {
     Ok = "Ok",
@@ -11,14 +11,14 @@ export const enum PartialResultKind {
     Err = "Err",
 }
 
-export interface PartialOk<T> {
+export interface PartialOk<O> {
     readonly kind: PartialResultKind.Ok;
-    readonly value: T;
+    readonly value: O;
 }
 
-export interface PartialMixed<T, E> {
+export interface PartialMixed<M, E> {
     readonly kind: PartialResultKind.Mixed;
-    readonly value: T;
+    readonly value: M;
     readonly error: E;
 }
 

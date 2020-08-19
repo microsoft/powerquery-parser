@@ -2,23 +2,18 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { Type } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
-import { NodeIdMap, TXorNode } from "../../parser";
+import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { Type } from "../../type";
-import { ScopeById, ScopeItemByKey } from "../scope";
-import { getOrCreateScope, getOrCreateType, inspectXorNode } from "./inspectType";
-import { ScopeTypeByKey, TypeById, TypeInspectionState } from "./type";
+import { ScopeItemByKey } from "../scope";
+import { ScopeTypeByKey } from "../scope";
+import { TypeCache } from "./common";
+import { expectGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXorNode } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
 export type TriedType = Result<Type.TType, CommonError.CommonError>;
-
-// A cache that can be re-used for successive calls under the same document.
-export interface TypeCache {
-    readonly scopeById: ScopeById;
-    readonly typeById: TypeById;
-}
 
 export function tryScopeType(
     settings: CommonSettings,
@@ -27,7 +22,7 @@ export function tryScopeType(
     nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedScopeType {
-    const state: TypeInspectionState = {
+    const state: InspectTypeState = {
         settings,
         givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
@@ -43,10 +38,10 @@ export function tryType(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    xorNode: TXorNode,
+    nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedType {
-    const state: TypeInspectionState = {
+    const state: InspectTypeState = {
         settings,
         givenTypeById: maybeTypeCache?.scopeById ?? new Map(),
         deltaTypeById: new Map(),
@@ -55,15 +50,17 @@ export function tryType(
         scopeById: maybeTypeCache?.typeById ?? new Map(),
     };
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectXorNode(state, xorNode));
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
+        inspectXorNode(state, NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId)),
+    );
 }
 
-function inspectScopeType(state: TypeInspectionState, nodeId: number): ScopeTypeByKey {
-    const scopeItemByKey: ScopeItemByKey = getOrCreateScope(state, nodeId);
+function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
+    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, nodeId);
 
     for (const scopeItem of scopeItemByKey.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
-            state.deltaTypeById.set(scopeItem.id, getOrCreateType(state, scopeItem));
+            state.deltaTypeById.set(scopeItem.id, getOrFindScopeItemType(state, scopeItem));
         }
     }
 

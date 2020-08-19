@@ -3,14 +3,14 @@
 
 import { PartialErr, PartialMixed, PartialOk, PartialResult, PartialResultKind } from "./partialResult";
 
-export function okFactory<T>(value: T): PartialOk<T> {
+export function okFactory<O>(value: O): PartialOk<O> {
     return {
         kind: PartialResultKind.Ok,
         value,
     };
 }
 
-export function mixedFactory<T, E>(value: T, error: E): PartialMixed<T, E> {
+export function mixedFactory<M, E>(value: M, error: E): PartialMixed<M, E> {
     return {
         kind: PartialResultKind.Mixed,
         value,
@@ -25,14 +25,14 @@ export function errFactory<E>(error: E): PartialErr<E> {
     };
 }
 
-export function isOk<T, E>(result: PartialResult<T, E>): result is PartialOk<T> {
+export function isOk<O, M, E>(result: PartialResult<O, M, E>): result is PartialOk<O> {
     return result.kind === PartialResultKind.Ok;
 }
 
-export function isMixed<T, E>(result: PartialResult<T, E>): result is PartialMixed<T, E> {
+export function isMixed<O, M, E>(result: PartialResult<O, M, E>): result is PartialMixed<M, E> {
     return result.kind === PartialResultKind.Mixed;
 }
 
-export function isErr<T, E>(result: PartialResult<T, E>): result is PartialErr<E> {
+export function isErr<O, M, E>(result: PartialResult<O, M, E>): result is PartialErr<E> {
     return result.kind === PartialResultKind.Err;
 }

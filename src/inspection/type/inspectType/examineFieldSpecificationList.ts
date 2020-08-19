@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../../language";
+import { Ast, Type } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { Type } from "../../../type";
-import { TypeInspectionState } from "../type";
-import { inspectFieldSpecification } from "./inspectFieldSpecification";
+import { InspectTypeState } from "./common";
+import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 
 export interface ExaminedFieldSpecificationList {
     readonly fields: Map<string, Type.TType>;
@@ -14,7 +13,7 @@ export interface ExaminedFieldSpecificationList {
 
 // It's called an examination instead of inspection because it doesn't return TType.
 export function examineFieldSpecificationList(
-    state: TypeInspectionState,
+    state: InspectTypeState,
     xorNode: TXorNode,
 ): ExaminedFieldSpecificationList {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecificationList);
@@ -37,7 +36,7 @@ export function examineFieldSpecificationList(
             break;
         }
         const name: string = (maybeName as Ast.GeneralizedIdentifier).literal;
-        const type: Type.TType = inspectFieldSpecification(state, fieldSpecification);
+        const type: Type.TType = inspectTypeFieldSpecification(state, fieldSpecification);
         fields.push([name, type]);
     }
 
