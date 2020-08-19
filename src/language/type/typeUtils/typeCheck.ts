@@ -5,60 +5,42 @@ import { Type } from "..";
 import { ArrayUtils } from "../../../common";
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
 
-export interface IChecked<T> {
-    readonly valid: ReadonlyArray<T>;
-    readonly invalid: ReadonlyArray<T>;
-    readonly extraneous: ReadonlyArray<T>;
-    readonly missing: ReadonlyArray<T>;
+export type TChecked =
+    | CheckedDefinedFunction
+    | CheckedDefinedList
+    | CheckedDefinedRecord
+    | CheckedDefinedTable
+    | CheckedFunctionSignature;
+
+export interface IChecked<Key, T extends Type.TType | Type.FunctionParameter> {
+    readonly valid: ReadonlyArray<Key>;
+    readonly invalid: ReadonlyArray<Mismatch<Key, T>>;
+    readonly extraneous: ReadonlyArray<Key>;
+    readonly missing: ReadonlyArray<Key>;
 }
 
-export type CheckedDefinedList = IChecked<number>;
+export type CheckedDefinedList = IChecked<number, Type.TType>;
 
-export interface CheckedFunction extends IChecked<number> {
+export interface CheckedDefinedFunction extends IChecked<number, Type.FunctionParameter> {
     readonly isReturnTypeCompatible: boolean;
 }
 
-export type CheckedFunctionSignature = IChecked<number>;
+export type CheckedFunctionSignature = IChecked<number, Type.FunctionParameter>;
 
-export type CheckedRecord = IChecked<string>;
+export type CheckedDefinedRecord = IChecked<string, Type.TType>;
 
-export type CheckedTable = IChecked<string>;
+export type CheckedDefinedTable = IChecked<string, Type.TType>;
 
-export function typeCheckListTypeWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): boolean {
-    const schemaItemType: Type.TType = schemaType.itemType;
-    for (const element of valueType.elements) {
-        if (!isCompatible(element, schemaItemType)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-export function typeCheckListTypeWithDefinedListType(
-    valueType: Type.DefinedList,
-    schemaType: Type.DefinedListType,
-): CheckedDefinedList {
-    return typeCheckGenericNumber(valueType.elements, schemaType.itemTypes, isCompatible);
+export interface Mismatch<K, T> {
+    readonly key: K;
+    readonly expected: T;
+    readonly actual: T;
 }
 
 export function typeCheckFunction(
-    valueType: Type.Function | Type.DefinedFunction,
+    valueType: Type.DefinedFunction,
     schemaType: Type.FunctionType,
-): CheckedFunction {
-    if (valueType.maybeExtendedKind === undefined) {
-        return {
-            valid: [],
-            invalid: [],
-            extraneous: [],
-            missing: ArrayUtils.range(schemaType.parameters.length, 0),
-            isReturnTypeCompatible:
-                schemaType.returnType.kind === Type.TypeKind.Any &&
-                schemaType.returnType.maybeExtendedKind === undefined &&
-                schemaType.returnType.isNullable === false,
-        };
-    }
-
+): CheckedDefinedFunction {
     return {
         ...typeCheckFunctionSignature(valueType, schemaType),
         isReturnTypeCompatible: isCompatible(valueType.returnType, schemaType.returnType) === true,
@@ -69,46 +51,61 @@ export function typeCheckFunctionSignature(
     valueType: Type.FunctionSignature,
     schemaType: Type.FunctionSignature,
 ): CheckedFunctionSignature {
-    return typeCheckGenericNumber(
+    return typeCheckGenericNumber<Type.FunctionParameter>(
         valueType.parameters,
         schemaType.parameters,
         (left: Type.FunctionParameter, right: Type.FunctionParameter) => isCompatibleWithFunctionParameter(left, right),
     );
 }
 
-export function typeCheckRecord(
-    valueType: Type.Record | Type.DefinedRecord,
-    schemaType: Type.RecordType,
-): CheckedRecord {
-    if (valueType.maybeExtendedKind === undefined) {
-        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()]);
+export function typeCheckListWithListType(valueType: Type.DefinedList, schemaType: Type.ListType): CheckedDefinedList {
+    const valid: number[] = [];
+    const invalid: Mismatch<number, Type.TType>[] = [];
+    const schemaItemType: Type.TType = schemaType.itemType;
+
+    const valueElements: ReadonlyArray<Type.TType> = valueType.elements;
+    const numElements: number = valueElements.length;
+    for (let index: number = 0; index < numElements; index += 1) {
+        const element: Type.TType = valueElements[index];
+        if (isCompatible(element, schemaItemType)) {
+            valid.push(index);
+        } else {
+            invalid.push({
+                key: index,
+                expected: schemaType,
+                actual: element,
+            });
+        }
     }
 
-    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
-}
-
-function typeCheckRecordOrTableOrTablePrimitive(schemaTypeKeys: ReadonlyArray<string>): CheckedRecord | CheckedTable {
     return {
-        valid: [],
-        invalid: [],
+        valid,
+        invalid,
         extraneous: [],
-        missing: schemaTypeKeys,
+        missing: [],
     };
 }
 
-export function typeCheckTable(valueType: Type.Table | Type.DefinedTable, schemaType: Type.TableType): CheckedTable {
-    if (valueType.maybeExtendedKind === undefined) {
-        return typeCheckRecordOrTableOrTablePrimitive([...schemaType.fields.keys()]);
-    }
+export function typeCheckListWithDefinedListType(
+    valueType: Type.DefinedList,
+    schemaType: Type.DefinedListType,
+): CheckedDefinedList {
+    return typeCheckGenericNumber(valueType.elements, schemaType.itemTypes, isCompatible);
+}
 
+export function typeCheckRecord(valueType: Type.DefinedRecord, schemaType: Type.RecordType): CheckedDefinedRecord {
     return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
 }
 
-function typeCheckGenericNumber<T>(
+export function typeCheckTable(valueType: Type.DefinedTable, schemaType: Type.TableType): CheckedDefinedTable {
+    return typeCheckRecordOrTable(valueType.fields, schemaType.fields, schemaType.isOpen);
+}
+
+function typeCheckGenericNumber<T extends Type.TType | Type.FunctionParameter>(
     valueElements: ReadonlyArray<T>,
     schemaItemTypes: ReadonlyArray<T>,
     valueCmpFn: (left: T, right: T) => boolean | undefined,
-): IChecked<number> {
+): IChecked<number, T> {
     const numElements: number = valueElements.length;
     const numItemTypes: number = schemaItemTypes.length;
 
@@ -126,7 +123,7 @@ function typeCheckGenericNumber<T>(
     }
 
     const validIndices: number[] = [];
-    const invalidIndices: number[] = [];
+    const mismatches: Mismatch<number, T>[] = [];
     for (let index: number = 0; index < upperBound; index += 1) {
         const element: T = valueElements[index];
         const schemaItemType: T = schemaItemTypes[index];
@@ -134,13 +131,17 @@ function typeCheckGenericNumber<T>(
         if (valueCmpFn(element, schemaItemType)) {
             validIndices.push(index);
         } else {
-            invalidIndices.push(index);
+            mismatches.push({
+                key: index,
+                expected: schemaItemType,
+                actual: element,
+            });
         }
     }
 
     return {
         valid: validIndices,
-        invalid: invalidIndices,
+        invalid: mismatches,
         extraneous: extraneousIndices,
         missing: missingIndices,
     };
@@ -150,9 +151,9 @@ function typeCheckRecordOrTable(
     valueFields: Map<string, Type.TType>,
     schemaFields: Map<string, Type.TType>,
     schemaIsOpen: boolean,
-): IChecked<string> {
+): IChecked<string, Type.TType> {
     const validFields: string[] = [];
-    const invalidFields: string[] = [];
+    const mismatches: Mismatch<string, Type.TType>[] = [];
     const extraneousFields: string[] = [];
     const missingFields: ReadonlyArray<string> = [...schemaFields.keys()].filter(
         (key: string) => valueFields.has(key) === false,
@@ -164,7 +165,11 @@ function typeCheckRecordOrTable(
             if (isCompatible(type, maybeSchemaValueType)) {
                 validFields.push(key);
             } else {
-                invalidFields.push(key);
+                mismatches.push({
+                    key,
+                    expected: maybeSchemaValueType,
+                    actual: type,
+                });
             }
         } else if (schemaIsOpen === true) {
             validFields.push(key);
@@ -175,7 +180,7 @@ function typeCheckRecordOrTable(
 
     return {
         valid: validFields,
-        invalid: invalidFields,
+        invalid: mismatches,
         extraneous: extraneousFields,
         missing: missingFields,
     };
