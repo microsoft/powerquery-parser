@@ -1,4 +1,6 @@
-import struct
+from collections import namedtuple
+
+CodeTrio = namedtuple("CodeTrio", ["code_point_hex", "code_point_int", "code_units"])
 
 # scrapped from http://www.fileformat.info
 letter_uppercase_class = ["0041","0042","0043","0044","0045","0046","0047","0048","0049","004A","004B","004C","004D","004E","004F","0050","0051","0052","0053","0054","0055","0056","0057","0058","0059","005A","00C0","00C1","00C2","00C3","00C4","00C5","00C6","00C7","00C8","00C9","00CA","00CB","00CC","00CD","00CE","00CF","00D0","00D1","00D2","00D3","00D4","00D5","00D6","00D8","00D9","00DA","00DB","00DC","00DD","00DE","0100","0102","0104","0106","0108","010A","010C","010E","0110","0112","0114","0116","0118","011A","011C","011E","0120","0122","0124","0126","0128","012A","012C","012E","0130","0132","0134","0136","0139","013B","013D","013F","0141","0143","0145","0147","014A","014C","014E","0150","0152","0154","0156","0158","015A","015C","015E","0160","0162","0164","0166","0168","016A","016C","016E","0170","0172","0174","0176","0178","0179","017B","017D","0181","0182","0184","0186","0187","0189","018A","018B","018E","018F","0190","0191","0193","0194","0196","0197","0198","019C","019D","019F","01A0","01A2","01A4","01A6","01A7","01A9","01AC","01AE","01AF","01B1","01B2","01B3","01B5","01B7","01B8","01BC","01C4","01C7","01CA","01CD","01CF","01D1","01D3","01D5","01D7","01D9","01DB","01DE","01E0","01E2","01E4","01E6","01E8","01EA","01EC","01EE","01F1","01F4","01F6","01F7","01F8","01FA","01FC","01FE","0200","0202","0204","0206","0208","020A","020C","020E","0210","0212","0214","0216","0218","021A","021C","021E","0220","0222","0224","0226","0228","022A","022C","022E","0230","0232","023A","023B","023D","023E","0241","0243","0244","0245","0246","0248","024A","024C","024E","0370","0372","0376","037F","0386","0388","0389","038A","038C","038E","038F","0391","0392","0393","0394","0395","0396","0397","0398","0399","039A","039B","039C","039D","039E","039F","03A0","03A1","03A3","03A4","03A5","03A6","03A7","03A8","03A9","03AA","03AB","03CF","03D2","03D3","03D4","03D8","03DA","03DC","03DE","03E0","03E2","03E4","03E6","03E8","03EA","03EC","03EE","03F4","03F7","03F9","03FA","03FD","03FE","03FF","0400","0401","0402","0403","0404","0405","0406","0407","0408","0409","040A","040B","040C","040D","040E","040F","0410","0411","0412","0413","0414","0415","0416","0417","0418","0419","041A","041B","041C","041D","041E","041F","0420","0421","0422","0423","0424","0425","0426","0427","0428","0429","042A","042B","042C","042D","042E","042F","0460","0462","0464","0466","0468","046A","046C","046E","0470","0472","0474","0476","0478","047A","047C","047E","0480","048A","048C","048E","0490","0492","0494","0496","0498","049A","049C","049E","04A0","04A2","04A4","04A6","04A8","04AA","04AC","04AE","04B0","04B2","04B4","04B6","04B8","04BA","04BC","04BE","04C0","04C1","04C3","04C5","04C7","04C9","04CB","04CD","04D0","04D2","04D4","04D6","04D8","04DA","04DC","04DE","04E0","04E2","04E4","04E6","04E8","04EA","04EC","04EE","04F0","04F2","04F4","04F6","04F8","04FA","04FC","04FE","0500","0502","0504","0506","0508","050A","050C","050E","0510","0512","0514","0516","0518","051A","051C","051E","0520","0522","0524","0526","0528","052A","052C","052E","0531","0532","0533","0534","0535","0536","0537","0538","0539","053A","053B","053C","053D","053E","053F","0540","0541","0542","0543","0544","0545","0546","0547","0548","0549","054A","054B","054C","054D","054E","054F","0550","0551","0552","0553","0554","0555","0556","10A0","10A1","10A2","10A3","10A4","10A5","10A6","10A7","10A8","10A9","10AA","10AB","10AC","10AD","10AE","10AF","10B0","10B1","10B2","10B3","10B4","10B5","10B6","10B7","10B8","10B9","10BA","10BB","10BC","10BD","10BE","10BF","10C0","10C1","10C2","10C3","10C4","10C5","10C7","10CD","13A0","13A1","13A2","13A3","13A4","13A5","13A6","13A7","13A8","13A9","13AA","13AB","13AC","13AD","13AE","13AF","13B0","13B1","13B2","13B3","13B4","13B5","13B6","13B7","13B8","13B9","13BA","13BB","13BC","13BD","13BE","13BF","13C0","13C1","13C2","13C3","13C4","13C5","13C6","13C7","13C8","13C9","13CA","13CB","13CC","13CD","13CE","13CF","13D0","13D1","13D2","13D3","13D4","13D5","13D6","13D7","13D8","13D9","13DA","13DB","13DC","13DD","13DE","13DF","13E0","13E1","13E2","13E3","13E4","13E5","13E6","13E7","13E8","13E9","13EA","13EB","13EC","13ED","13EE","13EF","13F0","13F1","13F2","13F3","13F4","13F5","1C90","1C91","1C92","1C93","1C94","1C95","1C96","1C97","1C98","1C99","1C9A","1C9B","1C9C","1C9D","1C9E","1C9F","1CA0","1CA1","1CA2","1CA3","1CA4","1CA5","1CA6","1CA7","1CA8","1CA9","1CAA","1CAB","1CAC","1CAD","1CAE","1CAF","1CB0","1CB1","1CB2","1CB3","1CB4","1CB5","1CB6","1CB7","1CB8","1CB9","1CBA","1CBD","1CBE","1CBF","1E00","1E02","1E04","1E06","1E08","1E0A","1E0C","1E0E","1E10","1E12","1E14","1E16","1E18","1E1A","1E1C","1E1E","1E20","1E22","1E24","1E26","1E28","1E2A","1E2C","1E2E","1E30","1E32","1E34","1E36","1E38","1E3A","1E3C","1E3E","1E40","1E42","1E44","1E46","1E48","1E4A","1E4C","1E4E","1E50","1E52","1E54","1E56","1E58","1E5A","1E5C","1E5E","1E60","1E62","1E64","1E66","1E68","1E6A","1E6C","1E6E","1E70","1E72","1E74","1E76","1E78","1E7A","1E7C","1E7E","1E80","1E82","1E84","1E86","1E88","1E8A","1E8C","1E8E","1E90","1E92","1E94","1E9E","1EA0","1EA2","1EA4","1EA6","1EA8","1EAA","1EAC","1EAE","1EB0","1EB2","1EB4","1EB6","1EB8","1EBA","1EBC","1EBE","1EC0","1EC2","1EC4","1EC6","1EC8","1ECA","1ECC","1ECE","1ED0","1ED2","1ED4","1ED6","1ED8","1EDA","1EDC","1EDE","1EE0","1EE2","1EE4","1EE6","1EE8","1EEA","1EEC","1EEE","1EF0","1EF2","1EF4","1EF6","1EF8","1EFA","1EFC","1EFE","1F08","1F09","1F0A","1F0B","1F0C","1F0D","1F0E","1F0F","1F18","1F19","1F1A","1F1B","1F1C","1F1D","1F28","1F29","1F2A","1F2B","1F2C","1F2D","1F2E","1F2F","1F38","1F39","1F3A","1F3B","1F3C","1F3D","1F3E","1F3F","1F48","1F49","1F4A","1F4B","1F4C","1F4D","1F59","1F5B","1F5D","1F5F","1F68","1F69","1F6A","1F6B","1F6C","1F6D","1F6E","1F6F","1FB8","1FB9","1FBA","1FBB","1FC8","1FC9","1FCA","1FCB","1FD8","1FD9","1FDA","1FDB","1FE8","1FE9","1FEA","1FEB","1FEC","1FF8","1FF9","1FFA","1FFB","2102","2107","210B","210C","210D","2110","2111","2112","2115","2119","211A","211B","211C","211D","2124","2126","2128","212A","212B","212C","212D","2130","2131","2132","2133","213E","213F","2145","2183","2C00","2C01","2C02","2C03","2C04","2C05","2C06","2C07","2C08","2C09","2C0A","2C0B","2C0C","2C0D","2C0E","2C0F","2C10","2C11","2C12","2C13","2C14","2C15","2C16","2C17","2C18","2C19","2C1A","2C1B","2C1C","2C1D","2C1E","2C1F","2C20","2C21","2C22","2C23","2C24","2C25","2C26","2C27","2C28","2C29","2C2A","2C2B","2C2C","2C2D","2C2E","2C60","2C62","2C63","2C64","2C67","2C69","2C6B","2C6D","2C6E","2C6F","2C70","2C72","2C75","2C7E","2C7F","2C80","2C82","2C84","2C86","2C88","2C8A","2C8C","2C8E","2C90","2C92","2C94","2C96","2C98","2C9A","2C9C","2C9E","2CA0","2CA2","2CA4","2CA6","2CA8","2CAA","2CAC","2CAE","2CB0","2CB2","2CB4","2CB6","2CB8","2CBA","2CBC","2CBE","2CC0","2CC2","2CC4","2CC6","2CC8","2CCA","2CCC","2CCE","2CD0","2CD2","2CD4","2CD6","2CD8","2CDA","2CDC","2CDE","2CE0","2CE2","2CEB","2CED","2CF2","A640","A642","A644","A646","A648","A64A","A64C","A64E","A650","A652","A654","A656","A658","A65A","A65C","A65E","A660","A662","A664","A666","A668","A66A","A66C","A680","A682","A684","A686","A688","A68A","A68C","A68E","A690","A692","A694","A696","A698","A69A","A722","A724","A726","A728","A72A","A72C","A72E","A732","A734","A736","A738","A73A","A73C","A73E","A740","A742","A744","A746","A748","A74A","A74C","A74E","A750","A752","A754","A756","A758","A75A","A75C","A75E","A760","A762","A764","A766","A768","A76A","A76C","A76E","A779","A77B","A77D","A77E","A780","A782","A784","A786","A78B","A78D","A790","A792","A796","A798","A79A","A79C","A79E","A7A0","A7A2","A7A4","A7A6","A7A8","A7AA","A7AB","A7AC","A7AD","A7AE","A7B0","A7B1","A7B2","A7B3","A7B4","A7B6","A7B8","FF21","FF22","FF23","FF24","FF25","FF26","FF27","FF28","FF29","FF2A","FF2B","FF2C","FF2D","FF2E","FF2F","FF30","FF31","FF32","FF33","FF34","FF35","FF36","FF37","FF38","FF39","FF3A","10400","10401","10402","10403","10404","10405","10406","10407","10408","10409","1040A","1040B","1040C","1040D","1040E","1040F","10410","10411","10412","10413","10414","10415","10416","10417","10418","10419","1041A","1041B","1041C","1041D","1041E","1041F","10420","10421","10422","10423","10424","10425","10426","10427","104B0","104B1","104B2","104B3","104B4","104B5","104B6","104B7","104B8","104B9","104BA","104BB","104BC","104BD","104BE","104BF","104C0","104C1","104C2","104C3","104C4","104C5","104C6","104C7","104C8","104C9","104CA","104CB","104CC","104CD","104CE","104CF","104D0","104D1","104D2","104D3","10C80","10C81","10C82","10C83","10C84","10C85","10C86","10C87","10C88","10C89","10C8A","10C8B","10C8C","10C8D","10C8E","10C8F","10C90","10C91","10C92","10C93","10C94","10C95","10C96","10C97","10C98","10C99","10C9A","10C9B","10C9C","10C9D","10C9E","10C9F","10CA0","10CA1","10CA2","10CA3","10CA4","10CA5","10CA6","10CA7","10CA8","10CA9","10CAA","10CAB","10CAC","10CAD","10CAE","10CAF","10CB0","10CB1","10CB2","118A0","118A1","118A2","118A3","118A4","118A5","118A6","118A7","118A8","118A9","118AA","118AB","118AC","118AD","118AE","118AF","118B0","118B1","118B2","118B3","118B4","118B5","118B6","118B7","118B8","118B9","118BA","118BB","118BC","118BD","118BE","118BF","16E40","16E41","16E42","16E43","16E44","16E45","16E46","16E47","16E48","16E49","16E4A","16E4B","16E4C","16E4D","16E4E","16E4F","16E50","16E51","16E52","16E53","16E54","16E55","16E56","16E57","16E58","16E59","16E5A","16E5B","16E5C","16E5D","16E5E","16E5F","1D400","1D401","1D402","1D403","1D404","1D405","1D406","1D407","1D408","1D409","1D40A","1D40B","1D40C","1D40D","1D40E","1D40F","1D410","1D411","1D412","1D413","1D414","1D415","1D416","1D417","1D418","1D419","1D434","1D435","1D436","1D437","1D438","1D439","1D43A","1D43B","1D43C","1D43D","1D43E","1D43F","1D440","1D441","1D442","1D443","1D444","1D445","1D446","1D447","1D448","1D449","1D44A","1D44B","1D44C","1D44D","1D468","1D469","1D46A","1D46B","1D46C","1D46D","1D46E","1D46F","1D470","1D471","1D472","1D473","1D474","1D475","1D476","1D477","1D478","1D479","1D47A","1D47B","1D47C","1D47D","1D47E","1D47F","1D480","1D481","1D49C","1D49E","1D49F","1D4A2","1D4A5","1D4A6","1D4A9","1D4AA","1D4AB","1D4AC","1D4AE","1D4AF","1D4B0","1D4B1","1D4B2","1D4B3","1D4B4","1D4B5","1D4D0","1D4D1","1D4D2","1D4D3","1D4D4","1D4D5","1D4D6","1D4D7","1D4D8","1D4D9","1D4DA","1D4DB","1D4DC","1D4DD","1D4DE","1D4DF","1D4E0","1D4E1","1D4E2","1D4E3","1D4E4","1D4E5","1D4E6","1D4E7","1D4E8","1D4E9","1D504","1D505","1D507","1D508","1D509","1D50A","1D50D","1D50E","1D50F","1D510","1D511","1D512","1D513","1D514","1D516","1D517","1D518","1D519","1D51A","1D51B","1D51C","1D538","1D539","1D53B","1D53C","1D53D","1D53E","1D540","1D541","1D542","1D543","1D544","1D546","1D54A","1D54B","1D54C","1D54D","1D54E","1D54F","1D550","1D56C","1D56D","1D56E","1D56F","1D570","1D571","1D572","1D573","1D574","1D575","1D576","1D577","1D578","1D579","1D57A","1D57B","1D57C","1D57D","1D57E","1D57F","1D580","1D581","1D582","1D583","1D584","1D585","1D5A0","1D5A1","1D5A2","1D5A3","1D5A4","1D5A5","1D5A6","1D5A7","1D5A8","1D5A9","1D5AA","1D5AB","1D5AC","1D5AD","1D5AE","1D5AF","1D5B0","1D5B1","1D5B2","1D5B3","1D5B4","1D5B5","1D5B6","1D5B7","1D5B8","1D5B9","1D5D4","1D5D5","1D5D6","1D5D7","1D5D8","1D5D9","1D5DA","1D5DB","1D5DC","1D5DD","1D5DE","1D5DF","1D5E0","1D5E1","1D5E2","1D5E3","1D5E4","1D5E5","1D5E6","1D5E7","1D5E8","1D5E9","1D5EA","1D5EB","1D5EC","1D5ED","1D608","1D609","1D60A","1D60B","1D60C","1D60D","1D60E","1D60F","1D610","1D611","1D612","1D613","1D614","1D615","1D616","1D617","1D618","1D619","1D61A","1D61B","1D61C","1D61D","1D61E","1D61F","1D620","1D621","1D63C","1D63D","1D63E","1D63F","1D640","1D641","1D642","1D643","1D644","1D645","1D646","1D647","1D648","1D649","1D64A","1D64B","1D64C","1D64D","1D64E","1D64F","1D650","1D651","1D652","1D653","1D654","1D655","1D670","1D671","1D672","1D673","1D674","1D675","1D676","1D677","1D678","1D679","1D67A","1D67B","1D67C","1D67D","1D67E","1D67F","1D680","1D681","1D682","1D683","1D684","1D685","1D686","1D687","1D688","1D689","1D6A8","1D6A9","1D6AA","1D6AB","1D6AC","1D6AD","1D6AE","1D6AF","1D6B0","1D6B1","1D6B2","1D6B3","1D6B4","1D6B5","1D6B6","1D6B7","1D6B8","1D6B9","1D6BA","1D6BB","1D6BC","1D6BD","1D6BE","1D6BF","1D6C0","1D6E2","1D6E3","1D6E4","1D6E5","1D6E6","1D6E7","1D6E8","1D6E9","1D6EA","1D6EB","1D6EC","1D6ED","1D6EE","1D6EF","1D6F0","1D6F1","1D6F2","1D6F3","1D6F4","1D6F5","1D6F6","1D6F7","1D6F8","1D6F9","1D6FA","1D71C","1D71D","1D71E","1D71F","1D720","1D721","1D722","1D723","1D724","1D725","1D726","1D727","1D728","1D729","1D72A","1D72B","1D72C","1D72D","1D72E","1D72F","1D730","1D731","1D732","1D733","1D734","1D756","1D757","1D758","1D759","1D75A","1D75B","1D75C","1D75D","1D75E","1D75F","1D760","1D761","1D762","1D763","1D764","1D765","1D766","1D767","1D768","1D769","1D76A","1D76B","1D76C","1D76D","1D76E","1D790","1D791","1D792","1D793","1D794","1D795","1D796","1D797","1D798","1D799","1D79A","1D79B","1D79C","1D79D","1D79E","1D79F","1D7A0","1D7A1","1D7A2","1D7A3","1D7A4","1D7A5","1D7A6","1D7A7","1D7A8","1D7CA","1E900","1E901","1E902","1E903","1E904","1E905","1E906","1E907","1E908","1E909","1E90A","1E90B","1E90C","1E90D","1E90E","1E90F","1E910","1E911","1E912","1E913","1E914","1E915","1E916","1E917","1E918","1E919","1E91A","1E91B","1E91C","1E91D","1E91E","1E91F","1E920","1E921"]
@@ -14,34 +16,96 @@ punctuation_connector_class = ["005F","203F","2040","2054","FE33","FE34","FE4D",
 other_format_class = ["00AD","0600","0601","0602","0603","0604","0605","061C","06DD","070F","08E2","180E","200B","200C","200D","200E","200F","202A","202B","202C","202D","202E","2060","2061","2062","2063","2064","2066","2067","2068","2069","206A","206B","206C","206D","206E","206F","FEFF","FFF9","FFFA","FFFB","110BD","110CD","1BCA0","1BCA1","1BCA2","1BCA3","1D173","1D174","1D175","1D176","1D177","1D178","1D179","1D17A","E0001","E0020","E0021","E0022","E0023","E0024","E0025","E0026","E0027","E0028","E0029","E002A","E002B","E002C","E002D","E002E","E002F","E0030","E0031","E0032","E0033","E0034","E0035","E0036","E0037","E0038","E0039","E003A","E003B","E003C","E003D","E003E","E003F","E0040","E0041","E0042","E0043","E0044","E0045","E0046","E0047","E0048","E0049","E004A","E004B","E004C","E004D","E004E","E004F","E0050","E0051","E0052","E0053","E0054","E0055","E0056","E0057","E0058","E0059","E005A","E005B","E005C","E005D","E005E","E005F","E0060","E0061","E0062","E0063","E0064","E0065","E0066","E0067","E0068","E0069","E006A","E006B","E006C","E006D","E006E","E006F","E0070","E0071","E0072","E0073","E0074","E0075","E0076","E0077","E0078","E0079","E007A","E007B","E007C","E007D","E007E","E007F"]
 
 def create_regex(lists_of_unicode_classes):
-    flattened_lists = [code for class_codes in lists_of_unicode_classes for code in class_codes]
-    sorted_codepoints = sorted([int(i, 16) for i in flattened_lists])
-    
-    regex_range_chunks = []
-    regex_non_range_chunks = []
-    for (low, hi) in codepoint_sequences(sorted_codepoints):
-        low_regex = codepoint_to_regexp_character(low)
-        high_regex = codepoint_to_regexp_character(hi)
+    flattened_lists = (code for class_codes in lists_of_unicode_classes for code in class_codes)
 
-        can_use_range = low_regex.count("\\u") == high_regex.count("\\u") == 1
-        if can_use_range:
-            regex_range_chunks.append("{}-{}".format(low_regex, high_regex))
+    code_trios = []
+    for code_point_hex in flattened_lists:
+        code_point_int = int(code_point_hex, 16)
+        code_trios.append(CodeTrio(
+            code_point_hex=code_point_hex,
+            code_point_int=code_point_int,
+            code_units=codepoint_to_codeunits(code_point_int)
+        ))
+
+    # Given the code units AB, AC, AD (where A, B, C, and D are valid code units),
+    # we want to eventually create the regex A[BCD].
+    # The first step to that is to organize them by their leading code unit.
+    code_trios_by_leading_codeunit = {}
+    for code_trio in code_trios:
+        key = code_trio.code_units[0]
+
+        if key not in code_trios_by_leading_codeunit:
+            code_trios_by_leading_codeunit[key] = []
+        
+        code_trios_by_leading_codeunit[key].append(code_trio)
+
+    # Partition the previous collection by:
+    #   the leading code unit is shared by more than one code point
+    #   the siblingless code point is one or two code units
+    short_siblingless_code_trios = []
+    long_siblingless_code_trios = []
+    code_trios_sibling_collections = []
+    for key, code_trios in code_trios_by_leading_codeunit.items():
+        if len(code_trios) == 1:
+            siblingless_code_trio = code_trios[0]
+
+            if len(siblingless_code_trio.code_units) == 1:
+                short_siblingless_code_trios.append(siblingless_code_trio)
+            else:
+                long_siblingless_code_trios.append(siblingless_code_trio)
+
         else:
-            for codepoint in range(low, hi+1):
-                regex_non_range_chunks.append((codepoint_to_regexp_character(codepoint)))
+            code_trios_sibling_collections.append(code_trios)
+
+    regex_chunks = []
+    short_regex_ranges = []
+
+    # We might be able to turn short siblingless code units into a range.
+    # Eg. given A, B, and C we might be able to do [A-C].
+    for (low, high) in code_trio_sequences(short_siblingless_code_trios):
+        assert len(low.code_units) == len(high.code_units)
+
+        if low.code_point_int == high.code_point_int:
+            regex_chunks.append("({})".format("".join(low.code_units)))
+        elif len(low.code_units) == 1:
+            short_regex_ranges.append("{}-{}".format(
+                low.code_units[0],
+                high.code_units[0],
+            ))
+        else:
+            regex_chunks.append("({}[{}-{}])".format(
+                low.code_units[0],
+                low.code_units[1],
+                high.code_units[1],
+            ))
+
+    # We can't do any optimization here without being to use the 'u' flag.
+    for code_trio in long_siblingless_code_trios:
+        regex_chunks.append("({})".format("".join(code_trio.code_units)))
+
+    for collection in code_trios_sibling_collections:
+        assert len(collection) > 1
+        assert len(collection[0].code_units) == 2
+
+        tails = (code_trio.code_units[1] for code_trio in collection)
+        regex_chunks.append("({}[{}])".format(
+            collection[0].code_units[0],
+            "".join(tails),
+        ))
 
     return "[{}]|{}".format(
-        "".join(regex_range_chunks),
-        "|".join(regex_non_range_chunks)
+        "".join(short_regex_ranges),
+        "|".join(sorted(regex_chunks)),
     )
 
-def codepoint_sequences(sorted_codepoints):
+def code_trio_sequences(code_trios):
+    sorted_code_trios = sorted(code_trios, key=lambda code_trio: code_trio.code_point_int)
     sequences = []
-    start = sorted_codepoints[0]
+    start = sorted_code_trios[0]
     previous = start
 
-    for i in sorted_codepoints[1:]:
-        if i == (previous + 1):
+    for i in sorted_code_trios[1:]:
+        if i.code_point_int == (previous.code_point_int + 1):
             previous = i
         else:
             sequences.append((start, previous))
@@ -51,17 +115,17 @@ def codepoint_sequences(sorted_codepoints):
 
     return sequences
 
-def codepoint_to_regexp_character(codepoint):
+def codepoint_to_codeunits(codepoint):
     bytes_be = [format(b, "02x") for b in chr(codepoint).encode("utf-16be")]
 
     num_bytes = len(bytes_be)
     assert num_bytes in (2, 4), codepoint
 
-    code_units = ["\\u{}{}".format(bytes_be[-2], bytes_be[-1])]
+    codeunits = ["\\u{}{}".format(bytes_be[-2], bytes_be[-1])]
     if num_bytes == 4:
-        code_units.insert(0, "\\u{}{}".format(bytes_be[-4], bytes_be[-3]))
+        codeunits.insert(0, "\\u{}{}".format(bytes_be[-4], bytes_be[-3]))
 
-    return "".join(code_units)
+    return codeunits
 
 letter_character_classes = [
     letter_uppercase_class,
@@ -87,7 +151,10 @@ identifier_part_classes = [
 ]
 
 letter_character_regex = create_regex(letter_character_classes)
-identifier_start_regex = "{}|{}".format(letter_character_regex, codepoint_to_regexp_character(ord("_")))
+identifier_start_regex = "{}|{}".format(
+    letter_character_regex,
+    "".join(codepoint_to_codeunits(ord("_")))
+)
 identifier_part_regex = create_regex(identifier_part_classes)
 
 # stdout these as needed to get the components of an identifier
