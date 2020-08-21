@@ -154,11 +154,11 @@ identifier_part_classes = [
 ]
 
 # letter_character_regex = create_regex(letter_character_classes)
-# identifier_start_regex = "{}|{}".format(
-#     letter_character_regex,
-#     "(:?{})".format("".join(codepoint_to_codeunits(ord("_"))))
-# )
-# identifier_part_regex = create_regex(identifier_part_classes)
+identifier_start_regex = "{}|{}".format(
+    letter_character_regex,
+    "(:?{})".format("".join(codepoint_to_codeunits(ord("_"))))
+)
+identifier_part_regex = create_regex(identifier_part_classes)
 whitespace_regex = create_regex([whitespace])
 
 # stdout these as needed to get the components of an identifier
