@@ -84,7 +84,7 @@ export function maybeIdentifierLength(text: string, index: number): number | und
     let continueMatching: boolean = true;
     let isOnStartCharacter: boolean = true;
 
-    while (continueMatching) {
+    while (continueMatching === true) {
         const maybeMatchLength: number | undefined = maybeRegexMatchLength(
             isOnStartCharacter ? Pattern.IdentifierStartCharacter : Pattern.IdentifierPartCharacters,
             text,
@@ -92,6 +92,11 @@ export function maybeIdentifierLength(text: string, index: number): number | und
         );
 
         if (maybeMatchLength === undefined) {
+            // Ignore a trailing period.
+            // Eg. `foo.`
+            if (isOnStartCharacter === true && index && startingIndex) {
+                index -= 1;
+            }
             continueMatching = false;
             continue;
         }
@@ -119,7 +124,7 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
 
     let continueMatching: boolean = true;
 
-    while (continueMatching) {
+    while (continueMatching === true) {
         const currentChr: string = text[index];
 
         if (currentChr === " ") {
@@ -197,7 +202,7 @@ export function maybeNewlineKindAt(text: string, index: number): NewlineKind | u
 
     switch (chr1) {
         case `\u000d`: {
-            const chr2: string = text[index + 1];
+            const chr2: string | undefined = text[index + 1];
             return chr2 === `\u000a` ? NewlineKind.DoubleCharacter : NewlineKind.SingleCharacter;
         }
 
