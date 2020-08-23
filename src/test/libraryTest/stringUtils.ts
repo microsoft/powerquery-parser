@@ -6,6 +6,15 @@ import "mocha";
 import { StringUtils } from "../../common";
 
 describe("StringUtils", () => {
+    describe(`isIdentifier`, () => {
+        describe(`valid`, () => {
+            it(`foo`, () => expect(StringUtils.isIdentifier("foo"), "should be true").to.be.true);
+        });
+        describe(`invalid`, () => {
+            it(`foo.`, () => expect(StringUtils.isIdentifier("foo."), "should be false").to.be.false);
+        });
+    });
+
     describe(`isGeneralizedIdentifier`, () => {
         describe(`valid`, () => {
             it("a", () => expect(StringUtils.isGeneralizedIdentifier("a"), "should be true").to.be.true);

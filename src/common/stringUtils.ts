@@ -103,7 +103,7 @@ export function maybeIdentifierLength(text: string, index: number): number | und
 
         index += maybeMatchLength;
 
-        if (text[index] === ".") {
+        if (text[index] === "." && text[index + 1] !== undefined) {
             isOnStartCharacter = true;
             index += 1;
         } else {
