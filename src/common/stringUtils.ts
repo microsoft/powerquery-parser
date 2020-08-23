@@ -74,12 +74,7 @@ export function isQuotedIdentifier(text: string): boolean {
 export function maybeRegexMatchLength(pattern: RegExp, text: string, index: number): number | undefined {
     pattern.lastIndex = index;
     const matches: RegExpExecArray | null = pattern.exec(text);
-
-    if (!matches) {
-        return undefined;
-    } else {
-        return matches[0].length;
-    }
+    return matches !== null && matches.index === index ? matches[0].length : undefined;
 }
 
 export function maybeIdentifierLength(text: string, index: number): number | undefined {
