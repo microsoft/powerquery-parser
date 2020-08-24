@@ -91,15 +91,12 @@ function maybeInvokeExpressionName(
     let maybeName: string | undefined;
     if (invokeExpr.node.maybeAttributeIndex === 0) {
         // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
-        const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
-            nodeIdMapCollection,
-            invokeExpr.node.id,
-        );
-        const recursiveExprXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
+        const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.assertParentXor(nodeIdMapCollection, invokeExpr.node.id);
+        const recursiveExprXorNode: TXorNode = NodeIdMapUtils.assertParentXor(
             nodeIdMapCollection,
             recursiveArrayXorNode.node.id,
         );
-        const headXorNode: TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+        const headXorNode: TXorNode = NodeIdMapUtils.assertChildXorByAttributeIndex(
             nodeIdMapCollection,
             recursiveExprXorNode.node.id,
             0,
@@ -138,7 +135,7 @@ function inspectInvokeExpressionArguments(
     }
 
     const csvArray: TXorNode = maybeCsvArray;
-    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
+    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
         nodeIdMapCollection,
         csvArray.node.id,
     );

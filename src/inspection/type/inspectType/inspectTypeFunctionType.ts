@@ -11,7 +11,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
 
     const maybeParameters:
         | TXorNode
-        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
+        | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
         Ast.NodeKind.ParameterList,
     ]);
     if (maybeParameters === undefined) {
@@ -27,7 +27,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         return Type.UnknownInstance;
     }
 
-    const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.arrayWrapperCsvXorNodes(
+    const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.iterArrayWrapper(
         state.nodeIdMapCollection,
         maybeArrayWrapper,
     )

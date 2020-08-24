@@ -21,11 +21,8 @@ export function examineFieldSpecificationList(
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const fields: [string, Type.TType][] = [];
 
-    for (const fieldSpecification of NodeIdMapIterator.fieldSpecificationListCsvXorNodes(
-        nodeIdMapCollection,
-        xorNode,
-    )) {
-        const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    for (const fieldSpecification of NodeIdMapIterator.iterFieldSpecification(nodeIdMapCollection, xorNode)) {
+        const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
             nodeIdMapCollection,
             fieldSpecification.node.id,
             1,
@@ -41,7 +38,7 @@ export function examineFieldSpecificationList(
     }
 
     const isOpen: boolean =
-        NodeIdMapUtils.maybeAstChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 3, [
+        NodeIdMapUtils.maybeChildAstByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 3, [
             Ast.NodeKind.Constant,
         ]) !== undefined;
 

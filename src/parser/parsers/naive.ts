@@ -717,7 +717,7 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     // Recalculate ids after shuffling things around.
     const newNodeIdByOldNodeId: Map<number, number> = NodeIdMapUtils.recalculateIds(
         nodeIdMapCollection,
-        NodeIdMapUtils.expectXorNode(
+        NodeIdMapUtils.assertXor(
             nodeIdMapCollection,
             MapUtils.assertGet(nodeIdMapCollection.parentIdById, currentContextNode.id),
         ),

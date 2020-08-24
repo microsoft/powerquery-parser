@@ -11,14 +11,14 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeOperatorsWrapper:
         | undefined
-        | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
+        | TXorNode = NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeOperatorsWrapper === undefined) {
         return Type.UnknownInstance;
     }
 
-    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         nodeIdMapCollection,
         xorNode.node.id,
         1,
@@ -40,7 +40,7 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
         return Type.NoneInstance;
     }
 
-    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeAstChildren(
+    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeIterChildrenAst(
         nodeIdMapCollection,
         maybeOperatorsWrapper.node.id,
     ) as ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>>;

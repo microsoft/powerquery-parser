@@ -8,7 +8,7 @@ import { InspectTypeState, inspectXorNode } from "./common";
 export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecification);
 
-    const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
         2,

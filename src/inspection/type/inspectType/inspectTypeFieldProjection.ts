@@ -9,17 +9,17 @@ import { InspectTypeState, inspectXorNode } from "./common";
 export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
 
-    const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.fieldProjectionFieldNames(
+    const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionNames(
         state.nodeIdMapCollection,
         xorNode,
     );
-    const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
     const previousSiblingType: Type.TType = inspectXorNode(state, previousSibling);
     const isOptional: boolean =
-        NodeIdMapUtils.maybeAstChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
+        NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
             Ast.NodeKind.Constant,
         ]) !== undefined;
 

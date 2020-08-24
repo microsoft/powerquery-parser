@@ -15,7 +15,10 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
     });
 
     const parentId: number = xorNode.node.id;
-    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(state.nodeIdMapCollection, parentId);
+    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
+        state.nodeIdMapCollection,
+        parentId,
+    );
 
     const maybeLeft: TXorNode | undefined = children[0];
     const maybeOperatorKind: Ast.TBinOpExpressionOperator | undefined =

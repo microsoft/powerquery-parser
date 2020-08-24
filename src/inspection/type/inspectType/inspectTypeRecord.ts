@@ -9,7 +9,7 @@ export function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): T
     XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     const fields: Map<string, Type.TType> = new Map();
-    for (const keyValuePair of NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, xorNode)) {
+    for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
         if (keyValuePair.maybeValue) {
             fields.set(keyValuePair.keyLiteral, inspectXorNode(state, keyValuePair.maybeValue));
         } else {

@@ -80,7 +80,7 @@ export function maybeActiveNode(
 }
 
 export function expectLeaf(activeNode: ActiveNode): TXorNode {
-    return AncestryUtils.expectLeaf(activeNode.ancestry);
+    return AncestryUtils.assertLeaf(activeNode.ancestry);
 }
 
 interface AstNodeSearch {
@@ -157,7 +157,7 @@ function maybeFindAstNodes(
     //  the closest leaf to the left or on position.
     //  the closest leaf to the right of position.
     for (const nodeId of leafNodeIds) {
-        const candidate: Ast.TNode = NodeIdMapUtils.expectAstNode(astNodeById, nodeId);
+        const candidate: Ast.TNode = NodeIdMapUtils.assertAst(astNodeById, nodeId);
 
         let isBoundIncluded: boolean;
         if (
@@ -200,14 +200,14 @@ function maybeFindAstNodes(
             maybeBestAfter?.kind === Ast.NodeKind.Constant &&
             AstUtils.isPairedWrapperConstantKinds(maybeBestOnOrBeforeNode.constantKind, maybeBestAfter.constantKind)
         ) {
-            const parent: Ast.TNode = NodeIdMapUtils.expectParentAstNode(nodeIdMapCollection, currentOnOrBefore.id, [
+            const parent: Ast.TNode = NodeIdMapUtils.assertParentAst(nodeIdMapCollection, currentOnOrBefore.id, [
                 Ast.NodeKind.RecordExpression,
                 Ast.NodeKind.RecordLiteral,
                 Ast.NodeKind.ListExpression,
                 Ast.NodeKind.ListLiteral,
                 Ast.NodeKind.InvokeExpression,
             ]);
-            const arrayWrapper: Ast.TNode = NodeIdMapUtils.expectAstChildByAttributeIndex(
+            const arrayWrapper: Ast.TNode = NodeIdMapUtils.assertChildAstByAttributeIndex(
                 nodeIdMapCollection,
                 parent.id,
                 1,
@@ -277,7 +277,7 @@ function maybeIdentifierUnderPosition(
         }
         const parentId: number = maybeParentId;
 
-        const parent: Ast.TNode = NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, parentId);
+        const parent: Ast.TNode = NodeIdMapUtils.assertAst(nodeIdMapCollection.astNodeById, parentId);
         if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
             return undefined;
         }

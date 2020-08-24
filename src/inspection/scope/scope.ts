@@ -325,7 +325,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
-    >> = NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, letExpr);
+    >> = NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, letExpr);
 
     inspectKeyValuePairs(state, scope, keyValuePairs, keyValuePairScopeItemFactory);
 
@@ -346,16 +346,17 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.GeneralizedIdentifier
-    >> = NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, record);
+    >> = NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, record);
     inspectKeyValuePairs(state, scope, keyValuePairs, keyValuePairScopeItemFactory);
 }
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
     XorNodeUtils.assertAstNodeKind(section, Ast.NodeKind.Section);
 
-    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
-        Ast.Identifier
-    >> = NodeIdMapIterator.sectionMemberKeyValuePairs(state.nodeIdMapCollection, section);
+    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<Ast.Identifier>> = NodeIdMapIterator.iterSection(
+        state.nodeIdMapCollection,
+        section,
+    );
 
     for (const kvp of keyValuePairs) {
         if (kvp.maybeValue === undefined) {
@@ -420,7 +421,7 @@ function expandChildScope(
 
     // TODO: optimize this
     for (const attributeId of childAttributeIds) {
-        const maybeChild: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+        const maybeChild: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
             nodeIdMapCollection,
             parentId,
             attributeId,
@@ -460,7 +461,7 @@ function localGetOrCreateScope(
     }
 
     // Default to a parent's scope if the node has a parent.
-    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(
+    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(
         state.nodeIdMapCollection,
         nodeId,
         undefined,

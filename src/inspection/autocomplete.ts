@@ -452,7 +452,7 @@ function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArr
     if (child.kind === XorNodeKind.Context && child.node.maybeAttributeIndex === 2) {
         const maybeInpsected: ReadonlyArray<Language.KeywordKind> | undefined = autocompleteLastKeyValuePair(
             state,
-            NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, state.parent),
+            NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, state.parent),
         );
         if (maybeInpsected === undefined || state.maybeTrailingText !== undefined) {
             return undefined;
@@ -511,7 +511,7 @@ function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArr
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
         const maybeSharedConstant:
             | TXorNode
-            | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+            | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
             state.nodeIdMapCollection,
             state.parent.node.id,
             1,

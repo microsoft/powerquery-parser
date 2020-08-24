@@ -51,7 +51,7 @@ export function tryType(
     };
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        inspectXorNode(state, NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId)),
+        inspectXorNode(state, NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId)),
     );
 }
 

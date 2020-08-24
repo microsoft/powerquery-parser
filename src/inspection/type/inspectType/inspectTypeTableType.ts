@@ -12,7 +12,7 @@ export function inspectTypeTableType(
 ): Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.TableType);
 
-    const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,

@@ -10,7 +10,7 @@ export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode)
 
     const maybeOptionalConstant:
         | Ast.TNode
-        | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 0, [
+        | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 0, [
         Ast.NodeKind.Constant,
     ]);
 

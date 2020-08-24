@@ -97,7 +97,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     }
 
     if (backup.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMapUtils.expectContextNode(
+        state.maybeCurrentContextNode = NodeIdMapUtils.assertContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
             backup.maybeContextNodeId,
         );

@@ -16,7 +16,7 @@ export function expectAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId
         maybeParentId = nodeIdMapCollection.parentIdById.get(parentId);
     }
 
-    return NodeIdMapIterator.expectXorNodes(nodeIdMapCollection, ancestryIds);
+    return NodeIdMapIterator.assertIterXor(nodeIdMapCollection, ancestryIds);
 }
 
 export function expectPreviousXorNode(
@@ -112,7 +112,8 @@ export function expectRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {
     return ancestry[ancestry.length - 1];
 }
 
-export function expectLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {
-    Assert.isTrue(ancestry.length > 0, "ancestry.length > 0");
-    return ancestry[0];
+export function assertLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {
+    const maybeLeaf: TXorNode | undefined = ancestry[0];
+    Assert.isDefined(maybeLeaf);
+    return maybeLeaf;
 }

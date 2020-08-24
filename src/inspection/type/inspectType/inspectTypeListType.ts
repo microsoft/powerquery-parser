@@ -8,7 +8,7 @@ import { InspectTypeState, inspectXorNode } from "./common";
 export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode): Type.ListType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ListType);
 
-    const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,

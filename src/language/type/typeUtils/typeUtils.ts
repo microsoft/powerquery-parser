@@ -246,7 +246,7 @@ function inspectContextParameter(
     let isNullable: boolean;
     let maybeType: Type.TypeKind | undefined;
 
-    const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeName: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
         nodeIdMapCollection,
         parameter.id,
         1,
@@ -256,7 +256,7 @@ function inspectContextParameter(
         return undefined;
     }
 
-    const maybeOptional: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeOptional: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
         nodeIdMapCollection,
         parameter.id,
         0,
@@ -264,7 +264,7 @@ function inspectContextParameter(
     );
     isOptional = maybeOptional !== undefined;
 
-    const maybeParameterType: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeParameterType: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
         nodeIdMapCollection,
         parameter.id,
         2,

@@ -200,7 +200,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
         }
 
         // The child Node inherits the attributeIndex.
-        const childXorNode: TXorNode = NodeIdMapUtils.expectXorNode(state.nodeIdMapCollection, childId);
+        const childXorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, childId);
         const mutableChildXorNode: TypeScriptUtils.StripReadonly<Ast.TNode | Node> = childXorNode.node;
         mutableChildXorNode.maybeAttributeIndex = contextNode.maybeAttributeIndex;
     }
@@ -219,7 +219,7 @@ export function deleteContext(state: State, nodeId: number): Node | undefined {
     parentIdById.delete(nodeId);
 
     // Return the node's parent if it exits
-    return maybeParentId !== undefined ? NodeIdMapUtils.expectContextNode(contextNodeById, maybeParentId) : undefined;
+    return maybeParentId !== undefined ? NodeIdMapUtils.assertContext(contextNodeById, maybeParentId) : undefined;
 }
 
 function removeLeafOrNoop(state: State, nodeId: number): void {
@@ -238,7 +238,7 @@ function removeOrReplaceChildId(
     maybeReplacementId: number | undefined,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMapIterator.expectChildIds(childIdsById, parentId);
+    const childIds: ReadonlyArray<number> = NodeIdMapIterator.assertIterChildIds(childIdsById, parentId);
     const replacementIndex: number = ArrayUtils.assertIn(childIds, childId, `childId isn't a child of parentId`, {
         childId,
         parentId,

@@ -3,11 +3,23 @@
 
 import { Assert } from ".";
 
-export function expectGet<K, V>(map: Map<K, V>, key: K): V {
+export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+    Assert.isTrue(map.delete(key), maybeMessage ?? `failed to delete, key is absent`, { key });
+}
+
+export function assertGet<K, V>(map: Map<K, V>, key: K): V {
     const maybeValue: V | undefined = map.get(key);
     Assert.isDefined(maybeValue, `key not found in given map`, { key });
 
     return maybeValue;
+}
+
+export function assertIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+    Assert.isTrue(map.has(key), maybeMessage ?? `key is absent`, { key });
+}
+
+export function assertNotIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
+    Assert.isFalse(map.has(key), maybeMessage ?? `key is present`, { key });
 }
 
 export function isEqualMap<K, V>(
@@ -63,22 +75,4 @@ export function pick<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): Map<K, V> {
     }
 
     return newMap;
-}
-
-export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
-    Assert.isTrue(map.delete(key), maybeMessage ?? `failed to delete, key is absent`, { key });
-}
-
-export function assertGet<K, V>(map: Map<K, V>, key: K, maybeMessage?: string, details?: {}): V {
-    const maybeValue: V | undefined = map.get(key);
-    Assert.isDefined(maybeValue, maybeMessage ?? `failed to get, key is absent`, details ?? { key });
-    return maybeValue;
-}
-
-export function assertIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
-    Assert.isTrue(map.has(key), maybeMessage ?? `key is absent`, { key });
-}
-
-export function assertNotIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
-    Assert.isFalse(map.has(key), maybeMessage ?? `key is present`, { key });
 }

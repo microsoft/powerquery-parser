@@ -292,7 +292,7 @@ export function inspectTypeFromChildAttributeIndex(
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
-    const maybeXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeXorNode: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,

@@ -10,7 +10,7 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
 
     const maybeOtherwiseExpression:
         | TXorNode
-        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
+        | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
         Ast.NodeKind.OtherwiseExpression,
     ]);
 
