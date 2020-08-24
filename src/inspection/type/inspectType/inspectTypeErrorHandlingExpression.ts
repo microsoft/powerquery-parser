@@ -3,7 +3,7 @@
 
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXorNode } from "./common";
+import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ErrorHandlingExpression);
@@ -17,7 +17,7 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
     return TypeUtils.anyUnionFactory([
         inspectTypeFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
-            ? inspectXorNode(state, maybeOtherwiseExpression)
+            ? inspectXor(state, maybeOtherwiseExpression)
             : TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record),
     ]);
 }

@@ -3,7 +3,7 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.UnaryExpression);
@@ -31,7 +31,7 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
     // Only certain operators are allowed depending on the type.
     // Unlike BinOpExpression, it's easier to implement the check without a lookup table.
     let expectedUnaryOperatorKinds: ReadonlyArray<Ast.UnaryOperatorKind>;
-    const expressionType: Type.TType = inspectXorNode(state, maybeExpression);
+    const expressionType: Type.TType = inspectXor(state, maybeExpression);
     if (expressionType.kind === Type.TypeKind.Number) {
         expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Positive, Ast.UnaryOperatorKind.Negative];
     } else if (expressionType.kind === Type.TypeKind.Logical) {

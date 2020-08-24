@@ -72,7 +72,7 @@ function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boole
     // Check if position is in the wrapped contents (InvokeExpression arguments).
     if (xorNode.kind === XorNodeKind.Ast) {
         const invokeExprAstNode: Ast.InvokeExpression = xorNode.node as Ast.InvokeExpression;
-        if (!PositionUtils.isInAstNode(position, invokeExprAstNode.content, true, true)) {
+        if (!PositionUtils.isInAst(position, invokeExprAstNode.content, true, true)) {
             return false;
         }
     }
@@ -127,7 +127,7 @@ function inspectInvokeExpressionArguments(
     nodeIndex: number,
 ): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, [
+    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, nodeIndex, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeCsvArray === undefined) {
@@ -144,7 +144,7 @@ function inspectInvokeExpressionArguments(
         return undefined;
     }
 
-    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
+    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
         activeNode.ancestry,
         nodeIndex,
         2,

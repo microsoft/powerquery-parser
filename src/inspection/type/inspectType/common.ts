@@ -58,7 +58,7 @@ export function getOrFindScopeItemType(state: InspectTypeState, scopeItem: TScop
     return scopeType;
 }
 
-export function expectGetOrCreateScope(state: InspectTypeState, nodeId: number): ScopeItemByKey {
+export function assertGetOrCreateScope(state: InspectTypeState, nodeId: number): ScopeItemByKey {
     const triedGetOrCreateScope: Result<ScopeItemByKey, CommonError.CommonError> = getOrCreateScope(state, nodeId);
     if (ResultUtils.isErr(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope.error;
@@ -82,20 +82,16 @@ export function getOrCreateScope(
 export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
-            return inspectXorNode(state, scopeItem.eachExpression);
+            return inspectXor(state, scopeItem.eachExpression);
 
         case ScopeItemKind.KeyValuePair:
-            return scopeItem.maybeValue === undefined
-                ? Type.UnknownInstance
-                : inspectXorNode(state, scopeItem.maybeValue);
+            return scopeItem.maybeValue === undefined ? Type.UnknownInstance : inspectXor(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Parameter:
             return TypeUtils.parameterFactory(scopeItem);
 
         case ScopeItemKind.SectionMember:
-            return scopeItem.maybeValue === undefined
-                ? Type.UnknownInstance
-                : inspectXorNode(state, scopeItem.maybeValue);
+            return scopeItem.maybeValue === undefined ? Type.UnknownInstance : inspectXor(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Undefined:
             return Type.UnknownInstance;
@@ -105,7 +101,7 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
     }
 }
 
-export function inspectXorNode(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     const xorNodeId: number = xorNode.node.id;
     const maybeCached: Type.TType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
@@ -298,7 +294,7 @@ export function inspectTypeFromChildAttributeIndex(
         attributeIndex,
         undefined,
     );
-    return maybeXorNode !== undefined ? inspectXorNode(state, maybeXorNode) : Type.UnknownInstance;
+    return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : Type.UnknownInstance;
 }
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
@@ -349,7 +345,7 @@ export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode
             throw Assert.isNever(deferenced);
     }
 
-    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, deferenced.id);
+    const scopeItemByKey: ScopeItemByKey = assertGetOrCreateScope(state, deferenced.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
     if (maybeScopeItem === undefined || (maybeScopeItem.isRecursive === true && isIdentifierRecurisve === false)) {
         return undefined;
@@ -387,7 +383,7 @@ export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode
     if (maybeNextXorNode === undefined) {
         return undefined;
     }
-    return inspectXorNode(state, maybeNextXorNode);
+    return inspectXor(state, maybeNextXorNode);
 }
 
 function maybeDereferencedIdentifier(state: InspectTypeState, xorNode: TXorNode): TXorNode | undefined {
@@ -418,7 +414,7 @@ function maybeDereferencedIdentifier(state: InspectTypeState, xorNode: TXorNode)
             throw Assert.isNever(identifier);
     }
 
-    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, identifier.id);
+    const scopeItemByKey: ScopeItemByKey = assertGetOrCreateScope(state, identifier.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
 
     if (

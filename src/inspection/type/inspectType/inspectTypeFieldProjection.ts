@@ -4,7 +4,7 @@
 import { ArrayUtils, MapUtils } from "../../../common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
@@ -17,7 +17,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: Type.TType = inspectXorNode(state, previousSibling);
+    const previousSiblingType: Type.TType = inspectXor(state, previousSibling);
     const isOptional: boolean =
         NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
             Ast.NodeKind.Constant,

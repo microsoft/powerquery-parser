@@ -39,7 +39,7 @@ export function maybeActiveNode(
     // Search for the closest Ast node on or to the left of Position, as well as the closest shifted right Ast node.
     const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, leafNodeIds, position);
     // Search for the closest Context node on or to the right of the closest Ast node.
-    const maybeContextNode: ParseContext.Node | undefined = maybeFindContextNode(nodeIdMapCollection, astSearch);
+    const maybeContextNode: ParseContext.Node | undefined = maybeFindContext(nodeIdMapCollection, astSearch);
 
     let maybeLeaf: TXorNode | undefined;
     let leafKind: ActiveNodeLeafKind;
@@ -62,7 +62,7 @@ export function maybeActiveNode(
         leafKind = ActiveNodeLeafKind.ContextNode;
     } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
         maybeLeaf = XorNodeUtils.astFactory(astSearch.maybeBestOnOrBeforeNode);
-        leafKind = PositionUtils.isAfterAstNode(position, astSearch.maybeBestOnOrBeforeNode, false)
+        leafKind = PositionUtils.isAfterAst(position, astSearch.maybeBestOnOrBeforeNode, false)
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
     } else {
@@ -74,12 +74,12 @@ export function maybeActiveNode(
     return {
         leafKind,
         position,
-        ancestry: AncestryUtils.expectAncestry(nodeIdMapCollection, leaf.node.id),
+        ancestry: AncestryUtils.assertAncestry(nodeIdMapCollection, leaf.node.id),
         maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
     };
 }
 
-export function expectLeaf(activeNode: ActiveNode): TXorNode {
+export function assertLeaf(activeNode: ActiveNode): TXorNode {
     return AncestryUtils.assertLeaf(activeNode.ancestry);
 }
 
@@ -106,7 +106,7 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
 ];
 
 function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
-    if (!PositionUtils.isInAstNode(position, astNode, true, true)) {
+    if (!PositionUtils.isInAst(position, astNode, true, true)) {
         return false;
     }
 
@@ -233,7 +233,7 @@ function maybeFindAstNodes(
     };
 }
 
-function maybeFindContextNode(
+function maybeFindContext(
     nodeIdMapCollection: NodeIdMap.Collection,
     astNodeSearch: AstNodeSearch,
 ): ParseContext.Node | undefined {
@@ -288,7 +288,7 @@ function maybeIdentifierUnderPosition(
         return undefined;
     }
 
-    if (PositionUtils.isInAstNode(position, identifier, false, true)) {
+    if (PositionUtils.isInAst(position, identifier, false, true)) {
         return identifier;
     } else {
         return undefined;

@@ -3,7 +3,7 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXorNode } from "./common";
+import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
@@ -42,7 +42,7 @@ export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, x
 
     let leftType: Type.TType = headType;
     for (const right of maybeExpressions) {
-        const rightType: Type.TType = inspectXorNode(state, right);
+        const rightType: Type.TType = inspectXor(state, right);
         leftType = rightType;
     }
 

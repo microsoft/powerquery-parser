@@ -6,7 +6,7 @@ import { Assert } from "../../common";
 import { Ast } from "../../language";
 import { TXorNode } from "./xorNode";
 
-export function expectAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
+export function assertAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
     const ancestryIds: number[] = [rootId];
 
     let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(rootId);
@@ -19,21 +19,44 @@ export function expectAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId
     return NodeIdMapIterator.assertIterXor(nodeIdMapCollection, ancestryIds);
 }
 
-export function expectPreviousXorNode(
+export function assertLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {
+    const maybeLeaf: TXorNode | undefined = ancestry[0];
+    Assert.isDefined(maybeLeaf);
+    return maybeLeaf;
+}
+
+export function assertRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {
+    Assert.isTrue(ancestry.length > 0, "ancestry.length > 0");
+    return ancestry[ancestry.length - 1];
+}
+
+export function assertNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    return expectNthPreviousXorNode(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
+    return assertNthNextXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
 }
 
-export function expectNthPreviousXorNode(
+export function assertNthNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybeNthPreviousXorNode(ancestry, ancestryIndex, n);
+    const maybeXorNode: TXorNode | undefined = maybeNthNextXor(ancestry, ancestryIndex, n, maybeAllowedNodeKinds);
+    Assert.isDefined(maybeXorNode, `no next node`, { ancestryIndex, n });
+
+    return maybeXorNode;
+}
+
+export function assertNthPreviousXor(
+    ancestry: ReadonlyArray<TXorNode>,
+    ancestryIndex: number,
+    n: number = 1,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode {
+    const maybeXorNode: TXorNode | undefined = maybeNthPreviousXor(ancestry, ancestryIndex, n);
     Assert.isDefined(maybeXorNode, `no previous node`, { ancestryIndex, n });
 
     if (maybeAllowedNodeKinds !== undefined) {
@@ -43,15 +66,15 @@ export function expectNthPreviousXorNode(
     return maybeXorNode;
 }
 
-export function maybePreviousXorNode(
+export function assertPreviousXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode | undefined {
-    return maybeNthPreviousXorNode(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
+): TXorNode {
+    return assertNthPreviousXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
 }
 
-export function maybeNthPreviousXorNode(
+export function maybeNthPreviousXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
@@ -65,35 +88,15 @@ export function maybeNthPreviousXorNode(
     return maybeXorNode;
 }
 
-export function expectNextXorNode(
-    ancestry: ReadonlyArray<TXorNode>,
-    ancestryIndex: number,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode {
-    return expectNthNextXorNode(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
-}
-
-export function expectNthNextXorNode(
-    ancestry: ReadonlyArray<TXorNode>,
-    ancestryIndex: number,
-    n: number = 1,
-    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
-): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybeNthNextXorNode(ancestry, ancestryIndex, n, maybeAllowedNodeKinds);
-    Assert.isDefined(maybeXorNode, `no next node`, { ancestryIndex, n });
-
-    return maybeXorNode;
-}
-
-export function maybeNextXorNode(
+export function maybeNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode | undefined {
-    return maybeNthNextXorNode(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
+    return maybeNthNextXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
 }
 
-export function maybeNthNextXorNode(
+export function maybeNthNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
@@ -107,13 +110,10 @@ export function maybeNthNextXorNode(
     return maybeXorNode;
 }
 
-export function expectRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {
-    Assert.isTrue(ancestry.length > 0, "ancestry.length > 0");
-    return ancestry[ancestry.length - 1];
-}
-
-export function assertLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {
-    const maybeLeaf: TXorNode | undefined = ancestry[0];
-    Assert.isDefined(maybeLeaf);
-    return maybeLeaf;
+export function maybePreviousXor(
+    ancestry: ReadonlyArray<TXorNode>,
+    ancestryIndex: number,
+    maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
+): TXorNode | undefined {
+    return maybeNthPreviousXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
 }

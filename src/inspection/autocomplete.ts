@@ -135,9 +135,9 @@ function inspectAutocomplete(
     const maybeTrailingText: TrailingText | undefined =
         maybeParseErrorToken !== undefined ? trailingTextFactory(activeNode, maybeParseErrorToken) : undefined;
 
-    const ancestryLeaf: TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
+    const ancestryLeaf: TXorNode = ActiveNodeUtils.assertLeaf(activeNode);
     let maybePositionName: string | undefined;
-    if (PositionUtils.isInXorNode(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
+    if (PositionUtils.isInXor(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
             maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
         }
@@ -163,7 +163,7 @@ function inspectAutocomplete(
         maybeParseErrorToken,
         maybeTrailingText,
         parent: activeNode.ancestry[1],
-        child: ActiveNodeUtils.expectLeaf(activeNode),
+        child: ActiveNodeUtils.assertLeaf(activeNode),
         ancestryIndex: 0,
     };
 
@@ -265,7 +265,7 @@ function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Language.
         ancestry[0].kind === XorNodeKind.Ast &&
         ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         ancestry[1].node.kind === Ast.NodeKind.Parameter &&
-        PositionUtils.isAfterAstNode(activeNode.position, ancestry[0].node, false)
+        PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, false)
     ) {
         maybeInspected = [Language.KeywordKind.As];
     }
@@ -308,7 +308,7 @@ function handleConjunctions(
         return inspected;
     }
 
-    const activeNodeLeaf: TXorNode = ActiveNodeUtils.expectLeaf(activeNode);
+    const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertLeaf(activeNode);
     if (!XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
         if (maybeTrailingText !== undefined) {
             return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
@@ -354,13 +354,13 @@ function autocompleteKeywordConstant(
     child: TXorNode,
     keywordKind: Language.KeywordKind,
 ): ReadonlyArray<Language.KeywordKind> | undefined {
-    if (PositionUtils.isBeforeXorNode(activeNode.position, child, false)) {
+    if (PositionUtils.isBeforeXor(activeNode.position, child, false)) {
         return undefined;
     } else if (child.kind === XorNodeKind.Ast) {
         // So long as you're inside of an Ast Constant there's nothing that can be recommended other than the constant.
         // Note that we previously checked isBeforeXorNode so we can use the quicker isOnAstNodeEnd to check
         // if we're inside of the Ast node.
-        return PositionUtils.isOnAstNodeEnd(activeNode.position, child.node) ? [] : [keywordKind];
+        return PositionUtils.isOnAstEnd(activeNode.position, child.node) ? [] : [keywordKind];
     }
 
     return [keywordKind];
@@ -406,7 +406,7 @@ function autocompleteErrorHandlingExpression(
             else {
                 return undefined;
             }
-        } else if (child.kind === XorNodeKind.Ast && PositionUtils.isAfterAstNode(position, child.node, true)) {
+        } else if (child.kind === XorNodeKind.Ast && PositionUtils.isAfterAst(position, child.node, true)) {
             return [Language.KeywordKind.Otherwise];
         } else {
             return ExpressionAutocomplete;
@@ -425,7 +425,7 @@ function autocompleteIdentifierPairedExpression(
     // `section; [] |`
     if (
         childAttributeIndex === 0 &&
-        AncestryUtils.maybeNextXorNode(state.activeNode.ancestry, state.ancestryIndex, [Ast.NodeKind.SectionMember])
+        AncestryUtils.maybeNextXor(state.activeNode.ancestry, state.ancestryIndex, [Ast.NodeKind.SectionMember])
     ) {
         return [Language.KeywordKind.Shared];
     } else if (childAttributeIndex !== 2) {
@@ -437,7 +437,7 @@ function autocompleteIdentifierPairedExpression(
     );
     // `x = |`
     // `x = |1`
-    if (maybeLeaf === undefined || PositionUtils.isBeforeAstNode(state.activeNode.position, maybeLeaf, false)) {
+    if (maybeLeaf === undefined || PositionUtils.isBeforeAst(state.activeNode.position, maybeLeaf, false)) {
         return ExpressionKeywords;
     } else {
         return undefined;
@@ -479,12 +479,7 @@ function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyAr
     });
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestryUtils.expectNthPreviousXorNode(
-        activeNode.ancestry,
-        ancestryIndex,
-        3,
-        undefined,
-    );
+    const nodeOrComma: TXorNode = AncestryUtils.assertNthPreviousXor(activeNode.ancestry, ancestryIndex, 3, undefined);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -493,10 +488,10 @@ function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyAr
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? AncestryUtils.expectNthPreviousXorNode(activeNode.ancestry, ancestryIndex, 4, undefined)
+            ? AncestryUtils.assertNthPreviousXor(activeNode.ancestry, ancestryIndex, 4, undefined)
             : nodeOrComma;
 
-    if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXorNode(activeNode.position, itemNode, false)) {
+    if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXor(activeNode.position, itemNode, false)) {
         return ExpressionAutocomplete;
     } else {
         return undefined;
@@ -524,7 +519,7 @@ function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArr
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
+        const maybeName: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
             state.activeNode.ancestry,
             state.ancestryIndex,
             2,
@@ -570,7 +565,7 @@ function autocompleteLastKeyValuePair(
     }
 
     // Start a new autocomplete inspection where the ActiveNode's ancestry is the right-most Ast node in the last value.
-    const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.expectAncestry(
+    const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(
         state.nodeIdMapCollection,
         maybeRightMostAstLeafForLastValue.id,
     );

@@ -3,7 +3,7 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecification);
@@ -16,6 +16,6 @@ export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: 
     );
 
     return maybeFieldTypeSpecification !== undefined
-        ? inspectXorNode(state, maybeFieldTypeSpecification)
+        ? inspectXor(state, maybeFieldTypeSpecification)
         : Type.AnyInstance;
 }
