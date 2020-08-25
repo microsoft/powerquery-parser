@@ -11,6 +11,13 @@ export class CommonError extends Error {
     }
 }
 
+export class CancellationError extends Error {
+    constructor(templates: ILocalizationTemplates, readonly message: any) {
+        super(Localization.error_common_cancellationError(templates, message));
+        Object.setPrototypeOf(this, UnknownError.prototype);
+    }
+}
+
 export class InvariantError extends Error {
     constructor(readonly invariantBroken: string, readonly maybeDetails: any | undefined = undefined) {
         super(Localization.error_common_invariantError(DefaultTemplates, invariantBroken, maybeDetails));

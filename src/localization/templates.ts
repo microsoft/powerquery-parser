@@ -46,6 +46,8 @@ import * as zh_CN from "./templates/zh-CN.json";
 import * as zh_TW from "./templates/zh-TW.json";
 
 export interface ILocalizationTemplates {
+    readonly error_common_cancellationError_1_details: string;
+    readonly error_common_cancellationError_2_noDetails: string;
     readonly error_common_invariantError_1_details: string;
     readonly error_common_invariantError_2_noDetails: string;
     readonly error_common_unknown: string;
