@@ -10,7 +10,7 @@ describe("StringUtils", () => {
         describe(`valid`, () => {
             it(`foo`, () => expect(StringUtils.isIdentifier("foo", false), "should be true").to.be.true);
             it(`foo`, () => expect(StringUtils.isIdentifier("foo", true), "should be true").to.be.true);
-            it(`WIP foo.`, () => expect(StringUtils.isIdentifier("foo.", true), "should be true").to.be.true);
+            it(`foo.`, () => expect(StringUtils.isIdentifier("foo.", true), "should be true").to.be.true);
         });
         describe(`invalid`, () => {
             it(`foo.`, () => expect(StringUtils.isIdentifier("foo.", false), "should be false").to.be.false);
