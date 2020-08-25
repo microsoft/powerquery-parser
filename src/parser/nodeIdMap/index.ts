@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import * as AncestryUtils from "./ancestryUtils";
 import * as NodeIdMap from "./nodeIdMap";
 import * as NodeIdMapIterator from "./nodeIdMapIterator";
