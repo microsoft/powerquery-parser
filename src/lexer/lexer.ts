@@ -1069,7 +1069,7 @@ function maybeIndexOfRegexEnd(pattern: RegExp, text: string, positionStart: numb
 }
 
 function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number | undefined {
-    const maybeLength: number | undefined = StringUtils.maybeIdentifierLength(text, positionStart);
+    const maybeLength: number | undefined = StringUtils.maybeIdentifierLength(text, positionStart, true);
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 

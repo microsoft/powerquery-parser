@@ -55,8 +55,8 @@ export function graphemePositionFrom(
     };
 }
 
-export function isIdentifier(text: string): boolean {
-    return maybeIdentifierLength(text, 0) === text.length;
+export function isIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
+    return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
 }
 
 export function isGeneralizedIdentifier(text: string): boolean {
@@ -77,41 +77,49 @@ export function maybeRegexMatchLength(pattern: RegExp, text: string, index: numb
     return matches !== null && matches.index === index ? matches[0].length : undefined;
 }
 
-export function maybeIdentifierLength(text: string, index: number): number | undefined {
+export function maybeIdentifierLength(text: string, index: number, allowTrailingPeriod: boolean): number | undefined {
     const startingIndex: number = index;
     const textLength: number = text.length;
 
-    let continueMatching: boolean = true;
-    let isOnStartCharacter: boolean = true;
-
-    while (continueMatching === true) {
-        const maybeMatchLength: number | undefined = maybeRegexMatchLength(
-            isOnStartCharacter ? Pattern.IdentifierStartCharacter : Pattern.IdentifierPartCharacters,
-            text,
-            index,
-        );
-
-        if (maybeMatchLength === undefined) {
-            // Ignore a trailing period.
-            // Eg. `foo.`
-            if (isOnStartCharacter === true && index && startingIndex) {
-                index -= 1;
-            }
-            continueMatching = false;
-            continue;
+    let state: IdentifierRegexpState = IdentifierRegexpState.Start;
+    let maybeMatchLength: number | undefined;
+    while (state !== IdentifierRegexpState.Done) {
+        if (index === textLength) {
+            return index - startingIndex;
         }
 
-        index += maybeMatchLength;
+        switch (state) {
+            case IdentifierRegexpState.Start:
+                maybeMatchLength = maybeRegexMatchLength(Pattern.IdentifierStartCharacter, text, index);
+                if (maybeMatchLength === undefined) {
+                    state = IdentifierRegexpState.Done;
+                } else {
+                    state = IdentifierRegexpState.RegularIdentifier;
+                    index += maybeMatchLength;
+                }
+                break;
 
-        if (text[index] === "." && text[index + 1] !== undefined) {
-            isOnStartCharacter = true;
-            index += 1;
-        } else {
-            isOnStartCharacter = false;
-        }
+            case IdentifierRegexpState.RegularIdentifier:
+                // Don't consider `..` or `...` part of an identifier.
+                if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
+                    index += 1;
+                }
 
-        if (index >= textLength) {
-            continueMatching = false;
+                maybeMatchLength = maybeRegexMatchLength(Pattern.IdentifierPartCharacters, text, index);
+                if (maybeMatchLength === undefined) {
+                    state = IdentifierRegexpState.Done;
+                } else {
+                    index += maybeMatchLength;
+                    // Don't consider `..` or `...` part of an identifier.
+                    if (allowTrailingPeriod && text[index] === "." && text[index + 1] !== ".") {
+                        index += 1;
+                    }
+                    state = IdentifierRegexpState.Start;
+                }
+                break;
+
+            default:
+                throw Assert.isNever(state);
         }
     }
 
@@ -228,4 +236,10 @@ export function assertFormat(template: string, args: Map<string, string>): strin
     }
 
     return result;
+}
+
+const enum IdentifierRegexpState {
+    Start,
+    RegularIdentifier,
+    Done,
 }
