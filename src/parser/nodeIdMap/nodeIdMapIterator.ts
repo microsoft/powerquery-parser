@@ -16,10 +16,14 @@ export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifi
 // -------- Simple iters  --------
 // -------------------------------
 
+// Assert the existence of children for the node.
+// Returns an array of nodeIds of children for the given node.
 export function assertIterChildIds(childIdsById: NodeIdMap.ChildIdsById, nodeId: number): ReadonlyArray<number> {
     return MapUtils.assertGet(childIdsById, nodeId);
 }
 
+// Assert the existence of children for the node and that they are Ast nodes.
+// Returns an array of children (which are TNodes) for the given node.
 export function assertIterChildrenAst(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
@@ -30,6 +34,8 @@ export function assertIterChildrenAst(
     );
 }
 
+// Assert the existence of children for the node.
+// Returns an array of children (as XorNodes) for the given node.
 export function assertIterChildrenXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
@@ -43,6 +49,7 @@ export function assertIterChildrenXor(
     return assertIterXor(nodeIdMapCollection, childIds);
 }
 
+// Given a list of nodeIds, assert the existence of then return them as XorNodes.
 export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
@@ -50,6 +57,7 @@ export function assertIterXor(
     return nodeIds.map(nodeId => NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId));
 }
 
+// If any exist, returns all Ast nodes under the given node.
 export function maybeIterChildrenAst(
     nodeIdMapCollection: NodeIdMap.Collection,
     parentId: number,
@@ -68,6 +76,8 @@ export function maybeNextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, n
     return maybeNthSiblingXor(nodeIdMapCollection, nodeId, 1);
 }
 
+// Grabs the parent for the given nodeId, then returns the nth child of the parent where that child's attributeIndex is
+// (givenNode.maybeAttributeIndex + offset) as an XorNode if such a child exists.
 export function maybeNthSiblingXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     rootId: number,
@@ -132,6 +142,7 @@ export function iterArrayWrapper(
     return partial;
 }
 
+// Return all FieldSelector children under the given FieldProjection.
 export function iterFieldProjection(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldProjection: TXorNode,
@@ -145,7 +156,7 @@ export function iterFieldProjection(
     return maybeArrayWrapper === undefined ? [] : iterArrayWrapper(nodeIdMapCollection, maybeArrayWrapper);
 }
 
-// Iterates over Ast.FIeldProjection.literal
+// Return all FieldSelector names under the given FieldProjection.
 export function iterFieldProjectionNames(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldProjection: TXorNode,
@@ -168,6 +179,7 @@ export function iterFieldProjectionNames(
     return result;
 }
 
+// Return all FieldSpecification children under the given FieldSpecificationList.
 export function iterFieldSpecification(
     nodeIdMapCollection: NodeIdMap.Collection,
     fieldSpecificationList: TXorNode,
@@ -186,6 +198,7 @@ export function iterFieldSpecification(
     return iterArrayWrapper(nodeIdMapCollection, maybeArrayWrapper);
 }
 
+// Return all key-value-pair children under the given LetExpression.
 export function iterLetExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     letExpression: TXorNode,
@@ -201,39 +214,7 @@ export function iterLetExpression(
     return maybeArrayWrapper === undefined ? [] : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }
 
-export function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    arrayWrapper: TXorNode,
-): ReadonlyArray<KeyValuePair<T>> {
-    const partial: KeyValuePair<T>[] = [];
-    for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
-        const maybeKey: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
-            nodeIdMapCollection,
-            keyValuePair.node.id,
-            0,
-            [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier],
-        );
-        if (maybeKey === undefined) {
-            break;
-        }
-        const key: T = maybeKey as T & (Ast.GeneralizedIdentifier | Ast.Identifier);
-
-        partial.push({
-            source: keyValuePair,
-            key,
-            keyLiteral: key.literal,
-            maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
-                nodeIdMapCollection,
-                keyValuePair.node.id,
-                2,
-                undefined,
-            ),
-        });
-    }
-
-    return partial;
-}
-
+// Return all ListItem children under the given ListExpression/ListLiteral.
 export function iterListItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorNode): ReadonlyArray<TXorNode> {
     XorNodeUtils.assertAnyAstNodeKind(list, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
 
@@ -241,6 +222,7 @@ export function iterListItems(nodeIdMapCollection: NodeIdMap.Collection, list: T
     return maybeArrayWrapper === undefined ? [] : iterArrayWrapper(nodeIdMapCollection, maybeArrayWrapper);
 }
 
+// Return all key-value-pair children under the given RecordExpression/RecordLiteral.
 export function iterRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
     record: TXorNode,
@@ -254,6 +236,7 @@ export function iterRecord(
     return maybeArrayWrapper === undefined ? [] : iterKeyValuePairs(nodeIdMapCollection, maybeArrayWrapper);
 }
 
+// Return all key-value-pair children under the given Section.
 export function iterSection(
     nodeIdMapCollection: NodeIdMap.Collection,
     section: TXorNode,
@@ -313,6 +296,39 @@ export function iterSection(
             maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
                 nodeIdMapCollection,
                 keyValuePairNodeId,
+                2,
+                undefined,
+            ),
+        });
+    }
+
+    return partial;
+}
+
+function iterKeyValuePairs<T extends Ast.GeneralizedIdentifier | Ast.Identifier>(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    arrayWrapper: TXorNode,
+): ReadonlyArray<KeyValuePair<T>> {
+    const partial: KeyValuePair<T>[] = [];
+    for (const keyValuePair of iterArrayWrapper(nodeIdMapCollection, arrayWrapper)) {
+        const maybeKey: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
+            nodeIdMapCollection,
+            keyValuePair.node.id,
+            0,
+            [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier],
+        );
+        if (maybeKey === undefined) {
+            break;
+        }
+        const key: T = maybeKey as T & (Ast.GeneralizedIdentifier | Ast.Identifier);
+
+        partial.push({
+            source: keyValuePair,
+            key,
+            keyLiteral: key.literal,
+            maybeValue: NodeIdMapUtils.maybeChildXorByAttributeIndex(
+                nodeIdMapCollection,
+                keyValuePair.node.id,
                 2,
                 undefined,
             ),

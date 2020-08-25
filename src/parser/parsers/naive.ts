@@ -99,7 +99,7 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
     const literal: string = lexerSnapshot.text.slice(contiguousIdentifierStartIndex, contiguousIdentifierEndIndex);
 
     if (
-        !StringUtils.isIdentifier(literal) &&
+        !StringUtils.isIdentifier(literal, true) &&
         !StringUtils.isGeneralizedIdentifier(literal) &&
         !StringUtils.isQuotedIdentifier(literal)
     ) {
