@@ -4,7 +4,7 @@
 import { Assert } from "../../../common";
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSelector);
@@ -19,13 +19,13 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
     const fieldName: string = (maybeFieldName as Ast.GeneralizedIdentifier).literal;
 
-    const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: Type.TType = inspectXorNode(state, previousSibling);
+    const previousSiblingType: Type.TType = inspectXor(state, previousSibling);
     const isOptional: boolean =
-        NodeIdMapUtils.maybeAstChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
+        NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
             Ast.NodeKind.Constant,
         ]) !== undefined;
 

@@ -3,16 +3,16 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.InvokeExpression);
 
-    const previousSibling: TXorNode = NodeIdMapUtils.expectRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: Type.TType = inspectXorNode(state, previousSibling);
+    const previousSiblingType: Type.TType = inspectXor(state, previousSibling);
     if (previousSiblingType.kind === Type.TypeKind.Any) {
         return Type.AnyInstance;
     } else if (previousSiblingType.kind !== Type.TypeKind.Function) {

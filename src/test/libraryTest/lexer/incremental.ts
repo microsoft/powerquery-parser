@@ -6,7 +6,7 @@ import "mocha";
 import { Assert } from "../../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { TriedLexerUpdate } from "../../../lexer/lexer";
-import { expectLexOk } from "./common";
+import { assertLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
 
@@ -23,7 +23,7 @@ function expectAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLi
 }
 
 function expectLexerUpdateRangeOk(originalText: string, newText: string, range: Lexer.Range): Lexer.State {
-    const state: Lexer.State = expectLexOk(originalText);
+    const state: Lexer.State = assertLexOk(originalText);
     const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateRange(state, range, newText);
     Assert.isOk(triedLexerUpdate);
 
@@ -37,7 +37,7 @@ function expectLexerUpdateLine(
     newText: string,
     expectedUpdate: AbridgedTLexerLine,
 ): Lexer.State {
-    let state: Lexer.State = expectLexOk(originalText);
+    let state: Lexer.State = assertLexOk(originalText);
     expectAbridgedTLexerLine(state, expectedOriginal);
 
     const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, newText);

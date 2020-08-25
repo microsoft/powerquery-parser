@@ -9,7 +9,7 @@ import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecordType);
 
-    const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,

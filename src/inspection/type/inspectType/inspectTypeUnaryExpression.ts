@@ -3,7 +3,7 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.UnaryExpression);
@@ -11,14 +11,14 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeOperatorsWrapper:
         | undefined
-        | TXorNode = NodeIdMapUtils.maybeXorChildByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
+        | TXorNode = NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeOperatorsWrapper === undefined) {
         return Type.UnknownInstance;
     }
 
-    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         nodeIdMapCollection,
         xorNode.node.id,
         1,
@@ -31,7 +31,7 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
     // Only certain operators are allowed depending on the type.
     // Unlike BinOpExpression, it's easier to implement the check without a lookup table.
     let expectedUnaryOperatorKinds: ReadonlyArray<Ast.UnaryOperatorKind>;
-    const expressionType: Type.TType = inspectXorNode(state, maybeExpression);
+    const expressionType: Type.TType = inspectXor(state, maybeExpression);
     if (expressionType.kind === Type.TypeKind.Number) {
         expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Positive, Ast.UnaryOperatorKind.Negative];
     } else if (expressionType.kind === Type.TypeKind.Logical) {
@@ -40,7 +40,7 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
         return Type.NoneInstance;
     }
 
-    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeAstChildren(
+    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeIterChildrenAst(
         nodeIdMapCollection,
         maybeOperatorsWrapper.node.id,
     ) as ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>>;

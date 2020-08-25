@@ -11,7 +11,7 @@ export function inspectTypeNullCoalescingExpression(state: InspectTypeState, xor
     const maybeLeftType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     const maybeNullCoalescingOperator:
         | Ast.TNode
-        | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
+        | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
         Ast.NodeKind.Constant,
     ]);
     // '??' isn't present, treat it as an Expression.

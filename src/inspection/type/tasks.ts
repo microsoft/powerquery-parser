@@ -9,7 +9,7 @@ import { CommonSettings } from "../../settings";
 import { ScopeItemByKey } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { TypeCache } from "./common";
-import { expectGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXorNode } from "./inspectType";
+import { assertGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
@@ -51,12 +51,12 @@ export function tryType(
     };
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        inspectXorNode(state, NodeIdMapUtils.expectXorNode(nodeIdMapCollection, nodeId)),
+        inspectXor(state, NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId)),
     );
 }
 
 function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
-    const scopeItemByKey: ScopeItemByKey = expectGetOrCreateScope(state, nodeId);
+    const scopeItemByKey: ScopeItemByKey = assertGetOrCreateScope(state, nodeId);
 
     for (const scopeItem of scopeItemByKey.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {

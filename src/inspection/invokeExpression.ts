@@ -72,7 +72,7 @@ function isInvokeExpressionContent(position: Position, xorNode: TXorNode): boole
     // Check if position is in the wrapped contents (InvokeExpression arguments).
     if (xorNode.kind === XorNodeKind.Ast) {
         const invokeExprAstNode: Ast.InvokeExpression = xorNode.node as Ast.InvokeExpression;
-        if (!PositionUtils.isInAstNode(position, invokeExprAstNode.content, true, true)) {
+        if (!PositionUtils.isInAst(position, invokeExprAstNode.content, true, true)) {
             return false;
         }
     }
@@ -91,15 +91,12 @@ function maybeInvokeExpressionName(
     let maybeName: string | undefined;
     if (invokeExpr.node.maybeAttributeIndex === 0) {
         // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
-        const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
-            nodeIdMapCollection,
-            invokeExpr.node.id,
-        );
-        const recursiveExprXorNode: TXorNode = NodeIdMapUtils.expectParentXorNode(
+        const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.assertParentXor(nodeIdMapCollection, invokeExpr.node.id);
+        const recursiveExprXorNode: TXorNode = NodeIdMapUtils.assertParentXor(
             nodeIdMapCollection,
             recursiveArrayXorNode.node.id,
         );
-        const headXorNode: TXorNode = NodeIdMapUtils.expectXorChildByAttributeIndex(
+        const headXorNode: TXorNode = NodeIdMapUtils.assertChildXorByAttributeIndex(
             nodeIdMapCollection,
             recursiveExprXorNode.node.id,
             0,
@@ -130,7 +127,7 @@ function inspectInvokeExpressionArguments(
     nodeIndex: number,
 ): InvokeExpressionArgs | undefined {
     // Grab arguments if they exist, else return early.
-    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXorNode(activeNode.ancestry, nodeIndex, [
+    const maybeCsvArray: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, nodeIndex, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeCsvArray === undefined) {
@@ -138,7 +135,7 @@ function inspectInvokeExpressionArguments(
     }
 
     const csvArray: TXorNode = maybeCsvArray;
-    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(
+    const csvNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
         nodeIdMapCollection,
         csvArray.node.id,
     );
@@ -147,7 +144,7 @@ function inspectInvokeExpressionArguments(
         return undefined;
     }
 
-    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorNode(
+    const maybeAncestorCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
         activeNode.ancestry,
         nodeIndex,
         2,

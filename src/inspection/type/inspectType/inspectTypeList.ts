@@ -3,11 +3,11 @@
 
 import { Type } from "../../../language/type";
 import { NodeIdMapIterator, TXorNode } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeList(state: InspectTypeState, xorNode: TXorNode): Type.DefinedList {
-    const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.listItems(state.nodeIdMapCollection, xorNode);
-    const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => inspectXorNode(state, item));
+    const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterListItems(state.nodeIdMapCollection, xorNode);
+    const elements: ReadonlyArray<Type.TType> = items.map((item: TXorNode) => inspectXor(state, item));
 
     return {
         kind: Type.TypeKind.List,

@@ -124,7 +124,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     }
     const activeNode: ActiveNode = maybeActiveNode;
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
-    const ancestryLeaf: TXorNode = AncestryUtils.expectLeaf(ancestry);
+    const ancestryLeaf: TXorNode = AncestryUtils.assertLeaf(ancestry);
 
     const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
@@ -158,7 +158,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     }
     const scopeById: Inspection.ScopeById = triedScope.value;
     const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestryLeaf.node.id);
-    Assert.isDefined(maybeScope, `expected nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
+    Assert.isDefined(maybeScope, `assert nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
     const scope: Inspection.ScopeItemByKey = maybeScope;
 
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(

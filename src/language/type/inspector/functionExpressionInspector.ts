@@ -25,7 +25,7 @@ export function inspectFunctionExpression(
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
             nodeIdMapCollection,
             parameter.node.id,
             1,
@@ -48,7 +48,7 @@ export function inspectFunctionExpression(
         }
     }
 
-    const maybeReturnType: Ast.TNode | undefined = NodeIdMapUtils.maybeAstChildByAttributeIndex(
+    const maybeReturnType: Ast.TNode | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(
         nodeIdMapCollection,
         fnExpr.node.id,
         1,
@@ -82,7 +82,7 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeParameterList: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeParameterList: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         nodeIdMapCollection,
         fnExpr.node.id,
         0,
@@ -98,5 +98,5 @@ function functionParameterXorNodes(
 
     return maybeWrappedContent === undefined
         ? []
-        : NodeIdMapIterator.arrayWrapperCsvXorNodes(nodeIdMapCollection, maybeWrappedContent);
+        : NodeIdMapIterator.iterArrayWrapper(nodeIdMapCollection, maybeWrappedContent);
 }

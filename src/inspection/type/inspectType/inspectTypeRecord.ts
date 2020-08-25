@@ -3,15 +3,15 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): Type.DefinedRecord {
     XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     const fields: Map<string, Type.TType> = new Map();
-    for (const keyValuePair of NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, xorNode)) {
+    for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
         if (keyValuePair.maybeValue) {
-            fields.set(keyValuePair.keyLiteral, inspectXorNode(state, keyValuePair.maybeValue));
+            fields.set(keyValuePair.keyLiteral, inspectXor(state, keyValuePair.maybeValue));
         } else {
             fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
         }

@@ -109,7 +109,7 @@ export function tryTraverse<State extends IState<ResultType>, ResultType, Node, 
 }
 
 // a TExpandNodesFn usable by tryTraverseAst which visits all nodes.
-export function expectExpandAllAstChildren<State extends IState<ResultType>, ResultType>(
+export function assertExpandAllAstChildren<State extends IState<ResultType>, ResultType>(
     _state: State,
     astNode: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -118,14 +118,14 @@ export function expectExpandAllAstChildren<State extends IState<ResultType>, Res
 
     if (maybeChildIds) {
         const childIds: ReadonlyArray<number> = maybeChildIds;
-        return childIds.map(nodeId => NodeIdMapUtils.expectAstNode(nodeIdMapCollection.astNodeById, nodeId));
+        return childIds.map(nodeId => NodeIdMapUtils.assertAst(nodeIdMapCollection.astNodeById, nodeId));
     } else {
         return [];
     }
 }
 
 // a TExpandNodesFn usable by tryTraverseXor which visits all nodes.
-export function expectExpandAllXorChildren<State extends IState<ResultType>, ResultType>(
+export function assertExpandAllXorChildren<State extends IState<ResultType>, ResultType>(
     _state: State,
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -133,7 +133,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
             const astNode: Ast.TNode = xorNode.node;
-            return expectExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.astFactory);
+            return assertExpandAllAstChildren(_state, astNode, nodeIdMapCollection).map(XorNodeUtils.astFactory);
         }
         case XorNodeKind.Context: {
             const result: TXorNode[] = [];
@@ -145,7 +145,7 @@ export function expectExpandAllXorChildren<State extends IState<ResultType>, Res
             if (maybeChildIds !== undefined) {
                 const childIds: ReadonlyArray<number> = maybeChildIds;
                 for (const childId of childIds) {
-                    result.push(NodeIdMapUtils.expectXorNode(nodeIdMapCollection, childId));
+                    result.push(NodeIdMapUtils.assertXor(nodeIdMapCollection, childId));
                 }
             }
 
@@ -162,7 +162,7 @@ export function maybeExpandXorParent<T>(
     xorNode: TXorNode,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): ReadonlyArray<TXorNode> {
-    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXorNode(nodeIdMapCollection, xorNode.node.id);
+    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
     return maybeParent !== undefined ? [maybeParent] : [];
 }
 

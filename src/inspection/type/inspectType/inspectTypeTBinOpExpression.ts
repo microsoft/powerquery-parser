@@ -4,7 +4,7 @@
 import { Assert, CommonError } from "../../../common";
 import { Ast, AstUtils, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 
@@ -15,7 +15,10 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
     });
 
     const parentId: number = xorNode.node.id;
-    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.expectXorChildren(state.nodeIdMapCollection, parentId);
+    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
+        state.nodeIdMapCollection,
+        parentId,
+    );
 
     const maybeLeft: TXorNode | undefined = children[0];
     const maybeOperatorKind: Ast.TBinOpExpressionOperator | undefined =
@@ -30,11 +33,11 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        return inspectXorNode(state, maybeLeft);
+        return inspectXor(state, maybeLeft);
     }
     // '1 +'
     else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
-        const leftType: Type.TType = inspectXorNode(state, maybeLeft);
+        const leftType: Type.TType = inspectXor(state, maybeLeft);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
@@ -57,9 +60,9 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
     }
     // '1 + 1'
     else {
-        const leftType: Type.TType = inspectXorNode(state, maybeLeft);
+        const leftType: Type.TType = inspectXor(state, maybeLeft);
         const operatorKind: Ast.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: Type.TType = inspectXorNode(state, maybeRight);
+        const rightType: Type.TType = inspectXor(state, maybeRight);
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: Type.TypeKind | undefined = Lookup.get(key);

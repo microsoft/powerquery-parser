@@ -3,12 +3,12 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXorNode } from "./common";
+import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
-    const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
@@ -25,14 +25,14 @@ export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, x
 
     const maybeArrayWrapper:
         | TXorNode
-        | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
+        | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
         Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeArrayWrapper === undefined) {
         return Type.UnknownInstance;
     }
 
-    const maybeExpressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.expectXorChildren(
+    const maybeExpressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.assertIterChildrenXor(
         state.nodeIdMapCollection,
         maybeArrayWrapper.node.id,
     );
@@ -42,7 +42,7 @@ export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, x
 
     let leftType: Type.TType = headType;
     for (const right of maybeExpressions) {
-        const rightType: Type.TType = inspectXorNode(state, right);
+        const rightType: Type.TType = inspectXor(state, right);
         leftType = rightType;
     }
 

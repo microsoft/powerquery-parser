@@ -3,7 +3,7 @@
 
 import { Ast, Type } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXorNode } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
 export function inspectTypeTableType(
@@ -12,7 +12,7 @@ export function inspectTypeTableType(
 ): Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.TableType);
 
-    const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeXorChildByAttributeIndex(
+    const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
@@ -34,7 +34,7 @@ export function inspectTypeTableType(
             kind: Type.TypeKind.Type,
             maybeExtendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
             isNullable: false,
-            primaryExpression: inspectXorNode(state, maybeRowType),
+            primaryExpression: inspectXor(state, maybeRowType),
         };
     }
 }
