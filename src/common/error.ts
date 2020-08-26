@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { DefaultTemplates, ILocalizationTemplates, Localization } from "../localization";
-import { ICancellationToken } from "./cancellationToken";
+import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 export type TInnerCommonError = InvariantError | UnknownError;
 
 export class CommonError extends Error {
@@ -13,8 +13,8 @@ export class CommonError extends Error {
 }
 
 export class CancellationError extends Error {
-    constructor(templates: ILocalizationTemplates, readonly cancellationToken: ICancellationToken) {
-        super(Localization.error_common_cancellationError(templates));
+    constructor(readonly cancellationToken: ICancellationToken) {
+        super(Localization.error_common_cancellationError(DefaultTemplates));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
 }
@@ -34,7 +34,7 @@ export class UnknownError extends Error {
 }
 
 export function isTInnerCommonError(x: any): x is TInnerCommonError {
-    return x instanceof InvariantError || x instanceof UnknownError;
+    return x instanceof CancellationError || x instanceof InvariantError || x instanceof UnknownError;
 }
 
 export function ensureCommonError(templates: ILocalizationTemplates, err: Error): CommonError {

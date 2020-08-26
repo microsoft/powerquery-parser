@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export interface ICancellationToken {
-    isCancelled: () => boolean;
-    cancel: () => void;
-}
+import { CommonError } from "..";
+import { ICancellationToken } from "./ICancellationToken";
 
 // Cancelled after X milliseconds.
 export class TimedCancellationToken implements ICancellationToken {
@@ -12,6 +10,12 @@ export class TimedCancellationToken implements ICancellationToken {
 
     constructor(private readonly cancellationThreshold: number = performance.now()) {
         this.wasForceCancelled = false;
+    }
+
+    public throwExceptionIfCancelled(): void {
+        if (this.isCancelled()) {
+            throw new CommonError.CancellationError(this);
+        }
     }
 
     public isCancelled(): boolean {
@@ -36,6 +40,12 @@ export class CounterCancellationToken implements ICancellationToken {
     public isCancelled(): boolean {
         this.counter += 1;
         return this.wasForceCancelled || this.counter >= this.cancellationThreshold;
+    }
+
+    public throwExceptionIfCancelled(): void {
+        if (this.isCancelled()) {
+            throw new CommonError.CancellationError(this);
+        }
     }
 
     public cancel(): void {
