@@ -30,6 +30,7 @@ export class Tokenizer implements TokensProvider {
         const lexerState: Lexer.State = {
             lines: [],
             localizationTemplates: DefaultTemplates,
+            maybeCancellationToken: undefined,
         };
         return new TokenizerState(lexerState);
     }

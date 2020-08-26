@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { LexerSnapshot } from "./lexer";
-import { DefaultLocale } from "./localization/templates";
-import { IParser, IParserState, IParserStateUtils, Parser } from "./parser";
+import { ICancellationToken } from "../common";
+import { LexerSnapshot } from "../lexer";
+import { DefaultLocale } from "../localization/templates";
+import { IParser, IParserState, IParserStateUtils, Parser } from "../parser";
 
 export interface CommonSettings {
     readonly locale: string;
+    readonly maybeCancellationToken: ICancellationToken | undefined;
 }
 
 // tslint:disable-next-line: no-empty-interface
@@ -24,4 +26,5 @@ export const DefaultSettings: Settings = {
     newParserState: (parseSettings: ParseSettings, lexerSnapshot: LexerSnapshot) =>
         IParserStateUtils.newState(parseSettings, lexerSnapshot),
     locale: DefaultLocale,
+    maybeCancellationToken: undefined,
 };

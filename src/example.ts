@@ -7,7 +7,7 @@ import { Inspection, Task } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { ParseError } from "./parser";
-import { DefaultSettings } from "./settings";
+import { DefaultSettings } from "./settings/settings";
 
 parseText(`let x = 1 in try x otherwise 2`);
 

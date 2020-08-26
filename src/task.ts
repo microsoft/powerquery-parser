@@ -22,7 +22,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "./parser";
-import { CommonSettings, LexSettings, ParseSettings } from "./settings";
+import { CommonSettings, LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 

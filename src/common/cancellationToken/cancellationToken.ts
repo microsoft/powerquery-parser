@@ -6,20 +6,22 @@ import { ICancellationToken } from "./ICancellationToken";
 
 // Cancelled after X milliseconds.
 export class TimedCancellationToken implements ICancellationToken {
+    private readonly threshold: number;
     private wasForceCancelled: boolean;
 
-    constructor(private readonly cancellationThreshold: number = performance.now()) {
+    constructor(milliseconds: number) {
+        this.threshold = performance.now() + milliseconds;
         this.wasForceCancelled = false;
     }
 
-    public throwExceptionIfCancelled(): void {
+    public throwIfCancelled(): void {
         if (this.isCancelled()) {
             throw new CommonError.CancellationError(this);
         }
     }
 
     public isCancelled(): boolean {
-        return this.wasForceCancelled || performance.now() >= this.cancellationThreshold;
+        return this.wasForceCancelled || performance.now() >= this.threshold;
     }
 
     public cancel(): void {
@@ -42,7 +44,7 @@ export class CounterCancellationToken implements ICancellationToken {
         return this.wasForceCancelled || this.counter >= this.cancellationThreshold;
     }
 
-    public throwExceptionIfCancelled(): void {
+    public throwIfCancelled(): void {
         if (this.isCancelled()) {
             throw new CommonError.CancellationError(this);
         }

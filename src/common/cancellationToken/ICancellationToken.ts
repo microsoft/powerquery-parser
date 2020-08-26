@@ -3,6 +3,6 @@
 
 export interface ICancellationToken {
     isCancelled: () => boolean;
-    throwExceptionIfCancelled: () => void;
+    throwIfCancelled: () => void;
     cancel: () => void;
 }

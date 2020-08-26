@@ -77,6 +77,7 @@ function createBenchmarkParseSettings(
         parser: BenchmarkParser,
         newParserState: newParserStateFn,
         locale: DefaultLocale,
+        maybeCancellationToken: undefined,
     };
 }
 
