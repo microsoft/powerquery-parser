@@ -1,6 +1,5 @@
 {
-    "error_common_cancellationError_1_details": "CancellationError: a cancellation request was made with no details given",
-    "error_common_cancellationError_2_noDetails": "CancellationError: a cancellation request - {details}",
+    "error_common_cancellationError": "CancellationError: a cancellation request was made with no details given",
     "error_common_invariantError_1_details": "InvariantError: {invariantBroken} – {details}",
     "error_common_invariantError_2_noDetails": "InvariantError: {invariantBroken}",
     "error_common_unknown": "Unbekannter Fehler, innerError: {innerError}",

@@ -11,5 +11,6 @@ import * as Traverse from "./traversal";
 import * as TypeScriptUtils from "./typeScriptTypeUtils";
 
 export { ArrayUtils, Assert, CommonError, MapUtils, Pattern, StringUtils, Traverse, TypeScriptUtils };
+export * from "./cancellationToken";
 export * from "./partialResult";
 export * from "./result";

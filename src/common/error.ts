@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { DefaultTemplates, ILocalizationTemplates, Localization } from "../localization";
+import { ICancellationToken } from "./cancellationToken";
 export type TInnerCommonError = InvariantError | UnknownError;
 
 export class CommonError extends Error {
@@ -12,8 +13,8 @@ export class CommonError extends Error {
 }
 
 export class CancellationError extends Error {
-    constructor(templates: ILocalizationTemplates, readonly message: any) {
-        super(Localization.error_common_cancellationError(templates, message));
+    constructor(templates: ILocalizationTemplates, readonly cancellationToken: ICancellationToken) {
+        super(Localization.error_common_cancellationError(templates));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
 }
