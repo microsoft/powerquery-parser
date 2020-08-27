@@ -32,6 +32,7 @@ export function stateFactory<S extends IParserState = IParserState>(
     return {
         ...settings,
         localizationTemplates: getLocalizationTemplates(settings.locale),
+        maybeCancellationToken: settings.maybeCancellationToken,
         lexerSnapshot,
         tokenIndex: 0,
         maybeCurrentToken,
@@ -247,7 +248,7 @@ export function isRecursivePrimaryExpressionNext(
 }
 
 // -----------------------------
-// ---------- Expects ----------
+// ---------- Asserts ----------
 // -----------------------------
 
 export function assertContextNodeMetadata(state: IParserState): ContextNodeMetadata {

@@ -63,6 +63,7 @@ function readBinOpExpression<S extends IParserState = IParserState>(
     parser: IParser<S>,
     nodeKind: Ast.NodeKind,
 ): Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType {
+    state.maybeCancellationToken?.throwIfCancelled();
     IParserStateUtils.startContext(state, nodeKind);
     const placeholderContextId: number = state.maybeCurrentContextNode!.id;
 
@@ -241,8 +242,9 @@ function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): As
 }
 
 function readUnaryExpression(state: IParserState, parser: IParser<IParserState>): Ast.TUnaryExpression {
-    let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
+    state.maybeCancellationToken?.throwIfCancelled();
 
+    let maybePrimaryExpression: Ast.TPrimaryExpression | undefined;
     // LL(1)
     switch (state.maybeCurrentTokenKind) {
         // PrimaryExpression
