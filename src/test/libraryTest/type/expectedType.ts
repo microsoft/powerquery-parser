@@ -9,11 +9,11 @@ import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
+import { TestAssertUtils } from "../../testUtils";
 
-function expectParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
-    const [textWithoutPipe, position]: [string, Position] = expectTextWithPosition(textWithPipe);
-    const parseOk: ParseOk = expectParseOk(DefaultSettings, textWithoutPipe);
+function assertParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
+    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertTextWithPosition(textWithPipe);
+    const parseOk: ParseOk = TestAssertUtils.assertParseOk(DefaultSettings, textWithoutPipe);
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseOk.state.contextState.leafNodeIds;
@@ -24,12 +24,12 @@ function expectParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefin
     );
     Assert.isDefined(maybeActiveNode);
 
-    return expectExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
+    return assertExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
 }
 
-function expectParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
-    const [textWithoutPipe, position]: [string, Position] = expectTextWithPosition(textWithPipe);
-    const parseErr: ParseError.ParseError = expectParseErr(DefaultSettings, textWithoutPipe);
+function assertParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
+    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertTextWithPosition(textWithPipe);
+    const parseErr: ParseError.ParseError = TestAssertUtils.assertParseErr(DefaultSettings, textWithoutPipe);
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseErr.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseErr.state.contextState.leafNodeIds;
@@ -40,10 +40,10 @@ function expectParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefi
     );
     Assert.isDefined(maybeActiveNode);
 
-    return expectExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
+    return assertExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
 }
 
-function expectExpectedTypeOk(
+function assertExpectedTypeOk(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
@@ -69,7 +69,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if | true then 1 else 1`, () => {
             const textWithPipe: string = "if | true then 1 else 1";
             const expected: Type.TType = Type.LogicalInstance;
-            const actual: Type.TType | undefined = expectParseOkExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertParseOkExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));
@@ -80,7 +80,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if |`, () => {
             const textWithPipe: string = "if |";
             const expected: Type.TType = Type.LogicalInstance;
-            const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));
@@ -89,7 +89,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if 1 then |`, () => {
             const textWithPipe: string = "if 1 then |";
             const expected: Type.TType = Type.ExpressionInstance;
-            const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));
@@ -98,7 +98,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if 1 then 1 else |`, () => {
             const textWithPipe: string = "if 1 then 1 else |";
             const expected: Type.TType = Type.ExpressionInstance;
-            const actual: Type.TType | undefined = expectParseErrExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));

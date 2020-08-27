@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { expectDeepEqual, expectLexParseOk } from "../../common";
+import { TestAssertUtils } from "../../testUtils";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;
@@ -14,7 +15,7 @@ interface ChildIdsByIdEntry {
     readonly kind: Ast.NodeKind;
 }
 
-function actualFactoryFn<S extends IParserState = IParserState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
+function actualFactory<S extends IParserState = IParserState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
     const astNodeById: NodeIdMap.AstNodeById = lexParseOk.state.contextState.nodeIdMapCollection.astNodeById;
 
@@ -54,7 +55,10 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.PrimitiveType,
             },
         ];
-        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
+        const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
+            TestAssertUtils.assertLexParseOk(DefaultSettings, text),
+        );
+        expect(actual).to.deep.equal(expected);
     });
 
     it(`null ?? 1 ?? 2`, () => {
@@ -71,6 +75,9 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.NullCoalescingExpression,
             },
         ];
-        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
+        const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
+            TestAssertUtils.assertLexParseOk(DefaultSettings, text),
+        );
+        expect(actual).to.deep.equal(expected);
     });
 });

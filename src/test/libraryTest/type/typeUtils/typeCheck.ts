@@ -30,7 +30,7 @@ function abridgedCheckedFactory(actual: TChecked): AbridgedChecked {
     };
 }
 
-function expectEqual(actual: AbridgedChecked, expected: AbridgedChecked): void {
+function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked): void {
     expect(actual.valid).to.have.members(expected.valid, "mismatch on valid");
     expect(actual.invalid).to.have.members(expected.invalid, "mismatch on invalid");
     expect(actual.extraneous).to.have.members(expected.extraneous, "mismatch on extraneous");
@@ -55,7 +55,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`list with two text elements, invalid`, () => {
@@ -75,7 +75,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [2],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`list of list with two text elements, valid single list`, () => {
@@ -93,7 +93,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`list of list with two text elements, valid multiple list`, () => {
@@ -114,7 +114,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`list of list with two text elements, empty list`, () => {
@@ -130,7 +130,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`list of list with two text elements, invalid single list`, () => {
@@ -148,7 +148,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`list of list with two text elements, invalid multiple list`, () => {
@@ -169,7 +169,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
     });
 
@@ -190,7 +190,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`invalid`, () => {
@@ -209,7 +209,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`extraneous`, () => {
@@ -225,7 +225,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [1],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`missing`, () => {
@@ -241,7 +241,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [0, 1],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
     });
 
@@ -259,7 +259,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`invalid`, () => {
@@ -278,7 +278,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`extraneous`, () => {
@@ -294,7 +294,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [1],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
 
         it(`missing`, () => {
@@ -310,7 +310,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [0, 1],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
     });
 
@@ -329,7 +329,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: [],
                 missing: [],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
     });
 
@@ -360,7 +360,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: ["table"],
                 missing: ["text"],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
     });
 
@@ -391,7 +391,7 @@ describe(`TypeUtils - typeCheck`, () => {
                 extraneous: ["table"],
                 missing: ["text"],
             };
-            expectEqual(abridgedCheckedFactory(actual), expected);
+            assertAbridgedEqual(abridgedCheckedFactory(actual), expected);
         });
     });
 });
