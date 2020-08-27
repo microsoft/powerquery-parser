@@ -16,6 +16,7 @@ export function examineFieldSpecificationList(
     state: InspectTypeState,
     xorNode: TXorNode,
 ): ExaminedFieldSpecificationList {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;

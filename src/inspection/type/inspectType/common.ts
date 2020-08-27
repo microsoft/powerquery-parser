@@ -102,6 +102,8 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
 }
 
 export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+
     const xorNodeId: number = xorNode.node.id;
     const maybeCached: Type.TType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
@@ -288,6 +290,8 @@ export function inspectTypeFromChildAttributeIndex(
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+
     const maybeXorNode: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         parentXorNode.node.id,
@@ -313,6 +317,8 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
 }
 
 export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode: TXorNode): undefined | Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+
     const maybeDeferenced: TXorNode | undefined = maybeDereferencedIdentifier(state, xorNode);
     if (maybeDeferenced === undefined) {
         return undefined;

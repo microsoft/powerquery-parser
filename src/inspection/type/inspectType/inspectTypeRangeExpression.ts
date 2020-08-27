@@ -6,6 +6,7 @@ import { TXorNode, XorNodeUtils } from "../../../parser";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RangeExpression);
 
     const maybeLeftType: Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);

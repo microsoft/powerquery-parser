@@ -7,6 +7,7 @@ import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../..
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNode): Type.FunctionType | Type.Unknown {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionType);
 
     const maybeParameters:
