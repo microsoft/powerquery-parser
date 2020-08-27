@@ -9,9 +9,9 @@ import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
-import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
+import { TestAssertUtils } from "../../testUtils";
 
-function expectInvokeExpressionOk(
+function assertInvokeExpressionOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -34,30 +34,34 @@ function expectInvokeExpressionOk(
     return triedInspect.value;
 }
 
-function expectParseOkInvokeExpressionOk(
+function assertParseOkInvokeExpressionOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const parseOk: ParseOk = expectParseOk(settings, text, IParserStateUtils.stateFactory);
+    const parseOk: ParseOk = TestAssertUtils.assertParseOk(settings, text, IParserStateUtils.stateFactory);
     const contextState: ParseContext.State = parseOk.state.contextState;
-    return expectInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
-function expectParseErrInvokeExpressionOk(
+function assertParseErrInvokeExpressionOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const parseError: ParseError.ParseError = expectParseErr(settings, text, IParserStateUtils.stateFactory);
+    const parseError: ParseError.ParseError = TestAssertUtils.assertParseErr(
+        settings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
     const contextState: ParseContext.State = parseError.state.contextState;
-    return expectInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 describe(`subset Inspection - InvokeExpression`, () => {
     it("single invoke expression, no parameters", () => {
-        const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(|)");
-        const inspected: InvokeExpression | undefined = expectParseOkInvokeExpressionOk(
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition("Foo(|)");
+        const inspected: InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -68,8 +72,8 @@ describe(`subset Inspection - InvokeExpression`, () => {
     });
 
     it("multiple invoke expression, no parameters", () => {
-        const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Bar(Foo(|))");
-        const inspected: InvokeExpression | undefined = expectParseOkInvokeExpressionOk(
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition("Bar(Foo(|))");
+        const inspected: InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -80,8 +84,8 @@ describe(`subset Inspection - InvokeExpression`, () => {
     });
 
     it("single invoke expression - Foo(a|)", () => {
-        const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|)");
-        const inspected: InvokeExpression | undefined = expectParseOkInvokeExpressionOk(
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition("Foo(a|)");
+        const inspected: InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -95,8 +99,8 @@ describe(`subset Inspection - InvokeExpression`, () => {
     });
 
     it("single invoke expression - Foo(a|,)", () => {
-        const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a|,)");
-        const inspected: InvokeExpression | undefined = expectParseErrInvokeExpressionOk(
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition("Foo(a|,)");
+        const inspected: InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
             DefaultSettings,
             text,
             position,
@@ -110,8 +114,8 @@ describe(`subset Inspection - InvokeExpression`, () => {
     });
 
     it("single invoke expression - Foo(a,|)", () => {
-        const [text, position]: [string, Inspection.Position] = expectTextWithPosition("Foo(a,|)");
-        const inspected: InvokeExpression | undefined = expectParseErrInvokeExpressionOk(
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition("Foo(a,|)");
+        const inspected: InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
             DefaultSettings,
             text,
             position,

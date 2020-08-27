@@ -14,7 +14,7 @@ import { ParseSettings, Settings } from "../../settings";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
 import * as path from "path";
-import * as FileUtils from "../fileUtils";
+import { TestFileUtils } from "../testUtils";
 
 interface FileSummary {
     readonly parserName: string;
@@ -88,7 +88,7 @@ function parseAllFiles(
 ): ReadonlyArray<FileSummary> {
     const parserSummaries: FileSummary[] = [];
 
-    for (const filePath of FileUtils.getPowerQueryFilesRecursively(ResourceDirectory)) {
+    for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(ResourceDirectory)) {
         // tslint:disable-next-line: no-console
         console.log(`Starting ${parserName} test on ${filePath}`);
         const fileName: string = path.basename(filePath);
@@ -101,7 +101,7 @@ function parseAllFiles(
                 // tslint:disable-next-line: no-console
                 console.log(`\tRun ${index} of ${NumberOfRunsPerFile}`);
             }
-            const triedLexParse: Task.TriedLexParse<BenchmarkState> = FileUtils.tryLexParse(
+            const triedLexParse: Task.TriedLexParse<BenchmarkState> = TestFileUtils.tryLexParse(
                 settings,
                 filePath,
                 stateFactoryFn,
@@ -177,7 +177,7 @@ function writeReport(resourceDirectory: string, summaries: ReadonlyArray<FileSum
     }
 
     const logFilePath: string = path.join(resourceDirectory, "logs", ReportFileName);
-    FileUtils.writeContents(logFilePath, csvContent);
+    TestFileUtils.writeContents(logFilePath, csvContent);
 }
 
 function writeSingleRunTimestamps(
@@ -218,5 +218,5 @@ function writeSingleRunTimestamps(
     }
 
     const logFilePath: string = path.join(resourceDirectory, "logs", perfFileName);
-    FileUtils.writeContents(logFilePath, csvContent);
+    TestFileUtils.writeContents(logFilePath, csvContent);
 }

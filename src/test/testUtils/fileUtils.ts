@@ -1,11 +1,10 @@
-import "mocha";
-import { Task } from "..";
-import { IParserState } from "../parser";
-import { LexSettings, ParseSettings } from "../settings";
-
 import * as fs from "fs";
+import "mocha";
 import * as path from "path";
-import { LexerSnapshot } from "../lexer";
+import { Task } from "../..";
+import { LexerSnapshot } from "../../lexer";
+import { IParserState } from "../../parser";
+import { LexSettings, ParseSettings } from "../../settings";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 

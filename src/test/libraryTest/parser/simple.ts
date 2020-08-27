@@ -10,7 +10,7 @@ import { DefaultTemplates } from "../../../localization";
 import { IParser, IParserState, IParserStateUtils } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
-import { expectLexParseOk } from "../../common";
+import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 
@@ -23,7 +23,11 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+        DefaultSettings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
     const state: CollectAbridgeNodeState = {
         localizationTemplates: DefaultTemplates,
         result: [],
@@ -46,8 +50,12 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     return triedTraverse.value;
 }
 
-function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
-    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory);
+function assertNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+        DefaultSettings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
     const state: NthNodeOfKindState = {
         localizationTemplates: DefaultTemplates,
         result: undefined,
@@ -93,7 +101,7 @@ function nthNodeEarlyExit(state: NthNodeOfKindState, _: Ast.TNode): boolean {
     return state.nthCounter === state.nthRequired;
 }
 
-function expectAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>): void {
+function assertAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>): void {
     const actual: ReadonlyArray<AbridgedNode> = collectAbridgeNodeFromAst(text);
     expect(actual).deep.equal(expected, JSON.stringify(actual));
 }
@@ -127,9 +135,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.And);
         });
 
@@ -141,9 +149,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Multiplication);
         });
 
@@ -155,9 +163,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Division);
         });
 
@@ -169,9 +177,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Addition);
         });
 
@@ -183,9 +191,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.ArithmeticOperatorKind.Subtraction);
         });
 
@@ -203,7 +211,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -217,7 +225,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`type function (x as number) as number`, () => {
@@ -243,7 +251,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.PrimitiveType, 1],
                 [Ast.NodeKind.Constant, 0],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -258,7 +266,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.LiteralExpression, 1],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     describe(`${Ast.NodeKind.EqualityExpression}`, () => {
@@ -270,9 +278,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.EqualityOperatorKind.EqualTo);
         });
 
@@ -284,9 +292,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.EqualityOperatorKind.NotEqualTo);
         });
     });
@@ -299,7 +307,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.LiteralExpression, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`try 1 otherwise 2`, () => {
@@ -312,7 +320,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.LiteralExpression, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -323,7 +331,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.LiteralExpression, 1],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     describe(`${Ast.NodeKind.FieldProjection}`, () => {
@@ -344,7 +352,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`x[[y], [z]]`, () => {
@@ -370,7 +378,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`x[[y]]?`, () => {
@@ -391,7 +399,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -404,7 +412,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`[x]?`, () => {
@@ -416,7 +424,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -435,7 +443,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`type [optional x]`, () => {
@@ -453,7 +461,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`type [x = number]`, () => {
@@ -474,7 +482,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -493,7 +501,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`type [x, ...]`, () => {
@@ -512,7 +520,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -530,7 +538,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.LiteralExpression, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`(x) => 1`, () => {
@@ -547,7 +555,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.LiteralExpression, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`(x, y, z) => 1`, () => {
@@ -572,7 +580,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.LiteralExpression, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`(optional x) => 1`, () => {
@@ -590,7 +598,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.LiteralExpression, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`(x as nullable text) => 1`, () => {
@@ -613,7 +621,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.LiteralExpression, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -634,7 +642,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.PrimitiveType, 1],
                 [Ast.NodeKind.Constant, 0],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`type function (x as number) as number`, () => {
@@ -660,7 +668,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.PrimitiveType, 1],
                 [Ast.NodeKind.Constant, 0],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -675,7 +683,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`[1]`, () => {
@@ -686,7 +694,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`[a.1]`, () => {
@@ -697,7 +705,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -718,7 +726,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 3],
             [Ast.NodeKind.ArrayWrapper, 4],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.GeneralizedIdentifierPairedExpression}`, () => {
@@ -734,7 +742,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.LiteralExpression, 2],
             [Ast.NodeKind.Constant, 2],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     // Ast.NodeKind.Identifier covered by many
@@ -746,7 +754,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.Identifier, 1],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.IdentifierPairedExpression}`, () => {
@@ -763,7 +771,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.LiteralExpression, 2],
             [Ast.NodeKind.Constant, 3],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.IfExpression}`, () => {
@@ -780,7 +788,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.IdentifierExpression, 5],
             [Ast.NodeKind.Identifier, 1],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.InvokeExpression}`, () => {
@@ -795,7 +803,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.ArrayWrapper, 1],
             [Ast.NodeKind.Constant, 2],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     describe(`${Ast.NodeKind.IsExpression}`, () => {
@@ -808,7 +816,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`1 is number is number`, () => {
@@ -824,7 +832,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -840,7 +848,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.LiteralExpression, 1],
             [Ast.NodeKind.Constant, 2],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.ItemAccessExpression} optional`, () => {
@@ -856,7 +864,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 2],
             [Ast.NodeKind.Constant, 3],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     describe(`keywords`, () => {
@@ -866,7 +874,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.IdentifierExpression, undefined],
                 [Ast.NodeKind.Identifier, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`#shared`, () => {
@@ -875,7 +883,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.IdentifierExpression, undefined],
                 [Ast.NodeKind.Identifier, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -895,7 +903,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.IdentifierExpression, 3],
                 [Ast.NodeKind.Identifier, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`let x = 1 in try x`, () => {
@@ -915,7 +923,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.IdentifierExpression, 1],
                 [Ast.NodeKind.Identifier, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -928,7 +936,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.ArrayWrapper, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`{1, 2}`, () => {
@@ -944,7 +952,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`{1..2}`, () => {
@@ -960,7 +968,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`{1..2, 3..4}`, () => {
@@ -982,7 +990,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`{1, 2..3}`, () => {
@@ -1001,7 +1009,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`{1..2, 3}`, () => {
@@ -1020,7 +1028,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`let x = 1, y = {x..2} in y`, () => {
@@ -1053,7 +1061,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.IdentifierExpression, 3],
                 [Ast.NodeKind.Identifier, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1080,7 +1088,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 3],
                 [Ast.NodeKind.ArrayWrapper, 4],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`[foo = {}] section;`, () => {
@@ -1103,7 +1111,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 3],
                 [Ast.NodeKind.ArrayWrapper, 4],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1118,98 +1126,98 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.Constant, 2],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     describe(`${Ast.NodeKind.LiteralExpression}`, () => {
         it(`true`, () => {
             const text: string = `true`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`false`, () => {
             const text: string = `false`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`1`, () => {
             const text: string = `1`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`0x1`, () => {
             const text: string = `0x1`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`0X1`, () => {
             const text: string = `0X1`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`1.2`, () => {
             const text: string = `1.2`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`.1`, () => {
             const text: string = ".1";
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`1e2`, () => {
             const text: string = "1e2";
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`1e+2`, () => {
             const text: string = "1e+2";
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`1e-2`, () => {
             const text: string = "1e-2";
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`#nan`, () => {
             const text: string = `#nan`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`#infinity`, () => {
             const text: string = `#infinity`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`""`, () => {
             const text: string = `""`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`""""`, () => {
             const text: string = `""""`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`null`, () => {
             const text: string = `null`;
             const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1222,7 +1230,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`true or true`, () => {
@@ -1233,7 +1241,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1245,7 +1253,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.Constant, 1],
             [Ast.NodeKind.LiteralExpression, 2],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.NotImplementedExpression}`, () => {
@@ -1254,7 +1262,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.NotImplementedExpression, undefined],
             [Ast.NodeKind.Constant, 0],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.NullablePrimitiveType}`, () => {
@@ -1268,7 +1276,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.PrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     it(`${Ast.NodeKind.NullableType}`, () => {
@@ -1281,7 +1289,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.PrimitiveType, 1],
             [Ast.NodeKind.Constant, 0],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
@@ -1294,7 +1302,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.IdentifierExpression, 2],
                 [Ast.NodeKind.Identifier, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`1 ?? 1 ?? 1`, () => {
@@ -1308,7 +1316,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1326,7 +1334,7 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.LiteralExpression, 1],
             [Ast.NodeKind.Constant, 2],
         ];
-        expectAbridgeNodes(text, expected);
+        assertAbridgeNodes(text, expected);
     });
 
     describe(`${Ast.NodeKind.PrimitiveType}`, () => {
@@ -1339,7 +1347,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.PrimitiveType, 2],
                 [Ast.NodeKind.Constant, 0],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1357,7 +1365,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`[]`, () => {
@@ -1368,7 +1376,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.ArrayWrapper, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1389,7 +1397,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`type [x, ...]`, () => {
@@ -1408,7 +1416,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1423,9 +1431,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.GreaterThan);
         });
 
@@ -1437,9 +1445,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.GreaterThanEqualTo);
         });
 
@@ -1451,9 +1459,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.LessThan);
         });
 
@@ -1465,9 +1473,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.RelationalOperatorKind.LessThanEqualTo);
         });
     });
@@ -1481,7 +1489,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 3],
                 [Ast.NodeKind.ArrayWrapper, 4],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`[] section;`, () => {
@@ -1496,7 +1504,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 3],
                 [Ast.NodeKind.ArrayWrapper, 4],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`section foo;`, () => {
@@ -1508,7 +1516,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 3],
                 [Ast.NodeKind.ArrayWrapper, 4],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`section; x = 1;`, () => {
@@ -1525,7 +1533,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`section; x = 1; y = 2;`, () => {
@@ -1548,7 +1556,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1567,7 +1575,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`section; [] x = 1;`, () => {
@@ -1588,7 +1596,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`section; shared x = 1;`, () => {
@@ -1606,7 +1614,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 2],
                 [Ast.NodeKind.Constant, 3],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1626,7 +1634,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.GeneralizedIdentifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
 
         it(`type table (x)`, () => {
@@ -1642,7 +1650,7 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Identifier, 1],
                 [Ast.NodeKind.Constant, 2],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
         });
     });
 
@@ -1657,9 +1665,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.LiteralExpression, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Negative);
         });
 
@@ -1671,9 +1679,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.LiteralExpression, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Not);
         });
 
@@ -1685,9 +1693,9 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.LiteralExpression, 1],
             ];
-            expectAbridgeNodes(text, expected);
+            assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = expectNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Ast.UnaryOperatorKind.Positive);
         });
     });
