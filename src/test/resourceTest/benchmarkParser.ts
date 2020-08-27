@@ -307,10 +307,10 @@ export function newBenchmarkState<S extends IParserState = IParserState>(
 function traceFunction<T>(
     benchmarkState: BenchmarkState,
     benchmarkParser: IParser<BenchmarkState>,
-    fn: (state: IParserState, parser: IParser<IParserState>) => T,
+    tracedFn: (state: IParserState, parser: IParser<IParserState>) => T,
 ): T {
-    const fnCallId: number = functionEntry(benchmarkState, fn);
-    const result: T = fn(benchmarkState, (benchmarkParser as unknown) as IParser<IParserState>);
+    const fnCallId: number = functionEntry(benchmarkState, tracedFn);
+    const result: T = tracedFn(benchmarkState, (benchmarkParser as unknown) as IParser<IParserState>);
     functionExit(benchmarkState, fnCallId);
     return result;
 }

@@ -56,7 +56,7 @@ interface AbridgedUndefinedScopeItem extends IAbridgedNodeScopeItem {
     readonly nodeId: number;
 }
 
-function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeItem): TAbridgedNodeScopeItem {
+function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TScopeItem): TAbridgedNodeScopeItem {
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
             return {
@@ -107,21 +107,21 @@ function abridgedScopeItemFrom(identifier: string, scopeItem: Inspection.TScopeI
     }
 }
 
-function actualScopeFactoryFn(scopeItemByKey: ScopeItemByKey): ReadonlyArray<TAbridgedNodeScopeItem> {
+function abridgedScopeItemsFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArray<TAbridgedNodeScopeItem> {
     const result: TAbridgedNodeScopeItem[] = [];
 
     for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
-        result.push(abridgedScopeItemFrom(identifier, scopeItem));
+        result.push(abridgedScopeItemFactory(identifier, scopeItem));
     }
 
     return result;
 }
 
-function actualParameterFactoryFn(scopeItemByKey: ScopeItemByKey): ReadonlyArray<AbridgedParameterScopeItem> {
+function abridgedParametersFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArray<AbridgedParameterScopeItem> {
     const result: AbridgedParameterScopeItem[] = [];
 
     for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
-        const abridged: TAbridgedNodeScopeItem = abridgedScopeItemFrom(identifier, scopeItem);
+        const abridged: TAbridgedNodeScopeItem = abridgedScopeItemFactory(identifier, scopeItem);
         if (abridged.kind === ScopeItemKind.Parameter) {
             result.push(abridged);
         }
@@ -183,7 +183,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `|each 1`,
                 );
                 const expected: ReadonlyArray<TAbridgedNodeScopeItem> = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -194,7 +194,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `each| 1`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -212,7 +212,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -230,7 +230,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -248,7 +248,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 3,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -259,7 +259,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`each|`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`each|`);
                 const expected: AbridgedNodeScope = [];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -277,7 +277,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -290,7 +290,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `|(x) => z`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -301,7 +301,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `(x|, y) => z`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -312,7 +312,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `(x, y)| => z`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -342,7 +342,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeType: undefined,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -355,7 +355,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `|(x) =>`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -366,7 +366,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `(x|, y) =>`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -377,7 +377,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `(x, y)| =>`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -407,7 +407,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeType: undefined,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -435,7 +435,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -448,7 +448,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `|[a=1]`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -459,7 +459,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `[|a=1]`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -478,7 +478,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -504,7 +504,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -537,7 +537,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 28,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -548,7 +548,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `[a=1]|`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -567,7 +567,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -578,7 +578,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|[a=1`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`|[a=1`);
                 const expected: AbridgedNodeScope = [];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -587,7 +587,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`[|a=1`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`[|a=1`);
                 const expected: AbridgedNodeScope = [];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -604,7 +604,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 9,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -621,7 +621,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 9,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -647,7 +647,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 15,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -680,7 +680,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 21,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -699,7 +699,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 9,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -725,7 +725,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 16,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -738,7 +738,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `s|ection foo; x = 1; y = 2;`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -762,7 +762,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -786,7 +786,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -797,7 +797,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `section foo; x = 1; y = 2;|`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -834,7 +834,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 35,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -847,7 +847,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     `s|ection foo; x = 1; y = 2`,
                 );
                 const expected: AbridgedNodeScope = [];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -871,7 +871,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -895,7 +895,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -919,7 +919,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -940,7 +940,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -959,7 +959,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -978,7 +978,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1004,7 +1004,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1030,7 +1030,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1081,7 +1081,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 39,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1114,7 +1114,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 37,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1154,7 +1154,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 17,
                     },
                 ];
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualScopeFactoryFn(
+                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
                     assertParseOkScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1175,7 +1175,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1201,7 +1201,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1227,7 +1227,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1253,7 +1253,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 21,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1272,7 +1272,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
-                const actual: AbridgedNodeScope = actualScopeFactoryFn(
+                const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
                     assertParseErrScopeOk(DefaultSettings, text, position),
                 );
                 expect(actual).to.deep.equal(expected);
@@ -1332,7 +1332,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     maybeType: Ast.PrimitiveTypeConstantKind.Table,
                 },
             ];
-            const actual: ReadonlyArray<TAbridgedNodeScopeItem> = actualParameterFactoryFn(
+            const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedParametersFactory(
                 assertParseOkScopeOk(DefaultSettings, text, position),
             );
             expect(actual).to.deep.equal(expected);

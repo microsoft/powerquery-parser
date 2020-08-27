@@ -8,11 +8,6 @@ import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
 import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
 import { LexSettings, ParseSettings } from "../../settings";
 
-export function assertDeepEqual<X, Y>(partial: X, expected: Y, actualFactoryFn: (partial: X) => Y): void {
-    const actual: Y = actualFactoryFn(partial);
-    expect(actual).deep.equal(expected);
-}
-
 // Only works with single line expressions
 export function assertTextWithPosition(text: string): [string, Inspection.Position] {
     const indexOfPipe: number = text.indexOf("|");
