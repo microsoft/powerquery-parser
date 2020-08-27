@@ -6,7 +6,7 @@ import { Task } from "../../..";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { assertDeepEqual, assertLexParseOk } from "../../common";
+import { assertDeepEqual, assertLexParseOk } from "../../testUtils/assertUtils";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;

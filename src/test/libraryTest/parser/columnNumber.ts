@@ -7,9 +7,9 @@ import { Assert } from "../../../common";
 import { IParserState, ParseError } from "../../../parser";
 import { TokenWithColumnNumber } from "../../../parser/error";
 import { DefaultSettings } from "../../../settings";
-import { assertParseErr } from "../../common";
+import { assertParseErr } from "../../testUtils/assertUtils";
 
-function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
+function assertExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
     const error: ParseError.ParseError<IParserState> = assertParseErr(DefaultSettings, text);
     const innerError: ParseError.TInnerParseError = error.innerError;
 
@@ -24,8 +24,8 @@ function expectExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
     return innerError;
 }
 
-function expectErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
-    const error: ParseError.ExpectedTokenKindError = expectExpectedTokenKindError(text);
+function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
+    const error: ParseError.ExpectedTokenKindError = assertExpectedTokenKindError(text);
     Assert.isDefined(error.maybeFoundToken);
     const foundToken: TokenWithColumnNumber = error.maybeFoundToken;
 
@@ -36,26 +36,26 @@ function expectErrorAt(text: string, lineNumber: number, columnNumber: number, c
 
 describe(`Parser.ColumnNumber`, () => {
     it(`if x foo`, () => {
-        expectErrorAt(`if x foo`, 0, 5, 5);
+        assertErrorAt(`if x foo`, 0, 5, 5);
     });
 
     it(`if x \\nfoo`, () => {
-        expectErrorAt(`if x \nfoo`, 1, 0, 6);
+        assertErrorAt(`if x \nfoo`, 1, 0, 6);
     });
 
     it(`if x \\n foo`, () => {
-        expectErrorAt(`if x \n foo`, 1, 1, 7);
+        assertErrorAt(`if x \n foo`, 1, 1, 7);
     });
 
     it(`if \u006E\u0303 foo`, () => {
-        expectErrorAt(`if \u006E\u0303 foo`, 0, 5, 6);
+        assertErrorAt(`if \u006E\u0303 foo`, 0, 5, 6);
     });
 
     it(`if \u006E\u0303 \\nfoo`, () => {
-        expectErrorAt(`if \u006E\u0303 \nfoo`, 1, 0, 7);
+        assertErrorAt(`if \u006E\u0303 \nfoo`, 1, 0, 7);
     });
 
     it(`if \u006E\u0303 \\n foo`, () => {
-        expectErrorAt(`if \u006E\u0303 \n foo`, 1, 1, 8);
+        assertErrorAt(`if \u006E\u0303 \n foo`, 1, 1, 8);
     });
 });

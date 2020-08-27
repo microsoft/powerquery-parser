@@ -10,7 +10,7 @@ import { DefaultTemplates } from "../../../localization";
 import { IParser, IParserState } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
-import { assertLexParseOk } from "../../common";
+import { assertLexParseOk } from "../../testUtils/assertUtils";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 

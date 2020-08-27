@@ -9,7 +9,7 @@ import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
-import { assertDeepEqual, assertParseErr, assertParseOk, assertTextWithPosition } from "../../common";
+import { assertDeepEqual, assertParseErr, assertParseOk, assertTextWithPosition } from "../../testUtils/assertUtils";
 
 export type TAbridgedNodeScopeItem =
     | AbridgedEachScopeItem

@@ -9,7 +9,7 @@ import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { assertParseErr, assertParseOk, assertTextWithPosition } from "../../common";
+import { assertParseErr, assertParseOk, assertTextWithPosition } from "../../testUtils/assertUtils";
 
 function assertParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
     const [textWithoutPipe, position]: [string, Position] = assertTextWithPosition(textWithPipe);

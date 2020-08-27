@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { DefaultSettings } from "../../../settings";
-import { assertLexParseOk } from "../../common";
+import { assertLexParseOk } from "../../testUtils/assertUtils";
 
 describe("Parser.Children", () => {
     it(`let x = foo(){0} in x`, () => {

@@ -1,7 +1,7 @@
 import "mocha";
-import { Task } from "..";
-import { IParserState } from "../parser";
-import { LexSettings, ParseSettings } from "../settings";
+import { Task } from "../..";
+import { IParserState } from "../../parser";
+import { LexSettings, ParseSettings } from "../../settings";
 
 import * as fs from "fs";
 import * as path from "path";

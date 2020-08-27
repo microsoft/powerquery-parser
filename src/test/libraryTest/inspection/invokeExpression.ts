@@ -9,9 +9,9 @@ import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { IParserState, NodeIdMap, ParseContext } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
-import { assertParseErr, assertParseOk, assertTextWithPosition } from "../../common";
+import { assertParseErr, assertParseOk, assertTextWithPosition } from "../../testUtils/assertUtils";
 
-function expectInvokeExpressionOk(
+function assertInvokeExpressionOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -40,7 +40,7 @@ function assertParseOkInvokeExpressionOk<S extends IParserState = IParserState>(
     position: Position,
 ): InvokeExpression | undefined {
     const contextState: ParseContext.State = assertParseOk(settings, text).state.contextState;
-    return expectInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 function assertParseErrInvokeExpressionOk<S extends IParserState = IParserState>(
@@ -49,7 +49,7 @@ function assertParseErrInvokeExpressionOk<S extends IParserState = IParserState>
     position: Position,
 ): InvokeExpression | undefined {
     const contextState: ParseContext.State = assertParseErr(settings, text).state.contextState;
-    return expectInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 describe(`subset Inspection - InvokeExpression`, () => {

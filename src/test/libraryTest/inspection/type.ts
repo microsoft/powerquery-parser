@@ -10,11 +10,11 @@ import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
-import { assertLexParseOk, assertParseErr, assertTextWithPosition } from "../../common";
+import { assertLexParseOk, assertParseErr, assertTextWithPosition } from "../../testUtils/assertUtils";
 
 function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
     const lexParseOk: Task.LexParseOk = assertLexParseOk(DefaultSettings, text);
-    const actual: Type.TType = expectParseNodeOk(
+    const actual: Type.TType = assertParseNodeOk(
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.state.contextState.leafNodeIds,
@@ -24,12 +24,12 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
     expect(actual).deep.equal(expected);
 }
 
-function expectParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
+function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     const parseErr: ParseError.ParseError<IParserState> = assertParseErr(DefaultSettings, text);
     const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
     Assert.isDefined(maybeRoot);
 
-    const actual: Type.TType = expectParseNodeOk(
+    const actual: Type.TType = assertParseNodeOk(
         DefaultSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
@@ -39,7 +39,7 @@ function expectParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     expect(actual).deep.equal(expected);
 }
 
-function expectParseNodeOk(
+function assertParseNodeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -56,13 +56,13 @@ function expectParseNodeOk(
     return triedType.value;
 }
 
-function expectParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.ScopeTypeByKey): void {
+function assertParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.ScopeTypeByKey): void {
     const [textWithoutPipe, position]: [string, Position] = assertTextWithPosition(textWithPipe);
     const lexParseOk: Task.LexParseOk = assertLexParseOk(DefaultSettings, textWithoutPipe);
     const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
 
-    const actual: Inspection.ScopeTypeByKey = expectParseOkScopeTypeOk(
+    const actual: Inspection.ScopeTypeByKey = assertParseOkScopeTypeOk(
         DefaultSettings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -72,7 +72,7 @@ function expectParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.
     expect(actual).deep.equal(expected);
 }
 
-function expectParseOkScopeTypeOk(
+function assertParseOkScopeTypeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -130,7 +130,7 @@ describe(`Inspection - Scope - Type`, () => {
                 ["foo", TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Number)],
                 ["bar", TypeUtils.primitiveTypeFactory(true, Type.TypeKind.Number)],
             ]);
-            expectParseOkScopeTypeEqual(expression, expected);
+            assertParseOkScopeTypeEqual(expression, expected);
         });
     });
 
@@ -439,19 +439,19 @@ describe(`Inspection - Scope - Type`, () => {
         it(`if`, () => {
             const expression: string = `if`;
             const expected: Type.TType = Type.UnknownInstance;
-            expectParseErrNodeTypeEqual(expression, expected);
+            assertParseErrNodeTypeEqual(expression, expected);
         });
 
         it(`if "a"`, () => {
             const expression: string = `if "a"`;
             const expected: Type.TType = Type.NoneInstance;
-            expectParseErrNodeTypeEqual(expression, expected);
+            assertParseErrNodeTypeEqual(expression, expected);
         });
 
         it(`if true or "a"`, () => {
             const expression: string = `if true or "a"`;
             const expected: Type.TType = Type.NoneInstance;
-            expectParseErrNodeTypeEqual(expression, expected);
+            assertParseErrNodeTypeEqual(expression, expected);
         });
 
         it(`if 1 as any then "a" else "b"`, () => {
@@ -471,7 +471,7 @@ describe(`Inspection - Scope - Type`, () => {
                     TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Unknown),
                 ],
             };
-            expectParseErrNodeTypeEqual(expression, expected);
+            assertParseErrNodeTypeEqual(expression, expected);
         });
     });
 
