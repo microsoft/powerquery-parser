@@ -7,10 +7,10 @@ import { Assert } from "../../../common";
 import { IParserState, ParseError } from "../../../parser";
 import { TokenWithColumnNumber } from "../../../parser/error";
 import { DefaultSettings } from "../../../settings";
-import { assertParseErr } from "../../testUtils/assertUtils";
+import { TestAssertUtils } from "../../testUtils";
 
 function assertExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const error: ParseError.ParseError<IParserState> = assertParseErr(DefaultSettings, text);
+    const error: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(DefaultSettings, text);
     const innerError: ParseError.TInnerParseError = error.innerError;
 
     if (!(innerError instanceof ParseError.ExpectedTokenKindError)) {

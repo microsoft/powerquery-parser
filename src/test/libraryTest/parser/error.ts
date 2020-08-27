@@ -7,10 +7,10 @@ import { DefaultTemplates, Localization } from "../../../localization";
 import { IParser, IParserState, ParseError } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
-import { assertParseErr } from "../../testUtils/assertUtils";
+import { TestAssertUtils } from "../../testUtils";
 
 function assertCsvContinuationError(text: string): ParseError.ExpectedCsvContinuationError {
-    const innerError: ParseError.TInnerParseError = assertParseErr(DefaultSettings, text).innerError;
+    const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(DefaultSettings, text).innerError;
     if (!(innerError instanceof ParseError.ExpectedCsvContinuationError)) {
         throw new Error(
             `AssertFailed: innerError instanceof ParseError.ExpectedCsvContinuationError - ${innerError.message}`,
@@ -23,7 +23,8 @@ function assertCsvContinuationError(text: string): ParseError.ExpectedCsvContinu
 describe("Parser.Error", () => {
     it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
         const text: string = "(optional x, y) => x";
-        const innerError: ParseError.TInnerParseError = assertParseErr(DefaultSettings, text).innerError;
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(DefaultSettings, text)
+            .innerError;
         expect(innerError instanceof ParseError.RequiredParameterAfterOptionalParameterError).to.equal(
             true,
             innerError.message,
@@ -32,20 +33,23 @@ describe("Parser.Error", () => {
 
     it("UnterminatedBracketError: let x = [", () => {
         const text: string = "let x = [";
-        const innerError: ParseError.TInnerParseError = assertParseErr(DefaultSettings, text).innerError;
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(DefaultSettings, text)
+            .innerError;
         expect(innerError instanceof ParseError.UnterminatedBracketError).to.equal(true, innerError.message);
     });
 
     it("UnterminatedParenthesesError: let x = (", () => {
         const text: string = "let x = (";
-        const innerError: ParseError.TInnerParseError = assertParseErr(DefaultSettings, text).innerError;
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(DefaultSettings, text)
+            .innerError;
         expect(innerError instanceof ParseError.UnterminatedParenthesesError).to.equal(true, innerError.message);
     });
 
     describe(`UnusedTokensRemainError`, () => {
         it("default parser", () => {
             const text: string = "1 1";
-            const innerError: ParseError.TInnerParseError = assertParseErr(DefaultSettings, text).innerError;
+            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(DefaultSettings, text)
+                .innerError;
             expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
         });
 
@@ -59,7 +63,8 @@ describe("Parser.Error", () => {
                 parser: customParser,
             };
             const text: string = "a b";
-            const innerError: ParseError.TInnerParseError = assertParseErr(customSettings, text).innerError;
+            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(customSettings, text)
+                .innerError;
             expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
         });
     });

@@ -10,10 +10,10 @@ import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
-import { assertLexParseOk, assertParseErr, assertTextWithPosition } from "../../testUtils/assertUtils";
+import { TestAssertUtils } from "../../testUtils";
 
 function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
-    const lexParseOk: Task.LexParseOk = assertLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(DefaultSettings, text);
     const actual: Type.TType = assertParseNodeOk(
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
@@ -25,7 +25,7 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 }
 
 function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
-    const parseErr: ParseError.ParseError<IParserState> = assertParseErr(DefaultSettings, text);
+    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(DefaultSettings, text);
     const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
     Assert.isDefined(maybeRoot);
 
@@ -57,8 +57,8 @@ function assertParseNodeOk(
 }
 
 function assertParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.ScopeTypeByKey): void {
-    const [textWithoutPipe, position]: [string, Position] = assertTextWithPosition(textWithPipe);
-    const lexParseOk: Task.LexParseOk = assertLexParseOk(DefaultSettings, textWithoutPipe);
+    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertTextWithPosition(textWithPipe);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(DefaultSettings, textWithoutPipe);
     const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
 

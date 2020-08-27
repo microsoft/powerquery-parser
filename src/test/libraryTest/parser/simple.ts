@@ -10,7 +10,7 @@ import { DefaultTemplates } from "../../../localization";
 import { IParser, IParserState } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
-import { assertLexParseOk } from "../../testUtils/assertUtils";
+import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];
 
@@ -23,7 +23,7 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: Task.LexParseOk = assertLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(DefaultSettings, text);
     const state: CollectAbridgeNodeState = {
         localizationTemplates: DefaultTemplates,
         result: [],
@@ -47,7 +47,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 }
 
 function assertNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
-    const lexParseOk: Task.LexParseOk = assertLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         localizationTemplates: DefaultTemplates,
         result: undefined,
