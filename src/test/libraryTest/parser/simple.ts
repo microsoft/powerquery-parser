@@ -7,7 +7,7 @@ import { Task } from "../../..";
 import { Assert, Traverse } from "../../../common";
 import { Ast } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
-import { IParser, IParserState } from "../../../parser";
+import { IParser, IParserState, IParserStateUtils } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
 import { expectLexParseOk } from "../../common";
@@ -23,7 +23,7 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory);
     const state: CollectAbridgeNodeState = {
         localizationTemplates: DefaultTemplates,
         result: [],
@@ -47,7 +47,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 }
 
 function expectNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
-    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory);
     const state: NthNodeOfKindState = {
         localizationTemplates: DefaultTemplates,
         result: undefined,
@@ -112,6 +112,7 @@ describe("Parser.AbridgedNode", () => {
             const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
                 customSettings,
                 "(a as number, optional b as text)",
+                IParserStateUtils.stateFactory,
             );
             Assert.isOk(triedLexParse);
         });

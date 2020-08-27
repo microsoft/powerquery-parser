@@ -291,13 +291,13 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readGeneralizedIdentifierPairedExpression),
 };
 
-export function newBenchmarkState<S extends IParserState = IParserState>(
+export function benchmarkStateFactory<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
     baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
-        ...IParserStateUtils.newState(parseSettings, lexerSnapshot),
+        ...IParserStateUtils.stateFactory(parseSettings, lexerSnapshot),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,

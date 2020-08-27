@@ -40,8 +40,9 @@ export function expectTextWithPosition(text: string): [string, Inspection.Positi
 export function expectLexParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): Task.LexParseOk<S> {
-    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
+    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text, stateFactoryFn);
     Assert.isOk(triedLexParse);
     return triedLexParse.value;
 }
@@ -49,8 +50,9 @@ export function expectLexParseOk<S extends IParserState = IParserState>(
 export function expectParseErr<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): ParseError.ParseError<S> {
-    const triedParse: TriedParse<S> = expectTriedParse(settings, text);
+    const triedParse: TriedParse<S> = expectTriedParse(settings, text, stateFactoryFn);
     Assert.isErr(triedParse);
     assertParseError(triedParse.error);
     return triedParse.error;
@@ -59,8 +61,9 @@ export function expectParseErr<S extends IParserState = IParserState>(
 export function expectParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): ParseOk<S> {
-    const triedParse: TriedParse<S> = expectTriedParse(settings, text);
+    const triedParse: TriedParse<S> = expectTriedParse(settings, text, stateFactoryFn);
     Assert.isOk(triedParse);
     return triedParse.value;
 }
@@ -70,6 +73,7 @@ export function expectParseOk<S extends IParserState = IParserState>(
 function expectTriedParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedParse<S> {
     const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
     Assert.isUndefined(Lexer.maybeErrorLineMap(lexerState));
@@ -78,6 +82,5 @@ function expectTriedParse<S extends IParserState = IParserState>(
     Assert.isOk(triedSnapshot);
     const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
 
-    const parserState: S = settings.newParserState(settings, lexerSnapshot);
-    return IParserUtils.tryRead(parserState, settings.parser);
+    return IParserUtils.tryRead(stateFactoryFn(settings, lexerSnapshot), settings.parser);
 }

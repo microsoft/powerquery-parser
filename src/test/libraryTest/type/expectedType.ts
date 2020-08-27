@@ -7,13 +7,13 @@ import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
-import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { IParserStateUtils, NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { expectParseErr, expectParseOk, expectTextWithPosition } from "../../common";
 
 function expectParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
     const [textWithoutPipe, position]: [string, Position] = expectTextWithPosition(textWithPipe);
-    const parseOk: ParseOk = expectParseOk(DefaultSettings, textWithoutPipe);
+    const parseOk: ParseOk = expectParseOk(DefaultSettings, textWithoutPipe, IParserStateUtils.stateFactory);
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseOk.state.contextState.leafNodeIds;
@@ -29,7 +29,11 @@ function expectParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefin
 
 function expectParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
     const [textWithoutPipe, position]: [string, Position] = expectTextWithPosition(textWithPipe);
-    const parseErr: ParseError.ParseError = expectParseErr(DefaultSettings, textWithoutPipe);
+    const parseErr: ParseError.ParseError = expectParseErr(
+        DefaultSettings,
+        textWithoutPipe,
+        IParserStateUtils.stateFactory,
+    );
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseErr.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseErr.state.contextState.leafNodeIds;

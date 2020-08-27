@@ -5,8 +5,14 @@ import { ParseContext } from "..";
 import { Language } from "../..";
 import { LexerSnapshot } from "../../lexer";
 import { ILocalizationTemplates } from "../../localization";
+import { CommonSettings, ParseSettings } from "../../settings";
 
-export interface IParserState {
+export type TCreateParseStateFn<S extends IParserState = IParserState> = (
+    settings: ParseSettings<S>,
+    lexerSnapshot: LexerSnapshot,
+) => S;
+
+export interface IParserState extends CommonSettings {
     readonly lexerSnapshot: LexerSnapshot;
     readonly localizationTemplates: ILocalizationTemplates;
     tokenIndex: number;

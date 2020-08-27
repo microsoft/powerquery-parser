@@ -6,7 +6,7 @@
 import { Inspection, Task } from ".";
 import { ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { ParseError } from "./parser";
+import { IParserStateUtils, ParseError } from "./parser";
 import { DefaultSettings } from "./settings/settings";
 
 parseText(`let x = 1 in try x otherwise 2`);
@@ -15,7 +15,7 @@ parseText(`let x = 1 in try x otherwise 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text);
+    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text, IParserStateUtils.stateFactory);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
@@ -101,7 +101,12 @@ function lexText(text: string): void {
 function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(DefaultSettings, text, position);
+    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(
+        DefaultSettings,
+        text,
+        position,
+        IParserStateUtils.stateFactory,
+    );
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;

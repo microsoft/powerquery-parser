@@ -4,7 +4,7 @@
 import "mocha";
 import { Task } from "../../..";
 import { Ast } from "../../../language";
-import { IParserState, NodeIdMap } from "../../../parser";
+import { IParserState, IParserStateUtils, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { expectDeepEqual, expectLexParseOk } from "../../common";
 
@@ -54,7 +54,11 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.PrimitiveType,
             },
         ];
-        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
+        expectDeepEqual(
+            expectLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
+            expected,
+            actualFactoryFn,
+        );
     });
 
     it(`null ?? 1 ?? 2`, () => {
@@ -71,6 +75,10 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.NullCoalescingExpression,
             },
         ];
-        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
+        expectDeepEqual(
+            expectLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
+            expected,
+            actualFactoryFn,
+        );
     });
 });

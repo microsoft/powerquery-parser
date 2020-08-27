@@ -5,6 +5,7 @@ import { LexSettings, ParseSettings } from "../settings";
 
 import * as fs from "fs";
 import * as path from "path";
+import { LexerSnapshot } from "../lexer";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -46,9 +47,10 @@ export function writeContents(filePath: string, contents: string): void {
 export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     filePath: string,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): Task.TriedLexParse<S> {
     const contents: string = readContents(filePath);
-    return Task.tryLexParse(settings, contents);
+    return Task.tryLexParse(settings, contents, stateFactoryFn);
 }
 
 function isDirectory(maybePath: string): boolean {

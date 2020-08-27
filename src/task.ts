@@ -68,12 +68,8 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse<S extends IParserState = IParserState>(
-    settings: ParseSettings<S>,
-    lexerSnapshot: LexerSnapshot,
-): TriedParse<S> {
+export function tryParse<S extends IParserState = IParserState>(settings: ParseSettings<S>, state: S): TriedParse<S> {
     const parser: IParser<S> = settings.parser;
-    const state: S = settings.newParserState(settings, lexerSnapshot);
     return IParserUtils.tryRead(state, parser);
 }
 
@@ -193,6 +189,7 @@ export function tryInspection<S extends IParserState = IParserState>(
 export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedLexParse<S> {
     const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
@@ -200,7 +197,8 @@ export function tryLexParse<S extends IParserState = IParserState>(
     }
     const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
 
-    const triedParse: TriedParse<S> = tryParse(settings, lexerSnapshot);
+    const state: S = stateFactoryFn(settings, lexerSnapshot);
+    const triedParse: TriedParse<S> = tryParse<S>(settings, state);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,
@@ -215,8 +213,9 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedLexParseInspect<S> {
-    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
+    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text, stateFactoryFn);
     const maybeTriedParse: TriedParse<S> | undefined = maybeTriedParseFromTriedLexParse(triedLexParse);
     // maybeTriedParse is undefined iff maybeLexParse is Err<CommonError | LexError>
     // Err<CommonError | LexError> is a subset of TriedLexParse

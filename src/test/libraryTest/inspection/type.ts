@@ -8,12 +8,20 @@ import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
-import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
+import {
+    IParserState,
+    IParserStateUtils,
+    NodeIdMap,
+    ParseContext,
+    ParseError,
+    TXorNode,
+    XorNodeUtils,
+} from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
 import { expectLexParseOk, expectParseErr, expectTextWithPosition } from "../../common";
 
 function expectParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
-    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory);
     const actual: Type.TType = expectParseNodeOk(
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
@@ -25,7 +33,11 @@ function expectParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 }
 
 function expectParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
-    const parseErr: ParseError.ParseError<IParserState> = expectParseErr(DefaultSettings, text);
+    const parseErr: ParseError.ParseError<IParserState> = expectParseErr(
+        DefaultSettings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
     const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
     Assert.isDefined(maybeRoot);
 
@@ -58,7 +70,11 @@ function expectParseNodeOk(
 
 function expectParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.ScopeTypeByKey): void {
     const [textWithoutPipe, position]: [string, Position] = expectTextWithPosition(textWithPipe);
-    const lexParseOk: Task.LexParseOk = expectLexParseOk(DefaultSettings, textWithoutPipe);
+    const lexParseOk: Task.LexParseOk = expectLexParseOk(
+        DefaultSettings,
+        textWithoutPipe,
+        IParserStateUtils.stateFactory,
+    );
     const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
 
