@@ -20,11 +20,11 @@ function abridgedPrimitiveType(kind: Type.TypeKind, isNullable: boolean): Abridg
     };
 }
 
-function expectAbridgedType(expected: AbridgedType, actual: AbridgedType): void {
+function assertAbridgedType(expected: AbridgedType, actual: AbridgedType): void {
     expect(actual).deep.equal(expected);
 }
 
-function expectAbridgedTypes(expected: ReadonlyArray<AbridgedType>, actual: ReadonlyArray<AbridgedType>): void {
+function assertAbridgedTypes(expected: ReadonlyArray<AbridgedType>, actual: ReadonlyArray<AbridgedType>): void {
     expect(actual).deep.equal(expected);
 }
 
@@ -52,7 +52,7 @@ describe(`TypeUtils`, () => {
                 TypeUtils.dedupe([Type.RecordInstance, Type.RecordInstance]),
             );
             expect(actual.length).to.equal(1);
-            expectAbridgedType(expected, actual[0]);
+            assertAbridgedType(expected, actual[0]);
         });
 
         it(`generic, mixed`, () => {
@@ -63,7 +63,7 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Record, true),
             ];
-            expectAbridgedTypes(expected, actual);
+            assertAbridgedTypes(expected, actual);
         });
 
         it(`early return with any primitive`, () => {
@@ -71,7 +71,7 @@ describe(`TypeUtils`, () => {
                 TypeUtils.dedupe([Type.AnyInstance, Type.NullableRecordInstance]),
             );
             const expected: ReadonlyArray<AbridgedType> = [Type.AnyInstance];
-            expectAbridgedTypes(expected, actual);
+            assertAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
@@ -84,7 +84,7 @@ describe(`TypeUtils`, () => {
 
             const actual: AbridgedType = typeToAbridged(deduped[0]);
             const expected: AbridgedType = primitiveTypeFactory(false, Type.TypeKind.Record);
-            expectAbridgedType(expected, actual);
+            assertAbridgedType(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single AnyUnion`, () => {
@@ -102,7 +102,7 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Table, true),
             ];
-            expectAbridgedTypes(expected, actual);
+            assertAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single AnyUnion, mixed nullability`, () => {
@@ -122,7 +122,7 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Table, false),
             ];
-            expectAbridgedTypes(expected, actual);
+            assertAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, flatten multi level AnyUnion to single AnyUnion`, () => {
@@ -143,7 +143,7 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Number, false),
             ];
-            expectAbridgedTypes(expected, actual);
+            assertAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, flatten multi level AnyUnion to single AnyUnion`, () => {
@@ -164,7 +164,7 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Number, false),
             ];
-            expectAbridgedTypes(expected, actual);
+            assertAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, early return with any primitive`, () => {
@@ -181,7 +181,7 @@ describe(`TypeUtils`, () => {
 
             const actual: AbridgedType = typeToAbridged(ttype);
             const expected: AbridgedType = typeToAbridged(Type.AnyInstance);
-            expectAbridgedType(expected, actual);
+            assertAbridgedType(expected, actual);
         });
     });
 });

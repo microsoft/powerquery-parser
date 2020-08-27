@@ -7,7 +7,7 @@ import { Assert } from "../../../common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
 
-function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
+function assertBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, `bar`);
     Assert.isErr(triedLexerUpdate);
@@ -23,7 +23,7 @@ function expectBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadL
     }
 }
 
-function expectExpectedKind(text: string, expectedKind: LexError.ExpectedKind): void {
+function assertExpectedKind(text: string, expectedKind: LexError.ExpectedKind): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
     expect(state.lines.length).to.equal(1);
 
@@ -43,7 +43,7 @@ function expectExpectedKind(text: string, expectedKind: LexError.ExpectedKind): 
     }
 }
 
-function expectBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeKind): void {
+function assertBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeKind): void {
     const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
     const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateRange(state, range, `bar`);
     Assert.isErr(triedLexerUpdate);
@@ -59,7 +59,7 @@ function expectBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeK
     }
 }
 
-function expectUnterminatedMultilineTokenKind(
+function assertUnterminatedMultilineTokenKind(
     text: string,
     expectedKind: LexError.UnterminatedMultilineTokenKind,
 ): void {
@@ -85,21 +85,21 @@ function expectUnterminatedMultilineTokenKind(
 describe(`Lexer.Error`, () => {
     describe(`${LexError.BadLineNumberError.name}`, () => {
         it(`${LexError.BadLineNumberKind.LessThanZero}`, () => {
-            expectBadLineNumberKind(-1, LexError.BadLineNumberKind.LessThanZero);
+            assertBadLineNumberKind(-1, LexError.BadLineNumberKind.LessThanZero);
         });
 
         it(`${LexError.BadLineNumberKind.GreaterThanNumLines}`, () => {
-            expectBadLineNumberKind(1, LexError.BadLineNumberKind.GreaterThanNumLines);
+            assertBadLineNumberKind(1, LexError.BadLineNumberKind.GreaterThanNumLines);
         });
     });
 
     describe(`${LexError.ExpectedError.name}`, () => {
         it(`${LexError.ExpectedKind.HexLiteral}`, () => {
-            expectExpectedKind(`0x`, LexError.ExpectedKind.HexLiteral);
+            assertExpectedKind(`0x`, LexError.ExpectedKind.HexLiteral);
         });
 
         it(`${LexError.ExpectedKind.KeywordOrIdentifier}`, () => {
-            expectExpectedKind(`^`, LexError.ExpectedKind.KeywordOrIdentifier);
+            assertExpectedKind(`^`, LexError.ExpectedKind.KeywordOrIdentifier);
         });
 
         // LexError.ExpectedKind.Numeric only throws if the regex is incorrect,
@@ -118,7 +118,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
-            expectBadRangeKind(range, LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher);
+            assertBadRangeKind(range, LexError.BadRangeKind.SameLine_LineCodeUnitStart_Higher);
         });
 
         it(`${LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd}`, () => {
@@ -132,7 +132,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
-            expectBadRangeKind(range, LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd);
+            assertBadRangeKind(range, LexError.BadRangeKind.LineNumberStart_GreaterThan_LineNumberEnd);
         });
 
         it(`${LexError.BadRangeKind.LineNumberStart_LessThan_Zero}`, () => {
@@ -146,7 +146,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
-            expectBadRangeKind(range, LexError.BadRangeKind.LineNumberStart_LessThan_Zero);
+            assertBadRangeKind(range, LexError.BadRangeKind.LineNumberStart_LessThan_Zero);
         });
 
         it(`${LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines}`, () => {
@@ -160,7 +160,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
-            expectBadRangeKind(range, LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines);
+            assertBadRangeKind(range, LexError.BadRangeKind.LineNumberStart_GreaterThan_NumLines);
         });
 
         it(`${LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines}`, () => {
@@ -174,7 +174,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 0,
                 },
             };
-            expectBadRangeKind(range, LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines);
+            assertBadRangeKind(range, LexError.BadRangeKind.LineNumberEnd_GreaterThan_NumLines);
         });
 
         it(`${LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength}`, () => {
@@ -188,7 +188,7 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 200,
                 },
             };
-            expectBadRangeKind(range, LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength);
+            assertBadRangeKind(range, LexError.BadRangeKind.LineCodeUnitStart_GreaterThan_LineLength);
         });
 
         it(`${LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength}`, () => {
@@ -202,21 +202,21 @@ describe(`Lexer.Error`, () => {
                     lineCodeUnit: 200,
                 },
             };
-            expectBadRangeKind(range, LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength);
+            assertBadRangeKind(range, LexError.BadRangeKind.LineCodeUnitEnd_GreaterThan_LineLength);
         });
     });
 
     describe(`${LexError.UnterminatedMultilineTokenError.name}`, () => {
         it(`${LexError.UnterminatedMultilineTokenKind.MultilineComment}`, () => {
-            expectUnterminatedMultilineTokenKind(`/*`, LexError.UnterminatedMultilineTokenKind.MultilineComment);
+            assertUnterminatedMultilineTokenKind(`/*`, LexError.UnterminatedMultilineTokenKind.MultilineComment);
         });
 
         it(`${LexError.UnterminatedMultilineTokenKind.Text}`, () => {
-            expectUnterminatedMultilineTokenKind(`"`, LexError.UnterminatedMultilineTokenKind.Text);
+            assertUnterminatedMultilineTokenKind(`"`, LexError.UnterminatedMultilineTokenKind.Text);
         });
 
         it(`${LexError.UnterminatedMultilineTokenKind.QuotedIdentifier}`, () => {
-            expectUnterminatedMultilineTokenKind(`#"`, LexError.UnterminatedMultilineTokenKind.QuotedIdentifier);
+            assertUnterminatedMultilineTokenKind(`#"`, LexError.UnterminatedMultilineTokenKind.QuotedIdentifier);
         });
     });
 });

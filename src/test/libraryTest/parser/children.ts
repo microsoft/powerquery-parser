@@ -6,7 +6,7 @@ import { Task } from "../../..";
 import { Ast } from "../../../language";
 import { IParserState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
-import { expectDeepEqual, expectLexParseOk } from "../../common";
+import { assertDeepEqual, assertLexParseOk } from "../../common";
 
 interface ChildIdsByIdEntry {
     readonly childNodeIds: ReadonlyArray<number>;
@@ -54,7 +54,7 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.PrimitiveType,
             },
         ];
-        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
+        assertDeepEqual(assertLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
     });
 
     it(`null ?? 1 ?? 2`, () => {
@@ -71,6 +71,6 @@ describe("Parser.Children", () => {
                 kind: Ast.NodeKind.NullCoalescingExpression,
             },
         ];
-        expectDeepEqual(expectLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
+        assertDeepEqual(assertLexParseOk(DefaultSettings, text), expected, actualFactoryFn);
     });
 });

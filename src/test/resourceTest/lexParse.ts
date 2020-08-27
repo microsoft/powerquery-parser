@@ -5,8 +5,7 @@ import { IParser, IParserState, Parser } from "../../parser";
 import { DefaultSettings, Settings } from "../../settings";
 
 import * as path from "path";
-import * as FileUtils from "../fileUtils";
-
+import { TestFileUtils } from "../testUtils";
 const parsers: ReadonlyArray<[Settings, string]> = [
     [createSettings(Parser.CombinatorialParser), "CombinatorialParser"],
     [createSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
@@ -31,11 +30,11 @@ function parseAllFiles<S extends IParserState>(settings: Settings<S>, parserName
     describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 
-        for (const filePath of FileUtils.getPowerQueryFilesRecursively(fileDirectory)) {
+        for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(fileDirectory)) {
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: Task.TriedLexParse<S> = FileUtils.tryLexParse(settings, filePath);
+                const triedLexParse: Task.TriedLexParse<S> = TestFileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }
