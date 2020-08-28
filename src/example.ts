@@ -28,7 +28,7 @@ function parseText(text: string): void {
 
         // If the error occured during parsing, then log the jsonified parsing context,
         // which is what was parsed up until the error was thrown.
-        if (ParseError.isParseError(triedLexParse.error) {
+        if (ParseError.isParseError(triedLexParse.error)) {
             console.log(JSON.stringify(triedLexParse.error.state.contextState, undefined, 4));
         }
     }
