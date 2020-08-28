@@ -83,7 +83,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     let maybeParseError: ParseError.ParseError<S> | undefined;
 
     if (ResultUtils.isErr(triedParse)) {
-        if (triedParse.error instanceof CommonError.CommonError) {
+        if (CommonError.isCommonError(triedParse.error)) {
             // Returning triedParse /should/ be safe, but Typescript has a problem with it.
             // However, if I repackage the same error it satisfies the type check.
             // There's no harm in having to repackage the error, and by not casting it we can prevent
@@ -244,12 +244,9 @@ export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     let state: S;
 
     if (ResultUtils.isErr(triedLexParse)) {
-        if (
-            triedLexParse.error instanceof CommonError.CommonError ||
-            triedLexParse.error instanceof LexError.LexError
-        ) {
+        if (LexError.isTLexError(triedLexParse.error)) {
             return undefined;
-        } else if (triedLexParse.error instanceof ParseError.ParseError) {
+        } else if (ParseError.isParseError(triedLexParse.error)) {
             return triedLexParse as TriedParse<S>;
         } else {
             throw Assert.isNever(triedLexParse.error);

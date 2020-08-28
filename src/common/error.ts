@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Assert } from ".";
 import { DefaultTemplates, ILocalizationTemplates, Localization } from "../localization";
 import { ICancellationToken } from "./cancellationToken/ICancellationToken";
+
 export type TInnerCommonError = InvariantError | UnknownError;
 
 export class CommonError extends Error {
@@ -31,6 +33,15 @@ export class UnknownError extends Error {
         super(Localization.error_common_unknown(templates, innerError));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
+}
+
+export function assertIsCommonError(error: any): error is CommonError {
+    Assert.isTrue(isCommonError(error), "isCommonError(error)");
+    return true;
+}
+
+export function isCommonError(error: any): error is CommonError {
+    return error instanceof CommonError;
 }
 
 export function isTInnerCommonError(x: any): x is TInnerCommonError {

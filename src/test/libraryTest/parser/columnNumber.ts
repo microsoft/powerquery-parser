@@ -17,15 +17,12 @@ function assertExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
     );
     const innerError: ParseError.TInnerParseError = error.innerError;
 
-    if (!(innerError instanceof ParseError.ExpectedTokenKindError)) {
-        const details: {} = {
-            innerError2json: JSON.stringify(innerError, undefined, 4),
-            message: innerError.message,
-        };
-        throw new Error(`AssertFailed: innerError instanceof ParseError.ExpectedTokenKindError - ${details}`);
-    }
+    Assert.isTrue(
+        innerError instanceof ParseError.ExpectedTokenKindError,
+        "innerError instanceof ParseError.ExpectedTokenKindError",
+    );
 
-    return innerError;
+    return innerError as ParseError.ExpectedTokenKindError;
 }
 
 function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {

@@ -3,6 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
+import { Assert } from "../../../common";
 import { DefaultTemplates, Localization } from "../../../localization";
 import { IParser, IParserState, IParserStateUtils, ParseError } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
@@ -15,13 +16,12 @@ function assertCsvContinuationError(text: string): ParseError.ExpectedCsvContinu
         text,
         IParserStateUtils.stateFactory,
     ).innerError;
-    if (!(innerError instanceof ParseError.ExpectedCsvContinuationError)) {
-        throw new Error(
-            `AssertFailed: innerError instanceof ParseError.ExpectedCsvContinuationError - ${innerError.message}`,
-        );
-    }
+    Assert.isTrue(
+        innerError instanceof ParseError.ExpectedCsvContinuationError,
+        "innerError instanceof ParseError.ExpectedCsvContinuationError",
+    );
 
-    return innerError;
+    return innerError as ParseError.ExpectedCsvContinuationError;
 }
 
 describe("Parser.Error", () => {
