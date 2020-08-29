@@ -5,7 +5,7 @@ import { Assert } from ".";
 import { DefaultTemplates, ILocalizationTemplates, Localization } from "../localization";
 import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 
-export type TInnerCommonError = InvariantError | UnknownError;
+export type TInnerCommonError = CancellationError | InvariantError | UnknownError;
 
 export class CommonError extends Error {
     constructor(readonly innerError: TInnerCommonError) {
@@ -17,7 +17,7 @@ export class CommonError extends Error {
 export class CancellationError extends Error {
     constructor(readonly cancellationToken: ICancellationToken) {
         super(Localization.error_common_cancellationError(DefaultTemplates));
-        Object.setPrototypeOf(this, UnknownError.prototype);
+        Object.setPrototypeOf(this, CancellationError.prototype);
     }
 }
 

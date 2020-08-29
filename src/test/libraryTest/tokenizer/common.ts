@@ -4,6 +4,7 @@
 import { Language } from "../../..";
 import { Lexer } from "../../../lexer";
 import { DefaultTemplates } from "../../../localization";
+import { Assert } from "../../../common";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}
@@ -38,7 +39,10 @@ export class Tokenizer implements TokensProvider {
     public tokenize(line: string, state: IState): ILineTokens {
         const tokenizerState: TokenizerState = state as TokenizerState;
         const lexerState: Lexer.State = tokenizerState.lexerState;
-        const newLexerState: Lexer.State = Lexer.appendLine(lexerState, line, this.lineTerminator);
+
+        const triedLex: Lexer.TriedLex = Lexer.tryAppendLine(lexerState, line, this.lineTerminator);
+        Assert.isOk(triedLex);
+        const newLexerState: Lexer.State = triedLex.value;
 
         return {
             tokens: newLexerState.lines[newLexerState.lines.length - 1].tokens.map(Tokenizer.ITokenFrom),

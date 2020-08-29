@@ -65,7 +65,9 @@ function assertTriedParse<S extends IParserState = IParserState>(
     text: string,
     stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedParse<S> {
-    const lexerState: Lexer.State = Lexer.stateFrom(settings, text);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
+    Assert.isOk(triedLex);
+    const lexerState: Lexer.State = triedLex.value;
     Assert.isUndefined(Lexer.maybeErrorLineMap(lexerState));
 
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);

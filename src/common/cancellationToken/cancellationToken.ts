@@ -10,7 +10,7 @@ export class TimedCancellationToken implements ICancellationToken {
     private wasForceCancelled: boolean;
 
     constructor(milliseconds: number) {
-        this.threshold = performance.now() + milliseconds;
+        this.threshold = Date.now() + milliseconds;
         this.wasForceCancelled = false;
     }
 
@@ -21,7 +21,7 @@ export class TimedCancellationToken implements ICancellationToken {
     }
 
     public isCancelled(): boolean {
-        return this.wasForceCancelled || performance.now() >= this.threshold;
+        return this.wasForceCancelled || Date.now() >= this.threshold;
     }
 
     public cancel(): void {
@@ -34,7 +34,7 @@ export class CounterCancellationToken implements ICancellationToken {
     private wasForceCancelled: boolean;
     private counter: number;
 
-    constructor(private readonly cancellationThreshold: number = 1000) {
+    constructor(private readonly cancellationThreshold: number) {
         this.wasForceCancelled = false;
         this.counter = 0;
     }

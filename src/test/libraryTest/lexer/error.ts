@@ -3,16 +3,18 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert } from "../../../common";
+import { Assert, ResultUtils } from "../../../common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
 
 function assertBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
-    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
-    const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, lineNumber, `bar`);
-    Assert.isErr(triedLexerUpdate);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
+    Assert.isOk(triedLex);
 
-    const error: LexError.LexError = triedLexerUpdate.error;
+    const triedUpdate: Lexer.TriedLex = Lexer.tryUpdateLine(triedLex.value, lineNumber, `bar`);
+    Assert.isErr(triedUpdate);
+
+    const error: LexError.LexError = triedUpdate.error;
     if (!(error.innerError instanceof LexError.BadLineNumberError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexError.BadLineNumber: ${JSON.stringify(error)}`);
     }
@@ -24,7 +26,11 @@ function assertBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadL
 }
 
 function assertExpectedKind(text: string, expectedKind: LexError.ExpectedKind): void {
-    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
+    if (ResultUtils.isErr(triedLex)) {
+        throw new Error(`AssertFailed: ResultUtils.isErr(triedLex)`);
+    }
+    const state: Lexer.State = triedLex.value;
     expect(state.lines.length).to.equal(1);
 
     const line: Lexer.TLine = state.lines[0];
@@ -44,11 +50,16 @@ function assertExpectedKind(text: string, expectedKind: LexError.ExpectedKind): 
 }
 
 function assertBadRangeKind(range: Lexer.Range, expectedKind: LexError.BadRangeKind): void {
-    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, `foo`);
-    const triedLexerUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateRange(state, range, `bar`);
-    Assert.isErr(triedLexerUpdate);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, `foo`);
+    if (ResultUtils.isErr(triedLex)) {
+        throw new Error(`AssertFailed: ResultUtils.isErr(triedLex)`);
+    }
+    const state: Lexer.State = triedLex.value;
 
-    const error: LexError.LexError = triedLexerUpdate.error;
+    const TriedLex: Lexer.TriedLex = Lexer.tryUpdateRange(state, range, `bar`);
+    Assert.isErr(TriedLex);
+
+    const error: LexError.LexError = TriedLex.error;
     if (!(error.innerError instanceof LexError.BadRangeError)) {
         throw new Error(`AssertFailed: error.innerError instanceof LexError.BadRangeError: ${JSON.stringify(error)}`);
     }
@@ -63,8 +74,10 @@ function assertUnterminatedMultilineTokenKind(
     text: string,
     expectedKind: LexError.UnterminatedMultilineTokenKind,
 ): void {
-    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
+    Assert.isOk(triedLex);
+    const lexerState: Lexer.State = triedLex.value;
+    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
     Assert.isErr(triedSnapshot);
 
     const error: LexError.TLexError = triedSnapshot.error;

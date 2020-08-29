@@ -4,7 +4,7 @@
 import { ICancellationToken } from "../common";
 import { DefaultSettings, Settings } from "./settings";
 
-export function defaultSettingsFfactory(maybeCancellationToken: ICancellationToken | undefined): Settings {
+export function defaultSettingsFactory(maybeCancellationToken: ICancellationToken | undefined): Settings {
     return {
         ...DefaultSettings,
         maybeCancellationToken,

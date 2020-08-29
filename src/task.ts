@@ -54,7 +54,12 @@ export interface LexParseInspectOk<S extends IParserState = IParserState> extend
 }
 
 export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot {
-    const state: Lexer.State = Lexer.stateFrom(settings, text);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
+    if (ResultUtils.isErr(triedLex)) {
+        return triedLex;
+    }
+    const state: Lexer.State = triedLex.value;
+
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
@@ -272,15 +277,11 @@ export function rootFromTriedLexParse<S extends IParserState = IParserState>(
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexParse)) {
         return XorNodeUtils.astFactory(triedLexParse.value.root);
-    }
-
-    if (triedLexParse.error instanceof LexError.LexError) {
-        return undefined;
-    } else if (triedLexParse.error instanceof CommonError.CommonError) {
-        return undefined;
-    } else {
+    } else if (ParseError.isParseError(triedLexParse.error)) {
         const maybeContextNode: ParseContext.Node | undefined = triedLexParse.error.state.contextState.maybeRoot;
         return maybeContextNode !== undefined ? XorNodeUtils.contextFactory(maybeContextNode) : undefined;
+    } else {
+        return undefined;
     }
 }
 
@@ -290,15 +291,11 @@ export function rootFromTriedLexParseInspect<S extends IParserState = IParserSta
     if (ResultUtils.isOk(triedLexInspectParseInspect)) {
         const maybeActiveNode: ActiveNode | undefined = triedLexInspectParseInspect.value.maybeActiveNode;
         return maybeActiveNode?.ancestry.length ? maybeActiveNode.ancestry[0] : undefined;
-    }
-
-    if (triedLexInspectParseInspect.error instanceof LexError.LexError) {
-        return undefined;
-    } else if (triedLexInspectParseInspect.error instanceof CommonError.CommonError) {
-        return undefined;
-    } else {
+    } else if (ParseError.isParseError(triedLexInspectParseInspect.error)) {
         const maybeContextNode: ParseContext.Node | undefined =
             triedLexInspectParseInspect.error.state.contextState.maybeRoot;
         return maybeContextNode !== undefined ? XorNodeUtils.contextFactory(maybeContextNode) : undefined;
+    } else {
+        return undefined;
     }
 }

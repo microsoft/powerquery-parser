@@ -4,8 +4,9 @@
 /* tslint:disable:no-console */
 
 import { Inspection, Task } from ".";
-import { ResultUtils } from "./common";
+import { Assert, ResultUtils } from "./common";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import { TriedLex } from "./lexer/lexer";
 import { IParserStateUtils, ParseError } from "./parser";
 import { DefaultSettings } from "./settings/settings";
 
@@ -44,12 +45,17 @@ function lexText(text: string): void {
     // or Lexer.maybeErrorLineMap to quickly get all lines with errors.
     // Note: At this point all errors are isolated to a single line.
     //       Checks for multiline errors, such as an unterminated string, have not been processed.
-    let state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
+    let triedLex: TriedLex = Lexer.tryLex(DefaultSettings, text);
+    if (ResultUtils.isErr(triedLex)) {
+        console.log(`An error occured while lexing: ${triedLex.error.message}`);
+        return;
+    }
+    let lexerState: Lexer.State = triedLex.value;
 
     // The lexer state might have an error.
     // To be sure either use the typeguard Lexer.isErrorState,
     // or Lexer.maybeErrorLineMap to get an option containing a map of all lines with errors.
-    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
+    const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
     if (maybeErrorLineMap !== undefined) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
 
@@ -60,18 +66,27 @@ function lexText(text: string): void {
     }
 
     // Appending a line is easy.
-    state = Lexer.appendLine(state, "// hello world", "\n");
+    // Be aware that this is a Result due to the potential of errors such as
+    // a cancellation request from the CancellationToken.
+    triedLex = Lexer.tryAppendLine(lexerState, "// hello world", "\n");
+    Assert.isOk(triedLex);
+    lexerState = triedLex.value;
 
     // Updating a line number is also easy.
-    // Be aware that this is a Result due the potential of invalid line numbers.
+    // Be aware that this is a Result due the potential of errors such as
+    // invalid line numbers or a cancellation request from the CancellationToken.
     // For fine-grained control there is also the method Lexer.tryUpdateRange,
     // which is how Lexer.tryUpdateLine is implemented.
-    const triedUpdate: Lexer.TriedLexerUpdate = Lexer.tryUpdateLine(state, state.lines.length - 1, "// goodbye world");
+    const triedUpdate: Lexer.TriedLex = Lexer.tryUpdateLine(
+        lexerState,
+        lexerState.lines.length - 1,
+        "// goodbye world",
+    );
     if (ResultUtils.isErr(triedUpdate)) {
         console.log("Failed to update line");
         return;
     }
-    state = triedUpdate.value;
+    lexerState = triedUpdate.value;
 
     // Once no more changes will occur a LexerSnapshot should be created, which  is an immutable copy that:
     //  * combines multiline tokens together
@@ -83,7 +98,7 @@ function lexText(text: string): void {
     // then use the `jobs.tryLex` helper function to perform both actions in one go.
 
     // Creating a LexerSnapshot is a Result due to potential multiline token errors.
-    const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
     if (ResultUtils.isOk(triedLexerSnapshot)) {
         const snapshot: LexerSnapshot = triedLexerSnapshot.value;
         console.log(`numTokens: ${snapshot.tokens}`);

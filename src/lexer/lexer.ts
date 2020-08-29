@@ -33,7 +33,7 @@ import { LexSettings } from "../settings";
 // Users who want incremental control can instantiate a lexer in the same way,
 // then call either appendLine/tryDeleteLine/tryUpdateLine/tryUpdateRange.
 
-export type TriedLexerUpdate = Result<State, LexError.LexError>;
+export type TriedLex = Result<State, LexError.TLexError>;
 
 export type ErrorLineMap = Map<number, TErrorLine>;
 
@@ -108,112 +108,38 @@ export interface RangePosition {
     readonly lineCodeUnit: number;
 }
 
-export function stateFrom(settings: LexSettings, text: string): State {
-    const localizationTemplates: ILocalizationTemplates = getLocalizationTemplates(settings.locale);
-    const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
-    const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
-        settings.maybeCancellationToken,
-        getLocalizationTemplates(settings.locale),
-        splitLines,
-        LineMode.Default,
-    );
-    return {
-        lines: tokenizedLines,
-        localizationTemplates,
-        maybeCancellationToken: settings.maybeCancellationToken,
-    };
-}
-
-export function appendLine(state: State, text: string, lineTerminator: string): State {
-    state.maybeCancellationToken?.throwIfCancelled();
-
-    const lines: ReadonlyArray<TLine> = state.lines;
-    const numLines: number = lines.length;
-    const maybeLatestLine: TLine | undefined = lines[numLines - 1];
-    const lineModeStart: LineMode = maybeLatestLine ? maybeLatestLine.lineModeEnd : LineMode.Default;
-    const untokenizedLine: UntouchedLine = lineFrom(text, lineTerminator, lineModeStart);
-    const tokenizedLine: TLine = tokenize(
-        state.maybeCancellationToken,
-        state.localizationTemplates,
-        untokenizedLine,
-        numLines,
-    );
-
-    return {
-        ...state,
-        lines: state.lines.concat(tokenizedLine),
-    };
-}
-
-export function tryUpdateLine(state: State, lineNumber: number, text: string): TriedLexerUpdate {
-    state.maybeCancellationToken?.throwIfCancelled();
-
-    const maybeError: LexError.BadLineNumberError | undefined = maybeBadLineNumberError(state, lineNumber);
-    if (maybeError) {
-        return ResultUtils.errFactory(new LexError.LexError(maybeError));
-    }
-
-    const line: TLine = state.lines[lineNumber];
-    const range: Range = rangeFrom(line, lineNumber);
-    return tryUpdateRange(state, range, text);
-}
-
-export function tryUpdateRange(state: State, range: Range, text: string): TriedLexerUpdate {
-    state.maybeCancellationToken?.throwIfCancelled();
-    const maybeError: LexError.BadRangeError | undefined = testBadRangeError(state, range);
-    if (maybeError) {
-        return ResultUtils.errFactory(new LexError.LexError(maybeError));
-    }
-
-    const splitLines: SplitLine[] = splitOnLineTerminators(text);
-
-    const rangeStart: RangePosition = range.start;
-    const lineStart: TLine = state.lines[rangeStart.lineNumber];
-    const textPrefix: string = lineStart.text.substring(0, rangeStart.lineCodeUnit);
-    splitLines[0].text = textPrefix + splitLines[0].text;
-
-    const rangeEnd: RangePosition = range.end;
-    const lineEnd: TLine = state.lines[rangeEnd.lineNumber];
-    const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
-    const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
-    lastSplitLine.text = lastSplitLine.text + textSuffix;
-
-    // make sure we have a line terminator
-    lastSplitLine.lineTerminator = lineEnd.lineTerminator;
-
-    const maybePreviousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
-    const previousLineModeEnd: LineMode = maybePreviousLine?.lineModeEnd ?? LineMode.Default;
-    const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
-        state.maybeCancellationToken,
-        state.localizationTemplates,
-        splitLines,
-        previousLineModeEnd,
-    );
-
-    const lines: ReadonlyArray<TLine> = [
-        ...state.lines.slice(0, rangeStart.lineNumber),
-        ...newLines,
-        ...retokenizeLines(state, rangeEnd.lineNumber + 1, newLines[newLines.length - 1].lineModeEnd),
-    ];
-
-    return ResultUtils.okFactory({
-        lines,
-        localizationTemplates: state.localizationTemplates,
-        maybeCancellationToken: state.maybeCancellationToken,
+// This export is a Result ensuring wrapper around the un-exported implementation.
+export function tryLex(settings: LexSettings, text: string): TriedLex {
+    return ensureCommonOrLexerResult(getLocalizationTemplates(settings.locale), () => {
+        return lex(settings, text);
     });
 }
 
-export function tryDeleteLine(state: State, lineNumber: number): TriedLexerUpdate {
-    state.maybeCancellationToken?.throwIfCancelled();
+// This export is a Result ensuring wrapper around the un-exported implementation.
+export function tryAppendLine(state: State, text: string, lineTerminator: string): TriedLex {
+    return ensureCommonOrLexerResult(state.localizationTemplates, () => {
+        return appendLine(state, text, lineTerminator);
+    });
+}
 
-    const maybeError: LexError.BadLineNumberError | undefined = maybeBadLineNumberError(state, lineNumber);
-    if (maybeError) {
-        ResultUtils.errFactory(new LexError.LexError(maybeError));
-    }
+// This export is a Result ensuring wrapper around the un-exported implementation.
+export function tryUpdateLine(state: State, lineNumber: number, text: string): TriedLex {
+    return ensureCommonOrLexerResult(state.localizationTemplates, () => {
+        return updateLine(state, lineNumber, text);
+    });
+}
 
-    return ResultUtils.okFactory({
-        ...state,
-        lines: ArrayUtils.removeAtIndex(state.lines, lineNumber),
+// This export is a Result ensuring wrapper around the un-exported implementation.
+export function tryUpdateRange(state: State, range: Range, text: string): TriedLex {
+    return ensureCommonOrLexerResult(state.localizationTemplates, () => {
+        return updateRange(state, range, text);
+    });
+}
+
+// This export is a Result ensuring wrapper around the un-exported implementation.
+export function tryDeleteLine(state: State, lineNumber: number): TriedLex {
+    return ensureCommonOrLexerResult(state.localizationTemplates, () => {
+        return deleteLine(state, lineNumber);
     });
 }
 
@@ -362,6 +288,132 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
 
     lines[lines.length - 1].lineTerminator = "";
     return lines;
+}
+
+function ensureCommonOrLexerResult<T>(
+    localizationTemplates: ILocalizationTemplates,
+    functionToWrap: () => T,
+): Result<T, CommonError.CommonError | LexError.LexError> {
+    try {
+        return ResultUtils.okFactory(functionToWrap());
+    } catch (err) {
+        let convertedError: CommonError.CommonError | LexError.LexError;
+        if (LexError.isTInnerLexError(err)) {
+            convertedError = new LexError.LexError(err);
+        } else {
+            convertedError = CommonError.ensureCommonError(localizationTemplates, err);
+        }
+        return ResultUtils.errFactory(convertedError);
+    }
+}
+
+function lex(settings: LexSettings, text: string): State {
+    const localizationTemplates: ILocalizationTemplates = getLocalizationTemplates(settings.locale);
+    const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
+    const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
+        settings.maybeCancellationToken,
+        getLocalizationTemplates(settings.locale),
+        splitLines,
+        LineMode.Default,
+    );
+    return {
+        lines: tokenizedLines,
+        localizationTemplates,
+        maybeCancellationToken: settings.maybeCancellationToken,
+    };
+}
+
+function appendLine(state: State, text: string, lineTerminator: string): State {
+    state.maybeCancellationToken?.throwIfCancelled();
+
+    const lines: ReadonlyArray<TLine> = state.lines;
+    const numLines: number = lines.length;
+    const maybeLatestLine: TLine | undefined = lines[numLines - 1];
+    const lineModeStart: LineMode = maybeLatestLine ? maybeLatestLine.lineModeEnd : LineMode.Default;
+    const untokenizedLine: UntouchedLine = lineFrom(text, lineTerminator, lineModeStart);
+    const tokenizedLine: TLine = tokenize(
+        state.maybeCancellationToken,
+        state.localizationTemplates,
+        untokenizedLine,
+        numLines,
+    );
+
+    return {
+        ...state,
+        lines: state.lines.concat(tokenizedLine),
+    };
+}
+
+function updateLine(state: State, lineNumber: number, text: string): State {
+    state.maybeCancellationToken?.throwIfCancelled();
+
+    const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+    if (maybeError !== undefined) {
+        throw maybeError;
+    }
+
+    const line: TLine = state.lines[lineNumber];
+    const range: Range = rangeFrom(line, lineNumber);
+    return updateRange(state, range, text);
+}
+
+function updateRange(state: State, range: Range, text: string): State {
+    state.maybeCancellationToken?.throwIfCancelled();
+    const maybeError: LexError.BadRangeError | undefined = testBadRangeError(state, range);
+    if (maybeError !== undefined) {
+        throw maybeError;
+    }
+
+    const splitLines: SplitLine[] = splitOnLineTerminators(text);
+
+    const rangeStart: RangePosition = range.start;
+    const lineStart: TLine = state.lines[rangeStart.lineNumber];
+    const textPrefix: string = lineStart.text.substring(0, rangeStart.lineCodeUnit);
+    splitLines[0].text = textPrefix + splitLines[0].text;
+
+    const rangeEnd: RangePosition = range.end;
+    const lineEnd: TLine = state.lines[rangeEnd.lineNumber];
+    const textSuffix: string = lineEnd.text.substr(rangeEnd.lineCodeUnit);
+    const lastSplitLine: SplitLine = splitLines[splitLines.length - 1];
+    lastSplitLine.text = lastSplitLine.text + textSuffix;
+
+    // make sure we have a line terminator
+    lastSplitLine.lineTerminator = lineEnd.lineTerminator;
+
+    const maybePreviousLine: TLine | undefined = state.lines[rangeStart.lineNumber - 1];
+    const previousLineModeEnd: LineMode = maybePreviousLine?.lineModeEnd ?? LineMode.Default;
+    const newLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
+        state.maybeCancellationToken,
+        state.localizationTemplates,
+        splitLines,
+        previousLineModeEnd,
+    );
+
+    const lines: ReadonlyArray<TLine> = [
+        ...state.lines.slice(0, rangeStart.lineNumber),
+        ...newLines,
+        ...retokenizeLines(state, rangeEnd.lineNumber + 1, newLines[newLines.length - 1].lineModeEnd),
+    ];
+
+    return {
+        lines,
+        localizationTemplates: state.localizationTemplates,
+        maybeCancellationToken: state.maybeCancellationToken,
+    };
+}
+
+function deleteLine(state: State, lineNumber: number): State {
+    state.maybeCancellationToken?.throwIfCancelled();
+
+    const maybeError: LexError.BadLineNumberError | undefined = testLineNumberError(state, lineNumber);
+    if (maybeError !== undefined) {
+        throw maybeError;
+    }
+
+    return {
+        ...state,
+        lines: ArrayUtils.removeAtIndex(state.lines, lineNumber),
+    };
 }
 
 function lineFrom(text: string, lineTerminator: string, lineModeStart: LineMode): UntouchedLine {
@@ -1198,7 +1250,7 @@ function unexpectedReadError(
     );
 }
 
-function maybeBadLineNumberError(state: State, lineNumber: number): LexError.BadLineNumberError | undefined {
+function testLineNumberError(state: State, lineNumber: number): LexError.BadLineNumberError | undefined {
     const numLines: number = state.lines.length;
     if (lineNumber >= numLines) {
         return new LexError.BadLineNumberError(
