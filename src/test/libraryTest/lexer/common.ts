@@ -100,9 +100,12 @@ export function assertSnapshotAbridgedComments(
 }
 
 export function assertLexOk(text: string): Lexer.State {
-    const state: Lexer.State = Lexer.stateFrom(DefaultSettings, text);
-    if (Lexer.isErrorState(state)) {
-        const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
+    Assert.isOk(triedLex);
+    const lexerState: Lexer.State = triedLex.value;
+
+    if (Lexer.isErrorState(lexerState)) {
+        const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(lexerState);
         Assert.isDefined(maybeErrorLineMap);
         const errorLines: ReadonlyArray<number> = [...maybeErrorLineMap.keys()];
 
@@ -110,7 +113,7 @@ export function assertLexOk(text: string): Lexer.State {
         throw new Error(`AssertFailed: Lexer.isErrorState(state) ${JSON.stringify(details, undefined, 4)}`);
     }
 
-    return state;
+    return lexerState;
 }
 
 export function assertLexerSnapshot(text: string): LexerSnapshot {

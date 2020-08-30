@@ -4,24 +4,25 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
-import { IParserState, ParseError } from "../../../parser";
+import { IParserState, IParserStateUtils, ParseError } from "../../../parser";
 import { TokenWithColumnNumber } from "../../../parser/error";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const error: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(DefaultSettings, text);
+    const error: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(
+        DefaultSettings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
     const innerError: ParseError.TInnerParseError = error.innerError;
 
-    if (!(innerError instanceof ParseError.ExpectedTokenKindError)) {
-        const details: {} = {
-            innerError2json: JSON.stringify(innerError, undefined, 4),
-            message: innerError.message,
-        };
-        throw new Error(`AssertFailed: innerError instanceof ParseError.ExpectedTokenKindError - ${details}`);
-    }
+    Assert.isTrue(
+        innerError instanceof ParseError.ExpectedTokenKindError,
+        "innerError instanceof ParseError.ExpectedTokenKindError",
+    );
 
-    return innerError;
+    return innerError as ParseError.ExpectedTokenKindError;
 }
 
 function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {

@@ -5,7 +5,6 @@ import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
-import { TriedLexerUpdate } from "../../../lexer/lexer";
 import { DefaultSettings } from "../../../settings";
 import { ILineTokens, IState, IToken, Tokenizer } from "./common";
 
@@ -24,11 +23,13 @@ class MockDocument2 {
     private lexerState: Lexer.State;
 
     constructor(initialText: string) {
-        this.lexerState = Lexer.stateFrom(DefaultSettings, initialText);
+        const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, initialText);
+        Assert.isOk(triedLex);
+        this.lexerState = triedLex.value;
     }
 
     public applyChange(text: string, range: Lexer.Range): void {
-        const triedLexerUpdate: TriedLexerUpdate = Lexer.tryUpdateRange(this.lexerState, range, text);
+        const triedLexerUpdate: Lexer.TriedLex = Lexer.tryUpdateRange(this.lexerState, range, text);
         Assert.isOk(triedLexerUpdate);
         this.lexerState = triedLexerUpdate.value;
     }

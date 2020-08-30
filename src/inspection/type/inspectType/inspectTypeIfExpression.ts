@@ -6,6 +6,7 @@ import { TXorNode, XorNodeUtils } from "../../../parser";
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeIfExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IfExpression);
 
     const conditionType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);

@@ -6,6 +6,7 @@ import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } 
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;

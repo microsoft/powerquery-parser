@@ -3,7 +3,7 @@
 
 import { Lexer, LexError } from ".";
 import { Language } from "..";
-import { CommonError, Result, ResultUtils, StringUtils } from "../common";
+import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { ILocalizationTemplates } from "../localization";
 
 // The lexer is a multiline aware lexer.
@@ -82,12 +82,14 @@ export class LexerSnapshot {
         const flatTokens: ReadonlyArray<FlatLineToken> = flattenedLines.flatLineTokens;
         const numFlatTokens: number = flatTokens.length;
         const text: string = flattenedLines.text;
+        const maybeCancellationToken: ICancellationToken | undefined = state.maybeCancellationToken;
         const localizationTemplates: ILocalizationTemplates = state.localizationTemplates;
 
         let flatIndex: number = 0;
         while (flatIndex < numFlatTokens) {
-            const flatToken: FlatLineToken = flatTokens[flatIndex];
+            state.maybeCancellationToken?.throwIfCancelled();
 
+            const flatToken: FlatLineToken = flatTokens[flatIndex];
             switch (flatToken.kind) {
                 case Language.LineTokenKind.LineComment:
                     comments.push(readLineComment(flatToken));
@@ -99,6 +101,7 @@ export class LexerSnapshot {
 
                 case Language.LineTokenKind.MultilineCommentStart: {
                     const concatenatedTokenRead: ConcatenatedCommentRead = readMultilineComment(
+                        maybeCancellationToken,
                         localizationTemplates,
                         flattenedLines,
                         flatToken,
@@ -110,6 +113,7 @@ export class LexerSnapshot {
 
                 case Language.LineTokenKind.QuotedIdentifierStart: {
                     const concatenatedTokenRead: ConcatenatedTokenRead = readQuotedIdentifier(
+                        maybeCancellationToken,
                         localizationTemplates,
                         flattenedLines,
                         flatToken,
@@ -121,6 +125,7 @@ export class LexerSnapshot {
 
                 case Language.LineTokenKind.TextLiteralStart: {
                     const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
+                        maybeCancellationToken,
                         localizationTemplates,
                         flattenedLines,
                         flatToken,
@@ -188,11 +193,13 @@ function readSingleLineMultilineComment(flatToken: FlatLineToken): Language.Mult
 }
 
 function readMultilineComment(
+    maybeCancellationToken: ICancellationToken | undefined,
     localizationTemplates: ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedCommentRead {
     const collection: FlatLineCollection = collectWhileContent(
+        maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
         Language.LineTokenKind.MultilineCommentContent,
@@ -227,11 +234,13 @@ function readMultilineComment(
 }
 
 function readQuotedIdentifier(
+    maybeCancellationToken: ICancellationToken | undefined,
     localizationTemplates: ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
+        maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
         Language.LineTokenKind.QuotedIdentifierContent,
@@ -265,11 +274,13 @@ function readQuotedIdentifier(
 }
 
 function readTextLiteral(
+    maybeCancellationToken: ICancellationToken | undefined,
     localizationTemplates: ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {
     const collection: FlatLineCollection = collectWhileContent(
+        maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
         Language.LineTokenKind.TextLiteralContent,
@@ -303,6 +314,7 @@ function readTextLiteral(
 }
 
 function collectWhileContent<KindVariant extends Language.LineTokenKind>(
+    maybeCancellationToken: ICancellationToken | undefined,
     flatTokens: ReadonlyArray<FlatLineToken>,
     tokenStart: FlatLineToken,
     contentKind: KindVariant,
@@ -312,6 +324,8 @@ function collectWhileContent<KindVariant extends Language.LineTokenKind>(
 
     let flatIndex: number = tokenStart.flatIndex + 1;
     while (flatIndex < numTokens) {
+        maybeCancellationToken?.throwIfCancelled();
+
         const token: FlatLineToken = flatTokens[flatIndex];
         if (token.kind !== contentKind) {
             break;

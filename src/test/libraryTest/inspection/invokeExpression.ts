@@ -7,7 +7,7 @@ import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { IParserState, NodeIdMap, ParseContext } from "../../../parser";
+import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -34,21 +34,27 @@ function assertInvokeExpressionOk(
     return triedInspect.value;
 }
 
-function assertParseOkInvokeExpressionOk<S extends IParserState = IParserState>(
-    settings: LexSettings & ParseSettings<S>,
+function assertParseOkInvokeExpressionOk(
+    settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const contextState: ParseContext.State = TestAssertUtils.assertParseOk(settings, text).state.contextState;
+    const parseOk: ParseOk = TestAssertUtils.assertParseOk(settings, text, IParserStateUtils.stateFactory);
+    const contextState: ParseContext.State = parseOk.state.contextState;
     return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
-function assertParseErrInvokeExpressionOk<S extends IParserState = IParserState>(
-    settings: LexSettings & ParseSettings<S>,
+function assertParseErrInvokeExpressionOk(
+    settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const contextState: ParseContext.State = TestAssertUtils.assertParseErr(settings, text).state.contextState;
+    const parseError: ParseError.ParseError = TestAssertUtils.assertParseErr(
+        settings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
+    const contextState: ParseContext.State = parseError.state.contextState;
     return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 

@@ -9,6 +9,7 @@ import { TokenWithColumnNumber } from "../parser/error";
 import { ILocalizationTemplates } from "./templates";
 
 interface ILocalization {
+    readonly error_common_cancellationError: (templates: ILocalizationTemplates) => string;
     readonly error_common_invariantError: (
         templates: ILocalizationTemplates,
         reason: string,
@@ -188,6 +189,10 @@ export function localizeTokenKind(
 }
 
 export const Localization: ILocalization = {
+    error_common_cancellationError: (templates: ILocalizationTemplates) => {
+        return templates.error_common_cancellationError;
+    },
+
     error_common_invariantError: (
         templates: ILocalizationTemplates,
         invariantBroken: string,

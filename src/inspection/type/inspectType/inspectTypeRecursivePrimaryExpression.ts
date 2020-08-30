@@ -6,6 +6,7 @@ import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../..
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
     const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(

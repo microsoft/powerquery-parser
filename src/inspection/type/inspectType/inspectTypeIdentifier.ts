@@ -6,6 +6,7 @@ import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 
 export function inspectTypeIdentifier(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Identifier);
 
     if (xorNode.kind === XorNodeKind.Context) {

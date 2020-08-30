@@ -7,6 +7,7 @@ import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../..
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionNames(

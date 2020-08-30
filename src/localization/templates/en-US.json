@@ -1,4 +1,7 @@
 {
+    "error_common_cancellationError": "CancellationError: a cancellation request was made.",
+    "_error_common_cancellationError.comment": "A fatal error, such as a timeout error. Intended to be user facing.",
+
     "error_common_invariantError_1_details": "InvariantError: {invariantBroken} - {details}",
     "_error_common_invariantError_1_details.comment": "A fatal error, such as division by 0. Not intended to be user facing.",
 

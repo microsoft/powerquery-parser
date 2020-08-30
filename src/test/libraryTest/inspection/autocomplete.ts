@@ -8,7 +8,7 @@ import { Assert } from "../../../common";
 import { Position, StartOfDocumentKeywords, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast } from "../../../language";
-import { IParserState, NodeIdMap, ParseContext, ParseError } from "../../../parser";
+import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -39,12 +39,13 @@ function assertAutocompleteOk<S extends IParserState>(
     return triedInspect.value;
 }
 
-function assertParseOkAutocompleteOk<S extends IParserState = IParserState>(
-    settings: LexSettings & ParseSettings<S>,
+function assertParseOkAutocompleteOk(
+    settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
 ): ReadonlyArray<Language.KeywordKind> {
-    const contextState: ParseContext.State = TestAssertUtils.assertParseOk(settings, text).state.contextState;
+    const parseOk: ParseOk = TestAssertUtils.assertParseOk(settings, text, IParserStateUtils.stateFactory);
+    const contextState: ParseContext.State = parseOk.state.contextState;
     return assertAutocompleteOk(
         settings,
         contextState.nodeIdMapCollection,
@@ -54,13 +55,18 @@ function assertParseOkAutocompleteOk<S extends IParserState = IParserState>(
     );
 }
 
-function assertParseErrAutocompleteOk<S extends IParserState = IParserState>(
-    settings: LexSettings & ParseSettings<S>,
+function assertParseErrAutocompleteOk(
+    settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
 ): ReadonlyArray<Language.KeywordKind> {
-    const parseError: ParseError.ParseError<S> = TestAssertUtils.assertParseErr(settings, text);
-    const contextState: ParseContext.State = TestAssertUtils.assertParseErr(settings, text).state.contextState;
+    const parseError: ParseError.ParseError = TestAssertUtils.assertParseErr(
+        settings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
+    const contextState: ParseContext.State = parseError.state.contextState;
+
     return assertAutocompleteOk(
         settings,
         contextState.nodeIdMapCollection,

@@ -22,7 +22,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "./parser";
-import { CommonSettings, LexSettings, ParseSettings } from "./settings";
+import { CommonSettings, LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
@@ -54,7 +54,12 @@ export interface LexParseInspectOk<S extends IParserState = IParserState> extend
 }
 
 export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot {
-    const state: Lexer.State = Lexer.stateFrom(settings, text);
+    const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
+    if (ResultUtils.isErr(triedLex)) {
+        return triedLex;
+    }
+    const state: Lexer.State = triedLex.value;
+
     const maybeErrorLineMap: Lexer.ErrorLineMap | undefined = Lexer.maybeErrorLineMap(state);
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
@@ -68,12 +73,8 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse<S extends IParserState = IParserState>(
-    settings: ParseSettings<S>,
-    lexerSnapshot: LexerSnapshot,
-): TriedParse<S> {
+export function tryParse<S extends IParserState = IParserState>(settings: ParseSettings<S>, state: S): TriedParse<S> {
     const parser: IParser<S> = settings.parser;
-    const state: S = settings.newParserState(settings, lexerSnapshot);
     return IParserUtils.tryRead(state, parser);
 }
 
@@ -87,7 +88,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     let maybeParseError: ParseError.ParseError<S> | undefined;
 
     if (ResultUtils.isErr(triedParse)) {
-        if (triedParse.error instanceof CommonError.CommonError) {
+        if (CommonError.isCommonError(triedParse.error)) {
             // Returning triedParse /should/ be safe, but Typescript has a problem with it.
             // However, if I repackage the same error it satisfies the type check.
             // There's no harm in having to repackage the error, and by not casting it we can prevent
@@ -193,6 +194,7 @@ export function tryInspection<S extends IParserState = IParserState>(
 export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedLexParse<S> {
     const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
@@ -200,7 +202,8 @@ export function tryLexParse<S extends IParserState = IParserState>(
     }
     const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
 
-    const triedParse: TriedParse<S> = tryParse(settings, lexerSnapshot);
+    const state: S = stateFactoryFn(settings, lexerSnapshot);
+    const triedParse: TriedParse<S> = tryParse<S>(settings, state);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,
@@ -215,8 +218,9 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedLexParseInspect<S> {
-    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
+    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text, stateFactoryFn);
     const maybeTriedParse: TriedParse<S> | undefined = maybeTriedParseFromTriedLexParse(triedLexParse);
     // maybeTriedParse is undefined iff maybeLexParse is Err<CommonError | LexError>
     // Err<CommonError | LexError> is a subset of TriedLexParse
@@ -245,12 +249,9 @@ export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     let state: S;
 
     if (ResultUtils.isErr(triedLexParse)) {
-        if (
-            triedLexParse.error instanceof CommonError.CommonError ||
-            triedLexParse.error instanceof LexError.LexError
-        ) {
+        if (LexError.isTLexError(triedLexParse.error)) {
             return undefined;
-        } else if (triedLexParse.error instanceof ParseError.ParseError) {
+        } else if (ParseError.isParseError(triedLexParse.error)) {
             return triedLexParse as TriedParse<S>;
         } else {
             throw Assert.isNever(triedLexParse.error);
@@ -276,15 +277,11 @@ export function rootFromTriedLexParse<S extends IParserState = IParserState>(
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexParse)) {
         return XorNodeUtils.astFactory(triedLexParse.value.root);
-    }
-
-    if (triedLexParse.error instanceof LexError.LexError) {
-        return undefined;
-    } else if (triedLexParse.error instanceof CommonError.CommonError) {
-        return undefined;
-    } else {
+    } else if (ParseError.isParseError(triedLexParse.error)) {
         const maybeContextNode: ParseContext.Node | undefined = triedLexParse.error.state.contextState.maybeRoot;
         return maybeContextNode !== undefined ? XorNodeUtils.contextFactory(maybeContextNode) : undefined;
+    } else {
+        return undefined;
     }
 }
 
@@ -294,15 +291,11 @@ export function rootFromTriedLexParseInspect<S extends IParserState = IParserSta
     if (ResultUtils.isOk(triedLexInspectParseInspect)) {
         const maybeActiveNode: ActiveNode | undefined = triedLexInspectParseInspect.value.maybeActiveNode;
         return maybeActiveNode?.ancestry.length ? maybeActiveNode.ancestry[0] : undefined;
-    }
-
-    if (triedLexInspectParseInspect.error instanceof LexError.LexError) {
-        return undefined;
-    } else if (triedLexInspectParseInspect.error instanceof CommonError.CommonError) {
-        return undefined;
-    } else {
+    } else if (ParseError.isParseError(triedLexInspectParseInspect.error)) {
         const maybeContextNode: ParseContext.Node | undefined =
             triedLexInspectParseInspect.error.state.contextState.maybeRoot;
         return maybeContextNode !== undefined ? XorNodeUtils.contextFactory(maybeContextNode) : undefined;
+    } else {
+        return undefined;
     }
 }

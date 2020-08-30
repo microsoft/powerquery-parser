@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Language } from "..";
-import { CommonError, StringUtils } from "../common";
+import { Assert, CommonError, StringUtils } from "../common";
 import { ILocalizationTemplates, Localization } from "../localization";
 import { IParserState } from "./IParserState";
 
@@ -134,6 +134,11 @@ export class UnusedTokensRemainError extends Error {
 export interface TokenWithColumnNumber {
     readonly token: Language.Token;
     readonly columnNumber: number;
+}
+
+export function assertIsParseError<S extends IParserState = IParserState>(error: any): error is ParseError<S> {
+    Assert.isTrue(isParseError(error), "isParseError(error)");
+    return true;
 }
 
 export function isParseError<S extends IParserState = IParserState>(error: any): error is ParseError<S> {

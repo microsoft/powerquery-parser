@@ -6,6 +6,7 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode): Type.ListType | Type.Unknown {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ListType);
 
     const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(

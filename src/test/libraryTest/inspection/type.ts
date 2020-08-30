@@ -8,12 +8,24 @@ import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
-import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
+import {
+    IParserState,
+    IParserStateUtils,
+    NodeIdMap,
+    ParseContext,
+    ParseError,
+    TXorNode,
+    XorNodeUtils,
+} from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+        DefaultSettings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
     const actual: Type.TType = assertParseNodeOk(
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
@@ -25,7 +37,11 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 }
 
 function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
-    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(DefaultSettings, text);
+    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(
+        DefaultSettings,
+        text,
+        IParserStateUtils.stateFactory,
+    );
     const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
     Assert.isDefined(maybeRoot);
 
@@ -58,7 +74,11 @@ function assertParseNodeOk(
 
 function assertParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.ScopeTypeByKey): void {
     const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertTextWithPosition(textWithPipe);
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(DefaultSettings, textWithoutPipe);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+        DefaultSettings,
+        textWithoutPipe,
+        IParserStateUtils.stateFactory,
+    );
     const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
 

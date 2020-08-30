@@ -21,16 +21,18 @@ export interface FastStateBackup {
 // ---------- State ----------
 // ---------------------------
 
-// If you have a custom parser + parser state, then you'll have to create your own newState function.
+// If you have a custom parser + parser state, then you'll have to create your own factory function.
 // See `benchmark.ts` for an example.
-export function newState<S extends IParserState = IParserState>(
+export function stateFactory<S extends IParserState = IParserState>(
     settings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
 ): IParserState {
     const maybeCurrentToken: Language.Token | undefined = lexerSnapshot.tokens[0];
 
     return {
+        ...settings,
         localizationTemplates: getLocalizationTemplates(settings.locale),
+        maybeCancellationToken: settings.maybeCancellationToken,
         lexerSnapshot,
         tokenIndex: 0,
         maybeCurrentToken,
@@ -246,7 +248,7 @@ export function isRecursivePrimaryExpressionNext(
 }
 
 // -----------------------------
-// ---------- Expects ----------
+// ---------- Asserts ----------
 // -----------------------------
 
 export function assertContextNodeMetadata(state: IParserState): ContextNodeMetadata {

@@ -19,6 +19,16 @@ export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?
     return index;
 }
 
+export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: {}): void {
+    Assert.isTrue(
+        collection.length > 0,
+        maybeMessage ?? `collection should have at least one element in it`,
+        maybeDetails ?? {
+            collectionLength: collection.length,
+        },
+    );
+}
+
 export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>): ReadonlyArray<T> {
     const partial: T[] = [...left];
     for (const element of right) {
@@ -30,23 +40,8 @@ export function concatUnique<T>(left: ReadonlyArray<T>, right: ReadonlyArray<T>)
     return partial;
 }
 
-export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: {}): void {
-    Assert.isTrue(
-        collection.length > 0,
-        maybeMessage ?? `collection should have at least one element in it`,
-        maybeDetails ?? {
-            collectionLength: collection.length,
-        },
-    );
-}
-
-export function replaceAtIndex<T>(collection: ReadonlyArray<T>, value: T, index: number): T[] {
-    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
-        index,
-        collectionLength: collection.length,
-    });
-
-    return [...collection.slice(0, index), value, ...collection.slice(index + 1)];
+export function enumerate<T>(collection: ReadonlyArray<T>): ReadonlyArray<[number, T]> {
+    return range(collection.length, 0).map((index: number) => [index, collection[index]]);
 }
 
 export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) => boolean): T | undefined {
@@ -92,6 +87,15 @@ export function isSubset<T>(
 export function range(size: number, startAt: number = 0): ReadonlyArray<number> {
     // tslint:disable-next-line: prefer-array-literal
     return [...Array(size).keys()].map(i => i + startAt);
+}
+
+export function replaceAtIndex<T>(collection: ReadonlyArray<T>, value: T, index: number): T[] {
+    Assert.isFalse(index < 0 || index >= collection.length, "index < 0 || index >= collection.length", {
+        index,
+        collectionLength: collection.length,
+    });
+
+    return [...collection.slice(0, index), value, ...collection.slice(index + 1)];
 }
 
 export function removeFirstInstance<T>(collection: ReadonlyArray<T>, element: T): T[] {
