@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext } from "../";
-import { Language } from "../..";
 import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../common";
-import { Ast } from "../../language";
+import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 
@@ -38,7 +37,7 @@ export function startContext(
     state: State,
     nodeKind: Ast.NodeKind,
     tokenIndexStart: number,
-    maybeTokenStart: Language.Token | undefined,
+    maybeTokenStart: Token.Token | undefined,
     maybeParentNode: Node | undefined,
 ): Node {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;

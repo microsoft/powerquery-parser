@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Lexer, LexError } from ".";
-import { Language } from "..";
 import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
+import { Comment, Token } from "../language";
 import { ILocalizationTemplates } from "../localization";
 
 // The lexer is a multiline aware lexer.
@@ -19,8 +19,8 @@ export type TriedLexerSnapshot = Result<LexerSnapshot, LexError.TLexError>;
 export class LexerSnapshot {
     constructor(
         public readonly text: string,
-        public readonly tokens: ReadonlyArray<Language.Token>,
-        public readonly comments: ReadonlyArray<Language.TComment>,
+        public readonly tokens: ReadonlyArray<Token.Token>,
+        public readonly comments: ReadonlyArray<Comment.TComment>,
         public readonly lineTerminators: ReadonlyArray<LineTerminator>,
     ) {}
 
@@ -41,10 +41,10 @@ export class LexerSnapshot {
     public static graphemePositionStartFrom(
         text: string,
         lineTerminators: ReadonlyArray<LineTerminator>,
-        flatLineToken: Language.Token | FlatLineToken,
+        flatLineToken: Token.Token | FlatLineToken,
     ): StringUtils.GraphemePosition {
-        const positionStart: Language.TokenPosition = flatLineToken.positionStart;
-        const positionEnd: Language.TokenPosition = flatLineToken.positionEnd;
+        const positionStart: Token.TokenPosition = flatLineToken.positionStart;
+        const positionEnd: Token.TokenPosition = flatLineToken.positionEnd;
 
         let substringPositionStart: number = 0;
         let substringPositionEnd: number = text.length;
@@ -66,18 +66,18 @@ export class LexerSnapshot {
         );
     }
 
-    public graphemePositionStartFrom(token: Language.Token): StringUtils.GraphemePosition {
+    public graphemePositionStartFrom(token: Token.Token): StringUtils.GraphemePosition {
         return LexerSnapshot.graphemePositionStartFrom(this.text, this.lineTerminators, token);
     }
 
-    public columnNumberStartFrom(token: Language.Token): number {
+    public columnNumberStartFrom(token: Token.Token): number {
         return this.graphemePositionStartFrom(token).columnNumber;
     }
 
     private static factory(state: Lexer.State): LexerSnapshot {
         // class properties
-        const tokens: Language.Token[] = [];
-        const comments: Language.TComment[] = [];
+        const tokens: Token.Token[] = [];
+        const comments: Comment.TComment[] = [];
         const flattenedLines: FlattenedLines = flattenLineTokens(state);
         const flatTokens: ReadonlyArray<FlatLineToken> = flattenedLines.flatLineTokens;
         const numFlatTokens: number = flatTokens.length;
@@ -91,15 +91,15 @@ export class LexerSnapshot {
 
             const flatToken: FlatLineToken = flatTokens[flatIndex];
             switch (flatToken.kind) {
-                case Language.LineTokenKind.LineComment:
+                case Token.LineTokenKind.LineComment:
                     comments.push(readLineComment(flatToken));
                     break;
 
-                case Language.LineTokenKind.MultilineComment:
+                case Token.LineTokenKind.MultilineComment:
                     comments.push(readSingleLineMultilineComment(flatToken));
                     break;
 
-                case Language.LineTokenKind.MultilineCommentStart: {
+                case Token.LineTokenKind.MultilineCommentStart: {
                     const concatenatedTokenRead: ConcatenatedCommentRead = readMultilineComment(
                         maybeCancellationToken,
                         localizationTemplates,
@@ -111,7 +111,7 @@ export class LexerSnapshot {
                     break;
                 }
 
-                case Language.LineTokenKind.QuotedIdentifierStart: {
+                case Token.LineTokenKind.QuotedIdentifierStart: {
                     const concatenatedTokenRead: ConcatenatedTokenRead = readQuotedIdentifier(
                         maybeCancellationToken,
                         localizationTemplates,
@@ -123,7 +123,7 @@ export class LexerSnapshot {
                     break;
                 }
 
-                case Language.LineTokenKind.TextLiteralStart: {
+                case Token.LineTokenKind.TextLiteralStart: {
                     const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
                         maybeCancellationToken,
                         localizationTemplates,
@@ -148,10 +148,10 @@ export class LexerSnapshot {
                     //      Almost all of LineTokenKind and TokenKind have a 1-to-1 mapping.
                     //      The edge cases (multiline tokens) have already been taken care of above.
                     //      set(remaining variants of LineTokenKind) === set(LineKind)
-                    const positionStart: Language.TokenPosition = flatToken.positionStart;
-                    const positionEnd: Language.TokenPosition = flatToken.positionEnd;
+                    const positionStart: Token.TokenPosition = flatToken.positionStart;
+                    const positionEnd: Token.TokenPosition = flatToken.positionEnd;
                     tokens.push({
-                        kind: (flatToken.kind as unknown) as Language.TokenKind,
+                        kind: (flatToken.kind as unknown) as Token.TokenKind,
                         data: flatToken.data,
                         positionStart,
                         positionEnd,
@@ -165,12 +165,12 @@ export class LexerSnapshot {
     }
 }
 
-function readLineComment(flatToken: FlatLineToken): Language.LineComment {
-    const positionStart: Language.TokenPosition = flatToken.positionStart;
-    const positionEnd: Language.TokenPosition = flatToken.positionEnd;
+function readLineComment(flatToken: FlatLineToken): Comment.LineComment {
+    const positionStart: Token.TokenPosition = flatToken.positionStart;
+    const positionEnd: Token.TokenPosition = flatToken.positionEnd;
 
     return {
-        kind: Language.CommentKind.Line,
+        kind: Comment.CommentKind.Line,
         data: flatToken.data,
         containsNewline: true,
         positionStart,
@@ -179,12 +179,12 @@ function readLineComment(flatToken: FlatLineToken): Language.LineComment {
 }
 
 // a multiline comment that spans a single line
-function readSingleLineMultilineComment(flatToken: FlatLineToken): Language.MultilineComment {
-    const positionStart: Language.TokenPosition = flatToken.positionStart;
-    const positionEnd: Language.TokenPosition = flatToken.positionEnd;
+function readSingleLineMultilineComment(flatToken: FlatLineToken): Comment.MultilineComment {
+    const positionStart: Token.TokenPosition = flatToken.positionStart;
+    const positionEnd: Token.TokenPosition = flatToken.positionEnd;
 
     return {
-        kind: Language.CommentKind.Multiline,
+        kind: Comment.CommentKind.Multiline,
         data: flatToken.data,
         containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
         positionStart,
@@ -202,7 +202,7 @@ function readMultilineComment(
         maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
-        Language.LineTokenKind.MultilineCommentContent,
+        Token.LineTokenKind.MultilineCommentContent,
     );
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
@@ -211,18 +211,18 @@ function readMultilineComment(
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.MultilineComment,
         );
-    } else if (maybeTokenEnd.kind !== Language.LineTokenKind.MultilineCommentEnd) {
+    } else if (maybeTokenEnd.kind !== Token.LineTokenKind.MultilineCommentEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
-        const positionStart: Language.TokenPosition = tokenStart.positionStart;
-        const positionEnd: Language.TokenPosition = tokenEnd.positionEnd;
+        const positionStart: Token.TokenPosition = tokenStart.positionStart;
+        const positionEnd: Token.TokenPosition = tokenEnd.positionEnd;
 
         return {
             comment: {
-                kind: Language.CommentKind.Multiline,
+                kind: Comment.CommentKind.Multiline,
                 data: flattenedLines.text.substring(positionStart.codeUnit, positionEnd.codeUnit),
                 containsNewline: positionStart.lineNumber !== positionEnd.lineNumber,
                 positionStart,
@@ -243,7 +243,7 @@ function readQuotedIdentifier(
         maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
-        Language.LineTokenKind.QuotedIdentifierContent,
+        Token.LineTokenKind.QuotedIdentifierContent,
     );
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
@@ -252,18 +252,18 @@ function readQuotedIdentifier(
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
-    } else if (maybeTokenEnd.kind !== Language.LineTokenKind.QuotedIdentifierEnd) {
+    } else if (maybeTokenEnd.kind !== Token.LineTokenKind.QuotedIdentifierEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
-        const positionStart: Language.TokenPosition = tokenStart.positionStart;
-        const positionEnd: Language.TokenPosition = tokenEnd.positionEnd;
+        const positionStart: Token.TokenPosition = tokenStart.positionStart;
+        const positionEnd: Token.TokenPosition = tokenEnd.positionEnd;
 
         return {
             token: {
-                kind: Language.TokenKind.Identifier,
+                kind: Token.TokenKind.Identifier,
                 data: flattenedLines.text.substring(positionStart.codeUnit, positionEnd.codeUnit),
                 positionStart,
                 positionEnd,
@@ -283,7 +283,7 @@ function readTextLiteral(
         maybeCancellationToken,
         flattenedLines.flatLineTokens,
         tokenStart,
-        Language.LineTokenKind.TextLiteralContent,
+        Token.LineTokenKind.TextLiteralContent,
     );
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
@@ -292,18 +292,18 @@ function readTextLiteral(
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.Text,
         );
-    } else if (maybeTokenEnd.kind !== Language.LineTokenKind.TextLiteralEnd) {
+    } else if (maybeTokenEnd.kind !== Token.LineTokenKind.TextLiteralEnd) {
         const details: {} = { foundTokenEnd: maybeTokenEnd };
         const message: string = `once a multiline token starts it should either reach a paired end token, or eof`;
         throw new CommonError.InvariantError(message, details);
     } else {
         const tokenEnd: FlatLineToken = maybeTokenEnd;
-        const positionStart: Language.TokenPosition = tokenStart.positionStart;
-        const positionEnd: Language.TokenPosition = tokenEnd.positionEnd;
+        const positionStart: Token.TokenPosition = tokenStart.positionStart;
+        const positionEnd: Token.TokenPosition = tokenEnd.positionEnd;
 
         return {
             token: {
-                kind: Language.TokenKind.TextLiteral,
+                kind: Token.TokenKind.TextLiteral,
                 data: flattenedLines.text.substring(positionStart.codeUnit, positionEnd.codeUnit),
                 positionStart,
                 positionEnd,
@@ -313,7 +313,7 @@ function readTextLiteral(
     }
 }
 
-function collectWhileContent<KindVariant extends Language.LineTokenKind>(
+function collectWhileContent<KindVariant extends Token.LineTokenKind>(
     maybeCancellationToken: ICancellationToken | undefined,
     flatTokens: ReadonlyArray<FlatLineToken>,
     tokenStart: FlatLineToken,
@@ -406,12 +406,12 @@ interface FlattenedLines {
 }
 
 interface ConcatenatedCommentRead {
-    readonly comment: Language.TComment;
+    readonly comment: Comment.TComment;
     readonly flatIndexEnd: number;
 }
 
 interface ConcatenatedTokenRead {
-    readonly token: Language.Token;
+    readonly token: Token.Token;
     readonly flatIndexEnd: number;
 }
 
@@ -426,6 +426,6 @@ interface LineTerminator {
     readonly text: string;
 }
 
-interface FlatLineToken extends Language.IToken<Language.LineTokenKind, Language.TokenPosition> {
+interface FlatLineToken extends Token.IToken<Token.LineTokenKind, Token.TokenPosition> {
     readonly flatIndex: number;
 }

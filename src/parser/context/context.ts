@@ -2,8 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap } from "../";
-import { Language } from "../..";
-import { Ast } from "../../language";
+import { Ast, Token } from "../../language";
 
 // Parsing use to be one giant evaluation, leading to an all-or-nothing outcome which was unsuitable for a
 // document that was being live edited.
@@ -37,7 +36,7 @@ export interface Node {
     readonly id: number;
     readonly kind: Ast.NodeKind;
     readonly tokenIndexStart: number;
-    readonly maybeTokenStart: Language.Token | undefined;
+    readonly maybeTokenStart: Token.Token | undefined;
     // Incremented for each child context created with the Node as its parent,
     // and decremented for each child context deleted.
     attributeCounter: number;

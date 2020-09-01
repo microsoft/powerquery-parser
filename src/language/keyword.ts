@@ -35,7 +35,7 @@ export const enum KeywordKind {
     HashTime = "#time",
 }
 
-export const Keywords: ReadonlyArray<KeywordKind> = [
+export const KeywordKinds: ReadonlyArray<KeywordKind> = [
     KeywordKind.And,
     KeywordKind.As,
     KeywordKind.Each,
@@ -69,7 +69,7 @@ export const Keywords: ReadonlyArray<KeywordKind> = [
     KeywordKind.HashTime,
 ];
 
-export const ExpressionKeywords: ReadonlyArray<KeywordKind> = [
+export const ExpressionKeywordKinds: ReadonlyArray<KeywordKind> = [
     KeywordKind.Each,
     KeywordKind.Error,
     KeywordKind.False,

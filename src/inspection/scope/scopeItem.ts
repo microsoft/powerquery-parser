@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../language";
+import { Ast, Constant } from "../../language";
 import { TXorNode } from "../../parser";
 
 export type TScopeItem =
@@ -41,7 +41,7 @@ export interface ParameterScopeItem extends IScopeItem {
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
-    readonly maybeType: Ast.PrimitiveTypeConstantKind | undefined;
+    readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
 }
 
 export interface SectionMemberScopeItem extends IScopeItem {

@@ -4,8 +4,7 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
-import { Language } from "../..";
-import { Ast } from "../../language";
+import { Ast, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { IParser } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
@@ -319,7 +318,7 @@ function functionEntry<S extends IParserState, T>(
     state: BenchmarkState,
     fn: (state: S, parser: IParser<S>) => T,
 ): number {
-    const tokenPosition: Language.TokenPosition = state.maybeCurrentToken!.positionStart;
+    const tokenPosition: Token.TokenPosition = state.maybeCurrentToken!.positionStart;
     const id: number = state.functionTimestampCounter;
     state.functionTimestampCounter += 1;
 
@@ -342,7 +341,7 @@ function functionEntry<S extends IParserState, T>(
 }
 
 function functionExit(state: BenchmarkState, id: number): void {
-    const tokenPosition: Language.TokenPosition = state.maybeCurrentToken!.positionStart;
+    const tokenPosition: Token.TokenPosition = state.maybeCurrentToken!.positionStart;
     const fnTimestamp: FunctionTimestamp = state.functionTimestamps.get(id)!;
     const finish: number = performanceNow();
     const duration: number = finish - fnTimestamp.timeStart;

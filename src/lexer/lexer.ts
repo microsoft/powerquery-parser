@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import { LexError } from ".";
-import { Language } from "..";
 import {
     ArrayUtils,
     Assert,
@@ -16,6 +15,7 @@ import {
     ResultUtils,
     StringUtils,
 } from "../common";
+import { Keyword, Token } from "../language";
 import { getLocalizationTemplates, ILocalizationTemplates } from "../localization";
 import { LexSettings } from "../settings";
 
@@ -73,7 +73,7 @@ export interface ILexerLine {
     readonly lineTerminator: string; // must be a valid Power Query newline character
     readonly lineModeStart: LineMode; // (the previous TLine's lineModeEnd) || LineMode.Default
     readonly lineModeEnd: LineMode;
-    readonly tokens: ReadonlyArray<Language.LineToken>;
+    readonly tokens: ReadonlyArray<Token.LineToken>;
 }
 
 // An error was thrown before anything could be tokenized.
@@ -159,8 +159,8 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
     for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
         const left: TLine = leftLines[lineIndex];
         const right: TLine = rightLines[lineIndex];
-        const leftTokens: ReadonlyArray<Language.LineToken> = left.tokens;
-        const rightTokens: ReadonlyArray<Language.LineToken> = right.tokens;
+        const leftTokens: ReadonlyArray<Token.LineToken> = left.tokens;
+        const rightTokens: ReadonlyArray<Token.LineToken> = right.tokens;
 
         const isEqualQuickCheck: boolean =
             left.kind === right.kind &&
@@ -185,7 +185,7 @@ export function equalLines(leftLines: ReadonlyArray<TLine>, rightLines: Readonly
 }
 
 // deep token comparison
-export function equalTokens(leftToken: Language.LineToken, rightToken: Language.LineToken): boolean {
+export function equalTokens(leftToken: Token.LineToken, rightToken: Token.LineToken): boolean {
     return (
         leftToken.kind === rightToken.kind &&
         leftToken.data === rightToken.data &&
@@ -226,12 +226,12 @@ export function maybeErrorLineMap(state: State): ErrorLineMap | undefined {
 }
 
 interface TokenizeChanges {
-    readonly tokens: ReadonlyArray<Language.LineToken>;
+    readonly tokens: ReadonlyArray<Token.LineToken>;
     readonly lineModeEnd: LineMode;
 }
 
 interface LineModeAlteringRead {
-    readonly token: Language.LineToken;
+    readonly token: Token.LineToken;
     readonly lineMode: LineMode;
 }
 
@@ -580,7 +580,7 @@ function tokenize(
         currentPosition = drainWhitespace(text, currentPosition);
     }
 
-    const newTokens: Language.LineToken[] = [];
+    const newTokens: Token.LineToken[] = [];
     let continueLexing: boolean = currentPosition !== text.length;
     let maybeError: LexError.TLexError | undefined;
 
@@ -615,7 +615,7 @@ function tokenize(
             }
 
             lineMode = readOutcome.lineMode;
-            const token: Language.LineToken = readOutcome.token;
+            const token: Token.LineToken = readOutcome.token;
             newTokens.push(token);
 
             if (lineMode === LineMode.Default) {
@@ -670,7 +670,7 @@ function updateLineState(
     switch (tokenizePartialResult.kind) {
         case PartialResultKind.Ok: {
             const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
-            const newTokens: ReadonlyArray<Language.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
+            const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
             return {
                 kind: LineKind.Touched,
@@ -684,7 +684,7 @@ function updateLineState(
 
         case PartialResultKind.Mixed: {
             const tokenizeChanges: TokenizeChanges = tokenizePartialResult.value;
-            const newTokens: ReadonlyArray<Language.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
+            const newTokens: ReadonlyArray<Token.LineToken> = line.tokens.concat(tokenizeChanges.tokens);
 
             return {
                 kind: LineKind.TouchedWithError,
@@ -720,13 +720,13 @@ function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number
 
     if (indexOfCloseComment === -1) {
         return {
-            token: readRestOfLine(Language.LineTokenKind.MultilineCommentContent, text, positionStart),
+            token: readRestOfLine(Token.LineTokenKind.MultilineCommentContent, text, positionStart),
             lineMode: LineMode.Comment,
         };
     } else {
         const positionEnd: number = indexOfCloseComment + 2;
         return {
-            token: readTokenFrom(Language.LineTokenKind.MultilineCommentEnd, text, positionStart, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.MultilineCommentEnd, text, positionStart, positionEnd),
             lineMode: LineMode.Default,
         };
     }
@@ -736,28 +736,28 @@ function tokenizeMultilineCommentContentOrEnd(line: TLine, positionStart: number
 function tokenizeQuotedIdentifierContentOrEnd(line: TLine, currentPosition: number): LineModeAlteringRead {
     const read: LineModeAlteringRead = tokenizeTextLiteralContentOrEnd(line, currentPosition);
     switch (read.token.kind) {
-        case Language.LineTokenKind.TextLiteralContent:
+        case Token.LineTokenKind.TextLiteralContent:
             return {
                 lineMode: LineMode.QuotedIdentifier,
                 token: {
                     ...read.token,
-                    kind: Language.LineTokenKind.QuotedIdentifierContent,
+                    kind: Token.LineTokenKind.QuotedIdentifierContent,
                 },
             };
 
-        case Language.LineTokenKind.TextLiteralEnd:
+        case Token.LineTokenKind.TextLiteralEnd:
             return {
                 lineMode: LineMode.Default,
                 token: {
                     ...read.token,
-                    kind: Language.LineTokenKind.QuotedIdentifierEnd,
+                    kind: Token.LineTokenKind.QuotedIdentifierEnd,
                 },
             };
 
         default:
             const details: {} = { read };
             throw new CommonError.InvariantError(
-                `expected the return to be either ${Language.LineTokenKind.TextLiteralContent} or ${Language.LineTokenKind.TextLiteralEnd}`,
+                `expected the return to be either ${Token.LineTokenKind.TextLiteralContent} or ${Token.LineTokenKind.TextLiteralEnd}`,
                 details,
             );
     }
@@ -770,13 +770,13 @@ function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): 
 
     if (maybePositionEnd === undefined) {
         return {
-            token: readRestOfLine(Language.LineTokenKind.TextLiteralContent, text, currentPosition),
+            token: readRestOfLine(Token.LineTokenKind.TextLiteralContent, text, currentPosition),
             lineMode: LineMode.Text,
         };
     } else {
         const positionEnd: number = maybePositionEnd + 1;
         return {
-            token: readTokenFrom(Language.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.TextLiteralEnd, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
         };
     }
@@ -791,44 +791,44 @@ function tokenizeDefault(
     const text: string = line.text;
 
     const chr1: string = text[positionStart];
-    let token: Language.LineToken;
+    let token: Token.LineToken;
     let lineMode: LineMode = LineMode.Default;
 
     if (chr1 === "!") {
-        token = readConstant(Language.LineTokenKind.Bang, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.Bang, text, positionStart, 1);
     } else if (chr1 === "&") {
-        token = readConstant(Language.LineTokenKind.Ampersand, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.Ampersand, text, positionStart, 1);
     } else if (chr1 === "(") {
-        token = readConstant(Language.LineTokenKind.LeftParenthesis, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.LeftParenthesis, text, positionStart, 1);
     } else if (chr1 === ")") {
-        token = readConstant(Language.LineTokenKind.RightParenthesis, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.RightParenthesis, text, positionStart, 1);
     } else if (chr1 === "*") {
-        token = readConstant(Language.LineTokenKind.Asterisk, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.Asterisk, text, positionStart, 1);
     } else if (chr1 === "+") {
-        token = readConstant(Language.LineTokenKind.Plus, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.Plus, text, positionStart, 1);
     } else if (chr1 === ",") {
-        token = readConstant(Language.LineTokenKind.Comma, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.Comma, text, positionStart, 1);
     } else if (chr1 === "-") {
-        token = readConstant(Language.LineTokenKind.Minus, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.Minus, text, positionStart, 1);
     } else if (chr1 === ";") {
-        token = readConstant(Language.LineTokenKind.Semicolon, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.Semicolon, text, positionStart, 1);
     } else if (chr1 === "?") {
         const chr2: string | undefined = text[positionStart + 1];
         if (chr2 === "?") {
-            token = readConstant(Language.LineTokenKind.NullCoalescingOperator, text, positionStart, 2);
+            token = readConstant(Token.LineTokenKind.NullCoalescingOperator, text, positionStart, 2);
         } else {
-            token = readConstant(Language.LineTokenKind.QuestionMark, text, positionStart, 1);
+            token = readConstant(Token.LineTokenKind.QuestionMark, text, positionStart, 1);
         }
     } else if (chr1 === "@") {
-        token = readConstant(Language.LineTokenKind.AtSign, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.AtSign, text, positionStart, 1);
     } else if (chr1 === "[") {
-        token = readConstant(Language.LineTokenKind.LeftBracket, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.LeftBracket, text, positionStart, 1);
     } else if (chr1 === "]") {
-        token = readConstant(Language.LineTokenKind.RightBracket, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.RightBracket, text, positionStart, 1);
     } else if (chr1 === "{") {
-        token = readConstant(Language.LineTokenKind.LeftBrace, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.LeftBrace, text, positionStart, 1);
     } else if (chr1 === "}") {
-        token = readConstant(Language.LineTokenKind.RightBrace, text, positionStart, 1);
+        token = readConstant(Token.LineTokenKind.RightBrace, text, positionStart, 1);
     } else if (chr1 === '"') {
         const read: LineModeAlteringRead = readOrStartTextLiteral(text, positionStart);
         token = read.token;
@@ -857,9 +857,9 @@ function tokenizeDefault(
             const chr3: string = text[positionStart + 2];
 
             if (chr3 === ".") {
-                token = readConstant(Language.LineTokenKind.Ellipsis, text, positionStart, 3);
+                token = readConstant(Token.LineTokenKind.Ellipsis, text, positionStart, 3);
             } else {
-                token = readConstant(Language.LineTokenKind.DotDot, text, positionStart, 2);
+                token = readConstant(Token.LineTokenKind.DotDot, text, positionStart, 2);
             }
         } else {
             throw unexpectedReadError(localizationTemplates, text, lineNumber, positionStart);
@@ -868,27 +868,27 @@ function tokenizeDefault(
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "=") {
-            token = readConstant(Language.LineTokenKind.GreaterThanEqualTo, text, positionStart, 2);
+            token = readConstant(Token.LineTokenKind.GreaterThanEqualTo, text, positionStart, 2);
         } else {
-            token = readConstant(Language.LineTokenKind.GreaterThan, text, positionStart, 1);
+            token = readConstant(Token.LineTokenKind.GreaterThan, text, positionStart, 1);
         }
     } else if (chr1 === "<") {
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === "=") {
-            token = readConstant(Language.LineTokenKind.LessThanEqualTo, text, positionStart, 2);
+            token = readConstant(Token.LineTokenKind.LessThanEqualTo, text, positionStart, 2);
         } else if (chr2 === ">") {
-            token = readConstant(Language.LineTokenKind.NotEqual, text, positionStart, 2);
+            token = readConstant(Token.LineTokenKind.NotEqual, text, positionStart, 2);
         } else {
-            token = readConstant(Language.LineTokenKind.LessThan, text, positionStart, 1);
+            token = readConstant(Token.LineTokenKind.LessThan, text, positionStart, 1);
         }
     } else if (chr1 === "=") {
         const chr2: string | undefined = text[positionStart + 1];
 
         if (chr2 === ">") {
-            token = readConstant(Language.LineTokenKind.FatArrow, text, positionStart, 2);
+            token = readConstant(Token.LineTokenKind.FatArrow, text, positionStart, 2);
         } else {
-            token = readConstant(Language.LineTokenKind.Equal, text, positionStart, 1);
+            token = readConstant(Token.LineTokenKind.Equal, text, positionStart, 1);
         }
     } else if (chr1 === "/") {
         const chr2: string | undefined = text[positionStart + 1];
@@ -900,7 +900,7 @@ function tokenizeDefault(
             token = read.token;
             lineMode = read.lineMode;
         } else {
-            token = readConstant(Language.LineTokenKind.Division, text, positionStart, 1);
+            token = readConstant(Token.LineTokenKind.Division, text, positionStart, 1);
         }
     } else if (chr1 === "#") {
         const chr2: string | undefined = text[positionStart + 1];
@@ -943,12 +943,12 @@ function readOrStartTextLiteral(text: string, currentPosition: number): LineMode
     if (maybePositionEnd !== undefined) {
         const positionEnd: number = maybePositionEnd + 1;
         return {
-            token: readTokenFrom(Language.LineTokenKind.TextLiteral, text, currentPosition, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.TextLiteral, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
         };
     } else {
         return {
-            token: readRestOfLine(Language.LineTokenKind.TextLiteralStart, text, currentPosition),
+            token: readRestOfLine(Token.LineTokenKind.TextLiteralStart, text, currentPosition),
             lineMode: LineMode.Text,
         };
     }
@@ -959,7 +959,7 @@ function readHexLiteral(
     text: string,
     lineNumber: number,
     positionStart: number,
-): Language.LineToken {
+): Token.LineToken {
     const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Hex, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
@@ -970,7 +970,7 @@ function readHexLiteral(
     }
     const positionEnd: number = maybePositionEnd;
 
-    return readTokenFrom(Language.LineTokenKind.HexLiteral, text, positionStart, positionEnd);
+    return readTokenFrom(Token.LineTokenKind.HexLiteral, text, positionStart, positionEnd);
 }
 
 function readNumericLiteral(
@@ -978,7 +978,7 @@ function readNumericLiteral(
     text: string,
     lineNumber: number,
     positionStart: number,
-): Language.LineToken {
+): Token.LineToken {
     const maybePositionEnd: number | undefined = maybeIndexOfRegexEnd(Pattern.Numeric, text, positionStart);
     if (maybePositionEnd === undefined) {
         throw new LexError.ExpectedError(
@@ -989,24 +989,24 @@ function readNumericLiteral(
     }
     const positionEnd: number = maybePositionEnd;
 
-    return readTokenFrom(Language.LineTokenKind.NumericLiteral, text, positionStart, positionEnd);
+    return readTokenFrom(Token.LineTokenKind.NumericLiteral, text, positionStart, positionEnd);
 }
 
-function readLineComment(text: string, positionStart: number): Language.LineToken {
-    return readRestOfLine(Language.LineTokenKind.LineComment, text, positionStart);
+function readLineComment(text: string, positionStart: number): Token.LineToken {
+    return readRestOfLine(Token.LineTokenKind.LineComment, text, positionStart);
 }
 
 function readOrStartMultilineComment(text: string, positionStart: number): LineModeAlteringRead {
     const indexOfCloseComment: number = text.indexOf("*/", positionStart + 2);
     if (indexOfCloseComment === -1) {
         return {
-            token: readRestOfLine(Language.LineTokenKind.MultilineCommentStart, text, positionStart),
+            token: readRestOfLine(Token.LineTokenKind.MultilineCommentStart, text, positionStart),
             lineMode: LineMode.Comment,
         };
     } else {
         const positionEnd: number = indexOfCloseComment + 2;
         return {
-            token: readTokenFrom(Language.LineTokenKind.MultilineComment, text, positionStart, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.MultilineComment, text, positionStart, positionEnd),
             lineMode: LineMode.Default,
         };
     }
@@ -1017,8 +1017,8 @@ function readKeyword(
     text: string,
     lineNumber: number,
     positionStart: number,
-): Language.LineToken {
-    const maybeLineToken: Language.LineToken | undefined = maybeReadKeyword(text, positionStart);
+): Token.LineToken {
+    const maybeLineToken: Token.LineToken | undefined = maybeReadKeyword(text, positionStart);
     if (maybeLineToken) {
         return maybeLineToken;
     } else {
@@ -1026,7 +1026,7 @@ function readKeyword(
     }
 }
 
-function maybeReadKeyword(text: string, currentPosition: number): Language.LineToken | undefined {
+function maybeReadKeyword(text: string, currentPosition: number): Token.LineToken | undefined {
     const identifierPositionStart: number = text[currentPosition] === "#" ? currentPosition + 1 : currentPosition;
 
     const maybeIdentifierPositionEnd: number | undefined = maybeIndexOfIdentifierEnd(text, identifierPositionStart);
@@ -1036,7 +1036,7 @@ function maybeReadKeyword(text: string, currentPosition: number): Language.LineT
     const identifierPositionEnd: number = maybeIdentifierPositionEnd;
 
     const data: string = text.substring(currentPosition, identifierPositionEnd);
-    const maybeKeywordTokenKind: Language.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
+    const maybeKeywordTokenKind: Token.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
     if (maybeKeywordTokenKind === undefined) {
         return undefined;
     } else {
@@ -1055,12 +1055,12 @@ function readOrStartQuotedIdentifier(text: string, currentPosition: number): Lin
         const positionEnd: number = maybePositionEnd + 1;
 
         return {
-            token: readTokenFrom(Language.LineTokenKind.Identifier, text, currentPosition, positionEnd),
+            token: readTokenFrom(Token.LineTokenKind.Identifier, text, currentPosition, positionEnd),
             lineMode: LineMode.Default,
         };
     } else {
         return {
-            token: readRestOfLine(Language.LineTokenKind.QuotedIdentifierStart, text, currentPosition),
+            token: readRestOfLine(Token.LineTokenKind.QuotedIdentifierStart, text, currentPosition),
             lineMode: LineMode.QuotedIdentifier,
         };
     }
@@ -1073,7 +1073,7 @@ function readKeywordOrIdentifier(
     text: string,
     lineNumber: number,
     positionStart: number,
-): Language.LineToken {
+): Token.LineToken {
     // keyword
     if (text[positionStart] === "#") {
         return readKeyword(localizationTemplates, text, lineNumber, positionStart);
@@ -1090,15 +1090,15 @@ function readKeywordOrIdentifier(
         }
         const positionEnd: number = maybePositionEnd;
         const data: string = text.substring(positionStart, positionEnd);
-        const maybeKeywordTokenKind: Language.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
+        const maybeKeywordTokenKind: Token.LineTokenKind | undefined = maybeKeywordLineTokenKindFrom(data);
 
-        let tokenKind: Language.LineTokenKind;
+        let tokenKind: Token.LineTokenKind;
         if (maybeKeywordTokenKind !== undefined) {
             tokenKind = maybeKeywordTokenKind;
         } else if (data === "null") {
-            tokenKind = Language.LineTokenKind.NullLiteral;
+            tokenKind = Token.LineTokenKind.NullLiteral;
         } else {
-            tokenKind = Language.LineTokenKind.Identifier;
+            tokenKind = Token.LineTokenKind.Identifier;
         }
 
         return {
@@ -1111,21 +1111,21 @@ function readKeywordOrIdentifier(
 }
 
 function readConstant(
-    lineTokenKind: Language.LineTokenKind,
+    lineTokenKind: Token.LineTokenKind,
     text: string,
     positionStart: number,
     length: number,
-): Language.LineToken {
+): Token.LineToken {
     const positionEnd: number = positionStart + length;
     return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
 }
 
 function readTokenFrom(
-    lineTokenKind: Language.LineTokenKind,
+    lineTokenKind: Token.LineTokenKind,
     text: string,
     positionStart: number,
     positionEnd: number,
-): Language.LineToken {
+): Token.LineToken {
     return {
         kind: lineTokenKind,
         positionStart,
@@ -1134,11 +1134,7 @@ function readTokenFrom(
     };
 }
 
-function readRestOfLine(
-    lineTokenKind: Language.LineTokenKind,
-    text: string,
-    positionStart: number,
-): Language.LineToken {
+function readRestOfLine(lineTokenKind: Token.LineTokenKind, text: string, positionStart: number): Token.LineToken {
     const positionEnd: number = text.length;
     return readTokenFrom(lineTokenKind, text, positionStart, positionEnd);
 }
@@ -1153,70 +1149,70 @@ function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number 
     return maybeLength !== undefined ? positionStart + maybeLength : undefined;
 }
 
-function maybeKeywordLineTokenKindFrom(data: string): Language.LineTokenKind | undefined {
+function maybeKeywordLineTokenKindFrom(data: string): Token.LineTokenKind | undefined {
     switch (data) {
-        case Language.KeywordKind.And:
-            return Language.LineTokenKind.KeywordAnd;
-        case Language.KeywordKind.As:
-            return Language.LineTokenKind.KeywordAs;
-        case Language.KeywordKind.Each:
-            return Language.LineTokenKind.KeywordEach;
-        case Language.KeywordKind.Else:
-            return Language.LineTokenKind.KeywordElse;
-        case Language.KeywordKind.Error:
-            return Language.LineTokenKind.KeywordError;
-        case Language.KeywordKind.False:
-            return Language.LineTokenKind.KeywordFalse;
-        case Language.KeywordKind.If:
-            return Language.LineTokenKind.KeywordIf;
-        case Language.KeywordKind.In:
-            return Language.LineTokenKind.KeywordIn;
-        case Language.KeywordKind.Is:
-            return Language.LineTokenKind.KeywordIs;
-        case Language.KeywordKind.Let:
-            return Language.LineTokenKind.KeywordLet;
-        case Language.KeywordKind.Meta:
-            return Language.LineTokenKind.KeywordMeta;
-        case Language.KeywordKind.Not:
-            return Language.LineTokenKind.KeywordNot;
-        case Language.KeywordKind.Or:
-            return Language.LineTokenKind.KeywordOr;
-        case Language.KeywordKind.Otherwise:
-            return Language.LineTokenKind.KeywordOtherwise;
-        case Language.KeywordKind.Section:
-            return Language.LineTokenKind.KeywordSection;
-        case Language.KeywordKind.Shared:
-            return Language.LineTokenKind.KeywordShared;
-        case Language.KeywordKind.Then:
-            return Language.LineTokenKind.KeywordThen;
-        case Language.KeywordKind.True:
-            return Language.LineTokenKind.KeywordTrue;
-        case Language.KeywordKind.Try:
-            return Language.LineTokenKind.KeywordTry;
-        case Language.KeywordKind.Type:
-            return Language.LineTokenKind.KeywordType;
-        case Language.KeywordKind.HashBinary:
-            return Language.LineTokenKind.KeywordHashBinary;
-        case Language.KeywordKind.HashDate:
-            return Language.LineTokenKind.KeywordHashDate;
-        case Language.KeywordKind.HashDateTime:
-            return Language.LineTokenKind.KeywordHashDateTime;
-        case Language.KeywordKind.HashDateTimeZone:
-            return Language.LineTokenKind.KeywordHashDateTimeZone;
-        case Language.KeywordKind.HashDuration:
-            return Language.LineTokenKind.KeywordHashDuration;
-        case Language.KeywordKind.HashInfinity:
-            return Language.LineTokenKind.KeywordHashInfinity;
-        case Language.KeywordKind.HashNan:
-            return Language.LineTokenKind.KeywordHashNan;
-        case Language.KeywordKind.HashSections:
-            return Language.LineTokenKind.KeywordHashSections;
-        case Language.KeywordKind.HashShared:
-            return Language.LineTokenKind.KeywordHashShared;
-        case Language.KeywordKind.HashTable:
-            return Language.LineTokenKind.KeywordHashTable;
-        case Language.KeywordKind.HashTime:
-            return Language.LineTokenKind.KeywordHashTime;
+        case Keyword.KeywordKind.And:
+            return Token.LineTokenKind.KeywordAnd;
+        case Keyword.KeywordKind.As:
+            return Token.LineTokenKind.KeywordAs;
+        case Keyword.KeywordKind.Each:
+            return Token.LineTokenKind.KeywordEach;
+        case Keyword.KeywordKind.Else:
+            return Token.LineTokenKind.KeywordElse;
+        case Keyword.KeywordKind.Error:
+            return Token.LineTokenKind.KeywordError;
+        case Keyword.KeywordKind.False:
+            return Token.LineTokenKind.KeywordFalse;
+        case Keyword.KeywordKind.If:
+            return Token.LineTokenKind.KeywordIf;
+        case Keyword.KeywordKind.In:
+            return Token.LineTokenKind.KeywordIn;
+        case Keyword.KeywordKind.Is:
+            return Token.LineTokenKind.KeywordIs;
+        case Keyword.KeywordKind.Let:
+            return Token.LineTokenKind.KeywordLet;
+        case Keyword.KeywordKind.Meta:
+            return Token.LineTokenKind.KeywordMeta;
+        case Keyword.KeywordKind.Not:
+            return Token.LineTokenKind.KeywordNot;
+        case Keyword.KeywordKind.Or:
+            return Token.LineTokenKind.KeywordOr;
+        case Keyword.KeywordKind.Otherwise:
+            return Token.LineTokenKind.KeywordOtherwise;
+        case Keyword.KeywordKind.Section:
+            return Token.LineTokenKind.KeywordSection;
+        case Keyword.KeywordKind.Shared:
+            return Token.LineTokenKind.KeywordShared;
+        case Keyword.KeywordKind.Then:
+            return Token.LineTokenKind.KeywordThen;
+        case Keyword.KeywordKind.True:
+            return Token.LineTokenKind.KeywordTrue;
+        case Keyword.KeywordKind.Try:
+            return Token.LineTokenKind.KeywordTry;
+        case Keyword.KeywordKind.Type:
+            return Token.LineTokenKind.KeywordType;
+        case Keyword.KeywordKind.HashBinary:
+            return Token.LineTokenKind.KeywordHashBinary;
+        case Keyword.KeywordKind.HashDate:
+            return Token.LineTokenKind.KeywordHashDate;
+        case Keyword.KeywordKind.HashDateTime:
+            return Token.LineTokenKind.KeywordHashDateTime;
+        case Keyword.KeywordKind.HashDateTimeZone:
+            return Token.LineTokenKind.KeywordHashDateTimeZone;
+        case Keyword.KeywordKind.HashDuration:
+            return Token.LineTokenKind.KeywordHashDuration;
+        case Keyword.KeywordKind.HashInfinity:
+            return Token.LineTokenKind.KeywordHashInfinity;
+        case Keyword.KeywordKind.HashNan:
+            return Token.LineTokenKind.KeywordHashNan;
+        case Keyword.KeywordKind.HashSections:
+            return Token.LineTokenKind.KeywordHashSections;
+        case Keyword.KeywordKind.HashShared:
+            return Token.LineTokenKind.KeywordHashShared;
+        case Keyword.KeywordKind.HashTable:
+            return Token.LineTokenKind.KeywordHashTable;
+        case Keyword.KeywordKind.HashTime:
+            return Token.LineTokenKind.KeywordHashTime;
         default:
             return undefined;
     }

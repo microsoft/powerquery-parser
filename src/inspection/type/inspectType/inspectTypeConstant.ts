@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
+import { Ast, Constant, Type, TypeUtils } from "../../../language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 
 export function inspectTypeConstant(xorNode: TXorNode): Type.TType {
@@ -13,61 +13,61 @@ export function inspectTypeConstant(xorNode: TXorNode): Type.TType {
 
     const constant: Ast.TConstant = xorNode.node as Ast.TConstant;
     switch (constant.constantKind) {
-        case Ast.PrimitiveTypeConstantKind.Action:
+        case Constant.PrimitiveTypeConstantKind.Action:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Action);
 
-        case Ast.PrimitiveTypeConstantKind.Any:
+        case Constant.PrimitiveTypeConstantKind.Any:
             return Type.AnyInstance;
 
-        case Ast.PrimitiveTypeConstantKind.AnyNonNull:
+        case Constant.PrimitiveTypeConstantKind.AnyNonNull:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.AnyNonNull);
 
-        case Ast.PrimitiveTypeConstantKind.Binary:
+        case Constant.PrimitiveTypeConstantKind.Binary:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Binary);
 
-        case Ast.PrimitiveTypeConstantKind.Date:
+        case Constant.PrimitiveTypeConstantKind.Date:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Date);
 
-        case Ast.PrimitiveTypeConstantKind.DateTime:
+        case Constant.PrimitiveTypeConstantKind.DateTime:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.DateTime);
 
-        case Ast.PrimitiveTypeConstantKind.DateTimeZone:
+        case Constant.PrimitiveTypeConstantKind.DateTimeZone:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.DateTimeZone);
 
-        case Ast.PrimitiveTypeConstantKind.Duration:
+        case Constant.PrimitiveTypeConstantKind.Duration:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Duration);
 
-        case Ast.PrimitiveTypeConstantKind.Function:
+        case Constant.PrimitiveTypeConstantKind.Function:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Function);
 
-        case Ast.PrimitiveTypeConstantKind.List:
+        case Constant.PrimitiveTypeConstantKind.List:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.List);
 
-        case Ast.PrimitiveTypeConstantKind.Logical:
+        case Constant.PrimitiveTypeConstantKind.Logical:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical);
 
-        case Ast.PrimitiveTypeConstantKind.None:
+        case Constant.PrimitiveTypeConstantKind.None:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.None);
 
-        case Ast.PrimitiveTypeConstantKind.Null:
+        case Constant.PrimitiveTypeConstantKind.Null:
             return Type.NoneInstance;
 
-        case Ast.PrimitiveTypeConstantKind.Number:
+        case Constant.PrimitiveTypeConstantKind.Number:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Number);
 
-        case Ast.PrimitiveTypeConstantKind.Record:
+        case Constant.PrimitiveTypeConstantKind.Record:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record);
 
-        case Ast.PrimitiveTypeConstantKind.Table:
+        case Constant.PrimitiveTypeConstantKind.Table:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Table);
 
-        case Ast.PrimitiveTypeConstantKind.Text:
+        case Constant.PrimitiveTypeConstantKind.Text:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Text);
 
-        case Ast.PrimitiveTypeConstantKind.Time:
+        case Constant.PrimitiveTypeConstantKind.Time:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Time);
 
-        case Ast.PrimitiveTypeConstantKind.Type:
+        case Constant.PrimitiveTypeConstantKind.Type:
             return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Type);
 
         default:

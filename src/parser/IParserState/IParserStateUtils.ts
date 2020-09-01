@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
-import { Language } from "../..";
 import { Assert, CommonError } from "../../common";
-import { Ast } from "../../language";
+import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
 import { ParseSettings } from "../../settings";
@@ -27,7 +26,7 @@ export function stateFactory<S extends IParserState = IParserState>(
     settings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
 ): IParserState {
-    const maybeCurrentToken: Language.Token | undefined = lexerSnapshot.tokens[0];
+    const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[0];
 
     return {
         ...settings,
@@ -153,25 +152,25 @@ export function incrementAttributeCounter(state: IParserState): void {
 // ---------- IsX ----------
 // -------------------------
 
-export function isTokenKind(state: IParserState, tokenKind: Language.TokenKind, tokenIndex: number): boolean {
+export function isTokenKind(state: IParserState, tokenKind: Token.TokenKind, tokenIndex: number): boolean {
     return state.lexerSnapshot.tokens[tokenIndex]?.kind === tokenKind ?? false;
 }
 
-export function isNextTokenKind(state: IParserState, tokenKind: Language.TokenKind): boolean {
+export function isNextTokenKind(state: IParserState, tokenKind: Token.TokenKind): boolean {
     return isTokenKind(state, tokenKind, state.tokenIndex + 1);
 }
 
 export function isOnTokenKind(
     state: IParserState,
-    tokenKind: Language.TokenKind,
+    tokenKind: Token.TokenKind,
     tokenIndex: number = state.tokenIndex,
 ): boolean {
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
-export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstantKind): boolean {
-    if (isOnTokenKind(state, Language.TokenKind.Identifier)) {
-        const currentToken: Language.Token = state.lexerSnapshot.tokens[state.tokenIndex];
+export function isOnConstantKind(state: IParserState, constantKind: Constant.TConstantKind): boolean {
+    if (isOnTokenKind(state, Token.TokenKind.Identifier)) {
+        const currentToken: Token.Token = state.lexerSnapshot.tokens[state.tokenIndex];
         if (currentToken?.data === undefined) {
             const details: {} = { currentToken };
             throw new CommonError.InvariantError(`expected data on Token`, details);
@@ -185,44 +184,44 @@ export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstan
 }
 
 export function isOnGeneralizedIdentifierStart(state: IParserState, tokenIndex: number = state.tokenIndex): boolean {
-    const maybeTokenKind: Language.TokenKind | undefined = state.lexerSnapshot.tokens[tokenIndex]?.kind;
+    const maybeTokenKind: Token.TokenKind | undefined = state.lexerSnapshot.tokens[tokenIndex]?.kind;
     if (maybeTokenKind === undefined) {
         return false;
     }
 
     switch (maybeTokenKind) {
-        case Language.TokenKind.Identifier:
-        case Language.TokenKind.KeywordAnd:
-        case Language.TokenKind.KeywordAs:
-        case Language.TokenKind.KeywordEach:
-        case Language.TokenKind.KeywordElse:
-        case Language.TokenKind.KeywordError:
-        case Language.TokenKind.KeywordFalse:
-        case Language.TokenKind.KeywordHashBinary:
-        case Language.TokenKind.KeywordHashDate:
-        case Language.TokenKind.KeywordHashDateTime:
-        case Language.TokenKind.KeywordHashDateTimeZone:
-        case Language.TokenKind.KeywordHashDuration:
-        case Language.TokenKind.KeywordHashInfinity:
-        case Language.TokenKind.KeywordHashNan:
-        case Language.TokenKind.KeywordHashSections:
-        case Language.TokenKind.KeywordHashShared:
-        case Language.TokenKind.KeywordHashTable:
-        case Language.TokenKind.KeywordHashTime:
-        case Language.TokenKind.KeywordIf:
-        case Language.TokenKind.KeywordIn:
-        case Language.TokenKind.KeywordIs:
-        case Language.TokenKind.KeywordLet:
-        case Language.TokenKind.KeywordMeta:
-        case Language.TokenKind.KeywordNot:
-        case Language.TokenKind.KeywordOr:
-        case Language.TokenKind.KeywordOtherwise:
-        case Language.TokenKind.KeywordSection:
-        case Language.TokenKind.KeywordShared:
-        case Language.TokenKind.KeywordThen:
-        case Language.TokenKind.KeywordTrue:
-        case Language.TokenKind.KeywordTry:
-        case Language.TokenKind.KeywordType:
+        case Token.TokenKind.Identifier:
+        case Token.TokenKind.KeywordAnd:
+        case Token.TokenKind.KeywordAs:
+        case Token.TokenKind.KeywordEach:
+        case Token.TokenKind.KeywordElse:
+        case Token.TokenKind.KeywordError:
+        case Token.TokenKind.KeywordFalse:
+        case Token.TokenKind.KeywordHashBinary:
+        case Token.TokenKind.KeywordHashDate:
+        case Token.TokenKind.KeywordHashDateTime:
+        case Token.TokenKind.KeywordHashDateTimeZone:
+        case Token.TokenKind.KeywordHashDuration:
+        case Token.TokenKind.KeywordHashInfinity:
+        case Token.TokenKind.KeywordHashNan:
+        case Token.TokenKind.KeywordHashSections:
+        case Token.TokenKind.KeywordHashShared:
+        case Token.TokenKind.KeywordHashTable:
+        case Token.TokenKind.KeywordHashTime:
+        case Token.TokenKind.KeywordIf:
+        case Token.TokenKind.KeywordIn:
+        case Token.TokenKind.KeywordIs:
+        case Token.TokenKind.KeywordLet:
+        case Token.TokenKind.KeywordMeta:
+        case Token.TokenKind.KeywordNot:
+        case Token.TokenKind.KeywordOr:
+        case Token.TokenKind.KeywordOtherwise:
+        case Token.TokenKind.KeywordSection:
+        case Token.TokenKind.KeywordShared:
+        case Token.TokenKind.KeywordThen:
+        case Token.TokenKind.KeywordTrue:
+        case Token.TokenKind.KeywordTry:
+        case Token.TokenKind.KeywordType:
             return true;
 
         default:
@@ -239,11 +238,11 @@ export function isRecursivePrimaryExpressionNext(
         // section-access-expression
         // this.isOnTokenKind(TokenKind.Bang)
         // field-access-expression
-        isTokenKind(state, Language.TokenKind.LeftBrace, tokenIndexStart) ||
+        isTokenKind(state, Token.TokenKind.LeftBrace, tokenIndexStart) ||
         // item-access-expression
-        isTokenKind(state, Language.TokenKind.LeftBracket, tokenIndexStart) ||
+        isTokenKind(state, Token.TokenKind.LeftBracket, tokenIndexStart) ||
         // invoke-expression
-        isTokenKind(state, Language.TokenKind.LeftParenthesis, tokenIndexStart)
+        isTokenKind(state, Token.TokenKind.LeftParenthesis, tokenIndexStart)
     );
 }
 
@@ -256,14 +255,14 @@ export function assertContextNodeMetadata(state: IParserState): ContextNodeMetad
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
     Assert.isDefined(currentContextNode.maybeTokenStart);
-    const tokenStart: Language.Token = currentContextNode.maybeTokenStart;
+    const tokenStart: Token.Token = currentContextNode.maybeTokenStart;
 
     // inclusive token index
     const tokenIndexEnd: number = state.tokenIndex - 1;
-    const maybeTokenEnd: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndexEnd];
+    const maybeTokenEnd: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndexEnd];
     Assert.isDefined(maybeTokenEnd);
 
-    const tokenRange: Language.TokenRange = {
+    const tokenRange: Token.TokenRange = {
         tokenIndexStart: currentContextNode.tokenIndexStart,
         tokenIndexEnd,
         positionStart: tokenStart.positionStart,
@@ -278,9 +277,9 @@ export function assertContextNodeMetadata(state: IParserState): ContextNodeMetad
     };
 }
 
-export function assertTokenAt(state: IParserState, tokenIndex: number): Language.Token {
+export function assertTokenAt(state: IParserState, tokenIndex: number): Token.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
-    const maybeToken: Language.Token | undefined = lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     Assert.isDefined(maybeToken, undefined, { tokenIndex });
 
     return maybeToken;
@@ -296,7 +295,7 @@ export function assertTokenAt(state: IParserState, tokenIndex: number): Language
 export function testCsvContinuationLetExpression(
     state: IParserState,
 ): ParseError.ExpectedCsvContinuationError | undefined {
-    if (state.maybeCurrentTokenKind === Language.TokenKind.KeywordIn) {
+    if (state.maybeCurrentTokenKind === Token.TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
             state.localizationTemplates,
             ParseError.CsvContinuationKind.LetExpression,
@@ -309,7 +308,7 @@ export function testCsvContinuationLetExpression(
 
 export function testCsvContinuationDanglingComma(
     state: IParserState,
-    tokenKind: Language.TokenKind,
+    tokenKind: Token.TokenKind,
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
@@ -328,7 +327,7 @@ export function testCsvContinuationDanglingComma(
 
 export function testIsOnTokenKind(
     state: IParserState,
-    expectedTokenKind: Language.TokenKind,
+    expectedTokenKind: Token.TokenKind,
 ): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
@@ -340,7 +339,7 @@ export function testIsOnTokenKind(
 
 export function testIsOnAnyTokenKind(
     state: IParserState,
-    expectedAnyTokenKinds: ReadonlyArray<Language.TokenKind>,
+    expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
 ): ParseError.ExpectedAnyTokenKindError | undefined {
     const isError: boolean =
         state.maybeCurrentTokenKind === undefined || expectedAnyTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1;
@@ -358,7 +357,7 @@ export function assertNoMoreTokens(state: IParserState): void {
         return;
     }
 
-    const token: Language.Token = assertTokenAt(state, state.tokenIndex);
+    const token: Token.Token = assertTokenAt(state, state.tokenIndex);
     throw new ParseError.UnusedTokensRemainError(
         state.localizationTemplates,
         token,
@@ -377,7 +376,7 @@ export function assertNoOpenContext(state: IParserState): void {
 // -------------------------------------
 
 export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedParenthesesError {
-    const token: Language.Token = assertTokenAt(state, state.tokenIndex);
+    const token: Token.Token = assertTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedParenthesesError(
         state.localizationTemplates,
         token,
@@ -386,7 +385,7 @@ export function unterminatedParenthesesError(state: IParserState): ParseError.Un
 }
 
 export function unterminatedBracketError(state: IParserState): ParseError.UnterminatedBracketError {
-    const token: Language.Token = assertTokenAt(state, state.tokenIndex);
+    const token: Token.Token = assertTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedBracketError(
         state.localizationTemplates,
         token,
@@ -406,11 +405,11 @@ export function maybeTokenWithColumnNumber(
     state: IParserState,
     tokenIndex: number,
 ): ParseError.TokenWithColumnNumber | undefined {
-    const maybeToken: Language.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
+    const maybeToken: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndex];
     if (maybeToken === undefined) {
         return undefined;
     }
-    const currentToken: Language.Token = maybeToken;
+    const currentToken: Token.Token = maybeToken;
 
     return {
         token: currentToken,
@@ -421,5 +420,5 @@ export function maybeTokenWithColumnNumber(
 interface ContextNodeMetadata {
     readonly id: number;
     readonly maybeAttributeIndex: number | undefined;
-    readonly tokenRange: Language.TokenRange;
+    readonly tokenRange: Token.TokenRange;
 }

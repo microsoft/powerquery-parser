@@ -3,16 +3,16 @@
 
 import { ArrayUtils, Assert, CommonError } from "../../common";
 import { Ast } from "../ast";
-import { TokenKind } from "../token";
+import { Constant } from "../constant";
 
 export interface SimplifiedType {
     readonly isNullable: boolean;
-    readonly primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind;
+    readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind;
 }
 
 export function simplifyType(type: Ast.TType): SimplifiedType {
     let isNullable: boolean;
-    let primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind;
+    let primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind;
 
     switch (type.kind) {
         case Ast.NodeKind.PrimitiveType:
@@ -27,22 +27,22 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
 
         case Ast.NodeKind.FunctionType:
             isNullable = false;
-            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.Function;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.Function;
             break;
 
         case Ast.NodeKind.ListType:
             isNullable = false;
-            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.List;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.List;
             break;
 
         case Ast.NodeKind.RecordType:
             isNullable = false;
-            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.Record;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.Record;
             break;
 
         case Ast.NodeKind.TableType:
             isNullable = false;
-            primitiveTypeConstantKind = Ast.PrimitiveTypeConstantKind.Table;
+            primitiveTypeConstantKind = Constant.PrimitiveTypeConstantKind.Table;
             break;
 
         default:
@@ -61,7 +61,7 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
 
 export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveType): SimplifiedType {
     let isNullable: boolean;
-    let primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind;
+    let primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind;
 
     const nullablePrimitiveType: Ast.TNullablePrimitiveType = node.paired;
     switch (nullablePrimitiveType.kind) {
@@ -85,207 +85,9 @@ export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveTyp
     };
 }
 
-export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): Ast.UnaryOperatorKind | undefined {
-    switch (maybeTokenKind) {
-        case TokenKind.Plus:
-            return Ast.UnaryOperatorKind.Positive;
-        case TokenKind.Minus:
-            return Ast.UnaryOperatorKind.Negative;
-        case TokenKind.KeywordNot:
-            return Ast.UnaryOperatorKind.Not;
-        default:
-            return undefined;
-    }
-}
-
-export function maybeArithmeticOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Ast.ArithmeticOperatorKind | undefined {
-    switch (maybeTokenKind) {
-        case TokenKind.Asterisk:
-            return Ast.ArithmeticOperatorKind.Multiplication;
-        case TokenKind.Division:
-            return Ast.ArithmeticOperatorKind.Division;
-        case TokenKind.Plus:
-            return Ast.ArithmeticOperatorKind.Addition;
-        case TokenKind.Minus:
-            return Ast.ArithmeticOperatorKind.Subtraction;
-        case TokenKind.Ampersand:
-            return Ast.ArithmeticOperatorKind.And;
-        default:
-            return undefined;
-    }
-}
-
-export function maybeEqualityOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Ast.EqualityOperatorKind | undefined {
-    switch (maybeTokenKind) {
-        case TokenKind.Equal:
-            return Ast.EqualityOperatorKind.EqualTo;
-        case TokenKind.NotEqual:
-            return Ast.EqualityOperatorKind.NotEqualTo;
-        default:
-            return undefined;
-    }
-}
-
-export function maybeLogicalOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Ast.LogicalOperatorKind | undefined {
-    switch (maybeTokenKind) {
-        case TokenKind.KeywordAnd:
-            return Ast.LogicalOperatorKind.And;
-        case TokenKind.KeywordOr:
-            return Ast.LogicalOperatorKind.Or;
-        default:
-            return undefined;
-    }
-}
-
-export function maybeRelationalOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Ast.RelationalOperatorKind | undefined {
-    switch (maybeTokenKind) {
-        case TokenKind.LessThan:
-            return Ast.RelationalOperatorKind.LessThan;
-        case TokenKind.LessThanEqualTo:
-            return Ast.RelationalOperatorKind.LessThanEqualTo;
-        case TokenKind.GreaterThan:
-            return Ast.RelationalOperatorKind.GreaterThan;
-        case TokenKind.GreaterThanEqualTo:
-            return Ast.RelationalOperatorKind.GreaterThanEqualTo;
-        default:
-            return undefined;
-    }
-}
-
-export function maybeBinOpExpressionOperatorKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Ast.TBinOpExpressionOperator | undefined {
-    switch (maybeTokenKind) {
-        // ArithmeticOperator
-        case TokenKind.Asterisk:
-            return Ast.ArithmeticOperatorKind.Multiplication;
-        case TokenKind.Division:
-            return Ast.ArithmeticOperatorKind.Division;
-        case TokenKind.Plus:
-            return Ast.ArithmeticOperatorKind.Addition;
-        case TokenKind.Minus:
-            return Ast.ArithmeticOperatorKind.Subtraction;
-        case TokenKind.Ampersand:
-            return Ast.ArithmeticOperatorKind.And;
-
-        // EqualityOperator
-        case TokenKind.Equal:
-            return Ast.EqualityOperatorKind.EqualTo;
-        case TokenKind.NotEqual:
-            return Ast.EqualityOperatorKind.NotEqualTo;
-
-        // LogicalOperator
-        case TokenKind.KeywordAnd:
-            return Ast.LogicalOperatorKind.And;
-        case TokenKind.KeywordOr:
-            return Ast.LogicalOperatorKind.Or;
-
-        // RelationalOperator
-        case TokenKind.LessThan:
-            return Ast.RelationalOperatorKind.LessThan;
-        case TokenKind.LessThanEqualTo:
-            return Ast.RelationalOperatorKind.LessThanEqualTo;
-        case TokenKind.GreaterThan:
-            return Ast.RelationalOperatorKind.GreaterThan;
-        case TokenKind.GreaterThanEqualTo:
-            return Ast.RelationalOperatorKind.GreaterThanEqualTo;
-
-        // Keyword operator
-        case TokenKind.KeywordAs:
-            return Ast.KeywordConstantKind.As;
-        case TokenKind.KeywordIs:
-            return Ast.KeywordConstantKind.Is;
-        case TokenKind.KeywordMeta:
-            return Ast.KeywordConstantKind.Meta;
-
-        case TokenKind.NullCoalescingOperator:
-            return Ast.MiscConstantKind.NullCoalescingOperator;
-
-        default:
-            return undefined;
-    }
-}
-
-export function binOpExpressionOperatorPrecedence(operator: Ast.TBinOpExpressionOperator): number {
-    switch (operator) {
-        case Ast.KeywordConstantKind.Meta:
-            return 110;
-
-        case Ast.ArithmeticOperatorKind.Multiplication:
-        case Ast.ArithmeticOperatorKind.Division:
-            return 100;
-
-        case Ast.ArithmeticOperatorKind.Addition:
-        case Ast.ArithmeticOperatorKind.Subtraction:
-        case Ast.ArithmeticOperatorKind.And:
-            return 90;
-
-        case Ast.RelationalOperatorKind.GreaterThan:
-        case Ast.RelationalOperatorKind.GreaterThanEqualTo:
-        case Ast.RelationalOperatorKind.LessThan:
-        case Ast.RelationalOperatorKind.LessThanEqualTo:
-            return 80;
-
-        case Ast.EqualityOperatorKind.EqualTo:
-        case Ast.EqualityOperatorKind.NotEqualTo:
-            return 70;
-
-        case Ast.KeywordConstantKind.As:
-            return 60;
-
-        case Ast.KeywordConstantKind.Is:
-            return 50;
-
-        case Ast.LogicalOperatorKind.And:
-            return 40;
-
-        case Ast.LogicalOperatorKind.Or:
-            return 30;
-
-        case Ast.MiscConstantKind.NullCoalescingOperator:
-            return 20;
-
-        default:
-            throw Assert.isNever(operator);
-    }
-}
-
-export function maybeLiteralKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {
-    switch (maybeTokenKind) {
-        case TokenKind.HexLiteral:
-        case TokenKind.KeywordHashNan:
-        case TokenKind.KeywordHashInfinity:
-        case TokenKind.NumericLiteral:
-            return Ast.LiteralKind.Numeric;
-
-        case TokenKind.KeywordFalse:
-        case TokenKind.KeywordTrue:
-            return Ast.LiteralKind.Logical;
-
-        case TokenKind.NullLiteral:
-            return Ast.LiteralKind.Null;
-
-        case TokenKind.TextLiteral:
-            return Ast.LiteralKind.Text;
-
-        default:
-            return undefined;
-    }
-}
-
 export function primitiveTypeConstantKindFrom(
     node: Ast.AsNullablePrimitiveType | Ast.NullablePrimitiveType | Ast.PrimitiveType,
-): Ast.PrimitiveTypeConstantKind {
+): Constant.PrimitiveTypeConstantKind {
     switch (node.kind) {
         case Ast.NodeKind.AsNullablePrimitiveType:
             return primitiveTypeConstantKindFrom(node.paired);
@@ -298,34 +100,6 @@ export function primitiveTypeConstantKindFrom(
 
         default:
             throw Assert.isNever(node);
-    }
-}
-
-export function isPrimitiveTypeConstantKind(
-    maybePrimitiveTypeConstantKind: string,
-): maybePrimitiveTypeConstantKind is Ast.PrimitiveTypeConstantKind {
-    switch (maybePrimitiveTypeConstantKind) {
-        case Ast.IdentifierConstantKind.Nullable:
-        case Ast.IdentifierConstantKind.Optional:
-        case Ast.PrimitiveTypeConstantKind.Any:
-        case Ast.PrimitiveTypeConstantKind.AnyNonNull:
-        case Ast.PrimitiveTypeConstantKind.Binary:
-        case Ast.PrimitiveTypeConstantKind.Date:
-        case Ast.PrimitiveTypeConstantKind.DateTime:
-        case Ast.PrimitiveTypeConstantKind.DateTimeZone:
-        case Ast.PrimitiveTypeConstantKind.Duration:
-        case Ast.PrimitiveTypeConstantKind.Function:
-        case Ast.PrimitiveTypeConstantKind.List:
-        case Ast.PrimitiveTypeConstantKind.Logical:
-        case Ast.PrimitiveTypeConstantKind.None:
-        case Ast.PrimitiveTypeConstantKind.Number:
-        case Ast.PrimitiveTypeConstantKind.Record:
-        case Ast.PrimitiveTypeConstantKind.Table:
-        case Ast.PrimitiveTypeConstantKind.Text:
-        case Ast.PrimitiveTypeConstantKind.Time:
-            return true;
-        default:
-            return false;
     }
 }
 
@@ -360,16 +134,6 @@ export function isTBinOpExpressionKind(nodeKind: Ast.NodeKind): nodeKind is Ast.
         default:
             return false;
     }
-}
-
-export function isPairedWrapperConstantKinds(left: Ast.TConstantKind, right: Ast.TConstantKind): boolean {
-    Assert.isTrue(left < right, `the first argument should be 'less than' the second, eg. '[' < ']`);
-
-    return (
-        (left === Ast.WrapperConstantKind.LeftBrace && right === Ast.WrapperConstantKind.RightBrace) ||
-        (left === Ast.WrapperConstantKind.LeftBracket && right === Ast.WrapperConstantKind.RightBracket) ||
-        (left === Ast.WrapperConstantKind.LeftParenthesis && right === Ast.WrapperConstantKind.RightParenthesis)
-    );
 }
 
 export function assertNodeKind(node: Ast.TNode, expectedNodeKind: Ast.NodeKind): void {

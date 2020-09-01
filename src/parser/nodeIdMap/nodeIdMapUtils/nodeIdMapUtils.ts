@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Language } from "../../..";
 import { Assert } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, Token } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
@@ -46,7 +45,7 @@ export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number):
 export function xorNodeTokenRange(nodeIdMapCollection: Collection, xorNode: TXorNode): XorNodeTokenRange {
     switch (xorNode.kind) {
         case XorNodeKind.Ast: {
-            const tokenRange: Language.TokenRange = xorNode.node.tokenRange;
+            const tokenRange: Token.TokenRange = xorNode.node.tokenRange;
             return {
                 tokenIndexStart: tokenRange.tokenIndexStart,
                 tokenIndexEnd: tokenRange.tokenIndexEnd,

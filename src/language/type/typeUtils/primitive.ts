@@ -3,68 +3,68 @@
 
 import { Type } from "..";
 import { Assert } from "../../../common";
-import { Ast } from "../../ast";
+import { Constant } from "../../constant";
 
 export function maybePrimitiveTypeConstantKindFromTypeKind(
     typeKind: Type.TypeKind,
-): Ast.PrimitiveTypeConstantKind | undefined {
+): Constant.PrimitiveTypeConstantKind | undefined {
     switch (typeKind) {
         case Type.TypeKind.Action:
-            return Ast.PrimitiveTypeConstantKind.Action;
+            return Constant.PrimitiveTypeConstantKind.Action;
 
         case Type.TypeKind.Any:
-            return Ast.PrimitiveTypeConstantKind.Any;
+            return Constant.PrimitiveTypeConstantKind.Any;
 
         case Type.TypeKind.AnyNonNull:
-            return Ast.PrimitiveTypeConstantKind.AnyNonNull;
+            return Constant.PrimitiveTypeConstantKind.AnyNonNull;
 
         case Type.TypeKind.Binary:
-            return Ast.PrimitiveTypeConstantKind.Binary;
+            return Constant.PrimitiveTypeConstantKind.Binary;
 
         case Type.TypeKind.Date:
-            return Ast.PrimitiveTypeConstantKind.Date;
+            return Constant.PrimitiveTypeConstantKind.Date;
 
         case Type.TypeKind.DateTime:
-            return Ast.PrimitiveTypeConstantKind.DateTime;
+            return Constant.PrimitiveTypeConstantKind.DateTime;
 
         case Type.TypeKind.DateTimeZone:
-            return Ast.PrimitiveTypeConstantKind.DateTimeZone;
+            return Constant.PrimitiveTypeConstantKind.DateTimeZone;
 
         case Type.TypeKind.Duration:
-            return Ast.PrimitiveTypeConstantKind.Duration;
+            return Constant.PrimitiveTypeConstantKind.Duration;
 
         case Type.TypeKind.Function:
-            return Ast.PrimitiveTypeConstantKind.Function;
+            return Constant.PrimitiveTypeConstantKind.Function;
 
         case Type.TypeKind.List:
-            return Ast.PrimitiveTypeConstantKind.List;
+            return Constant.PrimitiveTypeConstantKind.List;
 
         case Type.TypeKind.Logical:
-            return Ast.PrimitiveTypeConstantKind.Logical;
+            return Constant.PrimitiveTypeConstantKind.Logical;
 
         case Type.TypeKind.None:
-            return Ast.PrimitiveTypeConstantKind.None;
+            return Constant.PrimitiveTypeConstantKind.None;
 
         case Type.TypeKind.Null:
-            return Ast.PrimitiveTypeConstantKind.Null;
+            return Constant.PrimitiveTypeConstantKind.Null;
 
         case Type.TypeKind.Number:
-            return Ast.PrimitiveTypeConstantKind.Number;
+            return Constant.PrimitiveTypeConstantKind.Number;
 
         case Type.TypeKind.Record:
-            return Ast.PrimitiveTypeConstantKind.Record;
+            return Constant.PrimitiveTypeConstantKind.Record;
 
         case Type.TypeKind.Table:
-            return Ast.PrimitiveTypeConstantKind.Table;
+            return Constant.PrimitiveTypeConstantKind.Table;
 
         case Type.TypeKind.Text:
-            return Ast.PrimitiveTypeConstantKind.Text;
+            return Constant.PrimitiveTypeConstantKind.Text;
 
         case Type.TypeKind.Time:
-            return Ast.PrimitiveTypeConstantKind.Time;
+            return Constant.PrimitiveTypeConstantKind.Time;
 
         case Type.TypeKind.Type:
-            return Ast.PrimitiveTypeConstantKind.Type;
+            return Constant.PrimitiveTypeConstantKind.Type;
 
         case Type.TypeKind.NotApplicable:
         case Type.TypeKind.Unknown:
@@ -76,64 +76,64 @@ export function maybePrimitiveTypeConstantKindFromTypeKind(
 }
 
 export function typeKindFromPrimitiveTypeConstantKind(
-    primitiveTypeConstantKind: Ast.PrimitiveTypeConstantKind,
+    primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind,
 ): Type.TypeKind {
     switch (primitiveTypeConstantKind) {
-        case Ast.PrimitiveTypeConstantKind.Action:
+        case Constant.PrimitiveTypeConstantKind.Action:
             return Type.TypeKind.Action;
 
-        case Ast.PrimitiveTypeConstantKind.Any:
+        case Constant.PrimitiveTypeConstantKind.Any:
             return Type.TypeKind.Any;
 
-        case Ast.PrimitiveTypeConstantKind.AnyNonNull:
+        case Constant.PrimitiveTypeConstantKind.AnyNonNull:
             return Type.TypeKind.AnyNonNull;
 
-        case Ast.PrimitiveTypeConstantKind.Binary:
+        case Constant.PrimitiveTypeConstantKind.Binary:
             return Type.TypeKind.Binary;
 
-        case Ast.PrimitiveTypeConstantKind.Date:
+        case Constant.PrimitiveTypeConstantKind.Date:
             return Type.TypeKind.Date;
 
-        case Ast.PrimitiveTypeConstantKind.DateTime:
+        case Constant.PrimitiveTypeConstantKind.DateTime:
             return Type.TypeKind.DateTime;
 
-        case Ast.PrimitiveTypeConstantKind.DateTimeZone:
+        case Constant.PrimitiveTypeConstantKind.DateTimeZone:
             return Type.TypeKind.DateTimeZone;
 
-        case Ast.PrimitiveTypeConstantKind.Duration:
+        case Constant.PrimitiveTypeConstantKind.Duration:
             return Type.TypeKind.Duration;
 
-        case Ast.PrimitiveTypeConstantKind.Function:
+        case Constant.PrimitiveTypeConstantKind.Function:
             return Type.TypeKind.Function;
 
-        case Ast.PrimitiveTypeConstantKind.List:
+        case Constant.PrimitiveTypeConstantKind.List:
             return Type.TypeKind.List;
 
-        case Ast.PrimitiveTypeConstantKind.Logical:
+        case Constant.PrimitiveTypeConstantKind.Logical:
             return Type.TypeKind.Logical;
 
-        case Ast.PrimitiveTypeConstantKind.None:
+        case Constant.PrimitiveTypeConstantKind.None:
             return Type.TypeKind.None;
 
-        case Ast.PrimitiveTypeConstantKind.Null:
+        case Constant.PrimitiveTypeConstantKind.Null:
             return Type.TypeKind.Null;
 
-        case Ast.PrimitiveTypeConstantKind.Number:
+        case Constant.PrimitiveTypeConstantKind.Number:
             return Type.TypeKind.Number;
 
-        case Ast.PrimitiveTypeConstantKind.Record:
+        case Constant.PrimitiveTypeConstantKind.Record:
             return Type.TypeKind.Record;
 
-        case Ast.PrimitiveTypeConstantKind.Table:
+        case Constant.PrimitiveTypeConstantKind.Table:
             return Type.TypeKind.Table;
 
-        case Ast.PrimitiveTypeConstantKind.Text:
+        case Constant.PrimitiveTypeConstantKind.Text:
             return Type.TypeKind.Text;
 
-        case Ast.PrimitiveTypeConstantKind.Time:
+        case Constant.PrimitiveTypeConstantKind.Time:
             return Type.TypeKind.Time;
 
-        case Ast.PrimitiveTypeConstantKind.Type:
+        case Constant.PrimitiveTypeConstantKind.Type:
             return Type.TypeKind.Type;
 
         default:

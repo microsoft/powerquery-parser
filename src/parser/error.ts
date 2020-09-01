@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Language } from "..";
 import { Assert, CommonError, StringUtils } from "../common";
+import { Token } from "../language";
 import { ILocalizationTemplates, Localization } from "../localization";
 import { IParserState } from "./IParserState";
 
@@ -50,7 +50,7 @@ export class ExpectedCsvContinuationError extends Error {
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly expectedAnyTokenKinds: ReadonlyArray<Language.TokenKind>,
+        readonly expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKinds, maybeFoundToken));
@@ -61,7 +61,7 @@ export class ExpectedAnyTokenKindError extends Error {
 export class ExpectedTokenKindError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly expectedTokenKind: Language.TokenKind,
+        readonly expectedTokenKind: Token.TokenKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
         super(Localization.error_parse_expectTokenKind(templates, expectedTokenKind, maybeFoundToken));
@@ -79,7 +79,7 @@ export class ExpectedGeneralizedIdentifierError extends Error {
 export class InvalidPrimitiveTypeError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly token: Language.Token,
+        readonly token: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_invalidPrimitiveType(templates, token));
@@ -90,7 +90,7 @@ export class InvalidPrimitiveTypeError extends Error {
 export class RequiredParameterAfterOptionalParameterError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly missingOptionalToken: Language.Token,
+        readonly missingOptionalToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_requiredParameterAfterOptional(templates));
@@ -101,7 +101,7 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
 export class UnterminatedBracketError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly openBracketToken: Language.Token,
+        readonly openBracketToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unterminated_bracket(templates));
@@ -112,7 +112,7 @@ export class UnterminatedBracketError extends Error {
 export class UnterminatedParenthesesError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly openParenthesesToken: Language.Token,
+        readonly openParenthesesToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unterminated_parenthesis(templates));
@@ -123,7 +123,7 @@ export class UnterminatedParenthesesError extends Error {
 export class UnusedTokensRemainError extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly firstUnusedToken: Language.Token,
+        readonly firstUnusedToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
         super(Localization.error_parse_unusedTokens(templates));
@@ -132,7 +132,7 @@ export class UnusedTokensRemainError extends Error {
 }
 
 export interface TokenWithColumnNumber {
-    readonly token: Language.Token;
+    readonly token: Token.Token;
     readonly columnNumber: number;
 }
 
@@ -163,7 +163,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
     );
 }
 
-export function maybeTokenFrom(err: TInnerParseError): Language.Token | undefined {
+export function maybeTokenFrom(err: TInnerParseError): Token.Token | undefined {
     if (
         (err instanceof ExpectedAnyTokenKindError ||
             err instanceof ExpectedCsvContinuationError ||

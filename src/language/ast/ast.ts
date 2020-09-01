@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Constant } from "..";
 import { TokenRange } from "../token";
 
 export const enum NodeKind {
@@ -106,7 +107,7 @@ export type TAuxiliaryNodes =
 
 export type TArrayWrapper =
     | IArrayWrapper<AsNullablePrimitiveType>
-    | IArrayWrapper<IConstant<UnaryOperatorKind>>
+    | IArrayWrapper<IConstant<Constant.UnaryOperatorKind>>
     | IArrayWrapper<IsNullablePrimitiveType>
     | IArrayWrapper<SectionMember>
     | IArrayWrapper<TRecursivePrimaryExpression>
@@ -220,9 +221,9 @@ export interface Section extends INode {
     readonly kind: NodeKind.Section;
     readonly isLeaf: false;
     readonly maybeLiteralAttributes: RecordLiteral | undefined;
-    readonly sectionConstant: IConstant<KeywordConstantKind.Section>;
+    readonly sectionConstant: IConstant<Constant.KeywordConstantKind.Section>;
     readonly maybeName: Identifier | undefined;
-    readonly semicolonConstant: IConstant<MiscConstantKind.Semicolon>;
+    readonly semicolonConstant: IConstant<Constant.MiscConstantKind.Semicolon>;
     readonly sectionMembers: IArrayWrapper<SectionMember>;
 }
 
@@ -230,9 +231,9 @@ export interface SectionMember extends INode {
     readonly kind: NodeKind.SectionMember;
     readonly isLeaf: false;
     readonly maybeLiteralAttributes: RecordLiteral | undefined;
-    readonly maybeSharedConstant: IConstant<KeywordConstantKind.Shared> | undefined;
+    readonly maybeSharedConstant: IConstant<Constant.KeywordConstantKind.Shared> | undefined;
     readonly namePairedExpression: IdentifierPairedExpression;
-    readonly semicolonConstant: IConstant<MiscConstantKind.Semicolon>;
+    readonly semicolonConstant: IConstant<Constant.MiscConstantKind.Semicolon>;
 }
 
 // ------------------------------------------
@@ -263,15 +264,19 @@ export type TIsExpression = IsExpression | TAsExpression;
 export type TNullablePrimitiveType = NullablePrimitiveType | PrimitiveType;
 
 export interface NullablePrimitiveType
-    extends IPairedConstant<NodeKind.NullablePrimitiveType, IdentifierConstantKind.Nullable, PrimitiveType> {}
+    extends IPairedConstant<NodeKind.NullablePrimitiveType, Constant.IdentifierConstantKind.Nullable, PrimitiveType> {}
 
 export interface IsNullablePrimitiveType
-    extends IPairedConstant<NodeKind.IsNullablePrimitiveType, KeywordConstantKind.Is, TNullablePrimitiveType> {}
+    extends IPairedConstant<
+        NodeKind.IsNullablePrimitiveType,
+        Constant.KeywordConstantKind.Is,
+        TNullablePrimitiveType
+    > {}
 
 export interface PrimitiveType extends INode {
     readonly kind: NodeKind.PrimitiveType;
     readonly isLeaf: false;
-    readonly primitiveType: IConstant<PrimitiveTypeConstantKind>;
+    readonly primitiveType: IConstant<Constant.PrimitiveTypeConstantKind>;
 }
 
 // --------------------------------------------
@@ -308,7 +313,7 @@ export interface MetadataExpression
     extends IBinOpExpression<
         NodeKind.MetadataExpression,
         TUnaryExpression,
-        KeywordConstantKind.Meta,
+        Constant.KeywordConstantKind.Meta,
         TUnaryExpression
     > {}
 
@@ -321,7 +326,7 @@ export type TUnaryExpression = UnaryExpression | TTypeExpression;
 export interface UnaryExpression extends INode {
     readonly kind: NodeKind.UnaryExpression;
     readonly isLeaf: false;
-    readonly operators: IArrayWrapper<IConstant<UnaryOperatorKind>>;
+    readonly operators: IArrayWrapper<IConstant<Constant.UnaryOperatorKind>>;
     readonly typeExpression: TTypeExpression;
 }
 
@@ -348,7 +353,7 @@ export interface LiteralExpression extends INode {
     readonly kind: NodeKind.LiteralExpression;
     readonly isLeaf: true;
     readonly literal: string;
-    readonly literalKind: Exclude<LiteralKind, LiteralKind.Record>;
+    readonly literalKind: Exclude<Constant.LiteralKind, Constant.LiteralKind.Record>;
 }
 
 // -----------------------------------------------------
@@ -358,7 +363,7 @@ export interface LiteralExpression extends INode {
 export interface IdentifierExpression extends INode {
     readonly kind: NodeKind.IdentifierExpression;
     readonly isLeaf: false;
-    readonly maybeInclusiveConstant: IConstant<MiscConstantKind.AtSign> | undefined;
+    readonly maybeInclusiveConstant: IConstant<Constant.MiscConstantKind.AtSign> | undefined;
     readonly identifier: Identifier;
 }
 
@@ -375,7 +380,7 @@ export interface ParenthesizedExpression extends IParenthesisWrapped<NodeKind.Pa
 export interface NotImplementedExpression extends INode {
     readonly kind: NodeKind.NotImplementedExpression;
     readonly isLeaf: false;
-    readonly ellipsisConstant: IConstant<MiscConstantKind.Ellipsis>;
+    readonly ellipsisConstant: IConstant<Constant.MiscConstantKind.Ellipsis>;
 }
 
 // -------------------------------------------------
@@ -396,7 +401,7 @@ export interface RangeExpression extends INode {
     readonly kind: NodeKind.RangeExpression;
     readonly isLeaf: false;
     readonly left: TExpression;
-    readonly rangeConstant: IConstant<MiscConstantKind.DotDot>;
+    readonly rangeConstant: IConstant<Constant.MiscConstantKind.DotDot>;
     readonly right: TExpression;
 }
 
@@ -413,7 +418,7 @@ export interface RecordExpression
 
 export interface ItemAccessExpression extends IBraceWrapped<NodeKind.ItemAccessExpression, TExpression> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: IConstant<MiscConstantKind.QuestionMark> | undefined;
+    readonly maybeOptionalConstant: IConstant<Constant.MiscConstantKind.QuestionMark> | undefined;
 }
 
 // --------------------------------------------------------
@@ -424,12 +429,12 @@ export type TFieldAccessExpression = FieldSelector | FieldProjection;
 
 export interface FieldSelector extends IBracketWrapped<NodeKind.FieldSelector, GeneralizedIdentifier> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: IConstant<MiscConstantKind.QuestionMark> | undefined;
+    readonly maybeOptionalConstant: IConstant<Constant.MiscConstantKind.QuestionMark> | undefined;
 }
 
 export interface FieldProjection extends IBracketWrapped<NodeKind.FieldProjection, ICsvArray<FieldSelector>> {
     // located after closeWrapperConstant
-    readonly maybeOptionalConstant: IConstant<MiscConstantKind.QuestionMark> | undefined;
+    readonly maybeOptionalConstant: IConstant<Constant.MiscConstantKind.QuestionMark> | undefined;
 }
 
 // ---------------------------------------------------
@@ -441,7 +446,7 @@ export interface FunctionExpression extends INode {
     readonly isLeaf: false;
     readonly parameters: IParameterList<AsNullablePrimitiveType | undefined>;
     readonly maybeFunctionReturnType: AsNullablePrimitiveType | undefined;
-    readonly fatArrowConstant: IConstant<MiscConstantKind.FatArrow>;
+    readonly fatArrowConstant: IConstant<Constant.MiscConstantKind.FatArrow>;
     readonly expression: TExpression;
 }
 
@@ -450,7 +455,7 @@ export interface FunctionExpression extends INode {
 // -----------------------------------------------
 
 export interface EachExpression
-    extends IPairedConstant<NodeKind.EachExpression, KeywordConstantKind.Each, TExpression> {}
+    extends IPairedConstant<NodeKind.EachExpression, Constant.KeywordConstantKind.Each, TExpression> {}
 
 // ----------------------------------------------
 // ---------- 12.2.3.23 Let expression ----------
@@ -458,9 +463,9 @@ export interface EachExpression
 
 export interface LetExpression extends INode {
     readonly kind: NodeKind.LetExpression;
-    readonly letConstant: IConstant<KeywordConstantKind.Let>;
+    readonly letConstant: IConstant<Constant.KeywordConstantKind.Let>;
     readonly variableList: ICsvArray<IdentifierPairedExpression>;
-    readonly inConstant: IConstant<KeywordConstantKind.In>;
+    readonly inConstant: IConstant<Constant.KeywordConstantKind.In>;
     readonly expression: TExpression;
 }
 
@@ -471,11 +476,11 @@ export interface LetExpression extends INode {
 export interface IfExpression extends INode {
     readonly kind: NodeKind.IfExpression;
     readonly isLeaf: false;
-    readonly ifConstant: IConstant<KeywordConstantKind.If>;
+    readonly ifConstant: IConstant<Constant.KeywordConstantKind.If>;
     readonly condition: TExpression;
-    readonly thenConstant: IConstant<KeywordConstantKind.Then>;
+    readonly thenConstant: IConstant<Constant.KeywordConstantKind.Then>;
     readonly trueExpression: TExpression;
-    readonly elseConstant: IConstant<KeywordConstantKind.Else>;
+    readonly elseConstant: IConstant<Constant.KeywordConstantKind.Else>;
     readonly falseExpression: TExpression;
 }
 
@@ -493,14 +498,15 @@ export type TPrimaryType = PrimitiveType | FunctionType | ListType | NullableTyp
 export interface FunctionType extends INode {
     readonly kind: NodeKind.FunctionType;
     readonly isLeaf: false;
-    readonly functionConstant: IConstant<PrimitiveTypeConstantKind.Function>;
+    readonly functionConstant: IConstant<Constant.PrimitiveTypeConstantKind.Function>;
     readonly parameters: IParameterList<AsType>;
     readonly functionReturnType: AsType;
 }
 
 export interface ListType extends IBraceWrapped<NodeKind.ListType, TType> {}
 
-export interface NullableType extends IPairedConstant<NodeKind.NullableType, IdentifierConstantKind.Nullable, TType> {}
+export interface NullableType
+    extends IPairedConstant<NodeKind.NullableType, Constant.IdentifierConstantKind.Nullable, TType> {}
 
 export interface RecordType extends INode {
     readonly kind: NodeKind.RecordType;
@@ -511,7 +517,7 @@ export interface RecordType extends INode {
 export interface TableType extends INode {
     readonly kind: NodeKind.TableType;
     readonly isLeaf: false;
-    readonly tableConstant: IConstant<PrimitiveTypeConstantKind.Table>;
+    readonly tableConstant: IConstant<Constant.PrimitiveTypeConstantKind.Table>;
     readonly rowType: FieldSpecificationList | TPrimaryExpression;
 }
 
@@ -520,7 +526,7 @@ export interface TableType extends INode {
 // --------------------------------------------------------
 
 export interface ErrorRaisingExpression
-    extends IPairedConstant<NodeKind.ErrorRaisingExpression, KeywordConstantKind.Error, TExpression> {}
+    extends IPairedConstant<NodeKind.ErrorRaisingExpression, Constant.KeywordConstantKind.Error, TExpression> {}
 
 // ---------------------------------------------------------
 // ---------- 12.2.3.27 Error handling expression ----------
@@ -529,13 +535,13 @@ export interface ErrorRaisingExpression
 export interface ErrorHandlingExpression extends INode {
     readonly kind: NodeKind.ErrorHandlingExpression;
     readonly isLeaf: false;
-    readonly tryConstant: IConstant<KeywordConstantKind.Try>;
+    readonly tryConstant: IConstant<Constant.KeywordConstantKind.Try>;
     readonly protectedExpression: TExpression;
     readonly maybeOtherwiseExpression: OtherwiseExpression | undefined;
 }
 
 export interface OtherwiseExpression
-    extends IPairedConstant<NodeKind.OtherwiseExpression, KeywordConstantKind.Otherwise, TExpression> {}
+    extends IPairedConstant<NodeKind.OtherwiseExpression, Constant.KeywordConstantKind.Otherwise, TExpression> {}
 
 export interface RecursivePrimaryExpression extends INode {
     readonly kind: NodeKind.RecursivePrimaryExpression;
@@ -545,7 +551,7 @@ export interface RecursivePrimaryExpression extends INode {
 }
 
 export interface TypePrimaryType
-    extends IPairedConstant<NodeKind.TypePrimaryType, KeywordConstantKind.Type, TPrimaryType> {}
+    extends IPairedConstant<NodeKind.TypePrimaryType, Constant.KeywordConstantKind.Type, TPrimaryType> {}
 
 // -----------------------------------------------
 // ---------- 12.2.4 Literal Attributes ----------
@@ -554,12 +560,12 @@ export interface TypePrimaryType
 export type TAnyLiteral = ListLiteral | LiteralExpression | RecordLiteral;
 
 export interface ListLiteral extends IBraceWrapped<NodeKind.ListLiteral, ICsvArray<TAnyLiteral>> {
-    readonly literalKind: LiteralKind.List;
+    readonly literalKind: Constant.LiteralKind.List;
 }
 
 export interface RecordLiteral
     extends IBracketWrapped<NodeKind.RecordLiteral, ICsvArray<GeneralizedIdentifierPairedAnyLiteral>> {
-    readonly literalKind: LiteralKind.Record;
+    readonly literalKind: Constant.LiteralKind.Record;
 }
 
 // -----------------------------------------
@@ -578,20 +584,23 @@ export interface ICsvArray<T extends TCsvType> extends IArrayWrapper<ICsv<T>> {}
 export interface ICsv<T> extends INode {
     readonly kind: NodeKind.Csv;
     readonly node: T;
-    readonly maybeCommaConstant: IConstant<MiscConstantKind.Comma> | undefined;
+    readonly maybeCommaConstant: IConstant<Constant.MiscConstantKind.Comma> | undefined;
 }
 
 export interface IKeyValuePair<Kind extends TKeyValuePairNodeKind, Key, Value> extends INode {
     readonly kind: Kind;
     readonly key: Key;
-    readonly equalConstant: IConstant<MiscConstantKind.Equal>;
+    readonly equalConstant: IConstant<Constant.MiscConstantKind.Equal>;
     readonly value: Value;
 }
 
 // A [Constant, T] tuple
 // eg. EachExpression is a `each` Constant paired with a TExpression
-export interface IPairedConstant<Kind extends TPairedConstantNodeKind, ConstantKind extends TConstantKind, Paired>
-    extends INode {
+export interface IPairedConstant<
+    Kind extends TPairedConstantNodeKind,
+    ConstantKind extends Constant.TConstantKind,
+    Paired
+> extends INode {
     readonly kind: Kind;
     readonly constant: IConstant<ConstantKind>;
     readonly paired: Paired;
@@ -599,9 +608,9 @@ export interface IPairedConstant<Kind extends TPairedConstantNodeKind, ConstantK
 
 export interface IWrapped<
     Kind extends TWrappedNodeKind,
-    Open extends WrapperConstantKind,
+    Open extends Constant.WrapperConstantKind,
     Content,
-    Close extends WrapperConstantKind
+    Close extends Constant.WrapperConstantKind
 > extends INode {
     readonly kind: Kind;
     readonly openWrapperConstant: IConstant<Open>;
@@ -610,13 +619,23 @@ export interface IWrapped<
 }
 
 export interface IBraceWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<Kind, WrapperConstantKind.LeftBrace, Content, WrapperConstantKind.RightBrace> {}
+    extends IWrapped<Kind, Constant.WrapperConstantKind.LeftBrace, Content, Constant.WrapperConstantKind.RightBrace> {}
 
 export interface IBracketWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<Kind, WrapperConstantKind.LeftBracket, Content, WrapperConstantKind.RightBracket> {}
+    extends IWrapped<
+        Kind,
+        Constant.WrapperConstantKind.LeftBracket,
+        Content,
+        Constant.WrapperConstantKind.RightBracket
+    > {}
 
 export interface IParenthesisWrapped<Kind extends TWrappedNodeKind, Content>
-    extends IWrapped<Kind, WrapperConstantKind.LeftParenthesis, Content, WrapperConstantKind.RightParenthesis> {}
+    extends IWrapped<
+        Kind,
+        Constant.WrapperConstantKind.LeftParenthesis,
+        Content,
+        Constant.WrapperConstantKind.RightParenthesis
+    > {}
 
 // --------------------------------------
 // ---------- IBinOpExpression ----------
@@ -633,26 +652,26 @@ export type TBinOpExpression =
     | RelationalExpression
     | TBinOpExpressionSubtype;
 
-export type TBinOpExpressionOperator =
-    | ArithmeticOperatorKind
-    | EqualityOperatorKind
-    | LogicalOperatorKind
-    | RelationalOperatorKind
-    | MiscConstantKind.NullCoalescingOperator
-    | KeywordConstantKind.As
-    | KeywordConstantKind.Is
-    | KeywordConstantKind.Meta;
-
 // The following types are needed for recursiveReadBinOpExpressionHelper,
 // and are created by converting IBinOpExpression<A, B, C, D> to IBinOpExpression<A, D, C, D>.
 export type TBinOpExpressionSubtype =
-    | IBinOpExpression<NodeKind.AsExpression, TNullablePrimitiveType, KeywordConstantKind.As, TNullablePrimitiveType>
-    | IBinOpExpression<NodeKind.IsExpression, TNullablePrimitiveType, KeywordConstantKind.Is, TNullablePrimitiveType>;
+    | IBinOpExpression<
+          NodeKind.AsExpression,
+          TNullablePrimitiveType,
+          Constant.KeywordConstantKind.As,
+          TNullablePrimitiveType
+      >
+    | IBinOpExpression<
+          NodeKind.IsExpression,
+          TNullablePrimitiveType,
+          Constant.KeywordConstantKind.Is,
+          TNullablePrimitiveType
+      >;
 
 export interface IBinOpExpression<
     Kind extends TBinOpExpressionNodeKind,
     Left,
-    OperatorKind extends TBinOpExpressionOperator,
+    OperatorKind extends Constant.TBinOpExpressionOperator,
     Right
 > extends INode {
     readonly kind: Kind;
@@ -669,7 +688,7 @@ export interface ArithmeticExpression
     extends IBinOpExpression<
         NodeKind.ArithmeticExpression,
         TArithmeticExpression,
-        ArithmeticOperatorKind,
+        Constant.ArithmeticOperatorKind,
         TArithmeticExpression
     > {}
 
@@ -677,7 +696,7 @@ export interface AsExpression
     extends IBinOpExpression<
         NodeKind.AsExpression,
         TEqualityExpression,
-        KeywordConstantKind.As,
+        Constant.KeywordConstantKind.As,
         TNullablePrimitiveType
     > {}
 
@@ -685,21 +704,31 @@ export interface EqualityExpression
     extends IBinOpExpression<
         NodeKind.EqualityExpression,
         TEqualityExpression,
-        EqualityOperatorKind,
+        Constant.EqualityOperatorKind,
         TEqualityExpression
     > {}
 
 export interface IsExpression
-    extends IBinOpExpression<NodeKind.IsExpression, TAsExpression, KeywordConstantKind.Is, TNullablePrimitiveType> {}
+    extends IBinOpExpression<
+        NodeKind.IsExpression,
+        TAsExpression,
+        Constant.KeywordConstantKind.Is,
+        TNullablePrimitiveType
+    > {}
 
 export interface LogicalExpression
-    extends IBinOpExpression<NodeKind.LogicalExpression, TLogicalExpression, LogicalOperatorKind, TLogicalExpression> {}
+    extends IBinOpExpression<
+        NodeKind.LogicalExpression,
+        TLogicalExpression,
+        Constant.LogicalOperatorKind,
+        TLogicalExpression
+    > {}
 
 export interface RelationalExpression
     extends IBinOpExpression<
         NodeKind.RelationalExpression,
         TRelationalExpression,
-        RelationalOperatorKind,
+        Constant.RelationalOperatorKind,
         TRelationalExpression
     > {}
 
@@ -728,39 +757,31 @@ export interface IParameterList<T extends TParameterType>
 export interface IParameter<T extends TParameterType> extends INode {
     readonly kind: NodeKind.Parameter;
     readonly isLeaf: false;
-    readonly maybeOptionalConstant: IConstant<IdentifierConstantKind.Optional> | undefined;
+    readonly maybeOptionalConstant: IConstant<Constant.IdentifierConstantKind.Optional> | undefined;
     readonly name: Identifier;
     readonly maybeParameterType: T;
 }
 
 export interface AsNullablePrimitiveType
-    extends IPairedConstant<NodeKind.AsNullablePrimitiveType, KeywordConstantKind.As, TNullablePrimitiveType> {}
+    extends IPairedConstant<
+        NodeKind.AsNullablePrimitiveType,
+        Constant.KeywordConstantKind.As,
+        TNullablePrimitiveType
+    > {}
 
-export interface AsType extends IPairedConstant<NodeKind.AsType, KeywordConstantKind.As, TType> {}
+export interface AsType extends IPairedConstant<NodeKind.AsType, Constant.KeywordConstantKind.As, TType> {}
 
 // ------------------------------
 // ---------- Constant ----------
 // ------------------------------
 
-export type TConstantKind =
-    | ArithmeticOperatorKind
-    | EqualityOperatorKind
-    | IdentifierConstantKind
-    | KeywordConstantKind
-    | LogicalOperatorKind
-    | MiscConstantKind
-    | PrimitiveTypeConstantKind
-    | RelationalOperatorKind
-    | UnaryOperatorKind
-    | WrapperConstantKind;
-
-export interface IConstant<ConstantKind extends TConstantKind> extends INode {
+export interface IConstant<ConstantKind extends Constant.TConstantKind> extends INode {
     readonly kind: NodeKind.Constant;
     readonly isLeaf: true;
     readonly constantKind: ConstantKind;
 }
 
-export type TConstant = IConstant<TConstantKind>;
+export type TConstant = IConstant<Constant.TConstantKind>;
 
 // ----------------------------------------------
 // ---------- NullCoalescingExpression ----------
@@ -776,7 +797,7 @@ export interface NullCoalescingExpression
     extends IBinOpExpression<
         NodeKind.NullCoalescingExpression,
         TLogicalExpression,
-        MiscConstantKind.NullCoalescingOperator,
+        Constant.MiscConstantKind.NullCoalescingOperator,
         TLogicalExpression
     > {}
 
@@ -787,19 +808,19 @@ export interface NullCoalescingExpression
 export interface FieldSpecification extends INode {
     readonly kind: NodeKind.FieldSpecification;
     readonly isLeaf: false;
-    readonly maybeOptionalConstant: IConstant<IdentifierConstantKind.Optional> | undefined;
+    readonly maybeOptionalConstant: IConstant<Constant.IdentifierConstantKind.Optional> | undefined;
     readonly name: GeneralizedIdentifier;
     readonly maybeFieldTypeSpecification: FieldTypeSpecification | undefined;
 }
 export interface FieldSpecificationList
     extends IBracketWrapped<NodeKind.FieldSpecificationList, ICsvArray<FieldSpecification>> {
     // located between content and closeWrapperConstant
-    readonly maybeOpenRecordMarkerConstant: IConstant<MiscConstantKind.Ellipsis> | undefined;
+    readonly maybeOpenRecordMarkerConstant: IConstant<Constant.MiscConstantKind.Ellipsis> | undefined;
 }
 
 export interface FieldTypeSpecification extends INode {
     readonly kind: NodeKind.FieldTypeSpecification;
-    readonly equalConstant: IConstant<MiscConstantKind.Equal>;
+    readonly equalConstant: IConstant<Constant.MiscConstantKind.Equal>;
     readonly fieldType: TType;
 }
 
@@ -813,120 +834,4 @@ export interface Identifier extends INode {
     readonly kind: NodeKind.Identifier;
     readonly isLeaf: true;
     readonly literal: string;
-}
-
-// ---------------------------------
-// ---------- const enums ----------
-// ---------------------------------
-
-export const enum MiscConstantKind {
-    // TokenKind
-    Ampersand = "&",
-    AtSign = "@",
-    Comma = ",",
-    DotDot = "..",
-    Ellipsis = "...",
-    Equal = "=",
-    FatArrow = "=>",
-    NullCoalescingOperator = "??",
-    Semicolon = ";",
-    QuestionMark = "?",
-}
-
-export const enum WrapperConstantKind {
-    LeftBrace = "{",
-    LeftBracket = "[",
-    LeftParenthesis = "(",
-    RightBrace = "}",
-    RightBracket = "]",
-    RightParenthesis = ")",
-}
-
-export const enum KeywordConstantKind {
-    And = "and",
-    As = "as",
-    Each = "each",
-    Else = "else",
-    Error = "error",
-    False = "false",
-    If = "if",
-    In = "in",
-    Is = "is",
-    Let = "let",
-    Meta = "meta",
-    Otherwise = "otherwise",
-    Or = "or",
-    Section = "section",
-    Shared = "shared",
-    Then = "then",
-    True = "true",
-    Try = "try",
-    Type = "type",
-}
-
-export const enum PrimitiveTypeConstantKind {
-    Action = "action",
-    Any = "any",
-    AnyNonNull = "anynonnull",
-    Binary = "binary",
-    Date = "date",
-    DateTime = "datetime",
-    DateTimeZone = "datetimezone",
-    Duration = "duration",
-    Function = "function",
-    List = "list",
-    Logical = "logical",
-    None = "none",
-    Null = "null",
-    Number = "number",
-    Record = "record",
-    Table = "table",
-    Text = "text",
-    Time = "time",
-    Type = "type",
-}
-
-export const enum IdentifierConstantKind {
-    Nullable = "nullable",
-    Optional = "optional",
-}
-
-export const enum ArithmeticOperatorKind {
-    Multiplication = "*",
-    Division = "/",
-    Addition = "+",
-    Subtraction = "-",
-    And = "&",
-}
-
-export const enum EqualityOperatorKind {
-    EqualTo = "=",
-    NotEqualTo = "<>",
-}
-
-export const enum LogicalOperatorKind {
-    And = "and",
-    Or = "or",
-}
-
-export const enum RelationalOperatorKind {
-    LessThan = "<",
-    LessThanEqualTo = "<=",
-    GreaterThan = ">",
-    GreaterThanEqualTo = ">=",
-}
-
-export const enum UnaryOperatorKind {
-    Positive = "+",
-    Negative = "-",
-    Not = "not",
-}
-
-export const enum LiteralKind {
-    List = "List",
-    Logical = "Logical",
-    Null = "Null",
-    Numeric = "Numeric",
-    Record = "Record",
-    Text = "Text",
 }
