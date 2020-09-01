@@ -7,7 +7,7 @@ import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { AutocompleteOption, Position, StartOfDocumentKeywords, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { Ast, Constant, Keyword } from "../../../language";
+import { Ast, Keyword } from "../../../language";
 import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
@@ -386,30 +386,6 @@ describe(`Inspection - Autocomplete`, () => {
         });
     });
 
-    describe(`${Ast.NodeKind.AsExpression}`, () => {
-        it(`foo as|`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo as|`);
-            const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it(`foo as |`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo as |`);
-            const expected: ReadonlyArray<AutocompleteOption> = Constant.PrimitiveTypeConstantKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-    });
-
     describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
         it(`if |error`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if |error`);
@@ -678,30 +654,6 @@ describe(`Inspection - Autocomplete`, () => {
         it(`foo(a,|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo(a,|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-    });
-
-    describe(`${Ast.NodeKind.IsExpression}`, () => {
-        it(`foo is|`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo is|`);
-            const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it(`foo is |`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo is |`);
-            const expected: ReadonlyArray<AutocompleteOption> = Constant.PrimitiveTypeConstantKinds;
             const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
                 DefaultSettings,
                 text,

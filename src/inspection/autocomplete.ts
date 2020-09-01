@@ -22,7 +22,7 @@ import { Position, PositionUtils } from "./position";
 
 export type Autocomplete = ReadonlyArray<AutocompleteOption>;
 
-export type AutocompleteOption = Keyword.KeywordKind | Constant.PrimitiveTypeConstantKind;
+export type AutocompleteOption = Keyword.KeywordKind;
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
@@ -280,12 +280,6 @@ function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Autocompl
         ancestry[2].node.kind === Ast.NodeKind.FunctionExpression
     ) {
         maybeInspected = [Keyword.KeywordKind.As];
-    }
-
-    // The combinatorial parser directly parses a PrimitiveType from a BinOpExpression
-    // when the binary operator is either `as` or `is`.
-    else if (ancestry[0].kind === XorNodeKind.Context && ancestry[0].node.kind === Ast.NodeKind.PrimitiveType) {
-        maybeInspected = Constant.PrimitiveTypeConstantKinds;
     }
 
     return maybeInspected;
