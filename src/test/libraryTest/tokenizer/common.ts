@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Language } from "../../..";
 import { Assert } from "../../../common";
+import { Token } from "../../../language";
 import { Lexer } from "../../../lexer";
 import { DefaultTemplates } from "../../../localization";
 
@@ -10,7 +10,7 @@ export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}
 
     // tslint:disable-next-line: function-name
-    public static ITokenFrom(lineToken: Language.LineToken): IToken {
+    public static ITokenFrom(lineToken: Token.LineToken): IToken {
         // UNSAFE MARKER
         //
         // Purpose of code block:

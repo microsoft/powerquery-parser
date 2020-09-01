@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Language } from "..";
 import { ArrayUtils, Assert, CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
-import { Ast, Constant, Keyword } from "../language";
+import { Ast, Constant, Keyword, Token } from "../language";
 import { getLocalizationTemplates } from "../localization";
 import {
     AncestryUtils,
@@ -57,7 +56,7 @@ interface InspectAutocompleteState {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     readonly activeNode: ActiveNode;
-    readonly maybeParseErrorToken: Language.Token | undefined;
+    readonly maybeParseErrorToken: Token.Token | undefined;
     readonly maybeTrailingText: TrailingText | undefined;
     parent: TXorNode;
     child: TXorNode;
@@ -132,7 +131,7 @@ function inspectAutocomplete(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
-    maybeParseErrorToken: Language.Token | undefined,
+    maybeParseErrorToken: Token.Token | undefined,
 ): ReadonlyArray<AutocompleteOption> {
     const maybeTrailingText: TrailingText | undefined =
         maybeParseErrorToken !== undefined ? trailingTextFactory(activeNode, maybeParseErrorToken) : undefined;
@@ -180,7 +179,7 @@ function inspectAutocomplete(
     );
 }
 
-function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Language.Token): TrailingText {
+function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Token.Token): TrailingText {
     return {
         text: parseErrorToken.data,
         isInOrOnPosition: PositionUtils.isInToken(activeNode.position, parseErrorToken, false, true),
@@ -244,7 +243,7 @@ function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | unde
 function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<AutocompleteOption> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const maybeParseErrorToken: Language.Token | undefined = state.maybeParseErrorToken;
+    const maybeParseErrorToken: Token.Token | undefined = state.maybeParseErrorToken;
     let maybeInspected: ReadonlyArray<AutocompleteOption> | undefined;
 
     // The user is typing in a new file, which the parser defaults to searching for an identifier.
@@ -379,7 +378,7 @@ function autocompleteErrorHandlingExpression(
 ): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const position: Position = state.activeNode.position;
     const child: TXorNode = state.child;
-    const maybeParseErrorToken: Language.Token | undefined = state.maybeParseErrorToken;
+    const maybeParseErrorToken: Token.Token | undefined = state.maybeParseErrorToken;
 
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
@@ -388,11 +387,11 @@ function autocompleteErrorHandlingExpression(
         // 'try true o|' creates a ParseError.
         // It's ambiguous if the next token should be either 'otherwise' or 'or'.
         if (maybeParseErrorToken !== undefined) {
-            const errorToken: Language.Token = maybeParseErrorToken;
+            const errorToken: Token.Token = maybeParseErrorToken;
 
             // First we test if we can autocomplete using the error token.
             if (
-                errorToken.kind === Language.TokenKind.Identifier &&
+                errorToken.kind === Token.TokenKind.Identifier &&
                 PositionUtils.isInToken(position, maybeParseErrorToken, false, true)
             ) {
                 const tokenData: string = maybeParseErrorToken.data;

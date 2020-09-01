@@ -3,9 +3,8 @@
 
 import { Naive } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
-import { Language } from "../..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
-import { Ast, AstUtils, Constant, ConstantUtils } from "../../language";
+import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 
@@ -140,8 +139,8 @@ function readBinOpExpression<S extends IParserState = IParserState>(
         operatorConstant.maybeAttributeIndex = 1;
         right.maybeAttributeIndex = 2;
 
-        const leftTokenRange: Language.TokenRange = left.tokenRange;
-        const rightTokenRange: Language.TokenRange = right.tokenRange;
+        const leftTokenRange: Token.TokenRange = left.tokenRange;
+        const rightTokenRange: Token.TokenRange = right.tokenRange;
         const newBinOpExpression: Ast.TBinOpExpression = {
             kind: binOpExpressionNodeKindFrom(operator),
             id: newBinOpExpressionId,
@@ -248,16 +247,16 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
     // LL(1)
     switch (state.maybeCurrentTokenKind) {
         // PrimaryExpression
-        case Language.TokenKind.AtSign:
-        case Language.TokenKind.Identifier:
+        case Token.TokenKind.AtSign:
+        case Token.TokenKind.Identifier:
             maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
             break;
 
-        case Language.TokenKind.LeftParenthesis:
+        case Token.TokenKind.LeftParenthesis:
             maybePrimaryExpression = Naive.readParenthesizedExpression(state, parser);
             break;
 
-        case Language.TokenKind.LeftBracket:
+        case Token.TokenKind.LeftBracket:
             maybePrimaryExpression = Naive.readBracketDisambiguation(state, parser, [
                 BracketDisambiguation.FieldProjection,
                 BracketDisambiguation.FieldSelection,
@@ -265,36 +264,36 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
             ]);
             break;
 
-        case Language.TokenKind.LeftBrace:
+        case Token.TokenKind.LeftBrace:
             maybePrimaryExpression = Naive.readListExpression(state, parser);
             break;
 
-        case Language.TokenKind.Ellipsis:
+        case Token.TokenKind.Ellipsis:
             maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
             break;
 
         // LiteralExpression
-        case Language.TokenKind.HexLiteral:
-        case Language.TokenKind.KeywordFalse:
-        case Language.TokenKind.KeywordTrue:
-        case Language.TokenKind.NumericLiteral:
-        case Language.TokenKind.NullLiteral:
-        case Language.TokenKind.TextLiteral:
+        case Token.TokenKind.HexLiteral:
+        case Token.TokenKind.KeywordFalse:
+        case Token.TokenKind.KeywordTrue:
+        case Token.TokenKind.NumericLiteral:
+        case Token.TokenKind.NullLiteral:
+        case Token.TokenKind.TextLiteral:
             return Naive.readLiteralExpression(state, parser);
 
         // TypeExpression
-        case Language.TokenKind.KeywordType:
+        case Token.TokenKind.KeywordType:
             return Naive.readTypeExpression(state, parser);
 
-        case Language.TokenKind.KeywordHashSections:
-        case Language.TokenKind.KeywordHashShared:
-        case Language.TokenKind.KeywordHashBinary:
-        case Language.TokenKind.KeywordHashDate:
-        case Language.TokenKind.KeywordHashDateTime:
-        case Language.TokenKind.KeywordHashDateTimeZone:
-        case Language.TokenKind.KeywordHashDuration:
-        case Language.TokenKind.KeywordHashTable:
-        case Language.TokenKind.KeywordHashTime:
+        case Token.TokenKind.KeywordHashSections:
+        case Token.TokenKind.KeywordHashShared:
+        case Token.TokenKind.KeywordHashBinary:
+        case Token.TokenKind.KeywordHashDate:
+        case Token.TokenKind.KeywordHashDateTime:
+        case Token.TokenKind.KeywordHashDateTimeZone:
+        case Token.TokenKind.KeywordHashDuration:
+        case Token.TokenKind.KeywordHashTable:
+        case Token.TokenKind.KeywordHashTime:
             maybePrimaryExpression = parser.readKeyword(state, parser);
             break;
 

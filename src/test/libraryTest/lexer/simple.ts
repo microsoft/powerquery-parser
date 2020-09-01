@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Language } from "../../..";
+import { Keyword, Token } from "../../../language";
 import { assertSnapshotAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {
@@ -11,9 +11,9 @@ describe(`Lexer.Simple.TokenKinds`, () => {
         const text: string = `
 0x1
 0X1`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [
-            [Language.TokenKind.HexLiteral, `0x1`],
-            [Language.TokenKind.HexLiteral, `0X1`],
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [
+            [Token.TokenKind.HexLiteral, `0x1`],
+            [Token.TokenKind.HexLiteral, `0X1`],
         ];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
@@ -51,46 +51,46 @@ type
 #shared
 #table
 #time`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [
-            [Language.TokenKind.KeywordAnd, `and`],
-            [Language.TokenKind.KeywordAs, `as`],
-            [Language.TokenKind.KeywordEach, `each`],
-            [Language.TokenKind.KeywordElse, `else`],
-            [Language.TokenKind.KeywordError, `error`],
-            [Language.TokenKind.KeywordFalse, `false`],
-            [Language.TokenKind.KeywordIf, `if`],
-            [Language.TokenKind.KeywordIn, `in`],
-            [Language.TokenKind.KeywordIs, `is`],
-            [Language.TokenKind.KeywordLet, `let`],
-            [Language.TokenKind.KeywordMeta, `meta`],
-            [Language.TokenKind.KeywordNot, `not`],
-            [Language.TokenKind.KeywordOtherwise, `otherwise`],
-            [Language.TokenKind.KeywordOr, `or`],
-            [Language.TokenKind.KeywordSection, `section`],
-            [Language.TokenKind.KeywordShared, `shared`],
-            [Language.TokenKind.KeywordThen, `then`],
-            [Language.TokenKind.KeywordTrue, `true`],
-            [Language.TokenKind.KeywordTry, `try`],
-            [Language.TokenKind.KeywordType, `type`],
-            [Language.TokenKind.KeywordHashBinary, `#binary`],
-            [Language.TokenKind.KeywordHashDate, `#date`],
-            [Language.TokenKind.KeywordHashDateTime, `#datetime`],
-            [Language.TokenKind.KeywordHashDateTimeZone, `#datetimezone`],
-            [Language.TokenKind.KeywordHashDuration, `#duration`],
-            [Language.TokenKind.KeywordHashInfinity, `#infinity`],
-            [Language.TokenKind.KeywordHashNan, `#nan`],
-            [Language.TokenKind.KeywordHashSections, `#sections`],
-            [Language.TokenKind.KeywordHashShared, `#shared`],
-            [Language.TokenKind.KeywordHashTable, `#table`],
-            [Language.TokenKind.KeywordHashTime, `#time`],
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [
+            [Token.TokenKind.KeywordAnd, `and`],
+            [Token.TokenKind.KeywordAs, `as`],
+            [Token.TokenKind.KeywordEach, `each`],
+            [Token.TokenKind.KeywordElse, `else`],
+            [Token.TokenKind.KeywordError, `error`],
+            [Token.TokenKind.KeywordFalse, `false`],
+            [Token.TokenKind.KeywordIf, `if`],
+            [Token.TokenKind.KeywordIn, `in`],
+            [Token.TokenKind.KeywordIs, `is`],
+            [Token.TokenKind.KeywordLet, `let`],
+            [Token.TokenKind.KeywordMeta, `meta`],
+            [Token.TokenKind.KeywordNot, `not`],
+            [Token.TokenKind.KeywordOtherwise, `otherwise`],
+            [Token.TokenKind.KeywordOr, `or`],
+            [Token.TokenKind.KeywordSection, `section`],
+            [Token.TokenKind.KeywordShared, `shared`],
+            [Token.TokenKind.KeywordThen, `then`],
+            [Token.TokenKind.KeywordTrue, `true`],
+            [Token.TokenKind.KeywordTry, `try`],
+            [Token.TokenKind.KeywordType, `type`],
+            [Token.TokenKind.KeywordHashBinary, `#binary`],
+            [Token.TokenKind.KeywordHashDate, `#date`],
+            [Token.TokenKind.KeywordHashDateTime, `#datetime`],
+            [Token.TokenKind.KeywordHashDateTimeZone, `#datetimezone`],
+            [Token.TokenKind.KeywordHashDuration, `#duration`],
+            [Token.TokenKind.KeywordHashInfinity, `#infinity`],
+            [Token.TokenKind.KeywordHashNan, `#nan`],
+            [Token.TokenKind.KeywordHashSections, `#sections`],
+            [Token.TokenKind.KeywordHashShared, `#shared`],
+            [Token.TokenKind.KeywordHashTable, `#table`],
+            [Token.TokenKind.KeywordHashTime, `#time`],
         ];
-        expect(expected.length).to.equal(Language.Keyword.KeywordKinds.length);
+        expect(expected.length).to.equal(Keyword.KeywordKinds.length);
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`NullLiteral`, () => {
         const text: string = `null`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [[Language.TokenKind.NullLiteral, `null`]];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [[Token.TokenKind.NullLiteral, `null`]];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
@@ -108,19 +108,19 @@ type
 0.1e1
 0.1e-1
 0.1e+1`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [
-            [Language.TokenKind.NumericLiteral, `1`],
-            [Language.TokenKind.NumericLiteral, `1e1`],
-            [Language.TokenKind.NumericLiteral, `1e-1`],
-            [Language.TokenKind.NumericLiteral, `1e+1`],
-            [Language.TokenKind.NumericLiteral, `.1`],
-            [Language.TokenKind.NumericLiteral, `.1e1`],
-            [Language.TokenKind.NumericLiteral, `.1e-1`],
-            [Language.TokenKind.NumericLiteral, `.1e+1`],
-            [Language.TokenKind.NumericLiteral, `0.1`],
-            [Language.TokenKind.NumericLiteral, `0.1e1`],
-            [Language.TokenKind.NumericLiteral, `0.1e-1`],
-            [Language.TokenKind.NumericLiteral, `0.1e+1`],
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [
+            [Token.TokenKind.NumericLiteral, `1`],
+            [Token.TokenKind.NumericLiteral, `1e1`],
+            [Token.TokenKind.NumericLiteral, `1e-1`],
+            [Token.TokenKind.NumericLiteral, `1e+1`],
+            [Token.TokenKind.NumericLiteral, `.1`],
+            [Token.TokenKind.NumericLiteral, `.1e1`],
+            [Token.TokenKind.NumericLiteral, `.1e-1`],
+            [Token.TokenKind.NumericLiteral, `.1e+1`],
+            [Token.TokenKind.NumericLiteral, `0.1`],
+            [Token.TokenKind.NumericLiteral, `0.1e1`],
+            [Token.TokenKind.NumericLiteral, `0.1e-1`],
+            [Token.TokenKind.NumericLiteral, `0.1e+1`],
         ];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
@@ -152,32 +152,32 @@ type
 =>
 ..
 ...`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [
-            [Language.TokenKind.Comma, `,`],
-            [Language.TokenKind.Semicolon, `;`],
-            [Language.TokenKind.Equal, `=`],
-            [Language.TokenKind.LessThan, `<`],
-            [Language.TokenKind.LessThanEqualTo, `<=`],
-            [Language.TokenKind.GreaterThan, `>`],
-            [Language.TokenKind.GreaterThanEqualTo, `>=`],
-            [Language.TokenKind.NotEqual, `<>`],
-            [Language.TokenKind.Plus, `+`],
-            [Language.TokenKind.Minus, `-`],
-            [Language.TokenKind.Asterisk, `*`],
-            [Language.TokenKind.Division, `/`],
-            [Language.TokenKind.Ampersand, `&`],
-            [Language.TokenKind.LeftParenthesis, `(`],
-            [Language.TokenKind.RightParenthesis, `)`],
-            [Language.TokenKind.LeftBracket, `[`],
-            [Language.TokenKind.RightBracket, `]`],
-            [Language.TokenKind.LeftBrace, `{`],
-            [Language.TokenKind.RightBrace, `}`],
-            [Language.TokenKind.AtSign, `@`],
-            [Language.TokenKind.QuestionMark, `?`],
-            [Language.TokenKind.NullCoalescingOperator, `??`],
-            [Language.TokenKind.FatArrow, `=>`],
-            [Language.TokenKind.DotDot, `..`],
-            [Language.TokenKind.Ellipsis, `...`],
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [
+            [Token.TokenKind.Comma, `,`],
+            [Token.TokenKind.Semicolon, `;`],
+            [Token.TokenKind.Equal, `=`],
+            [Token.TokenKind.LessThan, `<`],
+            [Token.TokenKind.LessThanEqualTo, `<=`],
+            [Token.TokenKind.GreaterThan, `>`],
+            [Token.TokenKind.GreaterThanEqualTo, `>=`],
+            [Token.TokenKind.NotEqual, `<>`],
+            [Token.TokenKind.Plus, `+`],
+            [Token.TokenKind.Minus, `-`],
+            [Token.TokenKind.Asterisk, `*`],
+            [Token.TokenKind.Division, `/`],
+            [Token.TokenKind.Ampersand, `&`],
+            [Token.TokenKind.LeftParenthesis, `(`],
+            [Token.TokenKind.RightParenthesis, `)`],
+            [Token.TokenKind.LeftBracket, `[`],
+            [Token.TokenKind.RightBracket, `]`],
+            [Token.TokenKind.LeftBrace, `{`],
+            [Token.TokenKind.RightBrace, `}`],
+            [Token.TokenKind.AtSign, `@`],
+            [Token.TokenKind.QuestionMark, `?`],
+            [Token.TokenKind.NullCoalescingOperator, `??`],
+            [Token.TokenKind.FatArrow, `=>`],
+            [Token.TokenKind.DotDot, `..`],
+            [Token.TokenKind.Ellipsis, `...`],
         ];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
@@ -187,9 +187,9 @@ type
 ""
 """"
 `;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [
-            [Language.TokenKind.TextLiteral, `""`],
-            [Language.TokenKind.TextLiteral, `""""`],
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [
+            [Token.TokenKind.TextLiteral, `""`],
+            [Token.TokenKind.TextLiteral, `""""`],
         ];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
@@ -198,61 +198,61 @@ type
 describe(`Lexer.Simple.Whitespace`, () => {
     it(`only whitespace`, () => {
         const text: string = `  `;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`spaces`, () => {
         const text: string = ` a b `;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [
-            [Language.TokenKind.Identifier, `a`],
-            [Language.TokenKind.Identifier, `b`],
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [
+            [Token.TokenKind.Identifier, `a`],
+            [Token.TokenKind.Identifier, `b`],
         ];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`tabs`, () => {
         const text: string = `\ta\tb\t`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [
-            [Language.TokenKind.Identifier, `a`],
-            [Language.TokenKind.Identifier, `b`],
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [
+            [Token.TokenKind.Identifier, `a`],
+            [Token.TokenKind.Identifier, `b`],
         ];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`trailing \\n`, () => {
         const text: string = `a\n`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [[Language.TokenKind.Identifier, `a`]];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [[Token.TokenKind.Identifier, `a`]];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`trailing \\r\\n`, () => {
         const text: string = `a\r\n`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [[Language.TokenKind.Identifier, `a`]];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [[Token.TokenKind.Identifier, `a`]];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`trailing space`, () => {
         const text: string = `a `;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [[Language.TokenKind.Identifier, `a`]];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [[Token.TokenKind.Identifier, `a`]];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`leading \\n`, () => {
         const text: string = `\na`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [[Language.TokenKind.Identifier, `a`]];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [[Token.TokenKind.Identifier, `a`]];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`leading \\r\\n`, () => {
         const text: string = `\r\na`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [[Language.TokenKind.Identifier, `a`]];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [[Token.TokenKind.Identifier, `a`]];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
     it(`leading space`, () => {
         const text: string = ` a`;
-        const expected: ReadonlyArray<[Language.TokenKind, string]> = [[Language.TokenKind.Identifier, `a`]];
+        const expected: ReadonlyArray<[Token.TokenKind, string]> = [[Token.TokenKind.Identifier, `a`]];
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 });
