@@ -930,3 +930,60 @@ export const enum LiteralKind {
     Record = "Record",
     Text = "Text",
 }
+
+// ------------------------------------------
+// ---------- const enum iterables ----------
+// ------------------------------------------
+
+export const PrimitiveTypeConstantKinds: ReadonlyArray<PrimitiveTypeConstantKind> = [
+    PrimitiveTypeConstantKind.Action,
+    PrimitiveTypeConstantKind.Any,
+    PrimitiveTypeConstantKind.AnyNonNull,
+    PrimitiveTypeConstantKind.Binary,
+    PrimitiveTypeConstantKind.Date,
+    PrimitiveTypeConstantKind.DateTime,
+    PrimitiveTypeConstantKind.DateTimeZone,
+    PrimitiveTypeConstantKind.Duration,
+    PrimitiveTypeConstantKind.Function,
+    PrimitiveTypeConstantKind.List,
+    PrimitiveTypeConstantKind.Logical,
+    PrimitiveTypeConstantKind.None,
+    PrimitiveTypeConstantKind.Null,
+    PrimitiveTypeConstantKind.Number,
+    PrimitiveTypeConstantKind.Record,
+    PrimitiveTypeConstantKind.Table,
+    PrimitiveTypeConstantKind.Text,
+    PrimitiveTypeConstantKind.Time,
+    PrimitiveTypeConstantKind.Type,
+];
+
+export const ArithmeticOperatorKinds: ReadonlyArray<ArithmeticOperatorKind> = [
+    ArithmeticOperatorKind.Multiplication,
+    ArithmeticOperatorKind.Division,
+    ArithmeticOperatorKind.Addition,
+    ArithmeticOperatorKind.Subtraction,
+    ArithmeticOperatorKind.And,
+];
+
+export const EqualityOperatorKinds: ReadonlyArray<EqualityOperatorKind> = [
+    EqualityOperatorKind.EqualTo,
+    EqualityOperatorKind.NotEqualTo,
+];
+
+export const LogicalOperatorKinds: ReadonlyArray<LogicalOperatorKind> = [
+    LogicalOperatorKind.And,
+    LogicalOperatorKind.Or,
+];
+
+export const RelationalOperatorKinds: ReadonlyArray<RelationalOperatorKind> = [
+    RelationalOperatorKind.LessThan,
+    RelationalOperatorKind.LessThanEqualTo,
+    RelationalOperatorKind.GreaterThan,
+    RelationalOperatorKind.GreaterThanEqualTo,
+];
+
+export const UnaryOperatorKinds: ReadonlyArray<UnaryOperatorKind> = [
+    UnaryOperatorKind.Positive,
+    UnaryOperatorKind.Negative,
+    UnaryOperatorKind.Not,
+];

@@ -21,7 +21,9 @@ import { CommonSettings } from "../settings";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
-export type Autocomplete = ReadonlyArray<Language.KeywordKind>;
+export type Autocomplete = ReadonlyArray<AutocompleteOption>;
+
+export type AutocompleteOption = Language.KeywordKind | Ast.PrimitiveTypeConstantKind;
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
@@ -131,7 +133,7 @@ function inspectAutocomplete(
     leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
     maybeParseErrorToken: Language.Token | undefined,
-): ReadonlyArray<Language.KeywordKind> {
+): ReadonlyArray<AutocompleteOption> {
     const maybeTrailingText: TrailingText | undefined =
         maybeParseErrorToken !== undefined ? trailingTextFactory(activeNode, maybeParseErrorToken) : undefined;
 
@@ -167,7 +169,7 @@ function inspectAutocomplete(
         ancestryIndex: 0,
     };
 
-    const maybeEarlyExitInspected: ReadonlyArray<Language.KeywordKind> | undefined = maybeEdgeCase(state);
+    const maybeEarlyExitInspected: ReadonlyArray<AutocompleteOption> | undefined = maybeEdgeCase(state);
     if (maybeEarlyExitInspected !== undefined) {
         return maybeEarlyExitInspected;
     }
@@ -189,11 +191,11 @@ function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Language.T
 // Without zipping the values we wouldn't know what we're completing for.
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
-function traverseAncestors(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> {
+function traverseAncestors(state: InspectAutocompleteState): ReadonlyArray<AutocompleteOption> {
     const ancestry: ReadonlyArray<TXorNode> = state.activeNode.ancestry;
     const numNodes: number = ancestry.length;
 
-    let maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined;
+    let maybeInspected: ReadonlyArray<AutocompleteOption> | undefined;
     for (let ancestryIndex: number = 1; ancestryIndex < numNodes; ancestryIndex += 1) {
         state.ancestryIndex = ancestryIndex;
         state.parent = ancestry[ancestryIndex];
@@ -239,11 +241,11 @@ function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | unde
     return [nodeKind, maybeAttributeIndex].join(",");
 }
 
-function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<AutocompleteOption> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const maybeParseErrorToken: Language.Token | undefined = state.maybeParseErrorToken;
-    let maybeInspected: ReadonlyArray<Language.KeywordKind> | undefined;
+    let maybeInspected: ReadonlyArray<AutocompleteOption> | undefined;
 
     // The user is typing in a new file, which the parser defaults to searching for an identifier.
     // `l|` -> `let`
@@ -281,26 +283,32 @@ function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Language.
         maybeInspected = [Language.KeywordKind.As];
     }
 
+    // The combinatorial parser directly parses a PrimitiveType from a BinOpExpression
+    // when the binary operator is either `as` or `is`.
+    else if (ancestry[0].kind === XorNodeKind.Context && ancestry[0].node.kind === Ast.NodeKind.PrimitiveType) {
+        maybeInspected = Ast.PrimitiveTypeConstantKinds;
+    }
+
     return maybeInspected;
 }
 
 function filterRecommendations(
-    inspected: ReadonlyArray<Language.KeywordKind>,
+    inspected: ReadonlyArray<AutocompleteOption>,
     maybePositionName: string | undefined,
-): ReadonlyArray<Language.KeywordKind> {
+): ReadonlyArray<AutocompleteOption> {
     if (maybePositionName === undefined) {
         return inspected;
     }
 
     const positionName: string = maybePositionName;
-    return inspected.filter((kind: Language.KeywordKind) => kind.startsWith(positionName));
+    return inspected.filter((kind: AutocompleteOption) => kind.startsWith(positionName));
 }
 
 function handleConjunctions(
     activeNode: ActiveNode,
-    inspected: ReadonlyArray<Language.KeywordKind>,
+    inspected: ReadonlyArray<AutocompleteOption>,
     maybeTrailingText: TrailingText | undefined,
-): ReadonlyArray<Language.KeywordKind> {
+): ReadonlyArray<AutocompleteOption> {
     if (
         activeNode.leafKind !== ActiveNodeLeafKind.AfterAstNode &&
         activeNode.leafKind !== ActiveNodeLeafKind.ContextNode
@@ -327,10 +335,10 @@ function handleConjunctions(
 }
 
 function autocompleteFromTrailingText(
-    inspected: ReadonlyArray<Language.KeywordKind>,
+    inspected: ReadonlyArray<AutocompleteOption>,
     trailingText: TrailingText,
     maybeAllowedKeywords: ReadonlyArray<Language.KeywordKind> | undefined,
-): ReadonlyArray<Language.KeywordKind> {
+): ReadonlyArray<AutocompleteOption> {
     if (trailingText.isInOrOnPosition === false) {
         return inspected;
     }
@@ -444,13 +452,13 @@ function autocompleteIdentifierPairedExpression(
     }
 }
 
-function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArray<AutocompleteOption> | undefined {
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
     const child: TXorNode = state.child;
 
     if (child.kind === XorNodeKind.Context && child.node.maybeAttributeIndex === 2) {
-        const maybeInpsected: ReadonlyArray<Language.KeywordKind> | undefined = autocompleteLastKeyValuePair(
+        const maybeInpsected: ReadonlyArray<AutocompleteOption> | undefined = autocompleteLastKeyValuePair(
             state,
             NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, state.parent),
         );
@@ -543,7 +551,7 @@ function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArr
 function autocompleteLastKeyValuePair(
     state: InspectAutocompleteState,
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<Ast.GeneralizedIdentifier | Ast.Identifier>>,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+): ReadonlyArray<AutocompleteOption> | undefined {
     if (keyValuePairs.length === 0) {
         return undefined;
     }
@@ -574,7 +582,7 @@ function autocompleteLastKeyValuePair(
         ...state.activeNode,
         ancestry: shiftedAncestry,
     };
-    const inspected: ReadonlyArray<Language.KeywordKind> = inspectAutocomplete(
+    const inspected: ReadonlyArray<AutocompleteOption> = inspectAutocomplete(
         state.nodeIdMapCollection,
         state.leafNodeIds,
         shiftedActiveNode,
