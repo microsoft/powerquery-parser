@@ -387,6 +387,17 @@ describe(`Inspection - Autocomplete`, () => {
     });
 
     describe(`${Ast.NodeKind.AsExpression}`, () => {
+        it(`foo as|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo as|`);
+            const expected: ReadonlyArray<AutocompleteOption> = [];
+            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
         it(`foo as |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo as |`);
             const expected: ReadonlyArray<AutocompleteOption> = Constant.PrimitiveTypeConstantKinds;
@@ -667,6 +678,30 @@ describe(`Inspection - Autocomplete`, () => {
         it(`foo(a,|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo(a,|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
+            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+    });
+
+    describe(`${Ast.NodeKind.IsExpression}`, () => {
+        it(`foo is|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo is|`);
+            const expected: ReadonlyArray<AutocompleteOption> = [];
+            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
+        it(`foo is |`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo is |`);
+            const expected: ReadonlyArray<AutocompleteOption> = Constant.PrimitiveTypeConstantKinds;
             const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
