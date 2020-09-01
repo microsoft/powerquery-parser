@@ -7,7 +7,7 @@ import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { Position, ScopeItemByKey, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { Ast } from "../../../language";
+import { Ast, Constant } from "../../../language";
 import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
@@ -43,7 +43,7 @@ interface AbridgedParameterScopeItem extends IAbridgedNodeScopeItem {
     readonly nameNodeId: number;
     readonly isNullable: boolean;
     readonly isOptional: boolean;
-    readonly maybeType: Ast.PrimitiveTypeConstantKind | undefined;
+    readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
 }
 
 interface AbridgedSectionMemberScopeItem extends IAbridgedNodeScopeItem {
@@ -1308,7 +1308,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 11,
                     isNullable: false,
                     isOptional: false,
-                    maybeType: Ast.PrimitiveTypeConstantKind.Number,
+                    maybeType: Constant.PrimitiveTypeConstantKind.Number,
                 },
                 {
                     identifier: "c",
@@ -1317,7 +1317,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 19,
                     isNullable: true,
                     isOptional: false,
-                    maybeType: Ast.PrimitiveTypeConstantKind.Function,
+                    maybeType: Constant.PrimitiveTypeConstantKind.Function,
                 },
                 {
                     identifier: "d",
@@ -1335,7 +1335,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     nameNodeId: 35,
                     isNullable: false,
                     isOptional: true,
-                    maybeType: Ast.PrimitiveTypeConstantKind.Table,
+                    maybeType: Constant.PrimitiveTypeConstantKind.Table,
                 },
             ];
             const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedParametersFactory(

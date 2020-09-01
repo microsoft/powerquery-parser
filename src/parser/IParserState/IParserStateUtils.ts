@@ -4,7 +4,7 @@
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Language } from "../..";
 import { Assert, CommonError } from "../../common";
-import { Ast } from "../../language";
+import { Ast, Constant } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
 import { ParseSettings } from "../../settings";
@@ -169,7 +169,7 @@ export function isOnTokenKind(
     return isTokenKind(state, tokenKind, tokenIndex);
 }
 
-export function isOnConstantKind(state: IParserState, constantKind: Ast.TConstantKind): boolean {
+export function isOnConstantKind(state: IParserState, constantKind: Constant.TConstantKind): boolean {
     if (isOnTokenKind(state, Language.TokenKind.Identifier)) {
         const currentToken: Language.Token = state.lexerSnapshot.tokens[state.tokenIndex];
         if (currentToken?.data === undefined) {

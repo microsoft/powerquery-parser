@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "../../../language";
+import { Ast, Constant, Type } from "../../../language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { InspectTypeState, inspectXor } from "./common";
 
@@ -31,20 +31,20 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
 
     // Only certain operators are allowed depending on the type.
     // Unlike BinOpExpression, it's easier to implement the check without a lookup table.
-    let expectedUnaryOperatorKinds: ReadonlyArray<Ast.UnaryOperatorKind>;
+    let expectedUnaryOperatorKinds: ReadonlyArray<Constant.UnaryOperatorKind>;
     const expressionType: Type.TType = inspectXor(state, maybeExpression);
     if (expressionType.kind === Type.TypeKind.Number) {
-        expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Positive, Ast.UnaryOperatorKind.Negative];
+        expectedUnaryOperatorKinds = [Constant.UnaryOperatorKind.Positive, Constant.UnaryOperatorKind.Negative];
     } else if (expressionType.kind === Type.TypeKind.Logical) {
-        expectedUnaryOperatorKinds = [Ast.UnaryOperatorKind.Not];
+        expectedUnaryOperatorKinds = [Constant.UnaryOperatorKind.Not];
     } else {
         return Type.NoneInstance;
     }
 
-    const operators: ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>> = NodeIdMapIterator.maybeIterChildrenAst(
+    const operators: ReadonlyArray<Ast.IConstant<Constant.UnaryOperatorKind>> = NodeIdMapIterator.maybeIterChildrenAst(
         nodeIdMapCollection,
         maybeOperatorsWrapper.node.id,
-    ) as ReadonlyArray<Ast.IConstant<Ast.UnaryOperatorKind>>;
+    ) as ReadonlyArray<Ast.IConstant<Constant.UnaryOperatorKind>>;
     for (const operator of operators) {
         if (expectedUnaryOperatorKinds.indexOf(operator.constantKind) === -1) {
             return Type.NoneInstance;

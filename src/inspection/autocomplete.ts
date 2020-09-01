@@ -4,7 +4,7 @@
 import { Language } from "..";
 import { ArrayUtils, Assert, CommonError, Result } from "../common";
 import { ResultUtils } from "../common/result";
-import { Ast, ExpressionKeywords } from "../language";
+import { Ast, Constant, Keyword } from "../language";
 import { getLocalizationTemplates } from "../localization";
 import {
     AncestryUtils,
@@ -23,13 +23,13 @@ import { Position, PositionUtils } from "./position";
 
 export type Autocomplete = ReadonlyArray<AutocompleteOption>;
 
-export type AutocompleteOption = Language.KeywordKind | Ast.PrimitiveTypeConstantKind;
+export type AutocompleteOption = Keyword.KeywordKind | Constant.PrimitiveTypeConstantKind;
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
-export const StartOfDocumentKeywords: ReadonlyArray<Language.KeywordKind> = [
-    ...ExpressionKeywords,
-    Language.KeywordKind.Section,
+export const StartOfDocumentKeywords: ReadonlyArray<Keyword.KeywordKind> = [
+    ...Keyword.ExpressionKeywordKinds,
+    Keyword.KeywordKind.Section,
 ];
 
 export function tryAutocomplete<S extends IParserState = IParserState>(
@@ -40,7 +40,7 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
-        return ResultUtils.okFactory([...ExpressionAutocomplete, Language.KeywordKind.Section]);
+        return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
     }
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
@@ -69,7 +69,7 @@ interface TrailingText {
     readonly isInOrOnPosition: boolean;
 }
 
-const ExpressionAutocomplete: ReadonlyArray<Language.KeywordKind> = ExpressionKeywords;
+const ExpressionAutocomplete: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
 
 const AutocompleteExpressionKeys: ReadonlyArray<string> = [
     createMapKey(Ast.NodeKind.ErrorRaisingExpression, 1),
@@ -89,43 +89,43 @@ const AutocompleteExpressionKeys: ReadonlyArray<string> = [
 // If we're coming from a constant then we can quickly evaluate using a map.
 // This is possible because reading a Constant is binary.
 // Either the Constant was read and you're in the next context, or you didn't and you're in the constant's context.
-const AutocompleteConstantMap: Map<string, Language.KeywordKind> = new Map<string, Language.KeywordKind>([
+const AutocompleteConstantMap: Map<string, Keyword.KeywordKind> = new Map<string, Keyword.KeywordKind>([
     // Ast.NodeKind.ErrorRaisingExpression
-    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), Language.KeywordKind.Error],
+    [createMapKey(Ast.NodeKind.ErrorRaisingExpression, 0), Keyword.KeywordKind.Error],
 
     // Ast.NodeKind.IfExpression
-    [createMapKey(Ast.NodeKind.IfExpression, 0), Language.KeywordKind.If],
-    [createMapKey(Ast.NodeKind.IfExpression, 2), Language.KeywordKind.Then],
-    [createMapKey(Ast.NodeKind.IfExpression, 4), Language.KeywordKind.Else],
+    [createMapKey(Ast.NodeKind.IfExpression, 0), Keyword.KeywordKind.If],
+    [createMapKey(Ast.NodeKind.IfExpression, 2), Keyword.KeywordKind.Then],
+    [createMapKey(Ast.NodeKind.IfExpression, 4), Keyword.KeywordKind.Else],
 
     // Ast.NodeKind.LetExpression
-    [createMapKey(Ast.NodeKind.LetExpression, 2), Language.KeywordKind.In],
+    [createMapKey(Ast.NodeKind.LetExpression, 2), Keyword.KeywordKind.In],
 
     // Ast.NodeKind.OtherwiseExpression
-    [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), Language.KeywordKind.Otherwise],
+    [createMapKey(Ast.NodeKind.OtherwiseExpression, 0), Keyword.KeywordKind.Otherwise],
 
     // Ast.NodeKind.Section
-    [createMapKey(Ast.NodeKind.Section, 1), Language.KeywordKind.Section],
+    [createMapKey(Ast.NodeKind.Section, 1), Keyword.KeywordKind.Section],
 ]);
 
 // Used with maybeParseError to see if a user could be typing a conjunctive keyword such as 'or'. Eg.
 // 'Details[UserName] <> "" o|'
-const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Language.KeywordKind>> = new Map<
+const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Keyword.KeywordKind>> = new Map<
     string,
-    ReadonlyArray<Language.KeywordKind>
+    ReadonlyArray<Keyword.KeywordKind>
 >([
-    ["a", [Language.KeywordKind.And, Language.KeywordKind.As]],
-    ["i", [Language.KeywordKind.Is]],
-    ["m", [Language.KeywordKind.Meta]],
-    ["o", [Language.KeywordKind.Or]],
+    ["a", [Keyword.KeywordKind.And, Keyword.KeywordKind.As]],
+    ["i", [Keyword.KeywordKind.Is]],
+    ["m", [Keyword.KeywordKind.Meta]],
+    ["o", [Keyword.KeywordKind.Or]],
 ]);
 
-const ConjunctionKeywords: ReadonlyArray<Language.KeywordKind> = [
-    Language.KeywordKind.And,
-    Language.KeywordKind.As,
-    Language.KeywordKind.Is,
-    Language.KeywordKind.Meta,
-    Language.KeywordKind.Or,
+const ConjunctionKeywords: ReadonlyArray<Keyword.KeywordKind> = [
+    Keyword.KeywordKind.And,
+    Keyword.KeywordKind.As,
+    Keyword.KeywordKind.Is,
+    Keyword.KeywordKind.Meta,
+    Keyword.KeywordKind.Or,
 ];
 
 function inspectAutocomplete(
@@ -147,8 +147,8 @@ function inspectAutocomplete(
         else if (
             ancestryLeaf.kind === XorNodeKind.Ast &&
             ancestryLeaf.node.kind === Ast.NodeKind.LiteralExpression &&
-            (ancestryLeaf.node.literalKind === Ast.LiteralKind.Logical ||
-                ancestryLeaf.node.literalKind === Ast.LiteralKind.Null)
+            (ancestryLeaf.node.literalKind === Constant.LiteralKind.Logical ||
+                ancestryLeaf.node.literalKind === Constant.LiteralKind.Null)
         ) {
             maybePositionName = ancestryLeaf.node.literal;
         }
@@ -257,7 +257,7 @@ function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Autocompl
         ancestry[1].node.kind === Ast.NodeKind.IdentifierExpression
     ) {
         const identifier: string = ancestry[0].node.literal;
-        maybeInspected = StartOfDocumentKeywords.filter((keywordKind: Language.KeywordKind) =>
+        maybeInspected = StartOfDocumentKeywords.filter((keywordKind: Keyword.KeywordKind) =>
             keywordKind.startsWith(identifier),
         );
     }
@@ -269,7 +269,7 @@ function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Autocompl
         ancestry[1].node.kind === Ast.NodeKind.Parameter &&
         PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, false)
     ) {
-        maybeInspected = [Language.KeywordKind.As];
+        maybeInspected = [Keyword.KeywordKind.As];
     }
 
     // `(foo a|) => foo` -> `(foo as) => foo
@@ -280,13 +280,13 @@ function maybeEdgeCase(state: InspectAutocompleteState): ReadonlyArray<Autocompl
         ancestry[1].node.kind === Ast.NodeKind.ParameterList &&
         ancestry[2].node.kind === Ast.NodeKind.FunctionExpression
     ) {
-        maybeInspected = [Language.KeywordKind.As];
+        maybeInspected = [Keyword.KeywordKind.As];
     }
 
     // The combinatorial parser directly parses a PrimitiveType from a BinOpExpression
     // when the binary operator is either `as` or `is`.
     else if (ancestry[0].kind === XorNodeKind.Context && ancestry[0].node.kind === Ast.NodeKind.PrimitiveType) {
-        maybeInspected = Ast.PrimitiveTypeConstantKinds;
+        maybeInspected = Constant.PrimitiveTypeConstantKinds;
     }
 
     return maybeInspected;
@@ -337,7 +337,7 @@ function handleConjunctions(
 function autocompleteFromTrailingText(
     inspected: ReadonlyArray<AutocompleteOption>,
     trailingText: TrailingText,
-    maybeAllowedKeywords: ReadonlyArray<Language.KeywordKind> | undefined,
+    maybeAllowedKeywords: ReadonlyArray<Keyword.KeywordKind> | undefined,
 ): ReadonlyArray<AutocompleteOption> {
     if (trailingText.isInOrOnPosition === false) {
         return inspected;
@@ -350,7 +350,7 @@ function autocompleteFromTrailingText(
     if (maybeAllowedKeywords !== undefined) {
         return ArrayUtils.concatUnique(
             inspected,
-            maybeAllowedKeywords.filter((keyword: Language.KeywordKind) => keyword.startsWith(trailingText.text)),
+            maybeAllowedKeywords.filter((keyword: Keyword.KeywordKind) => keyword.startsWith(trailingText.text)),
         );
     } else {
         return inspected;
@@ -360,8 +360,8 @@ function autocompleteFromTrailingText(
 function autocompleteKeywordConstant(
     activeNode: ActiveNode,
     child: TXorNode,
-    keywordKind: Language.KeywordKind,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+    keywordKind: Keyword.KeywordKind,
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     if (PositionUtils.isBeforeXor(activeNode.position, child, false)) {
         return undefined;
     } else if (child.kind === XorNodeKind.Ast) {
@@ -376,14 +376,14 @@ function autocompleteKeywordConstant(
 
 function autocompleteErrorHandlingExpression(
     state: InspectAutocompleteState,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const position: Position = state.activeNode.position;
     const child: TXorNode = state.child;
     const maybeParseErrorToken: Language.Token | undefined = state.maybeParseErrorToken;
 
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
-        return [Language.KeywordKind.Try];
+        return [Keyword.KeywordKind.Try];
     } else if (maybeChildAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
         // It's ambiguous if the next token should be either 'otherwise' or 'or'.
@@ -398,15 +398,15 @@ function autocompleteErrorHandlingExpression(
                 const tokenData: string = maybeParseErrorToken.data;
 
                 // If we can exclude 'or' then the only thing we can autocomplete is 'otherwise'.
-                if (tokenData.length > 1 && Language.KeywordKind.Otherwise.startsWith(tokenData)) {
-                    return [Language.KeywordKind.Otherwise];
+                if (tokenData.length > 1 && Keyword.KeywordKind.Otherwise.startsWith(tokenData)) {
+                    return [Keyword.KeywordKind.Otherwise];
                 }
                 // In the ambiguous case we don't know what they're typing yet, so we suggest both.
                 // In the case of an identifier that doesn't match a 'or' or 'otherwise'
                 // we still suggest the only valid keywords allowed.
                 // In both cases the return is the same.
                 else {
-                    return [Language.KeywordKind.Or, Language.KeywordKind.Otherwise];
+                    return [Keyword.KeywordKind.Or, Keyword.KeywordKind.Otherwise];
                 }
             }
 
@@ -415,7 +415,7 @@ function autocompleteErrorHandlingExpression(
                 return undefined;
             }
         } else if (child.kind === XorNodeKind.Ast && PositionUtils.isAfterAst(position, child.node, true)) {
-            return [Language.KeywordKind.Otherwise];
+            return [Keyword.KeywordKind.Otherwise];
         } else {
             return ExpressionAutocomplete;
         }
@@ -426,7 +426,7 @@ function autocompleteErrorHandlingExpression(
 
 function autocompleteIdentifierPairedExpression(
     state: InspectAutocompleteState,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const childAttributeIndex: number | undefined = state.child.node.maybeAttributeIndex;
 
     // `section; s|`
@@ -435,7 +435,7 @@ function autocompleteIdentifierPairedExpression(
         childAttributeIndex === 0 &&
         AncestryUtils.maybeNextXor(state.activeNode.ancestry, state.ancestryIndex, [Ast.NodeKind.SectionMember])
     ) {
-        return [Language.KeywordKind.Shared];
+        return [Keyword.KeywordKind.Shared];
     } else if (childAttributeIndex !== 2) {
         return [];
     }
@@ -446,7 +446,7 @@ function autocompleteIdentifierPairedExpression(
     // `x = |`
     // `x = |1`
     if (maybeLeaf === undefined || PositionUtils.isBeforeAst(state.activeNode.position, maybeLeaf, false)) {
-        return ExpressionKeywords;
+        return Keyword.ExpressionKeywordKinds;
     } else {
         return undefined;
     }
@@ -466,13 +466,13 @@ function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArr
             return undefined;
         }
 
-        return [...maybeInpsected, Language.KeywordKind.In];
+        return [...maybeInpsected, Keyword.KeywordKind.In];
     }
 
     return autocompleteDefault(state);
 }
 
-function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const ancestryIndex: number = state.ancestryIndex;
     const child: TXorNode = state.child;
@@ -508,7 +508,7 @@ function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyAr
 
 // Test if 'shared' could be what's being typed. Eg.
 // 'section s' -> could either be interpreted as either the 'shared' keyword, or the key-value-pair key is 's'.
-function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArray<Keyword.KeywordKind> | undefined {
     // SectionMember.namePairedExpression
     if (state.child.node.maybeAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
@@ -540,8 +540,8 @@ function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArr
         }
 
         const name: Ast.Identifier = maybeName.node as Ast.Identifier;
-        if (Language.KeywordKind.Shared.startsWith(name.literal)) {
-            return [Language.KeywordKind.Shared];
+        if (Keyword.KeywordKind.Shared.startsWith(name.literal)) {
+            return [Keyword.KeywordKind.Shared];
         }
     }
 
@@ -592,7 +592,7 @@ function autocompleteLastKeyValuePair(
     return inspected;
 }
 
-function autocompleteDefault(state: InspectAutocompleteState): ReadonlyArray<Language.KeywordKind> | undefined {
+function autocompleteDefault(state: InspectAutocompleteState): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const child: TXorNode = state.child;
     const key: string = createMapKey(state.parent.node.kind, child.node.maybeAttributeIndex);
@@ -600,7 +600,7 @@ function autocompleteDefault(state: InspectAutocompleteState): ReadonlyArray<Lan
     if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
         return autocompleteDefaultExpression(state);
     } else {
-        const maybeMappedKeywordKind: Language.KeywordKind | undefined = AutocompleteConstantMap.get(key);
+        const maybeMappedKeywordKind: Keyword.KeywordKind | undefined = AutocompleteConstantMap.get(key);
         return maybeMappedKeywordKind !== undefined
             ? autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind)
             : undefined;
@@ -609,22 +609,22 @@ function autocompleteDefault(state: InspectAutocompleteState): ReadonlyArray<Lan
 
 function autocompleteDefaultExpression(
     state: InspectAutocompleteState,
-): ReadonlyArray<Language.KeywordKind> | undefined {
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const child: TXorNode = state.child;
 
     // '[x=|1]
     if (activeNode.leafKind === ActiveNodeLeafKind.ShiftedRight) {
-        return ExpressionKeywords;
+        return Keyword.ExpressionKeywordKinds;
     }
     // `if 1|`
     else if (
         child.kind === XorNodeKind.Ast &&
         child.node.kind === Ast.NodeKind.LiteralExpression &&
-        child.node.literalKind === Ast.LiteralKind.Numeric
+        child.node.literalKind === Constant.LiteralKind.Numeric
     ) {
         return [];
     }
 
-    return ExpressionKeywords;
+    return Keyword.ExpressionKeywordKinds;
 }

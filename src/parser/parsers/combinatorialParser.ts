@@ -5,7 +5,7 @@ import { Naive } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
 import { Language } from "../..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
-import { Ast, AstUtils } from "../../language";
+import { Ast, AstUtils, Constant, ConstantUtils } from "../../language";
 import { BracketDisambiguation, IParser } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 
@@ -69,20 +69,20 @@ function readBinOpExpression<S extends IParserState = IParserState>(
 
     // operators/operatorConstants are of length N
     // expressions are of length N + 1
-    let operators: Ast.TBinOpExpressionOperator[] = [];
-    let operatorConstants: Ast.IConstant<Ast.TBinOpExpressionOperator>[] = [];
+    let operators: Constant.TBinOpExpressionOperator[] = [];
+    let operatorConstants: Ast.IConstant<Constant.TBinOpExpressionOperator>[] = [];
     let expressions: (Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType)[] = [
         parser.readUnaryExpression(state, parser),
     ];
 
-    let maybeOperator: Ast.TBinOpExpressionOperator | undefined = AstUtils.maybeBinOpExpressionOperatorKindFrom(
-        state.maybeCurrentTokenKind,
-    );
+    let maybeOperator:
+        | Constant.TBinOpExpressionOperator
+        | undefined = ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
     while (maybeOperator !== undefined) {
-        const operator: Ast.TBinOpExpressionOperator = maybeOperator;
+        const operator: Constant.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(
-            Naive.readTokenKindAsConstant<S, Ast.TBinOpExpressionOperator>(
+            Naive.readTokenKindAsConstant<S, Constant.TBinOpExpressionOperator>(
                 state,
                 state.maybeCurrentTokenKind!,
                 maybeOperator,
@@ -90,8 +90,8 @@ function readBinOpExpression<S extends IParserState = IParserState>(
         );
 
         switch (operator) {
-            case Ast.KeywordConstantKind.As:
-            case Ast.KeywordConstantKind.Is:
+            case Constant.KeywordConstantKind.As:
+            case Constant.KeywordConstantKind.Is:
                 expressions.push(parser.readNullablePrimitiveType(state, parser));
                 break;
 
@@ -99,7 +99,7 @@ function readBinOpExpression<S extends IParserState = IParserState>(
                 expressions.push(parser.readUnaryExpression(state, parser));
         }
 
-        maybeOperator = AstUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
+        maybeOperator = ConstantUtils.maybeBinOpExpressionOperatorKindFrom(state.maybeCurrentTokenKind);
     }
 
     // There was a single TUnaryExpression, not a TBinOpExpression.
@@ -118,7 +118,7 @@ function readBinOpExpression<S extends IParserState = IParserState>(
         let minPrecedence: number = Number.MAX_SAFE_INTEGER;
 
         for (let index: number = 0; index < operators.length; index += 1) {
-            const currentPrecedence: number = AstUtils.binOpExpressionOperatorPrecedence(operators[index]);
+            const currentPrecedence: number = ConstantUtils.binOpExpressionOperatorPrecedence(operators[index]);
             if (minPrecedence > currentPrecedence) {
                 minPrecedence = currentPrecedence;
                 minPrecedenceIndex = index;
@@ -129,8 +129,8 @@ function readBinOpExpression<S extends IParserState = IParserState>(
         const left: TypeScriptUtils.StripReadonly<
             Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
         > = expressions[minPrecedenceIndex];
-        const operator: Ast.TBinOpExpressionOperator = operators[minPrecedenceIndex];
-        const operatorConstant: TypeScriptUtils.StripReadonly<Ast.IConstant<Ast.TBinOpExpressionOperator>> =
+        const operator: Constant.TBinOpExpressionOperator = operators[minPrecedenceIndex];
+        const operatorConstant: TypeScriptUtils.StripReadonly<Ast.IConstant<Constant.TBinOpExpressionOperator>> =
             operatorConstants[minPrecedenceIndex];
         const right: TypeScriptUtils.StripReadonly<
             Ast.TBinOpExpression | Ast.TUnaryExpression | Ast.TNullablePrimitiveType
@@ -201,39 +201,39 @@ function readBinOpExpression<S extends IParserState = IParserState>(
     return lastExpression;
 }
 
-function binOpExpressionNodeKindFrom(operator: Ast.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
+function binOpExpressionNodeKindFrom(operator: Constant.TBinOpExpressionOperator): Ast.TBinOpExpressionNodeKind {
     switch (operator) {
-        case Ast.KeywordConstantKind.Meta:
+        case Constant.KeywordConstantKind.Meta:
             return Ast.NodeKind.MetadataExpression;
 
-        case Ast.ArithmeticOperatorKind.Multiplication:
-        case Ast.ArithmeticOperatorKind.Division:
-        case Ast.ArithmeticOperatorKind.Addition:
-        case Ast.ArithmeticOperatorKind.Subtraction:
-        case Ast.ArithmeticOperatorKind.And:
+        case Constant.ArithmeticOperatorKind.Multiplication:
+        case Constant.ArithmeticOperatorKind.Division:
+        case Constant.ArithmeticOperatorKind.Addition:
+        case Constant.ArithmeticOperatorKind.Subtraction:
+        case Constant.ArithmeticOperatorKind.And:
             return Ast.NodeKind.ArithmeticExpression;
 
-        case Ast.RelationalOperatorKind.GreaterThan:
-        case Ast.RelationalOperatorKind.GreaterThanEqualTo:
-        case Ast.RelationalOperatorKind.LessThan:
-        case Ast.RelationalOperatorKind.LessThanEqualTo:
+        case Constant.RelationalOperatorKind.GreaterThan:
+        case Constant.RelationalOperatorKind.GreaterThanEqualTo:
+        case Constant.RelationalOperatorKind.LessThan:
+        case Constant.RelationalOperatorKind.LessThanEqualTo:
             return Ast.NodeKind.RelationalExpression;
 
-        case Ast.EqualityOperatorKind.EqualTo:
-        case Ast.EqualityOperatorKind.NotEqualTo:
+        case Constant.EqualityOperatorKind.EqualTo:
+        case Constant.EqualityOperatorKind.NotEqualTo:
             return Ast.NodeKind.EqualityExpression;
 
-        case Ast.KeywordConstantKind.As:
+        case Constant.KeywordConstantKind.As:
             return Ast.NodeKind.AsExpression;
 
-        case Ast.KeywordConstantKind.Is:
+        case Constant.KeywordConstantKind.Is:
             return Ast.NodeKind.IsExpression;
 
-        case Ast.LogicalOperatorKind.And:
-        case Ast.LogicalOperatorKind.Or:
+        case Constant.LogicalOperatorKind.And:
+        case Constant.LogicalOperatorKind.Or:
             return Ast.NodeKind.LogicalExpression;
 
-        case Ast.MiscConstantKind.NullCoalescingOperator:
+        case Constant.MiscConstantKind.NullCoalescingOperator:
             return Ast.NodeKind.NullCoalescingExpression;
 
         default:

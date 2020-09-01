@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, AstUtils } from "../../language";
+import { Ast, Constant, ConstantUtils } from "../../language";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -89,19 +89,19 @@ interface AstNodeSearch {
 }
 
 const DrilldownConstantKind: ReadonlyArray<string> = [
-    Ast.WrapperConstantKind.LeftBrace,
-    Ast.WrapperConstantKind.LeftBracket,
-    Ast.WrapperConstantKind.LeftParenthesis,
+    Constant.WrapperConstantKind.LeftBrace,
+    Constant.WrapperConstantKind.LeftBracket,
+    Constant.WrapperConstantKind.LeftParenthesis,
 ];
 
 const ShiftRightConstantKinds: ReadonlyArray<string> = [
-    Ast.MiscConstantKind.Comma,
-    Ast.MiscConstantKind.Equal,
-    Ast.MiscConstantKind.FatArrow,
-    Ast.WrapperConstantKind.RightBrace,
-    Ast.WrapperConstantKind.RightBracket,
-    Ast.WrapperConstantKind.RightParenthesis,
-    Ast.MiscConstantKind.Semicolon,
+    Constant.MiscConstantKind.Comma,
+    Constant.MiscConstantKind.Equal,
+    Constant.MiscConstantKind.FatArrow,
+    Constant.WrapperConstantKind.RightBrace,
+    Constant.WrapperConstantKind.RightBracket,
+    Constant.WrapperConstantKind.RightParenthesis,
+    Constant.MiscConstantKind.Semicolon,
     ...DrilldownConstantKind,
 ];
 
@@ -112,27 +112,30 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
 
     if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
         return true;
-    } else if (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric) {
+    } else if (
+        astNode.kind === Ast.NodeKind.LiteralExpression &&
+        astNode.literalKind === Constant.LiteralKind.Numeric
+    ) {
         return true;
     } else if (astNode.kind === Ast.NodeKind.Constant) {
         switch (astNode.constantKind) {
-            case Ast.KeywordConstantKind.As:
-            case Ast.KeywordConstantKind.Each:
-            case Ast.KeywordConstantKind.Else:
-            case Ast.KeywordConstantKind.Error:
-            case Ast.KeywordConstantKind.If:
-            case Ast.KeywordConstantKind.In:
-            case Ast.KeywordConstantKind.Is:
-            case Ast.KeywordConstantKind.Section:
-            case Ast.KeywordConstantKind.Shared:
-            case Ast.KeywordConstantKind.Let:
-            case Ast.KeywordConstantKind.Meta:
-            case Ast.KeywordConstantKind.Otherwise:
-            case Ast.KeywordConstantKind.Then:
-            case Ast.KeywordConstantKind.Try:
-            case Ast.KeywordConstantKind.Type:
+            case Constant.KeywordConstantKind.As:
+            case Constant.KeywordConstantKind.Each:
+            case Constant.KeywordConstantKind.Else:
+            case Constant.KeywordConstantKind.Error:
+            case Constant.KeywordConstantKind.If:
+            case Constant.KeywordConstantKind.In:
+            case Constant.KeywordConstantKind.Is:
+            case Constant.KeywordConstantKind.Section:
+            case Constant.KeywordConstantKind.Shared:
+            case Constant.KeywordConstantKind.Let:
+            case Constant.KeywordConstantKind.Meta:
+            case Constant.KeywordConstantKind.Otherwise:
+            case Constant.KeywordConstantKind.Then:
+            case Constant.KeywordConstantKind.Try:
+            case Constant.KeywordConstantKind.Type:
 
-            case Ast.PrimitiveTypeConstantKind.Null:
+            case Constant.PrimitiveTypeConstantKind.Null:
                 return true;
 
             default:
@@ -198,7 +201,10 @@ function maybeFindAstNodes(
         if (
             DrilldownConstantKind.indexOf(maybeBestOnOrBeforeNode.constantKind) !== -1 &&
             maybeBestAfter?.kind === Ast.NodeKind.Constant &&
-            AstUtils.isPairedWrapperConstantKinds(maybeBestOnOrBeforeNode.constantKind, maybeBestAfter.constantKind)
+            ConstantUtils.isPairedWrapperConstantKinds(
+                maybeBestOnOrBeforeNode.constantKind,
+                maybeBestAfter.constantKind,
+            )
         ) {
             const parent: Ast.TNode = NodeIdMapUtils.assertParentAst(nodeIdMapCollection, currentOnOrBefore.id, [
                 Ast.NodeKind.RecordExpression,
@@ -270,7 +276,7 @@ function maybeIdentifierUnderPosition(
     let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Ast.MiscConstantKind.AtSign) {
+    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Constant.MiscConstantKind.AtSign) {
         const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.node.id);
         if (maybeParentId === undefined) {
             return undefined;

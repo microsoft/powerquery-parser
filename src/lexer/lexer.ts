@@ -1155,67 +1155,67 @@ function maybeIndexOfIdentifierEnd(text: string, positionStart: number): number 
 
 function maybeKeywordLineTokenKindFrom(data: string): Language.LineTokenKind | undefined {
     switch (data) {
-        case Language.KeywordKind.And:
+        case Language.Keyword.KeywordKind.And:
             return Language.LineTokenKind.KeywordAnd;
-        case Language.KeywordKind.As:
+        case Language.Keyword.KeywordKind.As:
             return Language.LineTokenKind.KeywordAs;
-        case Language.KeywordKind.Each:
+        case Language.Keyword.KeywordKind.Each:
             return Language.LineTokenKind.KeywordEach;
-        case Language.KeywordKind.Else:
+        case Language.Keyword.KeywordKind.Else:
             return Language.LineTokenKind.KeywordElse;
-        case Language.KeywordKind.Error:
+        case Language.Keyword.KeywordKind.Error:
             return Language.LineTokenKind.KeywordError;
-        case Language.KeywordKind.False:
+        case Language.Keyword.KeywordKind.False:
             return Language.LineTokenKind.KeywordFalse;
-        case Language.KeywordKind.If:
+        case Language.Keyword.KeywordKind.If:
             return Language.LineTokenKind.KeywordIf;
-        case Language.KeywordKind.In:
+        case Language.Keyword.KeywordKind.In:
             return Language.LineTokenKind.KeywordIn;
-        case Language.KeywordKind.Is:
+        case Language.Keyword.KeywordKind.Is:
             return Language.LineTokenKind.KeywordIs;
-        case Language.KeywordKind.Let:
+        case Language.Keyword.KeywordKind.Let:
             return Language.LineTokenKind.KeywordLet;
-        case Language.KeywordKind.Meta:
+        case Language.Keyword.KeywordKind.Meta:
             return Language.LineTokenKind.KeywordMeta;
-        case Language.KeywordKind.Not:
+        case Language.Keyword.KeywordKind.Not:
             return Language.LineTokenKind.KeywordNot;
-        case Language.KeywordKind.Or:
+        case Language.Keyword.KeywordKind.Or:
             return Language.LineTokenKind.KeywordOr;
-        case Language.KeywordKind.Otherwise:
+        case Language.Keyword.KeywordKind.Otherwise:
             return Language.LineTokenKind.KeywordOtherwise;
-        case Language.KeywordKind.Section:
+        case Language.Keyword.KeywordKind.Section:
             return Language.LineTokenKind.KeywordSection;
-        case Language.KeywordKind.Shared:
+        case Language.Keyword.KeywordKind.Shared:
             return Language.LineTokenKind.KeywordShared;
-        case Language.KeywordKind.Then:
+        case Language.Keyword.KeywordKind.Then:
             return Language.LineTokenKind.KeywordThen;
-        case Language.KeywordKind.True:
+        case Language.Keyword.KeywordKind.True:
             return Language.LineTokenKind.KeywordTrue;
-        case Language.KeywordKind.Try:
+        case Language.Keyword.KeywordKind.Try:
             return Language.LineTokenKind.KeywordTry;
-        case Language.KeywordKind.Type:
+        case Language.Keyword.KeywordKind.Type:
             return Language.LineTokenKind.KeywordType;
-        case Language.KeywordKind.HashBinary:
+        case Language.Keyword.KeywordKind.HashBinary:
             return Language.LineTokenKind.KeywordHashBinary;
-        case Language.KeywordKind.HashDate:
+        case Language.Keyword.KeywordKind.HashDate:
             return Language.LineTokenKind.KeywordHashDate;
-        case Language.KeywordKind.HashDateTime:
+        case Language.Keyword.KeywordKind.HashDateTime:
             return Language.LineTokenKind.KeywordHashDateTime;
-        case Language.KeywordKind.HashDateTimeZone:
+        case Language.Keyword.KeywordKind.HashDateTimeZone:
             return Language.LineTokenKind.KeywordHashDateTimeZone;
-        case Language.KeywordKind.HashDuration:
+        case Language.Keyword.KeywordKind.HashDuration:
             return Language.LineTokenKind.KeywordHashDuration;
-        case Language.KeywordKind.HashInfinity:
+        case Language.Keyword.KeywordKind.HashInfinity:
             return Language.LineTokenKind.KeywordHashInfinity;
-        case Language.KeywordKind.HashNan:
+        case Language.Keyword.KeywordKind.HashNan:
             return Language.LineTokenKind.KeywordHashNan;
-        case Language.KeywordKind.HashSections:
+        case Language.Keyword.KeywordKind.HashSections:
             return Language.LineTokenKind.KeywordHashSections;
-        case Language.KeywordKind.HashShared:
+        case Language.Keyword.KeywordKind.HashShared:
             return Language.LineTokenKind.KeywordHashShared;
-        case Language.KeywordKind.HashTable:
+        case Language.Keyword.KeywordKind.HashTable:
             return Language.LineTokenKind.KeywordHashTable;
-        case Language.KeywordKind.HashTime:
+        case Language.Keyword.KeywordKind.HashTime:
             return Language.LineTokenKind.KeywordHashTime;
         default:
             return undefined;

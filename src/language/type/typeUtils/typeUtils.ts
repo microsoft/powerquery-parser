@@ -5,6 +5,7 @@ import { Type } from "..";
 import { Assert } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
 import { Ast, AstUtils } from "../../ast";
+import { Constant } from "../../constant";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
@@ -138,24 +139,24 @@ export function flattenAnyUnion(anyUnion: Type.AnyUnion): ReadonlyArray<Type.TTy
     return newUnionedTypePairs;
 }
 
-export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.TypeKind {
+export function typeKindFromLiteralKind(literalKind: Constant.LiteralKind): Type.TypeKind {
     switch (literalKind) {
-        case Ast.LiteralKind.List:
+        case Constant.LiteralKind.List:
             return Type.TypeKind.List;
 
-        case Ast.LiteralKind.Logical:
+        case Constant.LiteralKind.Logical:
             return Type.TypeKind.Logical;
 
-        case Ast.LiteralKind.Null:
+        case Constant.LiteralKind.Null:
             return Type.TypeKind.Null;
 
-        case Ast.LiteralKind.Numeric:
+        case Constant.LiteralKind.Numeric:
             return Type.TypeKind.Number;
 
-        case Ast.LiteralKind.Record:
+        case Constant.LiteralKind.Record:
             return Type.TypeKind.Record;
 
-        case Ast.LiteralKind.Text:
+        case Constant.LiteralKind.Text:
             return Type.TypeKind.Text;
 
         default:

@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Language } from "../../..";
+import { Assert } from "../../../common";
 import { Lexer } from "../../../lexer";
 import { DefaultTemplates } from "../../../localization";
-import { Assert } from "../../../common";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}

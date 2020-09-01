@@ -84,7 +84,7 @@ type
             [Language.TokenKind.KeywordHashTable, `#table`],
             [Language.TokenKind.KeywordHashTime, `#time`],
         ];
-        expect(expected.length).to.equal(Language.Keywords.length);
+        expect(expected.length).to.equal(Language.Keyword.KeywordKinds.length);
         assertSnapshotAbridgedTokens(text, expected, true);
     });
 
