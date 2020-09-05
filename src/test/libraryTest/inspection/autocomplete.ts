@@ -1129,6 +1129,39 @@ describe(`Inspection - Autocomplete`, () => {
             expect(actual).to.have.members(expected);
         });
 
+        it(`section; x = 1 |`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(
+                `section; x = 1 |`,
+            );
+            const expected: ReadonlyArray<AutocompleteOption> = [
+                Keyword.KeywordKind.And,
+                Keyword.KeywordKind.As,
+                Keyword.KeywordKind.In,
+                Keyword.KeywordKind.Is,
+                Keyword.KeywordKind.Meta,
+                Keyword.KeywordKind.Or,
+            ];
+            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
+        it(`section; x = 1 i|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(
+                `section; x = 1 i|`,
+            );
+            const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.In, Keyword.KeywordKind.Is];
+            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
         it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(
                 `section foo; a = () => true; b = "string"; c = 1; d = |;`,
@@ -1180,6 +1213,39 @@ describe(`Inspection - Autocomplete`, () => {
                 Keyword.KeywordKind.Meta,
                 Keyword.KeywordKind.Or,
             ];
+            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
+        it(`let a = 1 | trailingText`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(
+                `let a = 1 | trailingText`,
+            );
+            const expected: ReadonlyArray<AutocompleteOption> = [
+                Keyword.KeywordKind.And,
+                Keyword.KeywordKind.As,
+                Keyword.KeywordKind.In,
+                Keyword.KeywordKind.Is,
+                Keyword.KeywordKind.Meta,
+                Keyword.KeywordKind.Or,
+            ];
+            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
+        it(`let a = 1 i|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(
+                `let a = 1 i|`,
+            );
+            const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.In, Keyword.KeywordKind.Is];
             const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
                 DefaultSettings,
                 text,

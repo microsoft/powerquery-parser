@@ -19,6 +19,7 @@ import {
 import { CommonSettings } from "../settings";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "./activeNode";
 import { Position, PositionUtils } from "./position";
+import { TokenPosition } from "../language/token";
 
 export type Autocomplete = ReadonlyArray<AutocompleteOption>;
 
@@ -65,6 +66,7 @@ interface InspectAutocompleteState {
 
 interface TrailingText {
     readonly text: string;
+    readonly positionStart: TokenPosition;
     readonly isInOrOnPosition: boolean;
 }
 
@@ -182,6 +184,7 @@ function inspectAutocomplete(
 function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Token.Token): TrailingText {
     return {
         text: parseErrorToken.data,
+        positionStart: parseErrorToken.positionStart,
         isInOrOnPosition: PositionUtils.isInToken(activeNode.position, parseErrorToken, false, true),
     };
 }
@@ -310,18 +313,29 @@ function handleConjunctions(
     }
 
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertLeaf(activeNode);
-    if (!XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
-        if (maybeTrailingText !== undefined) {
-            return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
-        } else {
+    // `let x = 1 a|`
+    if (maybeTrailingText !== undefined && maybeTrailingText.isInOrOnPosition) {
+        return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
+    }
+    // `let x = |`
+    // `let x = 1|`
+    // `let x = 1 | a`
+    else if (XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
+        // `let x = 1 | a`
+        if (
+            maybeTrailingText !== undefined &&
+            PositionUtils.isAfterTokenPosition(activeNode.position, maybeTrailingText.positionStart, false)
+        ) {
             return inspected;
         }
-    } else if (maybeTrailingText !== undefined) {
-        return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
-    } else if (maybeTrailingText !== undefined) {
-        return autocompleteFromTrailingText(inspected, maybeTrailingText, undefined);
-    } else if (activeNodeLeaf.kind === XorNodeKind.Ast) {
-        return ArrayUtils.concatUnique(inspected, ConjunctionKeywords);
+        // `let x = 1|`
+        else if (activeNodeLeaf.kind === XorNodeKind.Ast) {
+            return ArrayUtils.concatUnique(inspected, ConjunctionKeywords);
+        }
+        // `let x = |`
+        else {
+            return inspected;
+        }
     } else {
         return inspected;
     }
@@ -337,8 +351,7 @@ function autocompleteFromTrailingText(
     }
     Assert.isTrue(trailingText.text.length > 0, "trailingText.length > 0");
 
-    maybeAllowedKeywords =
-        maybeAllowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(trailingText.text[0].toLocaleLowerCase());
+    maybeAllowedKeywords = maybeAllowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(trailingText.text[0]);
 
     if (maybeAllowedKeywords !== undefined) {
         return ArrayUtils.concatUnique(
@@ -449,20 +462,40 @@ function autocompleteLetExpression(state: InspectAutocompleteState): ReadonlyArr
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
     const child: TXorNode = state.child;
+    let maybeInspected: ReadonlyArray<AutocompleteOption> | undefined;
 
-    if (child.kind === XorNodeKind.Context && child.node.maybeAttributeIndex === 2) {
-        const maybeInpsected: ReadonlyArray<AutocompleteOption> | undefined = autocompleteLastKeyValuePair(
+    // Might be either `in` or whatever the autocomplete is for the the last child of the variableList.
+    // `let x = 1 |`
+    if (child.node.maybeAttributeIndex === 2 && child.kind === XorNodeKind.Context) {
+        maybeInspected = autocompleteLastKeyValuePair(
             state,
             NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, state.parent),
         );
-        if (maybeInpsected === undefined || state.maybeTrailingText !== undefined) {
-            return undefined;
+        if (state.maybeTrailingText !== undefined) {
+            if (state.maybeTrailingText.isInOrOnPosition === true) {
+                // We don't want maybeInspected to be zero legnth.
+                // It's either undefined or non-zero length.
+                maybeInspected = autocompleteFromTrailingText(maybeInspected ?? [], state.maybeTrailingText, [
+                    Keyword.KeywordKind.In,
+                ]);
+                return maybeInspected.length ? maybeInspected : undefined;
+            } else if (
+                PositionUtils.isBeforeTokenPosition(
+                    state.activeNode.position,
+                    state.maybeTrailingText.positionStart,
+                    true,
+                )
+            ) {
+                return maybeInspected !== undefined ? [...maybeInspected, Keyword.KeywordKind.In] : maybeInspected;
+            }
+        } else {
+            return maybeInspected !== undefined
+                ? [...maybeInspected, Keyword.KeywordKind.In]
+                : [Keyword.KeywordKind.In];
         }
-
-        return [...maybeInpsected, Keyword.KeywordKind.In];
     }
 
-    return autocompleteDefault(state);
+    return maybeInspected ?? autocompleteDefault(state);
 }
 
 function autocompleteListExpression(state: InspectAutocompleteState): ReadonlyArray<Keyword.KeywordKind> | undefined {
@@ -538,7 +571,7 @@ function autocompleteSectionMember(state: InspectAutocompleteState): ReadonlyArr
         }
     }
 
-    return [];
+    return undefined;
 }
 
 function autocompleteLastKeyValuePair(
