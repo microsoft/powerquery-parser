@@ -6,7 +6,7 @@ import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
 import { ScopeById, ScopeItemByKey, ScopeItemKind, tryScopeItems, TScopeItem } from "../../scope";
-import { TypeById } from "../common";
+import { TypeById } from "../commonTypes";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
 import { inspectTypeFieldProjection } from "./inspectTypeFieldProjection";

@@ -89,3 +89,5 @@ export const ExpressionKeywordKinds: ReadonlyArray<KeywordKind> = [
     KeywordKind.HashTable,
     KeywordKind.HashTime,
 ];
+
+export const StartOfDocumentKeywords: ReadonlyArray<KeywordKind> = [...ExpressionKeywordKinds, KeywordKind.Section];
