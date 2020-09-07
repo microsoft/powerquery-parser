@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
 import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
-import { assertLexOk } from "./common";
+import { assertGetLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
 
@@ -21,22 +21,22 @@ function assertAbridgedTLexerLine(state: Lexer.State, expected: AbridgedTLexerLi
     expect(actual).deep.equal(expected);
 }
 
-function assertLexerUpdateRangeOk(originalText: string, newText: string, range: Lexer.Range): Lexer.State {
-    const state: Lexer.State = assertLexOk(originalText);
+function assertGetLexerUpdateRangeOk(originalText: string, newText: string, range: Lexer.Range): Lexer.State {
+    const state: Lexer.State = assertGetLexOk(originalText);
     const triedLexerUpdate: Lexer.TriedLex = Lexer.tryUpdateRange(state, range, newText);
     Assert.isOk(triedLexerUpdate);
 
     return triedLexerUpdate.value;
 }
 
-function assertLexerUpdateLine(
+function assertGetLexerUpdateLine(
     originalText: string,
     expectedOriginal: AbridgedTLexerLine,
     lineNumber: number,
     newText: string,
     expectedUpdate: AbridgedTLexerLine,
 ): Lexer.State {
-    let state: Lexer.State = assertLexOk(originalText);
+    let state: Lexer.State = assertGetLexOk(originalText);
     assertAbridgedTLexerLine(state, expectedOriginal);
 
     const triedLexerUpdate: Lexer.TriedLex = Lexer.tryUpdateLine(state, lineNumber, newText);
@@ -48,7 +48,7 @@ function assertLexerUpdateLine(
     return state;
 }
 
-function assertLexerUpdateLineAlphaBravoCharlie(
+function assertGetLexerUpdateLineAlphaBravoCharlie(
     newText: string,
     lineNumber: number,
     expectedUpdate: AbridgedTLexerLine,
@@ -59,7 +59,7 @@ function assertLexerUpdateLineAlphaBravoCharlie(
         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
         [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
     ];
-    return assertLexerUpdateLine(originalText, originalExpected, lineNumber, newText, expectedUpdate);
+    return assertGetLexerUpdateLine(originalText, originalExpected, lineNumber, newText, expectedUpdate);
 }
 
 describe(`Lexer.Incremental`, () => {
@@ -75,7 +75,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 0,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foobar`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("Xfoobar");
         });
@@ -91,7 +91,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 3,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foobar`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("fooXbar");
         });
@@ -107,7 +107,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foobar`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("Xoobar");
         });
@@ -123,7 +123,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 6,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foobar`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foobar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("X");
         });
@@ -139,7 +139,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 3,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foo\nbar`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("X");
         });
@@ -155,7 +155,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 2,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foo\nbar`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar`, "X", range);
             expect(state.lines.length).to.equal(1);
             expect(state.lines[0].text).to.equal("fXr");
         });
@@ -171,7 +171,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 3,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
             expect(state.lines.length).to.equal(3);
             expect(state.lines[0].text).to.equal("foo");
             expect(state.lines[1].text).to.equal("X");
@@ -189,7 +189,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 2,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(`foo\nbar\nbaz`, "X", range);
             expect(state.lines.length).to.equal(3);
             expect(state.lines[0].text).to.equal("foo");
             expect(state.lines[1].text).to.equal("bXr");
@@ -208,7 +208,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 2,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(original, "X", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "X", range);
 
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
             Assert.isOk(triedSnapshot);
@@ -228,7 +228,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(original, "OO\nB", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "OO\nB", range);
             expect(state.lines.length).to.equal(3);
 
             const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
@@ -249,7 +249,7 @@ describe(`Lexer.Incremental`, () => {
                     lineCodeUnit: 1,
                 },
             };
-            const state: Lexer.State = assertLexerUpdateRangeOk(original, "", range);
+            const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "", range);
 
             expect(state.lines.length).to.equal(2);
 
@@ -263,7 +263,7 @@ describe(`Lexer.Incremental`, () => {
     describe(`Lexer.updateLine`, () => {
         describe(`single line`, () => {
             it(`identifier -> identifier`, () => {
-                assertLexerUpdateLine(
+                assertGetLexerUpdateLine(
                     `foo`,
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`]],
                     0,
@@ -273,7 +273,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`identifier -> unterminated string`, () => {
-                assertLexerUpdateLine(
+                assertGetLexerUpdateLine(
                     `foo`,
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foo`]],
                     0,
@@ -283,7 +283,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`unterminated string -> identifier`, () => {
-                assertLexerUpdateLine(
+                assertGetLexerUpdateLine(
                     `"`,
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
                     0,
@@ -295,7 +295,7 @@ describe(`Lexer.Incremental`, () => {
 
         describe(`multiple lines, no mode change`, () => {
             it(`first`, () => {
-                assertLexerUpdateLine(
+                assertGetLexerUpdateLine(
                     `"`,
                     [[Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`]],
                     0,
@@ -305,7 +305,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`first`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`foobar`, 0, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`foobar`, 0, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
@@ -313,7 +313,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`middle`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`foobar`, 1, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`foobar`, 1, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
@@ -321,7 +321,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`last`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`foobar`, 2, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`foobar`, 2, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
@@ -331,7 +331,7 @@ describe(`Lexer.Incremental`, () => {
 
         describe(`multiple lines, default mode to string mode`, () => {
             it(`first`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`"`, 0, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`"`, 0, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Text, Lexer.LineMode.Text, `bravo`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Text, Lexer.LineMode.Text, `charlie`],
@@ -339,7 +339,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`middle`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`"`, 1, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`"`, 1, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Text, Lexer.LineMode.Text, `charlie`],
@@ -347,7 +347,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`last`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`"`, 2, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`"`, 2, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Text, `"`],
@@ -357,7 +357,7 @@ describe(`Lexer.Incremental`, () => {
 
         describe(`multiple lines, string mode to default mode`, () => {
             it(`first`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`foobar`, 0, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`foobar`, 0, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
@@ -365,7 +365,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`middle`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`foobar`, 1, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`foobar`, 1, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `charlie`],
@@ -373,7 +373,7 @@ describe(`Lexer.Incremental`, () => {
             });
 
             it(`last`, () => {
-                assertLexerUpdateLineAlphaBravoCharlie(`foobar`, 2, [
+                assertGetLexerUpdateLineAlphaBravoCharlie(`foobar`, 2, [
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `alpha`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `bravo`],
                     [Lexer.LineKind.Touched, Lexer.LineMode.Default, Lexer.LineMode.Default, `foobar`],

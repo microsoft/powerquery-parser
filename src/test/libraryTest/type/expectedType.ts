@@ -11,9 +11,9 @@ import { IParserStateUtils, NodeIdMap, ParseError, ParseOk } from "../../../pars
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
-function assertParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
-    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertTextWithPosition(textWithPipe);
-    const parseOk: ParseOk = TestAssertUtils.assertParseOk(
+function assertGetParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
+    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertGetTextWithPosition(textWithPipe);
+    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(
         DefaultSettings,
         textWithoutPipe,
         IParserStateUtils.stateFactory,
@@ -28,12 +28,12 @@ function assertParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefin
     );
     Assert.isDefined(maybeActiveNode);
 
-    return assertExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
+    return assertGetExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
 }
 
-function assertParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
-    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertTextWithPosition(textWithPipe);
-    const parseErr: ParseError.ParseError = TestAssertUtils.assertParseErr(
+function assertGetParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
+    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertGetTextWithPosition(textWithPipe);
+    const parseErr: ParseError.ParseError = TestAssertUtils.assertGetParseErr(
         DefaultSettings,
         textWithoutPipe,
         IParserStateUtils.stateFactory,
@@ -48,10 +48,10 @@ function assertParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefi
     );
     Assert.isDefined(maybeActiveNode);
 
-    return assertExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
+    return assertGetExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
 }
 
-function assertExpectedTypeOk(
+function assertGetExpectedTypeOk(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
@@ -77,7 +77,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if | true then 1 else 1`, () => {
             const textWithPipe: string = "if | true then 1 else 1";
             const expected: Type.TType = Type.LogicalInstance;
-            const actual: Type.TType | undefined = assertParseOkExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertGetParseOkExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));
@@ -88,7 +88,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if |`, () => {
             const textWithPipe: string = "if |";
             const expected: Type.TType = Type.LogicalInstance;
-            const actual: Type.TType | undefined = assertParseErrExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertGetParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));
@@ -97,7 +97,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if 1 then |`, () => {
             const textWithPipe: string = "if 1 then |";
             const expected: Type.TType = Type.ExpressionInstance;
-            const actual: Type.TType | undefined = assertParseErrExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertGetParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));
@@ -106,7 +106,7 @@ describe(`Inspection - Scope - ExpectedType`, () => {
         it(`if 1 then 1 else |`, () => {
             const textWithPipe: string = "if 1 then 1 else |";
             const expected: Type.TType = Type.ExpressionInstance;
-            const actual: Type.TType | undefined = assertParseErrExpectedTypeOk(textWithPipe);
+            const actual: Type.TType | undefined = assertGetParseErrExpectedTypeOk(textWithPipe);
 
             Assert.isDefined(actual);
             expect(TypeUtils.isEqualType(actual, expected));

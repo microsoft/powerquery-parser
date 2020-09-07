@@ -9,7 +9,7 @@ import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../
 import { LexSettings, ParseSettings } from "../../settings";
 
 // Only works with single line expressions
-export function assertTextWithPosition(text: string): [string, Inspection.Position] {
+export function assertGetTextWithPosition(text: string): [string, Inspection.Position] {
     const indexOfPipe: number = text.indexOf("|");
 
     expect(indexOfPipe).to.be.greaterThan(-1, "text must have | marker");
@@ -23,7 +23,7 @@ export function assertTextWithPosition(text: string): [string, Inspection.Positi
     return [text.replace("|", ""), position];
 }
 
-export function assertLexParseOk<S extends IParserState = IParserState>(
+export function assertGetLexParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
@@ -33,12 +33,12 @@ export function assertLexParseOk<S extends IParserState = IParserState>(
     return triedLexParse.value;
 }
 
-export function assertParseErr<S extends IParserState = IParserState>(
+export function assertGetParseErr<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): ParseError.ParseError<S> {
-    const triedParse: TriedParse<S> = assertTriedParse(settings, text, stateFactoryFn);
+    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
     Assert.isErr(triedParse);
 
     if (!ParseError.isParseError(triedParse.error)) {
@@ -48,19 +48,19 @@ export function assertParseErr<S extends IParserState = IParserState>(
     return triedParse.error;
 }
 
-export function assertParseOk<S extends IParserState = IParserState>(
+export function assertGetParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): ParseOk<S> {
-    const triedParse: TriedParse<S> = assertTriedParse(settings, text, stateFactoryFn);
+    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
     Assert.isOk(triedParse);
     return triedParse.value;
 }
 
 // I only care about errors coming from the parse stage.
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
-function assertTriedParse<S extends IParserState = IParserState>(
+function assertGetTriedParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
