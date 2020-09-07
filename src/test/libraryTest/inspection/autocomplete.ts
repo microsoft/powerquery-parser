@@ -1136,7 +1136,6 @@ describe(`Inspection - Autocomplete`, () => {
             const expected: ReadonlyArray<AutocompleteOption> = [
                 Keyword.KeywordKind.And,
                 Keyword.KeywordKind.As,
-                Keyword.KeywordKind.In,
                 Keyword.KeywordKind.Is,
                 Keyword.KeywordKind.Meta,
                 Keyword.KeywordKind.Or,
@@ -1153,7 +1152,7 @@ describe(`Inspection - Autocomplete`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(
                 `section; x = 1 i|`,
             );
-            const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.In, Keyword.KeywordKind.Is];
+            const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Is];
             const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
