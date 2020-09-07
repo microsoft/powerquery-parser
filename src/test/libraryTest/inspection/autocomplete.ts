@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
-import { AutocompleteOption, Position, StartOfDocumentKeywords, TriedAutocomplete } from "../../../inspection";
+import { AutocompleteOption, Position, TriedAutocomplete } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Keyword } from "../../../language";
 import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
@@ -25,7 +25,7 @@ function assertAutocompleteOk<S extends IParserState>(
         position,
     );
     if (maybeActiveNode === undefined) {
-        return StartOfDocumentKeywords;
+        return Keyword.StartOfDocumentKeywords;
     }
 
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(

@@ -3,9 +3,8 @@
 
 import { Inspection } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
-import { StartOfDocumentKeywords } from "./inspection";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
-import { Ast } from "./language";
+import { Ast, Keyword } from "./language";
 import { ExpectedType, Type } from "./language";
 import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
 import { getLocalizationTemplates } from "./localization";
@@ -116,7 +115,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     if (maybeActiveNode === undefined) {
         return ResultUtils.okFactory({
             maybeActiveNode,
-            autocomplete: StartOfDocumentKeywords,
+            autocomplete: Keyword.StartOfDocumentKeywords,
             maybeInvokeExpression: undefined,
             scope: new Map(),
             scopeType: new Map(),
