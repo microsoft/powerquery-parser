@@ -42,7 +42,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         lexParseOk.root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
-        Traverse.assertExpandAllAstChildren,
+        Traverse.assertGetAllAstChildren,
         undefined,
     );
     Assert.isOk(triedTraverse);
@@ -73,7 +73,7 @@ function assertNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequire
         lexParseOk.root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
-        Traverse.assertExpandAllAstChildren,
+        Traverse.assertGetAllAstChildren,
         nthNodeEarlyExit,
     );
 

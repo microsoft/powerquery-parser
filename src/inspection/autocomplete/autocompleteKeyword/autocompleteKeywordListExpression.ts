@@ -25,7 +25,7 @@ export function autocompleteKeywordListExpression(
     });
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestryUtils.assertNthPreviousXor(activeNode.ancestry, ancestryIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 3, undefined);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
@@ -34,7 +34,7 @@ export function autocompleteKeywordListExpression(
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode =
         nodeOrComma.node.kind === Ast.NodeKind.RangeExpression
-            ? AncestryUtils.assertNthPreviousXor(activeNode.ancestry, ancestryIndex, 4, undefined)
+            ? AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 4, undefined)
             : nodeOrComma;
 
     if (itemNode.kind === XorNodeKind.Context || PositionUtils.isBeforeXor(activeNode.position, itemNode, false)) {

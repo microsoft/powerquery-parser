@@ -6,15 +6,15 @@ import { CommonError } from "../../../common";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
-import { assertChildXorByAttributeIndex } from "./childSelectors";
-import { assertXor } from "./commonSelectors";
-import { assertParentXor } from "./parentSelectors";
+import { assertGetChildXorByAttributeIndex } from "./childSelectors";
+import { assertGetXor } from "./commonSelectors";
+import { assertGetParentXor } from "./parentSelectors";
 
 // Returns the previous sibling of the given recursive expression.
 // Commonly used for things like getting the identifier name used in an InvokeExpression.
 export function assertRecursiveExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    const xorNode: TXorNode = assertXor(nodeIdMapCollection, nodeId);
-    const arrayWrapper: TXorNode = assertParentXor(nodeIdMapCollection, nodeId, [Ast.NodeKind.ArrayWrapper]);
+    const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
+    const arrayWrapper: TXorNode = assertGetParentXor(nodeIdMapCollection, nodeId, [Ast.NodeKind.ArrayWrapper]);
     const maybeInvokeExpressionAttributeIndex: number | undefined = xorNode.node.maybeAttributeIndex;
 
     // It's not the first element in the ArrayWrapper.
@@ -36,7 +36,7 @@ export function assertRecursiveExpressionPreviousSibling(nodeIdMapCollection: Co
             );
         }
 
-        return assertChildXorByAttributeIndex(
+        return assertGetChildXorByAttributeIndex(
             nodeIdMapCollection,
             arrayWrapper.node.id,
             indexOfInvokeExprId - 1,
@@ -45,13 +45,13 @@ export function assertRecursiveExpressionPreviousSibling(nodeIdMapCollection: Co
     }
     // It's the first element in ArrayWrapper, meaning we must grab RecursivePrimaryExpression.head
     else {
-        const recursivePrimaryExpression: TXorNode = assertParentXor(nodeIdMapCollection, arrayWrapper.node.id);
-        return assertChildXorByAttributeIndex(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0, undefined);
+        const recursivePrimaryExpression: TXorNode = assertGetParentXor(nodeIdMapCollection, arrayWrapper.node.id);
+        return assertGetChildXorByAttributeIndex(nodeIdMapCollection, recursivePrimaryExpression.node.id, 0, undefined);
     }
 }
 
 export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeId: number): string | undefined {
-    const invokeExprXorNode: TXorNode = assertXor(nodeIdMapCollection, nodeId);
+    const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
     XorNodeUtils.assertAstNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
@@ -59,9 +59,9 @@ export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeI
     let maybeName: string | undefined;
     if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
         // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
-        const recursiveArrayXorNode: TXorNode = assertParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
-        const recursiveExprXorNode: TXorNode = assertParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-        const headXorNode: TXorNode = assertChildXorByAttributeIndex(
+        const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
+        const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
+        const headXorNode: TXorNode = assertGetChildXorByAttributeIndex(
             nodeIdMapCollection,
             recursiveExprXorNode.node.id,
             0,

@@ -54,7 +54,7 @@ export function tryScopeItems(
     maybeScopeById: ScopeById | undefined,
 ): TriedScopeForRoot {
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
-        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(nodeIdMapCollection, nodeId);
+        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
         if (ancestry.length === 0) {
             return new Map();
         }

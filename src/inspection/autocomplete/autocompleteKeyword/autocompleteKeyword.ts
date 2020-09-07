@@ -49,7 +49,7 @@ export function inspectAutocompleteKeyword(
     const maybeTrailingText: TrailingText | undefined =
         maybeParseErrorToken !== undefined ? trailingTextFactory(activeNode, maybeParseErrorToken) : undefined;
 
-    const ancestryLeaf: TXorNode = ActiveNodeUtils.assertLeaf(activeNode);
+    const ancestryLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
     let maybePositionName: string | undefined;
     if (PositionUtils.isInXor(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
         if (activeNode.maybeIdentifierUnderPosition !== undefined) {
@@ -77,7 +77,7 @@ export function inspectAutocompleteKeyword(
         maybeParseErrorToken,
         maybeTrailingText,
         parent: activeNode.ancestry[1],
-        child: ActiveNodeUtils.assertLeaf(activeNode),
+        child: ActiveNodeUtils.assertGetLeaf(activeNode),
         ancestryIndex: 0,
     };
 
@@ -224,7 +224,7 @@ function handleConjunctions(
         return inspected;
     }
 
-    const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertLeaf(activeNode);
+    const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
     // `let x = 1 a|`
     if (maybeTrailingText !== undefined && maybeTrailingText.isInOrOnPosition) {
         return autocompleteKeywordTrailingText(inspected, maybeTrailingText, undefined);

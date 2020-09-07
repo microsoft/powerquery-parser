@@ -12,7 +12,7 @@ import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, P
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
-function assertAutocompleteOk<S extends IParserState>(
+function assertGetAutocompleteOk<S extends IParserState>(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -39,14 +39,14 @@ function assertAutocompleteOk<S extends IParserState>(
     return triedInspect.value;
 }
 
-function assertParseOkAutocompleteOk(
+function assertGetParseOkAutocompleteOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
 ): ReadonlyArray<AutocompleteOption> {
     const parseOk: ParseOk = TestAssertUtils.assertParseOk(settings, text, IParserStateUtils.stateFactory);
     const contextState: ParseContext.State = parseOk.state.contextState;
-    return assertAutocompleteOk(
+    return assertGetAutocompleteOk(
         settings,
         contextState.nodeIdMapCollection,
         contextState.leafNodeIds,
@@ -55,7 +55,7 @@ function assertParseOkAutocompleteOk(
     );
 }
 
-function assertParseErrAutocompleteOk(
+function assertGetParseErrAutocompleteOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
@@ -67,7 +67,7 @@ function assertParseErrAutocompleteOk(
     );
     const contextState: ParseContext.State = parseError.state.contextState;
 
-    return assertAutocompleteOk(
+    return assertGetAutocompleteOk(
         settings,
         contextState.nodeIdMapCollection,
         contextState.leafNodeIds,
@@ -83,7 +83,11 @@ describe(`Inspection - Autocomplete`, () => {
             ...Keyword.ExpressionKeywordKinds,
             Keyword.KeywordKind.Section,
         ];
-        const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(DefaultSettings, text, position);
+        const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
+            DefaultSettings,
+            text,
+            position,
+        );
         expect(actual).to.have.members(expected);
     });
 
@@ -91,7 +95,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("a|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`a|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -102,7 +106,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("x a|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`x a|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.And, Keyword.KeywordKind.As];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -113,7 +117,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("e|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`e|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -126,7 +130,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if x then x e|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Else];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -137,7 +141,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("i|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`i|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.If];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -148,7 +152,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("l|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`l|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Let];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -159,7 +163,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("m|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`m|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -170,7 +174,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("x m|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`x m|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Meta];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -181,7 +185,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("n|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`n|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Not];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -192,7 +196,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("true o|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`true o|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Or];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -205,7 +209,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true o|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Or, Keyword.KeywordKind.Otherwise];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -218,7 +222,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true o |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -231,7 +235,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true ot|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Otherwise];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -244,7 +248,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true oth|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Otherwise];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -255,7 +259,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("s|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`s|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Section];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -266,7 +270,7 @@ describe(`Inspection - Autocomplete`, () => {
         it("[] s|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`[] s|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Section];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -279,7 +283,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section; s|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Shared];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -292,7 +296,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section; shared x|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -305,7 +309,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section; [] s|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Shared];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -318,7 +322,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if true t|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Then];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -333,7 +337,7 @@ describe(`Inspection - Autocomplete`, () => {
                 Keyword.KeywordKind.Try,
                 Keyword.KeywordKind.Type,
             ];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -346,7 +350,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`try |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`try |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -357,7 +361,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`try true|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`try true|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.True];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -377,7 +381,7 @@ describe(`Inspection - Autocomplete`, () => {
                 Keyword.KeywordKind.Or,
                 Keyword.KeywordKind.Otherwise,
             ];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -390,7 +394,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if |error`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if |error`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -401,7 +405,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if error|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if error|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -412,7 +416,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`error |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`error |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -427,7 +431,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let x = (_ |) => a in x`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.As];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -440,7 +444,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let x = (_ a|) => a in`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.As];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -453,7 +457,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -464,7 +468,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(` if |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -475,7 +479,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if 1|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if 1|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -486,7 +490,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if |if`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if |if`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -497,7 +501,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if i|f`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if i|f`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.If];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -508,7 +512,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if if | `, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if if |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -519,7 +523,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if 1 |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if 1 |`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Then];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -530,7 +534,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if 1 t|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if 1 t|`);
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Then];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -543,7 +547,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if 1 then |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -556,7 +560,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if 1 then 1|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -569,7 +573,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if 1 then 1 e|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Else];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -582,7 +586,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if 1 then 1 else|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -595,7 +599,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if 1 th|en 1 else`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Then];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -608,7 +612,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if 1 then 1 else |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -621,7 +625,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`foo(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo(|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -632,7 +636,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`foo(a|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo(a|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -643,7 +647,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`foo(a|,`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo(a|,`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -654,7 +658,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`foo(a,|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo(a,|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -667,7 +671,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`{|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`{|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -678,7 +682,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`{1|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`{1|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -689,7 +693,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`{1|,`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`{1|,`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -700,7 +704,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`{1,|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`{1,|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -711,7 +715,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`{1,|2`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`{1,|2`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -722,7 +726,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`{1,|2,`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`{1,|2,`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -733,7 +737,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`{1..|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`{1..|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -748,7 +752,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true otherwise| false`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -761,7 +765,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true otherwise |false`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -774,7 +778,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true oth|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Otherwise];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -787,7 +791,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true otherwise |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -800,7 +804,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+(|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -813,7 +817,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -824,7 +828,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -835,7 +839,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=1|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=1|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -846,7 +850,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a|=1`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a|=1`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -857,7 +861,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=1|]`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=1|]`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -868,7 +872,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=|1]`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=| 1]`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseOkAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -879,7 +883,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=1|,`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=1|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -890,7 +894,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=1,|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=1,|`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -901,7 +905,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=1|,b`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=1|,b`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -912,7 +916,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=1|,b=`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=1|,b=`);
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -923,7 +927,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+[a=|1,b=`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+[a=|1,b=`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -936,7 +940,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `+[a=1,b=2|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -949,7 +953,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `+[a=1,b=2 |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -962,7 +966,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`error |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`error |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -973,7 +977,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`let x = |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`let x = |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -984,7 +988,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`() => |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`() => |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -995,7 +999,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`if |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`if |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1008,7 +1012,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if true then |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1021,7 +1025,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `if true then true else |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1032,7 +1036,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`foo(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`foo(|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1045,7 +1049,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let x = 1 in |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1056,7 +1060,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+{|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+{|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1069,7 +1073,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `try true otherwise |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1080,7 +1084,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`+(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`+(|`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1095,7 +1099,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section; [] |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Shared];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1108,7 +1112,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section; [] x |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1121,7 +1125,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section; x = |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1140,7 +1144,7 @@ describe(`Inspection - Autocomplete`, () => {
                 Keyword.KeywordKind.Meta,
                 Keyword.KeywordKind.Or,
             ];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1153,7 +1157,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section; x = 1 i|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Is];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1166,7 +1170,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `section foo; a = () => true; b = "string"; c = 1; d = |;`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1179,7 +1183,7 @@ describe(`Inspection - Autocomplete`, () => {
         it(`let a = |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertTextWithPosition(`let a = |`);
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1192,7 +1196,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let a = 1|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1212,7 +1216,7 @@ describe(`Inspection - Autocomplete`, () => {
                 Keyword.KeywordKind.Meta,
                 Keyword.KeywordKind.Or,
             ];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1232,7 +1236,7 @@ describe(`Inspection - Autocomplete`, () => {
                 Keyword.KeywordKind.Meta,
                 Keyword.KeywordKind.Or,
             ];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1245,7 +1249,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let a = 1 i|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.In, Keyword.KeywordKind.Is];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1258,7 +1262,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let a = 1 o|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Or];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1271,7 +1275,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let a = 1 m|`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [Keyword.KeywordKind.Meta];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1284,7 +1288,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let a = 1, |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1297,7 +1301,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let a = let b = |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = Keyword.ExpressionKeywordKinds;
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1317,7 +1321,7 @@ describe(`Inspection - Autocomplete`, () => {
                 Keyword.KeywordKind.Meta,
                 Keyword.KeywordKind.Or,
             ];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,
@@ -1330,7 +1334,7 @@ describe(`Inspection - Autocomplete`, () => {
                 `let a = let b = 1, |`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [];
-            const actual: ReadonlyArray<AutocompleteOption> = assertParseErrAutocompleteOk(
+            const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
                 DefaultSettings,
                 text,
                 position,

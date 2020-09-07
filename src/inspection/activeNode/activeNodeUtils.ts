@@ -74,13 +74,13 @@ export function maybeActiveNode(
     return {
         leafKind,
         position,
-        ancestry: AncestryUtils.assertAncestry(nodeIdMapCollection, leaf.node.id),
+        ancestry: AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
         maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
     };
 }
 
-export function assertLeaf(activeNode: ActiveNode): TXorNode {
-    return AncestryUtils.assertLeaf(activeNode.ancestry);
+export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
+    return AncestryUtils.assertGetLeaf(activeNode.ancestry);
 }
 
 interface AstNodeSearch {
@@ -160,7 +160,7 @@ function maybeFindAstNodes(
     //  the closest leaf to the left or on position.
     //  the closest leaf to the right of position.
     for (const nodeId of leafNodeIds) {
-        const candidate: Ast.TNode = NodeIdMapUtils.assertAst(astNodeById, nodeId);
+        const candidate: Ast.TNode = NodeIdMapUtils.assertGetAst(astNodeById, nodeId);
 
         let isBoundIncluded: boolean;
         if (
@@ -206,14 +206,14 @@ function maybeFindAstNodes(
                 maybeBestAfter.constantKind,
             )
         ) {
-            const parent: Ast.TNode = NodeIdMapUtils.assertParentAst(nodeIdMapCollection, currentOnOrBefore.id, [
+            const parent: Ast.TNode = NodeIdMapUtils.assertGetParentAst(nodeIdMapCollection, currentOnOrBefore.id, [
                 Ast.NodeKind.RecordExpression,
                 Ast.NodeKind.RecordLiteral,
                 Ast.NodeKind.ListExpression,
                 Ast.NodeKind.ListLiteral,
                 Ast.NodeKind.InvokeExpression,
             ]);
-            const arrayWrapper: Ast.TNode = NodeIdMapUtils.assertChildAstByAttributeIndex(
+            const arrayWrapper: Ast.TNode = NodeIdMapUtils.assertGetChildAstByAttributeIndex(
                 nodeIdMapCollection,
                 parent.id,
                 1,
@@ -283,7 +283,7 @@ function maybeIdentifierUnderPosition(
         }
         const parentId: number = maybeParentId;
 
-        const parent: Ast.TNode = NodeIdMapUtils.assertAst(nodeIdMapCollection.astNodeById, parentId);
+        const parent: Ast.TNode = NodeIdMapUtils.assertGetAst(nodeIdMapCollection.astNodeById, parentId);
         if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
             return undefined;
         }

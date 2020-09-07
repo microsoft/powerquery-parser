@@ -6,9 +6,9 @@ import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
-import { assertXor } from "./commonSelectors";
+import { assertGetXor } from "./commonSelectors";
 
-export function assertChildAstByAttributeIndex(
+export function assertGetChildAstByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
@@ -25,7 +25,7 @@ export function assertChildAstByAttributeIndex(
     return maybeNode;
 }
 
-export function assertChildContextByAttributeIndex(
+export function assertGetChildContextByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
@@ -45,7 +45,7 @@ export function assertChildContextByAttributeIndex(
     return maybeNode;
 }
 
-export function assertChildXorByAttributeIndex(
+export function assertGetChildXorByAttributeIndex(
     nodeIdMapCollection: Collection,
     parentId: number,
     attributeIndex: number,
@@ -121,7 +121,7 @@ export function maybeChildXorByAttributeIndex(
 
     // Iterate over the children and try to find one which matches attributeIndex.
     for (const childId of childIds) {
-        const xorNode: TXorNode = assertXor(nodeIdMapCollection, childId);
+        const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, childId);
         if (xorNode.node.maybeAttributeIndex === attributeIndex) {
             // If a Ast.NodeKind is given, validate the Ast.TNode at the given index matches the Ast.NodeKind.
             if (maybeChildNodeKinds !== undefined) {
