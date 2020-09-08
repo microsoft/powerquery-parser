@@ -20,15 +20,15 @@ function abridgedPrimitiveType(kind: Type.TypeKind, isNullable: boolean): Abridg
     };
 }
 
-function assertAbridgedType(expected: AbridgedType, actual: AbridgedType): void {
+function assertGetAbridgedType(expected: AbridgedType, actual: AbridgedType): void {
     expect(actual).deep.equal(expected);
 }
 
-function assertAbridgedTypes(expected: ReadonlyArray<AbridgedType>, actual: ReadonlyArray<AbridgedType>): void {
+function assertGetAbridgedTypes(expected: ReadonlyArray<AbridgedType>, actual: ReadonlyArray<AbridgedType>): void {
     expect(actual).deep.equal(expected);
 }
 
-function assertTypeIsAnyUnion(type: Type.TType): asserts type is Type.AnyUnion {
+function assertIsAnyUnion(type: Type.TType): asserts type is Type.AnyUnion {
     expect(type.maybeExtendedKind).to.equal(Type.ExtendedTypeKind.AnyUnion);
 }
 
@@ -52,7 +52,7 @@ describe(`TypeUtils`, () => {
                 TypeUtils.dedupe([Type.RecordInstance, Type.RecordInstance]),
             );
             expect(actual.length).to.equal(1);
-            assertAbridgedType(expected, actual[0]);
+            assertGetAbridgedType(expected, actual[0]);
         });
 
         it(`generic, mixed`, () => {
@@ -63,7 +63,7 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Record, true),
             ];
-            assertAbridgedTypes(expected, actual);
+            assertGetAbridgedTypes(expected, actual);
         });
 
         it(`early return with any primitive`, () => {
@@ -71,7 +71,7 @@ describe(`TypeUtils`, () => {
                 TypeUtils.dedupe([Type.AnyInstance, Type.NullableRecordInstance]),
             );
             const expected: ReadonlyArray<AbridgedType> = [Type.AnyInstance];
-            assertAbridgedTypes(expected, actual);
+            assertGetAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
@@ -84,7 +84,7 @@ describe(`TypeUtils`, () => {
 
             const actual: AbridgedType = typeToAbridged(deduped[0]);
             const expected: AbridgedType = primitiveTypeFactory(false, Type.TypeKind.Record);
-            assertAbridgedType(expected, actual);
+            assertGetAbridgedType(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single AnyUnion`, () => {
@@ -95,14 +95,14 @@ describe(`TypeUtils`, () => {
 
             expect(deduped.length).to.equal(1);
             const ttype: Type.TType = deduped[0];
-            assertTypeIsAnyUnion(ttype);
+            assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
             const expected: ReadonlyArray<AbridgedType> = [
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Table, true),
             ];
-            assertAbridgedTypes(expected, actual);
+            assertGetAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single AnyUnion, mixed nullability`, () => {
@@ -113,7 +113,7 @@ describe(`TypeUtils`, () => {
 
             expect(deduped.length).to.equal(1);
             const ttype: Type.TType = deduped[0];
-            assertTypeIsAnyUnion(ttype);
+            assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
             const expected: ReadonlyArray<AbridgedType> = [
@@ -122,7 +122,7 @@ describe(`TypeUtils`, () => {
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Table, false),
             ];
-            assertAbridgedTypes(expected, actual);
+            assertGetAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, flatten multi level AnyUnion to single AnyUnion`, () => {
@@ -136,14 +136,14 @@ describe(`TypeUtils`, () => {
 
             expect(deduped.length).to.equal(1);
             const ttype: Type.TType = deduped[0];
-            assertTypeIsAnyUnion(ttype);
+            assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
             const expected: ReadonlyArray<AbridgedType> = [
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Number, false),
             ];
-            assertAbridgedTypes(expected, actual);
+            assertGetAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, flatten multi level AnyUnion to single AnyUnion`, () => {
@@ -157,14 +157,14 @@ describe(`TypeUtils`, () => {
 
             expect(deduped.length).to.equal(1);
             const ttype: Type.TType = deduped[0];
-            assertTypeIsAnyUnion(ttype);
+            assertIsAnyUnion(ttype);
 
             const actual: ReadonlyArray<AbridgedType> = abridgedTypesFactory(ttype.unionedTypePairs);
             const expected: ReadonlyArray<AbridgedType> = [
                 abridgedPrimitiveType(Type.TypeKind.Record, false),
                 abridgedPrimitiveType(Type.TypeKind.Number, false),
             ];
-            assertAbridgedTypes(expected, actual);
+            assertGetAbridgedTypes(expected, actual);
         });
 
         it(`${Type.ExtendedTypeKind.AnyUnion}, early return with any primitive`, () => {
@@ -181,7 +181,7 @@ describe(`TypeUtils`, () => {
 
             const actual: AbridgedType = typeToAbridged(ttype);
             const expected: AbridgedType = typeToAbridged(Type.AnyInstance);
-            assertAbridgedType(expected, actual);
+            assertGetAbridgedType(expected, actual);
         });
     });
 });

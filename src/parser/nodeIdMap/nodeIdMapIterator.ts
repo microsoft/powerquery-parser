@@ -30,7 +30,7 @@ export function assertIterChildrenAst(
 ): ReadonlyArray<Ast.TNode> {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     return assertIterChildIds(nodeIdMapCollection.childIdsById, parentId).map(childId =>
-        NodeIdMapUtils.assertAst(astNodeById, childId),
+        NodeIdMapUtils.assertGetAst(astNodeById, childId),
     );
 }
 
@@ -54,7 +54,7 @@ export function assertIterXor(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
 ): ReadonlyArray<TXorNode> {
-    return nodeIds.map(nodeId => NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId));
+    return nodeIds.map(nodeId => NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId));
 }
 
 // If any exist, returns all Ast nodes under the given node.
@@ -69,7 +69,7 @@ export function maybeIterChildrenAst(
     const childIds: ReadonlyArray<number> = maybeChildIds;
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    return childIds.map(childId => NodeIdMapUtils.assertAst(astNodeById, childId));
+    return childIds.map(childId => NodeIdMapUtils.assertGetAst(astNodeById, childId));
 }
 
 export function maybeNextSiblingXor(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {
@@ -83,7 +83,7 @@ export function maybeNthSiblingXor(
     rootId: number,
     offset: number,
 ): TXorNode | undefined {
-    const childXorNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, rootId);
+    const childXorNode: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, rootId);
     if (childXorNode.node.maybeAttributeIndex === undefined) {
         return undefined;
     }
@@ -93,7 +93,7 @@ export function maybeNthSiblingXor(
         return undefined;
     }
 
-    const parentXorNode: TXorNode = NodeIdMapUtils.assertParentXor(nodeIdMapCollection, rootId, undefined);
+    const parentXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(nodeIdMapCollection, rootId, undefined);
     const childIds: ReadonlyArray<number> = assertIterChildIds(nodeIdMapCollection.childIdsById, parentXorNode.node.id);
     if (childIds.length >= attributeIndex) {
         return undefined;

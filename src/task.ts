@@ -124,7 +124,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     }
     const activeNode: ActiveNode = maybeActiveNode;
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
-    const ancestryLeaf: TXorNode = AncestryUtils.assertLeaf(ancestry);
+    const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(ancestry);
 
     const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
         settings,

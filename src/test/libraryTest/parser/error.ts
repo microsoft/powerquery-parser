@@ -11,7 +11,7 @@ import { DefaultSettings, Settings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertGetCsvContinuationError(text: string): ParseError.ExpectedCsvContinuationError {
-    const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(
+    const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
         DefaultSettings,
         text,
         IParserStateUtils.stateFactory,
@@ -27,7 +27,7 @@ function assertGetCsvContinuationError(text: string): ParseError.ExpectedCsvCont
 describe("Parser.Error", () => {
     it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
         const text: string = "(optional x, y) => x";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettings,
             text,
             IParserStateUtils.stateFactory,
@@ -40,7 +40,7 @@ describe("Parser.Error", () => {
 
     it("UnterminatedBracketError: let x = [", () => {
         const text: string = "let x = [";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettings,
             text,
             IParserStateUtils.stateFactory,
@@ -50,7 +50,7 @@ describe("Parser.Error", () => {
 
     it("UnterminatedParenthesesError: let x = (", () => {
         const text: string = "let x = (";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettings,
             text,
             IParserStateUtils.stateFactory,
@@ -61,7 +61,7 @@ describe("Parser.Error", () => {
     describe(`UnusedTokensRemainError`, () => {
         it("default parser", () => {
             const text: string = "1 1";
-            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(
+            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
                 DefaultSettings,
                 text,
                 IParserStateUtils.stateFactory,
@@ -79,7 +79,7 @@ describe("Parser.Error", () => {
                 parser: customParser,
             };
             const text: string = "a b";
-            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertParseErr(
+            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
                 customSettings,
                 text,
                 IParserStateUtils.stateFactory,

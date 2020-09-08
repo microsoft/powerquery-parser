@@ -21,12 +21,12 @@ import { CommonSettings, DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
         DefaultSettings,
         text,
         IParserStateUtils.stateFactory,
     );
-    const actual: Type.TType = assertParseNodeOk(
+    const actual: Type.TType = assertGetParseNodeOk(
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.state.contextState.leafNodeIds,
@@ -37,7 +37,7 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 }
 
 function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
-    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(
+    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertGetParseErr(
         DefaultSettings,
         text,
         IParserStateUtils.stateFactory,
@@ -45,7 +45,7 @@ function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
     Assert.isDefined(maybeRoot);
 
-    const actual: Type.TType = assertParseNodeOk(
+    const actual: Type.TType = assertGetParseNodeOk(
         DefaultSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
@@ -55,7 +55,7 @@ function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     expect(actual).deep.equal(expected);
 }
 
-function assertParseNodeOk(
+function assertGetParseNodeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -73,8 +73,8 @@ function assertParseNodeOk(
 }
 
 function assertParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.ScopeTypeByKey): void {
-    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertTextWithPosition(textWithPipe);
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+    const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertGetTextWithPosition(textWithPipe);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
         DefaultSettings,
         textWithoutPipe,
         IParserStateUtils.stateFactory,
@@ -82,7 +82,7 @@ function assertParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.
     const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
 
-    const actual: Inspection.ScopeTypeByKey = assertParseOkScopeTypeOk(
+    const actual: Inspection.ScopeTypeByKey = assertGetParseOkScopeTypeOk(
         DefaultSettings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -92,7 +92,7 @@ function assertParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.
     expect(actual).deep.equal(expected);
 }
 
-function assertParseOkScopeTypeOk(
+function assertGetParseOkScopeTypeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,

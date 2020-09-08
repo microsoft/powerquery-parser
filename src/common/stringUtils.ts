@@ -226,7 +226,7 @@ export function maybeNewlineKindAt(text: string, index: number): NewlineKind | u
 
 // A quick and dirty way to do string formatting.
 // Does not handle any escaping.
-export function assertFormat(template: string, args: Map<string, string>): string {
+export function assertGetFormatted(template: string, args: Map<string, string>): string {
     let result: string = template;
 
     for (const [key, value] of args.entries()) {

@@ -56,7 +56,7 @@ describe("Parser.Children", () => {
             },
         ];
         const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
-            TestAssertUtils.assertLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
+            TestAssertUtils.assertGetLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
         );
         expect(actual).to.deep.equal(expected);
     });
@@ -76,7 +76,7 @@ describe("Parser.Children", () => {
             },
         ];
         const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
-            TestAssertUtils.assertLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
+            TestAssertUtils.assertGetLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
         );
         expect(actual).to.deep.equal(expected);
     });

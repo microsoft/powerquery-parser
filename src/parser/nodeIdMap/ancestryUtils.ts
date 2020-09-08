@@ -6,7 +6,7 @@ import { Assert } from "../../common";
 import { Ast } from "../../language";
 import { TXorNode } from "./xorNode";
 
-export function assertAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
+export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {
     const ancestryIds: number[] = [rootId];
 
     let maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(rootId);
@@ -19,26 +19,26 @@ export function assertAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId
     return NodeIdMapIterator.assertIterXor(nodeIdMapCollection, ancestryIds);
 }
 
-export function assertLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {
+export function assertGetLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {
     const maybeLeaf: TXorNode | undefined = ancestry[0];
     Assert.isDefined(maybeLeaf);
     return maybeLeaf;
 }
 
-export function assertRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {
+export function assertGetRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {
     Assert.isTrue(ancestry.length > 0, "ancestry.length > 0");
     return ancestry[ancestry.length - 1];
 }
 
-export function assertNextXor(
+export function assertGetNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    return assertNthNextXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
+    return assertGetNthNextXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
 }
 
-export function assertNthNextXor(
+export function assertGetNthNextXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
@@ -50,7 +50,7 @@ export function assertNthNextXor(
     return maybeXorNode;
 }
 
-export function assertNthPreviousXor(
+export function assertGetNthPreviousXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     n: number = 1,
@@ -66,12 +66,12 @@ export function assertNthPreviousXor(
     return maybeXorNode;
 }
 
-export function assertPreviousXor(
+export function assertGetPreviousXor(
     ancestry: ReadonlyArray<TXorNode>,
     ancestryIndex: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    return assertNthPreviousXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
+    return assertGetNthPreviousXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
 }
 
 export function maybeNthPreviousXor(

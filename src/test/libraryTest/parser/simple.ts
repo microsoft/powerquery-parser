@@ -23,7 +23,7 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
         DefaultSettings,
         text,
         IParserStateUtils.stateFactory,
@@ -42,7 +42,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         lexParseOk.root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         collectAbridgeNodeVisit,
-        Traverse.assertExpandAllAstChildren,
+        Traverse.assertGetAllAstChildren,
         undefined,
     );
     Assert.isOk(triedTraverse);
@@ -50,8 +50,8 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     return triedTraverse.value;
 }
 
-function assertNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertLexParseOk(
+function assertGetNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
         DefaultSettings,
         text,
         IParserStateUtils.stateFactory,
@@ -73,7 +73,7 @@ function assertNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequire
         lexParseOk.root,
         Traverse.VisitNodeStrategy.BreadthFirst,
         nthNodeVisit,
-        Traverse.assertExpandAllAstChildren,
+        Traverse.assertGetAllAstChildren,
         nthNodeEarlyExit,
     );
 
@@ -137,7 +137,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.And);
         });
 
@@ -151,7 +151,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Multiplication);
         });
 
@@ -165,7 +165,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Division);
         });
 
@@ -179,7 +179,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Addition);
         });
 
@@ -193,7 +193,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Subtraction);
         });
 
@@ -280,7 +280,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.EqualityOperatorKind.EqualTo);
         });
 
@@ -294,7 +294,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.EqualityOperatorKind.NotEqualTo);
         });
     });
@@ -1433,7 +1433,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.GreaterThan);
         });
 
@@ -1447,7 +1447,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.GreaterThanEqualTo);
         });
 
@@ -1461,7 +1461,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.LessThan);
         });
 
@@ -1475,7 +1475,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.LessThanEqualTo);
         });
     });
@@ -1667,7 +1667,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.UnaryOperatorKind.Negative);
         });
 
@@ -1681,7 +1681,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.UnaryOperatorKind.Not);
         });
 
@@ -1695,7 +1695,7 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
+            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
             expect(operatorNode.constantKind).to.equal(Constant.UnaryOperatorKind.Positive);
         });
     });

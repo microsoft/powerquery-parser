@@ -9,8 +9,8 @@ import { TokenWithColumnNumber } from "../../../parser/error";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
-function assertExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const error: ParseError.ParseError<IParserState> = TestAssertUtils.assertParseErr(
+function assertGetExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
+    const error: ParseError.ParseError<IParserState> = TestAssertUtils.assertGetParseErr(
         DefaultSettings,
         text,
         IParserStateUtils.stateFactory,
@@ -26,7 +26,7 @@ function assertExpectedTokenKindError(text: string): ParseError.ExpectedTokenKin
 }
 
 function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
-    const error: ParseError.ExpectedTokenKindError = assertExpectedTokenKindError(text);
+    const error: ParseError.ExpectedTokenKindError = assertGetExpectedTokenKindError(text);
     Assert.isDefined(error.maybeFoundToken);
     const foundToken: TokenWithColumnNumber = error.maybeFoundToken;
 

@@ -12,7 +12,7 @@ describe("Parser.Children", () => {
     it(`let x = foo(){0} in x`, () => {
         const text: string = `let x = foo(){0} in x`;
         const expected: ReadonlyArray<number> = [2, 6, 7, 12, 15, 17, 19, 22, 23, 24, 28];
-        const lexParseOk: LexParseOk = TestAssertUtils.assertLexParseOk(
+        const lexParseOk: LexParseOk = TestAssertUtils.assertGetLexParseOk(
             DefaultSettings,
             text,
             IParserStateUtils.stateFactory,

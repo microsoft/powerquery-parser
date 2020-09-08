@@ -9,15 +9,15 @@ import { AstNodeById, Collection, ContextNodeById } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { maybeChildXorByAttributeIndex } from "./childSelectors";
 
-export function assertAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
+export function assertGetAst(astNodeById: AstNodeById, nodeId: number): Ast.TNode {
     return MapUtils.assertGet(astNodeById, nodeId);
 }
 
-export function assertContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
+export function assertGetContext(contextNodeById: ContextNodeById, nodeId: number): ParseContext.Node {
     return MapUtils.assertGet(contextNodeById, nodeId);
 }
 
-export function assertXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const maybeNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
     Assert.isDefined(maybeNode, undefined, { nodeId });
 

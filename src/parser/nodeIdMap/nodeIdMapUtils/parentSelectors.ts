@@ -8,7 +8,7 @@ import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
 import { TXorNode } from "../xorNode";
 
-export function assertParentAst(
+export function assertGetParentAst(
     nodeIdMapCollection: Collection,
     nodeId: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
@@ -19,7 +19,7 @@ export function assertParentAst(
     return maybeNode;
 }
 
-export function assertParentXor(
+export function assertGetParentXor(
     nodeIdMapCollection: Collection,
     nodeId: number,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,

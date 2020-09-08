@@ -98,7 +98,7 @@ export function applyFastStateBackup(state: IParserState, backup: FastStateBacku
     }
 
     if (backup.maybeContextNodeId) {
-        state.maybeCurrentContextNode = NodeIdMapUtils.assertContext(
+        state.maybeCurrentContextNode = NodeIdMapUtils.assertGetContext(
             state.contextState.nodeIdMapCollection.contextNodeById,
             backup.maybeContextNodeId,
         );
@@ -250,7 +250,7 @@ export function isRecursivePrimaryExpressionNext(
 // ---------- Asserts ----------
 // -----------------------------
 
-export function assertContextNodeMetadata(state: IParserState): ContextNodeMetadata {
+export function assertGetContextNodeMetadata(state: IParserState): ContextNodeMetadata {
     Assert.isDefined(state.maybeCurrentContextNode);
     const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
 
@@ -277,7 +277,7 @@ export function assertContextNodeMetadata(state: IParserState): ContextNodeMetad
     };
 }
 
-export function assertTokenAt(state: IParserState, tokenIndex: number): Token.Token {
+export function assertGetTokenAt(state: IParserState, tokenIndex: number): Token.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const maybeToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     Assert.isDefined(maybeToken, undefined, { tokenIndex });
@@ -357,7 +357,7 @@ export function assertNoMoreTokens(state: IParserState): void {
         return;
     }
 
-    const token: Token.Token = assertTokenAt(state, state.tokenIndex);
+    const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
     throw new ParseError.UnusedTokensRemainError(
         state.localizationTemplates,
         token,
@@ -376,7 +376,7 @@ export function assertNoOpenContext(state: IParserState): void {
 // -------------------------------------
 
 export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedParenthesesError {
-    const token: Token.Token = assertTokenAt(state, state.tokenIndex);
+    const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedParenthesesError(
         state.localizationTemplates,
         token,
@@ -385,7 +385,7 @@ export function unterminatedParenthesesError(state: IParserState): ParseError.Un
 }
 
 export function unterminatedBracketError(state: IParserState): ParseError.UnterminatedBracketError {
-    const token: Token.Token = assertTokenAt(state, state.tokenIndex);
+    const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedBracketError(
         state.localizationTemplates,
         token,

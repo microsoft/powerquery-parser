@@ -8,7 +8,7 @@ import { AstNodeById, Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { maybeXor } from "./commonSelectors";
 
-export function assertLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
+export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const maybeNode: TXorNode | undefined = maybeLeftMostXor(nodeIdMapCollection, nodeId);
     Assert.isDefined(maybeNode, `nodeId does not exist in nodeIdMapCollection`, { nodeId });
 

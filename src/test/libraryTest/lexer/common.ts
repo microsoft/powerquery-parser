@@ -18,7 +18,11 @@ export interface AbridgedSnapshot {
 
 export type AbridgedLineTokens = ReadonlyArray<[Token.LineTokenKind, string]>;
 
-export function assertAbridgedSnapshotMatch(text: string, expected: AbridgedSnapshot, wrapped: boolean): LexerSnapshot {
+export function assertGetAbridgedSnapshotMatch(
+    text: string,
+    expected: AbridgedSnapshot,
+    wrapped: boolean,
+): LexerSnapshot {
     if (wrapped) {
         const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
         const wrappedExpected: AbridgedSnapshot = {
@@ -29,10 +33,10 @@ export function assertAbridgedSnapshotMatch(text: string, expected: AbridgedSnap
             ],
             comments: expected.comments,
         };
-        assertAbridgedSnapshotMatch(wrappedText, wrappedExpected, false);
+        assertGetAbridgedSnapshotMatch(wrappedText, wrappedExpected, false);
     }
 
-    const snapshot: LexerSnapshot = assertLexerSnapshot(text);
+    const snapshot: LexerSnapshot = assertGetLexerSnapshot(text);
     const expectedTokens: AbridgedTokens = expected.tokens;
     const expectedComments: AbridgedComments = expected.comments;
     const actualTokens: AbridgedTokens = snapshot.tokens.map(token => [token.kind, token.data]);
@@ -44,7 +48,7 @@ export function assertAbridgedSnapshotMatch(text: string, expected: AbridgedSnap
     return snapshot;
 }
 
-export function assertLineTokenMatch(text: string, expected: AbridgedLineTokens, wrapped: boolean): Lexer.State {
+export function assertGetLineTokenMatch(text: string, expected: AbridgedLineTokens, wrapped: boolean): Lexer.State {
     if (wrapped) {
         const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
         const wrappedExpected: AbridgedLineTokens = [
@@ -52,10 +56,10 @@ export function assertLineTokenMatch(text: string, expected: AbridgedLineTokens,
             ...expected,
             [Token.LineTokenKind.Identifier, "wrapperClose"],
         ];
-        assertLineTokenMatch(wrappedText, wrappedExpected, false);
+        assertGetLineTokenMatch(wrappedText, wrappedExpected, false);
     }
 
-    const state: Lexer.State = assertLexOk(text);
+    const state: Lexer.State = assertGetLexOk(text);
 
     const tmp: [Token.LineTokenKind, string][] = [];
     for (const line of state.lines) {
@@ -73,8 +77,12 @@ export function assertLineTokenMatch(text: string, expected: AbridgedLineTokens,
     return state;
 }
 
-export function assertSnapshotAbridgedTokens(text: string, expected: AbridgedTokens, wrapped: boolean): LexerSnapshot {
-    return assertAbridgedSnapshotMatch(
+export function assertGetSnapshotAbridgedTokens(
+    text: string,
+    expected: AbridgedTokens,
+    wrapped: boolean,
+): LexerSnapshot {
+    return assertGetAbridgedSnapshotMatch(
         text,
         {
             tokens: expected,
@@ -84,12 +92,12 @@ export function assertSnapshotAbridgedTokens(text: string, expected: AbridgedTok
     );
 }
 
-export function assertSnapshotAbridgedComments(
+export function assertGetSnapshotAbridgedComments(
     text: string,
     expected: AbridgedComments,
     wrapped: boolean,
 ): LexerSnapshot {
-    return assertAbridgedSnapshotMatch(
+    return assertGetAbridgedSnapshotMatch(
         text,
         {
             tokens: [],
@@ -99,7 +107,7 @@ export function assertSnapshotAbridgedComments(
     );
 }
 
-export function assertLexOk(text: string): Lexer.State {
+export function assertGetLexOk(text: string): Lexer.State {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
     Assert.isOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
@@ -116,8 +124,8 @@ export function assertLexOk(text: string): Lexer.State {
     return lexerState;
 }
 
-export function assertLexerSnapshot(text: string): LexerSnapshot {
-    const state: Lexer.State = assertLexOk(text);
+export function assertGetLexerSnapshot(text: string): LexerSnapshot {
+    const state: Lexer.State = assertGetLexOk(text);
     const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
     Assert.isOk(triedSnapshot);
 

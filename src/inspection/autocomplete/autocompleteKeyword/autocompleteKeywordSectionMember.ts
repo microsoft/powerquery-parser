@@ -51,7 +51,7 @@ export function autocompleteKeywordSectionMember(
     // `section foo; bar = 1 |` would be expecting a semicolon.
     // The autocomplete should be for the IdentifierPairedExpression found on the previous child index.
     else if (maybeChildAttributeIndex === 3 && state.child.kind === XorNodeKind.Context) {
-        const identifierPairedExpression: Ast.TNode = NodeIdMapUtils.assertChildAstByAttributeIndex(
+        const identifierPairedExpression: Ast.TNode = NodeIdMapUtils.assertGetChildAstByAttributeIndex(
             state.nodeIdMapCollection,
             state.parent.node.id,
             2,
