@@ -2,14 +2,33 @@
 // Licensed under the MIT license.
 
 import { Ast, Constant } from "../../language";
-import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, AncestryUtils } from "../../parser";
+import { AncestryUtils, TXorNode, XorNodeKind } from "../../parser";
 import { ActiveNode } from "../activeNode";
 import { PositionUtils } from "../position";
+import { TrailingToken } from "./commonTypes";
 
 export function autocompletePrimitiveType(
-    nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
 ): ReadonlyArray<Constant.PrimitiveTypeConstantKind> {
+    return filterRecommendations(traverseAncestors(activeNode), maybeTrailingToken);
+}
+
+function filterRecommendations(
+    inspected: ReadonlyArray<Constant.PrimitiveTypeConstantKind>,
+    maybeTrailingToken: TrailingToken | undefined,
+): ReadonlyArray<Constant.PrimitiveTypeConstantKind> {
+    if (maybeTrailingToken === undefined) {
+        return inspected;
+    }
+    const trailingData: string = maybeTrailingToken.data;
+
+    return inspected.filter((primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind) =>
+        primitiveTypeConstantKind.startsWith(trailingData),
+    );
+}
+
+function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.PrimitiveTypeConstantKind> {
     if (activeNode.ancestry.length === 0) {
         return [];
     }
@@ -20,6 +39,7 @@ export function autocompletePrimitiveType(
     for (let index: number = 0; index < numAncestors; index += 1) {
         const parent: TXorNode = ancestry[index];
         const maybeChild: TXorNode | undefined = ancestry[index - 1];
+        // If on the second attribute for TypePrimaryType.
         // `type |`
         if (parent.node.kind === Ast.NodeKind.TypePrimaryType) {
             if (maybeChild === undefined) {
@@ -32,11 +52,12 @@ export function autocompletePrimitiveType(
                 return Constant.PrimitiveTypeConstantKinds;
             }
         }
-        // If parameter in a FunctionExpression
+        // If on a FunctionExpression parameter.
         else if (
             parent.node.kind === Ast.NodeKind.Parameter &&
             AncestryUtils.maybeNthNextXor(ancestry, index, 4, [Ast.NodeKind.FunctionExpression]) !== undefined
         ) {
+            // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
             const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
                 ancestry,
                 index,
@@ -45,21 +66,29 @@ export function autocompletePrimitiveType(
             );
             if (maybeGrandchild === undefined) {
                 continue;
-            } else if (
+            }
+            // On primitive type.
+            // `(x as |) => 0`
+            else if (
                 maybeGrandchild.kind === XorNodeKind.Ast &&
                 maybeGrandchild.node.kind === Ast.NodeKind.Constant &&
                 maybeGrandchild.node.constantKind === Constant.KeywordConstantKind.As &&
                 PositionUtils.isAfterAst(activeNode.position, maybeGrandchild.node, true)
             ) {
                 return Constant.PrimitiveTypeConstantKinds;
-            } else if (maybeGrandchild.node.kind === Ast.NodeKind.NullablePrimitiveType) {
-                const maybeGreatGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+            }
+            // On nullable primitive type
+            // `(x as nullable |) => 0`
+            else if (maybeGrandchild.node.kind === Ast.NodeKind.NullablePrimitiveType) {
+                const maybeGreatGreatGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
                     ancestry,
                     index,
                     3,
                     undefined,
                 );
-                var x = 1;
+                if (maybeGreatGreatGrandchild?.node.kind === Ast.NodeKind.PrimitiveType) {
+                    return Constant.PrimitiveTypeConstantKinds;
+                }
             }
         }
     }

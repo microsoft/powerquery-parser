@@ -36,7 +36,7 @@ export function autocompleteKeywordRightMostLeaf(
         state.nodeIdMapCollection,
         state.leafNodeIds,
         shiftedActiveNode,
-        state.maybeParseErrorToken,
+        state.maybeTrailingToken,
     );
 
     return inspected;

@@ -1,26 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Keyword, Token } from "../../../language";
-import { TokenPosition } from "../../../language/token";
+import { Keyword } from "../../../language";
 import { NodeIdMap, TXorNode } from "../../../parser";
 import { ActiveNode } from "../../activeNode";
+import { TrailingToken } from "../commonTypes";
 
 export interface InspectAutocompleteKeywordState {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     readonly activeNode: ActiveNode;
-    readonly maybeParseErrorToken: Token.Token | undefined;
-    readonly maybeTrailingText: TrailingText | undefined;
+    readonly maybeTrailingToken: TrailingToken | undefined;
     parent: TXorNode;
     child: TXorNode;
     ancestryIndex: number;
-}
-
-export interface TrailingText {
-    readonly text: string;
-    readonly positionStart: TokenPosition;
-    readonly isInOrOnPosition: boolean;
 }
 
 export const ExpressionAutocomplete: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;

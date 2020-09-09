@@ -1262,9 +1262,9 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it(`let a = 1 | trailingText`, () => {
+        it(`let a = 1 | foobar`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `let a = 1 | trailingText`,
+                `let a = 1 | foobar`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [
                 Keyword.KeywordKind.And,

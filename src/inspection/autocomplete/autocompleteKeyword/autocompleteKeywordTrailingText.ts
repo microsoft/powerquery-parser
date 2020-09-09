@@ -2,25 +2,26 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, Assert } from "../../../common";
-import { Keyword } from "../../../language";
-import { TrailingText } from "./commonTypes";
+import { Keyword, Token } from "../../../language";
+import { TrailingToken } from "./../commonTypes";
 
 export function autocompleteKeywordTrailingText(
     inspected: ReadonlyArray<Keyword.KeywordKind>,
-    trailingText: TrailingText,
+    trailingToken: TrailingToken,
     maybeAllowedKeywords: ReadonlyArray<Keyword.KeywordKind> | undefined,
 ): ReadonlyArray<Keyword.KeywordKind> {
-    if (trailingText.isInOrOnPosition === false) {
+    if (trailingToken.isInOrOnPosition === false) {
         return inspected;
     }
-    Assert.isTrue(trailingText.text.length > 0, "trailingText.length > 0");
+    Assert.isTrue(trailingToken.data.length > 0, "trailingToken.data.length > 0");
+    const token: Token.Token = trailingToken;
 
-    maybeAllowedKeywords = maybeAllowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(trailingText.text[0]);
+    maybeAllowedKeywords = maybeAllowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(token.data[0]);
 
     if (maybeAllowedKeywords !== undefined) {
         return ArrayUtils.concatUnique(
             inspected,
-            maybeAllowedKeywords.filter((keyword: Keyword.KeywordKind) => keyword.startsWith(trailingText.text)),
+            maybeAllowedKeywords.filter((keyword: Keyword.KeywordKind) => keyword.startsWith(token.data)),
         );
     } else {
         return inspected;
