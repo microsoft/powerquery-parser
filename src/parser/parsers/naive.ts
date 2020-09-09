@@ -1941,7 +1941,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
     const astNode: Ast.PrimitiveType = {
         ...IParserStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
-        isLeaf: false,
+        isLeaf: true,
         primitiveTypeKind,
     };
     IParserStateUtils.endContext(state, astNode);
