@@ -276,7 +276,7 @@ export interface IsNullablePrimitiveType
 export interface PrimitiveType extends INode {
     readonly kind: NodeKind.PrimitiveType;
     readonly isLeaf: false;
-    readonly primitiveType: IConstant<Constant.PrimitiveTypeConstantKind>;
+    readonly primitiveTypeKind: Constant.PrimitiveTypeConstantKind;
 }
 
 // --------------------------------------------

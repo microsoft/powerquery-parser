@@ -82,7 +82,7 @@ export function maybeNthPreviousXor(
 ): TXorNode | undefined {
     const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex - n];
     if (maybeXorNode !== undefined && maybeAllowedNodeKinds !== undefined) {
-        return maybeAllowedNodeKinds.indexOf(maybeXorNode.node.kind) === -1 ? undefined : maybeXorNode;
+        return maybeAllowedNodeKinds.includes(maybeXorNode.node.kind) ? maybeXorNode : undefined;
     }
 
     return maybeXorNode;
@@ -104,7 +104,7 @@ export function maybeNthNextXor(
 ): TXorNode | undefined {
     const maybeXorNode: TXorNode | undefined = ancestry[ancestryIndex + n];
     if (maybeXorNode !== undefined && maybeAllowedNodeKinds !== undefined) {
-        return maybeAllowedNodeKinds.indexOf(maybeXorNode.node.kind) === -1 ? undefined : maybeXorNode;
+        return maybeAllowedNodeKinds.includes(maybeXorNode.node.kind) ? maybeXorNode : undefined;
     }
 
     return maybeXorNode;

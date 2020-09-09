@@ -80,7 +80,7 @@ function assertGetParseErrAutocompleteOk(
 }
 
 describe(`Inspection - Autocomplete - PrimitiveType`, () => {
-    it("WIP type|", () => {
+    it("type|", () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`type|`);
         const expected: ReadonlyArray<AutocompleteOption> = [];
         const actual: ReadonlyArray<AutocompleteOption> = assertGetParseErrAutocompleteOk(
@@ -168,6 +168,58 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     it("(x as | number) => 1", () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
             `(x as | number) => 1`,
+        );
+        const expected: ReadonlyArray<AutocompleteOption> = Constant.PrimitiveTypeConstantKinds;
+        const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
+            DefaultSettings,
+            text,
+            position,
+        );
+        expect(actual).to.have.members(expected);
+    });
+
+    it("(x as| nullable number) => 1", () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+            `(x as| nullable number) => 1`,
+        );
+        const expected: ReadonlyArray<AutocompleteOption> = [];
+        const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
+            DefaultSettings,
+            text,
+            position,
+        );
+        expect(actual).to.have.members(expected);
+    });
+
+    it("(x as | nullable number) => 1", () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+            `(x as | nullable number) => 1`,
+        );
+        const expected: ReadonlyArray<AutocompleteOption> = Constant.PrimitiveTypeConstantKinds;
+        const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
+            DefaultSettings,
+            text,
+            position,
+        );
+        expect(actual).to.have.members(expected);
+    });
+
+    it("(x as nullable| number) => 1", () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+            `(x as nullable| number) => 1`,
+        );
+        const expected: ReadonlyArray<AutocompleteOption> = [];
+        const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(
+            DefaultSettings,
+            text,
+            position,
+        );
+        expect(actual).to.have.members(expected);
+    });
+
+    it("WIP (x as nullable num|ber) => 1", () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+            `(x as nullable num|ber) => 1`,
         );
         const expected: ReadonlyArray<AutocompleteOption> = Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<AutocompleteOption> = assertGetParseOkAutocompleteOk(

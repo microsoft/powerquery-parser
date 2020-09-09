@@ -1887,9 +1887,10 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
         return ResultUtils.errFactory(error);
     }
 
-    let primitiveType: Ast.IConstant<Constant.PrimitiveTypeConstantKind>;
+    let primitiveTypeKind: Constant.PrimitiveTypeConstantKind;
     if (IParserStateUtils.isOnTokenKind(state, Token.TokenKind.Identifier)) {
         const currentTokenData: string = state.lexerSnapshot.tokens[state.tokenIndex].data;
+
         switch (currentTokenData) {
             case Constant.PrimitiveTypeConstantKind.Action:
             case Constant.PrimitiveTypeConstantKind.Any:
@@ -1908,7 +1909,8 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
             case Constant.PrimitiveTypeConstantKind.Table:
             case Constant.PrimitiveTypeConstantKind.Text:
             case Constant.PrimitiveTypeConstantKind.Time:
-                primitiveType = readConstantKind(state, currentTokenData);
+                primitiveTypeKind = currentTokenData;
+                readToken(state);
                 break;
 
             default:
@@ -1923,17 +1925,11 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
                 );
         }
     } else if (IParserStateUtils.isOnTokenKind(state, Token.TokenKind.KeywordType)) {
-        primitiveType = readTokenKindAsConstant(
-            state,
-            Token.TokenKind.KeywordType,
-            Constant.PrimitiveTypeConstantKind.Type,
-        );
+        primitiveTypeKind = Constant.PrimitiveTypeConstantKind.Type;
+        readToken(state);
     } else if (IParserStateUtils.isOnTokenKind(state, Token.TokenKind.NullLiteral)) {
-        primitiveType = readTokenKindAsConstant(
-            state,
-            Token.TokenKind.NullLiteral,
-            Constant.PrimitiveTypeConstantKind.Null,
-        );
+        primitiveTypeKind = Constant.PrimitiveTypeConstantKind.Null;
+        readToken(state);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
         IParserStateUtils.applyFastStateBackup(state, stateBackup);
@@ -1946,7 +1942,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
         ...IParserStateUtils.assertGetContextNodeMetadata(state),
         kind: nodeKind,
         isLeaf: false,
-        primitiveType,
+        primitiveTypeKind,
     };
     IParserStateUtils.endContext(state, astNode);
     return ResultUtils.okFactory(astNode);
