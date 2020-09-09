@@ -2,14 +2,10 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils } from "../../../common";
-import { ResultUtils } from "../../../common/result";
 import { Ast, Constant, Keyword, Token } from "../../../language";
-import { getLocalizationTemplates } from "../../../localization";
-import { IParserState, NodeIdMap, ParseError, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
-import { CommonSettings } from "../../../settings";
+import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "../../activeNode";
 import { PositionUtils } from "../../position";
-import { TriedAutocomplete } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordErrorHandlingExpression } from "./autocompleteKeywordErrorHandlingExpression";
 import { autocompleteKeywordIdentifierPairedExpression } from "./autocompleteKeywordIdentifierPairedExpression";
@@ -17,30 +13,9 @@ import { autocompleteKeywordLetExpression } from "./autocompleteKeywordLetExpres
 import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpression";
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
-import { ExpressionAutocomplete, InspectAutocompleteKeywordState, TrailingText } from "./commonTypes";
+import { InspectAutocompleteKeywordState, TrailingText } from "./commonTypes";
 
-export function tryAutocompleteKeyword<S extends IParserState = IParserState>(
-    settings: CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    maybeActiveNode: ActiveNode | undefined,
-    maybeParseError: ParseError.ParseError<S> | undefined,
-): TriedAutocomplete {
-    if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
-        return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
-    }
-
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        inspectAutocompleteKeyword(
-            nodeIdMapCollection,
-            leafNodeIds,
-            maybeActiveNode,
-            maybeParseError !== undefined ? ParseError.maybeTokenFrom(maybeParseError.innerError) : undefined,
-        ),
-    );
-}
-
-export function inspectAutocompleteKeyword(
+export function autocompleteKeyword(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
