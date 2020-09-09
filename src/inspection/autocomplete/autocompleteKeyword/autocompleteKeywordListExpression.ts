@@ -25,7 +25,12 @@ export function autocompleteKeywordListExpression(
     });
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 3, undefined);
+    const nodeOrComma: TXorNode = AncestryUtils.assertGetNthPreviousXor(
+        activeNode.ancestry,
+        ancestryIndex,
+        3,
+        undefined,
+    );
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }

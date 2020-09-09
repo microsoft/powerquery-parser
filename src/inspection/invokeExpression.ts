@@ -91,7 +91,10 @@ function maybeInvokeExpressionName(
     let maybeName: string | undefined;
     if (invokeExpr.node.maybeAttributeIndex === 0) {
         // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
-        const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(nodeIdMapCollection, invokeExpr.node.id);
+        const recursiveArrayXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(
+            nodeIdMapCollection,
+            invokeExpr.node.id,
+        );
         const recursiveExprXorNode: TXorNode = NodeIdMapUtils.assertGetParentXor(
             nodeIdMapCollection,
             recursiveArrayXorNode.node.id,
