@@ -150,7 +150,7 @@ function maybeEdgeCase(
         ancestry[0].kind === XorNodeKind.Ast &&
         ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         ancestry[1].node.kind === Ast.NodeKind.Parameter &&
-        PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, false)
+        PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, true)
     ) {
         maybeInspected = [Keyword.KeywordKind.As];
     }
