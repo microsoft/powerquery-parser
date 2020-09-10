@@ -4,7 +4,6 @@
 // tslint:disable-next-line: no-require-imports
 import GraphemeSplitter = require("grapheme-splitter");
 import { Assert, CommonError, Pattern } from ".";
-import { Keyword } from "../language";
 
 export const graphemeSplitter: GraphemeSplitter = new GraphemeSplitter();
 
@@ -61,10 +60,6 @@ export function isIdentifier(text: string, allowTrailingPeriod: boolean): boolea
 
 export function isGeneralizedIdentifier(text: string): boolean {
     return maybeGeneralizedIdentifierLength(text, 0) === text.length;
-}
-
-export function isKeyword(text: string): boolean {
-    return Keyword.KeywordKinds.indexOf(text as Keyword.KeywordKind) !== -1;
 }
 
 export function isQuotedIdentifier(text: string): boolean {

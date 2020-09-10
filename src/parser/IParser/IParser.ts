@@ -5,8 +5,6 @@ import { IParserState, ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
 
-export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
-
 export const enum ParenthesisDisambiguation {
     FunctionExpression = "FunctionExpression",
     ParenthesizedExpression = "ParenthesizedExpression",

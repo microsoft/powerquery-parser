@@ -3,6 +3,7 @@
 
 import { Inspection } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
+import { TriedInspection } from "./inspection";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Ast, Keyword } from "./language";
 import { ExpectedType, Type } from "./language";
@@ -22,8 +23,6 @@ import {
     XorNodeUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings/settings";
-
-export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
 
 export interface InspectionOk {
     readonly maybeActiveNode: ActiveNode | undefined;
@@ -72,8 +71,7 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
     return LexerSnapshot.tryFrom(state);
 }
 
-export function tryParse<S extends IParserState = IParserState>(settings: ParseSettings<S>, state: S): TriedParse<S> {
-    const parser: IParser<S> = settings.parser;
+export function tryParse<S extends IParserState = IParserState>(state: S, parser: IParser<S>): TriedParse<S> {
     return IParserUtils.tryRead(state, parser);
 }
 
@@ -202,7 +200,7 @@ export function tryLexParse<S extends IParserState = IParserState>(
     const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
 
     const state: S = stateFactoryFn(settings, lexerSnapshot);
-    const triedParse: TriedParse<S> = tryParse<S>(settings, state);
+    const triedParse: TriedParse<S> = tryParse<S>(state, settings.parser);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,

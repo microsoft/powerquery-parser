@@ -6,6 +6,7 @@ import * as Parser from "./parsers";
 
 export { ParseError, Parser };
 export * from "./context";
+export * from "./commonTypes";
 export * from "./IParser";
 export * from "./IParserState";
 export * from "./nodeIdMap";
