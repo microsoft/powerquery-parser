@@ -4,6 +4,7 @@
 import { Keyword, Token } from "../../../language";
 import { TXorNode, XorNodeKind } from "../../../parser";
 import { Position, PositionUtils } from "../../position";
+import { TrailingToken } from "../commonTypes";
 import { ExpressionAutocomplete, InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordErrorHandlingExpression(
@@ -11,7 +12,7 @@ export function autocompleteKeywordErrorHandlingExpression(
 ): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const position: Position = state.activeNode.position;
     const child: TXorNode = state.child;
-    const maybeParseErrorToken: Token.Token | undefined = state.maybeParseErrorToken;
+    const maybeTrailingText: TrailingToken | undefined = state.maybeTrailingToken;
 
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
     if (maybeChildAttributeIndex === 0) {
@@ -19,15 +20,15 @@ export function autocompleteKeywordErrorHandlingExpression(
     } else if (maybeChildAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
         // It's ambiguous if the next token should be either 'otherwise' or 'or'.
-        if (maybeParseErrorToken !== undefined) {
-            const errorToken: Token.Token = maybeParseErrorToken;
+        if (maybeTrailingText !== undefined) {
+            const trailingToken: TrailingToken = maybeTrailingText;
 
             // First we test if we can autocomplete using the error token.
             if (
-                errorToken.kind === Token.TokenKind.Identifier &&
-                PositionUtils.isInToken(position, maybeParseErrorToken, false, true)
+                trailingToken.kind === Token.TokenKind.Identifier &&
+                PositionUtils.isInToken(position, trailingToken, false, true)
             ) {
-                const tokenData: string = maybeParseErrorToken.data;
+                const tokenData: string = maybeTrailingText.data;
 
                 // If we can exclude 'or' then the only thing we can autocomplete is 'otherwise'.
                 if (tokenData.length > 1 && Keyword.KeywordKind.Otherwise.startsWith(tokenData)) {

@@ -72,7 +72,9 @@ describe(`subset Inspection - InvokeExpression`, () => {
     });
 
     it("multiple invoke expression, no parameters", () => {
-        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition("Bar(Foo(|))");
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+            "Bar(Foo(|))",
+        );
         const inspected: InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
             DefaultSettings,
             text,

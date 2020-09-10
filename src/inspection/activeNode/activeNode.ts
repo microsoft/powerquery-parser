@@ -17,7 +17,7 @@ export interface ActiveNode {
     // A full parental ancestry of the root.
     // [root, parent of root, parent of parent of root, ...].
     readonly ancestry: ReadonlyArray<TXorNode>;
-    // A conditional indirection to the root if it's some sort of identifier Ast.
+    // A conditional indirection to the root if it's some sort of Ast identifier.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }
 

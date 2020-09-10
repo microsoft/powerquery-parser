@@ -2,17 +2,16 @@
 // Licensed under the MIT license.
 
 import { Assert } from "../../../common";
-import { Ast } from "../../../language";
+import { Ast, Keyword } from "../../../language";
 import { AncestryUtils, NodeIdMapUtils, TXorNode } from "../../../parser";
 import { ActiveNode } from "../../activeNode";
-import { AutocompleteOption } from "../commonTypes";
-import { inspectAutocompleteKeyword } from "./autocompleteKeyword";
+import { autocompleteKeyword } from "./autocompleteKeyword";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordRightMostLeaf(
     state: InspectAutocompleteKeywordState,
     xorNodeId: number,
-): ReadonlyArray<AutocompleteOption> | undefined {
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     // Grab the right-most Ast node in the last value.
     const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
         state.nodeIdMapCollection,
@@ -33,11 +32,11 @@ export function autocompleteKeywordRightMostLeaf(
         ...state.activeNode,
         ancestry: shiftedAncestry,
     };
-    const inspected: ReadonlyArray<AutocompleteOption> = inspectAutocompleteKeyword(
+    const inspected: ReadonlyArray<Keyword.KeywordKind> = autocompleteKeyword(
         state.nodeIdMapCollection,
         state.leafNodeIds,
         shiftedActiveNode,
-        state.maybeParseErrorToken,
+        state.maybeTrailingToken,
     );
 
     return inspected;

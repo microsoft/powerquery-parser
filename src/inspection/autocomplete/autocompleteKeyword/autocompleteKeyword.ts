@@ -2,14 +2,11 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils } from "../../../common";
-import { ResultUtils } from "../../../common/result";
-import { Ast, Constant, Keyword, Token } from "../../../language";
-import { getLocalizationTemplates } from "../../../localization";
-import { IParserState, NodeIdMap, ParseError, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
-import { CommonSettings } from "../../../settings";
+import { Ast, Constant, Keyword } from "../../../language";
+import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "../../activeNode";
 import { PositionUtils } from "../../position";
-import { TriedAutocomplete } from "../commonTypes";
+import { TrailingToken } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordErrorHandlingExpression } from "./autocompleteKeywordErrorHandlingExpression";
 import { autocompleteKeywordIdentifierPairedExpression } from "./autocompleteKeywordIdentifierPairedExpression";
@@ -17,38 +14,14 @@ import { autocompleteKeywordLetExpression } from "./autocompleteKeywordLetExpres
 import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpression";
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
-import { ExpressionAutocomplete, InspectAutocompleteKeywordState, TrailingText } from "./commonTypes";
+import { InspectAutocompleteKeywordState } from "./commonTypes";
 
-export function tryAutocompleteKeyword<S extends IParserState = IParserState>(
-    settings: CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    maybeActiveNode: ActiveNode | undefined,
-    maybeParseError: ParseError.ParseError<S> | undefined,
-): TriedAutocomplete {
-    if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
-        return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
-    }
-
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
-        inspectAutocompleteKeyword(
-            nodeIdMapCollection,
-            leafNodeIds,
-            maybeActiveNode,
-            maybeParseError !== undefined ? ParseError.maybeTokenFrom(maybeParseError.innerError) : undefined,
-        ),
-    );
-}
-
-export function inspectAutocompleteKeyword(
+export function autocompleteKeyword(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
-    maybeParseErrorToken: Token.Token | undefined,
+    maybeTrailingToken: TrailingToken | undefined,
 ): ReadonlyArray<Keyword.KeywordKind> {
-    const maybeTrailingText: TrailingText | undefined =
-        maybeParseErrorToken !== undefined ? trailingTextFactory(activeNode, maybeParseErrorToken) : undefined;
-
     const ancestryLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
     let maybePositionName: string | undefined;
     if (PositionUtils.isInXor(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
@@ -67,27 +40,29 @@ export function inspectAutocompleteKeyword(
     }
 
     if (activeNode.ancestry.length < 2) {
-        return filterRecommendations(handleConjunctions(activeNode, [], maybeTrailingText), maybePositionName);
+        return filterRecommendations(handleConjunctions(activeNode, [], maybeTrailingToken), maybePositionName);
     }
 
     const state: InspectAutocompleteKeywordState = {
         nodeIdMapCollection,
         leafNodeIds,
         activeNode,
-        maybeParseErrorToken,
-        maybeTrailingText,
+        maybeTrailingToken,
         parent: activeNode.ancestry[1],
         child: ActiveNodeUtils.assertGetLeaf(activeNode),
         ancestryIndex: 0,
     };
 
-    const maybeEarlyExitInspected: ReadonlyArray<Keyword.KeywordKind> | undefined = maybeEdgeCase(state);
+    const maybeEarlyExitInspected: ReadonlyArray<Keyword.KeywordKind> | undefined = maybeEdgeCase(
+        state,
+        maybeTrailingToken,
+    );
     if (maybeEarlyExitInspected !== undefined) {
         return maybeEarlyExitInspected;
     }
 
     return filterRecommendations(
-        handleConjunctions(state.activeNode, traverseAncestors(state), maybeTrailingText),
+        handleConjunctions(state.activeNode, traverseAncestors(state), maybeTrailingToken),
         maybePositionName,
     );
 }
@@ -99,14 +74,6 @@ const ConjunctionKeywords: ReadonlyArray<Keyword.KeywordKind> = [
     Keyword.KeywordKind.Meta,
     Keyword.KeywordKind.Or,
 ];
-
-function trailingTextFactory(activeNode: ActiveNode, parseErrorToken: Token.Token): TrailingText {
-    return {
-        text: parseErrorToken.data,
-        positionStart: parseErrorToken.positionStart,
-        isInOrOnPosition: PositionUtils.isInToken(activeNode.position, parseErrorToken, false, true),
-    };
-}
 
 // Travel the ancestry path in Active node in [parent, child] pairs.
 // Without zipping the values we wouldn't know what we're completing for.
@@ -155,16 +122,18 @@ function traverseAncestors(state: InspectAutocompleteKeywordState): ReadonlyArra
     return [];
 }
 
-function maybeEdgeCase(state: InspectAutocompleteKeywordState): ReadonlyArray<Keyword.KeywordKind> | undefined {
+function maybeEdgeCase(
+    state: InspectAutocompleteKeywordState,
+    maybeTrailingToken: TrailingToken | undefined,
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const maybeParseErrorToken: Token.Token | undefined = state.maybeParseErrorToken;
     let maybeInspected: ReadonlyArray<Keyword.KeywordKind> | undefined;
 
     // The user is typing in a new file, which the parser defaults to searching for an identifier.
     // `l|` -> `let`
     if (
-        maybeParseErrorToken === undefined &&
+        maybeTrailingToken === undefined &&
         ancestry.length === 2 &&
         ancestry[0].kind === XorNodeKind.Ast &&
         ancestry[0].node.kind === Ast.NodeKind.Identifier &&
@@ -181,14 +150,14 @@ function maybeEdgeCase(state: InspectAutocompleteKeywordState): ReadonlyArray<Ke
         ancestry[0].kind === XorNodeKind.Ast &&
         ancestry[0].node.kind === Ast.NodeKind.Identifier &&
         ancestry[1].node.kind === Ast.NodeKind.Parameter &&
-        PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, false)
+        PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, true)
     ) {
         maybeInspected = [Keyword.KeywordKind.As];
     }
 
     // `(foo a|) => foo` -> `(foo as) => foo
     else if (
-        maybeParseErrorToken?.data === "a" &&
+        maybeTrailingToken?.data === "a" &&
         ancestry[0].kind === XorNodeKind.Context &&
         ancestry[0].node.kind === Ast.NodeKind.Constant &&
         ancestry[1].node.kind === Ast.NodeKind.ParameterList &&
@@ -215,7 +184,7 @@ function filterRecommendations(
 function handleConjunctions(
     activeNode: ActiveNode,
     inspected: ReadonlyArray<Keyword.KeywordKind>,
-    maybeTrailingText: TrailingText | undefined,
+    maybeTrailingToken: TrailingToken | undefined,
 ): ReadonlyArray<Keyword.KeywordKind> {
     if (
         activeNode.leafKind !== ActiveNodeLeafKind.AfterAstNode &&
@@ -226,8 +195,8 @@ function handleConjunctions(
 
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
     // `let x = 1 a|`
-    if (maybeTrailingText !== undefined && maybeTrailingText.isInOrOnPosition) {
-        return autocompleteKeywordTrailingText(inspected, maybeTrailingText, undefined);
+    if (maybeTrailingToken !== undefined && maybeTrailingToken.isInOrOnPosition) {
+        return autocompleteKeywordTrailingText(inspected, maybeTrailingToken, undefined);
     }
     // `let x = |`
     // `let x = 1|`
@@ -235,8 +204,8 @@ function handleConjunctions(
     else if (XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
         // `let x = 1 | a`
         if (
-            maybeTrailingText !== undefined &&
-            PositionUtils.isAfterTokenPosition(activeNode.position, maybeTrailingText.positionStart, false)
+            maybeTrailingToken !== undefined &&
+            PositionUtils.isAfterTokenPosition(activeNode.position, maybeTrailingToken.positionStart, false)
         ) {
             return inspected;
         }

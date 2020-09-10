@@ -24,18 +24,18 @@ export function autocompleteKeywordLetExpression(
             state,
             NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, state.parent),
         );
-        if (state.maybeTrailingText !== undefined) {
-            if (state.maybeTrailingText.isInOrOnPosition === true) {
+        if (state.maybeTrailingToken !== undefined) {
+            if (state.maybeTrailingToken.isInOrOnPosition === true) {
                 // We don't want maybeInspected to be zero legnth.
                 // It's either undefined or non-zero length.
-                maybeInspected = autocompleteKeywordTrailingText(maybeInspected ?? [], state.maybeTrailingText, [
+                maybeInspected = autocompleteKeywordTrailingText(maybeInspected ?? [], state.maybeTrailingToken, [
                     Keyword.KeywordKind.In,
                 ]);
                 return maybeInspected.length ? maybeInspected : undefined;
             } else if (
                 PositionUtils.isBeforeTokenPosition(
                     state.activeNode.position,
-                    state.maybeTrailingText.positionStart,
+                    state.maybeTrailingToken.positionStart,
                     true,
                 )
             ) {

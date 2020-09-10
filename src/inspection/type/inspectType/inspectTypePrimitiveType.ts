@@ -12,7 +12,7 @@ export function inspectTypePrimitiveType(xorNode: TXorNode): Type.TType {
     }
 
     const kind: Type.TypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(
-        (xorNode.node as Ast.PrimitiveType).primitiveType.constantKind,
+        (xorNode.node as Ast.PrimitiveType).primitiveTypeKind,
     );
     return {
         kind,

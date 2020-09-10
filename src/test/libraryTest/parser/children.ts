@@ -35,7 +35,7 @@ describe("Parser.Children", () => {
         const text: string = `() as number => 1`;
         const expected: ReadonlyArray<ChildIdsByIdEntry> = [
             {
-                childNodeIds: [2, 6, 10, 13],
+                childNodeIds: [2, 6, 9, 12],
                 id: 1,
                 kind: Ast.NodeKind.FunctionExpression,
             },
@@ -48,11 +48,6 @@ describe("Parser.Children", () => {
                 childNodeIds: [7, 8],
                 id: 6,
                 kind: Ast.NodeKind.AsNullablePrimitiveType,
-            },
-            {
-                childNodeIds: [9],
-                id: 8,
-                kind: Ast.NodeKind.PrimitiveType,
             },
         ];
         const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(

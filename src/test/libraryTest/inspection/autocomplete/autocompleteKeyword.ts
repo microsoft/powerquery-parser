@@ -3,14 +3,14 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../..";
-import { Assert } from "../../../common";
-import { AutocompleteOption, Position, TriedAutocomplete } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { Ast, Keyword } from "../../../language";
-import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
-import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
-import { TestAssertUtils } from "../../testUtils";
+import { Inspection } from "../../../..";
+import { Assert } from "../../../../common";
+import { AutocompleteOption, Position, TriedAutocomplete } from "../../../../inspection";
+import { ActiveNode, ActiveNodeUtils } from "../../../../inspection/activeNode";
+import { Ast, Keyword } from "../../../../language";
+import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../../parser";
+import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
+import { TestAssertUtils } from "../../../testUtils";
 
 function assertGetAutocompleteOk<S extends IParserState>(
     settings: CommonSettings,
@@ -76,7 +76,7 @@ function assertGetParseErrAutocompleteOk(
     );
 }
 
-describe(`Inspection - Autocomplete`, () => {
+describe(`Inspection - Autocomplete - Keyword`, () => {
     it("|", () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`|`);
         const expected: ReadonlyArray<AutocompleteOption> = [
@@ -1262,9 +1262,9 @@ describe(`Inspection - Autocomplete`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it(`let a = 1 | trailingText`, () => {
+        it(`let a = 1 | foobar`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `let a = 1 | trailingText`,
+                `let a = 1 | foobar`,
             );
             const expected: ReadonlyArray<AutocompleteOption> = [
                 Keyword.KeywordKind.And,

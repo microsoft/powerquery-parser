@@ -17,7 +17,7 @@ export function simplifyType(type: Ast.TType): SimplifiedType {
     switch (type.kind) {
         case Ast.NodeKind.PrimitiveType:
             isNullable = false;
-            primitiveTypeConstantKind = type.primitiveType.constantKind;
+            primitiveTypeConstantKind = type.primitiveTypeKind;
             break;
 
         case Ast.NodeKind.NullableType:
@@ -67,12 +67,12 @@ export function simplifyAsNullablePrimitiveType(node: Ast.AsNullablePrimitiveTyp
     switch (nullablePrimitiveType.kind) {
         case Ast.NodeKind.NullablePrimitiveType:
             isNullable = true;
-            primitiveTypeConstantKind = nullablePrimitiveType.paired.primitiveType.constantKind;
+            primitiveTypeConstantKind = nullablePrimitiveType.paired.primitiveTypeKind;
             break;
 
         case Ast.NodeKind.PrimitiveType:
             isNullable = false;
-            primitiveTypeConstantKind = nullablePrimitiveType.primitiveType.constantKind;
+            primitiveTypeConstantKind = nullablePrimitiveType.primitiveTypeKind;
             break;
 
         default:
@@ -93,10 +93,10 @@ export function primitiveTypeConstantKindFrom(
             return primitiveTypeConstantKindFrom(node.paired);
 
         case Ast.NodeKind.NullablePrimitiveType:
-            return node.paired.primitiveType.constantKind;
+            return node.paired.primitiveTypeKind;
 
         case Ast.NodeKind.PrimitiveType:
-            return node.primitiveType.constantKind;
+            return node.primitiveTypeKind;
 
         default:
             throw Assert.isNever(node);

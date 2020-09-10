@@ -223,7 +223,6 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -244,12 +243,10 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.AsType, 2],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.AsType, 2],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -479,7 +476,6 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.FieldTypeSpecification, 2],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
@@ -616,7 +612,6 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.NullablePrimitiveType, 1],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.LiteralExpression, 3],
@@ -640,7 +635,6 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.AsType, 2],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -661,12 +655,10 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.AsType, 2],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.AsType, 2],
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -814,7 +806,6 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -827,10 +818,8 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1123,7 +1112,6 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.ListType, 1],
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.PrimitiveType, 1],
-            [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.Constant, 2],
         ];
         assertAbridgeNodes(text, expected);
@@ -1274,7 +1262,6 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.NullablePrimitiveType, 2],
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.PrimitiveType, 1],
-            [Ast.NodeKind.Constant, 0],
         ];
         assertAbridgeNodes(text, expected);
     });
@@ -1287,7 +1274,6 @@ describe("Parser.AbridgedNode", () => {
             [Ast.NodeKind.NullableType, 1],
             [Ast.NodeKind.Constant, 0],
             [Ast.NodeKind.PrimitiveType, 1],
-            [Ast.NodeKind.Constant, 0],
         ];
         assertAbridgeNodes(text, expected);
     });
@@ -1345,7 +1331,6 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 0],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.PrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
             ];
             assertAbridgeNodes(text, expected);
         });
