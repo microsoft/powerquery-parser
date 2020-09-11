@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer } from ".";
+import { Lexer } from "..";
 import { CommonError, StringUtils } from "../common";
 import { ILocalizationTemplates, Localization } from "../localization";
 

@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { expect } from "chai";
-import { Assert } from "../../../common";
+import { Assert, Lexer } from "../../..";
 import { Comment, Token } from "../../../language";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
 
 export type AbridgedComments = ReadonlyArray<[Comment.CommentKind, string]>;
@@ -22,7 +21,7 @@ export function assertGetAbridgedSnapshotMatch(
     text: string,
     expected: AbridgedSnapshot,
     wrapped: boolean,
-): LexerSnapshot {
+): Lexer.LexerSnapshot {
     if (wrapped) {
         const wrappedText: string = `wrapperOpen\n${text}\nwrapperClose`;
         const wrappedExpected: AbridgedSnapshot = {
@@ -36,7 +35,7 @@ export function assertGetAbridgedSnapshotMatch(
         assertGetAbridgedSnapshotMatch(wrappedText, wrappedExpected, false);
     }
 
-    const snapshot: LexerSnapshot = assertGetLexerSnapshot(text);
+    const snapshot: Lexer.LexerSnapshot = assertGetLexerSnapshot(text);
     const expectedTokens: AbridgedTokens = expected.tokens;
     const expectedComments: AbridgedComments = expected.comments;
     const actualTokens: AbridgedTokens = snapshot.tokens.map(token => [token.kind, token.data]);
@@ -81,7 +80,7 @@ export function assertGetSnapshotAbridgedTokens(
     text: string,
     expected: AbridgedTokens,
     wrapped: boolean,
-): LexerSnapshot {
+): Lexer.LexerSnapshot {
     return assertGetAbridgedSnapshotMatch(
         text,
         {
@@ -96,7 +95,7 @@ export function assertGetSnapshotAbridgedComments(
     text: string,
     expected: AbridgedComments,
     wrapped: boolean,
-): LexerSnapshot {
+): Lexer.LexerSnapshot {
     return assertGetAbridgedSnapshotMatch(
         text,
         {
@@ -124,9 +123,9 @@ export function assertGetLexOk(text: string): Lexer.State {
     return lexerState;
 }
 
-export function assertGetLexerSnapshot(text: string): LexerSnapshot {
+export function assertGetLexerSnapshot(text: string): Lexer.LexerSnapshot {
     const state: Lexer.State = assertGetLexOk(text);
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
     Assert.isOk(triedSnapshot);
 
     return triedSnapshot.value;

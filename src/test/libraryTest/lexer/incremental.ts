@@ -3,8 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert } from "../../../common";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
+import { Assert, Lexer } from "../../../";
 import { assertGetLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;
@@ -210,9 +209,9 @@ describe(`Lexer.Incremental`, () => {
             };
             const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "X", range);
 
-            const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+            const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
             Assert.isOk(triedSnapshot);
-            const snapshot: LexerSnapshot = triedSnapshot.value;
+            const snapshot: Lexer.LexerSnapshot = triedSnapshot.value;
             expect(snapshot.text).equals(`foo\nbXr\nbaz`, "expected snapshot text doesn't match");
         });
 
@@ -231,9 +230,9 @@ describe(`Lexer.Incremental`, () => {
             const state: Lexer.State = assertGetLexerUpdateRangeOk(original, "OO\nB", range);
             expect(state.lines.length).to.equal(3);
 
-            const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+            const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
             Assert.isOk(triedSnapshot);
-            const snapshot: LexerSnapshot = triedSnapshot.value;
+            const snapshot: Lexer.LexerSnapshot = triedSnapshot.value;
             expect(snapshot.text).equals(`fOO\nBaz\nboo`, "expected snapshot text doesn't match");
         });
 
@@ -253,9 +252,9 @@ describe(`Lexer.Incremental`, () => {
 
             expect(state.lines.length).to.equal(2);
 
-            const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(state);
+            const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(state);
             Assert.isOk(triedSnapshot);
-            const snapshot: LexerSnapshot = triedSnapshot.value;
+            const snapshot: Lexer.LexerSnapshot = triedSnapshot.value;
             expect(snapshot.text).equals("faz\nboo", "expected snapshot text doesn't match");
         });
     });

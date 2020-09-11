@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer, LexError } from ".";
+import { LexError } from ".";
+import { Lexer } from "..";
 import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
 import { ILocalizationTemplates } from "../localization";
@@ -23,20 +24,6 @@ export class LexerSnapshot {
         public readonly comments: ReadonlyArray<Comment.TComment>,
         public readonly lineTerminators: ReadonlyArray<LineTerminator>,
     ) {}
-
-    public static tryFrom(state: Lexer.State): TriedLexerSnapshot {
-        try {
-            return ResultUtils.okFactory(LexerSnapshot.factory(state));
-        } catch (e) {
-            let error: LexError.TLexError;
-            if (LexError.isTInnerLexError(e)) {
-                error = new LexError.LexError(e);
-            } else {
-                error = CommonError.ensureCommonError(state.localizationTemplates, e);
-            }
-            return ResultUtils.errFactory(error);
-        }
-    }
 
     public static graphemePositionStartFrom(
         text: string,
@@ -73,96 +60,98 @@ export class LexerSnapshot {
     public columnNumberStartFrom(token: Token.Token): number {
         return this.graphemePositionStartFrom(token).columnNumber;
     }
+}
 
-    private static factory(state: Lexer.State): LexerSnapshot {
-        // class properties
-        const tokens: Token.Token[] = [];
-        const comments: Comment.TComment[] = [];
-        const flattenedLines: FlattenedLines = flattenLineTokens(state);
-        const flatTokens: ReadonlyArray<FlatLineToken> = flattenedLines.flatLineTokens;
-        const numFlatTokens: number = flatTokens.length;
-        const text: string = flattenedLines.text;
-        const maybeCancellationToken: ICancellationToken | undefined = state.maybeCancellationToken;
-        const localizationTemplates: ILocalizationTemplates = state.localizationTemplates;
+export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
+    try {
+        return ResultUtils.okFactory(snapshotFactory(state));
+    } catch (e) {
+        let error: LexError.TLexError;
+        if (LexError.isTInnerLexError(e)) {
+            error = new LexError.LexError(e);
+        } else {
+            error = CommonError.ensureCommonError(state.localizationTemplates, e);
+        }
+        return ResultUtils.errFactory(error);
+    }
+}
 
-        let flatIndex: number = 0;
-        while (flatIndex < numFlatTokens) {
-            state.maybeCancellationToken?.throwIfCancelled();
+function snapshotFactory(state: Lexer.State): LexerSnapshot {
+    // class properties
+    const tokens: Token.Token[] = [];
+    const comments: Comment.TComment[] = [];
+    const flattenedLines: FlattenedLines = flattenLineTokens(state);
+    const flatTokens: ReadonlyArray<FlatLineToken> = flattenedLines.flatLineTokens;
+    const numFlatTokens: number = flatTokens.length;
+    const text: string = flattenedLines.text;
+    const maybeCancellationToken: ICancellationToken | undefined = state.maybeCancellationToken;
+    const localizationTemplates: ILocalizationTemplates = state.localizationTemplates;
 
-            const flatToken: FlatLineToken = flatTokens[flatIndex];
-            switch (flatToken.kind) {
-                case Token.LineTokenKind.LineComment:
-                    comments.push(readLineComment(flatToken));
-                    break;
+    let flatIndex: number = 0;
+    while (flatIndex < numFlatTokens) {
+        state.maybeCancellationToken?.throwIfCancelled();
 
-                case Token.LineTokenKind.MultilineComment:
-                    comments.push(readSingleLineMultilineComment(flatToken));
-                    break;
+        const flatToken: FlatLineToken = flatTokens[flatIndex];
+        switch (flatToken.kind) {
+            case Token.LineTokenKind.LineComment:
+                comments.push(readLineComment(flatToken));
+                break;
 
-                case Token.LineTokenKind.MultilineCommentStart: {
-                    const concatenatedTokenRead: ConcatenatedCommentRead = readMultilineComment(
-                        maybeCancellationToken,
-                        localizationTemplates,
-                        flattenedLines,
-                        flatToken,
-                    );
-                    comments.push(concatenatedTokenRead.comment);
-                    flatIndex = concatenatedTokenRead.flatIndexEnd;
-                    break;
-                }
+            case Token.LineTokenKind.MultilineComment:
+                comments.push(readSingleLineMultilineComment(flatToken));
+                break;
 
-                case Token.LineTokenKind.QuotedIdentifierStart: {
-                    const concatenatedTokenRead: ConcatenatedTokenRead = readQuotedIdentifier(
-                        maybeCancellationToken,
-                        localizationTemplates,
-                        flattenedLines,
-                        flatToken,
-                    );
-                    tokens.push(concatenatedTokenRead.token);
-                    flatIndex = concatenatedTokenRead.flatIndexEnd;
-                    break;
-                }
-
-                case Token.LineTokenKind.TextLiteralStart: {
-                    const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
-                        maybeCancellationToken,
-                        localizationTemplates,
-                        flattenedLines,
-                        flatToken,
-                    );
-                    tokens.push(concatenatedTokenRead.token);
-                    flatIndex = concatenatedTokenRead.flatIndexEnd;
-                    break;
-                }
-
-                default:
-                    // UNSAFE MARKER
-                    //
-                    // Purpose of code block:
-                    //      Translate LineTokenKind to LineToken.
-                    //
-                    // Why are you trying to avoid a safer approach?
-                    //      A proper mapping would require a switch statement, one case per kind in LineNodeKind
-                    //
-                    // Why is it safe?
-                    //      Almost all of LineTokenKind and TokenKind have a 1-to-1 mapping.
-                    //      The edge cases (multiline tokens) have already been taken care of above.
-                    //      set(remaining variants of LineTokenKind) === set(LineKind)
-                    const positionStart: Token.TokenPosition = flatToken.positionStart;
-                    const positionEnd: Token.TokenPosition = flatToken.positionEnd;
-                    tokens.push({
-                        kind: (flatToken.kind as unknown) as Token.TokenKind,
-                        data: flatToken.data,
-                        positionStart,
-                        positionEnd,
-                    });
+            case Token.LineTokenKind.MultilineCommentStart: {
+                const concatenatedTokenRead: ConcatenatedCommentRead = readMultilineComment(
+                    maybeCancellationToken,
+                    localizationTemplates,
+                    flattenedLines,
+                    flatToken,
+                );
+                comments.push(concatenatedTokenRead.comment);
+                flatIndex = concatenatedTokenRead.flatIndexEnd;
+                break;
             }
 
-            flatIndex += 1;
+            case Token.LineTokenKind.QuotedIdentifierStart: {
+                const concatenatedTokenRead: ConcatenatedTokenRead = readQuotedIdentifier(
+                    maybeCancellationToken,
+                    localizationTemplates,
+                    flattenedLines,
+                    flatToken,
+                );
+                tokens.push(concatenatedTokenRead.token);
+                flatIndex = concatenatedTokenRead.flatIndexEnd;
+                break;
+            }
+
+            case Token.LineTokenKind.TextLiteralStart: {
+                const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
+                    maybeCancellationToken,
+                    localizationTemplates,
+                    flattenedLines,
+                    flatToken,
+                );
+                tokens.push(concatenatedTokenRead.token);
+                flatIndex = concatenatedTokenRead.flatIndexEnd;
+                break;
+            }
+
+            default:
+                const positionStart: Token.TokenPosition = flatToken.positionStart;
+                const positionEnd: Token.TokenPosition = flatToken.positionEnd;
+                tokens.push({
+                    kind: (flatToken.kind as unknown) as Token.TokenKind,
+                    data: flatToken.data,
+                    positionStart,
+                    positionEnd,
+                });
         }
 
-        return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminators);
+        flatIndex += 1;
     }
+
+    return new LexerSnapshot(text, tokens, comments, flattenedLines.lineTerminators);
 }
 
 function readLineComment(flatToken: FlatLineToken): Comment.LineComment {

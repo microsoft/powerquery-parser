@@ -2,12 +2,13 @@
 // Licensed under the MIT license.
 
 import { Inspection } from ".";
+import { Lexer } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { TriedInspection } from "./inspection";
 import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
 import { Ast, Keyword } from "./language";
 import { ExpectedType, Type } from "./language";
-import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import { LexError } from "./lexer";
 import { getLocalizationTemplates } from "./localization";
 import {
     AncestryUtils,
@@ -44,14 +45,14 @@ export type TriedLexParseInspect<S extends IParserState = IParserState> = Result
 >;
 
 export interface LexParseOk<S extends IParserState = IParserState> extends ParseOk<S> {
-    readonly lexerSnapshot: LexerSnapshot;
+    readonly lexerSnapshot: Lexer.LexerSnapshot;
 }
 
 export interface LexParseInspectOk<S extends IParserState = IParserState> extends InspectionOk {
     readonly triedParse: TriedParse<S>;
 }
 
-export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot {
+export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSnapshot {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     if (ResultUtils.isErr(triedLex)) {
         return triedLex;
@@ -68,7 +69,7 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
         );
     }
 
-    return LexerSnapshot.tryFrom(state);
+    return Lexer.trySnapshot(state);
 }
 
 export function tryParse<S extends IParserState = IParserState>(state: S, parser: IParser<S>): TriedParse<S> {
@@ -191,13 +192,13 @@ export function tryInspection<S extends IParserState = IParserState>(
 export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedLexParse<S> {
-    const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
+    const triedLexerSnapshot: Lexer.TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
-    const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
+    const lexerSnapshot: Lexer.LexerSnapshot = triedLexerSnapshot.value;
 
     const state: S = stateFactoryFn(settings, lexerSnapshot);
     const triedParse: TriedParse<S> = tryParse<S>(state, settings.parser);
@@ -215,7 +216,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedLexParseInspect<S> {
     const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text, stateFactoryFn);
     const maybeTriedParse: TriedParse<S> | undefined = maybeTriedParseFromTriedLexParse(triedLexParse);
