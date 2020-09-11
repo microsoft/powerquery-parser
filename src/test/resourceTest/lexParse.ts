@@ -2,14 +2,14 @@ import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
-import { IParser, IParserState, IParserStateUtils, Parser } from "../../parser";
+import { CombinatorialParser, IParser, IParserState, IParserStateUtils, RecursiveDescentParser } from "../../parser";
 import { DefaultSettings, ParseSettings, Settings } from "../../settings";
 
 import * as path from "path";
 import { TestFileUtils } from "../testUtils";
 const parsers: ReadonlyArray<[Settings, string]> = [
-    [createSettings(Parser.CombinatorialParser), "CombinatorialParser"],
-    [createSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
+    [createSettings(CombinatorialParser), "CombinatorialParser"],
+    [createSettings(RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
 function createSettings(parser: IParser): Settings {

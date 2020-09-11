@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Naive } from ".";
+import { NaiveParseSteps } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
@@ -22,8 +22,8 @@ import { IParserState, IParserStateUtils } from "../IParserState";
 // 2)
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export const CombinatorialParser: IParser<IParserState> = {
-    ...Naive,
-    read: Naive.readDocument,
+    ...NaiveParseSteps,
+    read: NaiveParseSteps.readDocument,
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: IParserState, parser: IParser<IParserState>) =>
@@ -81,7 +81,7 @@ function readBinOpExpression<S extends IParserState = IParserState>(
         const operator: Constant.TBinOpExpressionOperator = maybeOperator;
         operators.push(operator);
         operatorConstants.push(
-            Naive.readTokenKindAsConstant<S, Constant.TBinOpExpressionOperator>(
+            NaiveParseSteps.readTokenKindAsConstant<S, Constant.TBinOpExpressionOperator>(
                 state,
                 state.maybeCurrentTokenKind!,
                 maybeOperator,
@@ -249,15 +249,15 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
         // PrimaryExpression
         case Token.TokenKind.AtSign:
         case Token.TokenKind.Identifier:
-            maybePrimaryExpression = Naive.readIdentifierExpression(state, parser);
+            maybePrimaryExpression = NaiveParseSteps.readIdentifierExpression(state, parser);
             break;
 
         case Token.TokenKind.LeftParenthesis:
-            maybePrimaryExpression = Naive.readParenthesizedExpression(state, parser);
+            maybePrimaryExpression = NaiveParseSteps.readParenthesizedExpression(state, parser);
             break;
 
         case Token.TokenKind.LeftBracket:
-            maybePrimaryExpression = Naive.readBracketDisambiguation(state, parser, [
+            maybePrimaryExpression = NaiveParseSteps.readBracketDisambiguation(state, parser, [
                 BracketDisambiguation.FieldProjection,
                 BracketDisambiguation.FieldSelection,
                 BracketDisambiguation.Record,
@@ -265,11 +265,11 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
             break;
 
         case Token.TokenKind.LeftBrace:
-            maybePrimaryExpression = Naive.readListExpression(state, parser);
+            maybePrimaryExpression = NaiveParseSteps.readListExpression(state, parser);
             break;
 
         case Token.TokenKind.Ellipsis:
-            maybePrimaryExpression = Naive.readNotImplementedExpression(state, parser);
+            maybePrimaryExpression = NaiveParseSteps.readNotImplementedExpression(state, parser);
             break;
 
         // LiteralExpression
@@ -279,11 +279,11 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
         case Token.TokenKind.NumericLiteral:
         case Token.TokenKind.NullLiteral:
         case Token.TokenKind.TextLiteral:
-            return Naive.readLiteralExpression(state, parser);
+            return NaiveParseSteps.readLiteralExpression(state, parser);
 
         // TypeExpression
         case Token.TokenKind.KeywordType:
-            return Naive.readTypeExpression(state, parser);
+            return NaiveParseSteps.readTypeExpression(state, parser);
 
         case Token.TokenKind.KeywordHashSections:
         case Token.TokenKind.KeywordHashShared:
@@ -299,7 +299,7 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
 
         // Let Naive throw an error.
         default:
-            return Naive.readUnaryExpression(state, parser);
+            return NaiveParseSteps.readUnaryExpression(state, parser);
     }
 
     // We should only reach this code block if a primary expression was read.

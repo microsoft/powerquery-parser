@@ -9,7 +9,7 @@ import { Task } from "../..";
 import { ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
-import { IParser, IParserState, IParserStateUtils, Parser } from "../../parser";
+import { CombinatorialParser, IParser, IParserState, IParserStateUtils } from "../../parser";
 import { ParseSettings, Settings } from "../../settings";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
@@ -50,14 +50,14 @@ function createRecurisveDescentBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
     lexerSnapshot: LexerSnapshot,
 ): BenchmarkState {
-    return createBenchmarkState(settings, lexerSnapshot, Parser.CombinatorialParser);
+    return createBenchmarkState(settings, lexerSnapshot, CombinatorialParser);
 }
 
 function createCombinatorialBenchmarkState(
     settings: ParseSettings<BenchmarkState>,
     lexerSnapshot: LexerSnapshot,
 ): BenchmarkState {
-    return createBenchmarkState(settings, lexerSnapshot, Parser.CombinatorialParser);
+    return createBenchmarkState(settings, lexerSnapshot, CombinatorialParser);
 }
 
 function createBenchmarkState(
