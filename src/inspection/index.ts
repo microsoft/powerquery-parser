@@ -6,4 +6,5 @@ export * from "./commonTypes";
 export * from "./invokeExpression";
 export * from "./position";
 export * from "./scope";
+export * from "./task";
 export * from "./type";

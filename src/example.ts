@@ -125,7 +125,7 @@ function inspectText(text: string, position: Inspection.Position): void {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;
     }
-    const inspection: Task.InspectionOk = triedInspection.value;
+    const inspection: Inspection.InspectionOk = triedInspection.value;
 
     for (const identifier of inspection.scope.keys()) {
         console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);

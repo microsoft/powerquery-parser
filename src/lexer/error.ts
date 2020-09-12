@@ -130,6 +130,10 @@ export class UnterminatedMultilineTokenError extends Error {
     }
 }
 
+export function isLexError(x: any): x is LexError {
+    return x instanceof LexError;
+}
+
 export function isTLexError(x: any): x is TLexError {
     return x instanceof LexError || x instanceof CommonError.CommonError;
 }

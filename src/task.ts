@@ -4,14 +4,12 @@
 import { Inspection } from ".";
 import { Lexer } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
-import { TriedInspection } from "./inspection";
-import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
-import { Ast, Keyword } from "./language";
-import { ExpectedType, Type } from "./language";
+import { InspectionOk, TriedInspection } from "./inspection";
+import { ActiveNode } from "./inspection/activeNode";
+import { Ast } from "./language";
 import { LexError } from "./lexer";
 import { getLocalizationTemplates } from "./localization";
 import {
-    AncestryUtils,
     IParser,
     IParserState,
     IParserUtils,
@@ -24,15 +22,6 @@ import {
     XorNodeUtils,
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings/settings";
-
-export interface InspectionOk {
-    readonly maybeActiveNode: ActiveNode | undefined;
-    readonly autocomplete: Inspection.Autocomplete;
-    readonly maybeInvokeExpression: Inspection.InvokeExpression | undefined;
-    readonly scope: Inspection.ScopeItemByKey;
-    readonly scopeType: Inspection.ScopeTypeByKey;
-    readonly maybeExpectedType: Type.TType | undefined;
-}
 
 export type TriedLexParse<S extends IParserState = IParserState> = Result<
     LexParseOk<S>,
@@ -105,88 +94,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         leafNodeIds = parseOk.state.contextState.leafNodeIds;
     }
 
-    // We should only get an undefined for activeNode iff the document is empty
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
-        nodeIdMapCollection,
-        leafNodeIds,
-        position,
-    );
-    if (maybeActiveNode === undefined) {
-        return ResultUtils.okFactory({
-            maybeActiveNode,
-            autocomplete: Keyword.StartOfDocumentKeywords,
-            maybeInvokeExpression: undefined,
-            scope: new Map(),
-            scopeType: new Map(),
-            maybeExpectedType: undefined,
-        });
-    }
-    const activeNode: ActiveNode = maybeActiveNode;
-    const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
-    const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(ancestry);
-
-    const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        activeNode,
-        maybeParseError,
-    );
-    if (ResultUtils.isErr(triedAutocomplete)) {
-        return triedAutocomplete;
-    }
-
-    const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
-        settings,
-        nodeIdMapCollection,
-        activeNode,
-    );
-    if (ResultUtils.isErr(triedInvokeExpression)) {
-        return triedInvokeExpression;
-    }
-
-    const triedScope: Inspection.TriedScope = Inspection.tryScope(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestry,
-        undefined,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        return triedScope;
-    }
-    const scopeById: Inspection.ScopeById = triedScope.value;
-    const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestryLeaf.node.id);
-    Assert.isDefined(maybeScope, `assert nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
-    const scope: Inspection.ScopeItemByKey = maybeScope;
-
-    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestryLeaf.node.id,
-        {
-            scopeById,
-            typeById: new Map(),
-        },
-    );
-    if (ResultUtils.isErr(triedScopeType)) {
-        return triedScopeType;
-    }
-
-    const triedExpectedType: ExpectedType.TriedExpectedType = ExpectedType.tryExpectedType(settings, activeNode);
-    if (ResultUtils.isErr(triedExpectedType)) {
-        return triedExpectedType;
-    }
-
-    return ResultUtils.okFactory({
-        maybeActiveNode,
-        autocomplete: triedAutocomplete.value,
-        maybeInvokeExpression: triedInvokeExpression.value,
-        scope,
-        scopeType: triedScopeType.value,
-        maybeExpectedType: triedExpectedType.value,
-    });
+    return Inspection.tryInspection(settings, nodeIdMapCollection, leafNodeIds, maybeParseError, position);
 }
 
 export function tryLexParse<S extends IParserState = IParserState>(
