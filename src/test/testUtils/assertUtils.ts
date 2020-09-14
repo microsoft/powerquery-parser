@@ -3,8 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, Inspection, Task } from "../..";
-import { Lexer, LexerSnapshot, TriedLexerSnapshot } from "../../lexer";
+import { Assert, Inspection, Lexer, Task } from "../..";
 import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
 import { LexSettings, ParseSettings } from "../../settings";
 
@@ -26,7 +25,7 @@ export function assertGetTextWithPosition(text: string): [string, Inspection.Pos
 export function assertGetLexParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): Task.LexParseOk<S> {
     const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text, stateFactoryFn);
     Assert.isOk(triedLexParse);
@@ -36,7 +35,7 @@ export function assertGetLexParseOk<S extends IParserState = IParserState>(
 export function assertGetParseErr<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): ParseError.ParseError<S> {
     const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
     Assert.isErr(triedParse);
@@ -51,7 +50,7 @@ export function assertGetParseErr<S extends IParserState = IParserState>(
 export function assertGetParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): ParseOk<S> {
     const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
     Assert.isOk(triedParse);
@@ -63,16 +62,16 @@ export function assertGetParseOk<S extends IParserState = IParserState>(
 function assertGetTriedParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedParse<S> {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     Assert.isOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
     Assert.isUndefined(Lexer.maybeErrorLineMap(lexerState));
 
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
+    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
     Assert.isOk(triedSnapshot);
-    const lexerSnapshot: LexerSnapshot = triedSnapshot.value;
+    const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
     return IParserUtils.tryRead(stateFactoryFn(settings, lexerSnapshot), settings.parser);
 }

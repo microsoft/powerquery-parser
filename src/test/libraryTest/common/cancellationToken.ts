@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { Lexer } from "../../..";
 import { Assert, CommonError, Result, TimedCancellationToken, TypeScriptUtils } from "../../../common";
-import { Lexer, LexError } from "../../../lexer";
+import { LexError } from "../../../lexer";
 import { DefaultSettings, Settings, SettingsUtils } from "../../../settings";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {

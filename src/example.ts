@@ -3,12 +3,7 @@
 
 /* tslint:disable:no-console */
 
-import { Inspection, Task } from ".";
-import { Assert, ResultUtils } from "./common";
-import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
-import { TriedLex } from "./lexer/lexer";
-import { IParserStateUtils, ParseError } from "./parser";
-import { DefaultSettings } from "./settings/settings";
+import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from ".";
 
 parseText(`let x = 1 in try x otherwise 2`);
 
@@ -16,7 +11,11 @@ parseText(`let x = 1 in try x otherwise 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text, IParserStateUtils.stateFactory);
+    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
+        DefaultSettings,
+        text,
+        Parser.IParserStateUtils.stateFactory,
+    );
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
@@ -29,7 +28,7 @@ function parseText(text: string): void {
 
         // If the error occured during parsing, then log the jsonified parsing context,
         // which is what was parsed up until the error was thrown.
-        if (ParseError.isParseError(triedLexParse.error)) {
+        if (Parser.ParseError.isParseError(triedLexParse.error)) {
             console.log(JSON.stringify(triedLexParse.error.state.contextState, undefined, 4));
         }
     }
@@ -45,7 +44,7 @@ function lexText(text: string): void {
     // or Lexer.maybeErrorLineMap to quickly get all lines with errors.
     // Note: At this point all errors are isolated to a single line.
     //       Checks for multiline errors, such as an unterminated string, have not been processed.
-    let triedLex: TriedLex = Lexer.tryLex(DefaultSettings, text);
+    let triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
     if (ResultUtils.isErr(triedLex)) {
         console.log(`An error occured while lexing: ${triedLex.error.message}`);
         return;
@@ -98,15 +97,15 @@ function lexText(text: string): void {
     // then use the `jobs.tryLex` helper function to perform both actions in one go.
 
     // Creating a LexerSnapshot is a Result due to potential multiline token errors.
-    const triedLexerSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
+    const triedLexerSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
     if (ResultUtils.isOk(triedLexerSnapshot)) {
-        const snapshot: LexerSnapshot = triedLexerSnapshot.value;
+        const snapshot: Lexer.LexerSnapshot = triedLexerSnapshot.value;
         console.log(`numTokens: ${snapshot.tokens}`);
         console.log(`numComments: ${snapshot.comments}`);
     }
-    // A multiline token error was thrown.
+    // A multiline token validation error was thrown.
     else {
-        const error: LexError.LexError = triedLexerSnapshot.error;
+        const error: Lexer.LexError.LexError = triedLexerSnapshot.error;
         console.log(error.innerError.message);
         console.log(JSON.stringify(error.innerError, undefined, 4));
     }
@@ -120,13 +119,13 @@ function inspectText(text: string, position: Inspection.Position): void {
         DefaultSettings,
         text,
         position,
-        IParserStateUtils.stateFactory,
+        Parser.IParserStateUtils.stateFactory,
     );
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;
     }
-    const inspection: Task.InspectionOk = triedInspection.value;
+    const inspection: Inspection.InspectionOk = triedInspection.value;
 
     for (const identifier of inspection.scope.keys()) {
         console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);

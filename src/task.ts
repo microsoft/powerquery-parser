@@ -2,14 +2,14 @@
 // Licensed under the MIT license.
 
 import { Inspection } from ".";
+import { Lexer } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
-import { ActiveNode, ActiveNodeUtils } from "./inspection/activeNode";
-import { Ast, Keyword } from "./language";
-import { ExpectedType, Type } from "./language";
-import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "./lexer";
+import { InspectionOk, TriedInspection } from "./inspection";
+import { ActiveNode } from "./inspection/activeNode";
+import { Ast } from "./language";
+import { LexError } from "./lexer";
 import { getLocalizationTemplates } from "./localization";
 import {
-    AncestryUtils,
     IParser,
     IParserState,
     IParserUtils,
@@ -23,17 +23,6 @@ import {
 } from "./parser";
 import { CommonSettings, LexSettings, ParseSettings } from "./settings/settings";
 
-export type TriedInspection = Result<InspectionOk, CommonError.CommonError | LexError.LexError | ParseError.ParseError>;
-
-export interface InspectionOk {
-    readonly maybeActiveNode: ActiveNode | undefined;
-    readonly autocomplete: Inspection.Autocomplete;
-    readonly maybeInvokeExpression: Inspection.InvokeExpression | undefined;
-    readonly scope: Inspection.ScopeItemByKey;
-    readonly scopeType: Inspection.ScopeTypeByKey;
-    readonly maybeExpectedType: Type.TType | undefined;
-}
-
 export type TriedLexParse<S extends IParserState = IParserState> = Result<
     LexParseOk<S>,
     LexError.TLexError | ParseError.TParseError<S>
@@ -45,14 +34,14 @@ export type TriedLexParseInspect<S extends IParserState = IParserState> = Result
 >;
 
 export interface LexParseOk<S extends IParserState = IParserState> extends ParseOk<S> {
-    readonly lexerSnapshot: LexerSnapshot;
+    readonly lexerSnapshot: Lexer.LexerSnapshot;
 }
 
 export interface LexParseInspectOk<S extends IParserState = IParserState> extends InspectionOk {
     readonly triedParse: TriedParse<S>;
 }
 
-export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot {
+export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSnapshot {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     if (ResultUtils.isErr(triedLex)) {
         return triedLex;
@@ -69,11 +58,10 @@ export function tryLex(settings: LexSettings, text: string): TriedLexerSnapshot 
         );
     }
 
-    return LexerSnapshot.tryFrom(state);
+    return Lexer.trySnapshot(state);
 }
 
-export function tryParse<S extends IParserState = IParserState>(settings: ParseSettings<S>, state: S): TriedParse<S> {
-    const parser: IParser<S> = settings.parser;
+export function tryParse<S extends IParserState = IParserState>(state: S, parser: IParser<S>): TriedParse<S> {
     return IParserUtils.tryRead(state, parser);
 }
 
@@ -106,103 +94,22 @@ export function tryInspection<S extends IParserState = IParserState>(
         leafNodeIds = parseOk.state.contextState.leafNodeIds;
     }
 
-    // We should only get an undefined for activeNode iff the document is empty
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
-        nodeIdMapCollection,
-        leafNodeIds,
-        position,
-    );
-    if (maybeActiveNode === undefined) {
-        return ResultUtils.okFactory({
-            maybeActiveNode,
-            autocomplete: Keyword.StartOfDocumentKeywords,
-            maybeInvokeExpression: undefined,
-            scope: new Map(),
-            scopeType: new Map(),
-            maybeExpectedType: undefined,
-        });
-    }
-    const activeNode: ActiveNode = maybeActiveNode;
-    const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
-    const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(ancestry);
-
-    const triedAutocomplete: Inspection.TriedAutocomplete = Inspection.tryAutocomplete(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        activeNode,
-        maybeParseError,
-    );
-    if (ResultUtils.isErr(triedAutocomplete)) {
-        return triedAutocomplete;
-    }
-
-    const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
-        settings,
-        nodeIdMapCollection,
-        activeNode,
-    );
-    if (ResultUtils.isErr(triedInvokeExpression)) {
-        return triedInvokeExpression;
-    }
-
-    const triedScope: Inspection.TriedScope = Inspection.tryScope(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestry,
-        undefined,
-    );
-    if (ResultUtils.isErr(triedScope)) {
-        return triedScope;
-    }
-    const scopeById: Inspection.ScopeById = triedScope.value;
-    const maybeScope: Inspection.ScopeItemByKey | undefined = scopeById.get(ancestryLeaf.node.id);
-    Assert.isDefined(maybeScope, `assert nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
-    const scope: Inspection.ScopeItemByKey = maybeScope;
-
-    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        ancestryLeaf.node.id,
-        {
-            scopeById,
-            typeById: new Map(),
-        },
-    );
-    if (ResultUtils.isErr(triedScopeType)) {
-        return triedScopeType;
-    }
-
-    const triedExpectedType: ExpectedType.TriedExpectedType = ExpectedType.tryExpectedType(settings, activeNode);
-    if (ResultUtils.isErr(triedExpectedType)) {
-        return triedExpectedType;
-    }
-
-    return ResultUtils.okFactory({
-        maybeActiveNode,
-        autocomplete: triedAutocomplete.value,
-        maybeInvokeExpression: triedInvokeExpression.value,
-        scope,
-        scopeType: triedScopeType.value,
-        maybeExpectedType: triedExpectedType.value,
-    });
+    return Inspection.tryInspection(settings, nodeIdMapCollection, leafNodeIds, maybeParseError, position);
 }
 
 export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedLexParse<S> {
-    const triedLexerSnapshot: TriedLexerSnapshot = tryLex(settings, text);
+    const triedLexerSnapshot: Lexer.TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
-    const lexerSnapshot: LexerSnapshot = triedLexerSnapshot.value;
+    const lexerSnapshot: Lexer.LexerSnapshot = triedLexerSnapshot.value;
 
     const state: S = stateFactoryFn(settings, lexerSnapshot);
-    const triedParse: TriedParse<S> = tryParse<S>(settings, state);
+    const triedParse: TriedParse<S> = tryParse<S>(state, settings.parser);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,
@@ -217,7 +124,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedLexParseInspect<S> {
     const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text, stateFactoryFn);
     const maybeTriedParse: TriedParse<S> | undefined = maybeTriedParseFromTriedLexParse(triedLexParse);

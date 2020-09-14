@@ -6,12 +6,7 @@ import { ICancellationToken } from "../../common";
 import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ILocalizationTemplates } from "../../localization";
-import { CommonSettings, ParseSettings } from "../../settings";
-
-export type TCreateParseStateFn<S extends IParserState = IParserState> = (
-    settings: ParseSettings<S>,
-    lexerSnapshot: LexerSnapshot,
-) => S;
+import { CommonSettings } from "../../settings";
 
 export interface IParserState extends CommonSettings {
     readonly lexerSnapshot: LexerSnapshot;

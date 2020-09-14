@@ -3,11 +3,11 @@
 
 import * as Inspection from "./inspection";
 import * as Language from "./language";
+import * as Lexer from "./lexer";
+import * as Parser from "./parser";
 import * as Task from "./task";
 
-export { Inspection, Language, Task };
+export { Inspection, Language, Lexer, Parser, Task };
 export * from "./common";
-export * from "./lexer";
 export * from "./localization";
-export * from "./parser";
 export * from "./settings";

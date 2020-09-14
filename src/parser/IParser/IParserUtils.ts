@@ -4,8 +4,9 @@
 import { ParseError } from "..";
 import { CommonError, ResultUtils } from "../../common";
 import { Ast } from "../../language";
+import { TriedParse } from "../commonTypes";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { IParser, TriedParse } from "./IParser";
+import { IParser } from "./IParser";
 
 export function tryRead<State extends IParserState = IParserState>(
     state: State,

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer } from ".";
+import { Lexer } from "..";
 import { CommonError, StringUtils } from "../common";
 import { ILocalizationTemplates, Localization } from "../localization";
 
@@ -128,6 +128,10 @@ export class UnterminatedMultilineTokenError extends Error {
         super(Localization.error_lex_unterminatedMultilineToken(templates, kind));
         Object.setPrototypeOf(this, UnterminatedMultilineTokenError.prototype);
     }
+}
+
+export function isLexError(x: any): x is LexError {
+    return x instanceof LexError;
 }
 
 export function isTLexError(x: any): x is TLexError {

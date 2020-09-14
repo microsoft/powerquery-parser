@@ -3,8 +3,8 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, ResultUtils } from "../../../common";
-import { Lexer, LexError, LexerSnapshot, TriedLexerSnapshot } from "../../../lexer";
+import { Assert, Lexer, ResultUtils } from "../../..";
+import { LexError } from "../../../lexer";
 import { DefaultSettings } from "../../../settings";
 
 function assertBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {
@@ -77,7 +77,7 @@ function assertUnterminatedMultilineTokenKind(
     const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
     Assert.isOk(triedLex);
     const lexerState: Lexer.State = triedLex.value;
-    const triedSnapshot: TriedLexerSnapshot = LexerSnapshot.tryFrom(lexerState);
+    const triedSnapshot: Lexer.TriedLexerSnapshot = Lexer.trySnapshot(lexerState);
     Assert.isErr(triedSnapshot);
 
     const error: LexError.TLexError = triedSnapshot.error;

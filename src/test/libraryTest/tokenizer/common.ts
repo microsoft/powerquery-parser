@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "../../../common";
+import { Assert, Lexer } from "../../../";
 import { Token } from "../../../language";
-import { Lexer } from "../../../lexer";
 import { DefaultTemplates } from "../../../localization";
 
 export class Tokenizer implements TokensProvider {
