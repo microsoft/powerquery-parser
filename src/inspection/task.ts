@@ -8,7 +8,7 @@ import { TriedAutocomplete, tryAutocomplete } from "./autocomplete";
 import { TriedInspection } from "./commonTypes";
 import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { Position } from "./position";
-import { ScopeById, ScopeItemByKey, TriedScope, tryScope } from "./scope";
+import { NodeScope, ScopeById, TriedScope, tryScope } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
 
 export function tryInspection<S extends IParserState = IParserState>(
@@ -29,7 +29,7 @@ export function tryInspection<S extends IParserState = IParserState>(
             maybeActiveNode,
             autocomplete: Keyword.StartOfDocumentKeywords,
             maybeInvokeExpression: undefined,
-            scope: new Map(),
+            nodeScope: new Map(),
             scopeType: new Map(),
             maybeExpectedType: undefined,
         });
@@ -59,9 +59,9 @@ export function tryInspection<S extends IParserState = IParserState>(
         return triedScope;
     }
     const scopeById: ScopeById = triedScope.value;
-    const maybeScope: ScopeItemByKey | undefined = scopeById.get(ancestryLeaf.node.id);
-    Assert.isDefined(maybeScope, `assert nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
-    const scope: ScopeItemByKey = maybeScope;
+    const maybeNodeScope: NodeScope | undefined = scopeById.get(ancestryLeaf.node.id);
+    Assert.isDefined(maybeNodeScope, `assert nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
+    const nodeScope: NodeScope = maybeNodeScope;
 
     const triedScopeType: TriedScopeType = tryScopeType(
         settings,
@@ -86,7 +86,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         maybeActiveNode,
         autocomplete: triedAutocomplete.value,
         maybeInvokeExpression: triedInvokeExpression.value,
-        scope,
+        nodeScope,
         scopeType: triedScopeType.value,
         maybeExpectedType: triedExpectedType.value,
     });

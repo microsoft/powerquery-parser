@@ -127,7 +127,7 @@ function inspectText(text: string, position: Inspection.Position): void {
     }
     const inspection: Inspection.InspectionOk = triedInspection.value;
 
-    for (const identifier of inspection.scope.keys()) {
+    for (const identifier of inspection.nodeScope.keys()) {
         console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);
     }
 

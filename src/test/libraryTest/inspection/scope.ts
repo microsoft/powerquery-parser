@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
-import { Position, ScopeItemByKey, ScopeItemKind } from "../../../inspection";
+import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Constant } from "../../../language";
 import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
@@ -107,7 +107,7 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
     }
 }
 
-function abridgedScopeItemsFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArray<TAbridgedNodeScopeItem> {
+function abridgedScopeItemsFactory(scopeItemByKey: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
     const result: TAbridgedNodeScopeItem[] = [];
 
     for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
@@ -117,7 +117,7 @@ function abridgedScopeItemsFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArra
     return result;
 }
 
-function abridgedParametersFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArray<AbridgedParameterScopeItem> {
+function abridgedParametersFactory(scopeItemByKey: NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
     const result: AbridgedParameterScopeItem[] = [];
 
     for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
@@ -130,12 +130,12 @@ function abridgedParametersFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArra
     return result;
 }
 
-function assertScopeForNodeOk(
+function assertNodeScopeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-): ScopeItemByKey {
+): NodeScope {
     const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
@@ -146,39 +146,39 @@ function assertScopeForNodeOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScopeInspection: Inspection.TriedScopeForRoot = Inspection.tryScopeItems(
+    const triedNodeScope: Inspection.TriedNodeScope = Inspection.tryNodeScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
         activeNode.ancestry[0].node.id,
         undefined,
     );
-    Assert.isOk(triedScopeInspection);
-    return triedScopeInspection.value;
+    Assert.isOk(triedNodeScope);
+    return triedNodeScope.value;
 }
 
 export function assertGetParseOkScopeOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
-): ScopeItemByKey {
+): NodeScope {
     const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text, IParserStateUtils.stateFactory);
     const contextState: ParseContext.State = parseOk.state.contextState;
-    return assertScopeForNodeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 export function assertGetParseErrScopeOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
-): ScopeItemByKey {
+): NodeScope {
     const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(
         settings,
         text,
         IParserStateUtils.stateFactory,
     );
     const contextState: ParseContext.State = parseError.state.contextState;
-    return assertScopeForNodeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 describe(`subset Inspection - Scope - Identifier`, () => {

@@ -6,7 +6,7 @@ import { Type } from "../../language";
 import { getLocalizationTemplates } from "../../localization";
 import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { ScopeItemByKey } from "../scope";
+import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { TypeCache } from "./commonTypes";
 import { assertGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
@@ -56,9 +56,9 @@ export function tryType(
 }
 
 function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
-    const scopeItemByKey: ScopeItemByKey = assertGetOrCreateScope(state, nodeId);
+    const nodeScope: NodeScope = assertGetOrCreateScope(state, nodeId);
 
-    for (const scopeItem of scopeItemByKey.values()) {
+    for (const scopeItem of nodeScope.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
             state.deltaTypeById.set(scopeItem.id, getOrFindScopeItemType(state, scopeItem));
         }
@@ -69,7 +69,7 @@ function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByK
     }
 
     const result: ScopeTypeByKey = new Map();
-    for (const [key, scopeItem] of scopeItemByKey.entries()) {
+    for (const [key, scopeItem] of nodeScope.entries()) {
         const maybeType: Type.TType | undefined = state.givenTypeById.get(scopeItem.id);
         Assert.isDefined(maybeType, `expected nodeId to be in givenTypeById`, { nodeId: scopeItem.id });
 
