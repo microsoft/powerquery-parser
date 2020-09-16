@@ -190,7 +190,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
             let triedError: Error;
             if (expressionErrorStateBackup.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                IParserStateUtils.applyFastStateBackup(state, expressionError);
+                IParserStateUtils.applyFastStateBackup(state, expressionErrorStateBackup);
                 state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;

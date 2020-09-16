@@ -53,6 +53,7 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
             leafNodeIds,
             activeNode,
             typeCache,
+            maybeParseError,
         );
 
         return [...primitiveTypes, ...keywords, ...fieldSelection];

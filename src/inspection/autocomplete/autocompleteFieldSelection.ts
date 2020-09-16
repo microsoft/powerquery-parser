@@ -3,7 +3,7 @@
 
 import { CommonError, Result, ResultUtils } from "../../common";
 import { Ast, Type } from "../../language";
-import { NodeIdMap, NodeIdMapUtils, TXorNode } from "../../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseError, TXorNode } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
 import { TriedType, tryType } from "../type";
@@ -17,6 +17,7 @@ export function autocompleteFieldSelection(
     leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
     typeCache: TypeCache,
+    maybeParseError: ParseError.ParseError | undefined,
 ): ReadonlyArray<string> {
     const maybeSelector: TXorNode | undefined = maybeFieldSelector(activeNode);
     if (maybeSelector === undefined) {
