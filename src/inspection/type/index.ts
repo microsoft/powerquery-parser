@@ -4,4 +4,4 @@
 import * as Type from "./inspectType";
 
 export { Type };
-export * from "./tasks";
+export * from "./task";

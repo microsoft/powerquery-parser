@@ -3,4 +3,4 @@
 
 export * from "./autocompleteKeyword";
 export * from "./commonTypes";
-export * from "./tasks";
+export * from "./task";
