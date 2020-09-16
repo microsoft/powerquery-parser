@@ -7,6 +7,8 @@ import { getLocalizationTemplates } from "../../localization";
 import { IParserState, NodeIdMap, ParseError } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
+import { TypeCache } from "../type/commonTypes";
+import { autocompleteFieldSelection } from "./autocompleteFieldSelection";
 import { autocompleteKeyword } from "./autocompleteKeyword";
 import { ExpressionAutocomplete } from "./autocompleteKeyword/commonTypes";
 import { autocompletePrimitiveType } from "./autocompletePrimitiveType";
@@ -17,33 +19,42 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
+    typeCache: TypeCache,
     maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
     if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
         return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
     }
+    const activeNode: ActiveNode = maybeActiveNode;
 
     let maybeTrailingToken: TrailingToken | undefined;
     if (maybeParseError !== undefined) {
         const maybeParseErrorToken: Token.Token | undefined = ParseError.maybeTokenFrom(maybeParseError.innerError);
         if (maybeParseErrorToken !== undefined) {
-            maybeTrailingToken = trailingTokenFactory(maybeActiveNode, maybeParseErrorToken);
+            maybeTrailingToken = trailingTokenFactory(activeNode, maybeParseErrorToken);
         }
     }
 
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
         const primitiveTypes: ReadonlyArray<Constant.PrimitiveTypeConstantKind> = autocompletePrimitiveType(
-            maybeActiveNode,
+            activeNode,
             maybeTrailingToken,
         );
         const keywords: ReadonlyArray<Keyword.KeywordKind> = autocompleteKeyword(
             nodeIdMapCollection,
             leafNodeIds,
-            maybeActiveNode,
+            activeNode,
             maybeTrailingToken,
         );
+        const fieldSelection: ReadonlyArray<string> = autocompleteFieldSelection(
+            settings,
+            nodeIdMapCollection,
+            leafNodeIds,
+            activeNode,
+            typeCache,
+        );
 
-        return [...primitiveTypes, ...keywords];
+        return [...primitiveTypes, ...keywords, ...fieldSelection];
     });
 }

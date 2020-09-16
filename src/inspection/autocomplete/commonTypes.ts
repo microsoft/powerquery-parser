@@ -2,11 +2,13 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result } from "../../common";
-import { Constant, Keyword, Token } from "../../language";
+import { Token } from "../../language";
 
 export type Autocomplete = ReadonlyArray<AutocompleteOption>;
 
-export type AutocompleteOption = Constant.PrimitiveTypeConstantKind | Keyword.KeywordKind;
+// Originally `Constant.PrimitiveTypeConstantKind | Keyword.KeywordKind`
+// Made into string to support table/record fields.
+export type AutocompleteOption = string;
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 

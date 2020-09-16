@@ -44,12 +44,12 @@ function inspectInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
 ): InvokeExpression | undefined {
-    const ancestors: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
     const position: Position = activeNode.position;
 
     for (let ancestryIndex: number = 0; ancestryIndex < numAncestors; ancestryIndex += 1) {
-        const xorNode: TXorNode = ancestors[ancestryIndex];
+        const xorNode: TXorNode = ancestry[ancestryIndex];
         if (!isInvokeExpressionContent(position, xorNode)) {
             continue;
         }

@@ -10,6 +10,7 @@ import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { Position } from "./position";
 import { NodeScope, ScopeById, TriedScope, tryScope } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
+import { TypeCache } from "./type/commonTypes";
 
 export function tryInspection<S extends IParserState = IParserState>(
     settings: CommonSettings,
@@ -38,17 +39,6 @@ export function tryInspection<S extends IParserState = IParserState>(
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
     const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(ancestry);
 
-    const triedAutocomplete: TriedAutocomplete = tryAutocomplete(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        activeNode,
-        maybeParseError,
-    );
-    if (ResultUtils.isErr(triedAutocomplete)) {
-        return triedAutocomplete;
-    }
-
     const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(settings, nodeIdMapCollection, activeNode);
     if (ResultUtils.isErr(triedInvokeExpression)) {
         return triedInvokeExpression;
@@ -63,15 +53,16 @@ export function tryInspection<S extends IParserState = IParserState>(
     Assert.isDefined(maybeNodeScope, `assert nodeId in scopeById`, { nodeId: ancestryLeaf.node.id });
     const nodeScope: NodeScope = maybeNodeScope;
 
+    const typeCache: TypeCache = {
+        scopeById,
+        typeById: new Map(),
+    };
     const triedScopeType: TriedScopeType = tryScopeType(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
         ancestryLeaf.node.id,
-        {
-            scopeById,
-            typeById: new Map(),
-        },
+        typeCache,
     );
     if (ResultUtils.isErr(triedScopeType)) {
         return triedScopeType;
@@ -80,6 +71,18 @@ export function tryInspection<S extends IParserState = IParserState>(
     const triedExpectedType: TriedExpectedType = tryExpectedType(settings, activeNode);
     if (ResultUtils.isErr(triedExpectedType)) {
         return triedExpectedType;
+    }
+
+    const triedAutocomplete: TriedAutocomplete = tryAutocomplete(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        typeCache,
+        activeNode,
+        maybeParseError,
+    );
+    if (ResultUtils.isErr(triedAutocomplete)) {
+        return triedAutocomplete;
     }
 
     return ResultUtils.okFactory({
