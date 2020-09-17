@@ -72,7 +72,7 @@ describe("Parser.Error", () => {
         it("custom start", () => {
             const customParser: IParser<IParserState> = {
                 ...RecursiveDescentParser,
-                read: RecursiveDescentParser.readIdentifier,
+                maybeInitialRead: RecursiveDescentParser.readIdentifier,
             };
             const customSettings: Settings = {
                 ...DefaultSettings,

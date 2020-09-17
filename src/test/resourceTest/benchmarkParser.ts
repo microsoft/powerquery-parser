@@ -31,11 +31,7 @@ export interface FunctionTimestamp {
 }
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
-    read: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
-        const readStartLambda: () => Ast.TNode = () =>
-            state.baseParser.read(state, (parser as unknown) as IParser<IParserState>) as Ast.TNode;
-        return traceFunction(state, parser, readStartLambda);
-    },
+    maybeInitialRead: undefined,
 
     // 12.1.6 Identifiers
     readIdentifier: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>

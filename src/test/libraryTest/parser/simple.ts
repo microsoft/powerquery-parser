@@ -111,7 +111,7 @@ describe("Parser.AbridgedNode", () => {
         it(`readParameterSpecificationList`, () => {
             const customParser: IParser<IParserState> = {
                 ...RecursiveDescentParser,
-                read: RecursiveDescentParser.readParameterSpecificationList,
+                maybeInitialRead: RecursiveDescentParser.readParameterSpecificationList,
             };
             const customSettings: Settings = {
                 ...DefaultSettings,

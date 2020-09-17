@@ -85,7 +85,7 @@ function assertGetTriedParse<S extends IParserState = IParserState>(
     Assert.isOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
-    return IParserUtils.tryRead(stateFactoryFn(settings, lexerSnapshot), settings.parser);
+    return IParserUtils.tryParse<S>(settings, lexerSnapshot, stateFactoryFn) as TriedParse<S>;
 }
 
 export function assertGetParseOkAutocompleteOk(

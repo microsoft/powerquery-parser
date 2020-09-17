@@ -5,6 +5,8 @@ import { IParserState, ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
 
+export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
+
 export const enum ParenthesisDisambiguation {
     FunctionExpression = "FunctionExpression",
     ParenthesizedExpression = "ParenthesizedExpression",
@@ -22,7 +24,7 @@ export interface ParseOk<S extends IParserState = IParserState> {
 }
 
 export interface IParser<State extends IParserState = IParserState> {
-    readonly read: (state: State, parser: IParser<State>) => Ast.TNode;
+    readonly maybeInitialRead: ((state: State, parser: IParser<State>) => Ast.TNode) | undefined;
 
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: State, parser: IParser<State>) => Ast.Identifier;

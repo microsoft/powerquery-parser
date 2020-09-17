@@ -7,10 +7,9 @@ import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { InspectionOk, TriedInspection } from "./inspection";
 import { ActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
-import { LexError } from "./lexer";
+import { LexError, LexerSnapshot } from "./lexer";
 import { getLocalizationTemplates } from "./localization";
 import {
-    IParser,
     IParserState,
     IParserUtils,
     NodeIdMap,
@@ -61,8 +60,12 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
     return Lexer.trySnapshot(state);
 }
 
-export function tryParse<S extends IParserState = IParserState>(state: S, parser: IParser<S>): TriedParse<S> {
-    return IParserUtils.tryRead(state, parser);
+export function tryParse<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
+    lexerSnapshot: LexerSnapshot,
+    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
+): TriedParse<S> {
+    return IParserUtils.tryParse<S>(parseSettings, lexerSnapshot, stateFactoryFn) as TriedParse<S>;
 }
 
 export function tryInspection<S extends IParserState = IParserState>(
@@ -108,8 +111,7 @@ export function tryLexParse<S extends IParserState = IParserState>(
     }
     const lexerSnapshot: Lexer.LexerSnapshot = triedLexerSnapshot.value;
 
-    const state: S = stateFactoryFn(settings, lexerSnapshot);
-    const triedParse: TriedParse<S> = tryParse<S>(state, settings.parser);
+    const triedParse: TriedParse<S> = tryParse(settings, lexerSnapshot, stateFactoryFn);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,

@@ -7,5 +7,5 @@ import { IParserState } from "../IParserState";
 
 export let RecursiveDescentParser: IParser<IParserState> = {
     ...NaiveParseSteps,
-    read: NaiveParseSteps.readDocument,
+    maybeInitialRead: undefined,
 };
