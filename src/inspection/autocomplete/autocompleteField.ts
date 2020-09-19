@@ -1,15 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils, ArrayUtils } from "../../common";
+import { CommonError, Result, ResultUtils, ArrayUtils, Assert } from "../../common";
 import { Ast, Type, Token } from "../../language";
-import { NodeIdMap, NodeIdMapUtils, ParseError, TXorNode, XorNodeKind, ParseContext, XorNodeUtils } from "../../parser";
+import {
+    NodeIdMap,
+    NodeIdMapUtils,
+    ParseError,
+    TXorNode,
+    XorNodeKind,
+    ParseContext,
+    XorNodeUtils,
+    IParserState,
+} from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../type/commonTypes";
 import { PositionUtils } from "../position";
 import { LexerSnapshot } from "../../lexer";
+import { SequenceKind } from "../../parser/error";
 
 export type TriedAutocompleteFieldSelection = Result<ReadonlyArray<string>, CommonError.CommonError>;
 
@@ -174,44 +184,79 @@ type AutocompleteNodeKind =
     | Ast.NodeKind.FieldProjection
     | Ast.NodeKind.ItemAccessExpression;
 
-export function autocompleteField(
+export function autocompleteField<S extends IParserState = IParserState>(
     settings: CommonSettings,
-    lexerSnapshot: LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
+    parserState: S,
     activeNode: ActiveNode,
     typeCache: TypeCache,
     maybeParseError: ParseError.ParseError | undefined,
 ): ReadonlyArray<string> {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
-    // Check if a RPE exists in the context state.
-    const indexOfRecursivePrimaryExpression: number = ArrayUtils.indexOfPredicate(
-        ancestry,
-        (xorNode: TXorNode) => xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression,
-    );
-    if (indexOfRecursivePrimaryExpression === -1) {
-        return [];
-    }
-    const recursivePrimaryExpression: TXorNode = ancestry[indexOfRecursivePrimaryExpression];
+    let maybeAutocompleteKind: AutocompleteNodeKind | undefined;
+    if (maybeParseError !== undefined) {
+        const innerParseError: ParseError.TInnerParseError = maybeParseError.innerError;
+        if (innerParseError instanceof ParseError.UnterminatedSequence) {
+            const unterminatedSequence: ParseError.UnterminatedSequence = innerParseError;
+            switch (unterminatedSequence.kind) {
+                case SequenceKind.Bracket:
+                    break;
 
-    const indexOfField: number = ArrayUtils.indexOfPredicate(ancestry, (xorNode: TXorNode) => {
-        const astNodeKind: Ast.NodeKind = xorNode.node.kind;
-        return (
-            astNodeKind === Ast.NodeKind.FieldProjection ||
-            astNodeKind === Ast.NodeKind.FieldSelector ||
-            astNodeKind === Ast.NodeKind.ItemAccessExpression
-        );
-    });
+                case SequenceKind.Parenthesis:
+                    break;
 
-    if (indexOfField === 0) {
-        if (maybeParseError === undefined) {
-            return [];
+                default:
+                    throw Assert.isNever(unterminatedSequence.kind);
+            }
+        } else if (
+            innerParseError instanceof ParseError.ExpectedAnyTokenKindError &&
+            innerParseError.maybeFoundToken?.token.kind === Token.TokenKind.LeftBrace
+        ) {
         }
-        // else if (maybeParseError.innerError instanceof ParseError.UnterminatedKind)
     }
 
     return [];
+
+    // // Check if a RPE exists in the context state.
+    // const indexOfRecursivePrimaryExpression: number = ArrayUtils.indexOfPredicate(
+    //     ancestry,
+    //     (xorNode: TXorNode) => xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression,
+    // );
+    // if (indexOfRecursivePrimaryExpression === -1) {
+    //     return [];
+    // }
+    // const recursivePrimaryExpression: TXorNode = ancestry[indexOfRecursivePrimaryExpression];
+
+    // const indexOfField: number = ArrayUtils.indexOfPredicate(ancestry, (xorNode: TXorNode) => {
+    //     const astNodeKind: Ast.NodeKind = xorNode.node.kind;
+    //     return (
+    //         astNodeKind === Ast.NodeKind.FieldProjection ||
+    //         astNodeKind === Ast.NodeKind.FieldSelector ||
+    //         astNodeKind === Ast.NodeKind.ItemAccessExpression
+    //     );
+    // });
+
+    // // No field currently exists, but we might be able to get something out of the ParseError
+    // if (indexOfField === 0) {
+    //     if (maybeParseError === undefined || !(maybeParseError.innerError instanceof ParseError.UnterminatedSequence)) {
+    //         return [];
+    //     }
+
+    //     const unterminatedSequence: ParseError.UnterminatedSequence = maybeParseError.innerError;
+    //     switch (unterminatedSequence.kind) {
+    //         case SequenceKind.Bracket:
+
+    //             break;
+
+    //         case SequenceKind.Parenthesis:
+    //             break;
+
+    //         default:
+    //             throw Assert.isNever(unterminatedSequence.kind);
+    //     }
+    // }
+
+    // return [];
 }
 
 // function maybePreviousPrimaryExpression(): TXorNode | undefined {

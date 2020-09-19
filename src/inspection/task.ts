@@ -15,12 +15,13 @@ import { TypeCache } from "./type/commonTypes";
 
 export function tryInspection<S extends IParserState = IParserState>(
     settings: CommonSettings,
-    lexerSnapshot: LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
+    parserState: S,
     maybeParseError: ParseError.ParseError<S> | undefined,
     position: Position,
 ): TriedInspection {
+    const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
+    const leafNodeIds: ReadonlyArray<number> = parserState.contextState.leafNodeIds;
+
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
@@ -77,9 +78,7 @@ export function tryInspection<S extends IParserState = IParserState>(
 
     const triedAutocomplete: TriedAutocomplete = tryAutocomplete(
         settings,
-        lexerSnapshot,
-        nodeIdMapCollection,
-        leafNodeIds,
+        parserState,
         typeCache,
         activeNode,
         maybeParseError,

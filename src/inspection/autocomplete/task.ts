@@ -18,13 +18,15 @@ import { TrailingToken, TriedAutocomplete } from "./commonTypes";
 
 export function tryAutocomplete<S extends IParserState = IParserState>(
     settings: CommonSettings,
-    lexerSnapshot: LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
+    parserState: S,
     typeCache: TypeCache,
     maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): TriedAutocomplete {
+    const lexerSnapshot: LexerSnapshot = parserState.lexerSnapshot;
+    const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
+    const leafNodeIds: ReadonlyArray<number> = parserState.contextState.leafNodeIds;
+
     if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
         return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
     }
@@ -51,9 +53,7 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
         );
         const fieldSelection: ReadonlyArray<string> = autocompleteField(
             settings,
-            lexerSnapshot,
-            nodeIdMapCollection,
-            leafNodeIds,
+            parserState,
             activeNode,
             typeCache,
             maybeParseError,

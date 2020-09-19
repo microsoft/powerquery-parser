@@ -95,15 +95,7 @@ export function assertGetParseOkAutocompleteOk(
     position: Position,
 ): ReadonlyArray<AutocompleteOption> {
     const parseOk: ParseOk = assertGetParseOk(settings, text, IParserStateUtils.stateFactory);
-    const contextState: ParseContext.State = parseOk.state.contextState;
-    return assertGetAutocompleteOk(
-        settings,
-        parseOk.state.lexerSnapshot,
-        contextState.nodeIdMapCollection,
-        contextState.leafNodeIds,
-        position,
-        undefined,
-    );
+    return assertGetAutocompleteOk(settings, parseOk.state, position, undefined);
 }
 
 export function assertGetParseErrAutocompleteOk(
@@ -114,27 +106,18 @@ export function assertGetParseErrAutocompleteOk(
     const parseError: ParseError.ParseError = assertGetParseErr(settings, text, IParserStateUtils.stateFactory);
     const contextState: ParseContext.State = parseError.state.contextState;
 
-    return assertGetAutocompleteOk(
-        settings,
-        parseError.state.lexerSnapshot,
-        contextState.nodeIdMapCollection,
-        contextState.leafNodeIds,
-        position,
-        parseError,
-    );
+    return assertGetAutocompleteOk(settings, parseError.state, position, parseError);
 }
 
 export function assertGetAutocompleteOk<S extends IParserState>(
     settings: CommonSettings,
-    lexerSnapshot: LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
+    parserState: IParserState,
     position: Position,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): ReadonlyArray<AutocompleteOption> {
     const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
-        nodeIdMapCollection,
-        leafNodeIds,
+        parserState.contextState.nodeIdMapCollection,
+        parserState.contextState.leafNodeIds,
         position,
     );
     if (maybeActiveNode === undefined) {
@@ -143,9 +126,7 @@ export function assertGetAutocompleteOk<S extends IParserState>(
 
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
-        lexerSnapshot,
-        nodeIdMapCollection,
-        leafNodeIds,
+        parserState,
         {
             scopeById: new Map(),
             typeById: new Map(),
