@@ -1,6 +1,7 @@
 import { Assert, ResultUtils } from "../common";
 import { Keyword } from "../language";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
+import { LexerSnapshot } from "../lexer";
 import { AncestryUtils, IParserState, NodeIdMap, ParseError, TXorNode } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
@@ -14,6 +15,7 @@ import { TypeCache } from "./type/commonTypes";
 
 export function tryInspection<S extends IParserState = IParserState>(
     settings: CommonSettings,
+    lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     maybeParseError: ParseError.ParseError<S> | undefined,
@@ -75,6 +77,7 @@ export function tryInspection<S extends IParserState = IParserState>(
 
     const triedAutocomplete: TriedAutocomplete = tryAutocomplete(
         settings,
+        lexerSnapshot,
         nodeIdMapCollection,
         leafNodeIds,
         typeCache,

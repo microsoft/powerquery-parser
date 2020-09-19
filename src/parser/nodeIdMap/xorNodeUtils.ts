@@ -4,7 +4,7 @@
 import { ParseContext } from "..";
 import { ArrayUtils, Assert } from "../../common";
 import { Ast } from "../../language";
-import { TXorNode, XorNodeKind } from "./xorNode";
+import { TXorNode, XorNodeKind, IXorNode, ContextXorNode, AstXorNode } from "./xorNode";
 
 export function astFactory(node: Ast.TNode): TXorNode {
     return {
@@ -58,4 +58,36 @@ export function assertAstNodeKind(xorNode: TXorNode, expected: Ast.NodeKind): vo
 
 export function assertAnyAstNodeKind(xorNode: TXorNode, allowedNodeKinds: ReadonlyArray<Ast.NodeKind>): void {
     ArrayUtils.assertIn(allowedNodeKinds, xorNode.node.kind, `incorrect Ast NodeKind`);
+}
+
+export function assertIsAst(xorNode: TXorNode): asserts xorNode is AstXorNode {
+    Assert.isTrue(isAst(xorNode), "expected xorNode to hold an Ast node", {
+        xorNodeKind: xorNode.kind,
+        xorNodeId: xorNode.node.id,
+    });
+}
+
+export function assertIsContext(xorNode: TXorNode): asserts xorNode is ContextXorNode {
+    Assert.isTrue(isContext(xorNode), "expected xorNode to hold a Context node", {
+        xorNodeKind: xorNode.kind,
+        xorNodeId: xorNode.node.id,
+    });
+}
+
+export function assertGetAst(xorNode: TXorNode): Ast.TNode {
+    assertIsAst(xorNode);
+    return xorNode.node;
+}
+
+export function assertGetContext(xorNode: TXorNode): ParseContext.Node {
+    assertIsContext(xorNode);
+    return xorNode.node;
+}
+
+export function isAst(xorNode: TXorNode): xorNode is AstXorNode {
+    return xorNode.kind === XorNodeKind.Ast;
+}
+
+export function isContext(xorNode: TXorNode): xorNode is ContextXorNode {
+    return xorNode.kind === XorNodeKind.Context;
 }

@@ -6,7 +6,7 @@ import { Assert, StringUtils } from "../common";
 import { Token } from "../language";
 import { LexError } from "../lexer";
 import { ParseError } from "../parser";
-import { TokenWithColumnNumber } from "../parser/error";
+import { SequenceKind, TokenWithColumnNumber } from "../parser/error";
 import { ILocalizationTemplates } from "./templates";
 
 interface ILocalization {
@@ -49,8 +49,10 @@ interface ILocalization {
     ) => string;
     readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token.Token) => string;
     readonly error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) => string;
-    readonly error_parse_unterminated_bracket: (templates: ILocalizationTemplates) => string;
-    readonly error_parse_unterminated_parenthesis: (templates: ILocalizationTemplates) => string;
+    readonly error_parse_unterminated_sequence: (
+        templates: ILocalizationTemplates,
+        sequenceKind: SequenceKind,
+    ) => string;
     readonly error_parse_unusedTokens: (templates: ILocalizationTemplates) => string;
 }
 
@@ -389,10 +391,18 @@ export const Localization: ILocalization = {
     error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) =>
         templates.error_parse_requiredParameterAfterOptional,
 
-    error_parse_unterminated_bracket: (templates: ILocalizationTemplates) => templates.error_parse_unterminated_bracket,
+    error_parse_unterminated_sequence: (templates: ILocalizationTemplates, sequenceKind: SequenceKind) => {
+        switch (sequenceKind) {
+            case SequenceKind.Bracket:
+                return templates.error_parse_unterminated_sequence_bracket;
 
-    error_parse_unterminated_parenthesis: (templates: ILocalizationTemplates) =>
-        templates.error_parse_unterminated_parenthesis,
+            case SequenceKind.Parenthesis:
+                return templates.error_parse_unterminated_sequence_parenthesis;
+
+            default:
+                throw Assert.isNever(sequenceKind);
+        }
+    },
 
     error_parse_unusedTokens: (templates: ILocalizationTemplates) => templates.error_parse_unusedTokens,
 };

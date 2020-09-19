@@ -80,8 +80,8 @@ export interface ILocalizationTemplates {
     readonly error_parse_expectTokenKind_2_endOfStream: string;
     readonly error_parse_invalidPrimitiveType: string;
     readonly error_parse_requiredParameterAfterOptional: string;
-    readonly error_parse_unterminated_bracket: string;
-    readonly error_parse_unterminated_parenthesis: string;
+    readonly error_parse_unterminated_sequence_bracket: string;
+    readonly error_parse_unterminated_sequence_parenthesis: string;
     readonly error_parse_unusedTokens: string;
     readonly tokenKind_ampersand: string;
     readonly tokenKind_asterisk: string;

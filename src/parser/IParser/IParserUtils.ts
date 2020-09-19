@@ -25,6 +25,7 @@ export function tryParse<S extends IParserState = IParserState>(
         IParserStateUtils.assertNoMoreTokens(parseState);
         IParserStateUtils.assertNoOpenContext(parseState);
         return ResultUtils.okFactory({
+            lexerSnapshot,
             root,
             state: parseState,
         });
@@ -46,6 +47,7 @@ export function tryParseDocument<S extends IParserState = IParserState>(
         IParserStateUtils.assertNoMoreTokens(expressionDocumentState);
         IParserStateUtils.assertNoOpenContext(expressionDocumentState);
         return ResultUtils.okFactory({
+            lexerSnapshot,
             root,
             state: expressionDocumentState,
         });
@@ -56,6 +58,7 @@ export function tryParseDocument<S extends IParserState = IParserState>(
             IParserStateUtils.assertNoMoreTokens(sectionDocumentState);
             IParserStateUtils.assertNoOpenContext(sectionDocumentState);
             return ResultUtils.okFactory({
+                lexerSnapshot,
                 root,
                 state: sectionDocumentState,
             });

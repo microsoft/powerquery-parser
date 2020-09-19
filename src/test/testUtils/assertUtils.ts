@@ -7,6 +7,7 @@ import { Assert, Inspection, Lexer, Task } from "../..";
 import { AutocompleteOption, Position, TriedAutocomplete } from "../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../inspection/activeNode";
 import { Keyword } from "../../language";
+import { LexerSnapshot } from "../../lexer";
 import {
     IParserState,
     IParserStateUtils,
@@ -97,6 +98,7 @@ export function assertGetParseOkAutocompleteOk(
     const contextState: ParseContext.State = parseOk.state.contextState;
     return assertGetAutocompleteOk(
         settings,
+        parseOk.state.lexerSnapshot,
         contextState.nodeIdMapCollection,
         contextState.leafNodeIds,
         position,
@@ -114,6 +116,7 @@ export function assertGetParseErrAutocompleteOk(
 
     return assertGetAutocompleteOk(
         settings,
+        parseError.state.lexerSnapshot,
         contextState.nodeIdMapCollection,
         contextState.leafNodeIds,
         position,
@@ -123,6 +126,7 @@ export function assertGetParseErrAutocompleteOk(
 
 export function assertGetAutocompleteOk<S extends IParserState>(
     settings: CommonSettings,
+    lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
@@ -139,6 +143,7 @@ export function assertGetAutocompleteOk<S extends IParserState>(
 
     const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
         settings,
+        lexerSnapshot,
         nodeIdMapCollection,
         leafNodeIds,
         {

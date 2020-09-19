@@ -4,6 +4,7 @@
 import { IParserState, ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
+import { LexerSnapshot } from "../../lexer";
 
 export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
@@ -162,11 +163,11 @@ export interface IParser<State extends IParserState = IParserState> {
     readonly disambiguateBracket: (
         state: State,
         parser: IParser<State>,
-    ) => Result<BracketDisambiguation, ParseError.UnterminatedBracketError>;
+    ) => Result<BracketDisambiguation, ParseError.UnterminatedSequence>;
     readonly disambiguateParenthesis: (
         state: State,
         parser: IParser<State>,
-    ) => Result<ParenthesisDisambiguation, ParseError.UnterminatedParenthesesError>;
+    ) => Result<ParenthesisDisambiguation, ParseError.UnterminatedSequence>;
 
     readonly readIdentifierPairedExpressions: (
         state: State,

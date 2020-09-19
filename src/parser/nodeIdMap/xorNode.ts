@@ -9,7 +9,11 @@ export const enum XorNodeKind {
     Context = "Context",
 }
 
-export type TXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode> | IXorNode<XorNodeKind.Context, ParseContext.Node>;
+export type TXorNode = AstXorNode | ContextXorNode;
+
+export type AstXorNode = IXorNode<XorNodeKind.Ast, Ast.TNode>;
+
+export type ContextXorNode = IXorNode<XorNodeKind.Context, ParseContext.Node>;
 
 export interface IXorNode<Kind extends XorNodeKind, T> {
     readonly kind: Kind;

@@ -3,12 +3,13 @@
 
 import { ResultUtils } from "../../common";
 import { Constant, Keyword, Token } from "../../language";
+import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
 import { IParserState, NodeIdMap, ParseError } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
-import { autocompleteFieldSelection } from "./autocompleteFieldSelection";
+import { autocompleteField } from "./autocompleteField";
 import { autocompleteKeyword } from "./autocompleteKeyword";
 import { ExpressionAutocomplete } from "./autocompleteKeyword/commonTypes";
 import { autocompletePrimitiveType } from "./autocompletePrimitiveType";
@@ -17,6 +18,7 @@ import { TrailingToken, TriedAutocomplete } from "./commonTypes";
 
 export function tryAutocomplete<S extends IParserState = IParserState>(
     settings: CommonSettings,
+    lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     typeCache: TypeCache,
@@ -47,8 +49,9 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
             activeNode,
             maybeTrailingToken,
         );
-        const fieldSelection: ReadonlyArray<string> = autocompleteFieldSelection(
+        const fieldSelection: ReadonlyArray<string> = autocompleteField(
             settings,
+            lexerSnapshot,
             nodeIdMapCollection,
             leafNodeIds,
             activeNode,

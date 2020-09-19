@@ -15,8 +15,7 @@ export type TInnerParseError =
     | ExpectedTokenKindError
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
-    | UnterminatedBracketError
-    | UnterminatedParenthesesError
+    | UnterminatedSequence
     | UnusedTokensRemainError;
 
 export const enum CsvContinuationKind {
@@ -24,7 +23,7 @@ export const enum CsvContinuationKind {
     LetExpression = "LetExpression",
 }
 
-export const enum UnterminatedKind {
+export const enum SequenceKind {
     Bracket = "Bracket",
     Parenthesis = "Parenthesis",
 }
@@ -98,25 +97,15 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
     }
 }
 
-export class UnterminatedBracketError extends Error {
+export class UnterminatedSequence extends Error {
     constructor(
         templates: ILocalizationTemplates,
-        readonly openBracketToken: Token.Token,
+        readonly kind: SequenceKind,
+        readonly startToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
-        super(Localization.error_parse_unterminated_bracket(templates));
-        Object.setPrototypeOf(this, UnterminatedBracketError.prototype);
-    }
-}
-
-export class UnterminatedParenthesesError extends Error {
-    constructor(
-        templates: ILocalizationTemplates,
-        readonly openParenthesesToken: Token.Token,
-        readonly positionStart: StringUtils.GraphemePosition,
-    ) {
-        super(Localization.error_parse_unterminated_parenthesis(templates));
-        Object.setPrototypeOf(this, UnterminatedParenthesesError.prototype);
+        super(Localization.error_parse_unterminated_sequence(templates, kind));
+        Object.setPrototypeOf(this, UnterminatedSequence.prototype);
     }
 }
 
@@ -157,8 +146,7 @@ export function isTInnerParseError(x: any): x is TInnerParseError {
         x instanceof ExpectedTokenKindError ||
         x instanceof InvalidPrimitiveTypeError ||
         x instanceof RequiredParameterAfterOptionalParameterError ||
-        x instanceof UnterminatedBracketError ||
-        x instanceof UnterminatedParenthesesError ||
+        x instanceof UnterminatedSequence ||
         x instanceof UnusedTokensRemainError
     );
 }
@@ -176,10 +164,8 @@ export function maybeTokenFrom(err: TInnerParseError): Token.Token | undefined {
         return err.token;
     } else if (err instanceof RequiredParameterAfterOptionalParameterError) {
         return err.missingOptionalToken;
-    } else if (err instanceof UnterminatedBracketError) {
-        return err.openBracketToken;
-    } else if (err instanceof UnterminatedParenthesesError) {
-        return err.openParenthesesToken;
+    } else if (err instanceof UnterminatedSequence) {
+        return err.startToken;
     } else if (err instanceof UnusedTokensRemainError) {
         return err.firstUnusedToken;
     } else {

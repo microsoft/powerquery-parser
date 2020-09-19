@@ -73,6 +73,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     triedParse: TriedParse<S>,
     position: Inspection.Position,
 ): TriedInspection {
+    let lexerSnapshot: LexerSnapshot;
     let nodeIdMapCollection: NodeIdMap.Collection;
     let leafNodeIds: ReadonlyArray<number>;
     let maybeParseError: ParseError.ParseError<S> | undefined;
@@ -85,9 +86,11 @@ export function tryInspection<S extends IParserState = IParserState>(
             // future regressions if TriedParse changes.
             return ResultUtils.errFactory(triedParse.error);
         } else {
+            lexerSnapshot = triedParse.error.state.lexerSnapshot;
             maybeParseError = triedParse.error;
         }
 
+        lexerSnapshot = triedParse.error.state.lexerSnapshot;
         const context: ParseContext.State = triedParse.error.state.contextState;
         nodeIdMapCollection = context.nodeIdMapCollection;
         leafNodeIds = context.leafNodeIds;
@@ -95,9 +98,17 @@ export function tryInspection<S extends IParserState = IParserState>(
         const parseOk: ParseOk<S> = triedParse.value;
         nodeIdMapCollection = parseOk.state.contextState.nodeIdMapCollection;
         leafNodeIds = parseOk.state.contextState.leafNodeIds;
+        lexerSnapshot = parseOk.state.lexerSnapshot;
     }
 
-    return Inspection.tryInspection(settings, nodeIdMapCollection, leafNodeIds, maybeParseError, position);
+    return Inspection.tryInspection(
+        settings,
+        lexerSnapshot,
+        nodeIdMapCollection,
+        leafNodeIds,
+        maybeParseError,
+        position,
+    );
 }
 
 export function tryLexParse<S extends IParserState = IParserState>(

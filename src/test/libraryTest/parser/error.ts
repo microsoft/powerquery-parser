@@ -6,6 +6,7 @@ import "mocha";
 import { Assert } from "../../../common";
 import { DefaultTemplates, Localization } from "../../../localization";
 import { IParser, IParserState, IParserStateUtils, ParseError } from "../../../parser";
+import { SequenceKind } from "../../../parser/error";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
@@ -38,24 +39,29 @@ describe("Parser.Error", () => {
         );
     });
 
-    it("UnterminatedBracketError: let x = [", () => {
+    it("UnterminatedSequence (Bracket): let x = [", () => {
         const text: string = "let x = [";
         const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettings,
             text,
             IParserStateUtils.stateFactory,
         ).innerError;
-        expect(innerError instanceof ParseError.UnterminatedBracketError).to.equal(true, innerError.message);
+        expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
+        expect((innerError as ParseError.UnterminatedSequence).kind).to.equal(SequenceKind.Bracket, innerError.message);
     });
 
-    it("UnterminatedParenthesesError: let x = (", () => {
+    it("UnterminatedSequence (Parenthesis): let x = (", () => {
         const text: string = "let x = (";
         const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettings,
             text,
             IParserStateUtils.stateFactory,
         ).innerError;
-        expect(innerError instanceof ParseError.UnterminatedParenthesesError).to.equal(true, innerError.message);
+        expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
+        expect((innerError as ParseError.UnterminatedSequence).kind).to.equal(
+            SequenceKind.Parenthesis,
+            innerError.message,
+        );
     });
 
     describe(`UnusedTokensRemainError`, () => {

@@ -101,11 +101,11 @@
     "error_parse_requiredParameterAfterOptional": "You cannot have a non-optional parameter after an optional parameter",
     "_error_parse_requiredParameterAfterOptional.comment": "Optional parameters must come after non-optional parameters, eg. ('(optional x, y) => x + y') causes an error. Expected to be user facing.",
 
-    "error_parse_unterminated_bracket": "Unterminated bracket",
-    "_error_parse_unterminated_bracket.comment": "A common parser where it could not disambiguate a bracket. Expected to be user facing.",
+    "error_parse_unterminated_sequence_bracket": "Unterminated bracket",
+    "_error_parse_unterminated_sequence_bracket.comment": "A common parser where it could not disambiguate a bracket. Expected to be user facing.",
 
-    "error_parse_unterminated_parenthesis": "Unterminated parenthesis",
-    "_error_parse_unterminated_parenthesis.comment": "A common parser where it could not disambiguate a parenthesis. Expected to be user facing.",
+    "error_parse_unterminated_sequence_parenthesis": "Unterminated parenthesis",
+    "_error_parse_unterminated_sequence_parenthesis.comment": "A common parser where it could not disambiguate a parenthesis. Expected to be user facing.",
 
     "error_parse_unusedTokens": "Finished parsing but more tokens remain",
     "_error_parse_unusedTokens.comment": "A common parser where not every token was parsed. Possibly user facing.",
