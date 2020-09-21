@@ -23,7 +23,6 @@ import { IParserState, IParserStateUtils } from "../IParserState";
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export const CombinatorialParser: IParser<IParserState> = {
     ...NaiveParseSteps,
-    maybeInitialRead: undefined,
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: IParserState, parser: IParser<IParserState>) =>

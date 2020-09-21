@@ -162,7 +162,7 @@ export function assertGetParseOkScopeOk(
     text: string,
     position: Position,
 ): NodeScope {
-    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text, IParserStateUtils.stateFactory);
+    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text);
     const contextState: ParseContext.State = parseOk.state.contextState;
     return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
@@ -172,11 +172,7 @@ export function assertGetParseErrScopeOk(
     text: string,
     position: Position,
 ): NodeScope {
-    const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(
-        settings,
-        text,
-        IParserStateUtils.stateFactory,
-    );
+    const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(settings, text);
     const contextState: ParseContext.State = parseError.state.contextState;
     return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }

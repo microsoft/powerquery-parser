@@ -7,17 +7,7 @@ import { Assert, Inspection, Lexer, Task } from "../..";
 import { AutocompleteOption, Position, TriedAutocomplete } from "../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../inspection/activeNode";
 import { Keyword } from "../../language";
-import { LexerSnapshot } from "../../lexer";
-import {
-    IParserState,
-    IParserStateUtils,
-    IParserUtils,
-    NodeIdMap,
-    ParseContext,
-    ParseError,
-    ParseOk,
-    TriedParse,
-} from "../../parser";
+import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
 import { CommonSettings, LexSettings, ParseSettings } from "../../settings";
 
 // Only works with single line expressions
@@ -38,9 +28,8 @@ export function assertGetTextWithPosition(text: string): [string, Inspection.Pos
 export function assertGetLexParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): Task.LexParseOk<S> {
-    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text, stateFactoryFn);
+    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
     Assert.isOk(triedLexParse);
     return triedLexParse.value;
 }
@@ -48,9 +37,8 @@ export function assertGetLexParseOk<S extends IParserState = IParserState>(
 export function assertGetParseErr<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): ParseError.ParseError<S> {
-    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
+    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text);
     Assert.isErr(triedParse);
 
     if (!ParseError.isParseError(triedParse.error)) {
@@ -63,9 +51,8 @@ export function assertGetParseErr<S extends IParserState = IParserState>(
 export function assertGetParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): ParseOk<S> {
-    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
+    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text);
     Assert.isOk(triedParse);
     return triedParse.value;
 }
@@ -75,7 +62,6 @@ export function assertGetParseOk<S extends IParserState = IParserState>(
 function assertGetTriedParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedParse<S> {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     Assert.isOk(triedLex);
@@ -86,7 +72,7 @@ function assertGetTriedParse<S extends IParserState = IParserState>(
     Assert.isOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
-    return IParserUtils.tryParse<S>(settings, lexerSnapshot, stateFactoryFn) as TriedParse<S>;
+    return IParserUtils.tryParse<S>(settings, lexerSnapshot);
 }
 
 export function assertGetParseOkAutocompleteOk(
@@ -94,7 +80,7 @@ export function assertGetParseOkAutocompleteOk(
     text: string,
     position: Position,
 ): ReadonlyArray<AutocompleteOption> {
-    const parseOk: ParseOk = assertGetParseOk(settings, text, IParserStateUtils.stateFactory);
+    const parseOk: ParseOk = assertGetParseOk(settings, text);
     return assertGetAutocompleteOk(settings, parseOk.state, position, undefined);
 }
 
@@ -103,8 +89,7 @@ export function assertGetParseErrAutocompleteOk(
     text: string,
     position: Position,
 ): ReadonlyArray<AutocompleteOption> {
-    const parseError: ParseError.ParseError = assertGetParseErr(settings, text, IParserStateUtils.stateFactory);
-    const contextState: ParseContext.State = parseError.state.contextState;
+    const parseError: ParseError.ParseError = assertGetParseErr(settings, text);
 
     return assertGetAutocompleteOk(settings, parseError.state, position, parseError);
 }

@@ -11,11 +11,7 @@ parseText(`let x = 1 in try x otherwise 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
-        DefaultSettings,
-        text,
-        Parser.IParserStateUtils.stateFactory,
-    );
+    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
@@ -115,12 +111,7 @@ function lexText(text: string): void {
 function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(
-        DefaultSettings,
-        text,
-        position,
-        Parser.IParserStateUtils.stateFactory,
-    );
+    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(DefaultSettings, text, position);
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;

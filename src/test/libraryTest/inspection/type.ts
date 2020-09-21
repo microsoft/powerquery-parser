@@ -21,11 +21,7 @@ import { CommonSettings, DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
-        DefaultSettings,
-        text,
-        IParserStateUtils.stateFactory,
-    );
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const actual: Type.TType = assertGetParseNodeOk(
         DefaultSettings,
         lexParseOk.state.contextState.nodeIdMapCollection,
@@ -37,11 +33,7 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 }
 
 function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
-    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertGetParseErr(
-        DefaultSettings,
-        text,
-        IParserStateUtils.stateFactory,
-    );
+    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertGetParseErr(DefaultSettings, text);
     const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
     Assert.isDefined(maybeRoot);
 
@@ -74,11 +66,7 @@ function assertGetParseNodeOk(
 
 function assertParseOkScopeTypeEqual(textWithPipe: string, expected: Inspection.ScopeTypeByKey): void {
     const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertGetTextWithPosition(textWithPipe);
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
-        DefaultSettings,
-        textWithoutPipe,
-        IParserStateUtils.stateFactory,
-    );
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, textWithoutPipe);
     const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
 

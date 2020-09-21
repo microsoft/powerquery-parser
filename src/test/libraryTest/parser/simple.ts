@@ -23,11 +23,7 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 }
 
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
-        DefaultSettings,
-        text,
-        IParserStateUtils.stateFactory,
-    );
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: CollectAbridgeNodeState = {
         localizationTemplates: DefaultTemplates,
         result: [],
@@ -51,11 +47,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 }
 
 function assertGetNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(
-        DefaultSettings,
-        text,
-        IParserStateUtils.stateFactory,
-    );
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         localizationTemplates: DefaultTemplates,
         result: undefined,
@@ -109,18 +101,16 @@ function assertAbridgeNodes(text: string, expected: ReadonlyArray<AbridgedNode>)
 describe("Parser.AbridgedNode", () => {
     describe(`custom IParser.read`, () => {
         it(`readParameterSpecificationList`, () => {
-            const customParser: IParser<IParserState> = {
-                ...RecursiveDescentParser,
-                maybeInitialRead: RecursiveDescentParser.readParameterSpecificationList,
-            };
             const customSettings: Settings = {
                 ...DefaultSettings,
-                parser: customParser,
+                parser: RecursiveDescentParser,
+                maybeParserOptions: {
+                    maybeEntryPoint: RecursiveDescentParser.readParameterSpecificationList,
+                },
             };
             const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
                 customSettings,
                 "(a as number, optional b as text)",
-                IParserStateUtils.stateFactory,
             );
             Assert.isOk(triedLexParse);
         });

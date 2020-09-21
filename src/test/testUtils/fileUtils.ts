@@ -46,10 +46,9 @@ export function writeContents(filePath: string, contents: string): void {
 export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     filePath: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): Task.TriedLexParse<S> {
     const contents: string = readContents(filePath);
-    return Task.tryLexParse(settings, contents, stateFactoryFn);
+    return Task.tryLexParse(settings, contents);
 }
 
 function isDirectory(maybePath: string): boolean {

@@ -2,11 +2,10 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
-import { Assert, CommonError } from "../../common";
+import { Assert, CommonError, ICancellationToken } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
-import { ParseSettings } from "../../settings";
 import { SequenceKind } from "../error";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
@@ -23,17 +22,17 @@ export interface FastStateBackup {
 
 // If you have a custom parser + parser state, then you'll have to create your own factory function.
 // See `benchmark.ts` for an example.
-export function stateFactory<S extends IParserState = IParserState>(
-    settings: ParseSettings<S>,
+export function stateFactory(
+    maybeCancellationToken: ICancellationToken | undefined,
     lexerSnapshot: LexerSnapshot,
+    locale: string,
 ): IParserState {
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[0];
 
     return {
-        ...settings,
-        localizationTemplates: getLocalizationTemplates(settings.locale),
-        maybeCancellationToken: settings.maybeCancellationToken,
+        maybeCancellationToken,
         lexerSnapshot,
+        localizationTemplates: getLocalizationTemplates(locale),
         tokenIndex: 0,
         maybeCurrentToken,
         maybeCurrentTokenKind: maybeCurrentToken?.kind,

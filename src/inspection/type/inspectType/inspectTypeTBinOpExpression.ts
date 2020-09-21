@@ -142,37 +142,37 @@ function unionFields([leftType, rightType]:
 // Values: the resulting type of the binary operation expression.
 // Eg. '1 > 3' -> Type.TypeKind.Number
 export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
-    ...createLookupsForRelational(Type.TypeKind.Null),
-    ...createLookupsForEquality(Type.TypeKind.Null),
+    ...lookupsForRelationalFactory(Type.TypeKind.Null),
+    ...lookupsForEqualityFactory(Type.TypeKind.Null),
 
-    ...createLookupsForRelational(Type.TypeKind.Logical),
-    ...createLookupsForEquality(Type.TypeKind.Logical),
-    ...createLookupsForLogical(Type.TypeKind.Logical),
+    ...lookupsForRelationalFactory(Type.TypeKind.Logical),
+    ...lookupsForEqualityFactory(Type.TypeKind.Logical),
+    ...lookupsForLogicalFactory(Type.TypeKind.Logical),
 
-    ...createLookupsForRelational(Type.TypeKind.Number),
-    ...createLookupsForEquality(Type.TypeKind.Number),
-    ...createLookupsForArithmetic(Type.TypeKind.Number),
+    ...lookupsForRelationalFactory(Type.TypeKind.Number),
+    ...lookupsForEqualityFactory(Type.TypeKind.Number),
+    ...lookupsForArithmeticFactory(Type.TypeKind.Number),
 
-    ...createLookupsForRelational(Type.TypeKind.Time),
-    ...createLookupsForEquality(Type.TypeKind.Time),
-    ...createLookupsForClockKind(Type.TypeKind.Time),
+    ...lookupsForRelationalFactory(Type.TypeKind.Time),
+    ...lookupsForEqualityFactory(Type.TypeKind.Time),
+    ...lookupsForClockKindFactory(Type.TypeKind.Time),
     [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
 
-    ...createLookupsForRelational(Type.TypeKind.Date),
-    ...createLookupsForEquality(Type.TypeKind.Date),
-    ...createLookupsForClockKind(Type.TypeKind.Date),
+    ...lookupsForRelationalFactory(Type.TypeKind.Date),
+    ...lookupsForEqualityFactory(Type.TypeKind.Date),
+    ...lookupsForClockKindFactory(Type.TypeKind.Date),
     [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
 
-    ...createLookupsForRelational(Type.TypeKind.DateTime),
-    ...createLookupsForEquality(Type.TypeKind.DateTime),
-    ...createLookupsForClockKind(Type.TypeKind.DateTime),
+    ...lookupsForRelationalFactory(Type.TypeKind.DateTime),
+    ...lookupsForEqualityFactory(Type.TypeKind.DateTime),
+    ...lookupsForClockKindFactory(Type.TypeKind.DateTime),
 
-    ...createLookupsForRelational(Type.TypeKind.DateTimeZone),
-    ...createLookupsForEquality(Type.TypeKind.DateTimeZone),
-    ...createLookupsForClockKind(Type.TypeKind.DateTimeZone),
+    ...lookupsForRelationalFactory(Type.TypeKind.DateTimeZone),
+    ...lookupsForEqualityFactory(Type.TypeKind.DateTimeZone),
+    ...lookupsForClockKindFactory(Type.TypeKind.DateTimeZone),
 
-    ...createLookupsForRelational(Type.TypeKind.Duration),
-    ...createLookupsForEquality(Type.TypeKind.Duration),
+    ...lookupsForRelationalFactory(Type.TypeKind.Duration),
+    ...lookupsForEqualityFactory(Type.TypeKind.Duration),
     [
         lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration),
         Type.TypeKind.Duration,
@@ -194,20 +194,20 @@ export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
         Type.TypeKind.Duration,
     ],
 
-    ...createLookupsForRelational(Type.TypeKind.Text),
-    ...createLookupsForEquality(Type.TypeKind.Text),
+    ...lookupsForRelationalFactory(Type.TypeKind.Text),
+    ...lookupsForEqualityFactory(Type.TypeKind.Text),
     [lookupKey(Type.TypeKind.Text, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Text), Type.TypeKind.Text],
 
-    ...createLookupsForRelational(Type.TypeKind.Binary),
-    ...createLookupsForEquality(Type.TypeKind.Binary),
+    ...lookupsForRelationalFactory(Type.TypeKind.Binary),
+    ...lookupsForEqualityFactory(Type.TypeKind.Binary),
 
-    ...createLookupsForEquality(Type.TypeKind.List),
+    ...lookupsForEqualityFactory(Type.TypeKind.List),
     [lookupKey(Type.TypeKind.List, Constant.ArithmeticOperatorKind.And, Type.TypeKind.List), Type.TypeKind.List],
 
-    ...createLookupsForEquality(Type.TypeKind.Record),
+    ...lookupsForEqualityFactory(Type.TypeKind.Record),
     [lookupKey(Type.TypeKind.Record, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Record), Type.TypeKind.Record],
 
-    ...createLookupsForEquality(Type.TypeKind.Table),
+    ...lookupsForEqualityFactory(Type.TypeKind.Table),
     [lookupKey(Type.TypeKind.Table, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Table), Type.TypeKind.Table],
 ]);
 
@@ -258,7 +258,7 @@ export function partialLookupKey(leftTypeKind: Type.TypeKind, operatorKind: Cons
     return `${leftTypeKind},${operatorKind}`;
 }
 
-function createLookupsForRelational(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForRelationalFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [lookupKey(typeKind, Constant.RelationalOperatorKind.GreaterThan, typeKind), Type.TypeKind.Logical],
         [lookupKey(typeKind, Constant.RelationalOperatorKind.GreaterThanEqualTo, typeKind), Type.TypeKind.Logical],
@@ -267,7 +267,7 @@ function createLookupsForRelational(typeKind: Type.TypeKind): ReadonlyArray<[str
     ];
 }
 
-function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForEqualityFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [lookupKey(typeKind, Constant.EqualityOperatorKind.EqualTo, typeKind), Type.TypeKind.Logical],
         [lookupKey(typeKind, Constant.EqualityOperatorKind.NotEqualTo, typeKind), Type.TypeKind.Logical],
@@ -275,7 +275,7 @@ function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[strin
 }
 
 // Note: does not include the and <'&'> Constant.
-function createLookupsForArithmetic(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForArithmeticFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Addition, typeKind), typeKind],
         [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Division, typeKind), typeKind],
@@ -284,14 +284,14 @@ function createLookupsForArithmetic(typeKind: Type.TypeKind): ReadonlyArray<[str
     ];
 }
 
-function createLookupsForLogical(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForLogicalFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
         [lookupKey(typeKind, Constant.LogicalOperatorKind.And, typeKind), typeKind],
         [lookupKey(typeKind, Constant.LogicalOperatorKind.Or, typeKind), typeKind],
     ];
 }
 
-function createLookupsForClockKind(
+function lookupsForClockKindFactory(
     typeKind: Type.TypeKind.Date | Type.TypeKind.DateTime | Type.TypeKind.DateTimeZone | Type.TypeKind.Time,
 ): ReadonlyArray<[string, Type.TypeKind]> {
     return [

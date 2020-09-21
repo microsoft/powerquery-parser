@@ -31,8 +31,6 @@ export interface FunctionTimestamp {
 }
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
-    maybeInitialRead: undefined,
-
     // 12.1.6 Identifiers
     readIdentifier: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIdentifier),
@@ -292,7 +290,7 @@ export function benchmarkStateFactory<S extends IParserState = IParserState>(
     baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(parseSettings, lexerSnapshot),
+        ...IParserStateUtils.stateFactory(parseSettings.maybeCancellationToken, lexerSnapshot, parseSettings.locale),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,

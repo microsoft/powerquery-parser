@@ -8,20 +8,22 @@ import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
 import { ParseSettings } from "../../settings";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { TriedParse } from "./IParser";
+import { IParser, TriedParse } from "./IParser";
 
 export function tryParse<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedParse<S> {
-    if (parseSettings.parser.maybeInitialRead === undefined) {
-        return tryParseDocument<S>(parseSettings, lexerSnapshot, stateFactoryFn) as TriedParse<S>;
+    const maybeEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined =
+        parseSettings?.maybeParserOptions?.maybeEntryPoint;
+
+    if (maybeEntryPointFn === undefined) {
+        return tryParseDocument<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
     }
 
-    const parseState: S = stateFactoryFn(parseSettings, lexerSnapshot);
+    const parseState: S = parseSettings.parserStateFactory(lexerSnapshot, parseSettings.locale);
     try {
-        const root: Ast.TNode = parseSettings.parser.maybeInitialRead(parseState, parseSettings.parser);
+        const root: Ast.TNode = maybeEntryPointFn(parseState, parseSettings.parser);
         IParserStateUtils.assertNoMoreTokens(parseState);
         IParserStateUtils.assertNoOpenContext(parseState);
         return ResultUtils.okFactory({
@@ -37,11 +39,10 @@ export function tryParse<S extends IParserState = IParserState>(
 export function tryParseDocument<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
 ): TriedParse {
     let root: Ast.TNode;
 
-    const expressionDocumentState: S = stateFactoryFn(parseSettings, lexerSnapshot);
+    const expressionDocumentState: S = parseSettings.parserStateFactory(lexerSnapshot, parseSettings.locale);
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
         IParserStateUtils.assertNoMoreTokens(expressionDocumentState);
@@ -52,7 +53,7 @@ export function tryParseDocument<S extends IParserState = IParserState>(
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
-        const sectionDocumentState: S = stateFactoryFn(parseSettings, lexerSnapshot);
+        const sectionDocumentState: S = parseSettings.parserStateFactory(lexerSnapshot, parseSettings.locale);
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
             IParserStateUtils.assertNoMoreTokens(sectionDocumentState);

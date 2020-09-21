@@ -39,7 +39,7 @@ function assertParseOkInvokeExpressionOk(
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text, IParserStateUtils.stateFactory);
+    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text);
     const contextState: ParseContext.State = parseOk.state.contextState;
     return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
@@ -49,11 +49,7 @@ function assertParseErrInvokeExpressionOk(
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
-    const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(
-        settings,
-        text,
-        IParserStateUtils.stateFactory,
-    );
+    const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(settings, text);
     const contextState: ParseContext.State = parseError.state.contextState;
     return assertInvokeExpressionOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
