@@ -135,7 +135,7 @@ export function isParseError<S extends IParserState = IParserState>(error: any):
 }
 
 export function isTParseError<S extends IParserState = IParserState>(error: any): error is TParseError<S> {
-    return error instanceof ParseError || error instanceof CommonError.CommonError;
+    return isParseError(error) || CommonError.isCommonError(error);
 }
 
 export function isTInnerParseError(x: any): x is TInnerParseError {

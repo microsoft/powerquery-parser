@@ -10,7 +10,7 @@ import { ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale, Locale } from "../../localization";
 import { CombinatorialParser, IParser, IParserState, IParserStateUtils, RecursiveDescentParser } from "../../parser";
-import { ParseSettings, Settings } from "../../settings";
+import { ParseSettings } from "../../settings";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
 import * as path from "path";

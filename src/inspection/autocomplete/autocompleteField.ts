@@ -12,6 +12,7 @@ import {
     ParseContext,
     XorNodeUtils,
     IParserState,
+    NodeIdMapIterator,
 } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
@@ -184,6 +185,11 @@ type AutocompleteNodeKind =
     | Ast.NodeKind.FieldProjection
     | Ast.NodeKind.ItemAccessExpression;
 
+const AllowedTrailingOpenWrapperConstants: ReadonlyArray<Token.TokenKind> = [
+    Token.TokenKind.LeftBrace,
+    Token.TokenKind.LeftBracket,
+];
+
 export function autocompleteField<S extends IParserState = IParserState>(
     settings: CommonSettings,
     parserState: S,
@@ -193,71 +199,137 @@ export function autocompleteField<S extends IParserState = IParserState>(
 ): ReadonlyArray<string> {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
-    let maybeAutocompleteKind: AutocompleteNodeKind | undefined;
+    let hasTrailingOpenConstant: boolean;
     if (maybeParseError !== undefined) {
-        const innerParseError: ParseError.TInnerParseError = maybeParseError.innerError;
-        if (innerParseError instanceof ParseError.UnterminatedSequence) {
-            const unterminatedSequence: ParseError.UnterminatedSequence = innerParseError;
-            switch (unterminatedSequence.kind) {
-                case SequenceKind.Bracket:
-                    break;
+        const maybeTrailingToken: Token.Token | undefined = ParseError.maybeTokenFrom(maybeParseError.innerError);
+        hasTrailingOpenConstant =
+            maybeTrailingToken !== undefined &&
+            AllowedTrailingOpenWrapperConstants.includes(maybeTrailingToken.kind) &&
+            PositionUtils.isAfterTokenPosition(activeNode.position, maybeTrailingToken.positionStart, true);
+    } else {
+        hasTrailingOpenConstant = false;
+    }
+    const maybeInspectable: TXorNode | undefined = maybeInspectablePrimaryExpression(
+        parserState.contextState.nodeIdMapCollection,
+        activeNode,
+        hasTrailingOpenConstant,
+    );
 
-                case SequenceKind.Parenthesis:
-                    break;
+    return [];
+}
 
-                default:
-                    throw Assert.isNever(unterminatedSequence.kind);
+function maybeInspectablePrimaryExpression(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
+    hasTrailingOpenConstant: boolean,
+): TXorNode | undefined {
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const numAncestors: number = ancestry.length;
+
+    let maybeContiguousPrimaryExpression: TXorNode | undefined;
+    let matchingContiguousPrimaryExpression: boolean = true;
+    for (let index: number = 0; index < numAncestors; index += 1) {
+        const xorNode: TXorNode = ancestry[index];
+
+        if (xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression) {
+            // The previous ancestor must be an attribute of Rpe, which is either its head or ArrrayWrapper.
+            const xorNodeBeforeRpe: TXorNode = ancestry[index - 1];
+
+            // If the previous ancestor is the head.
+            if (xorNodeBeforeRpe.node.maybeAttributeIndex === 0) {
+                // Only valid if there's a trailing bracket, Eg. `foo[|`
+                if (hasTrailingOpenConstant === true) {
+                    // Return Rpe.head.
+                    return xorNodeBeforeRpe;
+                }
+
+                // There's nothing we can do.
+                else {
+                    break;
+                }
             }
-        } else if (
-            innerParseError instanceof ParseError.ExpectedAnyTokenKindError &&
-            innerParseError.maybeFoundToken?.token.kind === Token.TokenKind.LeftBrace
-        ) {
+            // Else the previous ancestor is Rpe.recursiveExpressions (ArrayWrapper).
+            else {
+                const maybeChildrenForArrayWrapper:
+                    | ReadonlyArray<number>
+                    | undefined = nodeIdMapCollection.childIdsById.get(xorNodeBeforeRpe.node.id);
+
+                // If the ArrayWrapper has no children.
+                if (maybeChildrenForArrayWrapper === undefined) {
+                    // If there's a trailing bracket we can return the head, else nothing.
+                    // Eg. `foo[|`
+                    return hasTrailingOpenConstant === false
+                        ? undefined
+                        : NodeIdMapUtils.assertGetChildXorByAttributeIndex(
+                              nodeIdMapCollection,
+                              xorNode.node.id,
+                              0,
+                              undefined,
+                          );
+                }
+
+                // Else grab the last or second to last child.
+                else {
+                    const numChildren: number = maybeChildrenForArrayWrapper.length;
+                    const inspectableIndex: number = hasTrailingOpenConstant === true ? numChildren : numChildren - 1;
+                    return NodeIdMapUtils.assertGetChildXorByAttributeIndex(
+                        nodeIdMapCollection,
+                        xorNodeBeforeRpe.node.id,
+                        inspectableIndex,
+                        undefined,
+                    );
+                }
+            }
+        } else if (matchingContiguousPrimaryExpression && XorNodeUtils.isTPrimaryExpression(xorNode)) {
+            maybeContiguousPrimaryExpression = xorNode;
+        } else {
+            matchingContiguousPrimaryExpression = false;
         }
     }
 
-    return [];
-
-    // // Check if a RPE exists in the context state.
-    // const indexOfRecursivePrimaryExpression: number = ArrayUtils.indexOfPredicate(
-    //     ancestry,
-    //     (xorNode: TXorNode) => xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression,
-    // );
-    // if (indexOfRecursivePrimaryExpression === -1) {
-    //     return [];
-    // }
-    // const recursivePrimaryExpression: TXorNode = ancestry[indexOfRecursivePrimaryExpression];
-
-    // const indexOfField: number = ArrayUtils.indexOfPredicate(ancestry, (xorNode: TXorNode) => {
-    //     const astNodeKind: Ast.NodeKind = xorNode.node.kind;
-    //     return (
-    //         astNodeKind === Ast.NodeKind.FieldProjection ||
-    //         astNodeKind === Ast.NodeKind.FieldSelector ||
-    //         astNodeKind === Ast.NodeKind.ItemAccessExpression
-    //     );
-    // });
-
-    // // No field currently exists, but we might be able to get something out of the ParseError
-    // if (indexOfField === 0) {
-    //     if (maybeParseError === undefined || !(maybeParseError.innerError instanceof ParseError.UnterminatedSequence)) {
-    //         return [];
-    //     }
-
-    //     const unterminatedSequence: ParseError.UnterminatedSequence = maybeParseError.innerError;
-    //     switch (unterminatedSequence.kind) {
-    //         case SequenceKind.Bracket:
-
-    //             break;
-
-    //         case SequenceKind.Parenthesis:
-    //             break;
-
-    //         default:
-    //             throw Assert.isNever(unterminatedSequence.kind);
-    //     }
-    // }
-
-    // return [];
+    return maybeContiguousPrimaryExpression;
 }
+
+// // Check if a RPE exists in the context state.
+// const indexOfRecursivePrimaryExpression: number = ArrayUtils.indexOfPredicate(
+//     ancestry,
+//     (xorNode: TXorNode) => xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression,
+// );
+// if (indexOfRecursivePrimaryExpression === -1) {
+//     return [];
+// }
+// const recursivePrimaryExpression: TXorNode = ancestry[indexOfRecursivePrimaryExpression];
+
+// const indexOfField: number = ArrayUtils.indexOfPredicate(ancestry, (xorNode: TXorNode) => {
+//     const astNodeKind: Ast.NodeKind = xorNode.node.kind;
+//     return (
+//         astNodeKind === Ast.NodeKind.FieldProjection ||
+//         astNodeKind === Ast.NodeKind.FieldSelector ||
+//         astNodeKind === Ast.NodeKind.ItemAccessExpression
+//     );
+// });
+
+// // No field currently exists, but we might be able to get something out of the ParseError
+// if (indexOfField === 0) {
+//     if (maybeParseError === undefined || !(maybeParseError.innerError instanceof ParseError.UnterminatedSequence)) {
+//         return [];
+//     }
+
+//     const unterminatedSequence: ParseError.UnterminatedSequence = maybeParseError.innerError;
+//     switch (unterminatedSequence.kind) {
+//         case SequenceKind.Bracket:
+
+//             break;
+
+//         case SequenceKind.Parenthesis:
+//             break;
+
+//         default:
+//             throw Assert.isNever(unterminatedSequence.kind);
+//     }
+// }
+
+// return [];
 
 // function maybePreviousPrimaryExpression(): TXorNode | undefined {
 

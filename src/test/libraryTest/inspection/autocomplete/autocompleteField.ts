@@ -35,10 +35,8 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         expect(actual).to.have.members(expected);
     });
 
-    it("WIP let x = () => [a = 1] in x()[a]|", () => {
-        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-            `let x = () => [a = 1] in x[a]{|`,
-        );
+    it("WIP", () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`x[|`);
         const expected: ReadonlyArray<AutocompleteOption> = [];
         const actual: ReadonlyArray<AutocompleteOption> = TestAssertUtils.assertGetParseErrAutocompleteOk(
             DefaultSettings,
