@@ -618,6 +618,106 @@ describe("Parser.AbridgedNode", () => {
             ];
             assertAbridgeNodes(text, expected);
         });
+
+        it(`(x) as number => x`, () => {
+            const text: string = `(x) as number => x`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            assertAbridgeNodes(text, expected);
+        });
+
+        it(`(x as number) as number => x`, () => {
+            const text: string = `(x as number) as number => x`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            assertAbridgeNodes(text, expected);
+        });
+
+        it(`(x as number) as nullable number => x`, () => {
+            const text: string = `(x as number) as nullable number => x`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.FunctionExpression, undefined],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.Parameter, 0],
+                [Ast.NodeKind.Identifier, 1],
+                [Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.NullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            assertAbridgeNodes(text, expected);
+        });
+
+        it(`let Fn = () as nullable text => "asd" in Fn`, () => {
+            const text: string = `let Fn = () as nullable text => "asd" in Fn`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.LetExpression, undefined],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Csv, 0],
+                [Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Ast.NodeKind.Identifier, 0],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.FunctionExpression, 2],
+                [Ast.NodeKind.ParameterList, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ArrayWrapper, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.NullablePrimitiveType, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.PrimitiveType, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.LiteralExpression, 3],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.IdentifierExpression, 3],
+                [Ast.NodeKind.Identifier, 1],
+            ];
+            assertAbridgeNodes(text, expected);
+        });
     });
 
     describe(`${Ast.NodeKind.FunctionType}`, () => {
