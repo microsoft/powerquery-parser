@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as KeywordUtils from "./keyword";
+import * as Keyword from "./keyword";
+import * as KeywordUtils from "./keywordUtils";
 
-export { KeywordUtils };
-export * from "./keyword";
+export { Keyword, KeywordUtils };

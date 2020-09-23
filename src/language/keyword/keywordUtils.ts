@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Keyword } from "..";
+import { KeywordKind, KeywordKinds } from "./keyword";
 
-export function isKeyword(text: string): text is Keyword.KeywordKind {
-    return Keyword.KeywordKinds.includes(text as Keyword.KeywordKind);
+export function isKeyword(text: string): text is KeywordKind {
+    return KeywordKinds.includes(text as KeywordKind);
 }
