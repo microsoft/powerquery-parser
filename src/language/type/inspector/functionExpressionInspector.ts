@@ -12,7 +12,6 @@ export interface InspectedFunctionExpression {
 
 export interface InspectedFunctionParameter extends Type.FunctionParameter {
     readonly id: number;
-    readonly name: Ast.Identifier;
 }
 
 export function inspectFunctionExpression(
@@ -43,7 +42,7 @@ export function inspectFunctionExpression(
             examinedParameters.push({
                 ...maybeExaminable,
                 id: parameter.node.id,
-                name: maybeName,
+                name: maybeName.literal,
             });
         }
     }

@@ -58,6 +58,7 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
         parameters: inspectedFunctionExpression.parameters.map(
             (parameter: TypeInspector.InspectedFunctionParameter) => {
                 return {
+                    name: parameter.name,
                     isNullable: parameter.isNullable,
                     isOptional: parameter.isOptional,
                     maybeType: parameter.maybeType,
