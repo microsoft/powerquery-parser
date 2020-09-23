@@ -13,8 +13,9 @@ import {
     XorNodeUtils,
     IParserState,
     NodeIdMapIterator,
+    IParser,
 } from "../../parser";
-import { CommonSettings } from "../../settings";
+import { CommonSettings, ParseSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../type/commonTypes";
@@ -215,6 +216,10 @@ export function autocompleteField<S extends IParserState = IParserState>(
         hasTrailingOpenConstant,
     );
 
+    if (maybeInspectable === undefined) {
+        return [];
+    }
+
     return [];
 }
 
@@ -288,6 +293,17 @@ function maybeInspectablePrimaryExpression(
     }
 
     return maybeContiguousPrimaryExpression;
+}
+
+function maybeCurrentFieldNames<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
+    parseState: S,
+): void {
+    const startPoints: ReadonlyArray<(state: S, parser: IParser<S>) => Ast.TNode> = [
+        parseSettings.parser.readFieldSelection,
+        parseSettings.parser.readFieldProjection,
+    ];
+
 }
 
 // // Check if a RPE exists in the context state.
