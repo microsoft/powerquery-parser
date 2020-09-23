@@ -3,7 +3,7 @@
 
 import { ResultUtils } from "../../common";
 import { Constant, Keyword, Token } from "../../language";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import { IParserState, NodeIdMap, ParseError } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
@@ -32,7 +32,7 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
         }
     }
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
         const primitiveTypes: ReadonlyArray<Constant.PrimitiveTypeConstantKind> = autocompletePrimitiveType(
             maybeActiveNode,
             maybeTrailingToken,

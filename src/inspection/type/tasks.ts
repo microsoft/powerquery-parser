@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Type } from "../../language";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ScopeItemByKey } from "../scope";
@@ -31,7 +31,9 @@ export function tryScopeType(
         scopeById: maybeTypeCache?.scopeById ?? new Map(),
     };
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => inspectScopeType(state, nodeId));
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
+        inspectScopeType(state, nodeId),
+    );
 }
 
 export function tryType(
@@ -50,7 +52,7 @@ export function tryType(
         scopeById: maybeTypeCache?.typeById ?? new Map(),
     };
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
         inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId)),
     );
 }

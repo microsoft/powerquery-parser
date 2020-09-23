@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -40,7 +40,7 @@ export function tryScope(
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedScope {
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
         inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById),
     );
 }
@@ -53,7 +53,7 @@ export function tryScopeItems(
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedScopeForRoot {
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
         if (ancestry.length === 0) {
             return new Map();
@@ -298,7 +298,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = inspectedFnExpr.parameters.map(
         (parameter: TypeInspector.InspectedFunctionParameter) => {
             return [
-                parameter.name.literal,
+                parameter.name,
                 {
                     kind: ScopeItemKind.Parameter,
                     id: parameter.id,

@@ -45,3 +45,5 @@ export const enum Locale {
     zh_CN = "zh-CN",
     zh_TW = "zh-TW",
 }
+
+export const DefaultLocale: Locale = Locale.en_US;

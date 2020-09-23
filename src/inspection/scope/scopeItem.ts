@@ -38,7 +38,7 @@ export interface KeyValuePairScopeItem extends IScopeItem {
 
 export interface ParameterScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Parameter;
-    readonly name: Ast.Identifier;
+    readonly name: string;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
     readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;

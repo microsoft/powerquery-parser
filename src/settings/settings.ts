@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ICancellationToken } from "../common";
-import { DefaultLocale } from "../localization/templates";
+import { DefaultLocale } from "../localization";
 import { CombinatorialParser, IParser, IParserState } from "../parser";
 
 export interface CommonSettings {

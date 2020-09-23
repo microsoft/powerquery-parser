@@ -8,7 +8,7 @@ import { InspectionOk, TriedInspection } from "./inspection";
 import { ActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
 import { LexError } from "./lexer";
-import { getLocalizationTemplates } from "./localization";
+import { LocalizationUtils } from "./localization";
 import {
     IParser,
     IParserState,
@@ -53,7 +53,10 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return ResultUtils.errFactory(
             new LexError.LexError(
-                new LexError.ErrorLineMapError(getLocalizationTemplates(settings.locale), errorLineMap),
+                new LexError.ErrorLineMapError(
+                    LocalizationUtils.getLocalizationTemplates(settings.locale),
+                    errorLineMap,
+                ),
             ),
         );
     }

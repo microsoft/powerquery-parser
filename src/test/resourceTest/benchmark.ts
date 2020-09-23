@@ -8,12 +8,12 @@ import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
-import { DefaultLocale } from "../../localization";
 import { CombinatorialParser, IParser, IParserState, IParserStateUtils } from "../../parser";
 import { ParseSettings, Settings } from "../../settings";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
 import * as path from "path";
+import { DefaultLocale } from "../../localization";
 import { TestFileUtils } from "../testUtils";
 
 interface FileSummary {

@@ -6,7 +6,7 @@ import "mocha";
 import { Task } from "../../..";
 import { Assert, Traverse } from "../../../common";
 import { Ast, Constant } from "../../../language";
-import { DefaultTemplates } from "../../../localization";
+import { Templates } from "../../../localization";
 import { IParser, IParserState, IParserStateUtils } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
@@ -29,7 +29,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
         IParserStateUtils.stateFactory,
     );
     const state: CollectAbridgeNodeState = {
-        localizationTemplates: DefaultTemplates,
+        localizationTemplates: Templates.DefaultTemplates,
         result: [],
     };
 
@@ -57,7 +57,7 @@ function assertGetNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequ
         IParserStateUtils.stateFactory,
     );
     const state: NthNodeOfKindState = {
-        localizationTemplates: DefaultTemplates,
+        localizationTemplates: Templates.DefaultTemplates,
         result: undefined,
         nodeKind,
         nthCounter: 0,

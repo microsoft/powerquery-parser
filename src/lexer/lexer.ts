@@ -16,7 +16,7 @@ import {
     StringUtils,
 } from "../common";
 import { Keyword, Token } from "../language";
-import { getLocalizationTemplates, ILocalizationTemplates } from "../localization";
+import { LocalizationUtils, Templates } from "../localization";
 import { LexSettings } from "../settings";
 
 // Call Lexer.stateFrom to instantiate a new State instance.
@@ -63,7 +63,7 @@ export const enum LineMode {
 
 export interface State {
     readonly lines: ReadonlyArray<TLine>;
-    readonly localizationTemplates: ILocalizationTemplates;
+    readonly localizationTemplates: Templates.ILocalizationTemplates;
     readonly maybeCancellationToken: ICancellationToken | undefined;
 }
 
@@ -110,7 +110,7 @@ export interface RangePosition {
 
 // This export is a Result ensuring wrapper around the un-exported implementation.
 export function tryLex(settings: LexSettings, text: string): TriedLex {
-    return ensureCommonOrLexerResult(getLocalizationTemplates(settings.locale), () => {
+    return ensureCommonOrLexerResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
         return lex(settings, text);
     });
 }
@@ -291,7 +291,7 @@ function splitOnLineTerminators(startingText: string): SplitLine[] {
 }
 
 function ensureCommonOrLexerResult<T>(
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     functionToWrap: () => T,
 ): Result<T, CommonError.CommonError | LexError.LexError> {
     try {
@@ -308,11 +308,13 @@ function ensureCommonOrLexerResult<T>(
 }
 
 function lex(settings: LexSettings, text: string): State {
-    const localizationTemplates: ILocalizationTemplates = getLocalizationTemplates(settings.locale);
+    const localizationTemplates: Templates.ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(
+        settings.locale,
+    );
     const splitLines: ReadonlyArray<SplitLine> = splitOnLineTerminators(text);
     const tokenizedLines: ReadonlyArray<TLine> = tokenizedLinesFrom(
         settings.maybeCancellationToken,
-        getLocalizationTemplates(settings.locale),
+        LocalizationUtils.getLocalizationTemplates(settings.locale),
         splitLines,
         LineMode.Default,
     );
@@ -446,7 +448,7 @@ function rangeFrom(line: TLine, lineNumber: number): Range {
 
 function tokenizedLinesFrom(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     splitLines: ReadonlyArray<SplitLine>,
     previousLineModeEnd: LineMode,
 ): ReadonlyArray<TLine> {
@@ -514,7 +516,7 @@ function retokenizeLines(state: State, lineNumber: number, previousLineModeEnd: 
 // The main function of the lexer's tokenizer.
 function tokenize(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     line: TLine,
     lineNumber: number,
 ): TLine {
@@ -783,7 +785,7 @@ function tokenizeTextLiteralContentOrEnd(line: TLine, currentPosition: number): 
 }
 
 function tokenizeDefault(
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     line: TLine,
     lineNumber: number,
     positionStart: number,
@@ -955,7 +957,7 @@ function readOrStartTextLiteral(text: string, currentPosition: number): LineMode
 }
 
 function readHexLiteral(
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     text: string,
     lineNumber: number,
     positionStart: number,
@@ -974,7 +976,7 @@ function readHexLiteral(
 }
 
 function readNumericLiteral(
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     text: string,
     lineNumber: number,
     positionStart: number,
@@ -1013,7 +1015,7 @@ function readOrStartMultilineComment(text: string, positionStart: number): LineM
 }
 
 function readKeyword(
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     text: string,
     lineNumber: number,
     positionStart: number,
@@ -1069,7 +1071,7 @@ function readOrStartQuotedIdentifier(text: string, currentPosition: number): Lin
 // The case for quoted identifier has already been taken care of.
 // The null-literal is also read here.
 function readKeywordOrIdentifier(
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     text: string,
     lineNumber: number,
     positionStart: number,
@@ -1235,7 +1237,7 @@ function maybeIndexOfTextEnd(text: string, positionStart: number): number | unde
 }
 
 function unexpectedReadError(
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     text: string,
     lineNumber: number,
     lineCodeUnit: number,

@@ -5,12 +5,12 @@ import { ParseContext } from "..";
 import { ICancellationToken } from "../../common";
 import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { ILocalizationTemplates } from "../../localization";
+import { Templates } from "../../localization";
 import { CommonSettings } from "../../settings";
 
 export interface IParserState extends CommonSettings {
     readonly lexerSnapshot: LexerSnapshot;
-    readonly localizationTemplates: ILocalizationTemplates;
+    readonly localizationTemplates: Templates.ILocalizationTemplates;
     readonly maybeCancellationToken: ICancellationToken | undefined;
     tokenIndex: number;
     maybeCurrentToken: Token.Token | undefined;

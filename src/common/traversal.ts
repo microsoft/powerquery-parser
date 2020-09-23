@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, Result } from ".";
 import { Ast } from "../language";
-import { ILocalizationTemplates } from "../localization";
+import { Templates } from "../localization";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../parser";
 import { ResultUtils } from "./result";
 
@@ -39,7 +39,7 @@ export const enum VisitNodeStrategy {
 }
 
 export interface IState<T> {
-    readonly localizationTemplates: ILocalizationTemplates;
+    readonly localizationTemplates: Templates.ILocalizationTemplates;
     result: T;
 }
 

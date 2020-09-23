@@ -5,7 +5,7 @@ import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import { ParseSettings } from "../../settings";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
@@ -30,7 +30,7 @@ export function stateFactory<S extends IParserState = IParserState>(
 
     return {
         ...settings,
-        localizationTemplates: getLocalizationTemplates(settings.locale),
+        localizationTemplates: LocalizationUtils.getLocalizationTemplates(settings.locale),
         maybeCancellationToken: settings.maybeCancellationToken,
         lexerSnapshot,
         tokenIndex: 0,

@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, StringUtils } from "../common";
 import { Token } from "../language";
-import { ILocalizationTemplates, Localization } from "../localization";
+import { Localization, Templates } from "../localization";
 import { IParserState } from "./IParserState";
 
 export type TParseError<S extends IParserState = IParserState> = CommonError.CommonError | ParseError<S>;
@@ -38,7 +38,7 @@ export class ParseError<S extends IParserState = IParserState> extends Error {
 
 export class ExpectedCsvContinuationError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly kind: CsvContinuationKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
@@ -49,7 +49,7 @@ export class ExpectedCsvContinuationError extends Error {
 
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
@@ -60,7 +60,7 @@ export class ExpectedAnyTokenKindError extends Error {
 
 export class ExpectedTokenKindError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly expectedTokenKind: Token.TokenKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
@@ -70,7 +70,10 @@ export class ExpectedTokenKindError extends Error {
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
-    constructor(templates: ILocalizationTemplates, readonly maybeFoundToken: TokenWithColumnNumber | undefined) {
+    constructor(
+        templates: Templates.ILocalizationTemplates,
+        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
+    ) {
         super(Localization.error_parse_expectGeneralizedIdentifier(templates, maybeFoundToken));
         Object.setPrototypeOf(this, ExpectedGeneralizedIdentifierError.prototype);
     }
@@ -78,7 +81,7 @@ export class ExpectedGeneralizedIdentifierError extends Error {
 
 export class InvalidPrimitiveTypeError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly token: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
@@ -89,7 +92,7 @@ export class InvalidPrimitiveTypeError extends Error {
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly missingOptionalToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
@@ -100,7 +103,7 @@ export class RequiredParameterAfterOptionalParameterError extends Error {
 
 export class UnterminatedBracketError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly openBracketToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
@@ -111,7 +114,7 @@ export class UnterminatedBracketError extends Error {
 
 export class UnterminatedParenthesesError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly openParenthesesToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
@@ -122,7 +125,7 @@ export class UnterminatedParenthesesError extends Error {
 
 export class UnusedTokensRemainError extends Error {
     constructor(
-        templates: ILocalizationTemplates,
+        templates: Templates.ILocalizationTemplates,
         readonly firstUnusedToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
