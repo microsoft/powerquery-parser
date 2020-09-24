@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Assert } from ".";
-import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 import { Localization, Templates } from "../localization";
+import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 
 export type TInnerCommonError = CancellationError | InvariantError | UnknownError;
 

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Locale } from "./locale";
 import * as bg_BG from "./templates/bg-BG.json";
 import * as ca_ES from "./templates/ca-ES.json";
 import * as cs_CZ from "./templates/cs-CZ.json";
@@ -43,7 +44,6 @@ import * as uk_UA from "./templates/uk-UA.json";
 import * as vi_VN from "./templates/vi-VN.json";
 import * as zh_CN from "./templates/zh-CN.json";
 import * as zh_TW from "./templates/zh-TW.json";
-import { Locale } from "./locale";
 
 export {
     bg_BG,
