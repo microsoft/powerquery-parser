@@ -21,7 +21,11 @@ export function tryParse<S extends IParserState = IParserState>(
         return tryParseDocument<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
     }
 
-    const parseState: S = parseSettings.parserStateFactory(lexerSnapshot, parseSettings.locale);
+    const parseState: S = parseSettings.parserStateFactory(
+        parseSettings.maybeCancellationToken,
+        lexerSnapshot,
+        parseSettings.locale,
+    );
     try {
         const root: Ast.TNode = maybeEntryPointFn(parseState, parseSettings.parser);
         IParserStateUtils.assertNoMoreTokens(parseState);
@@ -42,7 +46,11 @@ export function tryParseDocument<S extends IParserState = IParserState>(
 ): TriedParse {
     let root: Ast.TNode;
 
-    const expressionDocumentState: S = parseSettings.parserStateFactory(lexerSnapshot, parseSettings.locale);
+    const expressionDocumentState: S = parseSettings.parserStateFactory(
+        parseSettings.maybeCancellationToken,
+        lexerSnapshot,
+        parseSettings.locale,
+    );
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
         IParserStateUtils.assertNoMoreTokens(expressionDocumentState);
@@ -53,7 +61,11 @@ export function tryParseDocument<S extends IParserState = IParserState>(
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
-        const sectionDocumentState: S = parseSettings.parserStateFactory(lexerSnapshot, parseSettings.locale);
+        const sectionDocumentState: S = parseSettings.parserStateFactory(
+            parseSettings.maybeCancellationToken,
+            lexerSnapshot,
+            parseSettings.locale,
+        );
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
             IParserStateUtils.assertNoMoreTokens(sectionDocumentState);

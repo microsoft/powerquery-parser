@@ -18,7 +18,11 @@ export interface LexSettings extends CommonSettings {}
 export interface ParseSettings<S extends IParserState = IParserState> extends CommonSettings {
     readonly parser: IParser<S>;
     readonly maybeParserOptions: ParserOptions<S> | undefined;
-    readonly parserStateFactory: (lexerSnapshot: LexerSnapshot, locale?: string) => S;
+    readonly parserStateFactory: (
+        maybeCancellationToken: ICancellationToken | undefined,
+        lexerSnapshot: LexerSnapshot,
+        locale?: string,
+    ) => S;
 }
 
 export type Settings<S extends IParserState = IParserState> = LexSettings & ParseSettings<S>;
@@ -28,6 +32,9 @@ export const DefaultSettings: Settings = {
     locale: DefaultLocale,
     parser: CombinatorialParser,
     maybeParserOptions: undefined,
-    parserStateFactory: (lexerSnapshot: LexerSnapshot, locale?: string) =>
-        IParserStateUtils.stateFactory(undefined, lexerSnapshot, locale ?? Locale.en_US),
+    parserStateFactory: (
+        maybeCancellationToken: ICancellationToken | undefined,
+        lexerSnapshot: LexerSnapshot,
+        locale?: string,
+    ) => IParserStateUtils.stateFactory(maybeCancellationToken, lexerSnapshot, locale ?? Locale.en_US),
 };

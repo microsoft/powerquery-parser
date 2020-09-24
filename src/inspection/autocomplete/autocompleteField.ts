@@ -297,14 +297,17 @@ function maybeInspectablePrimaryExpression(
 
 function maybeCurrentFieldNames<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
-    parseState: S,
+    parserState: S,
 ): void {
     const startPoints: ReadonlyArray<(state: S, parser: IParser<S>) => Ast.TNode> = [
         parseSettings.parser.readFieldSelection,
         parseSettings.parser.readFieldProjection,
     ];
 
+    parserState.lexerSnapshot;
 }
+
+// function copyParserSTate
 
 // // Check if a RPE exists in the context state.
 // const indexOfRecursivePrimaryExpression: number = ArrayUtils.indexOfPredicate(
