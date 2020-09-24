@@ -17,7 +17,7 @@ export function isFalse(value: boolean, maybeMessage?: string, maybeDetails?: {}
 }
 
 export function isNever(_: never): never {
-    throw new CommonError.InvariantError(`should never be reached`);
+    throw new CommonError.InvariantError(`Should never be reached. Stack trace: ${new Error().stack}`);
 }
 
 export function isDefined<T>(
