@@ -1,0 +1,17 @@
+{
+    "Projects": [
+      {
+        "LanguageSet": "Azure_Languages",
+         "LocItems": [
+          {
+            "SourceFile": "src\\localization\\templates\\en-US.json",
+            "Languages": "bg-BG;ca-ES;cs-CZ;da-DK;de-DE;el-GR;es-ES;et-EE;eu-ES;fi-FI;fr-FR;gl-ES;hi-IN;hr-HR;hu-HU;id-ID;it-IT;ja-JP;kk-KZ;ko-KR;lt-LT;lv-LV;ms-MY;nb-NO;nl-NL;pl-PL;pt-BR;pt-PT;ro-RO;ru-RU;sk-SK;sl-SI;sr-Cyrl-RS;sr-Latn-RS;sv-SE;th-TH;tr-TR;uk-UA;vi-VN;zh-CN;zh-TW",
+            "LclFile": "src\\localization\\loc\\{Lang}\\templates\\en-US.json.lcl",
+            "CopyOption": "LangIDOnName",
+            "OutputPath": "src\\localization\\templates"
+          }
+        ]
+       }
+    ]
+  }
+  
