@@ -2,33 +2,40 @@
 // Licensed under the MIT license.
 
 import { ResultUtils } from "../../common";
-import { Constant, Keyword, Token } from "../../language";
-import { LexerSnapshot } from "../../lexer";
-import { getLocalizationTemplates } from "../../localization";
+import { Keyword, Token } from "../../language";
 import { IParserState, NodeIdMap, ParseError } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
-import { autocompleteField } from "./autocompleteField";
-import { autocompleteKeyword } from "./autocompleteKeyword";
+import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
+import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { ExpressionAutocomplete } from "./autocompleteKeyword/commonTypes";
-import { autocompletePrimitiveType } from "./autocompletePrimitiveType";
+import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { trailingTokenFactory } from "./common";
-import { TrailingToken, TriedAutocomplete } from "./commonTypes";
+import {
+    Autocomplete,
+    TrailingToken,
+    TriedAutocompleteFieldAccess,
+    TriedAutocompleteKeyword,
+    TriedAutocompletePrimitiveType,
+} from "./commonTypes";
 
-export function tryAutocomplete<S extends IParserState = IParserState>(
+export function autocomplete<S extends IParserState = IParserState>(
     settings: CommonSettings,
     parserState: S,
     typeCache: TypeCache,
     maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined,
-): TriedAutocomplete {
-    const lexerSnapshot: LexerSnapshot = parserState.lexerSnapshot;
+): Autocomplete {
     const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parserState.contextState.leafNodeIds;
 
     if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
-        return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
+        return {
+            triedFieldAccess: ResultUtils.okFactory(undefined),
+            triedKeyword: ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]),
+            triedPrimitiveType: ResultUtils.okFactory([]),
+        };
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
@@ -40,25 +47,31 @@ export function tryAutocomplete<S extends IParserState = IParserState>(
         }
     }
 
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
-        const primitiveTypes: ReadonlyArray<Constant.PrimitiveTypeConstantKind> = autocompletePrimitiveType(
-            activeNode,
-            maybeTrailingToken,
-        );
-        const keywords: ReadonlyArray<Keyword.KeywordKind> = autocompleteKeyword(
-            nodeIdMapCollection,
-            leafNodeIds,
-            activeNode,
-            maybeTrailingToken,
-        );
-        const fieldSelection: ReadonlyArray<string> = autocompleteField(
-            settings,
-            parserState,
-            activeNode,
-            typeCache,
-            maybeParseError,
-        );
+    const triedFieldAccess: TriedAutocompleteFieldAccess = tryAutocompleteFieldAccess(
+        settings,
+        parserState,
+        activeNode,
+        typeCache,
+        maybeParseError,
+    );
 
-        return [...primitiveTypes, ...keywords, ...fieldSelection];
-    });
+    const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(
+        settings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        activeNode,
+        maybeTrailingToken,
+    );
+
+    const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
+        settings,
+        activeNode,
+        maybeTrailingToken,
+    );
+
+    return {
+        triedFieldAccess,
+        triedKeyword,
+        triedPrimitiveType,
+    };
 }

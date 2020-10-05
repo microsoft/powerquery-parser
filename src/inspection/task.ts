@@ -1,11 +1,10 @@
 import { Assert, ResultUtils } from "../common";
-import { Keyword } from "../language";
+import { StartOfDocumentKeywords } from "../language/keyword";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
-import { LexerSnapshot } from "../lexer";
 import { AncestryUtils, IParserState, NodeIdMap, ParseError, TXorNode } from "../parser";
 import { CommonSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
-import { TriedAutocomplete, tryAutocomplete } from "./autocomplete";
+import { Autocomplete, autocomplete } from "./autocomplete";
 import { TriedInspection } from "./commonTypes";
 import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { Position } from "./position";
@@ -31,7 +30,11 @@ export function tryInspection<S extends IParserState = IParserState>(
     if (maybeActiveNode === undefined) {
         return ResultUtils.okFactory({
             maybeActiveNode,
-            autocomplete: Keyword.StartOfDocumentKeywords,
+            autocomplete: {
+                triedFieldAccess: ResultUtils.okFactory(undefined),
+                triedKeyword: ResultUtils.okFactory(StartOfDocumentKeywords),
+                triedPrimitiveType: ResultUtils.okFactory([]),
+            },
             maybeInvokeExpression: undefined,
             nodeScope: new Map(),
             scopeType: new Map(),
@@ -76,20 +79,11 @@ export function tryInspection<S extends IParserState = IParserState>(
         return triedExpectedType;
     }
 
-    const triedAutocomplete: TriedAutocomplete = tryAutocomplete(
-        settings,
-        parserState,
-        typeCache,
-        activeNode,
-        maybeParseError,
-    );
-    if (ResultUtils.isErr(triedAutocomplete)) {
-        return triedAutocomplete;
-    }
+    const autocompleted: Autocomplete = autocomplete(settings, parserState, typeCache, activeNode, maybeParseError);
 
     return ResultUtils.okFactory({
         maybeActiveNode,
-        autocomplete: triedAutocomplete.value,
+        autocomplete: autocompleted,
         maybeInvokeExpression: triedInvokeExpression.value,
         nodeScope,
         scopeType: triedScopeType.value,

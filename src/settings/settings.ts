@@ -21,7 +21,7 @@ export interface ParseSettings<S extends IParserState = IParserState> extends Co
     readonly parserStateFactory: (
         maybeCancellationToken: ICancellationToken | undefined,
         lexerSnapshot: LexerSnapshot,
-        locale?: string,
+        maybeLocale: string | undefined,
     ) => S;
 }
 
@@ -35,6 +35,6 @@ export const DefaultSettings: Settings = {
     parserStateFactory: (
         maybeCancellationToken: ICancellationToken | undefined,
         lexerSnapshot: LexerSnapshot,
-        locale?: string,
-    ) => IParserStateUtils.stateFactory(maybeCancellationToken, lexerSnapshot, locale ?? Locale.en_US),
+        maybeLocale: string | undefined,
+    ) => IParserStateUtils.stateFactory(maybeCancellationToken, lexerSnapshot, maybeLocale ?? Locale.en_US),
 };

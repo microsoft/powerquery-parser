@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils } from "../../../common";
+import { ArrayUtils, CommonError, Result, ResultUtils } from "../../../common";
 import { Ast, Constant, Keyword } from "../../../language";
+import { getLocalizationTemplates } from "../../../localization";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { CommonSettings } from "../../../settings";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "../../activeNode";
 import { PositionUtils } from "../../position";
-import { TrailingToken } from "../commonTypes";
+import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordErrorHandlingExpression } from "./autocompleteKeywordErrorHandlingExpression";
 import { autocompleteKeywordIdentifierPairedExpression } from "./autocompleteKeywordIdentifierPairedExpression";
@@ -15,6 +17,18 @@ import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpr
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+
+export function tryAutocompleteKeyword(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    activeNode: ActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
+): TriedAutocompleteKeyword {
+    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
+        return autocompleteKeyword(nodeIdMapCollection, leafNodeIds, activeNode, maybeTrailingToken);
+    });
+}
 
 export function autocompleteKeyword(
     nodeIdMapCollection: NodeIdMap.Collection,

@@ -4,6 +4,7 @@
 /* tslint:disable:no-console */
 
 import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from ".";
+import { AutocompleteUtils } from "./inspection";
 
 parseText(`let x = 1 in try x otherwise 2`);
 
@@ -122,8 +123,7 @@ function inspectText(text: string, position: Inspection.Position): void {
         console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);
     }
 
-    console.log(`Suggested keyword autocomplete: ${inspection.autocomplete.join(", ")}`);
-
+    console.log(`Suggested for autocompelte: ${AutocompleteUtils.keys(inspection.autocomplete).join(", ")}`);
     console.log(`InvokeExpression name: ${inspection.maybeInvokeExpression?.maybeName}`);
     console.log(
         `InvokeExpression number of arguments: ${inspection.maybeInvokeExpression?.maybeArguments?.numArguments}`,

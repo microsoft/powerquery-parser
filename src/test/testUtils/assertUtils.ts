@@ -4,9 +4,8 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert, Inspection, Lexer, Task } from "../..";
-import { AutocompleteOption, Position, TriedAutocomplete } from "../../inspection";
+import { Autocomplete, Position } from "../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../inspection/activeNode";
-import { Keyword } from "../../language";
 import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
 import { CommonSettings, LexSettings, ParseSettings } from "../../settings";
 
@@ -75,41 +74,36 @@ function assertGetTriedParse<S extends IParserState = IParserState>(
     return IParserUtils.tryParse<S>(settings, lexerSnapshot);
 }
 
-export function assertGetParseOkAutocompleteOk(
-    settings: LexSettings & ParseSettings<IParserState>,
+export function assertGetParseOkAutocompleteOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
-): ReadonlyArray<AutocompleteOption> {
+): Autocomplete {
     const parseOk: ParseOk = assertGetParseOk(settings, text);
     return assertGetAutocompleteOk(settings, parseOk.state, position, undefined);
 }
 
-export function assertGetParseErrAutocompleteOk(
-    settings: LexSettings & ParseSettings<IParserState>,
+export function assertGetParseErrAutocompleteOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
-): ReadonlyArray<AutocompleteOption> {
+): Autocomplete {
     const parseError: ParseError.ParseError = assertGetParseErr(settings, text);
-
     return assertGetAutocompleteOk(settings, parseError.state, position, parseError);
 }
 
-export function assertGetAutocompleteOk<S extends IParserState>(
+export function assertGetAutocompleteOk<S extends IParserState = IParserState>(
     settings: CommonSettings,
-    parserState: IParserState,
+    parserState: S,
     position: Position,
     maybeParseError: ParseError.ParseError<S> | undefined,
-): ReadonlyArray<AutocompleteOption> {
+): Autocomplete {
     const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         parserState.contextState.nodeIdMapCollection,
         parserState.contextState.leafNodeIds,
         position,
     );
-    if (maybeActiveNode === undefined) {
-        return Keyword.StartOfDocumentKeywords;
-    }
-
-    const triedInspect: TriedAutocomplete = Inspection.tryAutocomplete(
+    return Inspection.autocomplete(
         settings,
         parserState,
         {
@@ -119,6 +113,4 @@ export function assertGetAutocompleteOk<S extends IParserState>(
         maybeActiveNode,
         maybeParseError,
     );
-    Assert.isOk(triedInspect);
-    return triedInspect.value;
 }
