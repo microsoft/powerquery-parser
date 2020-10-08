@@ -214,16 +214,15 @@ function handleConjunctions(
     if (
         activeNode.ancestry.length === 2 &&
         activeNode.ancestry[1].kind === XorNodeKind.Ast &&
-        activeNode.ancestry[1].node.kind === Ast.NodeKind.RecordExpression &&
-        maybeTrailingToken !== undefined
+        activeNode.ancestry[1].node.kind === Ast.NodeKind.RecordExpression
     ) {
-        if (
+        if (maybeTrailingToken === undefined) {
+            return concatUnique(inspected, [Keyword.KeywordKind.Section]);
+        } else if (
             maybeTrailingToken.kind === Token.TokenKind.Identifier &&
             PositionUtils.isInToken(activeNode.position, maybeTrailingToken, true, true)
         ) {
             return autocompleteKeywordTrailingText(inspected, maybeTrailingToken, [Keyword.KeywordKind.Section]);
-        } else if (maybeTrailingToken === undefined) {
-            return concatUnique(inspected, [Keyword.KeywordKind.Section]);
         }
     }
 

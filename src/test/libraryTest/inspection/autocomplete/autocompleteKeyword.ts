@@ -164,7 +164,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it("WIP [] |", () => {
+        it("[] |", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[] |`);
             const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Section];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
