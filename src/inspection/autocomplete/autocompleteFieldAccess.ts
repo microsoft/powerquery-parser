@@ -68,6 +68,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     if (maybeInspectable === undefined) {
         return undefined;
     }
+    const inspectable: TXorNode = maybeInspectable;
 
     const maybeFieldAccess: FieldAccess | undefined = maybeFieldAccessFromParse(parserState);
     if (maybeFieldAccess === undefined) {
@@ -78,7 +79,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
         settings,
         parserState.contextState.nodeIdMapCollection,
         parserState.contextState.leafNodeIds,
-        maybeInspectable.node.id,
+        inspectable.node.id,
         typeCache,
     );
     if (ResultUtils.isErr(triedInspectableType)) {
@@ -102,7 +103,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     }
 
     return {
-        field: maybeInspectable,
+        field: inspectable,
         fieldType: inspectableType,
         access: maybeFieldAccess,
         autocompleteItems,
@@ -164,10 +165,10 @@ function maybeInspectablePrimaryExpression(
                           );
                 }
 
-                // Else grab the last or second to last child.
+                // Else grab the last.
                 else {
                     const numChildren: number = maybeChildrenForArrayWrapper.length;
-                    const inspectableIndex: number = hasTrailingOpenConstant === true ? numChildren : numChildren - 1;
+                    const inspectableIndex: number = numChildren - 1;
                     return NodeIdMapUtils.assertGetChildXorByAttributeIndex(
                         nodeIdMapCollection,
                         xorNodeBeforeRpe.node.id,
@@ -206,7 +207,7 @@ function maybeFieldAccessFromParse<S extends IParserState = IParserState>(parser
                 parserState: copiedState,
             });
         } catch (err) {
-            if (!ParseError.isParseError(err)) {
+            if (!ParseError.isTInnerParseError(err)) {
                 continue;
             }
 
