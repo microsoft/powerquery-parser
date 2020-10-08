@@ -43,7 +43,7 @@ function assertGetParseErrAutocompleteOkFieldAccess<S extends IParserState = IPa
 }
 
 describe(`Inspection - Autocomplete - FieldSelection`, () => {
-    it(`WIP [a = 1][|`, () => {
+    it(`[a = 1][|`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[a = 1][|`);
         const expected: AbridgedAutocompleteFieldAccess = ["a"];
         const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
@@ -91,7 +91,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         expect(actual).to.have.members(expected);
     });
 
-    it("WIP let x = () => [a = 1] in x()|[", () => {
+    it("let x = () => [a = 1] in x()|[", () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
             `let x = () => [a = 1] in x()|[`,
         );

@@ -79,7 +79,7 @@ export function tryParseDocument<S extends IParserState = IParserState>(
             let betterParsedState: S;
             let betterParsedError: Error;
 
-            if (expressionDocumentState.tokenIndex > sectionDocumentState.tokenIndex) {
+            if (expressionDocumentState.tokenIndex >= sectionDocumentState.tokenIndex) {
                 betterParsedState = expressionDocumentState;
                 betterParsedError = expressionDocumentError;
             } else {

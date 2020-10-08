@@ -610,8 +610,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -629,8 +629,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -648,15 +648,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 15,
+                        keyNodeId: 16,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -674,22 +674,22 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 15,
+                        keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 19,
-                        maybeValueNodeId: 21,
+                        keyNodeId: 24,
+                        maybeValueNodeId: 28,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -707,8 +707,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 10,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -726,15 +726,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 14,
-                        maybeValueNodeId: 16,
+                        keyNodeId: 17,
+                        maybeValueNodeId: 19,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(

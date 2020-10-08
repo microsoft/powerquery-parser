@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, CommonError, Result, ResultUtils } from "../../../common";
-import { Ast, Constant, Keyword } from "../../../language";
+import { Ast, Constant, Keyword, Token } from "../../../language";
 import { getLocalizationTemplates } from "../../../localization";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
@@ -17,6 +17,7 @@ import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpr
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { concatUnique } from "../../../common/arrayUtils";
 
 export function tryAutocompleteKeyword(
     settings: CommonSettings,
@@ -205,6 +206,25 @@ function handleConjunctions(
         activeNode.leafKind !== ActiveNodeLeafKind.ContextNode
     ) {
         return inspected;
+    }
+
+    // Might be a section document.
+    // `[x=1] s`
+    // `[x=1] |`
+    if (
+        activeNode.ancestry.length === 2 &&
+        activeNode.ancestry[1].kind === XorNodeKind.Ast &&
+        activeNode.ancestry[1].node.kind === Ast.NodeKind.RecordExpression &&
+        maybeTrailingToken !== undefined
+    ) {
+        if (
+            maybeTrailingToken.kind === Token.TokenKind.Identifier &&
+            PositionUtils.isInToken(activeNode.position, maybeTrailingToken, true, true)
+        ) {
+            return autocompleteKeywordTrailingText(inspected, maybeTrailingToken, [Keyword.KeywordKind.Section]);
+        } else if (maybeTrailingToken === undefined) {
+            return concatUnique(inspected, [Keyword.KeywordKind.Section]);
+        }
     }
 
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);

@@ -164,9 +164,30 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             expect(actual).to.have.members(expected);
         });
 
+        it("WIP [] |", () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[] |`);
+            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Section];
+            const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
+            expect(actual).to.have.members(expected);
+        });
+
+        it("[] |s", () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[] |s`);
+            const expected: Inspection.AutocompleteKeyword = [];
+            const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
+            expect(actual).to.have.members(expected);
+        });
+
         it("[] s|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[] s|`);
             const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Section];
+            const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
+            expect(actual).to.have.members(expected);
+        });
+
+        it("[] s |", () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[] s |`);
+            const expected: Inspection.AutocompleteKeyword = [];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
