@@ -29,6 +29,7 @@ import {
     IAutocompleteItem,
     TriedAutocompleteFieldAccess,
 } from "./commonTypes";
+import { autocomplete } from "./task";
 
 export function tryAutocompleteFieldAccess<S extends IParserState = IParserState>(
     settings: CommonSettings,
@@ -94,12 +95,19 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
         return undefined;
     }
 
-    const autocompleteItems: IAutocompleteItem[] = [];
+    let autocompleteItems: IAutocompleteItem[] = [];
     for (const [key, type] of inspectableType.fields.entries()) {
         autocompleteItems.push({
             key,
             type,
         });
+    }
+
+    if (activeNode.maybeIdentifierUnderPosition !== undefined) {
+        const positionIdentifierLiteral: string | undefined = activeNode.maybeIdentifierUnderPosition.literal;
+        autocompleteItems = autocompleteItems.filter((autocompleteItem: IAutocompleteItem) =>
+            positionIdentifierLiteral.startsWith(autocompleteItem.key),
+        );
     }
 
     return {
