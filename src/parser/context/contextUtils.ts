@@ -7,7 +7,7 @@ import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 
-export function newState(): State {
+export function stateFactory(): State {
     return {
         nodeIdMapCollection: {
             astNodeById: new Map(),
@@ -19,6 +19,13 @@ export function newState(): State {
         maybeRoot: undefined,
         idCounter: 0,
         leafNodeIds: [],
+    };
+}
+
+export function stateCloner(source: State): State {
+    return {
+        ...source,
+        nodeIdMapCollection: NodeIdMapUtils.cloneCollection(source.nodeIdMapCollection),
     };
 }
 

@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../../..";
 import { Assert } from "../../../../common";
-import { IAutocompleteItem } from "../../../../inspection";
+import { AutocompleteItem } from "../../../../inspection";
 import { IParserState } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { TestAssertUtils } from "../../../testUtils";
@@ -19,7 +19,7 @@ function abridgedFieldAccess(
         return [];
     }
 
-    return maybeAutocompleteFieldAccess.autocompleteItems.map((item: IAutocompleteItem) => item.key);
+    return maybeAutocompleteFieldAccess.autocompleteItems.map((item: AutocompleteItem) => item.key);
 }
 
 function assertGetParseOkAutocompleteOkFieldAccess<S extends IParserState = IParserState>(
@@ -83,7 +83,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it(`[a = 1, alpha = 2][a |`, () => {
+        it(`WIP [a = 1, alpha = 2][a |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `[a = 1, alpha = 2][a |`,
             );

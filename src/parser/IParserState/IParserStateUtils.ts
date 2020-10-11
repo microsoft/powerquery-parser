@@ -36,8 +36,15 @@ export function stateFactory(
         tokenIndex: 0,
         maybeCurrentToken,
         maybeCurrentTokenKind: maybeCurrentToken?.kind,
-        contextState: ParseContextUtils.newState(),
+        contextState: ParseContextUtils.stateFactory(),
         maybeCurrentContextNode: undefined,
+    };
+}
+
+export function stateCloner(state: IParserState): IParserState {
+    return {
+        ...state,
+        contextState: ParseContextUtils.stateCloner(state.contextState),
     };
 }
 

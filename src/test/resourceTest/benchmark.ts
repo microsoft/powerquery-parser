@@ -6,7 +6,7 @@ import performanceNow = require("performance-now");
 
 import "mocha";
 import { Task } from "../..";
-import { ResultUtils, ICancellationToken } from "../../common";
+import { ICancellationToken, ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale, Locale } from "../../localization";
 import { CombinatorialParser, IParser, IParserState, IParserStateUtils, RecursiveDescentParser } from "../../parser";
@@ -58,6 +58,11 @@ function benchmarkParseSettingsFactory(baseParser: IParser<IParserState>): Parse
         parser: BenchmarkParser,
         parserStateFactory: (_cancellationToken: ICancellationToken | undefined, lexerSnapshot: LexerSnapshot) =>
             benchmarkStateFactory(lexerSnapshot, baseParser),
+        parserStateCloner: (source: BenchmarkState) => {
+            return {
+                ...source,
+            };
+        },
         maybeParserOptions: undefined,
         locale: DefaultLocale,
     };

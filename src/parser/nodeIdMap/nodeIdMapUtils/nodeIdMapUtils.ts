@@ -8,6 +8,16 @@ import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { maybeRightMostLeaf } from "./leafSelectors";
 
+export function cloneCollection(nodeIdMapCollection: Collection): Collection {
+    return {
+        astNodeById: new Map(nodeIdMapCollection.astNodeById),
+        contextNodeById: new Map(nodeIdMapCollection.contextNodeById),
+        parentIdById: new Map(nodeIdMapCollection.parentIdById),
+        childIdsById: new Map(nodeIdMapCollection.childIdsById),
+        maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
+    };
+}
+
 // Contains at least one parsed token.
 export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number): boolean {
     let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ResultUtils } from "../../common";
-import { Autocomplete, IAutocompleteItem } from "./commonTypes";
+import { Autocomplete, AutocompleteItem } from "./commonTypes";
 
 export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {
     let result: string[] = [];
@@ -10,7 +10,7 @@ export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {
     if (ResultUtils.isOk(autocomplete.triedFieldAccess) && autocomplete.triedFieldAccess.value !== undefined) {
         result = result.concat(
             autocomplete.triedFieldAccess.value.autocompleteItems.map(
-                (autocompleteItem: IAutocompleteItem) => autocompleteItem.key,
+                (autocompleteItem: AutocompleteItem) => autocompleteItem.key,
             ),
         );
     }

@@ -174,7 +174,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
 
         // Reset the parser's state.
         state.tokenIndex = 0;
-        state.contextState = ParseContextUtils.newState();
+        state.contextState = ParseContextUtils.stateFactory();
         state.maybeCurrentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {

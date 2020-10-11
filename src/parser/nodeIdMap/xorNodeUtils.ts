@@ -4,7 +4,7 @@
 import { ParseContext } from "..";
 import { ArrayUtils, Assert } from "../../common";
 import { Ast } from "../../language";
-import { TXorNode, XorNodeKind, IXorNode, ContextXorNode, AstXorNode } from "./xorNode";
+import { AstXorNode, ContextXorNode, TXorNode, XorNodeKind } from "./xorNode";
 
 export function astFactory(node: Ast.TNode): TXorNode {
     return {

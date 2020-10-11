@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result } from "../../common";
-import { Constant, Keyword, Token, Type } from "../../language";
-import { BracketDisambiguation, IParserState, TXorNode } from "../../parser";
+import { Ast, Constant, Keyword, Token, Type } from "../../language";
+import { IParserState, ParseError, TXorNode } from "../../parser";
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
 
@@ -17,7 +17,12 @@ export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
 
 export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
 
-export type FieldAccessKind = BracketDisambiguation.FieldProjection | BracketDisambiguation.FieldSelection;
+export const enum FieldAccessKind {
+    Ok,
+    Err,
+    SelectionOk,
+    SelectionErr,
+}
 
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;
@@ -25,7 +30,7 @@ export interface Autocomplete {
     readonly triedPrimitiveType: TriedAutocompletePrimitiveType;
 }
 
-export interface IAutocompleteItem {
+export interface AutocompleteItem {
     readonly key: string;
     readonly type: Type.TType;
 }
@@ -33,15 +38,56 @@ export interface IAutocompleteItem {
 export interface AutocompleteFieldAccess {
     readonly field: TXorNode;
     readonly fieldType: Type.TType;
-    readonly access: FieldAccess;
-    readonly autocompleteItems: ReadonlyArray<IAutocompleteItem>;
+    readonly fieldAccessParse: TTriedParseFieldAccess;
+    readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
 }
 
 export interface TrailingToken extends Token.Token {
     readonly isInOrOnPosition: boolean;
 }
 
-export interface FieldAccess {
-    readonly kind: FieldAccessKind;
+export type TTriedParseFieldAccess = TriedParseFieldProjection | TriedParseFieldSelection;
+
+export interface IParseFieldAccess {
+    readonly hasError: boolean;
+    readonly nodeKind: Ast.NodeKind;
+}
+
+export interface IParseFieldAccessOk<
+    T extends Ast.FieldProjection | Ast.FieldSelector,
+    K extends Ast.NodeKind.FieldProjection | Ast.NodeKind.FieldSelector
+> extends IParseFieldAccess {
+    readonly hasError: false;
+    readonly nodeKind: K;
+    readonly ast: T;
     readonly parserState: IParserState;
 }
+
+export interface IParseFieldAccessErr<
+    K extends Ast.NodeKind.FieldProjection | Ast.NodeKind.FieldSelector,
+    S extends IParserState = IParserState
+> extends IParseFieldAccess {
+    readonly hasError: true;
+    readonly nodeKind: K;
+    readonly parseError: ParseError.ParseError<S>;
+}
+
+export type TriedParseFieldProjection<S extends IParserState = IParserState> = Result<
+    ParseFieldProjectionOk,
+    ParseFieldProjectionErr<S>
+>;
+export type ParseFieldProjectionOk = IParseFieldAccessOk<Ast.FieldProjection, Ast.NodeKind.FieldProjection>;
+export type ParseFieldProjectionErr<S extends IParserState = IParserState> = IParseFieldAccessErr<
+    Ast.NodeKind.FieldProjection,
+    S
+>;
+
+export type TriedParseFieldSelection<S extends IParserState = IParserState> = Result<
+    ParseFieldSelectionOk,
+    ParseFieldSelectionErr<S>
+>;
+export type ParseFieldSelectionOk = IParseFieldAccessOk<Ast.FieldSelector, Ast.NodeKind.FieldSelector>;
+export type ParseFieldSelectionErr<S extends IParserState = IParserState> = IParseFieldAccessErr<
+    Ast.NodeKind.FieldSelector,
+    S
+>;
