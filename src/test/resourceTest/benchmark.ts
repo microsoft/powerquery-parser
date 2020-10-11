@@ -45,7 +45,7 @@ writeReport(ResourceDirectory, allSummaries);
 
 function benchmarkStateFactory(lexerSnapshot: LexerSnapshot, baseParser: IParser<IParserState>): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(undefined, lexerSnapshot, Locale.en_US),
+        ...IParserStateUtils.stateFactory(undefined, lexerSnapshot, 0, Locale.en_US),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
@@ -58,11 +58,6 @@ function benchmarkParseSettingsFactory(baseParser: IParser<IParserState>): Parse
         parser: BenchmarkParser,
         parserStateFactory: (_cancellationToken: ICancellationToken | undefined, lexerSnapshot: LexerSnapshot) =>
             benchmarkStateFactory(lexerSnapshot, baseParser),
-        parserStateCloner: (source: BenchmarkState) => {
-            return {
-                ...source,
-            };
-        },
         maybeParserOptions: undefined,
         locale: DefaultLocale,
     };

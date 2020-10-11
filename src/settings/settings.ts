@@ -5,14 +5,7 @@ import { ICancellationToken } from "../common";
 import { LexerSnapshot } from "../lexer";
 import { Locale } from "../localization";
 import { DefaultLocale } from "../localization/templates";
-import {
-    CombinatorialParser,
-    IParser,
-    IParserState,
-    IParserStateUtils,
-    ParserOptions,
-    ParseContextUtils,
-} from "../parser";
+import { CombinatorialParser, IParser, IParserState, IParserStateUtils, ParserOptions } from "../parser";
 
 export interface CommonSettings {
     readonly maybeCancellationToken: ICancellationToken | undefined;
@@ -28,9 +21,9 @@ export interface ParseSettings<S extends IParserState = IParserState> extends Co
     readonly parserStateFactory: (
         maybeCancellationToken: ICancellationToken | undefined,
         lexerSnapshot: LexerSnapshot,
+        tokenIndex: number,
         maybeLocale: string | undefined,
     ) => S;
-    readonly parserStateCloner: (source: S) => S;
 }
 
 export type Settings<S extends IParserState = IParserState> = LexSettings & ParseSettings<S>;
@@ -43,7 +36,7 @@ export const DefaultSettings: Settings = {
     parserStateFactory: (
         maybeCancellationToken: ICancellationToken | undefined,
         lexerSnapshot: LexerSnapshot,
+        tokenIndex: number,
         maybeLocale: string | undefined,
-    ) => IParserStateUtils.stateFactory(maybeCancellationToken, lexerSnapshot, maybeLocale ?? Locale.en_US),
-    parserStateCloner: (source: IParserState) => IParserStateUtils.stateCloner(source),
+    ) => IParserStateUtils.stateFactory(maybeCancellationToken, lexerSnapshot, tokenIndex, maybeLocale ?? Locale.en_US),
 };

@@ -25,26 +25,20 @@ export interface FastStateBackup {
 export function stateFactory(
     maybeCancellationToken: ICancellationToken | undefined,
     lexerSnapshot: LexerSnapshot,
+    tokenIndex: number,
     locale: string,
 ): IParserState {
-    const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[0];
+    const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
 
     return {
         maybeCancellationToken,
         lexerSnapshot,
         localizationTemplates: getLocalizationTemplates(locale),
-        tokenIndex: 0,
+        tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind: maybeCurrentToken?.kind,
         contextState: ParseContextUtils.stateFactory(),
         maybeCurrentContextNode: undefined,
-    };
-}
-
-export function stateCloner(state: IParserState): IParserState {
-    return {
-        ...state,
-        contextState: ParseContextUtils.stateCloner(state.contextState),
     };
 }
 

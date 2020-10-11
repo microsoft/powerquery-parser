@@ -22,13 +22,6 @@ export function stateFactory(): State {
     };
 }
 
-export function stateCloner(source: State): State {
-    return {
-        ...source,
-        nodeIdMapCollection: NodeIdMapUtils.cloneCollection(source.nodeIdMapCollection),
-    };
-}
-
 export function nextId(state: State): number {
     state.idCounter += 1;
     return state.idCounter;
