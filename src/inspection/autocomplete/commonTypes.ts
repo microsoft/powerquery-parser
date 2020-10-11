@@ -38,7 +38,7 @@ export interface AutocompleteItem {
 export interface AutocompleteFieldAccess {
     readonly field: TXorNode;
     readonly fieldType: Type.TType;
-    readonly fieldAccessParse: TTriedParseFieldAccess;
+    readonly fieldAccessParse: TParseFieldAccess;
     readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
 }
 
@@ -46,7 +46,11 @@ export interface TrailingToken extends Token.Token {
     readonly isInOrOnPosition: boolean;
 }
 
-export type TTriedParseFieldAccess = TriedParseFieldProjection | TriedParseFieldSelection;
+export type TParseFieldAccess =
+    | ParseFieldProjectionErr
+    | ParseFieldProjectionOk
+    | ParseFieldSelectionErr
+    | ParseFieldSelectionOk;
 
 export interface IParseFieldAccess {
     readonly hasError: boolean;
@@ -72,20 +76,12 @@ export interface IParseFieldAccessErr<
     readonly parseError: ParseError.ParseError<S>;
 }
 
-export type TriedParseFieldProjection<S extends IParserState = IParserState> = Result<
-    ParseFieldProjectionOk,
-    ParseFieldProjectionErr<S>
->;
 export type ParseFieldProjectionOk = IParseFieldAccessOk<Ast.FieldProjection, Ast.NodeKind.FieldProjection>;
 export type ParseFieldProjectionErr<S extends IParserState = IParserState> = IParseFieldAccessErr<
     Ast.NodeKind.FieldProjection,
     S
 >;
 
-export type TriedParseFieldSelection<S extends IParserState = IParserState> = Result<
-    ParseFieldSelectionOk,
-    ParseFieldSelectionErr<S>
->;
 export type ParseFieldSelectionOk = IParseFieldAccessOk<Ast.FieldSelector, Ast.NodeKind.FieldSelector>;
 export type ParseFieldSelectionErr<S extends IParserState = IParserState> = IParseFieldAccessErr<
     Ast.NodeKind.FieldSelector,
