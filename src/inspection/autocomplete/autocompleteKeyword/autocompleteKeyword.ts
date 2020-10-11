@@ -17,7 +17,6 @@ import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpr
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
-import { concatUnique } from "../../../common/arrayUtils";
 
 export function tryAutocompleteKeyword(
     settings: CommonSettings,
@@ -217,7 +216,7 @@ function handleConjunctions(
         activeNode.ancestry[1].node.kind === Ast.NodeKind.RecordExpression
     ) {
         if (maybeTrailingToken === undefined) {
-            return concatUnique(inspected, [Keyword.KeywordKind.Section]);
+            return ArrayUtils.concatUnique(inspected, [Keyword.KeywordKind.Section]);
         } else if (
             maybeTrailingToken.kind === Token.TokenKind.Identifier &&
             PositionUtils.isInToken(activeNode.position, maybeTrailingToken, true, true)

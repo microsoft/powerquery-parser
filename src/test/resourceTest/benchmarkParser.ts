@@ -290,7 +290,7 @@ export function benchmarkStateFactory<S extends IParserState = IParserState>(
     baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(parseSettings.maybeCancellationToken, lexerSnapshot, parseSettings.locale),
+        ...IParserStateUtils.stateFactory(parseSettings.maybeCancellationToken, lexerSnapshot, 0, parseSettings.locale),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,

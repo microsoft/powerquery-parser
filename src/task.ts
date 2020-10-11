@@ -68,7 +68,7 @@ export function tryParse<S extends IParserState = IParserState>(
 }
 
 export function tryInspection<S extends IParserState = IParserState>(
-    settings: CommonSettings,
+    parseSettings: ParseSettings<S>,
     triedParse: TriedParse<S>,
     position: Inspection.Position,
 ): TriedInspection {
@@ -91,7 +91,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         parserState = triedParse.value.state;
     }
 
-    return Inspection.tryInspection(settings, parserState, maybeParseError, position);
+    return Inspection.tryInspection(parseSettings, parserState, maybeParseError, position);
 }
 
 export function tryLexParse<S extends IParserState = IParserState>(

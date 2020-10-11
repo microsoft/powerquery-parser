@@ -79,7 +79,7 @@ export function assertGetParseOkAutocompleteOk<S extends IParserState = IParserS
     text: string,
     position: Position,
 ): Autocomplete {
-    const parseOk: ParseOk = assertGetParseOk(settings, text);
+    const parseOk: ParseOk<S> = assertGetParseOk(settings, text);
     return assertGetAutocompleteOk(settings, parseOk.state, position, undefined);
 }
 
@@ -88,12 +88,12 @@ export function assertGetParseErrAutocompleteOk<S extends IParserState = IParser
     text: string,
     position: Position,
 ): Autocomplete {
-    const parseError: ParseError.ParseError = assertGetParseErr(settings, text);
+    const parseError: ParseError.ParseError<S> = assertGetParseErr(settings, text);
     return assertGetAutocompleteOk(settings, parseError.state, position, parseError);
 }
 
 export function assertGetAutocompleteOk<S extends IParserState = IParserState>(
-    settings: CommonSettings,
+    parseSettings: ParseSettings<S>,
     parserState: S,
     position: Position,
     maybeParseError: ParseError.ParseError<S> | undefined,
@@ -104,7 +104,7 @@ export function assertGetAutocompleteOk<S extends IParserState = IParserState>(
         position,
     );
     return Inspection.autocomplete(
-        settings,
+        parseSettings,
         parserState,
         {
             scopeById: new Map(),

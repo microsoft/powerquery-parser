@@ -2,7 +2,7 @@ import { Assert, ResultUtils } from "../common";
 import { StartOfDocumentKeywords } from "../language/keyword";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
 import { AncestryUtils, IParserState, NodeIdMap, ParseError, TXorNode } from "../parser";
-import { CommonSettings } from "../settings";
+import { ParseSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils } from "./activeNode";
 import { Autocomplete, autocomplete } from "./autocomplete";
 import { TriedInspection } from "./commonTypes";
@@ -13,7 +13,7 @@ import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache } from "./type/commonTypes";
 
 export function tryInspection<S extends IParserState = IParserState>(
-    settings: CommonSettings,
+    parseSettings: ParseSettings<S>,
     parserState: S,
     maybeParseError: ParseError.ParseError<S> | undefined,
     position: Position,
@@ -45,12 +45,16 @@ export function tryInspection<S extends IParserState = IParserState>(
     const ancestry: ReadonlyArray<TXorNode> = maybeActiveNode.ancestry;
     const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(ancestry);
 
-    const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(settings, nodeIdMapCollection, activeNode);
+    const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
+        parseSettings,
+        nodeIdMapCollection,
+        activeNode,
+    );
     if (ResultUtils.isErr(triedInvokeExpression)) {
         return triedInvokeExpression;
     }
 
-    const triedScope: TriedScope = tryScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, undefined);
+    const triedScope: TriedScope = tryScope(parseSettings, nodeIdMapCollection, leafNodeIds, ancestry, undefined);
     if (ResultUtils.isErr(triedScope)) {
         return triedScope;
     }
@@ -64,7 +68,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         typeById: new Map(),
     };
     const triedScopeType: TriedScopeType = tryScopeType(
-        settings,
+        parseSettings,
         nodeIdMapCollection,
         leafNodeIds,
         ancestryLeaf.node.id,
@@ -74,12 +78,18 @@ export function tryInspection<S extends IParserState = IParserState>(
         return triedScopeType;
     }
 
-    const triedExpectedType: TriedExpectedType = tryExpectedType(settings, activeNode);
+    const triedExpectedType: TriedExpectedType = tryExpectedType(parseSettings, activeNode);
     if (ResultUtils.isErr(triedExpectedType)) {
         return triedExpectedType;
     }
 
-    const autocompleted: Autocomplete = autocomplete(settings, parserState, typeCache, activeNode, maybeParseError);
+    const autocompleted: Autocomplete = autocomplete(
+        parseSettings,
+        parserState,
+        typeCache,
+        activeNode,
+        maybeParseError,
+    );
 
     return ResultUtils.okFactory({
         maybeActiveNode,

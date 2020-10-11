@@ -24,6 +24,7 @@ export function tryParse<S extends IParserState = IParserState>(
     const parseState: S = parseSettings.parserStateFactory(
         parseSettings.maybeCancellationToken,
         lexerSnapshot,
+        0,
         parseSettings.locale,
     );
     try {
@@ -49,6 +50,7 @@ export function tryParseDocument<S extends IParserState = IParserState>(
     const expressionDocumentState: S = parseSettings.parserStateFactory(
         parseSettings.maybeCancellationToken,
         lexerSnapshot,
+        0,
         parseSettings.locale,
     );
     try {
@@ -64,6 +66,7 @@ export function tryParseDocument<S extends IParserState = IParserState>(
         const sectionDocumentState: S = parseSettings.parserStateFactory(
             parseSettings.maybeCancellationToken,
             lexerSnapshot,
+            0,
             parseSettings.locale,
         );
         try {
