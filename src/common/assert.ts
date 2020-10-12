@@ -4,6 +4,11 @@
 import { CommonError } from ".";
 import { Err, Ok, Result, ResultUtils } from "./result";
 
+export function asDefined<T>(maybeValue: T | undefined, maybeMessage: string, maybeDetails?: {}): NonNullable<T> {
+    isDefined(maybeValue, maybeMessage, maybeDetails);
+    return maybeValue;
+}
+
 export function isTrue(value: boolean, maybeMessage?: string, maybeDetails?: {}): asserts value is true {
     if (value !== true) {
         throw new CommonError.InvariantError(maybeMessage ?? `assert failed, expected value to be true`, maybeDetails);

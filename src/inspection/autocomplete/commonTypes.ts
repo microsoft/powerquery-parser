@@ -38,52 +38,21 @@ export interface AutocompleteItem {
 export interface AutocompleteFieldAccess {
     readonly field: TXorNode;
     readonly fieldType: Type.TType;
-    readonly parsedFieldAccess: TParsedFieldAccess;
+    readonly inspectedFieldAccess: InspectedFieldAccess;
     readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
+}
+
+export interface InspectedFieldAccess {
+    readonly isAutocompleteAllowed: boolean;
+    readonly maybeIdentifierUnderPosition: string | undefined;
+    readonly fieldNames: ReadonlyArray<string>;
 }
 
 export interface TrailingToken extends Token.Token {
     readonly isInOrOnPosition: boolean;
 }
 
-export type TParsedFieldAccess =
-    | ParsedFieldProjectionErr
-    | ParsedFieldProjectionOk
-    | ParsedFieldSelectionErr
-    | ParsedFieldSelectionOk;
-
-export interface IParsedFieldAccess {
-    readonly hasError: boolean;
-    readonly nodeKind: Ast.NodeKind;
+export interface ParsedFieldAccess<S extends IParserState = IParserState> {
+    readonly root: TXorNode;
+    readonly maybeParseError: ParseError.ParseError<S> | undefined;
 }
-
-export interface IParsedFieldAccessOk<
-    T extends Ast.FieldProjection | Ast.FieldSelector,
-    K extends Ast.NodeKind.FieldProjection | Ast.NodeKind.FieldSelector
-> extends IParsedFieldAccess {
-    readonly hasError: false;
-    readonly nodeKind: K;
-    readonly ast: T;
-    readonly parserState: IParserState;
-}
-
-export interface IParsedFieldAccessErr<
-    K extends Ast.NodeKind.FieldProjection | Ast.NodeKind.FieldSelector,
-    S extends IParserState = IParserState
-> extends IParsedFieldAccess {
-    readonly hasError: true;
-    readonly nodeKind: K;
-    readonly parseError: ParseError.ParseError<S>;
-}
-
-export type ParsedFieldProjectionOk = IParsedFieldAccessOk<Ast.FieldProjection, Ast.NodeKind.FieldProjection>;
-export type ParsedFieldProjectionErr<S extends IParserState = IParserState> = IParsedFieldAccessErr<
-    Ast.NodeKind.FieldProjection,
-    S
->;
-
-export type ParsedFieldSelectionOk = IParsedFieldAccessOk<Ast.FieldSelector, Ast.NodeKind.FieldSelector>;
-export type ParsedFieldSelectionErr<S extends IParserState = IParserState> = IParsedFieldAccessErr<
-    Ast.NodeKind.FieldSelector,
-    S
->;

@@ -74,7 +74,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `[a = 1, alpha = 2][a|`,
             );
-            const expected: AbridgedAutocompleteFieldAccess = ["a", "alpha"];
+            const expected: AbridgedAutocompleteFieldAccess = ["alpha"];
             const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
                 DefaultSettings,
                 text,
@@ -83,11 +83,11 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it(`WIP [a = 1, alpha = 2][a |`, () => {
+        it(`[a = 1, alpha = 2][a |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `[a = 1, alpha = 2][a |`,
             );
-            const expected: AbridgedAutocompleteFieldAccess = ["a"];
+            const expected: AbridgedAutocompleteFieldAccess = [];
             const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
                 DefaultSettings,
                 text,

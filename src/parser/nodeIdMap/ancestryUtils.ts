@@ -117,3 +117,17 @@ export function maybePreviousXor(
 ): TXorNode | undefined {
     return maybeNthPreviousXor(ancestry, ancestryIndex, 1, maybeAllowedNodeKinds);
 }
+
+export function maybeFirstXorWhere(
+    ancestry: ReadonlyArray<TXorNode>,
+    predicateFn: (xorNode: TXorNode, index?: number, array?: ReadonlyArray<TXorNode>) => boolean,
+): TXorNode | undefined {
+    return ancestry.find(predicateFn);
+}
+
+export function maybeFirstXorOfNodeKind(
+    ancestry: ReadonlyArray<TXorNode>,
+    nodeKind: Ast.NodeKind,
+): TXorNode | undefined {
+    return maybeFirstXorWhere(ancestry, (xorNode: TXorNode) => xorNode.node.kind === nodeKind);
+}
