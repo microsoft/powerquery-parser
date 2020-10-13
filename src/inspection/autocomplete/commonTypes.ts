@@ -54,5 +54,6 @@ export interface TrailingToken extends Token.Token {
 
 export interface ParsedFieldAccess<S extends IParserState = IParserState> {
     readonly root: TXorNode;
+    readonly parserState: S;
     readonly maybeParseError: ParseError.ParseError<S> | undefined;
 }

@@ -4,7 +4,7 @@
 import { CommonError } from ".";
 import { Err, Ok, Result, ResultUtils } from "./result";
 
-export function asDefined<T>(maybeValue: T | undefined, maybeMessage: string, maybeDetails?: {}): NonNullable<T> {
+export function asDefined<T>(maybeValue: T | undefined, maybeMessage?: string, maybeDetails?: {}): NonNullable<T> {
     isDefined(maybeValue, maybeMessage, maybeDetails);
     return maybeValue;
 }

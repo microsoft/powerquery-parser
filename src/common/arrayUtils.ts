@@ -19,6 +19,10 @@ export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?
     return index;
 }
 
+export function assertGet<T>(collection: ReadonlyArray<T>, index: number, maybeMessage?: string, maybeDetails?: {}): T {
+    return Assert.asDefined(collection[index], maybeMessage, maybeDetails);
+}
+
 export function assertIndexOfPredicate<T>(
     collection: ReadonlyArray<T>,
     predicateFn: (element: T) => boolean,
