@@ -44,211 +44,205 @@ function assertGetParseErrAutocompleteOkFieldAccess<S extends IParserState = IPa
 
 describe(`Inspection - Autocomplete - FieldSelection`, () => {
     describe(`Selection`, () => {
-        it(`[a = 1][|`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[a = 1][|`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["a"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
+        describe(`ParseOk`, () => {
+            it(`[cat = 1, car = 2][x|]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][x|]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
 
-        it(`[a = 1, alpha = 2][|`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[a = 1, alpha = 2][|`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["a", "alpha"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
+            it(`[cat = 1, car = 2][c|]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][c|]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
 
-        it(`[a = 1, alpha = 2][a|`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[a = 1, alpha = 2][a|`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["alpha"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
+            it(`[cat = 1, car = 2][| c]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][| c]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
 
-        it(`[a = 1, alpha = 2][a |`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[a = 1, alpha = 2][a |`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
+            it(`[cat = 1, car = 2][c |]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][c |]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
         });
+        describe(`ParseOk`, () => {
+            it(`[cat = 1, car = 2]|[`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2]|[`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
 
-        it(`[a = 1, alpha = 2][b|`, () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[a = 1, alpha = 2][b|`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
+            it(`[cat = 1, car = 2][|`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][|`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
 
-        it("let x = [a = 1] in x[|", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `let x = [a = 1] in x[|`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["a"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
+            it(`[cat = 1, car = 2][x|`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][x|`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
 
-        it("let x = () => [a = 1, alpha = 2] in x()[|", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `let x = () => [a = 1, alpha = 2] in x()[|`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["a", "alpha"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
+            it(`[cat = 1, car = 2][c|`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][c|`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
 
-        it("let x = () => [a = 1, alpha = 2] in x()[a|]", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `let x = () => [a = 1, alpha = 2] in x()[a|]`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["alpha"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("let x = () => [a = 1] in x()|[", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `let x = () => [a = 1] in x()|[`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("x[|", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`x[|`);
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("[x = 1][x|]", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[x = 1][x|]`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("[xavier = 1][x|]", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[xavier = 1][x|]`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["xavier"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("[x = 1, xavier = 2][x|]", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[x = 1, xavier = 2][x|]`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = ["xavier"];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("[x = 1, xavier = 2][x |]", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[x = 1, xavier = 2][x |]`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("[x = 1, xavier = 2]|[x]", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[x = 1, xavier = 2]|[x]`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
-        });
-
-        it("[x = 1, xavier = 2]|[x]", () => {
-            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `[x = 1, xavier = 2]|[x]`,
-            );
-            const expected: AbridgedAutocompleteFieldAccess = [];
-            const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
-                DefaultSettings,
-                text,
-                position,
-            );
-            expect(actual).to.have.members(expected);
+            it(`[cat = 1, car = 2][c |`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][c |`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
         });
     });
-    describe(`Projection`, () => {});
+    describe("Projection", () => {
+        describe("ParseOk", () => {
+            it(`[cat = 1, car = 2][ [x|] ]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][ [x|] ]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
+
+            it(`[cat = 1, car = 2][ [c|] ]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][ [c|] ]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
+
+            it(`[cat = 1, car = 2][ [c |] ]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][ [c |] ]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
+
+            it(`[cat = 1, car = 2][ [x], [c|] ]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][ [x], [c|] ]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
+
+            it(`[cat = 1, car = 2][ [cat], [c|] ]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][ [cat], [c|] ]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = ["car"];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
+
+            it(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, () => {
+                const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                    `[cat = 1, car = 2][ [cat], [car], [c|] ]`,
+                );
+                const expected: AbridgedAutocompleteFieldAccess = [];
+                const actual: AbridgedAutocompleteFieldAccess = assertGetParseOkAutocompleteOkFieldAccess(
+                    DefaultSettings,
+                    text,
+                    position,
+                );
+                expect(actual).to.have.members(expected);
+            });
+        });
+    });
 });
