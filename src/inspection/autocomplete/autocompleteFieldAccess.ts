@@ -84,10 +84,12 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     }
 
     if (hasTrailingOpenConstant === true) {
+        // From the starting open constant run a few new parse runs and return the run which parsed the most tokens.
         const maybeParsedFieldAccess: ParsedFieldAccess | undefined = maybeParseFieldAccessFromParse<S>(
             parseSettings,
             parserState,
         );
+        // Neither parse was succesful.
         if (maybeParsedFieldAccess === undefined) {
             return undefined;
         }
@@ -98,11 +100,16 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
         );
     }
 
+    // No field access was found, or the field access reports no autocomplete is possible.
+    // Eg. `[x = 1][x |]`
     if (maybeInspectedFieldAccess === undefined || maybeInspectedFieldAccess.isAutocompleteAllowed === false) {
         return undefined;
     }
     const inspectedFieldAccess: InspectedFieldAccess = maybeInspectedFieldAccess;
 
+    // After a field access was found then find the field it's accessing and inspect the field's type.
+    // This is delayed until after the field access because running static type analysis on an
+    // arbitrary field could be costly.
     const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
     const maybeField: TXorNode | undefined = maybeTypablePrimaryExpression(
         nodeIdMapCollection,
@@ -126,6 +133,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     }
     const fieldType: Type.TType = triedFieldType.value;
 
+    // We can only autocomplete a field access if we know what fields are present.
     if (
         fieldType.maybeExtendedKind !== Type.ExtendedTypeKind.DefinedRecord &&
         fieldType.maybeExtendedKind !== Type.ExtendedTypeKind.DefinedTable
