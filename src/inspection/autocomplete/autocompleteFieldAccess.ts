@@ -319,7 +319,7 @@ function maybeTypablePrimaryExpression(
 
                 // If the ArrayWrapper has no children.
                 if (maybeChildrenForArrayWrapper === undefined) {
-                    // If there's a trailing bracket we can return the head, else nothing.
+                    // If there's a trailing bracket then we can return the head, else nothing.
                     // Eg. `foo[|`
                     return hasTrailingOpenConstant === false
                         ? undefined
@@ -329,23 +329,32 @@ function maybeTypablePrimaryExpression(
                               0,
                               undefined,
                           );
-                } else {
+                }
+                // Else if there's a single child then conditionally shift left or remain in place.
+                else if (maybeChildrenForArrayWrapper.length === 1) {
+                    // If an unparsed trailing open bracket exists then don't shift to the left.
+                    if (hasTrailingOpenConstant === true) {
+                        return ancestry[index - 2];
+                    }
+                    // Otherwise return the previous sibling, meaning the head.
+                    else {
+                        return NodeIdMapUtils.assertGetChildXorByAttributeIndex(
+                            nodeIdMapCollection,
+                            xorNode.node.id,
+                            0,
+                            undefined,
+                        );
+                    }
+                }
+                // Else shift one to the left.
+                else {
                     const numChildren: number = maybeChildrenForArrayWrapper.length;
-                    return numChildren === 1
-                        ? // It's the first element in the ArrayWrapper so we return the head.
-                          NodeIdMapUtils.assertGetChildXorByAttributeIndex(
-                              nodeIdMapCollection,
-                              xorNode.node.id,
-                              0,
-                              undefined,
-                          )
-                        : // Otherwise return the (n - 1) element in ArrayWrapper
-                          NodeIdMapUtils.assertGetChildXorByAttributeIndex(
-                              nodeIdMapCollection,
-                              xorNodeBeforeRpe.node.id,
-                              numChildren - 2,
-                              undefined,
-                          );
+                    return NodeIdMapUtils.assertGetChildXorByAttributeIndex(
+                        nodeIdMapCollection,
+                        xorNodeBeforeRpe.node.id,
+                        maybeChildrenForArrayWrapper.length - 2,
+                        undefined,
+                    );
                 }
             }
         } else if (matchingContiguousPrimaryExpression && XorNodeUtils.isTPrimaryExpression(xorNode)) {
