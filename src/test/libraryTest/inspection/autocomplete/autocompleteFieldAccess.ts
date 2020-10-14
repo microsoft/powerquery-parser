@@ -97,7 +97,8 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 expect(actual).to.have.members(expected);
             });
         });
-        describe(`ParseOk`, () => {
+
+        describe(`ParseErr`, () => {
             it(`[cat = 1, car = 2]|[`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2]|[`,
@@ -164,6 +165,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             });
         });
     });
+
     describe("Projection", () => {
         describe("ParseOk", () => {
             it(`[cat = 1, car = 2][ [x|] ]`, () => {
