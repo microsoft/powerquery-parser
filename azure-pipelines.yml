@@ -1,81 +1,21 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+name: localization.yml
 
-trigger:
-- master
+trigger: none
 
-pr:
-- master
+stages:
+    - stage: __default
+      jobs:
+          - job: Job1
+            pool:
+                vmImage: windows-latest
+            steps:
+                - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
+                  env:
+                      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                  displayName: "Localization Build: Localize/LocProject.json"
+                  inputs:
+                      packageSourceAuth: patAuth
+                      patVariable: "$(OneLocBuildPAT)"
 
-pool:
-  vmImage: 'windows-latest'
-
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '10.x'
-  displayName: 'Install Node.js'
-
-- task: Npm@1
-  displayName: 'npm install'
-  inputs:
-    command: 'install'
-
-- task: Npm@1
-  displayName: 'build'
-  inputs:
-    command: 'custom'
-    customCommand: 'run build'
-
-- task: Npm@1
-  displayName: 'npm test'
-  inputs:
-    command: 'custom'
-    customCommand: 'test'
-
-- task: Npm@1
-  displayName: 'pack'
-  inputs:
-    command: 'custom'
-    customCommand: 'pack'
-
-- task: CopyFiles@2
-  displayName: 'copy package to out directory'
-  inputs:
-    SourceFolder: '$(Build.SourcesDirectory)'
-    Contents: '*.tgz'
-    TargetFolder: '$(Build.SourcesDirectory)/out'
-    OverWrite: true
-
-- task: PoliCheck@1
-  inputs:
-    inputType: 'Basic'
-    targetType: 'F'
-    targetArgument: 'src'
-    result: 'PoliCheck.xml'
-
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testRunner: JUnit
-    testResultsFiles: '**/test-results.xml'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
-    ArtifactName: lib
-  displayName: 'publish lib'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)/out'
-    ArtifactName: out
-  displayName: 'publish out directory'
-
-- task: PublishBuildArtifacts@1
-  inputs:
-   PathtoPublish: '$(System.DefaultWorkingDirectory)/../_sdt/logs/PoliCheck'
-   ArtifactName: PoliCheck
-  displayName: 'publish policheck results'
+                - task: PublishBuildArtifacts@1
+                  displayName: "Publish Artifact: drop"
