@@ -431,4 +431,58 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             });
         });
     });
+
+    describe(`Indirection`, () => {
+        it(`let fn = () => [cat = 1, car = 2] in fn()[|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                `let fn = () => [cat = 1, car = 2] in fn()[|`,
+            );
+            const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
+        it(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                `let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`,
+            );
+            const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
+        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()()[|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                `let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()()[|`,
+            );
+            const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+
+        it(`WIP let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                `let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`,
+            );
+            const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+    });
 });

@@ -41,6 +41,12 @@ export function tryAutocompleteFieldAccess<S extends IParserState = IParserState
     });
 }
 
+const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKind> = [
+    Type.ExtendedTypeKind.AnyUnion,
+    Type.ExtendedTypeKind.DefinedRecord,
+    Type.ExtendedTypeKind.DefinedTable,
+];
+
 const AllowedTrailingOpenWrapperConstants: ReadonlyArray<Token.TokenKind> = [
     Token.TokenKind.LeftBrace,
     Token.TokenKind.LeftBracket,
@@ -110,6 +116,12 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     }
     const inspectedFieldAccess: InspectedFieldAccess = maybeInspectedFieldAccess;
 
+    // Don't waste time on type analysis if the field access
+    // reports inspection it's in an invalid autocomplete location.
+    if (inspectedFieldAccess.isAutocompleteAllowed === false) {
+        return undefined;
+    }
+
     // After a field access was found then find the field it's accessing and inspect the field's type.
     // This is delayed until after the field access because running static type analysis on an
     // arbitrary field could be costly.
@@ -137,10 +149,8 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     const fieldType: Type.TType = triedFieldType.value;
 
     // We can only autocomplete a field access if we know what fields are present.
-    if (
-        fieldType.maybeExtendedKind !== Type.ExtendedTypeKind.DefinedRecord &&
-        fieldType.maybeExtendedKind !== Type.ExtendedTypeKind.DefinedTable
-    ) {
+    const fieldEntries: ReadonlyArray<[string, Type.TType]> = fieldEntriesFromFieldType(fieldType);
+    if (fieldEntries.length === 0) {
         return undefined;
     }
 
@@ -148,8 +158,33 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
         field,
         fieldType,
         inspectedFieldAccess,
-        autocompleteItems: autoCompleteItemsFactory(fieldType, inspectedFieldAccess),
+        autocompleteItems: autoCompleteItemsFactory(fieldEntries, inspectedFieldAccess),
     };
+}
+
+function fieldEntriesFromFieldType(type: Type.TType): ReadonlyArray<[string, Type.TType]> {
+    switch (type.maybeExtendedKind) {
+        case Type.ExtendedTypeKind.AnyUnion: {
+            let fields: [string, Type.TType][] = [];
+            for (const field of type.unionedTypePairs) {
+                if (
+                    field.maybeExtendedKind &&
+                    AllowedExtendedTypeKindsForFieldEntries.includes(field.maybeExtendedKind)
+                ) {
+                    fields = fields.concat(fieldEntriesFromFieldType(field));
+                }
+            }
+
+            return fields;
+        }
+
+        case Type.ExtendedTypeKind.DefinedRecord:
+        case Type.ExtendedTypeKind.DefinedTable:
+            return [...type.fields.entries()];
+
+        default:
+            return [];
+    }
 }
 
 function inspectFieldAccess(
@@ -280,18 +315,15 @@ function inspectFieldSelector(
 }
 
 function autoCompleteItemsFactory(
-    fieldType: Type.DefinedRecord | Type.DefinedTable,
+    fieldEntries: ReadonlyArray<[string, Type.TType]>,
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
-    if (inspectedFieldAccess.isAutocompleteAllowed === false) {
-        return [];
-    }
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
 
     const possibleAutocompleteItems: AutocompleteItem[] = [];
 
     const maybeIdentifierUnderPosition: string | undefined = inspectedFieldAccess.maybeIdentifierUnderPosition;
-    for (const [key, type] of fieldType.fields.entries()) {
+    for (const [key, type] of fieldEntries) {
         if (fieldAccessNames.includes(key) === true) {
             continue;
         }
