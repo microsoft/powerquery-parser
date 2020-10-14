@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, ResultUtils } from "../../common";
-import { Ast, Token, Type, Constant } from "../../language";
+import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
 import {

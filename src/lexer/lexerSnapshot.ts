@@ -3,7 +3,7 @@
 
 import { LexError } from ".";
 import { Lexer } from "..";
-import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils, ArrayUtils } from "../common";
+import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
 import { ILocalizationTemplates } from "../localization";
 
