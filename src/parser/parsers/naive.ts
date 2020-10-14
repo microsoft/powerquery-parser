@@ -179,7 +179,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
 
         if (state.lexerSnapshot.tokens.length) {
             state.maybeCurrentToken = state.lexerSnapshot.tokens[0];
-            state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+            state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
         }
 
         try {
@@ -2525,6 +2525,13 @@ export function readToken<S extends IParserState = IParserState>(state: S): stri
     state.tokenIndex += 1;
 
     if (state.tokenIndex === tokens.length) {
+        // Each node should have a token range of either [start, finish).
+        // That idea breaks if a required parse takes place at the end of the token stream.
+        // Eg. `let x = 1 |` will attempt a parse for `in`.
+        // That means a correct implementation would have some sort of TokenRange | Eof union type,
+        // but there's no clean way to introduce that.
+        //
+        // So, for now when a IParserState is Eof when maybeCurrentTokenKind === undefined.
         state.maybeCurrentTokenKind = undefined;
     } else {
         state.maybeCurrentToken = tokens[state.tokenIndex];

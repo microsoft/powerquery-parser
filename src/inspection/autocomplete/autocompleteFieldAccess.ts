@@ -2,7 +2,8 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, ResultUtils } from "../../common";
-import { Ast, Token, Type } from "../../language";
+import { Ast, Token, Type, Constant } from "../../language";
+import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
 import {
     IParser,
@@ -65,6 +66,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     }
     if (maybeFieldAccessAncestor !== undefined) {
         maybeInspectedFieldAccess = inspectFieldAccess(
+            parserState.lexerSnapshot,
             parserState.contextState.nodeIdMapCollection,
             activeNode.position,
             maybeFieldAccessAncestor,
@@ -94,6 +96,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
             return undefined;
         }
         maybeInspectedFieldAccess = inspectFieldAccess(
+            maybeParsedFieldAccess.parserState.lexerSnapshot,
             maybeParsedFieldAccess.parserState.contextState.nodeIdMapCollection,
             activeNode.position,
             maybeParsedFieldAccess.root,
@@ -150,16 +153,17 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
 }
 
 function inspectFieldAccess(
+    lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     fieldAccess: TXorNode,
 ): InspectedFieldAccess {
     switch (fieldAccess.node.kind) {
         case Ast.NodeKind.FieldProjection:
-            return inspectFieldProjection(nodeIdMapCollection, position, fieldAccess);
+            return inspectFieldProjection(lexerSnapshot, nodeIdMapCollection, position, fieldAccess);
 
         case Ast.NodeKind.FieldSelector:
-            return inspectFieldSelector(nodeIdMapCollection, position, fieldAccess);
+            return inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, position, fieldAccess);
 
         default:
             const details: {} = {
@@ -174,6 +178,7 @@ function inspectFieldAccess(
 }
 
 function inspectFieldProjection(
+    lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     fieldProjection: TXorNode,
@@ -184,6 +189,7 @@ function inspectFieldProjection(
 
     for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
         const inspectedFieldSelector: InspectedFieldAccess = inspectFieldSelector(
+            lexerSnapshot,
             nodeIdMapCollection,
             position,
             fieldSelector,
@@ -206,6 +212,7 @@ function inspectFieldProjection(
 }
 
 function inspectFieldSelector(
+    lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     fieldSelector: TXorNode,
@@ -241,18 +248,31 @@ function inspectFieldSelector(
             };
         }
 
-        case XorNodeKind.Context:
+        case XorNodeKind.Context: {
+            // TODO [Autocomplete]:
+            // This doesn't take into account of generalized identifiers consisting of multiple tokens.
+            // Eg. `foo[bar baz]` or `foo[#"bar baz"].
+            const openBracketConstant: Ast.TNode = NodeIdMapUtils.assertGetChildAstByAttributeIndex(
+                nodeIdMapCollection,
+                fieldSelector.node.id,
+                0,
+                [Ast.NodeKind.Constant],
+            );
+            const maybeNextTokenPosition: Token.TokenPosition =
+                lexerSnapshot.tokens[openBracketConstant.tokenRange.tokenIndexEnd + 1]?.positionStart;
+
+            const isAutocompleteAllowed: boolean =
+                PositionUtils.isAfterAst(position, openBracketConstant, false) &&
+                (maybeNextTokenPosition === undefined ||
+                    PositionUtils.isOnTokenPosition(position, maybeNextTokenPosition) ||
+                    PositionUtils.isBeforeTokenPosition(position, maybeNextTokenPosition, true));
+
             return {
-                isAutocompleteAllowed: PositionUtils.isInContext(
-                    nodeIdMapCollection,
-                    position,
-                    generalizedIdentifierXor.node,
-                    true,
-                    true,
-                ),
+                isAutocompleteAllowed,
                 maybeIdentifierUnderPosition: undefined,
                 fieldNames: [],
             };
+        }
 
         default:
             throw Assert.isNever(generalizedIdentifierXor);
