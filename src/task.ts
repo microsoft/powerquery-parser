@@ -20,7 +20,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "./parser";
-import { CommonSettings, LexSettings, ParseSettings } from "./settings/settings";
+import { LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedLexParse<S extends IParserState = IParserState> = Result<
     LexParseOk<S>,

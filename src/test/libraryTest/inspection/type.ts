@@ -8,15 +8,7 @@ import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
-import {
-    IParserState,
-    IParserStateUtils,
-    NodeIdMap,
-    ParseContext,
-    ParseError,
-    TXorNode,
-    XorNodeUtils,
-} from "../../../parser";
+import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 

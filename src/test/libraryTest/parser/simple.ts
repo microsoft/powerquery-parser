@@ -7,7 +7,6 @@ import { Task } from "../../..";
 import { Assert, Traverse } from "../../../common";
 import { Ast, Constant } from "../../../language";
 import { DefaultTemplates } from "../../../localization";
-import { IParser, IParserState, IParserStateUtils } from "../../../parser";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";

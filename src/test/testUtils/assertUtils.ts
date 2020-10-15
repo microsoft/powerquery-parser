@@ -7,7 +7,7 @@ import { Assert, Inspection, Lexer, Task } from "../..";
 import { Autocomplete, Position } from "../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../inspection/activeNode";
 import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
-import { CommonSettings, LexSettings, ParseSettings } from "../../settings";
+import { LexSettings, ParseSettings } from "../../settings";
 
 // Only works with single line expressions
 export function assertGetTextWithPosition(text: string): [string, Inspection.Position] {

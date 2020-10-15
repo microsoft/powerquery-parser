@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result } from "../../common";
-import { Ast, Constant, Keyword, Token, Type } from "../../language";
+import { Constant, Keyword, Token, Type } from "../../language";
 import { IParserState, ParseError, TXorNode } from "../../parser";
 
 export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;

@@ -408,7 +408,6 @@ function maybeTypablePrimaryExpression(
                 }
                 // Else shift one to the left.
                 else {
-                    const numChildren: number = maybeChildrenForArrayWrapper.length;
                     return NodeIdMapUtils.assertGetChildXorByAttributeIndex(
                         nodeIdMapCollection,
                         xorNodeBeforeRpe.node.id,

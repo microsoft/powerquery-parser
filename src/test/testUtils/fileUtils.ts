@@ -2,7 +2,6 @@ import * as fs from "fs";
 import "mocha";
 import * as path from "path";
 import { Task } from "../..";
-import { LexerSnapshot } from "../../lexer";
 import { IParserState } from "../../parser";
 import { LexSettings, ParseSettings } from "../../settings";
 

@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
 import { DefaultTemplates, Localization } from "../../../localization";
-import { IParser, IParserState, IParserStateUtils, ParseError } from "../../../parser";
+import { ParseError } from "../../../parser";
 import { SequenceKind } from "../../../parser/error";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, CommonError, Result, ResultUtils } from "../../../common";
+import { ArrayUtils, ResultUtils } from "../../../common";
 import { Ast, Constant, Keyword, Token } from "../../../language";
 import { getLocalizationTemplates } from "../../../localization";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";

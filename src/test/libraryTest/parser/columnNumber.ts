@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
-import { IParserState, IParserStateUtils, ParseError } from "../../../parser";
+import { IParserState, ParseError } from "../../../parser";
 import { TokenWithColumnNumber } from "../../../parser/error";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";

@@ -3,7 +3,6 @@
 
 import { expect } from "chai";
 import "mocha";
-import { IParserStateUtils } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { LexParseOk } from "../../../task";
 import { TestAssertUtils } from "../../testUtils";
