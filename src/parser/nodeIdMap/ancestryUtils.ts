@@ -125,9 +125,31 @@ export function maybeFirstXorWhere(
     return ancestry.find(predicateFn);
 }
 
+export function maybeFirstXorAndIndexWhere(
+    ancestry: ReadonlyArray<TXorNode>,
+    predicateFn: (xorNode: TXorNode) => boolean,
+): [TXorNode, number] | undefined {
+    const numNodes: number = ancestry.length;
+    for (let index: number = 0; index < numNodes; index += 1) {
+        const xorNode: TXorNode = ancestry[index];
+        if (predicateFn(xorNode)) {
+            return [xorNode, index];
+        }
+    }
+
+    return undefined;
+}
+
 export function maybeFirstXorOfNodeKind(
     ancestry: ReadonlyArray<TXorNode>,
     nodeKind: Ast.NodeKind,
 ): TXorNode | undefined {
     return maybeFirstXorWhere(ancestry, (xorNode: TXorNode) => xorNode.node.kind === nodeKind);
+}
+
+export function maybeFirstXorAndIndexOfNodeKind(
+    ancestry: ReadonlyArray<TXorNode>,
+    nodeKind: Ast.NodeKind,
+): [TXorNode, number] | undefined {
+    return maybeFirstXorAndIndexWhere(ancestry, (xorNode: TXorNode) => xorNode.node.kind === nodeKind);
 }
