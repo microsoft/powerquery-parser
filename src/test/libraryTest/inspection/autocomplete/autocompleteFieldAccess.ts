@@ -472,11 +472,26 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it(`WIP let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, () => {
+        it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`,
             );
             const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
+            const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
+                DefaultSettings,
+                text,
+                position,
+            );
+            expect(actual).to.have.members(expected);
+        });
+    });
+
+    describe(`GeneralizedIdentifier`, () => {
+        it(`[#"foo" = 1][|`, () => {
+            const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+                `[#"foo" = 1][|`,
+            );
+            const expected: AbridgedAutocompleteFieldAccess = [`#"foo"`];
             const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(
                 DefaultSettings,
                 text,
