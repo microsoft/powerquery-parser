@@ -1,6 +1,6 @@
 # powerquery-parser
 
-[![Build Status](https://dev.azure.com/ms/powerquery-parser/_apis/build/status/Microsoft.powerquery-parser?branchName=master)](https://dev.azure.com/ms/powerquery-parser/_build/latest?definitionId=134&branchName=master)
+[![Build Status](https://dev.azure.com/ms/powerquery-parser/_apis/build/status/microsoft.powerquery-parser?branchName=master)](https://dev.azure.com/ms/powerquery-parser/_build/latest?definitionId=134&branchName=master)
 
 A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) language, written in TypeScript. Designed to be consumed by other projects.
 
