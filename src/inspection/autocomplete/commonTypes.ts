@@ -17,13 +17,6 @@ export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
 
 export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
 
-export const enum FieldAccessKind {
-    Ok,
-    Err,
-    SelectionOk,
-    SelectionErr,
-}
-
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;
     readonly triedKeyword: TriedAutocompleteKeyword;
