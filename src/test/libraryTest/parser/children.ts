@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
 import { Ast } from "../../../language";
-import { IParserState, IParserStateUtils, NodeIdMap } from "../../../parser";
+import { IParserState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -51,7 +51,7 @@ describe("Parser.Children", () => {
             },
         ];
         const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
-            TestAssertUtils.assertGetLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
+            TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
         );
         expect(actual).to.deep.equal(expected);
     });
@@ -71,7 +71,7 @@ describe("Parser.Children", () => {
             },
         ];
         const actual: ReadonlyArray<ChildIdsByIdEntry> = actualFactory(
-            TestAssertUtils.assertGetLexParseOk(DefaultSettings, text, IParserStateUtils.stateFactory),
+            TestAssertUtils.assertGetLexParseOk(DefaultSettings, text),
         );
         expect(actual).to.deep.equal(expected);
     });

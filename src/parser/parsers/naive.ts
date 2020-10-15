@@ -174,12 +174,12 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
 
         // Reset the parser's state.
         state.tokenIndex = 0;
-        state.contextState = ParseContextUtils.newState();
+        state.contextState = ParseContextUtils.stateFactory();
         state.maybeCurrentContextNode = undefined;
 
         if (state.lexerSnapshot.tokens.length) {
             state.maybeCurrentToken = state.lexerSnapshot.tokens[0];
-            state.maybeCurrentTokenKind = state.maybeCurrentToken.kind;
+            state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
         }
 
         try {
@@ -190,7 +190,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
             let triedError: Error;
             if (expressionErrorStateBackup.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                IParserStateUtils.applyFastStateBackup(state, expressionError);
+                IParserStateUtils.applyFastStateBackup(state, expressionErrorStateBackup);
                 state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;
@@ -361,7 +361,7 @@ export function readExpression<S extends IParserState = IParserState>(state: S, 
         case Token.TokenKind.LeftParenthesis:
             const triedDisambiguation: Result<
                 ParenthesisDisambiguation,
-                ParseError.UnterminatedParenthesesError
+                ParseError.UnterminatedSequence
             > = parser.disambiguateParenthesis(state, parser);
             if (ResultUtils.isErr(triedDisambiguation)) {
                 throw triedDisambiguation.error;
@@ -1955,7 +1955,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
 export function disambiguateParenthesis<S extends IParserState = IParserState>(
     state: S,
     parser: IParser<S>,
-): Result<ParenthesisDisambiguation, ParseError.UnterminatedParenthesesError> {
+): Result<ParenthesisDisambiguation, ParseError.UnterminatedSequence> {
     state.maybeCancellationToken?.throwIfCancelled();
 
     const initialTokenIndex: number = state.tokenIndex;
@@ -2034,7 +2034,7 @@ function unsafeMoveTo(state: IParserState, tokenIndex: number): void {
 export function disambiguateBracket<S extends IParserState = IParserState>(
     state: S,
     _parser: IParser<S>,
-): Result<BracketDisambiguation, ParseError.UnterminatedBracketError> {
+): Result<BracketDisambiguation, ParseError.UnterminatedSequence> {
     state.maybeCancellationToken?.throwIfCancelled();
 
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
@@ -2525,6 +2525,13 @@ export function readToken<S extends IParserState = IParserState>(state: S): stri
     state.tokenIndex += 1;
 
     if (state.tokenIndex === tokens.length) {
+        // Each node should have a token range of either [start, finish).
+        // That idea breaks if a required parse takes place at the end of the token stream.
+        // Eg. `let x = 1 |` will attempt a parse for `in`.
+        // That means a correct implementation would have some sort of TokenRange | Eof union type,
+        // but there's no clean way to introduce that.
+        //
+        // So, for now when a IParserState is Eof when maybeCurrentTokenKind === undefined.
         state.maybeCurrentTokenKind = undefined;
     } else {
         state.maybeCurrentToken = tokens[state.tokenIndex];
@@ -2669,7 +2676,7 @@ export function readBracketDisambiguation<S extends IParserState = IParserState>
 
     const triedDisambiguation: Result<
         BracketDisambiguation,
-        ParseError.UnterminatedBracketError
+        ParseError.UnterminatedSequence
     > = parser.disambiguateBracket(state, parser);
     if (ResultUtils.isErr(triedDisambiguation)) {
         throw triedDisambiguation.error;

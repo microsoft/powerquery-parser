@@ -4,6 +4,8 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert, Inspection, Lexer, Task } from "../..";
+import { Autocomplete, Position } from "../../inspection";
+import { ActiveNode, ActiveNodeUtils } from "../../inspection/activeNode";
 import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
 import { LexSettings, ParseSettings } from "../../settings";
 
@@ -25,9 +27,8 @@ export function assertGetTextWithPosition(text: string): [string, Inspection.Pos
 export function assertGetLexParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): Task.LexParseOk<S> {
-    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text, stateFactoryFn);
+    const triedLexParse: Task.TriedLexParse<S> = Task.tryLexParse(settings, text);
     Assert.isOk(triedLexParse);
     return triedLexParse.value;
 }
@@ -35,9 +36,8 @@ export function assertGetLexParseOk<S extends IParserState = IParserState>(
 export function assertGetParseErr<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): ParseError.ParseError<S> {
-    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
+    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text);
     Assert.isErr(triedParse);
 
     if (!ParseError.isParseError(triedParse.error)) {
@@ -50,9 +50,8 @@ export function assertGetParseErr<S extends IParserState = IParserState>(
 export function assertGetParseOk<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): ParseOk<S> {
-    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text, stateFactoryFn);
+    const triedParse: TriedParse<S> = assertGetTriedParse(settings, text);
     Assert.isOk(triedParse);
     return triedParse.value;
 }
@@ -62,7 +61,6 @@ export function assertGetParseOk<S extends IParserState = IParserState>(
 function assertGetTriedParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedParse<S> {
     const triedLex: Lexer.TriedLex = Lexer.tryLex(settings, text);
     Assert.isOk(triedLex);
@@ -73,5 +71,46 @@ function assertGetTriedParse<S extends IParserState = IParserState>(
     Assert.isOk(triedSnapshot);
     const lexerSnapshot: Lexer.LexerSnapshot = triedSnapshot.value;
 
-    return IParserUtils.tryRead(stateFactoryFn(settings, lexerSnapshot), settings.parser);
+    return IParserUtils.tryParse<S>(settings, lexerSnapshot);
+}
+
+export function assertGetParseOkAutocompleteOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
+    text: string,
+    position: Position,
+): Autocomplete {
+    const parseOk: ParseOk<S> = assertGetParseOk(settings, text);
+    return assertGetAutocompleteOk(settings, parseOk.state, position, undefined);
+}
+
+export function assertGetParseErrAutocompleteOk<S extends IParserState = IParserState>(
+    settings: LexSettings & ParseSettings<S>,
+    text: string,
+    position: Position,
+): Autocomplete {
+    const parseError: ParseError.ParseError<S> = assertGetParseErr(settings, text);
+    return assertGetAutocompleteOk(settings, parseError.state, position, parseError);
+}
+
+export function assertGetAutocompleteOk<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
+    parserState: S,
+    position: Position,
+    maybeParseError: ParseError.ParseError<S> | undefined,
+): Autocomplete {
+    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+        parserState.contextState.nodeIdMapCollection,
+        parserState.contextState.leafNodeIds,
+        position,
+    );
+    return Inspection.autocomplete(
+        parseSettings,
+        parserState,
+        {
+            scopeById: new Map(),
+            typeById: new Map(),
+        },
+        maybeActiveNode,
+        maybeParseError,
+    );
 }

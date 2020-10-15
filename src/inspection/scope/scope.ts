@@ -22,16 +22,22 @@ import {
     TScopeItem,
 } from "./scopeItem";
 
+// Keys are identifier literals.
 export type ScopeTypeByKey = Map<string, Type.TType>;
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
-export type TriedScopeForRoot = Result<ScopeItemByKey, CommonError.CommonError>;
+export type TriedNodeScope = Result<NodeScope, CommonError.CommonError>;
 
-export type ScopeById = Map<number, ScopeItemByKey>;
+// Scopes for multiple nodes, where the keys are nodeIds.
+// Serves as a cache when building the scope for a specific node.
+export type ScopeById = Map<number, NodeScope>;
 
-export type ScopeItemByKey = Map<string, TScopeItem>;
+// Scope for a specific node.
+export type NodeScope = Map<string, TScopeItem>;
 
+// Builds scopes for multiple nodes using a top-down approach,
+// starting from the ancestry's root and finishing on the the ancestry's leaf.
 export function tryScope(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -45,14 +51,15 @@ export function tryScope(
     );
 }
 
-export function tryScopeItems(
+// Builds a scope for the given node.
+export function tryNodeScope(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
-): TriedScopeForRoot {
+): TriedNodeScope {
     return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
         if (ancestry.length === 0) {
@@ -60,35 +67,37 @@ export function tryScopeItems(
         }
 
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
-        const maybeScope: ScopeItemByKey | undefined = inspected.get(nodeId);
+        const maybeScope: NodeScope | undefined = inspected.get(nodeId);
         Assert.isDefined(maybeScope, `expected nodeId in scope result`, { nodeId });
 
         return maybeScope;
     });
 }
 
-export function getOrCreateScopeItemByKey(
+export function assertGetOrCreateScopeItemByKey(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined = undefined,
-): Result<ScopeItemByKey, CommonError.CommonError> {
+): Result<NodeScope, CommonError.CommonError> {
     const scopeById: ScopeById = maybeScopeById ?? new Map();
-    const maybeScope: ScopeItemByKey | undefined = scopeById.get(nodeId);
+    const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
         return ResultUtils.okFactory(maybeScope);
     }
 
-    const triedScope: TriedScopeForRoot = tryScopeItems(settings, nodeIdMapCollection, leafNodeIds, nodeId, scopeById);
-    if (ResultUtils.isErr(triedScope)) {
-        throw triedScope.error;
+    const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, leafNodeIds, nodeId, scopeById);
+    if (ResultUtils.isErr(triedNodeScope)) {
+        throw triedNodeScope.error;
     }
 
-    return triedScope;
+    return triedNodeScope;
 }
 
+// Recusrive deference of the identifier until it reaches the value node.
+// Does not handle recursive identifiers.
 export function maybeDereferencedIdentifier(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -125,7 +134,7 @@ export function maybeDereferencedIdentifier(
             throw Assert.isNever(identifier);
     }
 
-    const triedScopeItemByKey: Result<ScopeItemByKey, CommonError.CommonError> = getOrCreateScopeItemByKey(
+    const triedScopeItemByKey: Result<NodeScope, CommonError.CommonError> = assertGetOrCreateScopeItemByKey(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
@@ -135,7 +144,7 @@ export function maybeDereferencedIdentifier(
     if (ResultUtils.isErr(triedScopeItemByKey)) {
         return triedScopeItemByKey;
     }
-    const scopeItemByKey: ScopeItemByKey = triedScopeItemByKey.value;
+    const scopeItemByKey: NodeScope = triedScopeItemByKey.value;
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
 
     if (
@@ -201,7 +210,7 @@ function inspectScope(
 
     let scopeById: ScopeById;
     if (maybeScopeById !== undefined) {
-        const maybeCached: ScopeItemByKey | undefined = maybeScopeById.get(rootId);
+        const maybeCached: NodeScope | undefined = maybeScopeById.get(rootId);
         if (maybeCached !== undefined) {
             return maybeScopeById;
         }
@@ -259,7 +268,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
             break;
 
         default:
-            localGetOrCreateScope(state, xorNode.node.id, undefined);
+            localGetOrCreateNodeScope(state, xorNode.node.id, undefined);
     }
 }
 
@@ -288,7 +297,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     XorNodeUtils.assertAstNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
 
     // Propegates the parent's scope.
-    const scope: ScopeItemByKey = localGetOrCreateScope(state, fnExpr.node.id, undefined);
+    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, fnExpr.node.id, undefined);
 
     const inspectedFnExpr: TypeInspector.InspectedFunctionExpression = TypeInspector.inspectFunctionExpression(
         state.nodeIdMapCollection,
@@ -314,20 +323,20 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
             ];
         },
     );
-    expandChildScope(state, fnExpr, [3], newEntries, scope);
+    expandChildScope(state, fnExpr, [3], newEntries, nodeScope);
 }
 
 function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): void {
     XorNodeUtils.assertAstNodeKind(letExpr, Ast.NodeKind.LetExpression);
 
     // Propegates the parent's scope.
-    const scope: ScopeItemByKey = localGetOrCreateScope(state, letExpr.node.id, undefined);
+    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, letExpr.node.id, undefined);
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.Identifier
     >> = NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, letExpr);
 
-    inspectKeyValuePairs(state, scope, keyValuePairs, keyValuePairScopeItemFactory);
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyValuePairScopeItemFactory);
 
     // Places the assignments from the 'let' into LetExpression.expression
     const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = scopeItemsFromKeyValuePairs(
@@ -335,19 +344,19 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
         -1,
         keyValuePairScopeItemFactory,
     );
-    expandChildScope(state, letExpr, [3], newEntries, scope);
+    expandChildScope(state, letExpr, [3], newEntries, nodeScope);
 }
 
 function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: TXorNode): void {
     XorNodeUtils.assertAnyAstNodeKind(record, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
     // Propegates the parent's scope.
-    const scope: ScopeItemByKey = localGetOrCreateScope(state, record.node.id, undefined);
+    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, record.node.id, undefined);
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.GeneralizedIdentifier
     >> = NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, record);
-    inspectKeyValuePairs(state, scope, keyValuePairs, keyValuePairScopeItemFactory);
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyValuePairScopeItemFactory);
 }
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
@@ -377,7 +386,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
 // Expands the scope of the value portion for each key value pair.
 function inspectKeyValuePairs<T extends TScopeItem, I extends Ast.GeneralizedIdentifier | Ast.Identifier>(
     state: ScopeInspectionState,
-    parentScope: ScopeItemByKey,
+    parentScope: NodeScope,
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<I>>,
     factoryFn: (keyValuePair: NodeIdMapIterator.KeyValuePair<I>, recursive: boolean) => T,
 ): void {
@@ -401,11 +410,11 @@ function expandScope(
     state: ScopeInspectionState,
     xorNode: TXorNode,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
-    maybeDefaultScope: ScopeItemByKey | undefined,
+    maybeDefaultScope: NodeScope | undefined,
 ): void {
-    const scope: ScopeItemByKey = localGetOrCreateScope(state, xorNode.node.id, maybeDefaultScope);
+    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, xorNode.node.id, maybeDefaultScope);
     for (const [key, value] of newEntries) {
-        scope.set(key, value);
+        nodeScope.set(key, value);
     }
 }
 
@@ -414,7 +423,7 @@ function expandChildScope(
     parent: TXorNode,
     childAttributeIds: ReadonlyArray<number>,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
-    maybeDefaultScope: ScopeItemByKey | undefined,
+    maybeDefaultScope: NodeScope | undefined,
 ): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const parentId: number = parent.node.id;
@@ -434,28 +443,28 @@ function expandChildScope(
 }
 
 // Any operation done on a scope should first invoke `scopeFor` for data integrity.
-function localGetOrCreateScope(
+function localGetOrCreateNodeScope(
     state: ScopeInspectionState,
     nodeId: number,
-    maybeDefaultScope: ScopeItemByKey | undefined,
-): ScopeItemByKey {
+    maybeDefaultScope: NodeScope | undefined,
+): NodeScope {
     // If scopeFor has already been called then there should be a nodeId in the deltaScope.
-    const maybeDeltaScope: ScopeItemByKey | undefined = state.deltaScope.get(nodeId);
+    const maybeDeltaScope: NodeScope | undefined = state.deltaScope.get(nodeId);
     if (maybeDeltaScope !== undefined) {
         return maybeDeltaScope;
     }
 
     // If given a scope with an existing value then assume it's valid.
     // Cache and return.
-    const maybeGivenScope: ScopeItemByKey | undefined = state.givenScope.get(nodeId);
+    const maybeGivenScope: NodeScope | undefined = state.givenScope.get(nodeId);
     if (maybeGivenScope !== undefined) {
-        const shallowCopy: ScopeItemByKey = new Map(maybeGivenScope.entries());
+        const shallowCopy: NodeScope = new Map(maybeGivenScope.entries());
         state.deltaScope.set(nodeId, shallowCopy);
         return shallowCopy;
     }
 
     if (maybeDefaultScope !== undefined) {
-        const shallowCopy: ScopeItemByKey = new Map(maybeDefaultScope.entries());
+        const shallowCopy: NodeScope = new Map(maybeDefaultScope.entries());
         state.deltaScope.set(nodeId, shallowCopy);
         return shallowCopy;
     }
@@ -469,23 +478,23 @@ function localGetOrCreateScope(
     if (maybeParent !== undefined) {
         const parentNodeId: number = maybeParent.node.id;
 
-        const maybeParentDeltaScope: ScopeItemByKey | undefined = state.deltaScope.get(parentNodeId);
+        const maybeParentDeltaScope: NodeScope | undefined = state.deltaScope.get(parentNodeId);
         if (maybeParentDeltaScope !== undefined) {
-            const shallowCopy: ScopeItemByKey = new Map(maybeParentDeltaScope.entries());
+            const shallowCopy: NodeScope = new Map(maybeParentDeltaScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);
             return shallowCopy;
         }
 
-        const maybeParentGivenScope: ScopeItemByKey | undefined = state.givenScope.get(parentNodeId);
+        const maybeParentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
         if (maybeParentGivenScope !== undefined) {
-            const shallowCopy: ScopeItemByKey = new Map(maybeParentGivenScope.entries());
+            const shallowCopy: NodeScope = new Map(maybeParentGivenScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);
             return shallowCopy;
         }
     }
 
     // The node has no parent or it hasn't been visited.
-    const newScope: ScopeItemByKey = new Map();
+    const newScope: NodeScope = new Map();
     state.deltaScope.set(nodeId, newScope);
     return newScope;
 }

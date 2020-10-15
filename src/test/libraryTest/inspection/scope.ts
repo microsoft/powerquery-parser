@@ -5,10 +5,10 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
-import { Position, ScopeItemByKey, ScopeItemKind } from "../../../inspection";
+import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Constant } from "../../../language";
-import { IParserState, IParserStateUtils, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
+import { IParserState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -107,7 +107,7 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
     }
 }
 
-function abridgedScopeItemsFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArray<TAbridgedNodeScopeItem> {
+function abridgedScopeItemsFactory(scopeItemByKey: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
     const result: TAbridgedNodeScopeItem[] = [];
 
     for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
@@ -117,7 +117,7 @@ function abridgedScopeItemsFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArra
     return result;
 }
 
-function abridgedParametersFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArray<AbridgedParameterScopeItem> {
+function abridgedParametersFactory(scopeItemByKey: NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
     const result: AbridgedParameterScopeItem[] = [];
 
     for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
@@ -130,12 +130,12 @@ function abridgedParametersFactory(scopeItemByKey: ScopeItemByKey): ReadonlyArra
     return result;
 }
 
-function assertScopeForNodeOk(
+function assertNodeScopeOk(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-): ScopeItemByKey {
+): NodeScope {
     const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
@@ -146,39 +146,35 @@ function assertScopeForNodeOk(
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
-    const triedScopeInspection: Inspection.TriedScopeForRoot = Inspection.tryScopeItems(
+    const triedNodeScope: Inspection.TriedNodeScope = Inspection.tryNodeScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
         activeNode.ancestry[0].node.id,
         undefined,
     );
-    Assert.isOk(triedScopeInspection);
-    return triedScopeInspection.value;
+    Assert.isOk(triedNodeScope);
+    return triedNodeScope.value;
 }
 
 export function assertGetParseOkScopeOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
-): ScopeItemByKey {
-    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text, IParserStateUtils.stateFactory);
+): NodeScope {
+    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text);
     const contextState: ParseContext.State = parseOk.state.contextState;
-    return assertScopeForNodeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 export function assertGetParseErrScopeOk(
     settings: LexSettings & ParseSettings<IParserState>,
     text: string,
     position: Position,
-): ScopeItemByKey {
-    const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(
-        settings,
-        text,
-        IParserStateUtils.stateFactory,
-    );
+): NodeScope {
+    const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(settings, text);
     const contextState: ParseContext.State = parseError.state.contextState;
-    return assertScopeForNodeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
+    return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 describe(`subset Inspection - Scope - Identifier`, () => {
@@ -614,8 +610,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -633,8 +629,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -652,15 +648,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 15,
+                        keyNodeId: 16,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -678,22 +674,22 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 13,
-                        maybeValueNodeId: 15,
+                        keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                     {
                         identifier: "c",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 19,
-                        maybeValueNodeId: 21,
+                        keyNodeId: 24,
+                        maybeValueNodeId: 28,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -711,8 +707,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 10,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -730,15 +726,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 7,
-                        maybeValueNodeId: 9,
+                        keyNodeId: 8,
+                        maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
-                        keyNodeId: 14,
-                        maybeValueNodeId: 16,
+                        keyNodeId: 17,
+                        maybeValueNodeId: 19,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(

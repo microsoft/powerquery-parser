@@ -161,10 +161,7 @@ export function maybeGeneralizedIdentifierLength(text: string, index: number): n
 }
 
 export function maybeQuotedIdentifier(text: string, index: number): number | undefined {
-    if (text[index] !== "#") {
-        return undefined;
-    }
-    if (text[index + 1] !== '"') {
+    if (text[index] !== "#" || text[index + 1] !== '"') {
         return undefined;
     }
 

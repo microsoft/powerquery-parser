@@ -2,11 +2,11 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
-import { Assert, CommonError } from "../../common";
+import { Assert, CommonError, ICancellationToken } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { getLocalizationTemplates } from "../../localization";
-import { ParseSettings } from "../../settings";
+import { SequenceKind } from "../error";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
 
@@ -22,21 +22,22 @@ export interface FastStateBackup {
 
 // If you have a custom parser + parser state, then you'll have to create your own factory function.
 // See `benchmark.ts` for an example.
-export function stateFactory<S extends IParserState = IParserState>(
-    settings: ParseSettings<S>,
+export function stateFactory(
+    maybeCancellationToken: ICancellationToken | undefined,
     lexerSnapshot: LexerSnapshot,
+    tokenIndex: number,
+    locale: string,
 ): IParserState {
-    const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[0];
+    const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
 
     return {
-        ...settings,
-        localizationTemplates: getLocalizationTemplates(settings.locale),
-        maybeCancellationToken: settings.maybeCancellationToken,
+        maybeCancellationToken,
         lexerSnapshot,
-        tokenIndex: 0,
+        localizationTemplates: getLocalizationTemplates(locale),
+        tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind: maybeCurrentToken?.kind,
-        contextState: ParseContextUtils.newState(),
+        contextState: ParseContextUtils.stateFactory(),
         maybeCurrentContextNode: undefined,
     };
 }
@@ -376,19 +377,19 @@ export function assertNoOpenContext(state: IParserState): void {
 // ---------- Error factories ----------
 // -------------------------------------
 
-export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedParenthesesError {
-    const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
-    return new ParseError.UnterminatedParenthesesError(
-        state.localizationTemplates,
-        token,
-        state.lexerSnapshot.graphemePositionStartFrom(token),
-    );
+export function unterminatedBracketError(state: IParserState): ParseError.UnterminatedSequence {
+    return unterminatedSequence(state, SequenceKind.Bracket);
 }
 
-export function unterminatedBracketError(state: IParserState): ParseError.UnterminatedBracketError {
+export function unterminatedParenthesesError(state: IParserState): ParseError.UnterminatedSequence {
+    return unterminatedSequence(state, SequenceKind.Parenthesis);
+}
+
+function unterminatedSequence(state: IParserState, sequenceKind: SequenceKind): ParseError.UnterminatedSequence {
     const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
-    return new ParseError.UnterminatedBracketError(
+    return new ParseError.UnterminatedSequence(
         state.localizationTemplates,
+        sequenceKind,
         token,
         state.lexerSnapshot.graphemePositionStartFrom(token),
     );

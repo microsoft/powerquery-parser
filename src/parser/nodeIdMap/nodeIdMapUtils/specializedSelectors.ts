@@ -15,23 +15,23 @@ import { assertGetParentXor } from "./parentSelectors";
 export function assertRecursiveExpressionPreviousSibling(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     const xorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
     const arrayWrapper: TXorNode = assertGetParentXor(nodeIdMapCollection, nodeId, [Ast.NodeKind.ArrayWrapper]);
-    const maybeInvokeExpressionAttributeIndex: number | undefined = xorNode.node.maybeAttributeIndex;
+    const maybePrimaryExpressionAttributeId: number | undefined = xorNode.node.maybeAttributeIndex;
 
     // It's not the first element in the ArrayWrapper.
-    if (maybeInvokeExpressionAttributeIndex && maybeInvokeExpressionAttributeIndex > 0) {
+    if (maybePrimaryExpressionAttributeId && maybePrimaryExpressionAttributeId > 0) {
         const childIds: ReadonlyArray<number> = NodeIdMapIterator.assertIterChildIds(
             nodeIdMapCollection.childIdsById,
             arrayWrapper.node.id,
         );
-        const indexOfInvokeExprId: number = childIds.indexOf(xorNode.node.id);
-        if (indexOfInvokeExprId === -1 || indexOfInvokeExprId === 0) {
+        const indexOfPrimaryExpressionId: number = childIds.indexOf(xorNode.node.id);
+        if (indexOfPrimaryExpressionId === -1 || indexOfPrimaryExpressionId === 0) {
             const details: {} = {
-                invokeExprId: xorNode.node.id,
+                xorNodeId: xorNode.node.id,
                 arrayWrapperId: arrayWrapper.node.id,
-                indexOfInvokeExprId,
+                indexOfPrimaryExpressionId,
             };
             throw new CommonError.InvariantError(
-                `expected to find invokeExpr in arrayWrapper's children at an index > 0`,
+                `expected to find xorNodeId in arrayWrapper's children at an index > 0`,
                 details,
             );
         }
@@ -39,7 +39,7 @@ export function assertRecursiveExpressionPreviousSibling(nodeIdMapCollection: Co
         return assertGetChildXorByAttributeIndex(
             nodeIdMapCollection,
             arrayWrapper.node.id,
-            indexOfInvokeExprId - 1,
+            indexOfPrimaryExpressionId - 1,
             undefined,
         );
     }

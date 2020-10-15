@@ -6,11 +6,11 @@ import performanceNow = require("performance-now");
 
 import "mocha";
 import { Task } from "../..";
-import { ResultUtils } from "../../common";
+import { ICancellationToken, ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
-import { DefaultLocale } from "../../localization";
-import { CombinatorialParser, IParser, IParserState, IParserStateUtils } from "../../parser";
-import { ParseSettings, Settings } from "../../settings";
+import { DefaultLocale, Locale } from "../../localization";
+import { CombinatorialParser, IParser, IParserState, IParserStateUtils, RecursiveDescentParser } from "../../parser";
+import { ParseSettings } from "../../settings";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
 import * as path from "path";
@@ -27,12 +27,9 @@ interface FileSummary {
     readonly singleRunDurationMax: number;
 }
 
-const Parsers: ReadonlyArray<[
-    (settings: ParseSettings<BenchmarkState>, lexerSnapshot: LexerSnapshot) => BenchmarkState,
-    string,
-]> = [
-    [createRecurisveDescentBenchmarkState, "CombinatorialParser"],
-    [createCombinatorialBenchmarkState, "RecursiveDescentParser"],
+const Parsers: ReadonlyArray<[ParseSettings<BenchmarkState>, string]> = [
+    [benchmarkParseSettingsFactory(CombinatorialParser), "CombinatorialParser"],
+    [benchmarkParseSettingsFactory(RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
 const NumberOfRunsPerFile: number = 100;
@@ -40,52 +37,33 @@ const ReportFileName: string = `Report.perf`;
 const ResourceDirectory: string = path.join(path.dirname(__filename), "benchmarkResources");
 
 const allSummaries: FileSummary[] = [];
-for (const [stateFactoryFn, parserName] of Parsers) {
-    allSummaries.push(...parseAllFiles(createBenchmarkParseSettings(), stateFactoryFn, parserName));
+for (const [parseSettings, parserName] of Parsers) {
+    allSummaries.push(...parseAllFiles(parseSettings, parserName));
 }
 
 writeReport(ResourceDirectory, allSummaries);
 
-function createRecurisveDescentBenchmarkState(
-    settings: ParseSettings<BenchmarkState>,
-    lexerSnapshot: LexerSnapshot,
-): BenchmarkState {
-    return createBenchmarkState(settings, lexerSnapshot, CombinatorialParser);
-}
-
-function createCombinatorialBenchmarkState(
-    settings: ParseSettings<BenchmarkState>,
-    lexerSnapshot: LexerSnapshot,
-): BenchmarkState {
-    return createBenchmarkState(settings, lexerSnapshot, CombinatorialParser);
-}
-
-function createBenchmarkState(
-    settings: ParseSettings<BenchmarkState>,
-    lexerSnapshot: LexerSnapshot,
-    baseParser: IParser<IParserState>,
-): BenchmarkState {
+function benchmarkStateFactory(lexerSnapshot: LexerSnapshot, baseParser: IParser<IParserState>): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(settings, lexerSnapshot),
+        ...IParserStateUtils.stateFactory(undefined, lexerSnapshot, 0, Locale.en_US),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
     };
 }
 
-function createBenchmarkParseSettings(): ParseSettings<BenchmarkState> {
+function benchmarkParseSettingsFactory(baseParser: IParser<IParserState>): ParseSettings<BenchmarkState> {
     return {
-        parser: BenchmarkParser,
-        locale: DefaultLocale,
         maybeCancellationToken: undefined,
+        parser: BenchmarkParser,
+        parserStateFactory: (_cancellationToken: ICancellationToken | undefined, lexerSnapshot: LexerSnapshot) =>
+            benchmarkStateFactory(lexerSnapshot, baseParser),
+        maybeParserOptions: undefined,
+        locale: DefaultLocale,
     };
 }
 
-function parseAllFiles(
-    settings: Settings<BenchmarkState>,
-    stateFactoryFn: (settings: ParseSettings<BenchmarkState>, lexerSnapshot: LexerSnapshot) => BenchmarkState,
-    parserName: string,
-): ReadonlyArray<FileSummary> {
+function parseAllFiles(settings: ParseSettings<BenchmarkState>, parserName: string): ReadonlyArray<FileSummary> {
     const parserSummaries: FileSummary[] = [];
 
     for (const filePath of TestFileUtils.getPowerQueryFilesRecursively(ResourceDirectory)) {
@@ -101,11 +79,7 @@ function parseAllFiles(
                 // tslint:disable-next-line: no-console
                 console.log(`\tRun ${index} of ${NumberOfRunsPerFile}`);
             }
-            const triedLexParse: Task.TriedLexParse<BenchmarkState> = TestFileUtils.tryLexParse(
-                settings,
-                filePath,
-                stateFactoryFn,
-            );
+            const triedLexParse: Task.TriedLexParse<BenchmarkState> = TestFileUtils.tryLexParse(settings, filePath);
             if (!ResultUtils.isOk(triedLexParse)) {
                 throw triedLexParse.error;
             }

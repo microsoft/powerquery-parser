@@ -12,7 +12,7 @@ export interface InspectionOk {
     readonly maybeActiveNode: ActiveNode | undefined;
     readonly autocomplete: Inspection.Autocomplete;
     readonly maybeInvokeExpression: Inspection.InvokeExpression | undefined;
-    readonly scope: Inspection.ScopeItemByKey;
+    readonly nodeScope: Inspection.NodeScope;
     readonly scopeType: Inspection.ScopeTypeByKey;
     readonly maybeExpectedType: Type.TType | undefined;
 }

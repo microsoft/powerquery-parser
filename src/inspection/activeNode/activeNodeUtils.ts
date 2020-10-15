@@ -79,6 +79,10 @@ export function maybeActiveNode(
     };
 }
 
+export function maybeFirstXorOfNodeKind(activeNode: ActiveNode, nodeKind: Ast.NodeKind): TXorNode | undefined {
+    return AncestryUtils.maybeFirstXorWhere(activeNode.ancestry, (xorNode: TXorNode) => xorNode.node.kind === nodeKind);
+}
+
 export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
     return AncestryUtils.assertGetLeaf(activeNode.ancestry);
 }
