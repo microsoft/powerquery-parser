@@ -18,10 +18,7 @@ export function assertGetContext(contextNodeById: ContextNodeById, nodeId: numbe
 }
 
 export function assertGetXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    const maybeNode: TXorNode | undefined = maybeXor(nodeIdMapCollection, nodeId);
-    Assert.isDefined(maybeNode, undefined, { nodeId });
-
-    return maybeNode;
+    return Assert.asDefined(maybeXor(nodeIdMapCollection, nodeId), undefined, { nodeId });
 }
 
 export function maybeXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {

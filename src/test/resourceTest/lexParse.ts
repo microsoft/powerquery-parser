@@ -1,9 +1,8 @@
 import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../common";
-import { LexerSnapshot } from "../../lexer";
-import { CombinatorialParser, IParser, IParserState, IParserStateUtils, RecursiveDescentParser } from "../../parser";
-import { DefaultSettings, ParseSettings, Settings } from "../../settings";
+import { CombinatorialParser, IParser, IParserState, RecursiveDescentParser } from "../../parser";
+import { DefaultSettings, Settings } from "../../settings";
 
 import * as path from "path";
 import { TestFileUtils } from "../testUtils";
@@ -20,18 +19,14 @@ function createSettings(parser: IParser): Settings {
 }
 
 for (const [settings, parserName] of parsers) {
-    parseAllFiles(settings, parserName, IParserStateUtils.stateFactory);
+    parseAllFiles(settings, parserName);
 }
 
 function testNameFromFilePath(filePath: string): string {
     return filePath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles<S extends IParserState>(
-    settings: Settings<S>,
-    parserName: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: LexerSnapshot) => S,
-): void {
+function parseAllFiles<S extends IParserState>(settings: Settings<S>, parserName: string): void {
     describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 
@@ -39,11 +34,7 @@ function parseAllFiles<S extends IParserState>(
             const testName: string = testNameFromFilePath(filePath);
 
             it(testName, () => {
-                const triedLexParse: Task.TriedLexParse<S> = TestFileUtils.tryLexParse(
-                    settings,
-                    filePath,
-                    stateFactoryFn,
-                );
+                const triedLexParse: Task.TriedLexParse<S> = TestFileUtils.tryLexParse(settings, filePath);
                 if (!ResultUtils.isOk(triedLexParse)) {
                     throw triedLexParse.error;
                 }

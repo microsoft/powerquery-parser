@@ -7,17 +7,13 @@ import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
-import { IParserStateUtils, NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertGetParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
     const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertGetTextWithPosition(textWithPipe);
-    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(
-        DefaultSettings,
-        textWithoutPipe,
-        IParserStateUtils.stateFactory,
-    );
+    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(DefaultSettings, textWithoutPipe);
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseOk.state.contextState.leafNodeIds;
@@ -33,11 +29,7 @@ function assertGetParseOkExpectedTypeOk(textWithPipe: string): Type.TType | unde
 
 function assertGetParseErrExpectedTypeOk(textWithPipe: string): Type.TType | undefined {
     const [textWithoutPipe, position]: [string, Position] = TestAssertUtils.assertGetTextWithPosition(textWithPipe);
-    const parseErr: ParseError.ParseError = TestAssertUtils.assertGetParseErr(
-        DefaultSettings,
-        textWithoutPipe,
-        IParserStateUtils.stateFactory,
-    );
+    const parseErr: ParseError.ParseError = TestAssertUtils.assertGetParseErr(DefaultSettings, textWithoutPipe);
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseErr.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseErr.state.contextState.leafNodeIds;

@@ -1,49 +1,74 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
 import { ResultUtils } from "../../common";
-import { Constant, Keyword, Token } from "../../language";
-import { LocalizationUtils } from "../../localization";
+import { Keyword, Token } from "../../language";
 import { IParserState, NodeIdMap, ParseError } from "../../parser";
-import { CommonSettings } from "../../settings";
+import { ParseSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
-import { autocompleteKeyword } from "./autocompleteKeyword";
+import { TypeCache } from "../type/commonTypes";
+import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
+import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { ExpressionAutocomplete } from "./autocompleteKeyword/commonTypes";
-import { autocompletePrimitiveType } from "./autocompletePrimitiveType";
+import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { trailingTokenFactory } from "./common";
-import { TrailingToken, TriedAutocomplete } from "./commonTypes";
+import {
+    Autocomplete,
+    TrailingToken,
+    TriedAutocompleteFieldAccess,
+    TriedAutocompleteKeyword,
+    TriedAutocompletePrimitiveType,
+} from "./commonTypes";
 
-export function tryAutocomplete<S extends IParserState = IParserState>(
-    settings: CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
+export function autocomplete<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
+    parserState: S,
+    typeCache: TypeCache,
     maybeActiveNode: ActiveNode | undefined,
     maybeParseError: ParseError.ParseError<S> | undefined,
-): TriedAutocomplete {
+): Autocomplete {
+    const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
+    const leafNodeIds: ReadonlyArray<number> = parserState.contextState.leafNodeIds;
+
     if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
-        return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
+        return {
+            triedFieldAccess: ResultUtils.okFactory(undefined),
+            triedKeyword: ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]),
+            triedPrimitiveType: ResultUtils.okFactory([]),
+        };
     }
+    const activeNode: ActiveNode = maybeActiveNode;
 
     let maybeTrailingToken: TrailingToken | undefined;
     if (maybeParseError !== undefined) {
         const maybeParseErrorToken: Token.Token | undefined = ParseError.maybeTokenFrom(maybeParseError.innerError);
         if (maybeParseErrorToken !== undefined) {
-            maybeTrailingToken = trailingTokenFactory(maybeActiveNode, maybeParseErrorToken);
+            maybeTrailingToken = trailingTokenFactory(activeNode, maybeParseErrorToken);
         }
     }
 
-    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
-        const primitiveTypes: ReadonlyArray<Constant.PrimitiveTypeConstantKind> = autocompletePrimitiveType(
-            maybeActiveNode,
-            maybeTrailingToken,
-        );
-        const keywords: ReadonlyArray<Keyword.KeywordKind> = autocompleteKeyword(
-            nodeIdMapCollection,
-            leafNodeIds,
-            maybeActiveNode,
-            maybeTrailingToken,
-        );
+    const triedFieldAccess: TriedAutocompleteFieldAccess = tryAutocompleteFieldAccess(
+        parseSettings,
+        parserState,
+        activeNode,
+        typeCache,
+        maybeParseError,
+    );
 
-        return [...primitiveTypes, ...keywords];
-    });
+    const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(
+        parseSettings,
+        nodeIdMapCollection,
+        leafNodeIds,
+        activeNode,
+        maybeTrailingToken,
+    );
+
+    const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
+        parseSettings,
+        activeNode,
+        maybeTrailingToken,
+    );
+
+    return {
+        triedFieldAccess,
+        triedKeyword,
+        triedPrimitiveType,
+    };
 }

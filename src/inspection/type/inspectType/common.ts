@@ -5,7 +5,7 @@ import { Assert, CommonError, Result, ResultUtils } from "../../../common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
-import { ScopeById, ScopeItemByKey, ScopeItemKind, tryScopeItems, TScopeItem } from "../../scope";
+import { NodeScope, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { TypeById } from "../commonTypes";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
@@ -58,8 +58,10 @@ export function getOrFindScopeItemType(state: InspectTypeState, scopeItem: TScop
     return scopeType;
 }
 
-export function assertGetOrCreateScope(state: InspectTypeState, nodeId: number): ScopeItemByKey {
-    const triedGetOrCreateScope: Result<ScopeItemByKey, CommonError.CommonError> = getOrCreateScope(state, nodeId);
+export function assertGetOrCreateScope(state: InspectTypeState, nodeId: number): NodeScope {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+
+    const triedGetOrCreateScope: Result<NodeScope, CommonError.CommonError> = getOrCreateScope(state, nodeId);
     if (ResultUtils.isErr(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope.error;
     }
@@ -67,19 +69,20 @@ export function assertGetOrCreateScope(state: InspectTypeState, nodeId: number):
     return triedGetOrCreateScope.value;
 }
 
-export function getOrCreateScope(
-    state: InspectTypeState,
-    nodeId: number,
-): Result<ScopeItemByKey, CommonError.CommonError> {
-    const maybeScope: ScopeItemByKey | undefined = state.scopeById.get(nodeId);
-    if (maybeScope !== undefined) {
-        return ResultUtils.okFactory(maybeScope);
+export function getOrCreateScope(state: InspectTypeState, nodeId: number): Result<NodeScope, CommonError.CommonError> {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+
+    const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
+    if (maybeNodeScope !== undefined) {
+        return ResultUtils.okFactory(maybeNodeScope);
     }
 
-    return tryScopeItems(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
+    return tryNodeScope(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
 }
 
 export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
             return inspectXor(state, scopeItem.eachExpression);
@@ -351,7 +354,7 @@ export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode
             throw Assert.isNever(deferenced);
     }
 
-    const scopeItemByKey: ScopeItemByKey = assertGetOrCreateScope(state, deferenced.id);
+    const scopeItemByKey: NodeScope = assertGetOrCreateScope(state, deferenced.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
     if (maybeScopeItem === undefined || (maybeScopeItem.isRecursive === true && isIdentifierRecurisve === false)) {
         return undefined;
@@ -420,7 +423,7 @@ function maybeDereferencedIdentifier(state: InspectTypeState, xorNode: TXorNode)
             throw Assert.isNever(identifier);
     }
 
-    const scopeItemByKey: ScopeItemByKey = assertGetOrCreateScope(state, identifier.id);
+    const scopeItemByKey: NodeScope = assertGetOrCreateScope(state, identifier.id);
     const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
 
     if (

@@ -100,9 +100,9 @@ export const enum TypeKind {
 }
 
 export const enum ExtendedTypeKind {
-    // In Power Query if you want a union type, such as when a function retursn either a `test` OR a `number`,
+    // In Power Query if you want a union type, such as when a function returns either a `text` OR a `number`,
     // then you're only option is to give it the 'any' type.
-    // This is a narrower definition which restricts that typing to the union `number | any`.
+    // This is a narrower definition which restricts that typing to the union `text | number`.
     AnyUnion = "AnyUnion",
 
     // A function with known paramaters and a known return type.
@@ -115,7 +115,7 @@ export const enum ExtendedTypeKind {
     // A narrower typing for ListType, used to validate a DefinedList.
     DefinedListType = "DefinedListType",
 
-    // A list of known fields a typing for each field.
+    // A list of known fields and typing for each field.
     // An open record: `[a=1, b=2, ...]`
     // A closed record: `[a=1, b=2]`
     DefinedRecord = "DefinedRecord",

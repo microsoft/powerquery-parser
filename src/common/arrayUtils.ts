@@ -19,6 +19,21 @@ export function assertIn<T>(collection: ReadonlyArray<T>, item: T, maybeMessage?
     return index;
 }
 
+export function assertGet<T>(collection: ReadonlyArray<T>, index: number, maybeMessage?: string, maybeDetails?: {}): T {
+    return Assert.asDefined(collection[index], maybeMessage, maybeDetails);
+}
+
+export function assertIndexOfPredicate<T>(
+    collection: ReadonlyArray<T>,
+    predicateFn: (element: T) => boolean,
+    maybeMessage?: string,
+    maybeDetails?: {},
+): number {
+    const index: number = indexOfPredicate(collection, predicateFn);
+    Assert.isTrue(index !== -1, maybeMessage, maybeDetails);
+    return index;
+}
+
 export function assertNonZeroLength<T>(collection: ReadonlyArray<T>, maybeMessage?: string, maybeDetails?: {}): void {
     Assert.isTrue(
         collection.length > 0,
@@ -56,6 +71,28 @@ export function findReverse<T>(collection: ReadonlyArray<T>, predicate: (t: T) =
     }
 
     return undefined;
+}
+
+export function includesPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (element: T) => boolean): boolean {
+    const numElements: number = collection.length;
+    for (let index: number = 0; index < numElements; index += 1) {
+        if (predicateFn(collection[index])) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+export function indexOfPredicate<T>(collection: ReadonlyArray<T>, predicateFn: (element: T) => boolean): number {
+    const numElements: number = collection.length;
+    for (let index: number = 0; index < numElements; index += 1) {
+        if (predicateFn(collection[index])) {
+            return index;
+        }
+    }
+
+    return -1;
 }
 
 export function isSubset<T>(

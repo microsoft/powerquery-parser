@@ -1,23 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
+import { LocalizationUtils } from "../../localization";
 import { AncestryUtils, TXorNode, XorNodeKind } from "../../parser";
+import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
 import { PositionUtils } from "../position";
-import { TrailingToken } from "./commonTypes";
+import { AutocompletePrimitiveType, TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
 
-export function autocompletePrimitiveType(
+export function tryAutocompletePrimitiveType(
+    settings: CommonSettings,
     activeNode: ActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
-): ReadonlyArray<Constant.PrimitiveTypeConstantKind> {
+): TriedAutocompletePrimitiveType {
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
+        return autocompletePrimitiveType(activeNode, maybeTrailingToken);
+    });
+}
+
+function autocompletePrimitiveType(
+    activeNode: ActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
+): AutocompletePrimitiveType {
     return filterRecommendations(traverseAncestors(activeNode), maybeTrailingToken);
 }
 
 function filterRecommendations(
-    inspected: ReadonlyArray<Constant.PrimitiveTypeConstantKind>,
+    inspected: AutocompletePrimitiveType,
     maybeTrailingToken: TrailingToken | undefined,
-): ReadonlyArray<Constant.PrimitiveTypeConstantKind> {
+): AutocompletePrimitiveType {
     if (maybeTrailingToken === undefined) {
         return inspected;
     }
@@ -28,7 +41,7 @@ function filterRecommendations(
     );
 }
 
-function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.PrimitiveTypeConstantKind> {
+function traverseAncestors(activeNode: ActiveNode): AutocompletePrimitiveType {
     if (activeNode.ancestry.length === 0) {
         return [];
     }

@@ -239,8 +239,6 @@ export function isPrimitiveTypeConstantKind(
 }
 
 export function isPairedWrapperConstantKinds(left: TConstantKind, right: TConstantKind): boolean {
-    Assert.isTrue(left < right, `the first argument should be 'less than' the second, eg. '[' < ']`);
-
     return (
         (left === WrapperConstantKind.LeftBrace && right === WrapperConstantKind.RightBrace) ||
         (left === WrapperConstantKind.LeftBracket && right === WrapperConstantKind.RightBracket) ||

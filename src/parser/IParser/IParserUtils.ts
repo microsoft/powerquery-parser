@@ -4,44 +4,105 @@
 import { ParseError } from "..";
 import { CommonError, ResultUtils } from "../../common";
 import { Ast } from "../../language";
-import { TriedParse } from "../commonTypes";
+import { LexerSnapshot } from "../../lexer";
+import { LocalizationUtils } from "../../localization";
+import { ParseSettings } from "../../settings";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { IParser } from "./IParser";
+import { IParser, TriedParse } from "./IParser";
 
-export function tryRead<State extends IParserState = IParserState>(
-    state: State,
-    parser: IParser<State>,
-): TriedParse<State> {
+export function tryParse<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
+    lexerSnapshot: LexerSnapshot,
+): TriedParse<S> {
+    const maybeEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined =
+        parseSettings?.maybeParserOptions?.maybeEntryPoint;
+
+    if (maybeEntryPointFn === undefined) {
+        return tryParseDocument<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
+    }
+
+    const parseState: S = parseSettings.parserStateFactory(
+        parseSettings.maybeCancellationToken,
+        lexerSnapshot,
+        0,
+        parseSettings.locale,
+    );
+    try {
+        const root: Ast.TNode = maybeEntryPointFn(parseState, parseSettings.parser);
+        IParserStateUtils.assertNoMoreTokens(parseState);
+        IParserStateUtils.assertNoOpenContext(parseState);
+        return ResultUtils.okFactory({
+            lexerSnapshot,
+            root,
+            state: parseState,
+        });
+    } catch (error) {
+        return ResultUtils.errFactory(ensureParseError(parseState, error, parseSettings.locale));
+    }
+}
+
+export function tryParseDocument<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
+    lexerSnapshot: LexerSnapshot,
+): TriedParse {
     let root: Ast.TNode;
 
+    const expressionDocumentState: S = parseSettings.parserStateFactory(
+        parseSettings.maybeCancellationToken,
+        lexerSnapshot,
+        0,
+        parseSettings.locale,
+    );
     try {
-        root = parser.read(state, parser);
-    } catch (err) {
-        let convertedError: ParseError.TParseError<State>;
-        if (ParseError.isTInnerParseError(err)) {
-            convertedError = new ParseError.ParseError(err, state);
-        } else {
-            convertedError = CommonError.ensureCommonError(state.localizationTemplates, err);
+        root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
+        IParserStateUtils.assertNoMoreTokens(expressionDocumentState);
+        IParserStateUtils.assertNoOpenContext(expressionDocumentState);
+        return ResultUtils.okFactory({
+            lexerSnapshot,
+            root,
+            state: expressionDocumentState,
+        });
+    } catch (expressionDocumentError) {
+        const sectionDocumentState: S = parseSettings.parserStateFactory(
+            parseSettings.maybeCancellationToken,
+            lexerSnapshot,
+            0,
+            parseSettings.locale,
+        );
+        try {
+            root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
+            IParserStateUtils.assertNoMoreTokens(sectionDocumentState);
+            IParserStateUtils.assertNoOpenContext(sectionDocumentState);
+            return ResultUtils.okFactory({
+                lexerSnapshot,
+                root,
+                state: sectionDocumentState,
+            });
+        } catch (sectionDocumentError) {
+            let betterParsedState: S;
+            let betterParsedError: Error;
+
+            if (expressionDocumentState.tokenIndex >= sectionDocumentState.tokenIndex) {
+                betterParsedState = expressionDocumentState;
+                betterParsedError = expressionDocumentError;
+            } else {
+                betterParsedState = sectionDocumentState;
+                betterParsedError = sectionDocumentError;
+            }
+
+            return ResultUtils.errFactory(ensureParseError(betterParsedState, betterParsedError, parseSettings.locale));
         }
-        return ResultUtils.errFactory(convertedError);
     }
+}
 
-    try {
-        IParserStateUtils.assertNoOpenContext(state);
-    } catch (err) {
-        return ResultUtils.errFactory(new CommonError.CommonError(err));
+function ensureParseError<S extends IParserState = IParserState>(
+    state: S,
+    error: Error,
+    locale: string,
+): ParseError.TParseError<S> {
+    if (ParseError.isTInnerParseError(error)) {
+        return new ParseError.ParseError(error, state);
+    } else {
+        return CommonError.ensureCommonError(LocalizationUtils.getLocalizationTemplates(locale), error);
     }
-
-    try {
-        IParserStateUtils.assertNoMoreTokens(state);
-    } catch (err) {
-        return ResultUtils.errFactory(new ParseError.ParseError(err, state));
-    }
-
-    return ResultUtils.okFactory({
-        root,
-        nodeIdMapCollection: state.contextState.nodeIdMapCollection,
-        leafNodeIds: state.contextState.leafNodeIds,
-        state,
-    });
 }

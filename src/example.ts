@@ -4,6 +4,7 @@
 /* tslint:disable:no-console */
 
 import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from ".";
+import { AutocompleteUtils } from "./inspection";
 
 parseText(`let x = 1 in try x otherwise 2`);
 
@@ -11,11 +12,7 @@ parseText(`let x = 1 in try x otherwise 2`);
 function parseText(text: string): void {
     // Try lexing and parsing the argument which returns a Result object.
     // A Result<T, E> is the union (Ok<T> | Err<E>).
-    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
-        DefaultSettings,
-        text,
-        Parser.IParserStateUtils.stateFactory,
-    );
+    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(DefaultSettings, text);
 
     // If the Result is an Ok, then dump the jsonified abstract syntax tree (AST) which was parsed.
     if (ResultUtils.isOk(triedLexParse)) {
@@ -115,24 +112,18 @@ function lexText(text: string): void {
 function inspectText(text: string, position: Inspection.Position): void {
     // Having a LexError thrown will abort the inspection and return the offending LexError.
     // So long as a TriedParse is created from reaching the parsing stage then an inspection will be returned.
-    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(
-        DefaultSettings,
-        text,
-        position,
-        Parser.IParserStateUtils.stateFactory,
-    );
+    const triedInspection: Task.TriedLexParseInspect = Task.tryLexParseInspection(DefaultSettings, text, position);
     if (ResultUtils.isErr(triedInspection)) {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;
     }
     const inspection: Inspection.InspectionOk = triedInspection.value;
 
-    for (const identifier of inspection.scope.keys()) {
+    for (const identifier of inspection.nodeScope.keys()) {
         console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);
     }
 
-    console.log(`Suggested keyword autocomplete: ${inspection.autocomplete.join(", ")}`);
-
+    console.log(`Suggested for autocomplete: ${AutocompleteUtils.keys(inspection.autocomplete).join(", ")}`);
     console.log(`InvokeExpression name: ${inspection.maybeInvokeExpression?.maybeName}`);
     console.log(
         `InvokeExpression number of arguments: ${inspection.maybeInvokeExpression?.maybeArguments?.numArguments}`,

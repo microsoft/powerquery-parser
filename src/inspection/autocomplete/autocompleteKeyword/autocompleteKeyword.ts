@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils } from "../../../common";
-import { Ast, Constant, Keyword } from "../../../language";
+import { ArrayUtils, ResultUtils } from "../../../common";
+import { Ast, Constant, Keyword, Token } from "../../../language";
+import { LocalizationUtils } from "../../../localization";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { CommonSettings } from "../../../settings";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "../../activeNode";
 import { PositionUtils } from "../../position";
-import { TrailingToken } from "../commonTypes";
+import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordErrorHandlingExpression } from "./autocompleteKeywordErrorHandlingExpression";
 import { autocompleteKeywordIdentifierPairedExpression } from "./autocompleteKeywordIdentifierPairedExpression";
@@ -15,6 +17,18 @@ import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpr
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+
+export function tryAutocompleteKeyword(
+    settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    activeNode: ActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
+): TriedAutocompleteKeyword {
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
+        return autocompleteKeyword(nodeIdMapCollection, leafNodeIds, activeNode, maybeTrailingToken);
+    });
+}
 
 export function autocompleteKeyword(
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -191,6 +205,24 @@ function handleConjunctions(
         activeNode.leafKind !== ActiveNodeLeafKind.ContextNode
     ) {
         return inspected;
+    }
+
+    // Might be a section document.
+    // `[x=1] s`
+    // `[x=1] |`
+    if (
+        activeNode.ancestry.length === 2 &&
+        activeNode.ancestry[1].kind === XorNodeKind.Ast &&
+        activeNode.ancestry[1].node.kind === Ast.NodeKind.RecordExpression
+    ) {
+        if (maybeTrailingToken === undefined) {
+            return ArrayUtils.concatUnique(inspected, [Keyword.KeywordKind.Section]);
+        } else if (
+            maybeTrailingToken.kind === Token.TokenKind.Identifier &&
+            PositionUtils.isInToken(activeNode.position, maybeTrailingToken, true, true)
+        ) {
+            return autocompleteKeywordTrailingText(inspected, maybeTrailingToken, [Keyword.KeywordKind.Section]);
+        }
     }
 
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);

@@ -7,10 +7,9 @@ import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { InspectionOk, TriedInspection } from "./inspection";
 import { ActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
-import { LexError } from "./lexer";
+import { LexError, LexerSnapshot } from "./lexer";
 import { LocalizationUtils } from "./localization";
 import {
-    IParser,
     IParserState,
     IParserUtils,
     NodeIdMap,
@@ -21,7 +20,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "./parser";
-import { CommonSettings, LexSettings, ParseSettings } from "./settings/settings";
+import { LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedLexParse<S extends IParserState = IParserState> = Result<
     LexParseOk<S>,
@@ -64,17 +63,19 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
     return Lexer.trySnapshot(state);
 }
 
-export function tryParse<S extends IParserState = IParserState>(state: S, parser: IParser<S>): TriedParse<S> {
-    return IParserUtils.tryRead(state, parser);
+export function tryParse<S extends IParserState = IParserState>(
+    parseSettings: ParseSettings<S>,
+    lexerSnapshot: LexerSnapshot,
+): TriedParse<S> {
+    return IParserUtils.tryParse<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
 }
 
 export function tryInspection<S extends IParserState = IParserState>(
-    settings: CommonSettings,
+    parseSettings: ParseSettings<S>,
     triedParse: TriedParse<S>,
     position: Inspection.Position,
 ): TriedInspection {
-    let nodeIdMapCollection: NodeIdMap.Collection;
-    let leafNodeIds: ReadonlyArray<number>;
+    let parserState: S;
     let maybeParseError: ParseError.ParseError<S> | undefined;
 
     if (ResultUtils.isErr(triedParse)) {
@@ -88,22 +89,17 @@ export function tryInspection<S extends IParserState = IParserState>(
             maybeParseError = triedParse.error;
         }
 
-        const context: ParseContext.State = triedParse.error.state.contextState;
-        nodeIdMapCollection = context.nodeIdMapCollection;
-        leafNodeIds = context.leafNodeIds;
+        parserState = triedParse.error.state;
     } else {
-        const parseOk: ParseOk<S> = triedParse.value;
-        nodeIdMapCollection = parseOk.state.contextState.nodeIdMapCollection;
-        leafNodeIds = parseOk.state.contextState.leafNodeIds;
+        parserState = triedParse.value.state;
     }
 
-    return Inspection.tryInspection(settings, nodeIdMapCollection, leafNodeIds, maybeParseError, position);
+    return Inspection.tryInspection(parseSettings, parserState, maybeParseError, position);
 }
 
 export function tryLexParse<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedLexParse<S> {
     const triedLexerSnapshot: Lexer.TriedLexerSnapshot = tryLex(settings, text);
     if (ResultUtils.isErr(triedLexerSnapshot)) {
@@ -111,8 +107,7 @@ export function tryLexParse<S extends IParserState = IParserState>(
     }
     const lexerSnapshot: Lexer.LexerSnapshot = triedLexerSnapshot.value;
 
-    const state: S = stateFactoryFn(settings, lexerSnapshot);
-    const triedParse: TriedParse<S> = tryParse<S>(state, settings.parser);
+    const triedParse: TriedParse<S> = tryParse(settings, lexerSnapshot);
     if (ResultUtils.isOk(triedParse)) {
         return ResultUtils.okFactory({
             ...triedParse.value,
@@ -127,9 +122,8 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
-    stateFactoryFn: (settings: ParseSettings<S>, lexerSnapshot: Lexer.LexerSnapshot) => S,
 ): TriedLexParseInspect<S> {
-    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text, stateFactoryFn);
+    const triedLexParse: TriedLexParse<S> = tryLexParse(settings, text);
     const maybeTriedParse: TriedParse<S> | undefined = maybeTriedParseFromTriedLexParse(triedLexParse);
     // maybeTriedParse is undefined iff maybeLexParse is Err<CommonError | LexError>
     // Err<CommonError | LexError> is a subset of TriedLexParse
