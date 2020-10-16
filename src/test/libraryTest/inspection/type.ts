@@ -313,25 +313,25 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 parameters: [
                     {
-                        name: "a",
+                        nameLiteral: "a",
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
                     },
                     {
-                        name: "b",
+                        nameLiteral: "b",
                         isNullable: false,
                         isOptional: false,
                         maybeType: Type.TypeKind.Number,
                     },
                     {
-                        name: "c",
+                        nameLiteral: "c",
                         isNullable: true,
                         isOptional: false,
                         maybeType: Type.TypeKind.Number,
                     },
                     {
-                        name: "d",
+                        nameLiteral: "d",
                         isNullable: true,
                         isOptional: true,
                         maybeType: undefined,
@@ -370,19 +370,19 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 parameters: [
                     {
-                        name: "foo",
+                        nameLiteral: "foo",
                         isNullable: false,
                         isOptional: false,
                         maybeType: Type.TypeKind.Number,
                     },
                     {
-                        name: "bar",
+                        nameLiteral: "bar",
                         isNullable: true,
                         isOptional: false,
                         maybeType: Type.TypeKind.Text,
                     },
                     {
-                        name: "baz",
+                        nameLiteral: "baz",
                         isNullable: false,
                         isOptional: true,
                         maybeType: Type.TypeKind.Date,

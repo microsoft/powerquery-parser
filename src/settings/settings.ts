@@ -27,7 +27,7 @@ export interface ParseSettings<S extends IParserState = IParserState> extends Co
 
 export type Settings<S extends IParserState = IParserState> = LexSettings & ParseSettings<S>;
 
-export const DefaultSettings: Settings = {
+export const DefaultSettings: Settings<IParserState> = {
     maybeCancellationToken: undefined,
     locale: DefaultLocale,
     parser: CombinatorialParser,

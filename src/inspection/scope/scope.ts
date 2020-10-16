@@ -307,7 +307,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = inspectedFnExpr.parameters.map(
         (parameter: TypeInspector.InspectedFunctionParameter) => {
             return [
-                parameter.name,
+                parameter.name.literal,
                 {
                     kind: ScopeItemKind.Parameter,
                     id: parameter.id,

@@ -233,7 +233,7 @@ function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
     }
 
     return {
-        name: node.name.literal,
+        nameLiteral: node.name.literal,
         isNullable,
         isOptional: node.maybeOptionalConstant !== undefined,
         maybeType,
@@ -283,7 +283,7 @@ function inspectContextParameter(
     }
 
     return {
-        name: (maybeName as Ast.Identifier).literal,
+        nameLiteral: (maybeName as Ast.Identifier).literal,
         isOptional,
         isNullable,
         maybeType,

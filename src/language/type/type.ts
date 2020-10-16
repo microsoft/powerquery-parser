@@ -180,7 +180,7 @@ export interface SimplifiedNullablePrimitiveType {
 export interface FunctionParameter {
     // Technically a parameter's name isn't part of its type,
     // but it's useful to have when inspecting parameters.
-    readonly name: string;
+    readonly nameLiteral: string;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
     readonly maybeType: TypeKind | undefined;
