@@ -40,7 +40,6 @@ interface AbridgedKeyValuePairScopeItem extends IAbridgedNodeScopeItem {
 
 interface AbridgedParameterScopeItem extends IAbridgedNodeScopeItem {
     readonly kind: ScopeItemKind.Parameter;
-    readonly nameNodeId: number;
     readonly isNullable: boolean;
     readonly isOptional: boolean;
     readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
@@ -80,7 +79,6 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
                 identifier,
                 isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
-                nameNodeId: scopeItem.name.id,
                 isNullable: scopeItem.isNullable,
                 isOptional: scopeItem.isOptional,
                 maybeType: scopeItem.maybeType,
@@ -331,7 +329,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "x",
                         kind: ScopeItemKind.Parameter,
                         isRecursive: false,
-                        nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
@@ -340,7 +337,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.Parameter,
                         isRecursive: false,
-                        nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
@@ -396,7 +392,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "x",
                         kind: ScopeItemKind.Parameter,
                         isRecursive: false,
-                        nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
@@ -405,7 +400,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "y",
                         kind: ScopeItemKind.Parameter,
                         isRecursive: false,
-                        nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
@@ -1057,7 +1051,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "p1",
                         kind: ScopeItemKind.Parameter,
                         isRecursive: false,
-                        nameNodeId: 7,
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
@@ -1066,7 +1059,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "p2",
                         kind: ScopeItemKind.Parameter,
                         isRecursive: false,
-                        nameNodeId: 11,
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
@@ -1302,7 +1294,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     identifier: "a",
                     kind: ScopeItemKind.Parameter,
                     isRecursive: false,
-                    nameNodeId: 7,
                     isNullable: true,
                     isOptional: false,
                     maybeType: undefined,
@@ -1311,7 +1302,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     identifier: "b",
                     kind: ScopeItemKind.Parameter,
                     isRecursive: false,
-                    nameNodeId: 11,
                     isNullable: false,
                     isOptional: false,
                     maybeType: Constant.PrimitiveTypeConstantKind.Number,
@@ -1320,7 +1310,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     identifier: "c",
                     kind: ScopeItemKind.Parameter,
                     isRecursive: false,
-                    nameNodeId: 18,
                     isNullable: true,
                     isOptional: false,
                     maybeType: Constant.PrimitiveTypeConstantKind.Function,
@@ -1329,7 +1318,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     identifier: "d",
                     kind: ScopeItemKind.Parameter,
                     isRecursive: false,
-                    nameNodeId: 28,
                     isNullable: true,
                     isOptional: true,
                     maybeType: undefined,
@@ -1338,7 +1326,6 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     identifier: "e",
                     kind: ScopeItemKind.Parameter,
                     isRecursive: false,
-                    nameNodeId: 33,
                     isNullable: false,
                     isOptional: true,
                     maybeType: Constant.PrimitiveTypeConstantKind.Table,

@@ -5,14 +5,16 @@ import { Type } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { ActiveNode, ActiveNodeLeafKind } from "../../inspection/activeNode";
 import { Ast } from "../../language";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import { TXorNode, XorNodeKind } from "../../parser";
 import { CommonSettings } from "../../settings";
 
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 
 export function tryExpectedType(settings: CommonSettings, activeNode: ActiveNode): TriedExpectedType {
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => maybeExpectedType(activeNode));
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
+        maybeExpectedType(activeNode),
+    );
 }
 
 // Traverse up the ancestry and find what type is expected as the nth child of a node's kind.

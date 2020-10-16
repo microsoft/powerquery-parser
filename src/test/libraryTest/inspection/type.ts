@@ -313,21 +313,25 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 parameters: [
                     {
+                        nameLiteral: "a",
                         isNullable: true,
                         isOptional: false,
                         maybeType: undefined,
                     },
                     {
+                        nameLiteral: "b",
                         isNullable: false,
                         isOptional: false,
                         maybeType: Type.TypeKind.Number,
                     },
                     {
+                        nameLiteral: "c",
                         isNullable: true,
                         isOptional: false,
                         maybeType: Type.TypeKind.Number,
                     },
                     {
+                        nameLiteral: "d",
                         isNullable: true,
                         isOptional: true,
                         maybeType: undefined,
@@ -366,16 +370,19 @@ describe(`Inspection - Scope - Type`, () => {
                 isNullable: false,
                 parameters: [
                     {
+                        nameLiteral: "foo",
                         isNullable: false,
                         isOptional: false,
                         maybeType: Type.TypeKind.Number,
                     },
                     {
+                        nameLiteral: "bar",
                         isNullable: true,
                         isOptional: false,
                         maybeType: Type.TypeKind.Text,
                     },
                     {
+                        nameLiteral: "baz",
                         isNullable: false,
                         isOptional: true,
                         maybeType: Type.TypeKind.Date,

@@ -3,7 +3,7 @@
 
 import { ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import { AncestryUtils, TXorNode, XorNodeKind } from "../../parser";
 import { CommonSettings } from "../../settings";
 import { ActiveNode } from "../activeNode";
@@ -15,7 +15,7 @@ export function tryAutocompletePrimitiveType(
     activeNode: ActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
         return autocompletePrimitiveType(activeNode, maybeTrailingToken);
     });
 }

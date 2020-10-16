@@ -4,7 +4,7 @@
 import { Assert, CommonError, ResultUtils } from "../../common";
 import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import {
     IParser,
     IParserState,
@@ -36,7 +36,7 @@ export function tryAutocompleteFieldAccess<S extends IParserState = IParserState
     typeCache: TypeCache,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteFieldAccess {
-    return ResultUtils.ensureResult(getLocalizationTemplates(parseSettings.locale), () => {
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(parseSettings.locale), () => {
         return autocompleteFieldAccess(parseSettings, parserState, activeNode, typeCache, maybeParseError);
     });
 }

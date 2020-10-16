@@ -3,8 +3,7 @@
 
 import { ICancellationToken } from "../common";
 import { LexerSnapshot } from "../lexer";
-import { Locale } from "../localization";
-import { DefaultLocale } from "../localization/templates";
+import { DefaultLocale, Locale } from "../localization";
 import { CombinatorialParser, IParser, IParserState, IParserStateUtils, ParserOptions } from "../parser";
 
 export interface CommonSettings {
@@ -28,7 +27,7 @@ export interface ParseSettings<S extends IParserState = IParserState> extends Co
 
 export type Settings<S extends IParserState = IParserState> = LexSettings & ParseSettings<S>;
 
-export const DefaultSettings: Settings = {
+export const DefaultSettings: Settings<IParserState> = {
     maybeCancellationToken: undefined,
     locale: DefaultLocale,
     parser: CombinatorialParser,

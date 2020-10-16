@@ -10,7 +10,8 @@ export interface InspectedFunctionExpression {
     readonly returnType: Type.TType;
 }
 
-export interface InspectedFunctionParameter extends Type.FunctionParameter {
+// Omit "nameLiteral" since we're going to include the `name` identifier.
+export interface InspectedFunctionParameter extends Omit<Type.FunctionParameter, "nameLiteral"> {
     readonly id: number;
     readonly name: Ast.Identifier;
 }

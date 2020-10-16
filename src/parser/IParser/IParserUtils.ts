@@ -5,7 +5,7 @@ import { ParseError } from "..";
 import { CommonError, ResultUtils } from "../../common";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import { ParseSettings } from "../../settings";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { IParser, TriedParse } from "./IParser";
@@ -103,6 +103,6 @@ function ensureParseError<S extends IParserState = IParserState>(
     if (ParseError.isTInnerParseError(error)) {
         return new ParseError.ParseError(error, state);
     } else {
-        return CommonError.ensureCommonError(getLocalizationTemplates(locale), error);
+        return CommonError.ensureCommonError(LocalizationUtils.getLocalizationTemplates(locale), error);
     }
 }

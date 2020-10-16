@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert } from ".";
-import { DefaultTemplates, ILocalizationTemplates, Localization } from "../localization";
+import { Localization, Templates } from "../localization";
 import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 
 export type TInnerCommonError = CancellationError | InvariantError | UnknownError;
@@ -16,20 +16,20 @@ export class CommonError extends Error {
 
 export class CancellationError extends Error {
     constructor(readonly cancellationToken: ICancellationToken) {
-        super(Localization.error_common_cancellationError(DefaultTemplates));
+        super(Localization.error_common_cancellationError(Templates.DefaultTemplates));
         Object.setPrototypeOf(this, CancellationError.prototype);
     }
 }
 
 export class InvariantError extends Error {
     constructor(readonly invariantBroken: string, readonly maybeDetails: any | undefined = undefined) {
-        super(Localization.error_common_invariantError(DefaultTemplates, invariantBroken, maybeDetails));
+        super(Localization.error_common_invariantError(Templates.DefaultTemplates, invariantBroken, maybeDetails));
         Object.setPrototypeOf(this, InvariantError.prototype);
     }
 }
 
 export class UnknownError extends Error {
-    constructor(templates: ILocalizationTemplates, readonly innerError: any) {
+    constructor(templates: Templates.ILocalizationTemplates, readonly innerError: any) {
         super(Localization.error_common_unknown(templates, innerError));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
@@ -48,7 +48,7 @@ export function isTInnerCommonError(x: any): x is TInnerCommonError {
     return x instanceof CancellationError || x instanceof InvariantError || x instanceof UnknownError;
 }
 
-export function ensureCommonError(templates: ILocalizationTemplates, err: Error): CommonError {
+export function ensureCommonError(templates: Templates.ILocalizationTemplates, err: Error): CommonError {
     if (err instanceof CommonError) {
         return err;
     } else if (isTInnerCommonError(err)) {

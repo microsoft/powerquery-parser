@@ -1,5 +1,5 @@
 import { Assert, ResultUtils } from "../common";
-import { StartOfDocumentKeywords } from "../language/keyword";
+import { Keyword } from "../language";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
 import { AncestryUtils, IParserState, NodeIdMap, ParseError, TXorNode } from "../parser";
 import { ParseSettings } from "../settings";
@@ -32,7 +32,7 @@ export function tryInspection<S extends IParserState = IParserState>(
             maybeActiveNode,
             autocomplete: {
                 triedFieldAccess: ResultUtils.okFactory(undefined),
-                triedKeyword: ResultUtils.okFactory(StartOfDocumentKeywords),
+                triedKeyword: ResultUtils.okFactory(Keyword.StartOfDocumentKeywords),
                 triedPrimitiveType: ResultUtils.okFactory([]),
             },
             maybeInvokeExpression: undefined,

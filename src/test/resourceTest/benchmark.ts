@@ -11,10 +11,10 @@ import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale, Locale } from "../../localization";
 import { CombinatorialParser, IParser, IParserState, IParserStateUtils, RecursiveDescentParser } from "../../parser";
 import { ParseSettings } from "../../settings";
+import { TestFileUtils } from "../testUtils";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
 import * as path from "path";
-import { TestFileUtils } from "../testUtils";
 
 interface FileSummary {
     readonly parserName: string;

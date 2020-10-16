@@ -5,7 +5,7 @@ import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError, ICancellationToken } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import { SequenceKind } from "../error";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
@@ -33,7 +33,7 @@ export function stateFactory(
     return {
         maybeCancellationToken,
         lexerSnapshot,
-        localizationTemplates: getLocalizationTemplates(locale),
+        localizationTemplates: LocalizationUtils.getLocalizationTemplates(locale),
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind: maybeCurrentToken?.kind,

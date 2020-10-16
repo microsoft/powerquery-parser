@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
-import { getLocalizationTemplates } from "../../localization";
+import { LocalizationUtils } from "../../localization";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -46,7 +46,7 @@ export function tryScope(
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedScope {
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () =>
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
         inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById),
     );
 }
@@ -60,7 +60,7 @@ export function tryNodeScope(
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedNodeScope {
-    return ResultUtils.ensureResult(getLocalizationTemplates(settings.locale), () => {
+    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
         if (ancestry.length === 0) {
             return new Map();

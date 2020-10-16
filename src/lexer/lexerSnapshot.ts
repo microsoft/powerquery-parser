@@ -5,7 +5,7 @@ import { LexError } from ".";
 import { Lexer } from "..";
 import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
-import { ILocalizationTemplates } from "../localization";
+import { Templates } from "../localization";
 
 // The lexer is a multiline aware lexer.
 // That in part means multiline tokens are split up into <begin>, <content>, and <end> components.
@@ -85,7 +85,7 @@ function snapshotFactory(state: Lexer.State): LexerSnapshot {
     const numFlatTokens: number = flatTokens.length;
     const text: string = flattenedLines.text;
     const maybeCancellationToken: ICancellationToken | undefined = state.maybeCancellationToken;
-    const localizationTemplates: ILocalizationTemplates = state.localizationTemplates;
+    const localizationTemplates: Templates.ILocalizationTemplates = state.localizationTemplates;
 
     let flatIndex: number = 0;
     while (flatIndex < numFlatTokens) {
@@ -183,7 +183,7 @@ function readSingleLineMultilineComment(flatToken: FlatLineToken): Comment.Multi
 
 function readMultilineComment(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedCommentRead {
@@ -224,7 +224,7 @@ function readMultilineComment(
 
 function readQuotedIdentifier(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {
@@ -264,7 +264,7 @@ function readQuotedIdentifier(
 
 function readTextLiteral(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: ILocalizationTemplates,
+    localizationTemplates: Templates.ILocalizationTemplates,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {

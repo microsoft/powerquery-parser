@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "..";
-import { ILocalizationTemplates } from "../../localization";
+import { Templates } from "../../localization";
 import { Err, Ok, Result, ResultKind } from "./result";
 
 export function okFactory<T>(value: T): Ok<T> {
@@ -28,7 +28,7 @@ export function isErr<T, E>(result: Result<T, E>): result is Err<E> {
 }
 
 export function ensureResult<T>(
-    templates: ILocalizationTemplates,
+    templates: Templates.ILocalizationTemplates,
     callbackFn: () => T,
 ): Result<T, CommonError.CommonError> {
     try {

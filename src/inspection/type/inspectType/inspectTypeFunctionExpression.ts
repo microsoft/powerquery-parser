@@ -54,10 +54,10 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
         kind: Type.TypeKind.Function,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
         isNullable: false,
-        // TODO: Maybe rework this to not use TypeInspector. This would save a map call at the cost of complexity.
         parameters: inspectedFunctionExpression.parameters.map(
             (parameter: TypeInspector.InspectedFunctionParameter) => {
                 return {
+                    nameLiteral: parameter.name.literal,
                     isNullable: parameter.isNullable,
                     isOptional: parameter.isOptional,
                     maybeType: parameter.maybeType,
