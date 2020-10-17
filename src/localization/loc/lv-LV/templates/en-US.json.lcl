@@ -41,7 +41,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An unknown error was encountered, innerError: {innerError}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Radās nezināma kļūda; iekšēja kļūda: {innerError}]]></Val>
+            <Val><![CDATA[Radās nezināma kļūda; innerError: {innerError}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
