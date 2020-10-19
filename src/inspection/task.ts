@@ -33,6 +33,7 @@ export function tryInspection<S extends IParserState = IParserState>(
             autocomplete: {
                 triedFieldAccess: ResultUtils.okFactory(undefined),
                 triedKeyword: ResultUtils.okFactory(Keyword.StartOfDocumentKeywords),
+                triedLanguageConstant: ResultUtils.okFactory(undefined),
                 triedPrimitiveType: ResultUtils.okFactory([]),
             },
             maybeInvokeExpression: undefined,

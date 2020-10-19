@@ -10,6 +10,7 @@ import { TypeCache } from "../type/commonTypes";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { ExpressionAutocomplete } from "./autocompleteKeyword/commonTypes";
+import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { trailingTokenFactory } from "./common";
 import {
@@ -17,6 +18,7 @@ import {
     TrailingToken,
     TriedAutocompleteFieldAccess,
     TriedAutocompleteKeyword,
+    TriedAutocompleteLanguageConstant,
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
 
@@ -34,6 +36,7 @@ export function autocomplete<S extends IParserState = IParserState>(
         return {
             triedFieldAccess: ResultUtils.okFactory(undefined),
             triedKeyword: ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]),
+            triedLanguageConstant: ResultUtils.okFactory(undefined),
             triedPrimitiveType: ResultUtils.okFactory([]),
         };
     }
@@ -63,6 +66,12 @@ export function autocomplete<S extends IParserState = IParserState>(
         maybeTrailingToken,
     );
 
+    const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
+        parserState,
+        activeNode,
+        maybeParseError,
+    );
+
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
         parseSettings,
         activeNode,
@@ -72,6 +81,7 @@ export function autocomplete<S extends IParserState = IParserState>(
     return {
         triedFieldAccess,
         triedKeyword,
+        triedLanguageConstant,
         triedPrimitiveType,
     };
 }

@@ -195,4 +195,17 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         );
         expect(actual).to.have.members(expected);
     });
+
+    it("let a = 1 is |", () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
+            `let a = 1 is |`,
+        );
+        const expected: Inspection.AutocompletePrimitiveType = Constant.PrimitiveTypeConstantKinds;
+        const actual: Inspection.AutocompletePrimitiveType = assertGetParseErrAutocompleteOkPrimitiveType(
+            DefaultSettings,
+            text,
+            position,
+        );
+        expect(actual).to.have.members(expected);
+    });
 });

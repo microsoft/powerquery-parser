@@ -11,15 +11,23 @@ export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | unde
 
 export type TriedAutocompleteKeyword = Result<AutocompleteKeyword, CommonError.CommonError>;
 
+export type TriedAutocompleteLanguageConstant = Result<
+    AutocompleteLanguageConstant | undefined,
+    CommonError.CommonError
+>;
+
 export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType, CommonError.CommonError>;
 
 export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
+
+export type AutocompleteLanguageConstant = ReadonlyArray<string>;
 
 export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
 
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;
     readonly triedKeyword: TriedAutocompleteKeyword;
+    readonly triedLanguageConstant: TriedAutocompleteLanguageConstant;
     readonly triedPrimitiveType: TriedAutocompletePrimitiveType;
 }
 

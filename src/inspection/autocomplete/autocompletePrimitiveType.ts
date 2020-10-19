@@ -52,9 +52,16 @@ function traverseAncestors(activeNode: ActiveNode): AutocompletePrimitiveType {
     for (let index: number = 0; index < numAncestors; index += 1) {
         const parent: TXorNode = ancestry[index];
         const maybeChild: TXorNode | undefined = ancestry[index - 1];
+
+        // If the node is a context PrimitiveType node,
+        // which is created only when a primitive type was expected but there was nothing to parse.
+        // `x as |`
+        if (parent.kind === XorNodeKind.Context && parent.node.kind === Ast.NodeKind.PrimitiveType) {
+            return Constant.PrimitiveTypeConstantKinds;
+        }
         // If on the second attribute for TypePrimaryType.
         // `type |`
-        if (parent.node.kind === Ast.NodeKind.TypePrimaryType) {
+        else if (parent.node.kind === Ast.NodeKind.TypePrimaryType) {
             if (maybeChild === undefined) {
                 return Constant.PrimitiveTypeConstantKinds;
             } else if (
