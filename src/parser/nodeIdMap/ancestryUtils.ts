@@ -147,6 +147,14 @@ export function maybeFirstXorOfNodeKind(
     return maybeFirstXorWhere(ancestry, (xorNode: TXorNode) => xorNode.node.kind === nodeKind);
 }
 
+export function maybeFirstIndexOfNodeKind(
+    ancestry: ReadonlyArray<TXorNode>,
+    nodeKind: Ast.NodeKind,
+): number | undefined {
+    const maybeIndex: number = ancestry.findIndex((xorNode: TXorNode) => xorNode.node.kind === nodeKind);
+    return maybeIndex !== -1 ? maybeIndex : undefined;
+}
+
 export function maybeFirstXorAndIndexOfNodeKind(
     ancestry: ReadonlyArray<TXorNode>,
     nodeKind: Ast.NodeKind,

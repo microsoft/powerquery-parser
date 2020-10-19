@@ -22,10 +22,10 @@ import { Position, PositionUtils } from "../position";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../type/commonTypes";
 import {
+    AdditionalParse,
     AutocompleteFieldAccess,
     AutocompleteItem,
     InspectedFieldAccess,
-    ParsedFieldAccess,
     TriedAutocompleteFieldAccess,
 } from "./commonTypes";
 
@@ -93,7 +93,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
 
     if (hasTrailingOpenConstant === true) {
         // From the starting open constant run a few new parse runs and return the run which parsed the most tokens.
-        const maybeParsedFieldAccess: ParsedFieldAccess | undefined = maybeParseFieldAccessFromParse<S>(
+        const maybeParsedFieldAccess: AdditionalParse | undefined = maybeParseFieldAccessFromParse<S>(
             parseSettings,
             parserState,
         );
@@ -429,15 +429,15 @@ function maybeTypablePrimaryExpression(
 function maybeParseFieldAccessFromParse<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
-): ParsedFieldAccess | undefined {
-    const parseFns: ReadonlyArray<(parseSettings: ParseSettings<S>, parserState: S) => ParsedFieldAccess> = [
+): AdditionalParse | undefined {
+    const parseFns: ReadonlyArray<(parseSettings: ParseSettings<S>, parserState: S) => AdditionalParse> = [
         parseFieldProjection,
         parseFieldSelection,
     ];
 
-    let maybeBestMatch: ParsedFieldAccess | undefined;
+    let maybeBestMatch: AdditionalParse | undefined;
     for (const fn of parseFns) {
-        const attempt: ParsedFieldAccess = fn(parseSettings, parserState);
+        const attempt: AdditionalParse = fn(parseSettings, parserState);
         maybeBestMatch = betterFieldAccessMatch(maybeBestMatch, attempt);
     }
 
@@ -447,7 +447,7 @@ function maybeParseFieldAccessFromParse<S extends IParserState = IParserState>(
 function parseFieldProjection<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
-): ParsedFieldAccess {
+): AdditionalParse {
     return tryParseFieldAccess<Ast.FieldProjection, S>(
         parseSettings,
         parserState,
@@ -458,7 +458,7 @@ function parseFieldProjection<S extends IParserState = IParserState>(
 function parseFieldSelection<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
-): ParsedFieldAccess {
+): AdditionalParse {
     return tryParseFieldAccess<Ast.FieldSelector, S>(
         parseSettings,
         parserState,
@@ -470,7 +470,7 @@ function tryParseFieldAccess<T extends Ast.FieldProjection | Ast.FieldSelector, 
     parseSettings: ParseSettings<S>,
     parserState: S,
     parseFn: (state: S, parser: IParser<S>) => T,
-): ParsedFieldAccess {
+): AdditionalParse {
     const newState: S = parseSettings.parserStateFactory(
         parserState.maybeCancellationToken,
         parserState.lexerSnapshot,
@@ -502,9 +502,9 @@ function tryParseFieldAccess<T extends Ast.FieldProjection | Ast.FieldSelector, 
 }
 
 function betterFieldAccessMatch(
-    maybeBestFieldAccess: ParsedFieldAccess | undefined,
-    currentFieldAccess: ParsedFieldAccess,
-): ParsedFieldAccess {
+    maybeBestFieldAccess: AdditionalParse | undefined,
+    currentFieldAccess: AdditionalParse,
+): AdditionalParse {
     if (maybeBestFieldAccess === undefined) {
         return currentFieldAccess;
     }
@@ -523,7 +523,7 @@ function betterFieldAccessMatch(
     }
 }
 
-function tokenIndexFromParseFieldAccess(parsedFieldAccess: ParsedFieldAccess): number {
+function tokenIndexFromParseFieldAccess(parsedFieldAccess: AdditionalParse): number {
     return parsedFieldAccess.maybeParseError === undefined
         ? Number.MAX_SAFE_INTEGER
         : parsedFieldAccess.maybeParseError.state.tokenIndex;

@@ -67,6 +67,7 @@ export function autocomplete<S extends IParserState = IParserState>(
     );
 
     const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
+        parseSettings,
         parserState,
         activeNode,
         maybeParseError,

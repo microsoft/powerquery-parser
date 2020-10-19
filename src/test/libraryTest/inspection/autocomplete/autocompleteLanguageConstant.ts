@@ -20,22 +20,21 @@ function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParserState 
 }
 
 describe(`Inspection - Autocomplete - Language constants`, () => {
-    it(`WIP let x = (a as |`, () => {
+    it(`let x = (a as |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
             `let x = (a as |`,
         );
-        const expected: ReadonlyArray<string> | undefined = [];
         const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
             DefaultSettings,
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        Assert.isUndefined(actual);
     });
 
-    it(`(a, |`, () => {
+    it(`WIP (a, |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(a, |`);
-        const expected: ReadonlyArray<string> | undefined = [];
+        const expected: ReadonlyArray<string> | undefined = ["optional"];
         const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
             DefaultSettings,
             text,
@@ -46,7 +45,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
 
     it(`(x, op|`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(x, op|`);
-        const expected: ReadonlyArray<string> | undefined = [];
+        const expected: ReadonlyArray<string> | undefined = ["optional"];
         const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
             DefaultSettings,
             text,

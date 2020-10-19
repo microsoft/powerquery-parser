@@ -20,7 +20,7 @@ export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType, C
 
 export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
 
-export type AutocompleteLanguageConstant = ReadonlyArray<string>;
+export type AutocompleteLanguageConstant = ReadonlyArray<Constant.IdentifierConstantKind>;
 
 export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
 
@@ -53,7 +53,7 @@ export interface TrailingToken extends Token.Token {
     readonly isInOrOnPosition: boolean;
 }
 
-export interface ParsedFieldAccess<S extends IParserState = IParserState> {
+export interface AdditionalParse<S extends IParserState = IParserState> {
     readonly root: TXorNode;
     readonly parserState: S;
     readonly maybeParseError: ParseError.ParseError<S> | undefined;
