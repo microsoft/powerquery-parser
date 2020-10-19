@@ -27,7 +27,7 @@ export type ScopeTypeByKey = Map<string, Type.TType>;
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
-export type TriedNodeScope = Result<NodeScope, CommonError.CommonError>;
+export type TriedNodeScope = Result<NodeScope | undefined, CommonError.CommonError>;
 
 // Scopes for multiple nodes, where the keys are nodeIds.
 // Serves as a cache when building the scope for a specific node.

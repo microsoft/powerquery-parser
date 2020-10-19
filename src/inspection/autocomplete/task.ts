@@ -5,7 +5,7 @@ import { ResultUtils } from "../../common";
 import { Keyword, Token } from "../../language";
 import { IParserState, NodeIdMap, ParseError } from "../../parser";
 import { ParseSettings } from "../../settings";
-import { ActiveNode } from "../activeNode";
+import { ActiveNode, TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
@@ -24,7 +24,7 @@ export function autocomplete<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
     typeCache: TypeCache,
-    maybeActiveNode: ActiveNode | undefined,
+    maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): Autocomplete {
     const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;

@@ -11,7 +11,7 @@ import { ScopeTypeByKey } from "../scope";
 import { TypeCache } from "./commonTypes";
 import { assertGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 
-export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
+export type TriedScopeType = Result<ScopeTypeByKey | undefined, CommonError.CommonError>;
 
 export type TriedType = Result<Type.TType, CommonError.CommonError>;
 
