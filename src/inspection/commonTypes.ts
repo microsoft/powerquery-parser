@@ -2,8 +2,11 @@
 // Licensed under the MIT license.
 
 import { Inspection } from "..";
+import { CommonError, Result } from "../common";
 import { ExpectedType } from "../language";
 import { TMaybeActiveNode } from "./activeNode";
+
+export type TriedInspection = Result<Inspection, CommonError.CommonError>;
 
 export interface Inspection {
     readonly maybeActiveNode: TMaybeActiveNode;

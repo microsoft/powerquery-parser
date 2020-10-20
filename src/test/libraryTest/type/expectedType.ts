@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode, ActiveNodeKind } from "../../../inspection/activeNode";
+import { ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
