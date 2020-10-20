@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Inspection } from "../..";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
 import { LocalizationUtils } from "../../localization";
@@ -21,7 +22,6 @@ import {
     SectionMemberScopeItem,
     TScopeItem,
 } from "./scopeItem";
-import { Inspection } from "../..";
 
 // Keys are identifier literals.
 export type ScopeTypeByKey = Map<string, Type.TType>;
@@ -143,8 +143,8 @@ export function maybeDereferencedIdentifier(
         return triedNodeScope;
     }
 
-    const scopeItemByKey: NodeScope = triedNodeScope.value;
-    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
+    const nodeScope: NodeScope = triedNodeScope.value;
+    const maybeScopeItem: undefined | TScopeItem = nodeScope.get(identifierLiteral);
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier.

@@ -105,20 +105,20 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
     }
 }
 
-function abridgedScopeItemsFactory(scopeItemByKey: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
+function abridgedScopeItemsFactory(nodeScope: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
     const result: TAbridgedNodeScopeItem[] = [];
 
-    for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
+    for (const [identifier, scopeItem] of nodeScope.entries()) {
         result.push(abridgedScopeItemFactory(identifier, scopeItem));
     }
 
     return result;
 }
 
-function abridgedParametersFactory(scopeItemByKey: NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
+function abridgedParametersFactory(nodeScope: NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
     const result: AbridgedParameterScopeItem[] = [];
 
-    for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
+    for (const [identifier, scopeItem] of nodeScope.entries()) {
         const abridged: TAbridgedNodeScopeItem = abridgedScopeItemFactory(identifier, scopeItem);
         if (abridged.kind === ScopeItemKind.Parameter) {
             result.push(abridged);
