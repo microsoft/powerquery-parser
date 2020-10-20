@@ -63,6 +63,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             position,
         );
         Assert.isDefined(inspected);
+
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).to.equal(undefined, "expected no arguments");
     });
@@ -77,6 +78,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             position,
         );
         Assert.isDefined(inspected);
+
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).to.equal(undefined, "expected no arguments");
     });

@@ -16,7 +16,7 @@ export function tryAutocompletePrimitiveType(
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
     if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
-        return ResultUtils.okFactory(undefined);
+        return ResultUtils.okFactory([]);
     }
 
     return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {

@@ -424,9 +424,8 @@ function maybeDereferencedIdentifier(state: InspectTypeState, xorNode: TXorNode)
             throw Assert.isNever(identifier);
     }
 
-    const nodeScope: NodeScope | undefined = assertGetOrCreateNodeScope(state, identifier.id);
+    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, identifier.id);
     const maybeScopeItem: undefined | TScopeItem = nodeScope.get(identifierLiteral);
-
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier (eg. Odbc.Database).

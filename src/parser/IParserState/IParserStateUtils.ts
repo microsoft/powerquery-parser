@@ -121,11 +121,14 @@ export function startContext(state: IParserState, nodeKind: Ast.NodeKind): void 
 }
 
 export function endContext(state: IParserState, astNode: Ast.TNode): void {
-    Assert.isDefined(state.maybeCurrentContextNode, `can't end a context if one doesn't exist`);
+    const contextNode: ParseContext.Node = Assert.asDefined(
+        state.maybeCurrentContextNode,
+        `can't end a context if one doesn't exist`,
+    );
 
     const maybeParentOfContextNode: ParseContext.Node | undefined = ParseContextUtils.endContext(
         state.contextState,
-        state.maybeCurrentContextNode,
+        contextNode,
         astNode,
     );
     state.maybeCurrentContextNode = maybeParentOfContextNode;
@@ -134,9 +137,7 @@ export function endContext(state: IParserState, astNode: Ast.TNode): void {
 export function deleteContext(state: IParserState, maybeNodeId: number | undefined): void {
     let nodeId: number;
     if (maybeNodeId === undefined) {
-        Assert.isDefined(state.maybeCurrentContextNode, `can't delete a context if one doesn't exist`);
-        const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
-        nodeId = currentContextNode.id;
+        nodeId = Assert.asDefined(state.maybeCurrentContextNode, `can't delete a context if one doesn't exist`).id;
     } else {
         nodeId = maybeNodeId;
     }
@@ -145,9 +146,7 @@ export function deleteContext(state: IParserState, maybeNodeId: number | undefin
 }
 
 export function incrementAttributeCounter(state: IParserState): void {
-    Assert.isDefined(state.maybeCurrentContextNode, `state.maybeCurrentContextNode`);
-    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
-    currentContextNode.attributeCounter += 1;
+    Assert.asDefined(state.maybeCurrentContextNode, `state.maybeCurrentContextNode`).attributeCounter += 1;
 }
 
 // -------------------------
@@ -253,27 +252,22 @@ export function isRecursivePrimaryExpressionNext(
 // -----------------------------
 
 export function assertGetContextNodeMetadata(state: IParserState): ContextNodeMetadata {
-    Assert.isDefined(state.maybeCurrentContextNode);
-    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
-
-    Assert.isDefined(currentContextNode.maybeTokenStart);
-    const tokenStart: Token.Token = currentContextNode.maybeTokenStart;
+    const currentContextNode: ParseContext.Node = Assert.asDefined(state.maybeCurrentContextNode);
+    const tokenStart: Token.Token = Assert.asDefined(currentContextNode.maybeTokenStart);
 
     // inclusive token index
     const tokenIndexEnd: number = state.tokenIndex - 1;
-    const maybeTokenEnd: Token.Token | undefined = state.lexerSnapshot.tokens[tokenIndexEnd];
-    Assert.isDefined(maybeTokenEnd);
+    const tokenEnd: Token.Token = Assert.asDefined(state.lexerSnapshot.tokens[tokenIndexEnd]);
 
     const tokenRange: Token.TokenRange = {
         tokenIndexStart: currentContextNode.tokenIndexStart,
         tokenIndexEnd,
         positionStart: tokenStart.positionStart,
-        positionEnd: maybeTokenEnd.positionEnd,
+        positionEnd: tokenEnd.positionEnd,
     };
 
-    const contextNode: ParseContext.Node = state.maybeCurrentContextNode;
     return {
-        id: contextNode.id,
+        id: currentContextNode.id,
         maybeAttributeIndex: currentContextNode.maybeAttributeIndex,
         tokenRange,
     };
@@ -282,9 +276,8 @@ export function assertGetContextNodeMetadata(state: IParserState): ContextNodeMe
 export function assertGetTokenAt(state: IParserState, tokenIndex: number): Token.Token {
     const lexerSnapshot: LexerSnapshot = state.lexerSnapshot;
     const maybeToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
-    Assert.isDefined(maybeToken, undefined, { tokenIndex });
 
-    return maybeToken;
+    return Assert.asDefined(maybeToken, undefined, { tokenIndex });
 }
 
 // -------------------------------

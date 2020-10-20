@@ -2,7 +2,7 @@ import { ResultUtils } from "../common";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
 import { AncestryUtils, IParserState, NodeIdMap, ParseError, TXorNode } from "../parser";
 import { ParseSettings } from "../settings";
-import { ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
 import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
@@ -44,21 +44,23 @@ export function inspection<S extends IParserState = IParserState>(
     let triedScopeType: TriedScopeType;
     let triedExpectedType: TriedExpectedType;
     if (ActiveNodeUtils.isSome(maybeActiveNode)) {
+        const activeNode: ActiveNode = maybeActiveNode;
+
         triedNodeScope = tryNodeScope(
             parseSettings,
             nodeIdMapCollection,
             leafNodeIds,
-            maybeActiveNode.ancestry[0].node.id,
+            activeNode.ancestry[0].node.id,
             scopeById,
         );
 
-        const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(maybeActiveNode.ancestry);
+        const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(activeNode.ancestry);
         triedScopeType = tryScopeType(parseSettings, nodeIdMapCollection, leafNodeIds, ancestryLeaf.node.id, typeCache);
 
-        triedExpectedType = tryExpectedType(parseSettings, maybeActiveNode);
+        triedExpectedType = tryExpectedType(parseSettings, activeNode);
     } else {
-        triedNodeScope = ResultUtils.okFactory(undefined);
-        triedScopeType = ResultUtils.okFactory(undefined);
+        triedNodeScope = ResultUtils.okFactory(new Map());
+        triedScopeType = ResultUtils.okFactory(new Map());
         triedExpectedType = ResultUtils.okFactory(undefined);
     }
 

@@ -14,9 +14,7 @@ export function assertGetParentAst(
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): Ast.TNode {
     const maybeNode: Ast.TNode | undefined = maybeParentAst(nodeIdMapCollection, nodeId, maybeAllowedNodeKinds);
-    Assert.isDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
-
-    return maybeNode;
+    return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
 }
 
 export function assertGetParentXor(
@@ -25,9 +23,7 @@ export function assertGetParentXor(
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
     const maybeNode: TXorNode | undefined = maybeParentXor(nodeIdMapCollection, nodeId, maybeAllowedNodeKinds);
-    Assert.isDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
-
-    return maybeNode;
+    return Assert.asDefined(maybeNode, `nodeId doesn't have a parent`, { nodeId });
 }
 
 export function maybeParentAst(

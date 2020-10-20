@@ -32,14 +32,16 @@ export function maybeExpectedType(activeNode: ActiveNode): Type.TType | undefine
     for (let index: number = 0; index < upperBound; index += 1) {
         const parent: TXorNode = ancestry[index + 1];
         const child: TXorNode = ancestry[index];
+        const childAttributeIndex: number = Assert.asDefined(
+            child.node.maybeAttributeIndex,
+            `Expected child to have an attribute index.`,
+            { childId: child.node.id },
+        );
 
-        Assert.isDefined(child.node.maybeAttributeIndex, `Expected child to have an attribute index.`, {
-            childId: child.node.id,
-        });
         const attributeIndex: number =
             parent.kind === XorNodeKind.Ast && activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode
-                ? child.node.maybeAttributeIndex + 1
-                : child.node.maybeAttributeIndex;
+                ? childAttributeIndex + 1
+                : childAttributeIndex;
 
         const allowedType: Type.TType = expectedType(parent, attributeIndex);
         if (allowedType.kind !== Type.TypeKind.NotApplicable) {

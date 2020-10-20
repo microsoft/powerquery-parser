@@ -45,7 +45,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     return triedTraverse.value;
 }
 
-function assertGetNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N & Ast.TNode {
+function assertGetNthNodeOfKind<N extends Ast.TNode>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N {
     const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         localizationTemplates: Templates.DefaultTemplates,
@@ -69,10 +69,7 @@ function assertGetNthNodeOfKind<N>(text: string, nodeKind: Ast.NodeKind, nthRequ
     );
 
     Assert.isOk(triedTraverse);
-    Assert.isDefined(triedTraverse.value);
-    const astNode: Ast.TNode = triedTraverse.value;
-
-    return astNode as N & Ast.TNode;
+    return Assert.asDefined(triedTraverse.value) as N;
 }
 
 function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Ast.TNode): void {

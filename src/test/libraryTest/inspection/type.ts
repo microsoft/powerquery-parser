@@ -26,14 +26,13 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 
 function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertGetParseErr(DefaultSettings, text);
-    const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
-    Assert.isDefined(maybeRoot);
+    const root: ParseContext.Node = Assert.asDefined(parseErr.state.contextState.maybeRoot);
 
     const actual: Type.TType = assertGetParseNodeOk(
         DefaultSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
-        XorNodeUtils.contextFactory(maybeRoot),
+        XorNodeUtils.contextFactory(root),
     );
 
     expect(actual).deep.equal(expected);
@@ -92,7 +91,6 @@ function assertGetParseOkScopeTypeOk(
         maybeActiveNode.ancestry[0].node.id,
     );
     Assert.isOk(triedScopeType);
-    Assert.isDefined(triedScopeType.value);
 
     return triedScopeType.value;
 }

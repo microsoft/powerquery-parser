@@ -21,13 +21,14 @@ import {
     SectionMemberScopeItem,
     TScopeItem,
 } from "./scopeItem";
+import { Inspection } from "../..";
 
 // Keys are identifier literals.
 export type ScopeTypeByKey = Map<string, Type.TType>;
 
 export type TriedScope = Result<ScopeById, CommonError.CommonError>;
 
-export type TriedNodeScope = Result<NodeScope | undefined, CommonError.CommonError>;
+export type TriedNodeScope = Result<NodeScope, CommonError.CommonError>;
 
 // Scopes for multiple nodes, where the keys are nodeIds.
 // Serves as a cache when building the scope for a specific node.
@@ -67,10 +68,7 @@ export function tryNodeScope(
         }
 
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
-        const maybeScope: NodeScope | undefined = inspected.get(nodeId);
-        Assert.isDefined(maybeScope, `expected nodeId in scope result`, { nodeId });
-
-        return maybeScope;
+        return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
     });
 }
 
@@ -81,7 +79,7 @@ export function assertGetOrCreateNodeScope(
     nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined = undefined,
-): Result<NodeScope, CommonError.CommonError> {
+): Inspection.TriedNodeScope {
     const scopeById: ScopeById = maybeScopeById ?? new Map();
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
@@ -93,7 +91,7 @@ export function assertGetOrCreateNodeScope(
         throw triedNodeScope.error;
     }
 
-    return ResultUtils.okFactory(Assert.asDefined(triedNodeScope.value, "triedNodeScope.value"));
+    return triedNodeScope;
 }
 
 // Recusrive deference of the identifier until it reaches the value node.
@@ -134,19 +132,19 @@ export function maybeDereferencedIdentifier(
             throw Assert.isNever(identifier);
     }
 
-    const triedScopeItemByKey: Result<NodeScope, CommonError.CommonError> = assertGetOrCreateNodeScope(
+    const triedNodeScope: Inspection.TriedNodeScope = assertGetOrCreateNodeScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
         xorNode.node.id,
         scopeById,
     );
-    if (ResultUtils.isErr(triedScopeItemByKey)) {
-        return triedScopeItemByKey;
+    if (ResultUtils.isErr(triedNodeScope)) {
+        return triedNodeScope;
     }
-    const scopeItemByKey: NodeScope = triedScopeItemByKey.value;
-    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
 
+    const scopeItemByKey: NodeScope = triedNodeScope.value;
+    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier.

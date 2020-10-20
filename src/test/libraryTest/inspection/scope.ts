@@ -152,7 +152,6 @@ function assertNodeScopeOk(
         undefined,
     );
     Assert.isOk(triedNodeScope);
-    Assert.isDefined(triedNodeScope.value);
 
     return triedNodeScope.value;
 }
