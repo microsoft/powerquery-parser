@@ -19,7 +19,7 @@ export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {
         result = result.concat(autocomplete.triedKeyword.value);
     }
 
-    if (ResultUtils.isOk(autocomplete.triedPrimitiveType)) {
+    if (ResultUtils.isOk(autocomplete.triedPrimitiveType) && autocomplete.triedPrimitiveType.value !== undefined) {
         result = result.concat(autocomplete.triedPrimitiveType.value);
     }
 

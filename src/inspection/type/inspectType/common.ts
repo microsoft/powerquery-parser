@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result, ResultUtils } from "../../../common";
+import { Inspection } from "../../..";
+import { Assert, ResultUtils } from "../../../common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
@@ -58,18 +59,18 @@ export function getOrFindScopeItemType(state: InspectTypeState, scopeItem: TScop
     return scopeType;
 }
 
-export function assertGetOrCreateScope(state: InspectTypeState, nodeId: number): NodeScope {
+export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: number): NodeScope {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
-    const triedGetOrCreateScope: Result<NodeScope, CommonError.CommonError> = getOrCreateScope(state, nodeId);
+    const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
     if (ResultUtils.isErr(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope.error;
     }
 
-    return triedGetOrCreateScope.value;
+    return Assert.asDefined(triedGetOrCreateScope.value);
 }
 
-export function getOrCreateScope(state: InspectTypeState, nodeId: number): Result<NodeScope, CommonError.CommonError> {
+export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspection.TriedNodeScope {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
@@ -354,8 +355,8 @@ export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode
             throw Assert.isNever(deferenced);
     }
 
-    const scopeItemByKey: NodeScope = assertGetOrCreateScope(state, deferenced.id);
-    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
+    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, deferenced.id);
+    const maybeScopeItem: undefined | TScopeItem = nodeScope.get(identifierLiteral);
     if (maybeScopeItem === undefined || (maybeScopeItem.isRecursive === true && isIdentifierRecurisve === false)) {
         return undefined;
     }
@@ -423,8 +424,8 @@ function maybeDereferencedIdentifier(state: InspectTypeState, xorNode: TXorNode)
             throw Assert.isNever(identifier);
     }
 
-    const scopeItemByKey: NodeScope = assertGetOrCreateScope(state, identifier.id);
-    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
+    const nodeScope: NodeScope | undefined = assertGetOrCreateNodeScope(state, identifier.id);
+    const maybeScopeItem: undefined | TScopeItem = nodeScope.get(identifierLiteral);
 
     if (
         // If the identifier couldn't be found in the generated scope,

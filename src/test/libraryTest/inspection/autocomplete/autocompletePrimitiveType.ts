@@ -17,6 +17,8 @@ function assertGetParseOkAutocompleteOkPrimitiveType<S extends IParserState = IP
 ): Inspection.AutocompletePrimitiveType {
     const actual: Inspection.Autocomplete = TestAssertUtils.assertGetParseOkAutocompleteOk(settings, text, position);
     Assert.isOk(actual.triedPrimitiveType);
+    Assert.isDefined(actual.triedPrimitiveType.value);
+
     return actual.triedPrimitiveType.value;
 }
 
@@ -27,6 +29,8 @@ function assertGetParseErrAutocompleteOkPrimitiveType<S extends IParserState = I
 ): Inspection.AutocompletePrimitiveType {
     const actual: Inspection.Autocomplete = TestAssertUtils.assertGetParseErrAutocompleteOk(settings, text, position);
     Assert.isOk(actual.triedPrimitiveType);
+    Assert.isDefined(actual.triedPrimitiveType.value);
+
     return actual.triedPrimitiveType.value;
 }
 

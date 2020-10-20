@@ -17,7 +17,7 @@ import {
     XorNodeUtils,
 } from "../../parser";
 import { ParseSettings } from "../../settings";
-import { ActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../type/commonTypes";
@@ -32,12 +32,16 @@ import {
 export function tryAutocompleteFieldAccess<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
-    activeNode: ActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteFieldAccess {
+    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+        return ResultUtils.okFactory(undefined);
+    }
+
     return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(parseSettings.locale), () => {
-        return autocompleteFieldAccess(parseSettings, parserState, activeNode, typeCache, maybeParseError);
+        return autocompleteFieldAccess(parseSettings, parserState, maybeActiveNode, typeCache, maybeParseError);
     });
 }
 

@@ -9,7 +9,7 @@ export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | unde
 
 export type TriedAutocompleteKeyword = Result<AutocompleteKeyword, CommonError.CommonError>;
 
-export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType, CommonError.CommonError>;
+export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType | undefined, CommonError.CommonError>;
 
 export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
 

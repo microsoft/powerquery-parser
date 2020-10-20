@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, Constant } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
@@ -134,12 +134,12 @@ function assertNodeScopeOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): NodeScope {
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    if (maybeActiveNode === undefined) {
+    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
         return new Map();
     }
     const activeNode: ActiveNode = maybeActiveNode;
@@ -152,6 +152,8 @@ function assertNodeScopeOk(
         undefined,
     );
     Assert.isOk(triedNodeScope);
+    Assert.isDefined(triedNodeScope.value);
+
     return triedNodeScope.value;
 }
 

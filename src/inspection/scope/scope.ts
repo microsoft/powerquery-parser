@@ -74,7 +74,7 @@ export function tryNodeScope(
     });
 }
 
-export function assertGetOrCreateScopeItemByKey(
+export function assertGetOrCreateNodeScope(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
@@ -93,7 +93,7 @@ export function assertGetOrCreateScopeItemByKey(
         throw triedNodeScope.error;
     }
 
-    return triedNodeScope;
+    return ResultUtils.okFactory(Assert.asDefined(triedNodeScope.value, "triedNodeScope.value"));
 }
 
 // Recusrive deference of the identifier until it reaches the value node.
@@ -134,7 +134,7 @@ export function maybeDereferencedIdentifier(
             throw Assert.isNever(identifier);
     }
 
-    const triedScopeItemByKey: Result<NodeScope, CommonError.CommonError> = assertGetOrCreateScopeItemByKey(
+    const triedScopeItemByKey: Result<NodeScope, CommonError.CommonError> = assertGetOrCreateNodeScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,

@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection, Task } from "../../..";
 import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
@@ -78,12 +78,12 @@ function assertGetParseOkScopeTypeOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): Inspection.ScopeTypeByKey {
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    Assert.isDefined(maybeActiveNode);
+    TestAssertUtils.assertIsActiveNode(maybeActiveNode);
 
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
         settings,
@@ -92,6 +92,7 @@ function assertGetParseOkScopeTypeOk(
         maybeActiveNode.ancestry[0].node.id,
     );
     Assert.isOk(triedScopeType);
+    Assert.isDefined(triedScopeType.value);
 
     return triedScopeType.value;
 }

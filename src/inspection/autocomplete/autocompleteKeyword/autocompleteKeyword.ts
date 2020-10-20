@@ -6,7 +6,7 @@ import { Ast, Constant, Keyword, Token } from "../../../language";
 import { LocalizationUtils } from "../../../localization";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils } from "../../activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";
 import { PositionUtils } from "../../position";
 import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
@@ -16,17 +16,21 @@ import { autocompleteKeywordLetExpression } from "./autocompleteKeywordLetExpres
 import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpression";
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { ExpressionAutocomplete, InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function tryAutocompleteKeyword(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    activeNode: ActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteKeyword {
+    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+        return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
+    }
+
     return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
-        return autocompleteKeyword(nodeIdMapCollection, leafNodeIds, activeNode, maybeTrailingToken);
+        return autocompleteKeyword(nodeIdMapCollection, leafNodeIds, maybeActiveNode, maybeTrailingToken);
     });
 }
 

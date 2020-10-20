@@ -5,6 +5,7 @@ import { Ast } from "../../language";
 import { TXorNode } from "../../parser";
 import { Position } from "../position";
 
+// Sometimes we want to curry postion around with the indicator that it wasn't a valid active node location.
 export type TMaybeActiveNode = ActiveNode | ActiveNodeFailure;
 
 export interface IActiveNode {
@@ -21,14 +22,14 @@ export interface IActiveNode {
 export interface ActiveNode extends IActiveNode {
     readonly kind: ActiveNodeKind.ActiveNode;
     readonly leafKind: ActiveNodeLeafKind;
-    // A full parental ancestry of the root.
-    // [root, parent of root, parent of parent of root, ...].
+    // A full parental ancestry of the starting node.
+    // Must contain at least one element, otherwise it should be an ActiveNodeFailure.
+    // [starting node, parent of starting node, parent of parent of starting node, ...].
     readonly ancestry: ReadonlyArray<TXorNode>;
-    // A conditional indirection to the root if it's some sort of Ast identifier.
+    // A conditional indirection to the leaf if it's an Ast identifier.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }
 
-// Sometimes we want to curry postion around with the indicator that it wasn't a valid active node location.
 export interface ActiveNodeFailure extends IActiveNode {
     readonly kind: ActiveNodeKind.ActiveNodeFailure;
 }
