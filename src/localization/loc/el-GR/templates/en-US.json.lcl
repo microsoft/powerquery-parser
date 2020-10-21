@@ -322,7 +322,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";error_parse_unterminated_bracket" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";error_parse_unterminated_sequence_bracket" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unterminated bracket]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -331,7 +331,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";error_parse_unterminated_parenthesis" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";error_parse_unterminated_sequence_parenthesis" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unterminated parenthesis]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
