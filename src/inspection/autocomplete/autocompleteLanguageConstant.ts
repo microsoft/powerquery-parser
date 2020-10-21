@@ -23,10 +23,6 @@ export function tryAutocompleteLanguageConstant<S extends IParserState = IParser
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteLanguageConstant {
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
-        return ResultUtils.okFactory([]);
-    }
-
     return ResultUtils.ensureResult(parserState.localizationTemplates, () => {
         return autocompleteLanguageConstant(parseSettings, parserState, maybeActiveNode, maybeParseError);
     });
@@ -36,22 +32,27 @@ export function tryAutocompleteLanguageConstant<S extends IParserState = IParser
 function autocompleteLanguageConstant<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
-    activeNode: ActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError | undefined,
 ): AutocompleteLanguageConstant | undefined {
-    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const maybeFunctionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
-        ancestry,
-        Ast.NodeKind.FunctionExpression,
-    );
-    if (maybeFunctionExpressionAncestryIndex === undefined) {
-        if (maybeParseError?.innerError instanceof ParseError.UnterminatedSequence) {
-            return parseAndInspectFunctionExpression(parseSettings, parserState, activeNode);
+    // const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+
+    if (ActiveNodeUtils.isSome(maybeActiveNode)) {
+        const maybeFunctionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
+            maybeActiveNode.ancestry,
+            Ast.NodeKind.FunctionExpression,
+        );
+        if (maybeFunctionExpressionAncestryIndex === undefined) {
+            if (maybeParseError?.innerError instanceof ParseError.UnterminatedSequence) {
+                return parseAndInspectFunctionExpression(parseSettings, parserState, maybeActiveNode);
+            } else {
+                return undefined;
+            }
         } else {
-            return undefined;
+            return inspectFunctionExpression(maybeActiveNode, maybeFunctionExpressionAncestryIndex);
         }
     } else {
-        return inspectFunctionExpression(activeNode, maybeFunctionExpressionAncestryIndex);
+        return parseAndInspectFunctionExpression(parseSettings, parserState, maybeActiveNode);
     }
 }
 
@@ -113,7 +114,7 @@ function inspectFunctionExpression(
 function parseAndInspectFunctionExpression<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
-    originalActiveNode: ActiveNode,
+    originalActiveNode: TMaybeActiveNode,
 ): AutocompleteLanguageConstant | undefined {
     const parsed: AdditionalParse<S> = parseFunctionExpression(parseSettings, parserState);
     const contextState: ParseContext.State = parsed.parserState.contextState;
