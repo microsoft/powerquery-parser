@@ -23,8 +23,7 @@ function assertGetExpectedTokenKindError(text: string): ParseError.ExpectedToken
 
 function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
     const error: ParseError.ExpectedTokenKindError = assertGetExpectedTokenKindError(text);
-    Assert.isDefined(error.maybeFoundToken);
-    const foundToken: TokenWithColumnNumber = error.maybeFoundToken;
+    const foundToken: TokenWithColumnNumber = Assert.asDefined(error.maybeFoundToken);
 
     expect(foundToken.token.positionStart.codeUnit).to.equal(codeUnit, "codeUnit");
     expect(foundToken.token.positionStart.lineNumber).to.equal(lineNumber, "lineNumber");

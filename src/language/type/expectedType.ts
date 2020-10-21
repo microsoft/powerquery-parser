@@ -3,7 +3,7 @@
 
 import { Type } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
-import { ActiveNode, ActiveNodeLeafKind } from "../../inspection/activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
 import { Ast } from "../../language";
 import { LocalizationUtils } from "../../localization";
 import { TXorNode, XorNodeKind } from "../../parser";
@@ -11,9 +11,13 @@ import { CommonSettings } from "../../settings";
 
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 
-export function tryExpectedType(settings: CommonSettings, activeNode: ActiveNode): TriedExpectedType {
+export function tryExpectedType(settings: CommonSettings, maybeActiveNode: TMaybeActiveNode): TriedExpectedType {
+    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+        return ResultUtils.okFactory(undefined);
+    }
+
     return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
-        maybeExpectedType(activeNode),
+        maybeExpectedType(maybeActiveNode),
     );
 }
 
@@ -28,14 +32,16 @@ export function maybeExpectedType(activeNode: ActiveNode): Type.TType | undefine
     for (let index: number = 0; index < upperBound; index += 1) {
         const parent: TXorNode = ancestry[index + 1];
         const child: TXorNode = ancestry[index];
+        const childAttributeIndex: number = Assert.asDefined(
+            child.node.maybeAttributeIndex,
+            `Expected child to have an attribute index.`,
+            { childId: child.node.id },
+        );
 
-        Assert.isDefined(child.node.maybeAttributeIndex, `Expected child to have an attribute index.`, {
-            childId: child.node.id,
-        });
         const attributeIndex: number =
             parent.kind === XorNodeKind.Ast && activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode
-                ? child.node.maybeAttributeIndex + 1
-                : child.node.maybeAttributeIndex;
+                ? childAttributeIndex + 1
+                : childAttributeIndex;
 
         const allowedType: Type.TType = expectedType(parent, attributeIndex);
         if (allowedType.kind !== Type.TypeKind.NotApplicable) {

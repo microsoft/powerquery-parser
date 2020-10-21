@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Inspection } from "../..";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
 import { LocalizationUtils } from "../../localization";
@@ -67,21 +68,18 @@ export function tryNodeScope(
         }
 
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
-        const maybeScope: NodeScope | undefined = inspected.get(nodeId);
-        Assert.isDefined(maybeScope, `expected nodeId in scope result`, { nodeId });
-
-        return maybeScope;
+        return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
     });
 }
 
-export function assertGetOrCreateScopeItemByKey(
+export function assertGetOrCreateNodeScope(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined = undefined,
-): Result<NodeScope, CommonError.CommonError> {
+): Inspection.TriedNodeScope {
     const scopeById: ScopeById = maybeScopeById ?? new Map();
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
@@ -134,19 +132,19 @@ export function maybeDereferencedIdentifier(
             throw Assert.isNever(identifier);
     }
 
-    const triedScopeItemByKey: Result<NodeScope, CommonError.CommonError> = assertGetOrCreateScopeItemByKey(
+    const triedNodeScope: Inspection.TriedNodeScope = assertGetOrCreateNodeScope(
         settings,
         nodeIdMapCollection,
         leafNodeIds,
         xorNode.node.id,
         scopeById,
     );
-    if (ResultUtils.isErr(triedScopeItemByKey)) {
-        return triedScopeItemByKey;
+    if (ResultUtils.isErr(triedNodeScope)) {
+        return triedNodeScope;
     }
-    const scopeItemByKey: NodeScope = triedScopeItemByKey.value;
-    const maybeScopeItem: undefined | TScopeItem = scopeItemByKey.get(identifierLiteral);
 
+    const nodeScope: NodeScope = triedNodeScope.value;
+    const maybeScopeItem: undefined | TScopeItem = nodeScope.get(identifierLiteral);
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier.

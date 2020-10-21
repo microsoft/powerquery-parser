@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { InvokeExpression, Position } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { IParserState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
@@ -17,12 +17,12 @@ function assertInvokeExpressionOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): InvokeExpression | undefined {
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    Assert.isDefined(maybeActiveNode);
+    TestAssertUtils.assertIsActiveNode(maybeActiveNode);
     const activeNode: ActiveNode = maybeActiveNode;
 
     const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
@@ -63,6 +63,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             position,
         );
         Assert.isDefined(inspected);
+
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).to.equal(undefined, "expected no arguments");
     });
@@ -77,6 +78,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             position,
         );
         Assert.isDefined(inspected);
+
         expect(inspected.maybeName).to.equal("Foo");
         expect(inspected.maybeArguments).to.equal(undefined, "expected no arguments");
     });

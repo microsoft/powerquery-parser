@@ -2,13 +2,12 @@
 // Licensed under the MIT license.
 
 import { Token } from "../../language";
-import { ActiveNode } from "../activeNode";
-import { PositionUtils } from "../position";
+import { Position, PositionUtils } from "../position";
 import { TrailingToken } from "./commonTypes";
 
-export function trailingTokenFactory(activeNode: ActiveNode, parseErrorToken: Token.Token): TrailingToken {
+export function trailingTokenFactory(position: Position, parseErrorToken: Token.Token): TrailingToken {
     return {
         ...parseErrorToken,
-        isInOrOnPosition: PositionUtils.isInToken(activeNode.position, parseErrorToken, false, true),
+        isInOrOnPosition: PositionUtils.isInToken(position, parseErrorToken, false, true),
     };
 }

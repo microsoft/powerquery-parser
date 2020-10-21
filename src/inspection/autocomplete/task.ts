@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "../../common";
-import { Keyword, Token } from "../../language";
+import { Token } from "../../language";
 import { IParserState, NodeIdMap, ParseError } from "../../parser";
 import { ParseSettings } from "../../settings";
-import { ActiveNode } from "../activeNode";
+import { TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
-import { ExpressionAutocomplete } from "./autocompleteKeyword/commonTypes";
 import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { trailingTokenFactory } from "./common";
@@ -26,34 +24,24 @@ export function autocomplete<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
     typeCache: TypeCache,
-    maybeActiveNode: ActiveNode | undefined,
+    maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): Autocomplete {
     const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parserState.contextState.leafNodeIds;
 
-    if (maybeActiveNode === undefined || maybeActiveNode.ancestry.length === 0) {
-        return {
-            triedFieldAccess: ResultUtils.okFactory(undefined),
-            triedKeyword: ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]),
-            triedLanguageConstant: ResultUtils.okFactory(undefined),
-            triedPrimitiveType: ResultUtils.okFactory([]),
-        };
-    }
-    const activeNode: ActiveNode = maybeActiveNode;
-
     let maybeTrailingToken: TrailingToken | undefined;
     if (maybeParseError !== undefined) {
         const maybeParseErrorToken: Token.Token | undefined = ParseError.maybeTokenFrom(maybeParseError.innerError);
         if (maybeParseErrorToken !== undefined) {
-            maybeTrailingToken = trailingTokenFactory(activeNode, maybeParseErrorToken);
+            maybeTrailingToken = trailingTokenFactory(maybeActiveNode.position, maybeParseErrorToken);
         }
     }
 
     const triedFieldAccess: TriedAutocompleteFieldAccess = tryAutocompleteFieldAccess(
         parseSettings,
         parserState,
-        activeNode,
+        maybeActiveNode,
         typeCache,
         maybeParseError,
     );
@@ -62,20 +50,20 @@ export function autocomplete<S extends IParserState = IParserState>(
         parseSettings,
         nodeIdMapCollection,
         leafNodeIds,
-        activeNode,
+        maybeActiveNode,
         maybeTrailingToken,
     );
 
     const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
         parseSettings,
         parserState,
-        activeNode,
+        maybeActiveNode,
         maybeParseError,
     );
 
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
         parseSettings,
-        activeNode,
+        maybeActiveNode,
         maybeTrailingToken,
     );
 

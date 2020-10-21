@@ -13,18 +13,22 @@ import {
     XorNodeUtils,
 } from "../../parser";
 import { ParseSettings } from "../../settings";
-import { ActiveNode, ActiveNodeUtils } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { PositionUtils } from "../position";
 import { AdditionalParse, AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
-    activeNode: ActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteLanguageConstant {
+    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+        return ResultUtils.okFactory([]);
+    }
+
     return ResultUtils.ensureResult(parserState.localizationTemplates, () => {
-        return autocompleteLanguageConstant(parseSettings, parserState, activeNode, maybeParseError);
+        return autocompleteLanguageConstant(parseSettings, parserState, maybeActiveNode, maybeParseError);
     });
 }
 
@@ -113,16 +117,16 @@ function parseAndInspectFunctionExpression<S extends IParserState = IParserState
 ): AutocompleteLanguageConstant | undefined {
     const parsed: AdditionalParse<S> = parseFunctionExpression(parseSettings, parserState);
     const contextState: ParseContext.State = parsed.parserState.contextState;
-    const maybeNewActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeNewActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         contextState.nodeIdMapCollection,
         contextState.leafNodeIds,
         originalActiveNode.position,
     );
-    if (maybeNewActiveNode === undefined) {
+    if (!ActiveNodeUtils.isSome(maybeNewActiveNode)) {
         return undefined;
     }
 
-    const newActiveNode: ActiveNode = maybeNewActiveNode;
+    const newActiveNode: TMaybeActiveNode = maybeNewActiveNode;
     const ancestry: ReadonlyArray<TXorNode> = newActiveNode.ancestry;
     const functionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
         ancestry,

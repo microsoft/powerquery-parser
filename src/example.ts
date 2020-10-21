@@ -117,18 +117,31 @@ function inspectText(text: string, position: Inspection.Position): void {
         console.log(`Inspection failed due to: ${triedInspection.error.message}`);
         return;
     }
-    const inspection: Inspection.InspectionOk = triedInspection.value;
+    const inspection: Inspection.Inspection = triedInspection.value;
 
-    for (const identifier of inspection.nodeScope.keys()) {
-        console.log(`Identifier: ${identifier} has type ${inspection.scopeType.get(identifier)!.kind}`);
+    // A helper function grabs all autocomplete keys.
+    console.log(`Suggested for autocomplete: ${AutocompleteUtils.keys(inspection.autocomplete).join(", ")}`);
+
+    // If an inspection for scope was successful, and if that inspection returned any members.
+    if (ResultUtils.isOk(inspection.triedNodeScope) && inspection.triedNodeScope.value !== undefined) {
+        const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
+
+        for (const identifier of nodeScope.keys()) {
+            console.log(`Identifier: ${identifier} has type ${nodeScope.get(identifier)!.kind}`);
+        }
     }
 
-    console.log(`Suggested for autocomplete: ${AutocompleteUtils.keys(inspection.autocomplete).join(", ")}`);
-    console.log(`InvokeExpression name: ${inspection.maybeInvokeExpression?.maybeName}`);
-    console.log(
-        `InvokeExpression number of arguments: ${inspection.maybeInvokeExpression?.maybeArguments?.numArguments}`,
-    );
-    console.log(
-        `InvokeExpression argument position: ${inspection.maybeInvokeExpression?.maybeArguments?.argumentOrdinal}`,
-    );
+    // An inspection which checks if the cursor is in an invoke expression, and if so returns related metadata.
+    // If an inspection for the invoke expression was succesful.
+    if (ResultUtils.isOk(inspection.triedInvokeExpression) && inspection.triedInvokeExpression.value !== undefined) {
+        const invokeExpression: Inspection.InvokeExpression = inspection.triedInvokeExpression.value;
+
+        console.log(`InvokeExpression name: ${invokeExpression.maybeName ?? "<null>"}`);
+        console.log(
+            `InvokeExpression number of arguments: ${invokeExpression.maybeArguments?.numArguments ?? "<null>"}`,
+        );
+        console.log(
+            `InvokeExpression argument position: ${invokeExpression.maybeArguments?.argumentOrdinal ?? "<null>"}`,
+        );
+    }
 }

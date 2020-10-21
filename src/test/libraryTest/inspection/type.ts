@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection, Task } from "../../..";
 import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
@@ -26,14 +26,13 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 
 function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertGetParseErr(DefaultSettings, text);
-    const maybeRoot: ParseContext.Node | undefined = parseErr.state.contextState.maybeRoot;
-    Assert.isDefined(maybeRoot);
+    const root: ParseContext.Node = Assert.asDefined(parseErr.state.contextState.maybeRoot);
 
     const actual: Type.TType = assertGetParseNodeOk(
         DefaultSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
-        XorNodeUtils.contextFactory(maybeRoot),
+        XorNodeUtils.contextFactory(root),
     );
 
     expect(actual).deep.equal(expected);
@@ -78,12 +77,12 @@ function assertGetParseOkScopeTypeOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): Inspection.ScopeTypeByKey {
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    Assert.isDefined(maybeActiveNode);
+    TestAssertUtils.assertIsActiveNode(maybeActiveNode);
 
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
         settings,
