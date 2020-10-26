@@ -32,7 +32,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         Assert.isUndefined(actual);
     });
 
-    it(`WIP (a, |`, () => {
+    it(`(a, |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(a, |`);
         const expected: ReadonlyArray<string> | undefined = ["optional"];
         const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
