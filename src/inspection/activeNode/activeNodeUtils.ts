@@ -12,7 +12,7 @@ import {
     XorNodeUtils,
 } from "../../parser";
 import { Position, PositionUtils } from "../position";
-import { ActiveNode, ActiveNodeFailure, ActiveNodeKind, ActiveNodeLeafKind, TMaybeActiveNode } from "./activeNode";
+import { ActiveNode, OutOfBoundPosition, ActiveNodeKind, ActiveNodeLeafKind, TMaybeActiveNode } from "./activeNode";
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
@@ -66,7 +66,7 @@ export function maybeActiveNode(
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
     } else {
-        return activeNodeFailureFactory(position);
+        return outOfBoundPositionFactory(position);
     }
 
     const leaf: TXorNode = maybeLeaf;
@@ -94,9 +94,9 @@ export function activeNodeFactory(
     };
 }
 
-export function activeNodeFailureFactory(position: Position): ActiveNodeFailure {
+export function outOfBoundPositionFactory(position: Position): OutOfBoundPosition {
     return {
-        kind: ActiveNodeKind.ActiveNodeFailure,
+        kind: ActiveNodeKind.OutOfBoundPosition,
         position,
     };
 }
@@ -109,7 +109,7 @@ export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
     return AncestryUtils.assertGetLeaf(activeNode.ancestry);
 }
 
-export function isSome(maybeValue: TMaybeActiveNode): maybeValue is ActiveNode {
+export function isPositionInBounds(maybeValue: TMaybeActiveNode): maybeValue is ActiveNode {
     return maybeValue.kind === ActiveNodeKind.ActiveNode;
 }
 

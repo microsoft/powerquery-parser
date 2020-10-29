@@ -25,7 +25,7 @@ export function tryAutocompleteKeyword(
     maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteKeyword {
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
     }
 

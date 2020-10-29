@@ -35,7 +35,7 @@ export function tryInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
 ): TriedInvokeExpression {
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory(undefined);
     }
 

@@ -139,7 +139,7 @@ function assertNodeScopeOk(
         leafNodeIds,
         position,
     );
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return new Map();
     }
     const activeNode: ActiveNode = maybeActiveNode;

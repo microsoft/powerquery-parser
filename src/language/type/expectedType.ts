@@ -12,7 +12,7 @@ import { CommonSettings } from "../../settings";
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 
 export function tryExpectedType(settings: CommonSettings, maybeActiveNode: TMaybeActiveNode): TriedExpectedType {
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory(undefined);
     }
 

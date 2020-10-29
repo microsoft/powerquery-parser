@@ -36,7 +36,7 @@ export function tryAutocompleteFieldAccess<S extends IParserState = IParserState
     typeCache: TypeCache,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteFieldAccess {
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory(undefined);
     }
 

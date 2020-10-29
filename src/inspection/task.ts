@@ -43,7 +43,7 @@ export function inspection<S extends IParserState = IParserState>(
     let triedNodeScope: TriedNodeScope;
     let triedScopeType: TriedScopeType;
     let triedExpectedType: TriedExpectedType;
-    if (ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         const activeNode: ActiveNode = maybeActiveNode;
 
         triedNodeScope = tryNodeScope(
