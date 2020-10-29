@@ -12,7 +12,7 @@ import {
     XorNodeUtils,
 } from "../../parser";
 import { Position, PositionUtils } from "../position";
-import { ActiveNode, OutOfBoundPosition, ActiveNodeKind, ActiveNodeLeafKind, TMaybeActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
