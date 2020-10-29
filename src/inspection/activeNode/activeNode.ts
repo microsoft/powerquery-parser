@@ -6,9 +6,9 @@ import { TXorNode } from "../../parser";
 import { Position } from "../position";
 
 export type TMaybeActiveNode =
-    // A Position was given that is inside of an Ast (either fully or partially parsed)
+    // A Position located inside an Ast (either fully or partially parsed).
     | ActiveNode
-    // An invalid Position was given.
+    // A Position located outside of an Ast (either fully or partially parsed).
     // `| let x = 1 in x` is before the start of the Ast
     | OutOfBoundPosition;
 
@@ -27,14 +27,13 @@ export interface ActiveNode extends IActiveNode {
     readonly kind: ActiveNodeKind.ActiveNode;
     readonly leafKind: ActiveNodeLeafKind;
     // A full parental ancestry of the starting node.
-    // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     // [starting node, parent of starting node, parent of parent of starting node, ...].
+    // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }
 
-// The
 export interface OutOfBoundPosition extends IActiveNode {
     readonly kind: ActiveNodeKind.OutOfBoundPosition;
 }
