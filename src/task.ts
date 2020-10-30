@@ -192,7 +192,7 @@ export function rootFromTriedLexParseInspect<S extends IParserState = IParserSta
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexInspectParseInspect)) {
         const maybeActiveNode: TMaybeActiveNode = triedLexInspectParseInspect.value.maybeActiveNode;
-        return ActiveNodeUtils.isSome(maybeActiveNode) ? maybeActiveNode.ancestry[0] : undefined;
+        return ActiveNodeUtils.isPositionInBounds(maybeActiveNode) ? maybeActiveNode.ancestry[0] : undefined;
     } else if (ParseError.isParseError(triedLexInspectParseInspect.error)) {
         const maybeContextNode: ParseContext.Node | undefined =
             triedLexInspectParseInspect.error.state.contextState.maybeRoot;

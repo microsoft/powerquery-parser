@@ -5,7 +5,6 @@ import {
     EqualityOperatorKind,
     IdentifierConstantKind,
     KeywordConstantKind,
-    LiteralKind,
     LogicalOperatorKind,
     MiscConstantKind,
     PrimitiveTypeConstantKind,
@@ -182,31 +181,6 @@ export function binOpExpressionOperatorPrecedence(operator: TBinOpExpressionOper
 
         default:
             throw Assert.isNever(operator);
-    }
-}
-
-export function maybeLiteralKindFrom(
-    maybeTokenKind: TokenKind | undefined,
-): LiteralKind.Numeric | LiteralKind.Logical | LiteralKind.Null | LiteralKind.Text | undefined {
-    switch (maybeTokenKind) {
-        case TokenKind.HexLiteral:
-        case TokenKind.KeywordHashNan:
-        case TokenKind.KeywordHashInfinity:
-        case TokenKind.NumericLiteral:
-            return LiteralKind.Numeric;
-
-        case TokenKind.KeywordFalse:
-        case TokenKind.KeywordTrue:
-            return LiteralKind.Logical;
-
-        case TokenKind.NullLiteral:
-            return LiteralKind.Null;
-
-        case TokenKind.TextLiteral:
-            return LiteralKind.Text;
-
-        default:
-            return undefined;
     }
 }
 

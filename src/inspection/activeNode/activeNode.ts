@@ -5,8 +5,12 @@ import { Ast } from "../../language";
 import { TXorNode } from "../../parser";
 import { Position } from "../position";
 
-// Sometimes we want to curry postion around with the indicator that it wasn't a valid active node location.
-export type TMaybeActiveNode = ActiveNode | ActiveNodeFailure;
+export type TMaybeActiveNode =
+    // A Position located inside an Ast (either fully or partially parsed).
+    | ActiveNode
+    // A Position located outside of an Ast (either fully or partially parsed).
+    // `| let x = 1 in x` is before the start of the Ast
+    | OutOfBoundPosition;
 
 export interface IActiveNode {
     readonly kind: ActiveNodeKind;
@@ -23,15 +27,15 @@ export interface ActiveNode extends IActiveNode {
     readonly kind: ActiveNodeKind.ActiveNode;
     readonly leafKind: ActiveNodeLeafKind;
     // A full parental ancestry of the starting node.
-    // Must contain at least one element, otherwise it should be an ActiveNodeFailure.
     // [starting node, parent of starting node, parent of parent of starting node, ...].
+    // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }
 
-export interface ActiveNodeFailure extends IActiveNode {
-    readonly kind: ActiveNodeKind.ActiveNodeFailure;
+export interface OutOfBoundPosition extends IActiveNode {
+    readonly kind: ActiveNodeKind.OutOfBoundPosition;
 }
 
 export const enum ActiveNodeLeafKind {
@@ -44,5 +48,5 @@ export const enum ActiveNodeLeafKind {
 
 export const enum ActiveNodeKind {
     ActiveNode = "ActiveNode",
-    ActiveNodeFailure = "ActiveNodeFailure",
+    OutOfBoundPosition = "OutOfBoundPosition",
 }

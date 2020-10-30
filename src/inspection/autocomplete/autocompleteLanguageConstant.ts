@@ -37,7 +37,7 @@ function autocompleteLanguageConstant<S extends IParserState = IParserState>(
 ): AutocompleteLanguageConstant | undefined {
     // const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
-    if (ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         const maybeFunctionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
             maybeActiveNode.ancestry,
             Ast.NodeKind.FunctionExpression,
@@ -123,7 +123,7 @@ function parseAndInspectFunctionExpression<S extends IParserState = IParserState
         contextState.leafNodeIds,
         originalActiveNode.position,
     );
-    if (!ActiveNodeUtils.isSome(maybeNewActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeNewActiveNode)) {
         return undefined;
     }
 

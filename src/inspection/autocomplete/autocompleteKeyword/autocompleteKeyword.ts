@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, ResultUtils } from "../../../common";
-import { Ast, Constant, Keyword, Token } from "../../../language";
+import { Ast, Keyword, Token } from "../../../language";
 import { LocalizationUtils } from "../../../localization";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
@@ -25,7 +25,7 @@ export function tryAutocompleteKeyword(
     maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteKeyword {
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
     }
 
@@ -50,8 +50,8 @@ export function autocompleteKeyword(
         else if (
             ancestryLeaf.kind === XorNodeKind.Ast &&
             ancestryLeaf.node.kind === Ast.NodeKind.LiteralExpression &&
-            (ancestryLeaf.node.literalKind === Constant.LiteralKind.Logical ||
-                ancestryLeaf.node.literalKind === Constant.LiteralKind.Null)
+            (ancestryLeaf.node.literalKind === Ast.LiteralKind.Logical ||
+                ancestryLeaf.node.literalKind === Ast.LiteralKind.Null)
         ) {
             maybePositionName = ancestryLeaf.node.literal;
         }

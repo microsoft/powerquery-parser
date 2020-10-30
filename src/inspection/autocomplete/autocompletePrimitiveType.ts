@@ -15,7 +15,7 @@ export function tryAutocompletePrimitiveType(
     maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
-    if (!ActiveNodeUtils.isSome(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory([]);
     }
 

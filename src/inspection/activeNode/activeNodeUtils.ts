@@ -12,11 +12,11 @@ import {
     XorNodeUtils,
 } from "../../parser";
 import { Position, PositionUtils } from "../position";
-import { ActiveNode, ActiveNodeFailure, ActiveNodeKind, ActiveNodeLeafKind, TMaybeActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
-// 'let x=|1 in x' -> the value part of the key-value-pair.
+// 'let x=|1 in x' -> the value part of the key-value-pair.asdfa
 // 'foo(|)' -> the zero length ArrayWrapper of an InvokeExpression
 //
 // The naive approach is to find the closest Ast or Context node either to the left of or ends on the cursor.
@@ -66,7 +66,7 @@ export function maybeActiveNode(
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
     } else {
-        return activeNodeFailureFactory(position);
+        return outOfBoundPositionFactory(position);
     }
 
     const leaf: TXorNode = maybeLeaf;
@@ -94,9 +94,9 @@ export function activeNodeFactory(
     };
 }
 
-export function activeNodeFailureFactory(position: Position): ActiveNodeFailure {
+export function outOfBoundPositionFactory(position: Position): OutOfBoundPosition {
     return {
-        kind: ActiveNodeKind.ActiveNodeFailure,
+        kind: ActiveNodeKind.OutOfBoundPosition,
         position,
     };
 }
@@ -109,7 +109,7 @@ export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
     return AncestryUtils.assertGetLeaf(activeNode.ancestry);
 }
 
-export function isSome(maybeValue: TMaybeActiveNode): maybeValue is ActiveNode {
+export function isPositionInBounds(maybeValue: TMaybeActiveNode): maybeValue is ActiveNode {
     return maybeValue.kind === ActiveNodeKind.ActiveNode;
 }
 
@@ -142,10 +142,7 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
 
     if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
         return true;
-    } else if (
-        astNode.kind === Ast.NodeKind.LiteralExpression &&
-        astNode.literalKind === Constant.LiteralKind.Numeric
-    ) {
+    } else if (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric) {
         return true;
     } else if (astNode.kind === Ast.NodeKind.Constant) {
         switch (astNode.constantKind) {

@@ -27,31 +27,12 @@ export type TBinOpExpressionOperator =
 // ---------- const enums ----------
 // ---------------------------------
 
-export const enum MiscConstantKind {
-    // TokenKind
-    Ampersand = "&",
-    AtSign = "@",
-    Comma = ",",
-    DotDot = "..",
-    Ellipsis = "...",
-    Equal = "=",
-    FatArrow = "=>",
-    NullCoalescingOperator = "??",
-    Semicolon = ";",
-    QuestionMark = "?",
-}
-
-export const enum WrapperConstantKind {
-    LeftBrace = "{",
-    LeftBracket = "[",
-    LeftParenthesis = "(",
-    RightBrace = "}",
-    RightBracket = "]",
-    RightParenthesis = ")",
+export const enum IdentifierConstantKind {
+    Nullable = "nullable",
+    Optional = "optional",
 }
 
 export const enum KeywordConstantKind {
-    And = "and",
     As = "as",
     Each = "each",
     Else = "else",
@@ -63,13 +44,26 @@ export const enum KeywordConstantKind {
     Let = "let",
     Meta = "meta",
     Otherwise = "otherwise",
-    Or = "or",
     Section = "section",
     Shared = "shared",
     Then = "then",
     True = "true",
     Try = "try",
     Type = "type",
+}
+
+// Mostly direct mappings from their respective TokenKind
+export const enum MiscConstantKind {
+    Ampersand = "&",
+    AtSign = "@",
+    Comma = ",",
+    DotDot = "..",
+    Ellipsis = "...",
+    Equal = "=",
+    FatArrow = "=>",
+    NullCoalescingOperator = "??",
+    Semicolon = ";",
+    QuestionMark = "?",
 }
 
 export const enum PrimitiveTypeConstantKind {
@@ -94,48 +88,14 @@ export const enum PrimitiveTypeConstantKind {
     Type = "type",
 }
 
-export const enum IdentifierConstantKind {
-    Nullable = "nullable",
-    Optional = "optional",
+export const enum WrapperConstantKind {
+    LeftBrace = "{",
+    LeftBracket = "[",
+    LeftParenthesis = "(",
+    RightBrace = "}",
+    RightBracket = "]",
+    RightParenthesis = ")",
 }
-
-export const enum LiteralKind {
-    List = "List",
-    Logical = "Logical",
-    Null = "Null",
-    Numeric = "Numeric",
-    Record = "Record",
-    Text = "Text",
-}
-
-// ------------------------------------------
-// ---------- const enum iterables ----------
-// ------------------------------------------
-
-export const PrimitiveTypeConstantKinds: ReadonlyArray<PrimitiveTypeConstantKind> = [
-    PrimitiveTypeConstantKind.Action,
-    PrimitiveTypeConstantKind.Any,
-    PrimitiveTypeConstantKind.AnyNonNull,
-    PrimitiveTypeConstantKind.Binary,
-    PrimitiveTypeConstantKind.Date,
-    PrimitiveTypeConstantKind.DateTime,
-    PrimitiveTypeConstantKind.DateTimeZone,
-    PrimitiveTypeConstantKind.Duration,
-    PrimitiveTypeConstantKind.Function,
-    PrimitiveTypeConstantKind.List,
-    PrimitiveTypeConstantKind.Logical,
-    PrimitiveTypeConstantKind.None,
-    PrimitiveTypeConstantKind.Null,
-    PrimitiveTypeConstantKind.Number,
-    PrimitiveTypeConstantKind.Record,
-    PrimitiveTypeConstantKind.Table,
-    PrimitiveTypeConstantKind.Text,
-    PrimitiveTypeConstantKind.Time,
-    PrimitiveTypeConstantKind.Type,
-];
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
 
 // ------------------------------------------
 // ---------- operator const enums ----------
@@ -172,9 +132,9 @@ export const enum UnaryOperatorKind {
     Not = "not",
 }
 
-// ---------------------------------------------------
-// ---------- operator const enum iterables ----------
-// ---------------------------------------------------
+// ----------------------------------------
+// ---------- const enum iterals ----------
+// ----------------------------------------
 
 export const ArithmeticOperatorKinds: ReadonlyArray<ArithmeticOperatorKind> = [
     ArithmeticOperatorKind.Multiplication,
@@ -192,6 +152,28 @@ export const EqualityOperatorKinds: ReadonlyArray<EqualityOperatorKind> = [
 export const LogicalOperatorKinds: ReadonlyArray<LogicalOperatorKind> = [
     LogicalOperatorKind.And,
     LogicalOperatorKind.Or,
+];
+
+export const PrimitiveTypeConstantKinds: ReadonlyArray<PrimitiveTypeConstantKind> = [
+    PrimitiveTypeConstantKind.Action,
+    PrimitiveTypeConstantKind.Any,
+    PrimitiveTypeConstantKind.AnyNonNull,
+    PrimitiveTypeConstantKind.Binary,
+    PrimitiveTypeConstantKind.Date,
+    PrimitiveTypeConstantKind.DateTime,
+    PrimitiveTypeConstantKind.DateTimeZone,
+    PrimitiveTypeConstantKind.Duration,
+    PrimitiveTypeConstantKind.Function,
+    PrimitiveTypeConstantKind.List,
+    PrimitiveTypeConstantKind.Logical,
+    PrimitiveTypeConstantKind.None,
+    PrimitiveTypeConstantKind.Null,
+    PrimitiveTypeConstantKind.Number,
+    PrimitiveTypeConstantKind.Record,
+    PrimitiveTypeConstantKind.Table,
+    PrimitiveTypeConstantKind.Text,
+    PrimitiveTypeConstantKind.Time,
+    PrimitiveTypeConstantKind.Type,
 ];
 
 export const RelationalOperatorKinds: ReadonlyArray<RelationalOperatorKind> = [
