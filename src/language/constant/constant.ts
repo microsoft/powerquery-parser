@@ -4,8 +4,8 @@
 export type TConstantKind =
     | ArithmeticOperatorKind
     | EqualityOperatorKind
-    | IdentifierConstantKind
     | KeywordConstantKind
+    | LanguageConstant
     | LogicalOperatorKind
     | MiscConstantKind
     | PrimitiveTypeConstantKind
@@ -27,7 +27,7 @@ export type TBinOpExpressionOperator =
 // ---------- const enums ----------
 // ---------------------------------
 
-export const enum IdentifierConstantKind {
+export const enum LanguageConstant {
     Nullable = "nullable",
     Optional = "optional",
 }

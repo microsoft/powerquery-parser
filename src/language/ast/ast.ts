@@ -264,7 +264,7 @@ export type TIsExpression = IsExpression | TAsExpression;
 export type TNullablePrimitiveType = NullablePrimitiveType | PrimitiveType;
 
 export interface NullablePrimitiveType
-    extends IPairedConstant<NodeKind.NullablePrimitiveType, Constant.IdentifierConstantKind.Nullable, PrimitiveType> {}
+    extends IPairedConstant<NodeKind.NullablePrimitiveType, Constant.LanguageConstant.Nullable, PrimitiveType> {}
 
 export interface IsNullablePrimitiveType
     extends IPairedConstant<
@@ -515,7 +515,7 @@ export interface FunctionType extends INode {
 export interface ListType extends IBraceWrapped<NodeKind.ListType, TType> {}
 
 export interface NullableType
-    extends IPairedConstant<NodeKind.NullableType, Constant.IdentifierConstantKind.Nullable, TType> {}
+    extends IPairedConstant<NodeKind.NullableType, Constant.LanguageConstant.Nullable, TType> {}
 
 export interface RecordType extends INode {
     readonly kind: NodeKind.RecordType;
@@ -766,7 +766,7 @@ export interface IParameterList<T extends TParameterType>
 export interface IParameter<T extends TParameterType> extends INode {
     readonly kind: NodeKind.Parameter;
     readonly isLeaf: false;
-    readonly maybeOptionalConstant: IConstant<Constant.IdentifierConstantKind.Optional> | undefined;
+    readonly maybeOptionalConstant: IConstant<Constant.LanguageConstant.Optional> | undefined;
     readonly name: Identifier;
     readonly maybeParameterType: T;
 }
@@ -817,7 +817,7 @@ export interface NullCoalescingExpression
 export interface FieldSpecification extends INode {
     readonly kind: NodeKind.FieldSpecification;
     readonly isLeaf: false;
-    readonly maybeOptionalConstant: IConstant<Constant.IdentifierConstantKind.Optional> | undefined;
+    readonly maybeOptionalConstant: IConstant<Constant.LanguageConstant.Optional> | undefined;
     readonly name: GeneralizedIdentifier;
     readonly maybeFieldTypeSpecification: FieldTypeSpecification | undefined;
 }
