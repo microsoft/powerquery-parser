@@ -4,10 +4,36 @@
 import { ArrayUtils, Assert, CommonError } from "../../common";
 import { Ast } from "../ast";
 import { Constant } from "../constant";
+import { TokenKind } from "../token";
 
 export interface SimplifiedType {
     readonly isNullable: boolean;
     readonly primitiveTypeConstantKind: Constant.PrimitiveTypeConstantKind;
+}
+
+export function maybeLiteralKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Ast.LiteralKind.Numeric | Ast.LiteralKind.Logical | Ast.LiteralKind.Null | Ast.LiteralKind.Text | undefined {
+    switch (maybeTokenKind) {
+        case TokenKind.HexLiteral:
+        case TokenKind.KeywordHashNan:
+        case TokenKind.KeywordHashInfinity:
+        case TokenKind.NumericLiteral:
+            return Ast.LiteralKind.Numeric;
+
+        case TokenKind.KeywordFalse:
+        case TokenKind.KeywordTrue:
+            return Ast.LiteralKind.Logical;
+
+        case TokenKind.NullLiteral:
+            return Ast.LiteralKind.Null;
+
+        case TokenKind.TextLiteral:
+            return Ast.LiteralKind.Text;
+
+        default:
+            return undefined;
+    }
 }
 
 export function simplifyType(type: Ast.TType): SimplifiedType {

@@ -12,7 +12,7 @@ import {
     StringUtils,
     TypeScriptUtils,
 } from "../../common";
-import { Ast, Constant, ConstantUtils, Token } from "../../language";
+import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
@@ -840,8 +840,8 @@ export function readLiteralExpression<S extends IParserState = IParserState>(
         throw maybeErr;
     }
 
-    const literalKind: Constant.LiteralKind = Assert.asDefined(
-        ConstantUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind),
+    const literalKind: Ast.LiteralKind = Assert.asDefined(
+        AstUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind),
         `couldn't convert TokenKind into LiteralKind`,
         { maybeCurrentTokenKind: state.maybeCurrentTokenKind },
     );
@@ -1775,7 +1775,7 @@ export function readRecordLiteral<S extends IParserState = IParserState>(
         false,
     );
     return {
-        literalKind: Constant.LiteralKind.Record,
+        literalKind: Ast.LiteralKind.Record,
         ...wrappedRead,
     };
 }
@@ -1831,7 +1831,7 @@ export function readListLiteral<S extends IParserState = IParserState>(state: S,
         false,
     );
     return {
-        literalKind: Constant.LiteralKind.List,
+        literalKind: Ast.LiteralKind.List,
         ...wrappedRead,
     };
 }

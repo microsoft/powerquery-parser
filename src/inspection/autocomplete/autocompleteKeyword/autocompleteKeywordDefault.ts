@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Constant, Keyword } from "../../../language";
+import { Ast, Keyword } from "../../../language";
 import { TXorNode, XorNodeKind } from "../../../parser";
 import { ActiveNode, ActiveNodeLeafKind } from "../../activeNode";
 import { PositionUtils } from "../../position";
@@ -75,7 +75,7 @@ function autocompleteDefaultExpression(
     else if (
         child.kind === XorNodeKind.Ast &&
         child.node.kind === Ast.NodeKind.LiteralExpression &&
-        child.node.literalKind === Constant.LiteralKind.Numeric
+        child.node.literalKind === Ast.LiteralKind.Numeric
     ) {
         return [];
     }
