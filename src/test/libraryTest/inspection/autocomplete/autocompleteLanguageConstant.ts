@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../../..";
+import { Inspection, Language } from "../../../..";
 import { Assert } from "../../../../common";
 import { IParserState } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
@@ -34,7 +34,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
 
     it(`(a, |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(a, |`);
-        const expected: ReadonlyArray<string> | undefined = ["optional"];
+        const expected: ReadonlyArray<string> | undefined = [Language.Constant.LanguageConstantKind.Optional];
         const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
             DefaultSettings,
             text,
@@ -45,7 +45,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
 
     it(`(x, op|`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(x, op|`);
-        const expected: ReadonlyArray<string> | undefined = ["optional"];
+        const expected: ReadonlyArray<string> | undefined = [Language.Constant.LanguageConstantKind.Optional];
         const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
             DefaultSettings,
             text,

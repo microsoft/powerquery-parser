@@ -95,17 +95,17 @@ function inspectFunctionExpression(
     }
     const name: TXorNode = childOfParameter;
     if (name.kind === XorNodeKind.Context) {
-        return [Constant.IdentifierConstantKind.Optional];
+        return [Constant.LanguageConstantKind.Optional];
     }
 
     const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
     const nameLiteral: string = nameAst.literal;
     if (
         PositionUtils.isInAst(activeNode.position, nameAst, false, true) &&
-        Constant.IdentifierConstantKind.Optional.startsWith(nameLiteral) &&
-        Constant.IdentifierConstantKind.Optional.length !== nameLiteral.length
+        Constant.LanguageConstantKind.Optional.startsWith(nameLiteral) &&
+        Constant.LanguageConstantKind.Optional.length !== nameLiteral.length
     ) {
-        return [Constant.IdentifierConstantKind.Optional];
+        return [Constant.LanguageConstantKind.Optional];
     }
 
     return undefined;
