@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { InvokeExpression, Position } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
+import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { IParserState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
@@ -17,13 +17,7 @@ function assertInvokeExpressionOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): InvokeExpression | undefined {
-    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
-        nodeIdMapCollection,
-        leafNodeIds,
-        position,
-    );
-    TestAssertUtils.assertIsActiveNode(maybeActiveNode);
-    const activeNode: ActiveNode = maybeActiveNode;
+    const activeNode: ActiveNode = ActiveNodeUtils.assertActiveNode(nodeIdMapCollection, leafNodeIds, position);
 
     const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
         settings,

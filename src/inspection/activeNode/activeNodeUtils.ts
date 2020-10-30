@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CommonError } from "../../common";
 import { Ast, Constant, ConstantUtils } from "../../language";
 import {
     AncestryUtils,
@@ -101,16 +102,32 @@ export function outOfBoundPositionFactory(position: Position): OutOfBoundPositio
     };
 }
 
-export function maybeFirstXorOfNodeKind(activeNode: ActiveNode, nodeKind: Ast.NodeKind): TXorNode | undefined {
-    return AncestryUtils.maybeFirstXorWhere(activeNode.ancestry, (xorNode: TXorNode) => xorNode.node.kind === nodeKind);
+export function assertActiveNode(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    position: Position,
+): ActiveNode {
+    const maybeValue: TMaybeActiveNode = maybeActiveNode(nodeIdMapCollection, leafNodeIds, position);
+    assertPositionInBounds(maybeValue);
+    return maybeValue;
 }
 
 export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
     return AncestryUtils.assertGetLeaf(activeNode.ancestry);
 }
 
+export function assertPositionInBounds(maybeValue: TMaybeActiveNode): asserts maybeValue is ActiveNode {
+    if (!isPositionInBounds(maybeValue)) {
+        throw new CommonError.InvariantError(`maybeValue did not have position in bounds`);
+    }
+}
+
 export function isPositionInBounds(maybeValue: TMaybeActiveNode): maybeValue is ActiveNode {
     return maybeValue.kind === ActiveNodeKind.ActiveNode;
+}
+
+export function maybeFirstXorOfNodeKind(activeNode: ActiveNode, nodeKind: Ast.NodeKind): TXorNode | undefined {
+    return AncestryUtils.maybeFirstXorWhere(activeNode.ancestry, (xorNode: TXorNode) => xorNode.node.kind === nodeKind);
 }
 
 interface AstNodeSearch {
