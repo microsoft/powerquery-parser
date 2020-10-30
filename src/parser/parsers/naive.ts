@@ -442,11 +442,11 @@ export function readNullablePrimitiveType<S extends IParserState = IParserState>
 ): Ast.TNullablePrimitiveType {
     state.maybeCancellationToken?.throwIfCancelled();
 
-    if (IParserStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
+    if (IParserStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
         return readPairedConstant(
             state,
             Ast.NodeKind.NullablePrimitiveType,
-            () => readConstantKind(state, Constant.LanguageConstant.Nullable),
+            () => readConstantKind(state, Constant.LanguageConstantKind.Nullable),
             () => parser.readPrimitiveType(state, parser),
         );
     } else {
@@ -1468,8 +1468,8 @@ export function readFieldSpecificationList<S extends IParserState = IParserState
             IParserStateUtils.startContext(state, fieldSpecificationNodeKind);
 
             const maybeOptionalConstant:
-                | Ast.IConstant<Constant.LanguageConstant.Optional>
-                | undefined = maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
+                | Ast.IConstant<Constant.LanguageConstantKind.Optional>
+                | undefined = maybeReadConstantKind(state, Constant.LanguageConstantKind.Optional);
 
             const name: Ast.GeneralizedIdentifier = parser.readGeneralizedIdentifier(state, parser);
 
@@ -1650,7 +1650,7 @@ function tryReadPrimaryType<S extends IParserState = IParserState>(state: S, par
         return ResultUtils.okFactory(parser.readTableType(state, parser));
     } else if (isFunctionTypeNext) {
         return ResultUtils.okFactory(parser.readFunctionType(state, parser));
-    } else if (IParserStateUtils.isOnConstantKind(state, Constant.LanguageConstant.Nullable)) {
+    } else if (IParserStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
         return ResultUtils.okFactory(parser.readNullableType(state, parser));
     } else {
         const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
@@ -1681,7 +1681,7 @@ export function readNullableType<S extends IParserState = IParserState>(
     return readPairedConstant(
         state,
         Ast.NodeKind.NullableType,
-        () => readConstantKind(state, Constant.LanguageConstant.Nullable),
+        () => readConstantKind(state, Constant.LanguageConstantKind.Nullable),
         () => parser.readType(state, parser),
     );
 }
@@ -2393,8 +2393,8 @@ function genericReadParameterList<S extends IParserState, T extends Ast.TParamet
         }
 
         const maybeOptionalConstant:
-            | Ast.IConstant<Constant.LanguageConstant.Optional>
-            | undefined = maybeReadConstantKind(state, Constant.LanguageConstant.Optional);
+            | Ast.IConstant<Constant.LanguageConstantKind.Optional>
+            | undefined = maybeReadConstantKind(state, Constant.LanguageConstantKind.Optional);
 
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token.Token = IParserStateUtils.assertGetTokenAt(state, state.tokenIndex);
