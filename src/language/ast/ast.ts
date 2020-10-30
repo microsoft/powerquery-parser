@@ -349,11 +349,20 @@ export type TPrimaryExpression =
 // ---------- 12.2.3.11 Literal expression ----------
 // --------------------------------------------------
 
+export const enum LiteralKind {
+    List = "List",
+    Logical = "Logical",
+    Null = "Null",
+    Numeric = "Numeric",
+    Record = "Record",
+    Text = "Text",
+}
+
 export interface LiteralExpression extends INode {
     readonly kind: NodeKind.LiteralExpression;
     readonly isLeaf: true;
     readonly literal: string;
-    readonly literalKind: Exclude<Constant.LiteralKind, Constant.LiteralKind.Record>;
+    readonly literalKind: Exclude<LiteralKind, LiteralKind.Record>;
 }
 
 // -----------------------------------------------------
@@ -560,12 +569,12 @@ export interface TypePrimaryType
 export type TAnyLiteral = ListLiteral | LiteralExpression | RecordLiteral;
 
 export interface ListLiteral extends IBraceWrapped<NodeKind.ListLiteral, ICsvArray<TAnyLiteral>> {
-    readonly literalKind: Constant.LiteralKind.List;
+    readonly literalKind: LiteralKind.List;
 }
 
 export interface RecordLiteral
     extends IBracketWrapped<NodeKind.RecordLiteral, ICsvArray<GeneralizedIdentifierPairedAnyLiteral>> {
-    readonly literalKind: Constant.LiteralKind.Record;
+    readonly literalKind: LiteralKind.Record;
 }
 
 // -----------------------------------------
