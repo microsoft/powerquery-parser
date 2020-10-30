@@ -5,8 +5,6 @@ import { CommonError, Result } from "../../common";
 import { Constant, Keyword, Token, Type } from "../../language";
 import { IParserState, ParseError, TXorNode } from "../../parser";
 
-export type TriedAutocomplete = Result<Autocomplete, CommonError.CommonError>;
-
 export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | undefined, CommonError.CommonError>;
 
 export type TriedAutocompleteKeyword = Result<AutocompleteKeyword, CommonError.CommonError>;

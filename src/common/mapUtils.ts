@@ -8,10 +8,7 @@ export function assertDelete<K, V>(map: Map<K, V>, key: K, maybeMessage?: string
 }
 
 export function assertGet<K, V>(map: Map<K, V>, key: K): V {
-    const maybeValue: V | undefined = map.get(key);
-    Assert.isDefined(maybeValue, `key not found in given map`, { key });
-
-    return maybeValue;
+    return Assert.asDefined(map.get(key), `key not found in given map`, { key });
 }
 
 export function assertIn<K, V>(map: Map<K, V>, key: K, maybeMessage?: string): void {
@@ -69,9 +66,7 @@ export function pick<K, V>(map: Map<K, V>, keys: ReadonlyArray<K>): Map<K, V> {
     const newMap: Map<K, V> = new Map();
 
     for (const key of keys) {
-        const maybeValue: V | undefined = map.get(key);
-        Assert.isDefined(maybeValue, `key from keys is not found in map`, { key });
-        newMap.set(key, maybeValue);
+        newMap.set(key, Assert.asDefined(map.get(key), `key from keys is not found in map`, { key }));
     }
 
     return newMap;

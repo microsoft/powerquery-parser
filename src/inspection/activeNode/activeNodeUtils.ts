@@ -12,7 +12,7 @@ import {
     XorNodeUtils,
 } from "../../parser";
 import { Position, PositionUtils } from "../position";
-import { ActiveNode, ActiveNodeLeafKind } from "./activeNode";
+import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
@@ -35,7 +35,7 @@ export function maybeActiveNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
-): ActiveNode | undefined {
+): TMaybeActiveNode {
     // Search for the closest Ast node on or to the left of Position, as well as the closest shifted right Ast node.
     const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, leafNodeIds, position);
     // Search for the closest Context node on or to the right of the closest Ast node.
@@ -66,16 +66,38 @@ export function maybeActiveNode(
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
     } else {
-        return undefined;
+        return outOfBoundPositionFactory(position);
     }
 
     const leaf: TXorNode = maybeLeaf;
 
-    return {
+    return activeNodeFactory(
         leafKind,
         position,
-        ancestry: AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
-        maybeIdentifierUnderPosition: maybeIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
+        AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
+        findIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
+    );
+}
+
+export function activeNodeFactory(
+    leafKind: ActiveNodeLeafKind,
+    position: Position,
+    ancestry: ReadonlyArray<TXorNode>,
+    maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
+): ActiveNode {
+    return {
+        kind: ActiveNodeKind.ActiveNode,
+        leafKind,
+        position,
+        ancestry,
+        maybeIdentifierUnderPosition,
+    };
+}
+
+export function outOfBoundPositionFactory(position: Position): OutOfBoundPosition {
+    return {
+        kind: ActiveNodeKind.OutOfBoundPosition,
+        position,
     };
 }
 
@@ -85,6 +107,10 @@ export function maybeFirstXorOfNodeKind(activeNode: ActiveNode, nodeKind: Ast.No
 
 export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
     return AncestryUtils.assertGetLeaf(activeNode.ancestry);
+}
+
+export function isPositionInBounds(maybeValue: TMaybeActiveNode): maybeValue is ActiveNode {
+    return maybeValue.kind === ActiveNodeKind.ActiveNode;
 }
 
 interface AstNodeSearch {
@@ -268,7 +294,7 @@ function maybeFindContext(
     return maybeCurrent;
 }
 
-function maybeIdentifierUnderPosition(
+function findIdentifierUnderPosition(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     leaf: TXorNode,

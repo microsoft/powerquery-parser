@@ -9,7 +9,7 @@ import { CommonSettings } from "../../settings";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { TypeCache } from "./commonTypes";
-import { assertGetOrCreateScope, getOrFindScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
+import { assertGetOrCreateNodeScope, getOrFindScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
@@ -58,7 +58,7 @@ export function tryType(
 }
 
 function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
-    const nodeScope: NodeScope = assertGetOrCreateScope(state, nodeId);
+    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, nodeId);
 
     for (const scopeItem of nodeScope.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
@@ -72,10 +72,12 @@ function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByK
 
     const result: ScopeTypeByKey = new Map();
     for (const [key, scopeItem] of nodeScope.entries()) {
-        const maybeType: Type.TType | undefined = state.givenTypeById.get(scopeItem.id);
-        Assert.isDefined(maybeType, `expected nodeId to be in givenTypeById`, { nodeId: scopeItem.id });
-
-        result.set(key, maybeType);
+        const type: Type.TType = Assert.asDefined(
+            state.givenTypeById.get(scopeItem.id),
+            `expected nodeId to be in givenTypeById`,
+            { nodeId: scopeItem.id },
+        );
+        result.set(key, type);
     }
 
     return result;

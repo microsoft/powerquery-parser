@@ -14,7 +14,7 @@ import {
     XorNodeUtils,
 } from "../parser";
 import { CommonSettings } from "../settings";
-import { ActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { Position, PositionUtils } from "./position";
 
 export type TriedInvokeExpression = Result<InvokeExpression | undefined, CommonError.CommonError>;
@@ -33,10 +33,14 @@ export interface InvokeExpressionArgs {
 export function tryInvokeExpression(
     settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
 ): TriedInvokeExpression {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        return ResultUtils.okFactory(undefined);
+    }
+
     return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
-        inspectInvokeExpression(nodeIdMapCollection, activeNode),
+        inspectInvokeExpression(nodeIdMapCollection, maybeActiveNode),
     );
 }
 

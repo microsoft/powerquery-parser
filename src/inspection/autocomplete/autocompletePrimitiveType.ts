@@ -6,17 +6,21 @@ import { Ast, Constant } from "../../language";
 import { LocalizationUtils } from "../../localization";
 import { AncestryUtils, TXorNode, XorNodeKind } from "../../parser";
 import { CommonSettings } from "../../settings";
-import { ActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { PositionUtils } from "../position";
 import { AutocompletePrimitiveType, TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
     settings: CommonSettings,
-    activeNode: ActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        return ResultUtils.okFactory([]);
+    }
+
     return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
-        return autocompletePrimitiveType(activeNode, maybeTrailingToken);
+        return autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken);
     });
 }
 

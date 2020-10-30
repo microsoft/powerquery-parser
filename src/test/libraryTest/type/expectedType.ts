@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
 import { Position } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
@@ -17,12 +17,15 @@ function assertGetParseOkExpectedTypeOk(textWithPipe: string): Type.TType | unde
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseOk.state.contextState.leafNodeIds;
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    Assert.isDefined(maybeActiveNode);
+    Assert.isTrue(
+        maybeActiveNode.kind === ActiveNodeKind.ActiveNode,
+        "maybeActiveNode.kind === ActiveNodeKind.ActiveNode",
+    );
 
     return assertGetExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
 }
@@ -33,12 +36,15 @@ function assertGetParseErrExpectedTypeOk(textWithPipe: string): Type.TType | und
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseErr.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseErr.state.contextState.leafNodeIds;
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    Assert.isDefined(maybeActiveNode);
+    Assert.isTrue(
+        maybeActiveNode.kind === ActiveNodeKind.ActiveNode,
+        "maybeActiveNode.kind === ActiveNodeKind.ActiveNode",
+    );
 
     return assertGetExpectedTypeOk(nodeIdMapCollection, leafNodeIds, position);
 }
@@ -48,12 +54,15 @@ function assertGetExpectedTypeOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): Type.TType | undefined {
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    Assert.isDefined(maybeActiveNode);
+    Assert.isTrue(
+        maybeActiveNode.kind === ActiveNodeKind.ActiveNode,
+        "maybeActiveNode.kind === ActiveNodeKind.ActiveNode",
+    );
 
     const triedExpectedType: ExpectedType.TriedExpectedType = ExpectedType.tryExpectedType(
         DefaultSettings,

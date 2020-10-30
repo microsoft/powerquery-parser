@@ -5,9 +5,13 @@ import { expect } from "chai";
 import "mocha";
 import { Assert, Inspection, Lexer, Task } from "../..";
 import { Autocomplete, Position } from "../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../inspection/activeNode";
+import { ActiveNode, ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
 import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
 import { LexSettings, ParseSettings } from "../../settings";
+
+export function assertIsActiveNode(maybeActiveNode: TMaybeActiveNode): asserts maybeActiveNode is ActiveNode {
+    expect(maybeActiveNode.kind).to.equal(ActiveNodeKind.ActiveNode);
+}
 
 // Only works with single line expressions
 export function assertGetTextWithPosition(text: string): [string, Inspection.Position] {
@@ -98,7 +102,7 @@ export function assertGetAutocompleteOk<S extends IParserState = IParserState>(
     position: Position,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): Autocomplete {
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         parserState.contextState.nodeIdMapCollection,
         parserState.contextState.leafNodeIds,
         position,

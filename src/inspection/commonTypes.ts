@@ -3,16 +3,16 @@
 
 import { Inspection } from "..";
 import { CommonError, Result } from "../common";
-import { Type } from "../language";
-import { ActiveNode } from "./activeNode";
+import { ExpectedType } from "../language";
+import { TMaybeActiveNode } from "./activeNode";
 
-export type TriedInspection = Result<InspectionOk, CommonError.CommonError>;
+export type TriedInspection = Result<Inspection, CommonError.CommonError>;
 
-export interface InspectionOk {
-    readonly maybeActiveNode: ActiveNode | undefined;
+export interface Inspection {
+    readonly maybeActiveNode: TMaybeActiveNode;
     readonly autocomplete: Inspection.Autocomplete;
-    readonly maybeInvokeExpression: Inspection.InvokeExpression | undefined;
-    readonly nodeScope: Inspection.NodeScope;
-    readonly scopeType: Inspection.ScopeTypeByKey;
-    readonly maybeExpectedType: Type.TType | undefined;
+    readonly triedInvokeExpression: Inspection.TriedInvokeExpression;
+    readonly triedNodeScope: Inspection.TriedNodeScope;
+    readonly triedScopeType: Inspection.TriedScopeType;
+    readonly triedExpectedType: ExpectedType.TriedExpectedType;
 }

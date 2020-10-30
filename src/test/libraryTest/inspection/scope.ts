@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, Constant } from "../../../language";
 import { IParserState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
@@ -105,20 +105,20 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
     }
 }
 
-function abridgedScopeItemsFactory(scopeItemByKey: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
+function abridgedScopeItemsFactory(nodeScope: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
     const result: TAbridgedNodeScopeItem[] = [];
 
-    for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
+    for (const [identifier, scopeItem] of nodeScope.entries()) {
         result.push(abridgedScopeItemFactory(identifier, scopeItem));
     }
 
     return result;
 }
 
-function abridgedParametersFactory(scopeItemByKey: NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
+function abridgedParametersFactory(nodeScope: NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
     const result: AbridgedParameterScopeItem[] = [];
 
-    for (const [identifier, scopeItem] of scopeItemByKey.entries()) {
+    for (const [identifier, scopeItem] of nodeScope.entries()) {
         const abridged: TAbridgedNodeScopeItem = abridgedScopeItemFactory(identifier, scopeItem);
         if (abridged.kind === ScopeItemKind.Parameter) {
             result.push(abridged);
@@ -134,12 +134,12 @@ function assertNodeScopeOk(
     leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): NodeScope {
-    const maybeActiveNode: ActiveNode | undefined = ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    if (maybeActiveNode === undefined) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return new Map();
     }
     const activeNode: ActiveNode = maybeActiveNode;
@@ -152,6 +152,7 @@ function assertNodeScopeOk(
         undefined,
     );
     Assert.isOk(triedNodeScope);
+
     return triedNodeScope.value;
 }
 

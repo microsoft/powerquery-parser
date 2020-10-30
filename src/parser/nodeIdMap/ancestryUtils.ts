@@ -20,9 +20,7 @@ export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, roo
 }
 
 export function assertGetLeaf(ancestry: ReadonlyArray<TXorNode>): TXorNode {
-    const maybeLeaf: TXorNode | undefined = ancestry[0];
-    Assert.isDefined(maybeLeaf);
-    return maybeLeaf;
+    return Assert.asDefined(ancestry[0], "ancestry[0]");
 }
 
 export function assertGetRoot(ancestry: ReadonlyArray<TXorNode>): TXorNode {
@@ -44,10 +42,10 @@ export function assertGetNthNextXor(
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybeNthNextXor(ancestry, ancestryIndex, n, maybeAllowedNodeKinds);
-    Assert.isDefined(maybeXorNode, `no next node`, { ancestryIndex, n });
-
-    return maybeXorNode;
+    return Assert.asDefined(maybeNthNextXor(ancestry, ancestryIndex, n, maybeAllowedNodeKinds), `no next node`, {
+        ancestryIndex,
+        n,
+    });
 }
 
 export function assertGetNthPreviousXor(
@@ -56,14 +54,16 @@ export function assertGetNthPreviousXor(
     n: number = 1,
     maybeAllowedNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined = undefined,
 ): TXorNode {
-    const maybeXorNode: TXorNode | undefined = maybeNthPreviousXor(ancestry, ancestryIndex, n);
-    Assert.isDefined(maybeXorNode, `no previous node`, { ancestryIndex, n });
+    const xorNode: TXorNode = Assert.asDefined(maybeNthPreviousXor(ancestry, ancestryIndex, n), `no previous node`, {
+        ancestryIndex,
+        n,
+    });
 
     if (maybeAllowedNodeKinds !== undefined) {
-        XorNodeUtils.assertAnyAstNodeKind(maybeXorNode, maybeAllowedNodeKinds);
+        XorNodeUtils.assertAnyAstNodeKind(xorNode, maybeAllowedNodeKinds);
     }
 
-    return maybeXorNode;
+    return xorNode;
 }
 
 export function assertGetPreviousXor(

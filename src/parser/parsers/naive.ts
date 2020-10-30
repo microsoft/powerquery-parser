@@ -721,8 +721,10 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
     IParserStateUtils.startContext(state, nodeKind);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    Assert.isDefined(state.maybeCurrentContextNode);
-    const currentContextNode: ParseContext.Node = state.maybeCurrentContextNode;
+    const currentContextNode: ParseContext.Node = Assert.asDefined(
+        state.maybeCurrentContextNode,
+        "state.maybeCurrentContextNode",
+    );
 
     // Update parent attributes.
     const parentOfHeadId: number = MapUtils.assertGet(nodeIdMapCollection.parentIdById, head.id);
@@ -838,16 +840,11 @@ export function readLiteralExpression<S extends IParserState = IParserState>(
         throw maybeErr;
     }
 
-    const maybeLiteralKind:
-        | Constant.LiteralKind.Numeric
-        | Constant.LiteralKind.Logical
-        | Constant.LiteralKind.Null
-        | Constant.LiteralKind.Text
-        | undefined = ConstantUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind);
-
-    Assert.isDefined(maybeLiteralKind, `couldn't convert TokenKind into LiteralKind`, {
-        maybeCurrentTokenKind: state.maybeCurrentTokenKind,
-    });
+    const literalKind: Constant.LiteralKind = Assert.asDefined(
+        ConstantUtils.maybeLiteralKindFrom(state.maybeCurrentTokenKind),
+        `couldn't convert TokenKind into LiteralKind`,
+        { maybeCurrentTokenKind: state.maybeCurrentTokenKind },
+    );
 
     const literal: string = readToken(state);
     const astNode: Ast.LiteralExpression = {
@@ -855,7 +852,7 @@ export function readLiteralExpression<S extends IParserState = IParserState>(
         kind: nodeKind,
         isLeaf: true,
         literal,
-        literalKind: maybeLiteralKind,
+        literalKind,
     };
     IParserStateUtils.endContext(state, astNode);
     return astNode;
@@ -2619,13 +2616,9 @@ function readConstantKind<S extends IParserState, ConstantKind extends Constant.
     state: S,
     constantKind: ConstantKind,
 ): Ast.TConstant & Ast.IConstant<ConstantKind> {
-    const maybeConstant: (Ast.TConstant & Ast.IConstant<ConstantKind>) | undefined = maybeReadConstantKind(
-        state,
+    return Assert.asDefined(maybeReadConstantKind(state, constantKind), `couldn't conver constantKind`, {
         constantKind,
-    );
-    Assert.isDefined(maybeConstant, `couldn't conver constantKind`, { constantKind });
-
-    return maybeConstant;
+    });
 }
 
 function maybeReadConstantKind<S extends IParserState, ConstantKind extends Constant.TConstantKind>(

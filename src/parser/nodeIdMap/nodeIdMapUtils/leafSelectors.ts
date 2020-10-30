@@ -9,10 +9,11 @@ import { TXorNode, XorNodeKind } from "../xorNode";
 import { maybeXor } from "./commonSelectors";
 
 export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
-    const maybeNode: TXorNode | undefined = maybeLeftMostXor(nodeIdMapCollection, nodeId);
-    Assert.isDefined(maybeNode, `nodeId does not exist in nodeIdMapCollection`, { nodeId });
-
-    return maybeNode;
+    return Assert.asDefined(
+        maybeLeftMostXor(nodeIdMapCollection, nodeId),
+        `nodeId does not exist in nodeIdMapCollection`,
+        { nodeId },
+    );
 }
 
 export function maybeLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {

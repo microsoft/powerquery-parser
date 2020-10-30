@@ -14,15 +14,11 @@ export function assertGetChildAstByAttributeIndex(
     attributeIndex: number,
     maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
 ): Ast.TNode {
-    const maybeNode: Ast.TNode | undefined = maybeChildAstByAttributeIndex(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-        maybeChildNodeKinds,
+    return Assert.asDefined(
+        maybeChildAstByAttributeIndex(nodeIdMapCollection, parentId, attributeIndex, maybeChildNodeKinds),
+        `parentId doesn't have an Ast child at the given index`,
+        { parentId, attributeIndex },
     );
-    Assert.isDefined(maybeNode, `parentId doesn't have an Ast child at the given index`, { parentId, attributeIndex });
-
-    return maybeNode;
 }
 
 export function assertGetChildContextByAttributeIndex(
@@ -31,18 +27,14 @@ export function assertGetChildContextByAttributeIndex(
     attributeIndex: number,
     maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
 ): ParseContext.Node {
-    const maybeNode: ParseContext.Node | undefined = maybeChildContextByAttributeIndex(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-        maybeChildNodeKinds,
+    return Assert.asDefined(
+        maybeChildContextByAttributeIndex(nodeIdMapCollection, parentId, attributeIndex, maybeChildNodeKinds),
+        `parentId doesn't have a context child at the given index`,
+        {
+            parentId,
+            attributeIndex,
+        },
     );
-    Assert.isDefined(maybeNode, `parentId doesn't have a context child at the given index`, {
-        parentId,
-        attributeIndex,
-    });
-
-    return maybeNode;
 }
 
 export function assertGetChildXorByAttributeIndex(
@@ -51,15 +43,11 @@ export function assertGetChildXorByAttributeIndex(
     attributeIndex: number,
     maybeChildNodeKinds: ReadonlyArray<Ast.NodeKind> | undefined,
 ): TXorNode {
-    const maybeNode: TXorNode | undefined = maybeChildXorByAttributeIndex(
-        nodeIdMapCollection,
-        parentId,
-        attributeIndex,
-        maybeChildNodeKinds,
+    return Assert.asDefined(
+        maybeChildXorByAttributeIndex(nodeIdMapCollection, parentId, attributeIndex, maybeChildNodeKinds),
+        `parentId doesn't have a child at the given index`,
+        { parentId, attributeIndex },
     );
-    Assert.isDefined(maybeNode, `parentId doesn't have a child at the given index`, { parentId, attributeIndex });
-
-    return maybeNode;
 }
 
 export function maybeChildAstByAttributeIndex(

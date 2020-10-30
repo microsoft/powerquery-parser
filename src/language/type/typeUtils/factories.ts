@@ -9,10 +9,10 @@ import { dedupe } from "./typeUtils";
 
 export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.IPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
-    const maybeValue: Type.IPrimitiveType | undefined = PrimitiveTypeConstantMap.get(key);
-    Assert.isDefined(maybeValue, `unknown [isNullable, typeKind] key`, { typeKind, isNullable });
-
-    return maybeValue;
+    return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown [isNullable, typeKind] key`, {
+        typeKind,
+        isNullable,
+    });
 }
 
 export function anyUnionFactory(unionedTypePairs: ReadonlyArray<Type.TType>): Type.TType {

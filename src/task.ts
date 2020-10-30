@@ -4,8 +4,7 @@
 import { Inspection } from ".";
 import { Lexer } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
-import { InspectionOk, TriedInspection } from "./inspection";
-import { ActiveNode } from "./inspection/activeNode";
+import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
 import { LexError, LexerSnapshot } from "./lexer";
 import { LocalizationUtils } from "./localization";
@@ -36,7 +35,7 @@ export interface LexParseOk<S extends IParserState = IParserState> extends Parse
     readonly lexerSnapshot: Lexer.LexerSnapshot;
 }
 
-export interface LexParseInspectOk<S extends IParserState = IParserState> extends InspectionOk {
+export interface LexParseInspectOk<S extends IParserState = IParserState> extends Inspection.Inspection {
     readonly triedParse: TriedParse<S>;
 }
 
@@ -74,7 +73,7 @@ export function tryInspection<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     triedParse: TriedParse<S>,
     position: Inspection.Position,
-): TriedInspection {
+): Inspection.TriedInspection {
     let parserState: S;
     let maybeParseError: ParseError.ParseError<S> | undefined;
 
@@ -94,7 +93,7 @@ export function tryInspection<S extends IParserState = IParserState>(
         parserState = triedParse.value.state;
     }
 
-    return Inspection.tryInspection(parseSettings, parserState, maybeParseError, position);
+    return ResultUtils.okFactory(Inspection.inspection(parseSettings, parserState, maybeParseError, position));
 }
 
 export function tryLexParse<S extends IParserState = IParserState>(
@@ -131,7 +130,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
         return triedLexParse as TriedLexParseInspect<S>;
     }
     const triedParse: TriedParse<S> = maybeTriedParse;
-    const triedInspection: TriedInspection = tryInspection(settings, triedParse, position);
+    const triedInspection: Inspection.TriedInspection = tryInspection(settings, triedParse, position);
 
     if (ResultUtils.isErr(triedInspection)) {
         return triedInspection;
@@ -192,8 +191,8 @@ export function rootFromTriedLexParseInspect<S extends IParserState = IParserSta
     triedLexInspectParseInspect: TriedLexParseInspect<S>,
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexInspectParseInspect)) {
-        const maybeActiveNode: ActiveNode | undefined = triedLexInspectParseInspect.value.maybeActiveNode;
-        return maybeActiveNode?.ancestry.length ? maybeActiveNode.ancestry[0] : undefined;
+        const maybeActiveNode: TMaybeActiveNode = triedLexInspectParseInspect.value.maybeActiveNode;
+        return ActiveNodeUtils.isPositionInBounds(maybeActiveNode) ? maybeActiveNode.ancestry[0] : undefined;
     } else if (ParseError.isParseError(triedLexInspectParseInspect.error)) {
         const maybeContextNode: ParseContext.Node | undefined =
             triedLexInspectParseInspect.error.state.contextState.maybeRoot;
