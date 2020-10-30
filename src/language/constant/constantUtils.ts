@@ -1,28 +1,17 @@
+import { Constant } from ".";
 import { Assert } from "../../common";
 import { TokenKind } from "../token";
-import {
-    ArithmeticOperatorKind,
-    EqualityOperatorKind,
-    IdentifierConstantKind,
-    KeywordConstantKind,
-    LogicalOperatorKind,
-    MiscConstantKind,
-    PrimitiveTypeConstantKind,
-    RelationalOperatorKind,
-    TBinOpExpressionOperator,
-    TConstantKind,
-    UnaryOperatorKind,
-    WrapperConstantKind,
-} from "./constant";
 
-export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined): UnaryOperatorKind | undefined {
+export function maybeUnaryOperatorKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Constant.UnaryOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Plus:
-            return UnaryOperatorKind.Positive;
+            return Constant.UnaryOperatorKind.Positive;
         case TokenKind.Minus:
-            return UnaryOperatorKind.Negative;
+            return Constant.UnaryOperatorKind.Negative;
         case TokenKind.KeywordNot:
-            return UnaryOperatorKind.Not;
+            return Constant.UnaryOperatorKind.Not;
         default:
             return undefined;
     }
@@ -30,40 +19,44 @@ export function maybeUnaryOperatorKindFrom(maybeTokenKind: TokenKind | undefined
 
 export function maybeArithmeticOperatorKindFrom(
     maybeTokenKind: TokenKind | undefined,
-): ArithmeticOperatorKind | undefined {
+): Constant.ArithmeticOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Asterisk:
-            return ArithmeticOperatorKind.Multiplication;
+            return Constant.ArithmeticOperatorKind.Multiplication;
         case TokenKind.Division:
-            return ArithmeticOperatorKind.Division;
+            return Constant.ArithmeticOperatorKind.Division;
         case TokenKind.Plus:
-            return ArithmeticOperatorKind.Addition;
+            return Constant.ArithmeticOperatorKind.Addition;
         case TokenKind.Minus:
-            return ArithmeticOperatorKind.Subtraction;
+            return Constant.ArithmeticOperatorKind.Subtraction;
         case TokenKind.Ampersand:
-            return ArithmeticOperatorKind.And;
+            return Constant.ArithmeticOperatorKind.And;
         default:
             return undefined;
     }
 }
 
-export function maybeEqualityOperatorKindFrom(maybeTokenKind: TokenKind | undefined): EqualityOperatorKind | undefined {
+export function maybeEqualityOperatorKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Constant.EqualityOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.Equal:
-            return EqualityOperatorKind.EqualTo;
+            return Constant.EqualityOperatorKind.EqualTo;
         case TokenKind.NotEqual:
-            return EqualityOperatorKind.NotEqualTo;
+            return Constant.EqualityOperatorKind.NotEqualTo;
         default:
             return undefined;
     }
 }
 
-export function maybeLogicalOperatorKindFrom(maybeTokenKind: TokenKind | undefined): LogicalOperatorKind | undefined {
+export function maybeLogicalOperatorKindFrom(
+    maybeTokenKind: TokenKind | undefined,
+): Constant.LogicalOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.KeywordAnd:
-            return LogicalOperatorKind.And;
+            return Constant.LogicalOperatorKind.And;
         case TokenKind.KeywordOr:
-            return LogicalOperatorKind.Or;
+            return Constant.LogicalOperatorKind.Or;
         default:
             return undefined;
     }
@@ -71,16 +64,16 @@ export function maybeLogicalOperatorKindFrom(maybeTokenKind: TokenKind | undefin
 
 export function maybeRelationalOperatorKindFrom(
     maybeTokenKind: TokenKind | undefined,
-): RelationalOperatorKind | undefined {
+): Constant.RelationalOperatorKind | undefined {
     switch (maybeTokenKind) {
         case TokenKind.LessThan:
-            return RelationalOperatorKind.LessThan;
+            return Constant.RelationalOperatorKind.LessThan;
         case TokenKind.LessThanEqualTo:
-            return RelationalOperatorKind.LessThanEqualTo;
+            return Constant.RelationalOperatorKind.LessThanEqualTo;
         case TokenKind.GreaterThan:
-            return RelationalOperatorKind.GreaterThan;
+            return Constant.RelationalOperatorKind.GreaterThan;
         case TokenKind.GreaterThanEqualTo:
-            return RelationalOperatorKind.GreaterThanEqualTo;
+            return Constant.RelationalOperatorKind.GreaterThanEqualTo;
         default:
             return undefined;
     }
@@ -88,95 +81,95 @@ export function maybeRelationalOperatorKindFrom(
 
 export function maybeBinOpExpressionOperatorKindFrom(
     maybeTokenKind: TokenKind | undefined,
-): TBinOpExpressionOperator | undefined {
+): Constant.TBinOpExpressionOperator | undefined {
     switch (maybeTokenKind) {
         // ArithmeticOperator
         case TokenKind.Asterisk:
-            return ArithmeticOperatorKind.Multiplication;
+            return Constant.ArithmeticOperatorKind.Multiplication;
         case TokenKind.Division:
-            return ArithmeticOperatorKind.Division;
+            return Constant.ArithmeticOperatorKind.Division;
         case TokenKind.Plus:
-            return ArithmeticOperatorKind.Addition;
+            return Constant.ArithmeticOperatorKind.Addition;
         case TokenKind.Minus:
-            return ArithmeticOperatorKind.Subtraction;
+            return Constant.ArithmeticOperatorKind.Subtraction;
         case TokenKind.Ampersand:
-            return ArithmeticOperatorKind.And;
+            return Constant.ArithmeticOperatorKind.And;
 
         // EqualityOperator
         case TokenKind.Equal:
-            return EqualityOperatorKind.EqualTo;
+            return Constant.EqualityOperatorKind.EqualTo;
         case TokenKind.NotEqual:
-            return EqualityOperatorKind.NotEqualTo;
+            return Constant.EqualityOperatorKind.NotEqualTo;
 
         // LogicalOperator
         case TokenKind.KeywordAnd:
-            return LogicalOperatorKind.And;
+            return Constant.LogicalOperatorKind.And;
         case TokenKind.KeywordOr:
-            return LogicalOperatorKind.Or;
+            return Constant.LogicalOperatorKind.Or;
 
         // RelationalOperator
         case TokenKind.LessThan:
-            return RelationalOperatorKind.LessThan;
+            return Constant.RelationalOperatorKind.LessThan;
         case TokenKind.LessThanEqualTo:
-            return RelationalOperatorKind.LessThanEqualTo;
+            return Constant.RelationalOperatorKind.LessThanEqualTo;
         case TokenKind.GreaterThan:
-            return RelationalOperatorKind.GreaterThan;
+            return Constant.RelationalOperatorKind.GreaterThan;
         case TokenKind.GreaterThanEqualTo:
-            return RelationalOperatorKind.GreaterThanEqualTo;
+            return Constant.RelationalOperatorKind.GreaterThanEqualTo;
 
         // Keyword operator
         case TokenKind.KeywordAs:
-            return KeywordConstantKind.As;
+            return Constant.KeywordConstantKind.As;
         case TokenKind.KeywordIs:
-            return KeywordConstantKind.Is;
+            return Constant.KeywordConstantKind.Is;
         case TokenKind.KeywordMeta:
-            return KeywordConstantKind.Meta;
+            return Constant.KeywordConstantKind.Meta;
 
         case TokenKind.NullCoalescingOperator:
-            return MiscConstantKind.NullCoalescingOperator;
+            return Constant.MiscConstantKind.NullCoalescingOperator;
 
         default:
             return undefined;
     }
 }
 
-export function binOpExpressionOperatorPrecedence(operator: TBinOpExpressionOperator): number {
+export function binOpExpressionOperatorPrecedence(operator: Constant.TBinOpExpressionOperator): number {
     switch (operator) {
-        case KeywordConstantKind.Meta:
+        case Constant.KeywordConstantKind.Meta:
             return 110;
 
-        case ArithmeticOperatorKind.Multiplication:
-        case ArithmeticOperatorKind.Division:
+        case Constant.ArithmeticOperatorKind.Multiplication:
+        case Constant.ArithmeticOperatorKind.Division:
             return 100;
 
-        case ArithmeticOperatorKind.Addition:
-        case ArithmeticOperatorKind.Subtraction:
-        case ArithmeticOperatorKind.And:
+        case Constant.ArithmeticOperatorKind.Addition:
+        case Constant.ArithmeticOperatorKind.Subtraction:
+        case Constant.ArithmeticOperatorKind.And:
             return 90;
 
-        case RelationalOperatorKind.GreaterThan:
-        case RelationalOperatorKind.GreaterThanEqualTo:
-        case RelationalOperatorKind.LessThan:
-        case RelationalOperatorKind.LessThanEqualTo:
+        case Constant.RelationalOperatorKind.GreaterThan:
+        case Constant.RelationalOperatorKind.GreaterThanEqualTo:
+        case Constant.RelationalOperatorKind.LessThan:
+        case Constant.RelationalOperatorKind.LessThanEqualTo:
             return 80;
 
-        case EqualityOperatorKind.EqualTo:
-        case EqualityOperatorKind.NotEqualTo:
+        case Constant.EqualityOperatorKind.EqualTo:
+        case Constant.EqualityOperatorKind.NotEqualTo:
             return 70;
 
-        case KeywordConstantKind.As:
+        case Constant.KeywordConstantKind.As:
             return 60;
 
-        case KeywordConstantKind.Is:
+        case Constant.KeywordConstantKind.Is:
             return 50;
 
-        case LogicalOperatorKind.And:
+        case Constant.LogicalOperatorKind.And:
             return 40;
 
-        case LogicalOperatorKind.Or:
+        case Constant.LogicalOperatorKind.Or:
             return 30;
 
-        case MiscConstantKind.NullCoalescingOperator:
+        case Constant.MiscConstantKind.NullCoalescingOperator:
             return 20;
 
         default:
@@ -186,36 +179,37 @@ export function binOpExpressionOperatorPrecedence(operator: TBinOpExpressionOper
 
 export function isPrimitiveTypeConstantKind(
     maybePrimitiveTypeConstantKind: string,
-): maybePrimitiveTypeConstantKind is PrimitiveTypeConstantKind {
+): maybePrimitiveTypeConstantKind is Constant.PrimitiveTypeConstantKind {
     switch (maybePrimitiveTypeConstantKind) {
-        case IdentifierConstantKind.Nullable:
-        case IdentifierConstantKind.Optional:
-        case PrimitiveTypeConstantKind.Any:
-        case PrimitiveTypeConstantKind.AnyNonNull:
-        case PrimitiveTypeConstantKind.Binary:
-        case PrimitiveTypeConstantKind.Date:
-        case PrimitiveTypeConstantKind.DateTime:
-        case PrimitiveTypeConstantKind.DateTimeZone:
-        case PrimitiveTypeConstantKind.Duration:
-        case PrimitiveTypeConstantKind.Function:
-        case PrimitiveTypeConstantKind.List:
-        case PrimitiveTypeConstantKind.Logical:
-        case PrimitiveTypeConstantKind.None:
-        case PrimitiveTypeConstantKind.Number:
-        case PrimitiveTypeConstantKind.Record:
-        case PrimitiveTypeConstantKind.Table:
-        case PrimitiveTypeConstantKind.Text:
-        case PrimitiveTypeConstantKind.Time:
+        case Constant.LanguageConstant.Nullable:
+        case Constant.LanguageConstant.Optional:
+        case Constant.PrimitiveTypeConstantKind.Any:
+        case Constant.PrimitiveTypeConstantKind.AnyNonNull:
+        case Constant.PrimitiveTypeConstantKind.Binary:
+        case Constant.PrimitiveTypeConstantKind.Date:
+        case Constant.PrimitiveTypeConstantKind.DateTime:
+        case Constant.PrimitiveTypeConstantKind.DateTimeZone:
+        case Constant.PrimitiveTypeConstantKind.Duration:
+        case Constant.PrimitiveTypeConstantKind.Function:
+        case Constant.PrimitiveTypeConstantKind.List:
+        case Constant.PrimitiveTypeConstantKind.Logical:
+        case Constant.PrimitiveTypeConstantKind.None:
+        case Constant.PrimitiveTypeConstantKind.Number:
+        case Constant.PrimitiveTypeConstantKind.Record:
+        case Constant.PrimitiveTypeConstantKind.Table:
+        case Constant.PrimitiveTypeConstantKind.Text:
+        case Constant.PrimitiveTypeConstantKind.Time:
             return true;
         default:
             return false;
     }
 }
 
-export function isPairedWrapperConstantKinds(left: TConstantKind, right: TConstantKind): boolean {
+export function isPairedWrapperConstantKinds(left: Constant.TConstantKind, right: Constant.TConstantKind): boolean {
     return (
-        (left === WrapperConstantKind.LeftBrace && right === WrapperConstantKind.RightBrace) ||
-        (left === WrapperConstantKind.LeftBracket && right === WrapperConstantKind.RightBracket) ||
-        (left === WrapperConstantKind.LeftParenthesis && right === WrapperConstantKind.RightParenthesis)
+        (left === Constant.WrapperConstantKind.LeftBrace && right === Constant.WrapperConstantKind.RightBrace) ||
+        (left === Constant.WrapperConstantKind.LeftBracket && right === Constant.WrapperConstantKind.RightBracket) ||
+        (left === Constant.WrapperConstantKind.LeftParenthesis &&
+            right === Constant.WrapperConstantKind.RightParenthesis)
     );
 }
