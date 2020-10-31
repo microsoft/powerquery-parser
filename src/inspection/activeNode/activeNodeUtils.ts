@@ -17,7 +17,7 @@ import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMa
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
-// 'let x=|1 in x' -> the value part of the key-value-pair.asdfa
+// 'let x=|1 in x' -> the value part of the key-value-pair.
 // 'foo(|)' -> the zero length ArrayWrapper of an InvokeExpression
 //
 // The naive approach is to find the closest Ast or Context node either to the left of or ends on the cursor.
