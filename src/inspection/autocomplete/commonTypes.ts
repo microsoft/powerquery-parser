@@ -9,15 +9,23 @@ export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | unde
 
 export type TriedAutocompleteKeyword = Result<AutocompleteKeyword, CommonError.CommonError>;
 
+export type TriedAutocompleteLanguageConstant = Result<
+    AutocompleteLanguageConstant | undefined,
+    CommonError.CommonError
+>;
+
 export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType, CommonError.CommonError>;
 
 export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
+
+export type AutocompleteLanguageConstant = ReadonlyArray<Constant.LanguageConstantKind>;
 
 export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
 
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;
     readonly triedKeyword: TriedAutocompleteKeyword;
+    readonly triedLanguageConstant: TriedAutocompleteLanguageConstant;
     readonly triedPrimitiveType: TriedAutocompletePrimitiveType;
 }
 
@@ -43,7 +51,7 @@ export interface TrailingToken extends Token.Token {
     readonly isInOrOnPosition: boolean;
 }
 
-export interface ParsedFieldAccess<S extends IParserState = IParserState> {
+export interface AdditionalParse<S extends IParserState = IParserState> {
     readonly root: TXorNode;
     readonly parserState: S;
     readonly maybeParseError: ParseError.ParseError<S> | undefined;

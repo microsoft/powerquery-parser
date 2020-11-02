@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+export * from "./activeNode";
 export * from "./autocomplete";
 export * from "./commonTypes";
 export * from "./invokeExpression";

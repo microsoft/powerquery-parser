@@ -8,6 +8,7 @@ import { TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
+import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { trailingTokenFactory } from "./common";
 import {
@@ -15,6 +16,7 @@ import {
     TrailingToken,
     TriedAutocompleteFieldAccess,
     TriedAutocompleteKeyword,
+    TriedAutocompleteLanguageConstant,
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
 
@@ -52,6 +54,13 @@ export function autocomplete<S extends IParserState = IParserState>(
         maybeTrailingToken,
     );
 
+    const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
+        parseSettings,
+        parserState,
+        maybeActiveNode,
+        maybeParseError,
+    );
+
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
         parseSettings,
         maybeActiveNode,
@@ -61,6 +70,7 @@ export function autocomplete<S extends IParserState = IParserState>(
     return {
         triedFieldAccess,
         triedKeyword,
+        triedLanguageConstant,
         triedPrimitiveType,
     };
 }
