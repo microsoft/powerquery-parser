@@ -3,7 +3,7 @@
 
 import { Lexer } from "..";
 import { CommonError, StringUtils } from "../common";
-import { Localization, Templates } from "../localization";
+import { Localization, LocalizationUtils } from "../localization";
 
 export type TLexError = CommonError.CommonError | LexError;
 
@@ -56,76 +56,74 @@ export class LexError extends Error {
 
 export class BadLineNumberError extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly kind: BadLineNumberKind,
         readonly lineNumber: number,
         readonly numLines: number,
     ) {
-        super(Localization.error_lex_badLineNumber(templates, kind));
+        super(Localization.error_lex_badLineNumber(LocalizationUtils.getLocalizationTemplates(locale), kind));
         Object.setPrototypeOf(this, BadLineNumberError.prototype);
     }
 }
 
 export class BadRangeError extends Error {
-    constructor(templates: Templates.ILocalizationTemplates, readonly range: Lexer.Range, readonly kind: BadRangeKind) {
-        super(Localization.error_lex_badRange(templates, kind));
+    constructor(locale: string, readonly range: Lexer.Range, readonly kind: BadRangeKind) {
+        super(Localization.error_lex_badRange(LocalizationUtils.getLocalizationTemplates(locale), kind));
         Object.setPrototypeOf(this, BadRangeError.prototype);
     }
 }
 
 export class BadStateError extends Error {
-    constructor(templates: Templates.ILocalizationTemplates, readonly innerError: TLexError) {
-        super(Localization.error_lex_badState(templates));
+    constructor(locale: string, readonly innerError: TLexError) {
+        super(Localization.error_lex_badState(LocalizationUtils.getLocalizationTemplates(locale)));
         Object.setPrototypeOf(this, BadStateError.prototype);
     }
 }
 
 export class ErrorLineMapError extends Error {
-    constructor(templates: Templates.ILocalizationTemplates, readonly errorLineMap: Lexer.ErrorLineMap) {
-        super(Localization.error_lex_lineMap(templates, errorLineMap));
+    constructor(locale: string, readonly errorLineMap: Lexer.ErrorLineMap) {
+        super(Localization.error_lex_lineMap(LocalizationUtils.getLocalizationTemplates(locale), errorLineMap));
         Object.setPrototypeOf(this, ErrorLineMapError.prototype);
     }
 }
 
 export class EndOfStreamError extends Error {
-    constructor(templates: Templates.ILocalizationTemplates) {
-        super(Localization.error_lex_endOfStream(templates));
+    constructor(locale: string) {
+        super(Localization.error_lex_endOfStream(LocalizationUtils.getLocalizationTemplates(locale)));
         Object.setPrototypeOf(this, EndOfStreamError.prototype);
     }
 }
 
 export class ExpectedError extends Error {
-    constructor(
-        templates: Templates.ILocalizationTemplates,
-        readonly graphemePosition: StringUtils.GraphemePosition,
-        readonly kind: ExpectedKind,
-    ) {
-        super(Localization.error_lex_expectedKind(templates, kind));
+    constructor(locale: string, readonly graphemePosition: StringUtils.GraphemePosition, readonly kind: ExpectedKind) {
+        super(Localization.error_lex_expectedKind(LocalizationUtils.getLocalizationTemplates(locale), kind));
         Object.setPrototypeOf(this, ExpectedError.prototype);
     }
 }
 
 export class UnexpectedEofError extends Error {
-    constructor(templates: Templates.ILocalizationTemplates, readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.error_lex_endOfStreamPartwayRead(templates));
+    constructor(locale: string, readonly graphemePosition: StringUtils.GraphemePosition) {
+        super(Localization.error_lex_endOfStreamPartwayRead(LocalizationUtils.getLocalizationTemplates(locale)));
         Object.setPrototypeOf(this, UnexpectedEofError.prototype);
     }
 }
 
 export class UnexpectedReadError extends Error {
-    constructor(templates: Templates.ILocalizationTemplates, readonly graphemePosition: StringUtils.GraphemePosition) {
-        super(Localization.error_lex_unexpectedRead(templates));
+    constructor(locale: string, readonly graphemePosition: StringUtils.GraphemePosition) {
+        super(Localization.error_lex_unexpectedRead(LocalizationUtils.getLocalizationTemplates(locale)));
         Object.setPrototypeOf(this, UnexpectedReadError.prototype);
     }
 }
 
 export class UnterminatedMultilineTokenError extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly graphemePosition: StringUtils.GraphemePosition,
         readonly kind: UnterminatedMultilineTokenKind,
     ) {
-        super(Localization.error_lex_unterminatedMultilineToken(templates, kind));
+        super(
+            Localization.error_lex_unterminatedMultilineToken(LocalizationUtils.getLocalizationTemplates(locale), kind),
+        );
         Object.setPrototypeOf(this, UnterminatedMultilineTokenError.prototype);
     }
 }

@@ -5,7 +5,6 @@ import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError, ICancellationToken } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { LocalizationUtils } from "../../localization";
 import { SequenceKind } from "../error";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
@@ -33,7 +32,7 @@ export function stateFactory(
     return {
         maybeCancellationToken,
         lexerSnapshot,
-        localizationTemplates: LocalizationUtils.getLocalizationTemplates(locale),
+        locale,
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind: maybeCurrentToken?.kind,
@@ -292,7 +291,7 @@ export function testCsvContinuationLetExpression(
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === Token.TokenKind.KeywordIn) {
         return new ParseError.ExpectedCsvContinuationError(
-            state.localizationTemplates,
+            state.locale,
             ParseError.CsvContinuationKind.LetExpression,
             maybeCurrentTokenWithColumnNumber(state),
         );
@@ -307,7 +306,7 @@ export function testCsvContinuationDanglingComma(
 ): ParseError.ExpectedCsvContinuationError | undefined {
     if (state.maybeCurrentTokenKind === tokenKind) {
         return new ParseError.ExpectedCsvContinuationError(
-            state.localizationTemplates,
+            state.locale,
             ParseError.CsvContinuationKind.DanglingComma,
             maybeCurrentTokenWithColumnNumber(state),
         );
@@ -326,7 +325,7 @@ export function testIsOnTokenKind(
 ): ParseError.ExpectedTokenKindError | undefined {
     if (expectedTokenKind !== state.maybeCurrentTokenKind) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
-        return new ParseError.ExpectedTokenKindError(state.localizationTemplates, expectedTokenKind, maybeToken);
+        return new ParseError.ExpectedTokenKindError(state.locale, expectedTokenKind, maybeToken);
     } else {
         return undefined;
     }
@@ -341,7 +340,7 @@ export function testIsOnAnyTokenKind(
 
     if (isError) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);
-        return new ParseError.ExpectedAnyTokenKindError(state.localizationTemplates, expectedAnyTokenKinds, maybeToken);
+        return new ParseError.ExpectedAnyTokenKindError(state.locale, expectedAnyTokenKinds, maybeToken);
     } else {
         return undefined;
     }
@@ -354,7 +353,7 @@ export function assertNoMoreTokens(state: IParserState): void {
 
     const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
     throw new ParseError.UnusedTokensRemainError(
-        state.localizationTemplates,
+        state.locale,
         token,
         state.lexerSnapshot.graphemePositionStartFrom(token),
     );
@@ -381,7 +380,7 @@ export function unterminatedParenthesesError(state: IParserState): ParseError.Un
 function unterminatedSequence(state: IParserState, sequenceKind: SequenceKind): ParseError.UnterminatedSequence {
     const token: Token.Token = assertGetTokenAt(state, state.tokenIndex);
     return new ParseError.UnterminatedSequence(
-        state.localizationTemplates,
+        state.locale,
         sequenceKind,
         token,
         state.lexerSnapshot.graphemePositionStartFrom(token),

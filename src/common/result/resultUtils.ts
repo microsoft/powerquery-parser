@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "..";
-import { Templates } from "../../localization";
 import { Err, Ok, Result, ResultKind } from "./result";
 
 export function okFactory<T>(value: T): Ok<T> {
@@ -27,13 +26,10 @@ export function isErr<T, E>(result: Result<T, E>): result is Err<E> {
     return result.kind === ResultKind.Err;
 }
 
-export function ensureResult<T>(
-    templates: Templates.ILocalizationTemplates,
-    callbackFn: () => T,
-): Result<T, CommonError.CommonError> {
+export function ensureResult<T>(locale: string, callbackFn: () => T): Result<T, CommonError.CommonError> {
     try {
         return okFactory(callbackFn());
     } catch (err) {
-        return errFactory(CommonError.ensureCommonError(templates, err));
+        return errFactory(CommonError.ensureCommonError(locale, err));
     }
 }

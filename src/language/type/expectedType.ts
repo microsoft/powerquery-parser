@@ -5,7 +5,6 @@ import { Type } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
 import { Ast } from "../../language";
-import { LocalizationUtils } from "../../localization";
 import { TXorNode, XorNodeKind } from "../../parser";
 import { CommonSettings } from "../../settings";
 
@@ -16,9 +15,7 @@ export function tryExpectedType(settings: CommonSettings, maybeActiveNode: TMayb
         return ResultUtils.okFactory(undefined);
     }
 
-    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
-        maybeExpectedType(maybeActiveNode),
-    );
+    return ResultUtils.ensureResult(settings.locale, () => maybeExpectedType(maybeActiveNode));
 }
 
 // Traverse up the ancestry and find what type is expected as the nth child of a node's kind.

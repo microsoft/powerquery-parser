@@ -3,7 +3,6 @@
 
 import { Assert, CommonError, Result } from ".";
 import { Ast } from "../language";
-import { Templates } from "../localization";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind, XorNodeUtils } from "../parser";
 import { ResultUtils } from "./result";
 
@@ -39,7 +38,7 @@ export const enum VisitNodeStrategy {
 }
 
 export interface IState<T> {
-    readonly localizationTemplates: Templates.ILocalizationTemplates;
+    readonly locale: string;
     result: T;
 }
 
@@ -94,7 +93,7 @@ export function tryTraverse<State extends IState<ResultType>, ResultType, Node, 
     expandNodesFn: TExpandNodesFn<State, ResultType, Node, NodesById>,
     maybeEarlyExitFn: TEarlyExitFn<State, ResultType, Node> | undefined,
 ): TriedTraverse<ResultType> {
-    return ResultUtils.ensureResult(state.localizationTemplates, () => {
+    return ResultUtils.ensureResult(state.locale, () => {
         traverseRecursion<State, ResultType, Node, NodesById>(
             state,
             nodesById,

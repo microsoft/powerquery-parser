@@ -23,7 +23,7 @@ export function tryAutocompleteLanguageConstant<S extends IParserState = IParser
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteLanguageConstant {
-    return ResultUtils.ensureResult(parserState.localizationTemplates, () => {
+    return ResultUtils.ensureResult(parseSettings.locale, () => {
         return autocompleteLanguageConstant(parseSettings, parserState, maybeActiveNode, maybeParseError);
     });
 }
