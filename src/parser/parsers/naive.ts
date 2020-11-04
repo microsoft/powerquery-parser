@@ -86,7 +86,7 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
 
     if (tokenRangeStartIndex === tokenRangeEndIndex) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
-            state.localizationTemplates,
+            state.locale,
             IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
         );
     }
@@ -103,7 +103,7 @@ export function readGeneralizedIdentifier<S extends IParserState = IParserState>
         !StringUtils.isQuotedIdentifier(literal)
     ) {
         throw new ParseError.ExpectedGeneralizedIdentifierError(
-            state.localizationTemplates,
+            state.locale,
             IParserStateUtils.maybeTokenWithColumnNumber(state, state.tokenIndex + 1),
         );
     }
@@ -1915,7 +1915,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
                 IParserStateUtils.applyFastStateBackup(state, stateBackup);
                 return ResultUtils.errFactory(
                     new ParseError.InvalidPrimitiveTypeError(
-                        state.localizationTemplates,
+                        state.locale,
                         token,
                         state.lexerSnapshot.graphemePositionStartFrom(token),
                     ),
@@ -2399,7 +2399,7 @@ function genericReadParameterList<S extends IParserState, T extends Ast.TParamet
         if (reachedOptionalParameter && !maybeOptionalConstant) {
             const token: Token.Token = IParserStateUtils.assertGetTokenAt(state, state.tokenIndex);
             throw new ParseError.RequiredParameterAfterOptionalParameterError(
-                state.localizationTemplates,
+                state.locale,
                 token,
                 state.lexerSnapshot.graphemePositionStartFrom(token),
             );

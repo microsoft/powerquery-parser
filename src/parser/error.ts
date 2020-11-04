@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, StringUtils } from "../common";
 import { Token } from "../language";
-import { Localization, Templates } from "../localization";
+import { Localization, LocalizationUtils } from "../localization";
 import { IParserState } from "./IParserState";
 
 export type TParseError<S extends IParserState = IParserState> = CommonError.CommonError | ParseError<S>;
@@ -37,88 +37,100 @@ export class ParseError<S extends IParserState = IParserState> extends Error {
 
 export class ExpectedCsvContinuationError extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly kind: CsvContinuationKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
-        super(Localization.error_parse_csvContinuation(templates, kind));
+        super(Localization.error_parse_csvContinuation(LocalizationUtils.getLocalizationTemplates(locale), kind));
         Object.setPrototypeOf(this, ExpectedCsvContinuationError.prototype);
     }
 }
 
 export class ExpectedAnyTokenKindError extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
-        super(Localization.error_parse_expectAnyTokenKind(templates, expectedAnyTokenKinds, maybeFoundToken));
+        super(
+            Localization.error_parse_expectAnyTokenKind(
+                LocalizationUtils.getLocalizationTemplates(locale),
+                expectedAnyTokenKinds,
+                maybeFoundToken,
+            ),
+        );
         Object.setPrototypeOf(this, ExpectedAnyTokenKindError.prototype);
     }
 }
 
 export class ExpectedTokenKindError extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly expectedTokenKind: Token.TokenKind,
         readonly maybeFoundToken: TokenWithColumnNumber | undefined,
     ) {
-        super(Localization.error_parse_expectTokenKind(templates, expectedTokenKind, maybeFoundToken));
+        super(
+            Localization.error_parse_expectTokenKind(
+                LocalizationUtils.getLocalizationTemplates(locale),
+                expectedTokenKind,
+                maybeFoundToken,
+            ),
+        );
         Object.setPrototypeOf(this, ExpectedTokenKindError.prototype);
     }
 }
 
 export class ExpectedGeneralizedIdentifierError extends Error {
-    constructor(
-        templates: Templates.ILocalizationTemplates,
-        readonly maybeFoundToken: TokenWithColumnNumber | undefined,
-    ) {
-        super(Localization.error_parse_expectGeneralizedIdentifier(templates, maybeFoundToken));
+    constructor(locale: string, readonly maybeFoundToken: TokenWithColumnNumber | undefined) {
+        super(
+            Localization.error_parse_expectGeneralizedIdentifier(
+                LocalizationUtils.getLocalizationTemplates(locale),
+                maybeFoundToken,
+            ),
+        );
         Object.setPrototypeOf(this, ExpectedGeneralizedIdentifierError.prototype);
     }
 }
 
 export class InvalidPrimitiveTypeError extends Error {
-    constructor(
-        templates: Templates.ILocalizationTemplates,
-        readonly token: Token.Token,
-        readonly positionStart: StringUtils.GraphemePosition,
-    ) {
-        super(Localization.error_parse_invalidPrimitiveType(templates, token));
+    constructor(locale: string, readonly token: Token.Token, readonly positionStart: StringUtils.GraphemePosition) {
+        super(Localization.error_parse_invalidPrimitiveType(LocalizationUtils.getLocalizationTemplates(locale), token));
         Object.setPrototypeOf(this, InvalidPrimitiveTypeError.prototype);
     }
 }
 
 export class RequiredParameterAfterOptionalParameterError extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly missingOptionalToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
-        super(Localization.error_parse_requiredParameterAfterOptional(templates));
+        super(
+            Localization.error_parse_requiredParameterAfterOptional(LocalizationUtils.getLocalizationTemplates(locale)),
+        );
         Object.setPrototypeOf(this, RequiredParameterAfterOptionalParameterError.prototype);
     }
 }
 
 export class UnterminatedSequence extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly kind: SequenceKind,
         readonly startToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
-        super(Localization.error_parse_unterminated_sequence(templates, kind));
+        super(Localization.error_parse_unterminated_sequence(LocalizationUtils.getLocalizationTemplates(locale), kind));
         Object.setPrototypeOf(this, UnterminatedSequence.prototype);
     }
 }
 
 export class UnusedTokensRemainError extends Error {
     constructor(
-        templates: Templates.ILocalizationTemplates,
+        locale: string,
         readonly firstUnusedToken: Token.Token,
         readonly positionStart: StringUtils.GraphemePosition,
     ) {
-        super(Localization.error_parse_unusedTokens(templates));
+        super(Localization.error_parse_unusedTokens(LocalizationUtils.getLocalizationTemplates(locale)));
         Object.setPrototypeOf(this, UnusedTokensRemainError.prototype);
     }
 }
