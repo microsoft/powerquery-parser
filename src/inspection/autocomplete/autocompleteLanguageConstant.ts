@@ -3,7 +3,6 @@
 
 import { Assert, CommonError, ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
-import { LocalizationUtils } from "../../localization";
 import {
     AncestryUtils,
     IParserState,
@@ -24,7 +23,7 @@ export function tryAutocompleteLanguageConstant<S extends IParserState = IParser
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteLanguageConstant {
-    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(parseSettings.locale), () => {
+    return ResultUtils.ensureResult(parseSettings.locale, () => {
         return autocompleteLanguageConstant(parseSettings, parserState, maybeActiveNode, maybeParseError);
     });
 }

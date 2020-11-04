@@ -3,7 +3,6 @@
 
 import { ArrayUtils, ResultUtils } from "../../../common";
 import { Ast, Keyword, Token } from "../../../language";
-import { LocalizationUtils } from "../../../localization";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";
@@ -29,7 +28,7 @@ export function tryAutocompleteKeyword(
         return ResultUtils.okFactory([...ExpressionAutocomplete, Keyword.KeywordKind.Section]);
     }
 
-    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () => {
+    return ResultUtils.ensureResult(settings.locale, () => {
         return autocompleteKeyword(nodeIdMapCollection, leafNodeIds, maybeActiveNode, maybeTrailingToken);
     });
 }

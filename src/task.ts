@@ -7,7 +7,6 @@ import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
 import { LexError, LexerSnapshot } from "./lexer";
-import { LocalizationUtils } from "./localization";
 import {
     IParserState,
     IParserUtils,
@@ -50,12 +49,7 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return ResultUtils.errFactory(
-            new LexError.LexError(
-                new LexError.ErrorLineMapError(
-                    LocalizationUtils.getLocalizationTemplates(settings.locale),
-                    errorLineMap,
-                ),
-            ),
+            new LexError.LexError(new LexError.ErrorLineMapError(settings.locale, errorLineMap)),
         );
     }
 

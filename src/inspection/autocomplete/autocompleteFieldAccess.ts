@@ -4,7 +4,6 @@
 import { Assert, CommonError, ResultUtils } from "../../common";
 import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { LocalizationUtils } from "../../localization";
 import {
     IParser,
     IParserState,
@@ -40,7 +39,7 @@ export function tryAutocompleteFieldAccess<S extends IParserState = IParserState
         return ResultUtils.okFactory(undefined);
     }
 
-    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(parseSettings.locale), () => {
+    return ResultUtils.ensureResult(parseSettings.locale, () => {
         return autocompleteFieldAccess(parseSettings, parserState, maybeActiveNode, typeCache, maybeParseError);
     });
 }

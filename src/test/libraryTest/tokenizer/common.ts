@@ -3,7 +3,7 @@
 
 import { Assert, Lexer } from "../../../";
 import { Token } from "../../../language";
-import { Templates } from "../../../localization";
+import { DefaultLocale } from "../../../localization";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}
@@ -29,7 +29,7 @@ export class Tokenizer implements TokensProvider {
     public getInitialState(): IState {
         const lexerState: Lexer.State = {
             lines: [],
-            localizationTemplates: Templates.DefaultTemplates,
+            locale: DefaultLocale,
             maybeCancellationToken: undefined,
         };
         return new TokenizerState(lexerState);

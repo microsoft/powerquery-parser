@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert } from ".";
-import { Localization, Templates } from "../localization";
+import { Localization, LocalizationUtils, Templates } from "../localization";
 import { ICancellationToken } from "./cancellationToken/ICancellationToken";
 
 export type TInnerCommonError = CancellationError | InvariantError | UnknownError;
@@ -29,8 +29,8 @@ export class InvariantError extends Error {
 }
 
 export class UnknownError extends Error {
-    constructor(templates: Templates.ILocalizationTemplates, readonly innerError: any) {
-        super(Localization.error_common_unknown(templates, innerError));
+    constructor(locale: string, readonly innerError: any) {
+        super(Localization.error_common_unknown(LocalizationUtils.getLocalizationTemplates(locale), innerError));
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
 }
@@ -48,12 +48,12 @@ export function isTInnerCommonError(x: any): x is TInnerCommonError {
     return x instanceof CancellationError || x instanceof InvariantError || x instanceof UnknownError;
 }
 
-export function ensureCommonError(templates: Templates.ILocalizationTemplates, err: Error): CommonError {
+export function ensureCommonError(locale: string, err: Error): CommonError {
     if (err instanceof CommonError) {
         return err;
     } else if (isTInnerCommonError(err)) {
         return new CommonError(err);
     } else {
-        return new CommonError(new UnknownError(templates, err));
+        return new CommonError(new UnknownError(locale, err));
     }
 }

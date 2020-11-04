@@ -5,7 +5,6 @@ import { LexError } from ".";
 import { Lexer } from "..";
 import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
-import { Templates } from "../localization";
 
 // The lexer is a multiline aware lexer.
 // That in part means multiline tokens are split up into <begin>, <content>, and <end> components.
@@ -70,7 +69,7 @@ export function trySnapshot(state: Lexer.State): TriedLexerSnapshot {
         if (LexError.isTInnerLexError(e)) {
             error = new LexError.LexError(e);
         } else {
-            error = CommonError.ensureCommonError(state.localizationTemplates, e);
+            error = CommonError.ensureCommonError(state.locale, e);
         }
         return ResultUtils.errFactory(error);
     }
@@ -85,7 +84,6 @@ function snapshotFactory(state: Lexer.State): LexerSnapshot {
     const numFlatTokens: number = flatTokens.length;
     const text: string = flattenedLines.text;
     const maybeCancellationToken: ICancellationToken | undefined = state.maybeCancellationToken;
-    const localizationTemplates: Templates.ILocalizationTemplates = state.localizationTemplates;
 
     let flatIndex: number = 0;
     while (flatIndex < numFlatTokens) {
@@ -104,7 +102,7 @@ function snapshotFactory(state: Lexer.State): LexerSnapshot {
             case Token.LineTokenKind.MultilineCommentStart: {
                 const concatenatedTokenRead: ConcatenatedCommentRead = readMultilineComment(
                     maybeCancellationToken,
-                    localizationTemplates,
+                    state.locale,
                     flattenedLines,
                     flatToken,
                 );
@@ -116,7 +114,7 @@ function snapshotFactory(state: Lexer.State): LexerSnapshot {
             case Token.LineTokenKind.QuotedIdentifierStart: {
                 const concatenatedTokenRead: ConcatenatedTokenRead = readQuotedIdentifier(
                     maybeCancellationToken,
-                    localizationTemplates,
+                    state.locale,
                     flattenedLines,
                     flatToken,
                 );
@@ -128,7 +126,7 @@ function snapshotFactory(state: Lexer.State): LexerSnapshot {
             case Token.LineTokenKind.TextLiteralStart: {
                 const concatenatedTokenRead: ConcatenatedTokenRead = readTextLiteral(
                     maybeCancellationToken,
-                    localizationTemplates,
+                    state.locale,
                     flattenedLines,
                     flatToken,
                 );
@@ -183,7 +181,7 @@ function readSingleLineMultilineComment(flatToken: FlatLineToken): Comment.Multi
 
 function readMultilineComment(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: Templates.ILocalizationTemplates,
+    locale: string,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedCommentRead {
@@ -196,7 +194,7 @@ function readMultilineComment(
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
-            localizationTemplates,
+            locale,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.MultilineComment,
         );
@@ -224,7 +222,7 @@ function readMultilineComment(
 
 function readQuotedIdentifier(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: Templates.ILocalizationTemplates,
+    locale: string,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {
@@ -237,7 +235,7 @@ function readQuotedIdentifier(
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
-            localizationTemplates,
+            locale,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.QuotedIdentifier,
         );
@@ -264,7 +262,7 @@ function readQuotedIdentifier(
 
 function readTextLiteral(
     maybeCancellationToken: ICancellationToken | undefined,
-    localizationTemplates: Templates.ILocalizationTemplates,
+    locale: string,
     flattenedLines: FlattenedLines,
     tokenStart: FlatLineToken,
 ): ConcatenatedTokenRead {
@@ -277,7 +275,7 @@ function readTextLiteral(
     const maybeTokenEnd: FlatLineToken | undefined = collection.maybeTokenEnd;
     if (!maybeTokenEnd) {
         throw new LexError.UnterminatedMultilineTokenError(
-            localizationTemplates,
+            locale,
             LexerSnapshot.graphemePositionStartFrom(flattenedLines.text, flattenedLines.lineTerminators, tokenStart),
             LexError.UnterminatedMultilineTokenKind.Text,
         );

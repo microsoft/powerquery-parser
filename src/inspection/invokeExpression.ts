@@ -3,7 +3,6 @@
 
 import { Assert, CommonError, Result, ResultUtils } from "../common";
 import { Ast } from "../language";
-import { LocalizationUtils } from "../localization";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -39,7 +38,7 @@ export function tryInvokeExpression(
         return ResultUtils.okFactory(undefined);
     }
 
-    return ResultUtils.ensureResult(LocalizationUtils.getLocalizationTemplates(settings.locale), () =>
+    return ResultUtils.ensureResult(settings.locale, () =>
         inspectInvokeExpression(nodeIdMapCollection, maybeActiveNode),
     );
 }

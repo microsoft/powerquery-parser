@@ -6,7 +6,7 @@ import "mocha";
 import { Task } from "../../..";
 import { Assert, Traverse } from "../../../common";
 import { Ast, Constant } from "../../../language";
-import { Templates } from "../../../localization";
+import { DefaultLocale } from "../../../localization";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
@@ -24,7 +24,7 @@ interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
 function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: CollectAbridgeNodeState = {
-        localizationTemplates: Templates.DefaultTemplates,
+        locale: DefaultLocale,
         result: [],
     };
 
@@ -48,7 +48,7 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
 function assertGetNthNodeOfKind<N extends Ast.TNode>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N {
     const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
-        localizationTemplates: Templates.DefaultTemplates,
+        locale: DefaultLocale,
         result: undefined,
         nodeKind,
         nthCounter: 0,
