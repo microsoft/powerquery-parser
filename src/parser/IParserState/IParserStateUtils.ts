@@ -5,7 +5,6 @@ import { NodeIdMap, ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError, ICancellationToken } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { LocalizationUtils } from "../../localization";
 import { SequenceKind } from "../error";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { IParserState } from "./IParserState";
