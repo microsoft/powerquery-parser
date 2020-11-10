@@ -144,12 +144,11 @@ function parseFunctionExpression<S extends IParserState = IParserState>(
     parseSettings: ParseSettings<S>,
     parserState: S,
 ): AdditionalParse<S> {
-    const newState: S = parseSettings.parserStateFactory(
-        parseSettings.maybeCancellationToken,
-        parserState.lexerSnapshot,
-        parserState.tokenIndex,
-        parseSettings.locale,
-    );
+    const newState: S = parseSettings.parserStateFactory(parserState.lexerSnapshot, {
+        maybeCancellationToken: parserState.maybeCancellationToken,
+        locale: parseSettings.locale,
+        tokenIndex: parserState.tokenIndex,
+    });
 
     try {
         return {

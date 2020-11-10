@@ -288,7 +288,9 @@ export function benchmarkStateFactory<S extends IParserState = IParserState>(
     baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(parseSettings.maybeCancellationToken, lexerSnapshot, 0, parseSettings.locale),
+        ...IParserStateUtils.stateFactory(lexerSnapshot, {
+            maybeCancellationToken: parseSettings.maybeCancellationToken,
+        }),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,

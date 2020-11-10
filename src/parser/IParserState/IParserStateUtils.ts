@@ -2,31 +2,45 @@
 // Licensed under the MIT license.
 
 import { ParseContext, ParseContextUtils, ParseError } from "..";
-import { Assert, CommonError, ICancellationToken } from "../../common";
+import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
+import { DefaultLocale } from "../../localization";
 import { SequenceKind } from "../error";
 import { IParserState } from "./IParserState";
 
 // If you have a custom parser + parser state, then you'll have to create your own factory function.
 // See `benchmark.ts` for an example.
 export function stateFactory(
-    maybeCancellationToken: ICancellationToken | undefined,
     lexerSnapshot: LexerSnapshot,
-    tokenIndex: number,
-    locale: string,
+    overrides:
+        | Partial<Omit<IParserState, "maybeCurrentToken" | "maybeCurrentTokenKind" | "maybeCurrentContextNode">>
+        | undefined,
 ): IParserState {
+    const tokenIndex: number = overrides?.tokenIndex ?? 0;
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
+    const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;
+    const contextState: ParseContext.State = overrides?.contextState ?? ParseContextUtils.stateFactory();
+
+    const maybeCurrentContextNodeId: number | undefined =
+        contextState.nodeIdMapCollection.contextNodeById.size > 0
+            ? Math.max(...contextState.nodeIdMapCollection.contextNodeById.keys())
+            : undefined;
+
+    const maybeCurrentContextNode: ParseContext.Node | undefined =
+        maybeCurrentContextNodeId !== undefined
+            ? MapUtils.assertGet(contextState.nodeIdMapCollection.contextNodeById, maybeCurrentContextNodeId)
+            : undefined;
 
     return {
-        maybeCancellationToken,
         lexerSnapshot,
-        locale,
+        maybeCancellationToken: overrides?.maybeCancellationToken,
+        locale: overrides?.locale ?? DefaultLocale,
         tokenIndex,
         maybeCurrentToken,
-        maybeCurrentTokenKind: maybeCurrentToken?.kind,
-        contextState: ParseContextUtils.stateFactory(),
-        maybeCurrentContextNode: undefined,
+        maybeCurrentTokenKind,
+        contextState: overrides?.contextState ?? ParseContextUtils.stateFactory(),
+        maybeCurrentContextNode,
     };
 }
 

@@ -6,9 +6,13 @@ import { ICancellationToken } from "../../common";
 import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 
+export type TParserStateOverrides = Partial<
+    Omit<IParserState, "lexerSnapshot" | "maybeCurrentToken" | "maybeCurrentTokenKind" | "maybeCurrentContextNode">
+>;
+
 export interface IParserState {
-    readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly lexerSnapshot: LexerSnapshot;
+    readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly locale: string;
     tokenIndex: number;
     maybeCurrentToken: Token.Token | undefined;
