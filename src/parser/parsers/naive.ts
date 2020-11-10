@@ -190,7 +190,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
             let triedError: Error;
             if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                parser.restoreCheckpoint(state, expressionCheckpoint);
+                parser.restoreFromCheckpoint(state, expressionCheckpoint);
                 state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;
@@ -1657,7 +1657,7 @@ function tryReadPrimaryType<S extends IParserState = IParserState>(state: S, par
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
         if (ResultUtils.isErr(triedReadPrimitiveType)) {
-            parser.restoreCheckpoint(state, checkpoint);
+            parser.restoreFromCheckpoint(state, checkpoint);
         }
         return triedReadPrimitiveType;
     }
@@ -1912,7 +1912,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
 
             default:
                 const token: Token.Token = IParserStateUtils.assertGetTokenAt(state, state.tokenIndex);
-                parser.restoreCheckpoint(state, checkpoint);
+                parser.restoreFromCheckpoint(state, checkpoint);
                 return ResultUtils.errFactory(
                     new ParseError.InvalidPrimitiveTypeError(
                         state.locale,
@@ -1929,7 +1929,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
         readToken(state);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
-        parser.restoreCheckpoint(state, checkpoint);
+        parser.restoreFromCheckpoint(state, checkpoint);
         return ResultUtils.errFactory(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );
@@ -1980,7 +1980,7 @@ export function disambiguateParenthesis<S extends IParserState = IParserState>(
                 try {
                     parser.readNullablePrimitiveType(state, parser);
                 } catch {
-                    parser.restoreCheckpoint(state, checkpoint);
+                    parser.restoreFromCheckpoint(state, checkpoint);
                     if (IParserStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                         return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
                     } else {
@@ -1995,7 +1995,7 @@ export function disambiguateParenthesis<S extends IParserState = IParserState>(
                     disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
                 }
 
-                parser.restoreCheckpoint(state, checkpoint);
+                parser.restoreFromCheckpoint(state, checkpoint);
                 return ResultUtils.okFactory(disambiguation);
             } else {
                 if (IParserStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {

@@ -38,7 +38,7 @@ export interface IParser<
     C extends IParserStateCheckpoint = IParserStateCheckpoint
 > {
     readonly createCheckpoint: (state: S) => C;
-    readonly restoreCheckpoint: (state: S, checkpoint: C) => void;
+    readonly restoreFromCheckpoint: (state: S, checkpoint: C) => void;
 
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: S, parser: IParser<S>) => Ast.Identifier;

@@ -32,7 +32,7 @@ export interface FunctionTimestamp {
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
     createCheckpoint: (state: IParserState) => IParserUtils.stateCheckpointFactory(state),
-    restoreCheckpoint: (state: IParserState, checkpoint: IParserStateCheckpoint) =>
+    restoreFromCheckpoint: (state: IParserState, checkpoint: IParserStateCheckpoint) =>
         IParserUtils.restoreStateCheckpoint(state, checkpoint),
 
     // 12.1.6 Identifiers

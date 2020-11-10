@@ -24,7 +24,7 @@ import { IParserState, IParserStateUtils } from "../IParserState";
 export const CombinatorialParser: IParser<IParserState> = {
     ...NaiveParseSteps,
     createCheckpoint: (state: IParserState) => IParserUtils.stateCheckpointFactory(state),
-    restoreCheckpoint: (state: IParserState, checkpoint: IParserStateCheckpoint) =>
+    restoreFromCheckpoint: (state: IParserState, checkpoint: IParserStateCheckpoint) =>
         IParserUtils.restoreStateCheckpoint(state, checkpoint),
 
     // 12.2.3.2 Logical expressions
