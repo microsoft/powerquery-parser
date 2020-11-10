@@ -52,11 +52,11 @@ writeReport(ResourceDirectory, allSummaries);
 
 function benchmarkStateFactory(
     lexerSnapshot: LexerSnapshot,
-    overrides: TParserStateOverrides | undefined,
+    maybeOverrides: TParserStateOverrides | undefined,
     baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(lexerSnapshot, overrides),
+        ...IParserStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
