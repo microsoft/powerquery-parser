@@ -2,11 +2,70 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { Result, ResultUtils } from "../../common";
-import { Token } from "../../language";
-import { BracketDisambiguation, IParser, IParserStateCheckpoint } from "../IParser";
+import { ArrayUtils, Assert, Result, ResultUtils } from "../../common";
+import { Ast, Token } from "../../language";
+import { IParser, IParserStateCheckpoint } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
-import { ParenthesisDisambiguation } from "./disambiguation";
+import { BracketDisambiguation, ParenthesisDisambiguation } from "./disambiguation";
+
+export function readAmbiguousBracket<S extends IParserState = IParserState>(
+    state: S,
+    parser: IParser<S>,
+    allowedVariants: ReadonlyArray<BracketDisambiguation>,
+): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
+    state.maybeCancellationToken?.throwIfCancelled();
+
+    const triedDisambiguation: Result<BracketDisambiguation, ParseError.UnterminatedSequence> = tryDisambiguateBracket(
+        state,
+        parser,
+    );
+    if (ResultUtils.isErr(triedDisambiguation)) {
+        throw triedDisambiguation.error;
+    }
+    const disambiguation: BracketDisambiguation = triedDisambiguation.value;
+    ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
+
+    switch (disambiguation) {
+        case BracketDisambiguation.FieldProjection:
+            return parser.readFieldProjection(state, parser);
+
+        case BracketDisambiguation.FieldSelection:
+            return parser.readFieldSelection(state, parser);
+
+        case BracketDisambiguation.Record:
+            return parser.readRecordExpression(state, parser);
+
+        default:
+            throw Assert.isNever(disambiguation);
+    }
+}
+
+export function readAmbiguousParenthesis<S extends IParserState = IParserState>(
+    state: S,
+    parser: IParser<S>,
+): Ast.FunctionExpression | Ast.TExpression {
+    state.maybeCancellationToken?.throwIfCancelled();
+
+    const triedDisambiguation: Result<
+        ParenthesisDisambiguation,
+        ParseError.UnterminatedSequence
+    > = tryDisambiguateParenthesis(state, parser);
+    if (ResultUtils.isErr(triedDisambiguation)) {
+        throw triedDisambiguation.error;
+    }
+    const disambiguation: ParenthesisDisambiguation = triedDisambiguation.value;
+
+    switch (disambiguation) {
+        case ParenthesisDisambiguation.FunctionExpression:
+            return parser.readFunctionExpression(state, parser);
+
+        case ParenthesisDisambiguation.ParenthesizedExpression:
+            return parser.readNullCoalescingExpression(state, parser);
+
+        default:
+            throw Assert.isNever(disambiguation);
+    }
+}
 
 export function tryDisambiguateParenthesis<S extends IParserState = IParserState>(
     state: S,

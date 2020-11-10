@@ -7,17 +7,6 @@ import { Ast } from "../../language";
 
 export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
-export const enum ParenthesisDisambiguation {
-    FunctionExpression = "FunctionExpression",
-    ParenthesizedExpression = "ParenthesizedExpression",
-}
-
-export const enum BracketDisambiguation {
-    FieldProjection = "FieldProjection",
-    FieldSelection = "FieldSelection",
-    Record = "Record",
-}
-
 export interface IParserStateCheckpoint {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;

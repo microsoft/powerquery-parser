@@ -14,8 +14,8 @@ import {
 } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { DisambiguationUtils } from "../disambiguation";
-import { BracketDisambiguation, IParser, IParserStateCheckpoint, ParenthesisDisambiguation } from "../IParser";
+import { Disambiguation, DisambiguationUtils } from "../disambiguation";
+import { IParser, IParserStateCheckpoint } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapUtils } from "../nodeIdMap";
 
@@ -360,25 +360,7 @@ export function readExpression<S extends IParserState = IParserState>(state: S, 
             return parser.readErrorHandlingExpression(state, parser);
 
         case Token.TokenKind.LeftParenthesis:
-            const triedDisambiguation: Result<
-                ParenthesisDisambiguation,
-                ParseError.UnterminatedSequence
-            > = DisambiguationUtils.tryDisambiguateParenthesis(state, parser);
-            if (ResultUtils.isErr(triedDisambiguation)) {
-                throw triedDisambiguation.error;
-            }
-            const disambiguation: ParenthesisDisambiguation = triedDisambiguation.value;
-
-            switch (disambiguation) {
-                case ParenthesisDisambiguation.FunctionExpression:
-                    return parser.readFunctionExpression(state, parser);
-
-                case ParenthesisDisambiguation.ParenthesizedExpression:
-                    return parser.readNullCoalescingExpression(state, parser);
-
-                default:
-                    throw Assert.isNever(disambiguation);
-            }
+            return DisambiguationUtils.readAmbiguousParenthesis(state, parser);
 
         default:
             return parser.readNullCoalescingExpression(state, parser);
@@ -673,10 +655,10 @@ export function readPrimaryExpression<S extends IParserState = IParserState>(
                 break;
 
             case Token.TokenKind.LeftBracket:
-                primaryExpression = readBracketDisambiguation(state, parser, [
-                    BracketDisambiguation.FieldProjection,
-                    BracketDisambiguation.FieldSelection,
-                    BracketDisambiguation.Record,
+                primaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
+                    Disambiguation.BracketDisambiguation.FieldProjection,
+                    Disambiguation.BracketDisambiguation.FieldSelection,
+                    Disambiguation.BracketDisambiguation.Record,
                 ]);
                 break;
 
@@ -780,10 +762,14 @@ export function readRecursivePrimaryExpression<S extends IParserState = IParserS
         } else if (maybeCurrentTokenKind === Token.TokenKind.LeftBrace) {
             recursiveExpressions.push(parser.readItemAccessExpression(state, parser));
         } else if (maybeCurrentTokenKind === Token.TokenKind.LeftBracket) {
-            const bracketExpression: Ast.TFieldAccessExpression = readBracketDisambiguation(state, parser, [
-                BracketDisambiguation.FieldProjection,
-                BracketDisambiguation.FieldSelection,
-            ]) as Ast.TFieldAccessExpression;
+            const bracketExpression: Ast.TFieldAccessExpression = DisambiguationUtils.readAmbiguousBracket(
+                state,
+                parser,
+                [
+                    Disambiguation.BracketDisambiguation.FieldProjection,
+                    Disambiguation.BracketDisambiguation.FieldSelection,
+                ],
+            ) as Ast.TFieldAccessExpression;
             recursiveExpressions.push(bracketExpression);
         } else {
             continueReadingValues = false;
@@ -2533,42 +2519,6 @@ function maybeReadLiteralAttributes<S extends IParserState = IParserState>(
     } else {
         IParserStateUtils.incrementAttributeCounter(state);
         return undefined;
-    }
-}
-
-// -------------------------------------------------------
-// ---------- Helper functions (disambiguation) ----------
-// -------------------------------------------------------
-
-export function readBracketDisambiguation<S extends IParserState = IParserState>(
-    state: S,
-    parser: IParser<S>,
-    allowedVariants: ReadonlyArray<BracketDisambiguation>,
-): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
-    state.maybeCancellationToken?.throwIfCancelled();
-
-    const triedDisambiguation: Result<
-        BracketDisambiguation,
-        ParseError.UnterminatedSequence
-    > = parser.disambiguateBracket(state, parser);
-    if (ResultUtils.isErr(triedDisambiguation)) {
-        throw triedDisambiguation.error;
-    }
-    const disambiguation: BracketDisambiguation = triedDisambiguation.value;
-    ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
-
-    switch (disambiguation) {
-        case BracketDisambiguation.FieldProjection:
-            return parser.readFieldProjection(state, parser);
-
-        case BracketDisambiguation.FieldSelection:
-            return parser.readFieldSelection(state, parser);
-
-        case BracketDisambiguation.Record:
-            return parser.readRecordExpression(state, parser);
-
-        default:
-            throw Assert.isNever(disambiguation);
     }
 }
 
