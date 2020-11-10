@@ -24,6 +24,7 @@ export function tryParse<S extends IParserState = IParserState>(
 
     const parseState: S = parseSettings.parserStateFactory(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
+        locale: parseSettings.locale,
     });
     try {
         const root: Ast.TNode = maybeEntryPointFn(parseState, parseSettings.parser);
