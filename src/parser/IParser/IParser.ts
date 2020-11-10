@@ -7,17 +7,6 @@ import { Ast } from "../../language";
 
 export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
-export const enum ParenthesisDisambiguation {
-    FunctionExpression = "FunctionExpression",
-    ParenthesizedExpression = "ParenthesizedExpression",
-}
-
-export const enum BracketDisambiguation {
-    FieldProjection = "FieldProjection",
-    FieldSelection = "FieldSelection",
-    Record = "Record",
-}
-
 export interface IParserStateCheckpoint {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;
@@ -171,16 +160,6 @@ export interface IParser<
     readonly readListLiteral: (state: S, parser: IParser<S>) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: S, parser: IParser<S>) => Ast.TAnyLiteral;
     readonly readPrimitiveType: (state: S, parser: IParser<S>) => Ast.PrimitiveType;
-
-    // Disambiguation
-    readonly disambiguateBracket: (
-        state: S,
-        parser: IParser<S>,
-    ) => Result<BracketDisambiguation, ParseError.UnterminatedSequence>;
-    readonly disambiguateParenthesis: (
-        state: S,
-        parser: IParser<S>,
-    ) => Result<ParenthesisDisambiguation, ParseError.UnterminatedSequence>;
 
     readonly readIdentifierPairedExpressions: (
         state: S,

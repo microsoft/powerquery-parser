@@ -244,12 +244,6 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
     readPrimitiveType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readPrimitiveType),
 
-    // Disambiguation
-    disambiguateBracket: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
-        traceFunction(state, parser, state.baseParser.disambiguateBracket),
-    disambiguateParenthesis: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
-        traceFunction(state, parser, state.baseParser.disambiguateParenthesis),
-
     // key-value pairs
     readIdentifierPairedExpressions: (
         state: BenchmarkState,

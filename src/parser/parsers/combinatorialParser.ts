@@ -5,7 +5,8 @@ import { NaiveParseSteps } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
-import { BracketDisambiguation, IParser, IParserStateCheckpoint, IParserUtils } from "../IParser";
+import { Disambiguation, DisambiguationUtils } from "../disambiguation";
+import { IParser, IParserStateCheckpoint, IParserUtils } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
@@ -259,10 +260,10 @@ function readUnaryExpression(state: IParserState, parser: IParser<IParserState>)
             break;
 
         case Token.TokenKind.LeftBracket:
-            maybePrimaryExpression = NaiveParseSteps.readBracketDisambiguation(state, parser, [
-                BracketDisambiguation.FieldProjection,
-                BracketDisambiguation.FieldSelection,
-                BracketDisambiguation.Record,
+            maybePrimaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
+                Disambiguation.BracketDisambiguation.FieldProjection,
+                Disambiguation.BracketDisambiguation.FieldSelection,
+                Disambiguation.BracketDisambiguation.Record,
             ]);
             break;
 
