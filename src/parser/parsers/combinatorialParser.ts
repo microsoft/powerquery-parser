@@ -5,7 +5,7 @@ import { NaiveParseSteps } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
-import { BracketDisambiguation, IParser } from "../IParser";
+import { BracketDisambiguation, IParser, IParserStateCheckpoint, IParserUtils } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
@@ -23,6 +23,9 @@ import { IParserState, IParserStateUtils } from "../IParserState";
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export const CombinatorialParser: IParser<IParserState> = {
     ...NaiveParseSteps,
+    createCheckpoint: (state: IParserState) => IParserUtils.stateCheckpointFactory(state),
+    restoreCheckpoint: (state: IParserState, checkpoint: IParserStateCheckpoint) =>
+        IParserUtils.restoreStateCheckpoint(state, checkpoint),
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: IParserState, parser: IParser<IParserState>) =>

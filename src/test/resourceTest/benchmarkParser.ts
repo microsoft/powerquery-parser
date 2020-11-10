@@ -6,7 +6,7 @@ import performanceNow = require("performance-now");
 
 import { Ast, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { IParser } from "../../parser/IParser";
+import { IParser, IParserStateCheckpoint, IParserUtils } from "../../parser/IParser";
 import { IParserState, IParserStateUtils } from "../../parser/IParserState";
 import { ParseSettings } from "../../settings";
 
@@ -31,6 +31,10 @@ export interface FunctionTimestamp {
 }
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
+    createCheckpoint: (state: IParserState) => IParserUtils.stateCheckpointFactory(state),
+    restoreCheckpoint: (state: IParserState, checkpoint: IParserStateCheckpoint) =>
+        IParserUtils.restoreStateCheckpoint(state, checkpoint),
+
     // 12.1.6 Identifiers
     readIdentifier: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIdentifier),

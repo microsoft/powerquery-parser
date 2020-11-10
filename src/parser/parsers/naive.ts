@@ -14,7 +14,7 @@ import {
 } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { BracketDisambiguation, IParser, ParenthesisDisambiguation } from "../IParser";
+import { BracketDisambiguation, IParser, IParserStateCheckpoint, ParenthesisDisambiguation } from "../IParser";
 import { IParserState, IParserStateUtils } from "../IParserState";
 import { NodeIdMapUtils } from "../nodeIdMap";
 
@@ -169,7 +169,7 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
     } catch (expressionError) {
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
-        const expressionErrorStateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
+        const expressionCheckpoint: IParserStateCheckpoint = parser.createCheckpoint(state);
         const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
@@ -188,9 +188,9 @@ export function readDocument<S extends IParserState = IParserState>(state: S, pa
             IParserStateUtils.assertNoOpenContext(state);
         } catch (sectionError) {
             let triedError: Error;
-            if (expressionErrorStateBackup.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
+            if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                IParserStateUtils.applyFastStateBackup(state, expressionErrorStateBackup);
+                parser.restoreCheckpoint(state, expressionCheckpoint);
                 state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;
@@ -1653,11 +1653,11 @@ function tryReadPrimaryType<S extends IParserState = IParserState>(state: S, par
     } else if (IParserStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
         return ResultUtils.okFactory(parser.readNullableType(state, parser));
     } else {
-        const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
+        const checkpoint: IParserStateCheckpoint = parser.createCheckpoint(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
         if (ResultUtils.isErr(triedReadPrimitiveType)) {
-            IParserStateUtils.applyFastStateBackup(state, stateBackup);
+            parser.restoreCheckpoint(state, checkpoint);
         }
         return triedReadPrimitiveType;
     }
@@ -1864,12 +1864,12 @@ export function readPrimitiveType<S extends IParserState = IParserState>(
 
 function tryReadPrimitiveType<S extends IParserState = IParserState>(
     state: S,
-    _parser: IParser<S>,
+    parser: IParser<S>,
 ): TriedReadPrimitiveType {
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
     IParserStateUtils.startContext(state, nodeKind);
 
-    const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
+    const checkpoint: IParserStateCheckpoint = parser.createCheckpoint(state);
     const expectedTokenKinds: ReadonlyArray<Token.TokenKind> = [
         Token.TokenKind.Identifier,
         Token.TokenKind.KeywordType,
@@ -1912,7 +1912,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
 
             default:
                 const token: Token.Token = IParserStateUtils.assertGetTokenAt(state, state.tokenIndex);
-                IParserStateUtils.applyFastStateBackup(state, stateBackup);
+                parser.restoreCheckpoint(state, checkpoint);
                 return ResultUtils.errFactory(
                     new ParseError.InvalidPrimitiveTypeError(
                         state.locale,
@@ -1929,7 +1929,7 @@ function tryReadPrimitiveType<S extends IParserState = IParserState>(
         readToken(state);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
-        IParserStateUtils.applyFastStateBackup(state, stateBackup);
+        parser.restoreCheckpoint(state, checkpoint);
         return ResultUtils.errFactory(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );
@@ -1974,13 +1974,13 @@ export function disambiguateParenthesis<S extends IParserState = IParserState>(
             // '(x as number) as number' could either be either case,
             // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (IParserStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const stateBackup: IParserStateUtils.FastStateBackup = IParserStateUtils.fastStateBackup(state);
+                const checkpoint: IParserStateCheckpoint = parser.createCheckpoint(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
                     parser.readNullablePrimitiveType(state, parser);
                 } catch {
-                    IParserStateUtils.applyFastStateBackup(state, stateBackup);
+                    parser.restoreCheckpoint(state, checkpoint);
                     if (IParserStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                         return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
                     } else {
@@ -1995,7 +1995,7 @@ export function disambiguateParenthesis<S extends IParserState = IParserState>(
                     disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
                 }
 
-                IParserStateUtils.applyFastStateBackup(state, stateBackup);
+                parser.restoreCheckpoint(state, checkpoint);
                 return ResultUtils.okFactory(disambiguation);
             } else {
                 if (IParserStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
