@@ -10,7 +10,7 @@ import {
     IParserState,
     IParserStateUtils,
     ParserOptions,
-    TParserStateOverrides,
+    TParserStateFactoryOverrides,
 } from "../parser";
 
 export interface CommonSettings {
@@ -24,7 +24,10 @@ export interface LexSettings extends CommonSettings {}
 export interface ParseSettings<S extends IParserState = IParserState> extends CommonSettings {
     readonly parser: IParser<S>;
     readonly maybeParserOptions: ParserOptions<S> | undefined;
-    readonly parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateOverrides | undefined) => S;
+    readonly parserStateFactory: (
+        lexerSnapshot: LexerSnapshot,
+        maybeOverrides: TParserStateFactoryOverrides | undefined,
+    ) => S;
 }
 
 export type Settings<S extends IParserState = IParserState> = LexSettings & ParseSettings<S>;
@@ -34,6 +37,6 @@ export const DefaultSettings: Settings<IParserState> = {
     locale: DefaultLocale,
     parser: CombinatorialParser,
     maybeParserOptions: undefined,
-    parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateOverrides | undefined) =>
+    parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateFactoryOverrides | undefined) =>
         IParserStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
 };

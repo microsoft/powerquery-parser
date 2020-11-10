@@ -7,20 +7,18 @@ import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
 import { SequenceKind } from "../error";
-import { IParserState } from "./IParserState";
+import { IParserState, TParserStateFactoryOverrides } from "./IParserState";
 
 // If you have a custom parser + parser state, then you'll have to create your own factory function.
 // See `benchmark.ts` for an example.
 export function stateFactory(
     lexerSnapshot: LexerSnapshot,
-    overrides:
-        | Partial<Omit<IParserState, "maybeCurrentToken" | "maybeCurrentTokenKind" | "maybeCurrentContextNode">>
-        | undefined,
+    maybeOverrides: TParserStateFactoryOverrides | undefined,
 ): IParserState {
-    const tokenIndex: number = overrides?.tokenIndex ?? 0;
+    const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;
-    const contextState: ParseContext.State = overrides?.contextState ?? ParseContextUtils.stateFactory();
+    const contextState: ParseContext.State = maybeOverrides?.contextState ?? ParseContextUtils.stateFactory();
 
     const maybeCurrentContextNodeId: number | undefined =
         contextState.nodeIdMapCollection.contextNodeById.size > 0
@@ -34,12 +32,12 @@ export function stateFactory(
 
     return {
         lexerSnapshot,
-        maybeCancellationToken: overrides?.maybeCancellationToken,
-        locale: overrides?.locale ?? DefaultLocale,
+        maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
+        locale: maybeOverrides?.locale ?? DefaultLocale,
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind,
-        contextState: overrides?.contextState ?? ParseContextUtils.stateFactory(),
+        contextState: maybeOverrides?.contextState ?? ParseContextUtils.stateFactory(),
         maybeCurrentContextNode,
     };
 }

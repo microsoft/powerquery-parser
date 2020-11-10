@@ -15,7 +15,7 @@ import {
     IParserState,
     IParserStateUtils,
     RecursiveDescentParser,
-    TParserStateOverrides,
+    TParserStateFactoryOverrides,
 } from "../../parser";
 import { ParseSettings } from "../../settings";
 import { TestFileUtils } from "../testUtils";
@@ -52,7 +52,7 @@ writeReport(ResourceDirectory, allSummaries);
 
 function benchmarkStateFactory(
     lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TParserStateOverrides | undefined,
+    maybeOverrides: TParserStateFactoryOverrides | undefined,
     baseParser: IParser<IParserState>,
 ): BenchmarkState {
     return {
@@ -67,7 +67,7 @@ function benchmarkParseSettingsFactory(baseParser: IParser<IParserState>): Parse
     return {
         maybeCancellationToken: undefined,
         parser: BenchmarkParser,
-        parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateOverrides | undefined) =>
+        parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateFactoryOverrides | undefined) =>
             benchmarkStateFactory(lexerSnapshot, maybeOverrides, baseParser),
         maybeParserOptions: undefined,
         locale: DefaultLocale,

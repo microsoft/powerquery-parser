@@ -6,7 +6,7 @@ import { ICancellationToken } from "../../common";
 import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 
-export type TParserStateOverrides = Partial<
+export type TParserStateFactoryOverrides = Partial<
     Omit<IParserState, "lexerSnapshot" | "maybeCurrentToken" | "maybeCurrentTokenKind" | "maybeCurrentContextNode">
 >;
 
