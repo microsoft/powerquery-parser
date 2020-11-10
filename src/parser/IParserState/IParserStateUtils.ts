@@ -8,16 +8,6 @@ import { LexerSnapshot } from "../../lexer";
 import { SequenceKind } from "../error";
 import { IParserState } from "./IParserState";
 
-export interface FastStateBackup {
-    readonly tokenIndex: number;
-    readonly contextStateIdCounter: number;
-    readonly maybeContextNodeId: number | undefined;
-}
-
-// ---------------------------
-// ---------- State ----------
-// ---------------------------
-
 // If you have a custom parser + parser state, then you'll have to create your own factory function.
 // See `benchmark.ts` for an example.
 export function stateFactory(
