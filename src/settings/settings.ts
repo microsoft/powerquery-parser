@@ -12,8 +12,7 @@ export interface CommonSettings {
     readonly locale: string;
 }
 
-// tslint:disable-next-line: no-empty-interface
-export interface LexSettings extends CommonSettings {}
+export type LexSettings = CommonSettings;
 
 export interface ParseSettings<S extends IParseState = IParseState> extends CommonSettings {
     readonly parser: IParser<S>;
