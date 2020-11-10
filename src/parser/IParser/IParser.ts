@@ -18,6 +18,12 @@ export const enum BracketDisambiguation {
     Record = "Record",
 }
 
+export interface IParserStateCheckpoint {
+    readonly tokenIndex: number;
+    readonly contextStateIdCounter: number;
+    readonly maybeContextNodeId: number | undefined;
+}
+
 export interface ParseOk<S extends IParserState = IParserState> {
     readonly root: Ast.TNode;
     readonly state: S;
@@ -27,7 +33,13 @@ export interface ParserOptions<S extends IParserState = IParserState> {
     readonly maybeEntryPoint: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
 }
 
-export interface IParser<S extends IParserState = IParserState> {
+export interface IParser<
+    S extends IParserState = IParserState,
+    C extends IParserStateCheckpoint = IParserStateCheckpoint
+> {
+    readonly createCheckpoint: (state: S) => C;
+    readonly restoreFromCheckpoint: (state: S, checkpoint: C) => void;
+
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: S, parser: IParser<S>) => Ast.Identifier;
     readonly readGeneralizedIdentifier: (state: S, parser: IParser<S>) => Ast.GeneralizedIdentifier;
