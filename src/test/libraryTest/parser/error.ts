@@ -64,9 +64,7 @@ describe("Parser.Error", () => {
             const customSettings: Settings = {
                 ...DefaultSettings,
                 parser: RecursiveDescentParser,
-                maybeParserOptions: {
-                    maybeEntryPoint: RecursiveDescentParser.readIdentifier,
-                },
+                maybeParserEntryPointFn: RecursiveDescentParser.readIdentifier,
             };
             const text: string = "a b";
             const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(customSettings, text)
