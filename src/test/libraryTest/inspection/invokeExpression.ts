@@ -7,7 +7,7 @@ import { Inspection } from "../../..";
 import { Assert } from "../../../common";
 import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { IParserState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
+import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -29,7 +29,7 @@ function assertInvokeExpressionOk(
 }
 
 function assertParseOkInvokeExpressionOk(
-    settings: LexSettings & ParseSettings<IParserState>,
+    settings: LexSettings & ParseSettings<IParseState>,
     text: string,
     position: Position,
 ): InvokeExpression | undefined {
@@ -39,7 +39,7 @@ function assertParseOkInvokeExpressionOk(
 }
 
 function assertParseErrInvokeExpressionOk(
-    settings: LexSettings & ParseSettings<IParserState>,
+    settings: LexSettings & ParseSettings<IParseState>,
     text: string,
     position: Position,
 ): InvokeExpression | undefined {

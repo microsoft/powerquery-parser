@@ -5,11 +5,11 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection, Language } from "../../../..";
 import { Assert } from "../../../../common";
-import { IParserState } from "../../../../parser";
+import { IParseState } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { TestAssertUtils } from "../../../testUtils";
 
-function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParserState = IParserState>(
+function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,

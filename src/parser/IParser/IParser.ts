@@ -1,31 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { IParserState, ParseError } from "..";
+import { IParseState, ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
 
-export type TriedParse<S extends IParserState = IParserState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
+export type TriedParse<S extends IParseState = IParseState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
-export interface IParserStateCheckpoint {
+export interface IParseStateCheckpoint {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;
     readonly maybeContextNodeId: number | undefined;
 }
 
-export interface ParseOk<S extends IParserState = IParserState> {
+export interface ParseOk<S extends IParseState = IParseState> {
     readonly root: Ast.TNode;
     readonly state: S;
 }
 
-export interface ParserOptions<S extends IParserState = IParserState> {
+export interface ParserOptions<S extends IParseState = IParseState> {
     readonly maybeEntryPoint: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
 }
 
-export interface IParser<
-    S extends IParserState = IParserState,
-    C extends IParserStateCheckpoint = IParserStateCheckpoint
-> {
+export interface IParser<S extends IParseState = IParseState, C extends IParseStateCheckpoint = IParseStateCheckpoint> {
     readonly createCheckpoint: (state: S) => C;
     readonly restoreFromCheckpoint: (state: S, checkpoint: C) => void;
 
@@ -136,7 +133,7 @@ export interface IParser<
         state: S,
         parser: IParser<S>,
         allowOpenMarker: boolean,
-        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
+        testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.FieldSpecificationList;
     readonly readListType: (state: S, parser: IParser<S>) => Ast.ListType;
     readonly readFunctionType: (state: S, parser: IParser<S>) => Ast.FunctionType;
@@ -155,7 +152,7 @@ export interface IParser<
         state: S,
         parser: IParser<S>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
+        testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedAnyLiteral>;
     readonly readListLiteral: (state: S, parser: IParser<S>) => Ast.ListLiteral;
     readonly readAnyLiteral: (state: S, parser: IParser<S>) => Ast.TAnyLiteral;
@@ -165,14 +162,14 @@ export interface IParser<
         state: S,
         parser: IParser<S>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
+        testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.IdentifierPairedExpression>;
     readonly readIdentifierPairedExpression: (state: S, parser: IParser<S>) => Ast.IdentifierPairedExpression;
     readonly readGeneralizedIdentifierPairedExpressions: (
         state: S,
         parser: IParser<S>,
         onePairRequired: boolean,
-        testPostCommaError: (state: IParserState) => ParseError.TInnerParseError | undefined,
+        testPostCommaError: (state: IParseState) => ParseError.TInnerParseError | undefined,
     ) => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression>;
     readonly readGeneralizedIdentifierPairedExpression: (
         state: S,

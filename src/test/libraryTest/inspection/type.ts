@@ -8,7 +8,7 @@ import { Assert } from "../../../common";
 import { Position, ScopeTypeByKey } from "../../../inspection";
 import { ActiveNodeUtils } from "../../../inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../language";
-import { IParserState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
+import { IParseState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../parser";
 import { CommonSettings, DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -25,7 +25,7 @@ function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {
 }
 
 function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
-    const parseErr: ParseError.ParseError<IParserState> = TestAssertUtils.assertGetParseErr(DefaultSettings, text);
+    const parseErr: ParseError.ParseError<IParseState> = TestAssertUtils.assertGetParseErr(DefaultSettings, text);
     const root: ParseContext.Node = Assert.asDefined(parseErr.state.contextState.maybeRoot);
 
     const actual: Type.TType = assertGetParseNodeOk(

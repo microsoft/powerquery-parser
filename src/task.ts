@@ -8,8 +8,8 @@ import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
 import { LexError, LexerSnapshot } from "./lexer";
 import {
-    IParserState,
     IParserUtils,
+    IParseState,
     NodeIdMap,
     ParseContext,
     ParseError,
@@ -20,21 +20,21 @@ import {
 } from "./parser";
 import { LexSettings, ParseSettings } from "./settings/settings";
 
-export type TriedLexParse<S extends IParserState = IParserState> = Result<
+export type TriedLexParse<S extends IParseState = IParseState> = Result<
     LexParseOk<S>,
     LexError.TLexError | ParseError.TParseError<S>
 >;
 
-export type TriedLexParseInspect<S extends IParserState = IParserState> = Result<
+export type TriedLexParseInspect<S extends IParseState = IParseState> = Result<
     LexParseInspectOk<S>,
     CommonError.CommonError | LexError.LexError | ParseError.ParseError
 >;
 
-export interface LexParseOk<S extends IParserState = IParserState> extends ParseOk<S> {
+export interface LexParseOk<S extends IParseState = IParseState> extends ParseOk<S> {
     readonly lexerSnapshot: Lexer.LexerSnapshot;
 }
 
-export interface LexParseInspectOk<S extends IParserState = IParserState> extends Inspection.Inspection {
+export interface LexParseInspectOk<S extends IParseState = IParseState> extends Inspection.Inspection {
     readonly triedParse: TriedParse<S>;
 }
 
@@ -56,19 +56,19 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
     return Lexer.trySnapshot(state);
 }
 
-export function tryParse<S extends IParserState = IParserState>(
+export function tryParse<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
 ): TriedParse<S> {
     return IParserUtils.tryParse<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
 }
 
-export function tryInspection<S extends IParserState = IParserState>(
+export function tryInspection<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
     triedParse: TriedParse<S>,
     position: Inspection.Position,
 ): Inspection.TriedInspection {
-    let parserState: S;
+    let parseState: S;
     let maybeParseError: ParseError.ParseError<S> | undefined;
 
     if (ResultUtils.isErr(triedParse)) {
@@ -82,15 +82,15 @@ export function tryInspection<S extends IParserState = IParserState>(
             maybeParseError = triedParse.error;
         }
 
-        parserState = triedParse.error.state;
+        parseState = triedParse.error.state;
     } else {
-        parserState = triedParse.value.state;
+        parseState = triedParse.value.state;
     }
 
-    return ResultUtils.okFactory(Inspection.inspection(parseSettings, parserState, maybeParseError, position));
+    return ResultUtils.okFactory(Inspection.inspection(parseSettings, parseState, maybeParseError, position));
 }
 
-export function tryLexParse<S extends IParserState = IParserState>(
+export function tryLexParse<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
 ): TriedLexParse<S> {
@@ -111,7 +111,7 @@ export function tryLexParse<S extends IParserState = IParserState>(
     }
 }
 
-export function tryLexParseInspection<S extends IParserState = IParserState>(
+export function tryLexParseInspection<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
@@ -136,7 +136,7 @@ export function tryLexParseInspection<S extends IParserState = IParserState>(
     });
 }
 
-export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
+export function maybeTriedParseFromTriedLexParse<S extends IParseState>(
     triedLexParse: TriedLexParse<S>,
 ): TriedParse<S> | undefined {
     let root: Ast.TNode;
@@ -168,7 +168,7 @@ export function maybeTriedParseFromTriedLexParse<S extends IParserState>(
     });
 }
 
-export function rootFromTriedLexParse<S extends IParserState = IParserState>(
+export function rootFromTriedLexParse<S extends IParseState = IParseState>(
     triedLexParse: TriedLexParse<S>,
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexParse)) {
@@ -181,7 +181,7 @@ export function rootFromTriedLexParse<S extends IParserState = IParserState>(
     }
 }
 
-export function rootFromTriedLexParseInspect<S extends IParserState = IParserState>(
+export function rootFromTriedLexParseInspect<S extends IParseState = IParseState>(
     triedLexInspectParseInspect: TriedLexParseInspect<S>,
 ): TXorNode | undefined {
     if (ResultUtils.isOk(triedLexInspectParseInspect)) {

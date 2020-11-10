@@ -12,10 +12,10 @@ import { DefaultLocale } from "../../localization";
 import {
     CombinatorialParser,
     IParser,
-    IParserState,
-    IParserStateUtils,
+    IParseState,
+    IParseStateUtils,
     RecursiveDescentParser,
-    TParserStateFactoryOverrides,
+    TParseStateFactoryOverrides,
 } from "../../parser";
 import { ParseSettings } from "../../settings";
 import { TestFileUtils } from "../testUtils";
@@ -52,22 +52,22 @@ writeReport(ResourceDirectory, allSummaries);
 
 function benchmarkStateFactory(
     lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TParserStateFactoryOverrides | undefined,
-    baseParser: IParser<IParserState>,
+    maybeOverrides: TParseStateFactoryOverrides | undefined,
+    baseParser: IParser<IParseState>,
 ): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
+        ...IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
     };
 }
 
-function benchmarkParseSettingsFactory(baseParser: IParser<IParserState>): ParseSettings<BenchmarkState> {
+function benchmarkParseSettingsFactory(baseParser: IParser<IParseState>): ParseSettings<BenchmarkState> {
     return {
         maybeCancellationToken: undefined,
         parser: BenchmarkParser,
-        parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateFactoryOverrides | undefined) =>
+        parseStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParseStateFactoryOverrides | undefined) =>
             benchmarkStateFactory(lexerSnapshot, maybeOverrides, baseParser),
         maybeParserOptions: undefined,
         locale: DefaultLocale,

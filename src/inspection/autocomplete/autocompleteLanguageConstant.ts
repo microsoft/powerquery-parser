@@ -5,7 +5,7 @@ import { Assert, CommonError, ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
 import {
     AncestryUtils,
-    IParserState,
+    IParseState,
     ParseContext,
     ParseError,
     TXorNode,
@@ -17,21 +17,21 @@ import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { PositionUtils } from "../position";
 import { AdditionalParse, AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
-export function tryAutocompleteLanguageConstant<S extends IParserState = IParserState>(
+export function tryAutocompleteLanguageConstant<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteLanguageConstant {
     return ResultUtils.ensureResult(parseSettings.locale, () => {
-        return autocompleteLanguageConstant(parseSettings, parserState, maybeActiveNode, maybeParseError);
+        return autocompleteLanguageConstant(parseSettings, parseState, maybeActiveNode, maybeParseError);
     });
 }
 
 // Currently only checks "optional" constant in FunctionExpression.
-function autocompleteLanguageConstant<S extends IParserState = IParserState>(
+function autocompleteLanguageConstant<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError | undefined,
 ): AutocompleteLanguageConstant | undefined {
@@ -44,7 +44,7 @@ function autocompleteLanguageConstant<S extends IParserState = IParserState>(
         );
         if (maybeFunctionExpressionAncestryIndex === undefined) {
             if (maybeParseError?.innerError instanceof ParseError.UnterminatedSequence) {
-                return parseAndInspectFunctionExpression(parseSettings, parserState, maybeActiveNode);
+                return parseAndInspectFunctionExpression(parseSettings, parseState, maybeActiveNode);
             } else {
                 return undefined;
             }
@@ -52,7 +52,7 @@ function autocompleteLanguageConstant<S extends IParserState = IParserState>(
             return inspectFunctionExpression(maybeActiveNode, maybeFunctionExpressionAncestryIndex);
         }
     } else {
-        return parseAndInspectFunctionExpression(parseSettings, parserState, maybeActiveNode);
+        return parseAndInspectFunctionExpression(parseSettings, parseState, maybeActiveNode);
     }
 }
 
@@ -111,13 +111,13 @@ function inspectFunctionExpression(
     return undefined;
 }
 
-function parseAndInspectFunctionExpression<S extends IParserState = IParserState>(
+function parseAndInspectFunctionExpression<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     originalActiveNode: TMaybeActiveNode,
 ): AutocompleteLanguageConstant | undefined {
-    const parsed: AdditionalParse<S> = parseFunctionExpression(parseSettings, parserState);
-    const contextState: ParseContext.State = parsed.parserState.contextState;
+    const parsed: AdditionalParse<S> = parseFunctionExpression(parseSettings, parseState);
+    const contextState: ParseContext.State = parsed.parseState.contextState;
     const maybeNewActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
         contextState.nodeIdMapCollection,
         contextState.leafNodeIds,
@@ -140,20 +140,20 @@ function parseAndInspectFunctionExpression<S extends IParserState = IParserState
     return inspectFunctionExpression(newActiveNode, functionExpressionAncestryIndex);
 }
 
-function parseFunctionExpression<S extends IParserState = IParserState>(
+function parseFunctionExpression<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
 ): AdditionalParse<S> {
-    const newState: S = parseSettings.parserStateFactory(parserState.lexerSnapshot, {
-        maybeCancellationToken: parserState.maybeCancellationToken,
+    const newState: S = parseSettings.parseStateFactory(parseState.lexerSnapshot, {
+        maybeCancellationToken: parseState.maybeCancellationToken,
         locale: parseSettings.locale,
-        tokenIndex: parserState.tokenIndex,
+        tokenIndex: parseState.tokenIndex,
     });
 
     try {
         return {
             root: XorNodeUtils.astFactory(parseSettings.parser.readFunctionExpression(newState, parseSettings.parser)),
-            parserState: newState,
+            parseState: newState,
             maybeParseError: undefined,
         };
     } catch (error) {
@@ -164,7 +164,7 @@ function parseFunctionExpression<S extends IParserState = IParserState>(
         } else {
             return {
                 root: XorNodeUtils.contextFactory(Assert.asDefined(newState.contextState.maybeRoot)),
-                parserState: newState,
+                parseState: newState,
                 maybeParseError: new ParseError.ParseError(error, newState),
             };
         }

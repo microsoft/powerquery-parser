@@ -6,7 +6,7 @@ import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import {
     IParser,
-    IParserState,
+    IParseState,
     NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
@@ -28,9 +28,9 @@ import {
     TriedAutocompleteFieldAccess,
 } from "./commonTypes";
 
-export function tryAutocompleteFieldAccess<S extends IParserState = IParserState>(
+export function tryAutocompleteFieldAccess<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
     maybeParseError: ParseError.ParseError | undefined,
@@ -40,7 +40,7 @@ export function tryAutocompleteFieldAccess<S extends IParserState = IParserState
     }
 
     return ResultUtils.ensureResult(parseSettings.locale, () => {
-        return autocompleteFieldAccess(parseSettings, parserState, maybeActiveNode, typeCache, maybeParseError);
+        return autocompleteFieldAccess(parseSettings, parseState, maybeActiveNode, typeCache, maybeParseError);
     });
 }
 
@@ -57,9 +57,9 @@ const AllowedTrailingOpenWrapperConstants: ReadonlyArray<Token.TokenKind> = [
 
 const FieldAccessNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.FieldSelector, Ast.NodeKind.FieldProjection];
 
-function autocompleteFieldAccess<S extends IParserState = IParserState>(
+function autocompleteFieldAccess<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     activeNode: ActiveNode,
     typeCache: TypeCache,
     maybeParseError: ParseError.ParseError | undefined,
@@ -75,8 +75,8 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     }
     if (maybeFieldAccessAncestor !== undefined) {
         maybeInspectedFieldAccess = inspectFieldAccess(
-            parserState.lexerSnapshot,
-            parserState.contextState.nodeIdMapCollection,
+            parseState.lexerSnapshot,
+            parseState.contextState.nodeIdMapCollection,
             activeNode.position,
             maybeFieldAccessAncestor,
         );
@@ -98,15 +98,15 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
         // From the starting open constant run a few new parse runs and return the run which parsed the most tokens.
         const maybeParsedFieldAccess: AdditionalParse | undefined = maybeParseFieldAccessFromParse<S>(
             parseSettings,
-            parserState,
+            parseState,
         );
         // Neither parse was succesful.
         if (maybeParsedFieldAccess === undefined) {
             return undefined;
         }
         maybeInspectedFieldAccess = inspectFieldAccess(
-            maybeParsedFieldAccess.parserState.lexerSnapshot,
-            maybeParsedFieldAccess.parserState.contextState.nodeIdMapCollection,
+            maybeParsedFieldAccess.parseState.lexerSnapshot,
+            maybeParsedFieldAccess.parseState.contextState.nodeIdMapCollection,
             activeNode.position,
             maybeParsedFieldAccess.root,
         );
@@ -128,7 +128,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     // After a field access was found then find the field it's accessing and inspect the field's type.
     // This is delayed until after the field access because running static type analysis on an
     // arbitrary field could be costly.
-    const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
     const maybeField: TXorNode | undefined = maybeTypablePrimaryExpression(
         nodeIdMapCollection,
         activeNode,
@@ -142,7 +142,7 @@ function autocompleteFieldAccess<S extends IParserState = IParserState>(
     const triedFieldType: TriedType = tryType(
         parseSettings,
         nodeIdMapCollection,
-        parserState.contextState.leafNodeIds,
+        parseState.contextState.leafNodeIds,
         field.node.id,
         typeCache,
     );
@@ -429,62 +429,62 @@ function maybeTypablePrimaryExpression(
     return maybeContiguousPrimaryExpression;
 }
 
-function maybeParseFieldAccessFromParse<S extends IParserState = IParserState>(
+function maybeParseFieldAccessFromParse<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
 ): AdditionalParse | undefined {
-    const parseFns: ReadonlyArray<(parseSettings: ParseSettings<S>, parserState: S) => AdditionalParse> = [
+    const parseFns: ReadonlyArray<(parseSettings: ParseSettings<S>, parseState: S) => AdditionalParse> = [
         parseFieldProjection,
         parseFieldSelection,
     ];
 
     let maybeBestMatch: AdditionalParse | undefined;
     for (const fn of parseFns) {
-        const attempt: AdditionalParse = fn(parseSettings, parserState);
+        const attempt: AdditionalParse = fn(parseSettings, parseState);
         maybeBestMatch = betterFieldAccessMatch(maybeBestMatch, attempt);
     }
 
     return maybeBestMatch;
 }
 
-function parseFieldProjection<S extends IParserState = IParserState>(
+function parseFieldProjection<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
 ): AdditionalParse {
     return tryParseFieldAccess<Ast.FieldProjection, S>(
         parseSettings,
-        parserState,
+        parseState,
         parseSettings.parser.readFieldProjection,
     );
 }
 
-function parseFieldSelection<S extends IParserState = IParserState>(
+function parseFieldSelection<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
 ): AdditionalParse {
     return tryParseFieldAccess<Ast.FieldSelector, S>(
         parseSettings,
-        parserState,
+        parseState,
         parseSettings.parser.readFieldSelection,
     );
 }
 
-function tryParseFieldAccess<T extends Ast.FieldProjection | Ast.FieldSelector, S extends IParserState = IParserState>(
+function tryParseFieldAccess<T extends Ast.FieldProjection | Ast.FieldSelector, S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     parseFn: (state: S, parser: IParser<S>) => T,
 ): AdditionalParse {
-    const newState: S = parseSettings.parserStateFactory(parserState.lexerSnapshot, {
-        maybeCancellationToken: parserState.maybeCancellationToken,
+    const newState: S = parseSettings.parseStateFactory(parseState.lexerSnapshot, {
+        maybeCancellationToken: parseState.maybeCancellationToken,
         locale: parseSettings.locale,
-        tokenIndex: parserState.tokenIndex,
+        tokenIndex: parseState.tokenIndex,
     });
 
     try {
         const ast: T = parseFn(newState, parseSettings.parser);
         return {
             root: XorNodeUtils.astFactory(ast),
-            parserState: newState,
+            parseState: newState,
             maybeParseError: undefined,
         };
     } catch (error) {
@@ -497,7 +497,7 @@ function tryParseFieldAccess<T extends Ast.FieldProjection | Ast.FieldSelector, 
 
         return {
             root: XorNodeUtils.contextFactory(Assert.asDefined(newState.contextState.maybeRoot)),
-            parserState: newState,
+            parseState: newState,
             maybeParseError: new ParseError.ParseError(innerParseError, newState),
         };
     }

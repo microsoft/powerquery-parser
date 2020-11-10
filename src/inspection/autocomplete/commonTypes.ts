@@ -3,7 +3,7 @@
 
 import { CommonError, Result } from "../../common";
 import { Constant, Keyword, Token, Type } from "../../language";
-import { IParserState, ParseError, TXorNode } from "../../parser";
+import { IParseState, ParseError, TXorNode } from "../../parser";
 
 export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | undefined, CommonError.CommonError>;
 
@@ -51,8 +51,8 @@ export interface TrailingToken extends Token.Token {
     readonly isInOrOnPosition: boolean;
 }
 
-export interface AdditionalParse<S extends IParserState = IParserState> {
+export interface AdditionalParse<S extends IParseState = IParseState> {
     readonly root: TXorNode;
-    readonly parserState: S;
+    readonly parseState: S;
     readonly maybeParseError: ParseError.ParseError<S> | undefined;
 }

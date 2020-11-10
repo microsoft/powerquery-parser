@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../../../..";
 import { Assert } from "../../../../common";
 import { AutocompleteItem } from "../../../../inspection";
-import { IParserState } from "../../../../parser";
+import { IParseState } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { TestAssertUtils } from "../../../testUtils";
 
@@ -22,7 +22,7 @@ function abridgedFieldAccess(
     return maybeAutocompleteFieldAccess.autocompleteItems.map((item: AutocompleteItem) => item.key);
 }
 
-function assertGetParseOkAutocompleteOkFieldAccess<S extends IParserState = IParserState>(
+function assertGetParseOkAutocompleteOkFieldAccess<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
@@ -32,7 +32,7 @@ function assertGetParseOkAutocompleteOkFieldAccess<S extends IParserState = IPar
     return abridgedFieldAccess(actual.triedFieldAccess.value);
 }
 
-function assertGetParseErrAutocompleteOkFieldAccess<S extends IParserState = IParserState>(
+function assertGetParseErrAutocompleteOkFieldAccess<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
