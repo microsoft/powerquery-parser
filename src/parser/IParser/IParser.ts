@@ -18,10 +18,6 @@ export interface ParseOk<S extends IParseState = IParseState> {
     readonly state: S;
 }
 
-export interface ParserOptions<S extends IParseState = IParseState> {
-    readonly maybeEntryPoint: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
-}
-
 export interface IParser<S extends IParseState = IParseState, C extends IParseStateCheckpoint = IParseStateCheckpoint> {
     readonly createCheckpoint: (state: S) => C;
     readonly restoreFromCheckpoint: (state: S, checkpoint: C) => void;

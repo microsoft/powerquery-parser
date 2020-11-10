@@ -15,10 +15,10 @@ export function tryParse<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
 ): TriedParse<S> {
-    const maybeEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined =
-        parseSettings?.maybeParserOptions?.maybeEntryPoint;
+    const maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined =
+        parseSettings?.maybeParserEntryPointFn;
 
-    if (maybeEntryPointFn === undefined) {
+    if (maybeParserEntryPointFn === undefined) {
         return tryParseDocument<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
     }
 
@@ -27,7 +27,7 @@ export function tryParse<S extends IParseState = IParseState>(
         locale: parseSettings.locale,
     });
     try {
-        const root: Ast.TNode = maybeEntryPointFn(parseState, parseSettings.parser);
+        const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
         IParseStateUtils.assertNoMoreTokens(parseState);
         IParseStateUtils.assertNoOpenContext(parseState);
         return ResultUtils.okFactory({
