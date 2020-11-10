@@ -6,11 +6,11 @@ import { ICancellationToken } from "../../common";
 import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 
-export type TParserStateFactoryOverrides = Partial<
-    Omit<IParserState, "lexerSnapshot" | "maybeCurrentToken" | "maybeCurrentTokenKind" | "maybeCurrentContextNode">
+export type TParseStateFactoryOverrides = Partial<
+    Omit<IParseState, "lexerSnapshot" | "maybeCurrentToken" | "maybeCurrentTokenKind" | "maybeCurrentContextNode">
 >;
 
-export interface IParserState {
+export interface IParseState {
     readonly lexerSnapshot: LexerSnapshot;
     readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly locale: string;

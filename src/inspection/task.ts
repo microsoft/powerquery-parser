@@ -1,6 +1,6 @@
 import { ResultUtils } from "../common";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
-import { AncestryUtils, IParserState, NodeIdMap, ParseError, TXorNode } from "../parser";
+import { AncestryUtils, IParseState, NodeIdMap, ParseError, TXorNode } from "../parser";
 import { ParseSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
@@ -11,14 +11,14 @@ import { ScopeById, TriedNodeScope, tryNodeScope } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache } from "./type/commonTypes";
 
-export function inspection<S extends IParserState = IParserState>(
+export function inspection<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     maybeParseError: ParseError.ParseError<S> | undefined,
     position: Position,
 ): Inspection {
-    const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
-    const leafNodeIds: ReadonlyArray<number> = parserState.contextState.leafNodeIds;
+    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
+    const leafNodeIds: ReadonlyArray<number> = parseState.contextState.leafNodeIds;
 
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
@@ -66,7 +66,7 @@ export function inspection<S extends IParserState = IParserState>(
 
     return {
         maybeActiveNode,
-        autocomplete: autocomplete(parseSettings, parserState, typeCache, maybeActiveNode, maybeParseError),
+        autocomplete: autocomplete(parseSettings, parseState, typeCache, maybeActiveNode, maybeParseError),
         triedInvokeExpression,
         triedNodeScope,
         triedScopeType,

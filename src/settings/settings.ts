@@ -7,10 +7,10 @@ import { DefaultLocale } from "../localization";
 import {
     CombinatorialParser,
     IParser,
-    IParserState,
-    IParserStateUtils,
+    IParseState,
+    IParseStateUtils,
     ParserOptions,
-    TParserStateFactoryOverrides,
+    TParseStateFactoryOverrides,
 } from "../parser";
 
 export interface CommonSettings {
@@ -21,22 +21,22 @@ export interface CommonSettings {
 // tslint:disable-next-line: no-empty-interface
 export interface LexSettings extends CommonSettings {}
 
-export interface ParseSettings<S extends IParserState = IParserState> extends CommonSettings {
+export interface ParseSettings<S extends IParseState = IParseState> extends CommonSettings {
     readonly parser: IParser<S>;
     readonly maybeParserOptions: ParserOptions<S> | undefined;
-    readonly parserStateFactory: (
+    readonly parseStateFactory: (
         lexerSnapshot: LexerSnapshot,
-        maybeOverrides: TParserStateFactoryOverrides | undefined,
+        maybeOverrides: TParseStateFactoryOverrides | undefined,
     ) => S;
 }
 
-export type Settings<S extends IParserState = IParserState> = LexSettings & ParseSettings<S>;
+export type Settings<S extends IParseState = IParseState> = LexSettings & ParseSettings<S>;
 
-export const DefaultSettings: Settings<IParserState> = {
+export const DefaultSettings: Settings<IParseState> = {
     maybeCancellationToken: undefined,
     locale: DefaultLocale,
     parser: CombinatorialParser,
     maybeParserOptions: undefined,
-    parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateFactoryOverrides | undefined) =>
-        IParserStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
+    parseStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParseStateFactoryOverrides | undefined) =>
+        IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
 };

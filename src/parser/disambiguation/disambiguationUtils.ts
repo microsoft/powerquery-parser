@@ -4,11 +4,11 @@
 import { ParseError } from "..";
 import { ArrayUtils, Assert, Result, ResultUtils } from "../../common";
 import { Ast, Token } from "../../language";
-import { IParser, IParserStateCheckpoint } from "../IParser";
-import { IParserState, IParserStateUtils } from "../IParserState";
+import { IParser, IParseStateCheckpoint } from "../IParser";
+import { IParseState, IParseStateUtils } from "../IParseState";
 import { BracketDisambiguation, ParenthesisDisambiguation } from "./disambiguation";
 
-export function readAmbiguousBracket<S extends IParserState = IParserState>(
+export function readAmbiguousBracket<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
@@ -40,7 +40,7 @@ export function readAmbiguousBracket<S extends IParserState = IParserState>(
     }
 }
 
-export function readAmbiguousParenthesis<S extends IParserState = IParserState>(
+export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
 ): Ast.FunctionExpression | Ast.TExpression {
@@ -67,7 +67,7 @@ export function readAmbiguousParenthesis<S extends IParserState = IParserState>(
     }
 }
 
-export function tryDisambiguateParenthesis<S extends IParserState = IParserState>(
+export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
 ): Result<ParenthesisDisambiguation, ParseError.UnterminatedSequence> {
@@ -91,15 +91,15 @@ export function tryDisambiguateParenthesis<S extends IParserState = IParserState
         if (nestedDepth === 0) {
             // '(x as number) as number' could either be either case,
             // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
-            if (IParserStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const checkpoint: IParserStateCheckpoint = parser.createCheckpoint(state);
+            if (IParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
+                const checkpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
                     parser.readNullablePrimitiveType(state, parser);
                 } catch {
                     parser.restoreFromCheckpoint(state, checkpoint);
-                    if (IParserStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
+                    if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                         return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
                     } else {
                         return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
@@ -107,7 +107,7 @@ export function tryDisambiguateParenthesis<S extends IParserState = IParserState
                 }
 
                 let disambiguation: ParenthesisDisambiguation;
-                if (IParserStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
+                if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                     disambiguation = ParenthesisDisambiguation.FunctionExpression;
                 } else {
                     disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
@@ -116,7 +116,7 @@ export function tryDisambiguateParenthesis<S extends IParserState = IParserState
                 parser.restoreFromCheckpoint(state, checkpoint);
                 return ResultUtils.okFactory(disambiguation);
             } else {
-                if (IParserStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
+                if (IParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
                     return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
                 } else {
                     return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
@@ -127,13 +127,13 @@ export function tryDisambiguateParenthesis<S extends IParserState = IParserState
         offsetTokenIndex += 1;
     }
 
-    return ResultUtils.errFactory(IParserStateUtils.unterminatedParenthesesError(state));
+    return ResultUtils.errFactory(IParseStateUtils.unterminatedParenthesesError(state));
 }
 
 // WARNING: Only updates tokenIndex and currentTokenKind,
 //          Manual management of TokenRangeStack is assumed.
-//          Best used in conjunction with backup/restore using ParserState.
-function unsafeMoveTo(state: IParserState, tokenIndex: number): void {
+//          Best used in conjunction with backup/restore using ParseState.
+function unsafeMoveTo(state: IParseState, tokenIndex: number): void {
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
     state.tokenIndex = tokenIndex;
 
@@ -146,7 +146,7 @@ function unsafeMoveTo(state: IParserState, tokenIndex: number): void {
     }
 }
 
-export function tryDisambiguateBracket<S extends IParserState = IParserState>(
+export function tryDisambiguateBracket<S extends IParseState = IParseState>(
     state: S,
     _parser: IParser<S>,
 ): Result<BracketDisambiguation, ParseError.UnterminatedSequence> {
@@ -157,7 +157,7 @@ export function tryDisambiguateBracket<S extends IParserState = IParserState>(
     const offsetToken: Token.Token = tokens[offsetTokenIndex];
 
     if (!offsetToken) {
-        return ResultUtils.errFactory(IParserStateUtils.unterminatedBracketError(state));
+        return ResultUtils.errFactory(IParseStateUtils.unterminatedBracketError(state));
     }
 
     let offsetTokenKind: Token.TokenKind = offsetToken.kind;
@@ -180,6 +180,6 @@ export function tryDisambiguateBracket<S extends IParserState = IParserState>(
             offsetTokenIndex += 1;
         }
 
-        return ResultUtils.errFactory(IParserStateUtils.unterminatedBracketError(state));
+        return ResultUtils.errFactory(IParseStateUtils.unterminatedBracketError(state));
     }
 }

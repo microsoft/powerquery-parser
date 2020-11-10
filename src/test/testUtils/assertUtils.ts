@@ -6,7 +6,7 @@ import "mocha";
 import { Assert, Inspection, Lexer, Task } from "../..";
 import { Autocomplete, Position } from "../../inspection";
 import { ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
-import { IParserState, IParserUtils, ParseError, ParseOk, TriedParse } from "../../parser";
+import { IParserUtils, IParseState, ParseError, ParseOk, TriedParse } from "../../parser";
 import { LexSettings, ParseSettings } from "../../settings";
 
 // Only works with single line expressions
@@ -24,7 +24,7 @@ export function assertGetTextWithPosition(text: string): [string, Inspection.Pos
     return [text.replace("|", ""), position];
 }
 
-export function assertGetLexParseOk<S extends IParserState = IParserState>(
+export function assertGetLexParseOk<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
 ): Task.LexParseOk<S> {
@@ -33,7 +33,7 @@ export function assertGetLexParseOk<S extends IParserState = IParserState>(
     return triedLexParse.value;
 }
 
-export function assertGetParseErr<S extends IParserState = IParserState>(
+export function assertGetParseErr<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
 ): ParseError.ParseError<S> {
@@ -47,7 +47,7 @@ export function assertGetParseErr<S extends IParserState = IParserState>(
     return triedParse.error;
 }
 
-export function assertGetParseOk<S extends IParserState = IParserState>(
+export function assertGetParseOk<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
 ): ParseOk<S> {
@@ -58,7 +58,7 @@ export function assertGetParseOk<S extends IParserState = IParserState>(
 
 // I only care about errors coming from the parse stage.
 // If I use tryLexParse I might get a CommonError which could have come either from lexing or parsing.
-function assertGetTriedParse<S extends IParserState = IParserState>(
+function assertGetTriedParse<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
 ): TriedParse<S> {
@@ -74,7 +74,7 @@ function assertGetTriedParse<S extends IParserState = IParserState>(
     return IParserUtils.tryParse<S>(settings, lexerSnapshot);
 }
 
-export function assertGetParseOkAutocompleteOk<S extends IParserState = IParserState>(
+export function assertGetParseOkAutocompleteOk<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
@@ -83,7 +83,7 @@ export function assertGetParseOkAutocompleteOk<S extends IParserState = IParserS
     return assertGetAutocompleteOk(settings, parseOk.state, position, undefined);
 }
 
-export function assertGetParseErrAutocompleteOk<S extends IParserState = IParserState>(
+export function assertGetParseErrAutocompleteOk<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Position,
@@ -92,20 +92,20 @@ export function assertGetParseErrAutocompleteOk<S extends IParserState = IParser
     return assertGetAutocompleteOk(settings, parseError.state, position, parseError);
 }
 
-export function assertGetAutocompleteOk<S extends IParserState = IParserState>(
+export function assertGetAutocompleteOk<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     position: Position,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): Autocomplete {
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
-        parserState.contextState.nodeIdMapCollection,
-        parserState.contextState.leafNodeIds,
+        parseState.contextState.nodeIdMapCollection,
+        parseState.contextState.leafNodeIds,
         position,
     );
     return Inspection.autocomplete(
         parseSettings,
-        parserState,
+        parseState,
         {
             scopeById: new Map(),
             typeById: new Map(),

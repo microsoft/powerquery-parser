@@ -6,12 +6,12 @@ import performanceNow = require("performance-now");
 
 import { Ast, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { IParser, IParserStateCheckpoint, IParserUtils } from "../../parser/IParser";
-import { IParserState, IParserStateUtils } from "../../parser/IParserState";
+import { IParser, IParserUtils, IParseStateCheckpoint } from "../../parser/IParser";
+import { IParseState, IParseStateUtils } from "../../parser/IParseState";
 import { ParseSettings } from "../../settings";
 
-export interface BenchmarkState extends IParserState {
-    readonly baseParser: IParser<IParserState>;
+export interface BenchmarkState extends IParseState {
+    readonly baseParser: IParser<IParseState>;
     readonly functionTimestamps: Map<number, FunctionTimestamp>;
     functionTimestampCounter: number;
 }
@@ -31,8 +31,8 @@ export interface FunctionTimestamp {
 }
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
-    createCheckpoint: (state: IParserState) => IParserUtils.stateCheckpointFactory(state),
-    restoreFromCheckpoint: (state: IParserState, checkpoint: IParserStateCheckpoint) =>
+    createCheckpoint: (state: IParseState) => IParserUtils.stateCheckpointFactory(state),
+    restoreFromCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
         IParserUtils.restoreStateCheckpoint(state, checkpoint),
 
     // 12.1.6 Identifiers
@@ -47,7 +47,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
     // 12.2.1 Documents
     readDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
         const readDocumentLambda: () => Ast.TDocument = () =>
-            state.baseParser.readDocument(state, (parser as unknown) as IParser<IParserState>) as Ast.TDocument;
+            state.baseParser.readDocument(state, (parser as unknown) as IParser<IParseState>) as Ast.TDocument;
         return traceFunction(state, parser, readDocumentLambda);
     },
 
@@ -104,7 +104,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readPrimaryExpression),
     readRecursivePrimaryExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>, head) => {
         const readRecursivePrimaryExpressionLambda: () => Ast.RecursivePrimaryExpression = () =>
-            state.baseParser.readRecursivePrimaryExpression(state, (parser as unknown) as IParser<IParserState>, head);
+            state.baseParser.readRecursivePrimaryExpression(state, (parser as unknown) as IParser<IParseState>, head);
         return traceFunction(state, parser, readRecursivePrimaryExpressionLambda);
     },
 
@@ -149,7 +149,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readFieldProjection),
     readFieldSelector: (state: BenchmarkState, parser: IParser<BenchmarkState>, allowOptional: boolean) => {
         const readFieldSelectorLambda: () => Ast.FieldSelector = () =>
-            state.baseParser.readFieldSelector(state, (parser as unknown) as IParser<IParserState>, allowOptional);
+            state.baseParser.readFieldSelector(state, (parser as unknown) as IParser<IParseState>, allowOptional);
         return traceFunction(state, parser, readFieldSelectorLambda);
     },
 
@@ -193,7 +193,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         const readFieldSpecificationListLambda: () => Ast.FieldSpecificationList = () =>
             state.baseParser.readFieldSpecificationList(
                 state,
-                (parser as unknown) as IParser<IParserState>,
+                (parser as unknown) as IParser<IParseState>,
                 allowOpenMarker,
                 testPostCommaError,
             );
@@ -230,7 +230,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         > = () =>
             state.baseParser.readFieldNamePairedAnyLiterals(
                 state,
-                (parser as unknown) as IParser<IParserState>,
+                (parser as unknown) as IParser<IParseState>,
                 onePairRequired,
                 testPostCommaError,
             );
@@ -254,7 +254,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.IdentifierPairedExpression> = () =>
             state.baseParser.readIdentifierPairedExpressions(
                 state,
-                (parser as unknown) as IParser<IParserState>,
+                (parser as unknown) as IParser<IParseState>,
                 onePairRequired,
                 testPostCommaError,
             );
@@ -272,7 +272,7 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = () =>
             state.baseParser.readGeneralizedIdentifierPairedExpressions(
                 state,
-                (parser as unknown) as IParser<IParserState>,
+                (parser as unknown) as IParser<IParseState>,
                 onePairRequired,
                 testPostCommaError,
             );
@@ -282,13 +282,13 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
         traceFunction(state, parser, state.baseParser.readGeneralizedIdentifierPairedExpression),
 };
 
-export function benchmarkStateFactory<S extends IParserState = IParserState>(
+export function benchmarkStateFactory<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
-    baseParser: IParser<IParserState>,
+    baseParser: IParser<IParseState>,
 ): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(lexerSnapshot, {
+        ...IParseStateUtils.stateFactory(lexerSnapshot, {
             maybeCancellationToken: parseSettings.maybeCancellationToken,
         }),
         baseParser,
@@ -300,15 +300,15 @@ export function benchmarkStateFactory<S extends IParserState = IParserState>(
 function traceFunction<T>(
     benchmarkState: BenchmarkState,
     benchmarkParser: IParser<BenchmarkState>,
-    tracedFn: (state: IParserState, parser: IParser<IParserState>) => T,
+    tracedFn: (state: IParseState, parser: IParser<IParseState>) => T,
 ): T {
     const fnCallId: number = functionEntry(benchmarkState, tracedFn);
-    const result: T = tracedFn(benchmarkState, (benchmarkParser as unknown) as IParser<IParserState>);
+    const result: T = tracedFn(benchmarkState, (benchmarkParser as unknown) as IParser<IParseState>);
     functionExit(benchmarkState, fnCallId);
     return result;
 }
 
-function functionEntry<S extends IParserState, T>(
+function functionEntry<S extends IParseState, T>(
     state: BenchmarkState,
     fn: (state: S, parser: IParser<S>) => T,
 ): number {

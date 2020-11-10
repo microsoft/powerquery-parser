@@ -7,11 +7,11 @@ import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ParseSettings } from "../../settings";
 import { ParseContext, ParseContextUtils } from "../context";
-import { IParserState, IParserStateUtils } from "../IParserState";
+import { IParseState, IParseStateUtils } from "../IParseState";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
-import { IParser, IParserStateCheckpoint, TriedParse } from "./IParser";
+import { IParser, IParseStateCheckpoint, TriedParse } from "./IParser";
 
-export function tryParse<S extends IParserState = IParserState>(
+export function tryParse<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
 ): TriedParse<S> {
@@ -22,14 +22,14 @@ export function tryParse<S extends IParserState = IParserState>(
         return tryParseDocument<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
     }
 
-    const parseState: S = parseSettings.parserStateFactory(lexerSnapshot, {
+    const parseState: S = parseSettings.parseStateFactory(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
     try {
         const root: Ast.TNode = maybeEntryPointFn(parseState, parseSettings.parser);
-        IParserStateUtils.assertNoMoreTokens(parseState);
-        IParserStateUtils.assertNoOpenContext(parseState);
+        IParseStateUtils.assertNoMoreTokens(parseState);
+        IParseStateUtils.assertNoOpenContext(parseState);
         return ResultUtils.okFactory({
             lexerSnapshot,
             root,
@@ -40,34 +40,34 @@ export function tryParse<S extends IParserState = IParserState>(
     }
 }
 
-export function tryParseDocument<S extends IParserState = IParserState>(
+export function tryParseDocument<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
     lexerSnapshot: LexerSnapshot,
 ): TriedParse {
     let root: Ast.TNode;
 
-    const expressionDocumentState: S = parseSettings.parserStateFactory(lexerSnapshot, {
+    const expressionDocumentState: S = parseSettings.parseStateFactory(lexerSnapshot, {
         maybeCancellationToken: parseSettings.maybeCancellationToken,
         locale: parseSettings.locale,
     });
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
-        IParserStateUtils.assertNoMoreTokens(expressionDocumentState);
-        IParserStateUtils.assertNoOpenContext(expressionDocumentState);
+        IParseStateUtils.assertNoMoreTokens(expressionDocumentState);
+        IParseStateUtils.assertNoOpenContext(expressionDocumentState);
         return ResultUtils.okFactory({
             lexerSnapshot,
             root,
             state: expressionDocumentState,
         });
     } catch (expressionDocumentError) {
-        const sectionDocumentState: S = parseSettings.parserStateFactory(lexerSnapshot, {
+        const sectionDocumentState: S = parseSettings.parseStateFactory(lexerSnapshot, {
             maybeCancellationToken: parseSettings.maybeCancellationToken,
             locale: parseSettings.locale,
         });
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
-            IParserStateUtils.assertNoMoreTokens(sectionDocumentState);
-            IParserStateUtils.assertNoOpenContext(sectionDocumentState);
+            IParseStateUtils.assertNoMoreTokens(sectionDocumentState);
+            IParseStateUtils.assertNoOpenContext(sectionDocumentState);
             return ResultUtils.okFactory({
                 lexerSnapshot,
                 root,
@@ -96,7 +96,7 @@ export function tryParseDocument<S extends IParserState = IParserState>(
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily just drop all delete all context nodes past the id of when the backup was created.
-export function stateCheckpointFactory(state: IParserState): IParserStateCheckpoint {
+export function stateCheckpointFactory(state: IParseState): IParseStateCheckpoint {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
@@ -105,7 +105,7 @@ export function stateCheckpointFactory(state: IParserState): IParserStateCheckpo
 }
 
 // See stateCheckpointFactory above for more information.
-export function restoreStateCheckpoint(state: IParserState, checkpoint: IParserStateCheckpoint): void {
+export function restoreStateCheckpoint(state: IParseState, checkpoint: IParseStateCheckpoint): void {
     state.tokenIndex = checkpoint.tokenIndex;
     state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
     state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
@@ -148,7 +148,7 @@ export function restoreStateCheckpoint(state: IParserState, checkpoint: IParserS
     }
 }
 
-function ensureParseError<S extends IParserState = IParserState>(
+function ensureParseError<S extends IParseState = IParseState>(
     state: S,
     error: Error,
     locale: string,

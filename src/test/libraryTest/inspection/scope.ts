@@ -8,7 +8,7 @@ import { Assert } from "../../../common";
 import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, Constant } from "../../../language";
-import { IParserState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
+import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -157,7 +157,7 @@ function assertNodeScopeOk(
 }
 
 export function assertGetParseOkScopeOk(
-    settings: LexSettings & ParseSettings<IParserState>,
+    settings: LexSettings & ParseSettings<IParseState>,
     text: string,
     position: Position,
 ): NodeScope {
@@ -167,7 +167,7 @@ export function assertGetParseOkScopeOk(
 }
 
 export function assertGetParseErrScopeOk(
-    settings: LexSettings & ParseSettings<IParserState>,
+    settings: LexSettings & ParseSettings<IParseState>,
     text: string,
     position: Position,
 ): NodeScope {

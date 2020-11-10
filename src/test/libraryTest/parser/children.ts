@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
 import { Ast } from "../../../language";
-import { IParserState, NodeIdMap } from "../../../parser";
+import { IParseState, NodeIdMap } from "../../../parser";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
@@ -15,7 +15,7 @@ interface ChildIdsByIdEntry {
     readonly kind: Ast.NodeKind;
 }
 
-function actualFactory<S extends IParserState = IParserState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
+function actualFactory<S extends IParseState = IParseState>(lexParseOk: Task.LexParseOk<S>): ChildIdsByIdEntry[] {
     const actual: ChildIdsByIdEntry[] = [];
     const astNodeById: NodeIdMap.AstNodeById = lexParseOk.state.contextState.nodeIdMapCollection.astNodeById;
 

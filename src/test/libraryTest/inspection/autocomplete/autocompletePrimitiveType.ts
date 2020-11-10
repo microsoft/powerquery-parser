@@ -6,11 +6,11 @@ import "mocha";
 import { Inspection } from "../../../..";
 import { Assert } from "../../../../common";
 import { Constant } from "../../../../language";
-import { IParserState } from "../../../../parser";
+import { IParseState } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { TestAssertUtils } from "../../../testUtils";
 
-function assertGetParseOkAutocompleteOkPrimitiveType<S extends IParserState = IParserState>(
+function assertGetParseOkAutocompleteOkPrimitiveType<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
@@ -20,7 +20,7 @@ function assertGetParseOkAutocompleteOkPrimitiveType<S extends IParserState = IP
     return actual.triedPrimitiveType.value;
 }
 
-function assertGetParseErrAutocompleteOkPrimitiveType<S extends IParserState = IParserState>(
+function assertGetParseErrAutocompleteOkPrimitiveType<S extends IParseState = IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,

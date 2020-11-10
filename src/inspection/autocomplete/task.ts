@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Token } from "../../language";
-import { IParserState, NodeIdMap, ParseError } from "../../parser";
+import { IParseState, NodeIdMap, ParseError } from "../../parser";
 import { ParseSettings } from "../../settings";
 import { TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
@@ -20,15 +20,15 @@ import {
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
 
-export function autocomplete<S extends IParserState = IParserState>(
+export function autocomplete<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parserState: S,
+    parseState: S,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: ParseError.ParseError<S> | undefined,
 ): Autocomplete {
-    const nodeIdMapCollection: NodeIdMap.Collection = parserState.contextState.nodeIdMapCollection;
-    const leafNodeIds: ReadonlyArray<number> = parserState.contextState.leafNodeIds;
+    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
+    const leafNodeIds: ReadonlyArray<number> = parseState.contextState.leafNodeIds;
 
     let maybeTrailingToken: TrailingToken | undefined;
     if (maybeParseError !== undefined) {
@@ -40,7 +40,7 @@ export function autocomplete<S extends IParserState = IParserState>(
 
     const triedFieldAccess: TriedAutocompleteFieldAccess = tryAutocompleteFieldAccess(
         parseSettings,
-        parserState,
+        parseState,
         maybeActiveNode,
         typeCache,
         maybeParseError,
@@ -56,7 +56,7 @@ export function autocomplete<S extends IParserState = IParserState>(
 
     const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
         parseSettings,
-        parserState,
+        parseState,
         maybeActiveNode,
         maybeParseError,
     );
