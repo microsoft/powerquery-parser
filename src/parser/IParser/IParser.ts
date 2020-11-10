@@ -172,16 +172,6 @@ export interface IParser<
     readonly readAnyLiteral: (state: S, parser: IParser<S>) => Ast.TAnyLiteral;
     readonly readPrimitiveType: (state: S, parser: IParser<S>) => Ast.PrimitiveType;
 
-    // Disambiguation
-    readonly disambiguateBracket: (
-        state: S,
-        parser: IParser<S>,
-    ) => Result<BracketDisambiguation, ParseError.UnterminatedSequence>;
-    readonly disambiguateParenthesis: (
-        state: S,
-        parser: IParser<S>,
-    ) => Result<ParenthesisDisambiguation, ParseError.UnterminatedSequence>;
-
     readonly readIdentifierPairedExpressions: (
         state: S,
         parser: IParser<S>,
