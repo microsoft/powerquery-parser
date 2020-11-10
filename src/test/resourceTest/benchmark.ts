@@ -6,10 +6,17 @@ import performanceNow = require("performance-now");
 
 import "mocha";
 import { Task } from "../..";
-import { ICancellationToken, ResultUtils } from "../../common";
+import { ResultUtils } from "../../common";
 import { LexerSnapshot } from "../../lexer";
-import { DefaultLocale, Locale } from "../../localization";
-import { CombinatorialParser, IParser, IParserState, IParserStateUtils, RecursiveDescentParser } from "../../parser";
+import { DefaultLocale } from "../../localization";
+import {
+    CombinatorialParser,
+    IParser,
+    IParserState,
+    IParserStateUtils,
+    RecursiveDescentParser,
+    TParserStateFactoryOverrides,
+} from "../../parser";
 import { ParseSettings } from "../../settings";
 import { TestFileUtils } from "../testUtils";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
@@ -43,9 +50,13 @@ for (const [parseSettings, parserName] of Parsers) {
 
 writeReport(ResourceDirectory, allSummaries);
 
-function benchmarkStateFactory(lexerSnapshot: LexerSnapshot, baseParser: IParser<IParserState>): BenchmarkState {
+function benchmarkStateFactory(
+    lexerSnapshot: LexerSnapshot,
+    maybeOverrides: TParserStateFactoryOverrides | undefined,
+    baseParser: IParser<IParserState>,
+): BenchmarkState {
     return {
-        ...IParserStateUtils.stateFactory(undefined, lexerSnapshot, 0, Locale.en_US),
+        ...IParserStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
@@ -56,8 +67,8 @@ function benchmarkParseSettingsFactory(baseParser: IParser<IParserState>): Parse
     return {
         maybeCancellationToken: undefined,
         parser: BenchmarkParser,
-        parserStateFactory: (_cancellationToken: ICancellationToken | undefined, lexerSnapshot: LexerSnapshot) =>
-            benchmarkStateFactory(lexerSnapshot, baseParser),
+        parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateFactoryOverrides | undefined) =>
+            benchmarkStateFactory(lexerSnapshot, maybeOverrides, baseParser),
         maybeParserOptions: undefined,
         locale: DefaultLocale,
     };

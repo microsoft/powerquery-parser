@@ -474,12 +474,11 @@ function tryParseFieldAccess<T extends Ast.FieldProjection | Ast.FieldSelector, 
     parserState: S,
     parseFn: (state: S, parser: IParser<S>) => T,
 ): AdditionalParse {
-    const newState: S = parseSettings.parserStateFactory(
-        parserState.maybeCancellationToken,
-        parserState.lexerSnapshot,
-        parserState.tokenIndex,
-        parseSettings.locale,
-    );
+    const newState: S = parseSettings.parserStateFactory(parserState.lexerSnapshot, {
+        maybeCancellationToken: parserState.maybeCancellationToken,
+        locale: parseSettings.locale,
+        tokenIndex: parserState.tokenIndex,
+    });
 
     try {
         const ast: T = parseFn(newState, parseSettings.parser);

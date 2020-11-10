@@ -3,8 +3,15 @@
 
 import { ICancellationToken } from "../common";
 import { LexerSnapshot } from "../lexer";
-import { DefaultLocale, Locale } from "../localization";
-import { CombinatorialParser, IParser, IParserState, IParserStateUtils, ParserOptions } from "../parser";
+import { DefaultLocale } from "../localization";
+import {
+    CombinatorialParser,
+    IParser,
+    IParserState,
+    IParserStateUtils,
+    ParserOptions,
+    TParserStateFactoryOverrides,
+} from "../parser";
 
 export interface CommonSettings {
     readonly maybeCancellationToken: ICancellationToken | undefined;
@@ -18,10 +25,8 @@ export interface ParseSettings<S extends IParserState = IParserState> extends Co
     readonly parser: IParser<S>;
     readonly maybeParserOptions: ParserOptions<S> | undefined;
     readonly parserStateFactory: (
-        maybeCancellationToken: ICancellationToken | undefined,
         lexerSnapshot: LexerSnapshot,
-        tokenIndex: number,
-        maybeLocale: string | undefined,
+        maybeOverrides: TParserStateFactoryOverrides | undefined,
     ) => S;
 }
 
@@ -32,10 +37,6 @@ export const DefaultSettings: Settings<IParserState> = {
     locale: DefaultLocale,
     parser: CombinatorialParser,
     maybeParserOptions: undefined,
-    parserStateFactory: (
-        maybeCancellationToken: ICancellationToken | undefined,
-        lexerSnapshot: LexerSnapshot,
-        tokenIndex: number,
-        maybeLocale: string | undefined,
-    ) => IParserStateUtils.stateFactory(maybeCancellationToken, lexerSnapshot, tokenIndex, maybeLocale ?? Locale.en_US),
+    parserStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParserStateFactoryOverrides | undefined) =>
+        IParserStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
 };
