@@ -66,11 +66,11 @@ function benchmarkStateFactory(
 function benchmarkParseSettingsFactory(baseParser: IParser<IParseState>): ParseSettings<BenchmarkState> {
     return {
         maybeCancellationToken: undefined,
+        locale: DefaultLocale,
         parser: BenchmarkParser,
         parseStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParseStateFactoryOverrides | undefined) =>
             benchmarkStateFactory(lexerSnapshot, maybeOverrides, baseParser),
-        maybeParserOptions: undefined,
-        locale: DefaultLocale,
+        maybeParserEntryPointFn: undefined,
     };
 }
 
