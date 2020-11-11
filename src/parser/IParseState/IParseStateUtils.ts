@@ -6,6 +6,7 @@ import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
+import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";
 import { IParseState, TParseStateFactoryOverrides } from "./IParseState";
 
@@ -34,6 +35,7 @@ export function stateFactory(
         lexerSnapshot,
         maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
         locale: maybeOverrides?.locale ?? DefaultLocale,
+        disambiguationBehavior: maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind,
