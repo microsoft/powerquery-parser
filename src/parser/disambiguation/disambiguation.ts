@@ -14,5 +14,5 @@ export const enum ParenthesisDisambiguation {
 export const enum BracketDisambiguation {
     FieldProjection = "FieldProjection",
     FieldSelection = "FieldSelection",
-    Record = "Record",
+    RecordExpression = "RecordExpression",
 }

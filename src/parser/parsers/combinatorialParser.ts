@@ -24,8 +24,8 @@ import { IParseState, IParseStateUtils } from "../IParseState";
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export const CombinatorialParser: IParser<IParseState> = {
     ...NaiveParseSteps,
-    createCheckpoint: (state: IParseState) => IParserUtils.stateCheckpointFactory(state),
-    restoreFromCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
+    checkpointFactory: (state: IParseState) => IParserUtils.stateCheckpointFactory(state),
+    loadCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
         IParserUtils.restoreStateCheckpoint(state, checkpoint),
 
     // 12.2.3.2 Logical expressions
@@ -263,7 +263,7 @@ function readUnaryExpression(state: IParseState, parser: IParser<IParseState>): 
             maybePrimaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
                 Disambiguation.BracketDisambiguation.FieldProjection,
                 Disambiguation.BracketDisambiguation.FieldSelection,
-                Disambiguation.BracketDisambiguation.Record,
+                Disambiguation.BracketDisambiguation.RecordExpression,
             ]);
             break;
 

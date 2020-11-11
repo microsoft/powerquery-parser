@@ -76,7 +76,7 @@ function readStrictAmbiguousBracket<S extends IParseState = IParseState>(
         case BracketDisambiguation.FieldSelection:
             return parser.readFieldSelection(state, parser);
 
-        case BracketDisambiguation.Record:
+        case BracketDisambiguation.RecordExpression:
             return parser.readRecordExpression(state, parser);
 
         default:
@@ -109,13 +109,13 @@ export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
             // '(x as number) as number' could either be either case,
             // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
             if (IParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const checkpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
+                const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
                     parser.readNullablePrimitiveType(state, parser);
                 } catch {
-                    parser.restoreFromCheckpoint(state, checkpoint);
+                    parser.loadCheckpoint(state, checkpoint);
                     if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                         return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
                     } else {
@@ -130,7 +130,7 @@ export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
                     disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
                 }
 
-                parser.restoreFromCheckpoint(state, checkpoint);
+                parser.loadCheckpoint(state, checkpoint);
                 return ResultUtils.okFactory(disambiguation);
             } else {
                 if (IParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
@@ -181,7 +181,7 @@ export function tryDisambiguateBracket<S extends IParseState = IParseState>(
     if (offsetTokenKind === Token.TokenKind.LeftBracket) {
         return ResultUtils.okFactory(BracketDisambiguation.FieldProjection);
     } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
-        return ResultUtils.okFactory(BracketDisambiguation.Record);
+        return ResultUtils.okFactory(BracketDisambiguation.RecordExpression);
     } else {
         const totalTokens: number = tokens.length;
         offsetTokenIndex += 1;
@@ -189,7 +189,7 @@ export function tryDisambiguateBracket<S extends IParseState = IParseState>(
             offsetTokenKind = tokens[offsetTokenIndex].kind;
 
             if (offsetTokenKind === Token.TokenKind.Equal) {
-                return ResultUtils.okFactory(BracketDisambiguation.Record);
+                return ResultUtils.okFactory(BracketDisambiguation.RecordExpression);
             } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
                 return ResultUtils.okFactory(BracketDisambiguation.FieldSelection);
             }
@@ -206,5 +206,36 @@ function readThoroughAmbiguousBracket<S extends IParseState = IParseState>(
     parser: IParser<S>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
+    const startingCheckpoint = parser.checkpointFactory(state);
+
+    const parses: S[] = [state];
+
+    for (const variant of allowedVariants) {
+        const variantState = 1 as any;
+        // const variantState: S = parser.stateFactory(state.lexerSnapshot, {
+        //     maybeCancellationToken: state.maybeCancellationToken,
+        //     tokenIndex: state.tokenIndex,
+        // });
+
+        try {
+            switch (variant) {
+                case BracketDisambiguation.FieldProjection:
+                    parser.readFieldProjection(variantState, parser);
+                    break;
+
+                case BracketDisambiguation.FieldSelection:
+                    parser.readFieldProjection(variantState, parser);
+                    break;
+
+                case BracketDisambiguation.RecordExpression:
+                    parser.readRecordExpression(variantState, parser);
+                    break;
+
+                default:
+                    throw Assert.isNever(variant);
+            }
+        } catch (err) {}
+    }
+
     throw new Error();
 }

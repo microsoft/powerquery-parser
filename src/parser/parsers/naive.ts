@@ -170,7 +170,7 @@ export function readDocument<S extends IParseState = IParseState>(state: S, pars
     } catch (expressionError) {
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
-        const expressionCheckpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
+        const expressionCheckpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
         const expressionErrorContextState: ParseContext.State = state.contextState;
 
         // Reset the parser's state.
@@ -191,7 +191,7 @@ export function readDocument<S extends IParseState = IParseState>(state: S, pars
             let triedError: Error;
             if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                parser.restoreFromCheckpoint(state, expressionCheckpoint);
+                parser.loadCheckpoint(state, expressionCheckpoint);
                 state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;
@@ -652,7 +652,7 @@ export function readPrimaryExpression<S extends IParseState = IParseState>(
                 primaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
                     Disambiguation.BracketDisambiguation.FieldProjection,
                     Disambiguation.BracketDisambiguation.FieldSelection,
-                    Disambiguation.BracketDisambiguation.Record,
+                    Disambiguation.BracketDisambiguation.RecordExpression,
                 ]);
                 break;
 
@@ -1628,11 +1628,11 @@ function tryReadPrimaryType<S extends IParseState = IParseState>(state: S, parse
     } else if (IParseStateUtils.isOnConstantKind(state, Constant.LanguageConstantKind.Nullable)) {
         return ResultUtils.okFactory(parser.readNullableType(state, parser));
     } else {
-        const checkpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
+        const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
         if (ResultUtils.isErr(triedReadPrimitiveType)) {
-            parser.restoreFromCheckpoint(state, checkpoint);
+            parser.loadCheckpoint(state, checkpoint);
         }
         return triedReadPrimitiveType;
     }
@@ -1841,7 +1841,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
     const nodeKind: Ast.NodeKind.PrimitiveType = Ast.NodeKind.PrimitiveType;
     IParseStateUtils.startContext(state, nodeKind);
 
-    const checkpoint: IParseStateCheckpoint = parser.createCheckpoint(state);
+    const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
     const expectedTokenKinds: ReadonlyArray<Token.TokenKind> = [
         Token.TokenKind.Identifier,
         Token.TokenKind.KeywordType,
@@ -1884,7 +1884,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
 
             default:
                 const token: Token.Token = IParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
-                parser.restoreFromCheckpoint(state, checkpoint);
+                parser.loadCheckpoint(state, checkpoint);
                 return ResultUtils.errFactory(
                     new ParseError.InvalidPrimitiveTypeError(
                         state.locale,
@@ -1901,7 +1901,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
         readToken(state);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
-        parser.restoreFromCheckpoint(state, checkpoint);
+        parser.loadCheckpoint(state, checkpoint);
         return ResultUtils.errFactory(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );
