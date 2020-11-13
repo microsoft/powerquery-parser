@@ -206,16 +206,10 @@ function readThoroughAmbiguousBracket<S extends IParseState = IParseState>(
     parser: IParser<S>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression {
-    const startingCheckpoint = parser.checkpointFactory(state);
-
-    const parses: S[] = [state];
+    let mostTokensMatched: S = state;
 
     for (const variant of allowedVariants) {
-        const variantState = 1 as any;
-        // const variantState: S = parser.stateFactory(state.lexerSnapshot, {
-        //     maybeCancellationToken: state.maybeCancellationToken,
-        //     tokenIndex: state.tokenIndex,
-        // });
+        const variantState: S = parser.copyState(state);
 
         try {
             switch (variant) {
@@ -234,7 +228,14 @@ function readThoroughAmbiguousBracket<S extends IParseState = IParseState>(
                 default:
                     throw Assert.isNever(variant);
             }
-        } catch (err) {}
+
+            // tslint:disable-next-line: no-empty
+        } catch (_) {
+        } finally {
+            if (variantState.tokenIndex > mostTokensMatched.tokenIndex) {
+                mostTokensMatched = variantState;
+            }
+        }
     }
 
     throw new Error();

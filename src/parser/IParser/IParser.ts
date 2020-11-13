@@ -4,6 +4,7 @@
 import { IParseState, ParseError } from "..";
 import { Result } from "../../common";
 import { Ast } from "../../language";
+import { TParseStateFactoryOverrides } from "../IParseState";
 
 export type TriedParse<S extends IParseState = IParseState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 
@@ -19,6 +20,7 @@ export interface ParseOk<S extends IParseState = IParseState> {
 }
 
 export interface IParser<S extends IParseState = IParseState, C extends IParseStateCheckpoint = IParseStateCheckpoint> {
+    readonly copyState: (state: S) => S;
     readonly checkpointFactory: (state: S) => C;
     readonly loadCheckpoint: (state: S, checkpoint: C) => void;
 

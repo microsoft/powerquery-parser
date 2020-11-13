@@ -18,6 +18,22 @@ export function cloneCollection(nodeIdMapCollection: Collection): Collection {
     };
 }
 
+export function deepCloneCollection(nodeIdMapCollection: Collection): Collection {
+    const contextNodeById: Map<number, ParseContext.Node> = new Map(
+        [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.Node]) => {
+            return [id, { ...contextNode }];
+        }),
+    );
+
+    return {
+        astNodeById: new Map(nodeIdMapCollection.astNodeById),
+        contextNodeById,
+        parentIdById: new Map(nodeIdMapCollection.parentIdById),
+        childIdsById: new Map(nodeIdMapCollection.childIdsById),
+        maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
+    };
+}
+
 // Contains at least one parsed token.
 export function hasParsedToken(nodeIdMapCollection: Collection, nodeId: number): boolean {
     let maybeChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(nodeId);

@@ -22,6 +22,16 @@ export function stateFactory(): State {
     };
 }
 
+export function cloneState(state: State): State {
+    const maybeRoot: Node | undefined = state.maybeRoot !== undefined ? { ...state.maybeRoot } : undefined;
+
+    return {
+        ...state,
+        maybeRoot,
+        nodeIdMapCollection: NodeIdMapUtils.deepCloneCollection(state.nodeIdMapCollection),
+    };
+}
+
 export function nextId(state: State): number {
     state.idCounter += 1;
     return state.idCounter;

@@ -128,13 +128,13 @@ export function restoreStateCheckpoint(state: IParseState, checkpoint: IParseSta
         }
     }
 
-    const sortByNumber: (left: number, right: number) => number = (left: number, right: number) => left - right;
-    for (const nodeId of newAstNodeIds.sort(sortByNumber).reverse()) {
+    const reverseNumberSort: (left: number, right: number) => number = (left: number, right: number) => right - left;
+    for (const nodeId of newAstNodeIds.sort(reverseNumberSort)) {
         const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(nodeId);
         const parentWillBeDeleted: boolean = maybeParentId !== undefined && maybeParentId >= backupIdCounter;
         ParseContextUtils.deleteAst(state.contextState, nodeId, parentWillBeDeleted);
     }
-    for (const nodeId of newContextNodeIds.sort(sortByNumber).reverse()) {
+    for (const nodeId of newContextNodeIds.sort(reverseNumberSort)) {
         ParseContextUtils.deleteContext(state.contextState, nodeId);
     }
 

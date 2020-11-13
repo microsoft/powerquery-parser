@@ -44,6 +44,13 @@ export function stateFactory(
     };
 }
 
+export function cloneState(state: IParseState): IParseState {
+    return {
+        ...state,
+        contextState: ParseContextUtils.cloneState(state.contextState),
+    };
+}
+
 export function startContext(state: IParseState, nodeKind: Ast.NodeKind): void {
     const newContextNode: ParseContext.Node = ParseContextUtils.startContext(
         state.contextState,

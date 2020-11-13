@@ -24,9 +24,9 @@ import { IParseState, IParseStateUtils } from "../IParseState";
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export const CombinatorialParser: IParser<IParseState> = {
     ...NaiveParseSteps,
-    checkpointFactory: (state: IParseState) => IParserUtils.stateCheckpointFactory(state),
-    loadCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
-        IParserUtils.restoreStateCheckpoint(state, checkpoint),
+    copyState: IParseStateUtils.cloneState,
+    checkpointFactory: IParserUtils.stateCheckpointFactory,
+    loadCheckpoint: IParserUtils.restoreStateCheckpoint,
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: IParseState, parser: IParser<IParseState>) =>
