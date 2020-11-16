@@ -8,17 +8,7 @@ import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { maybeRightMostLeaf } from "./leafSelectors";
 
-export function cloneCollection(nodeIdMapCollection: Collection): Collection {
-    return {
-        astNodeById: new Map(nodeIdMapCollection.astNodeById),
-        contextNodeById: new Map(nodeIdMapCollection.contextNodeById),
-        parentIdById: new Map(nodeIdMapCollection.parentIdById),
-        childIdsById: new Map(nodeIdMapCollection.childIdsById),
-        maybeRightMostLeaf: nodeIdMapCollection.maybeRightMostLeaf,
-    };
-}
-
-export function deepCloneCollection(nodeIdMapCollection: Collection): Collection {
+export function copy(nodeIdMapCollection: Collection): Collection {
     const contextNodeById: Map<number, ParseContext.Node> = new Map(
         [...nodeIdMapCollection.contextNodeById.entries()].map(([id, contextNode]: [number, ParseContext.Node]) => {
             return [id, { ...contextNode }];

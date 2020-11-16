@@ -22,13 +22,13 @@ export function stateFactory(): State {
     };
 }
 
-export function cloneState(state: State): State {
+export function copyState(state: State): State {
     const maybeRoot: Node | undefined = state.maybeRoot !== undefined ? { ...state.maybeRoot } : undefined;
 
     return {
         ...state,
         maybeRoot,
-        nodeIdMapCollection: NodeIdMapUtils.deepCloneCollection(state.nodeIdMapCollection),
+        nodeIdMapCollection: NodeIdMapUtils.copy(state.nodeIdMapCollection),
     };
 }
 

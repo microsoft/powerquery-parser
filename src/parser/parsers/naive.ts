@@ -191,7 +191,7 @@ export function readDocument<S extends IParseState = IParseState>(state: S, pars
             let triedError: Error;
             if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
                 triedError = expressionError;
-                parser.loadCheckpoint(state, expressionCheckpoint);
+                parser.restoreCheckpoint(state, expressionCheckpoint);
                 state.contextState = expressionErrorContextState;
             } else {
                 triedError = sectionError;
@@ -1632,7 +1632,7 @@ function tryReadPrimaryType<S extends IParseState = IParseState>(state: S, parse
         const triedReadPrimitiveType: TriedReadPrimaryType = tryReadPrimitiveType(state, parser);
 
         if (ResultUtils.isErr(triedReadPrimitiveType)) {
-            parser.loadCheckpoint(state, checkpoint);
+            parser.restoreCheckpoint(state, checkpoint);
         }
         return triedReadPrimitiveType;
     }
@@ -1884,7 +1884,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
 
             default:
                 const token: Token.Token = IParseStateUtils.assertGetTokenAt(state, state.tokenIndex);
-                parser.loadCheckpoint(state, checkpoint);
+                parser.restoreCheckpoint(state, checkpoint);
                 return ResultUtils.errFactory(
                     new ParseError.InvalidPrimitiveTypeError(
                         state.locale,
@@ -1901,7 +1901,7 @@ function tryReadPrimitiveType<S extends IParseState = IParseState>(
         readToken(state);
     } else {
         const details: {} = { tokenKind: state.maybeCurrentTokenKind };
-        parser.loadCheckpoint(state, checkpoint);
+        parser.restoreCheckpoint(state, checkpoint);
         return ResultUtils.errFactory(
             new CommonError.InvariantError(`unknown currentTokenKind, not found in [${expectedTokenKinds}]`, details),
         );

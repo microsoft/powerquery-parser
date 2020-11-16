@@ -7,7 +7,8 @@ import { IParseState, IParseStateUtils } from "../IParseState";
 
 export let RecursiveDescentParser: IParser<IParseState> = {
     ...NaiveParseSteps,
-    copyState: IParseStateUtils.cloneState,
-    checkpointFactory: IParserUtils.stateCheckpointFactory,
-    loadCheckpoint: IParserUtils.restoreStateCheckpoint,
+    applyState: IParseStateUtils.applyState,
+    copyState: IParseStateUtils.copyState,
+    checkpointFactory: IParserUtils.checkpointFactory,
+    restoreCheckpoint: IParserUtils.restoreCheckpoint,
 };
