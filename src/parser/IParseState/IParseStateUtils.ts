@@ -10,12 +10,12 @@ import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";
 import { IParseState, TParseStateFactoryOverrides } from "./IParseState";
 
-// If you have a custom parser + parser state, then you'll have to create your own factory function.
-// See `benchmark.ts` for an example.
-export function stateFactory(
+export function stateFactory<S extends IParseState = IParseState>(
     lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TParseStateFactoryOverrides | undefined,
+    maybeOverrides: TParseStateFactoryOverrides<S> | undefined,
 ): IParseState {
+    maybeOverrides = maybeOverrides !== undefined ? maybeOverrides : {};
+
     const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;
@@ -32,6 +32,7 @@ export function stateFactory(
             : undefined;
 
     return {
+        ...maybeOverrides,
         lexerSnapshot,
         maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
         locale: maybeOverrides?.locale ?? DefaultLocale,
@@ -44,10 +45,22 @@ export function stateFactory(
     };
 }
 
-export function cloneState(state: IParseState): IParseState {
+// If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
+// See `benchmark.ts` for an example.
+export function applyState(state: IParseState, update: IParseState): void {
+    state.tokenIndex = update.tokenIndex;
+    state.maybeCurrentToken = update.maybeCurrentToken;
+    state.maybeCurrentTokenKind = update.maybeCurrentTokenKind;
+    state.contextState = update.contextState;
+    state.maybeCurrentContextNode = update.maybeCurrentContextNode;
+}
+
+// If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
+// See `benchmark.ts` for an example.
+export function copyState(state: IParseState): IParseState {
     return {
         ...state,
-        contextState: ParseContextUtils.cloneState(state.contextState),
+        contextState: ParseContextUtils.copyState(state.contextState),
     };
 }
 

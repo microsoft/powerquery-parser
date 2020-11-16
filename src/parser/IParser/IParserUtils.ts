@@ -90,13 +90,17 @@ export function tryParseDocument<S extends IParseState = IParseState>(
     }
 }
 
+// If you have a custom parser + parser state,
+// then you'll have to create your own checkpointFactory/restoreCheckpoint functions.
+// See `benchmark.ts` for an example.
+//
 // Due to performance reasons the backup no longer can include a naive deep copy of the context state.
 // Instead it's assumed that a backup is made immediately before a try/catch read block.
 // This means the state begins in a parsing context and the backup will either be immediately consumed or dropped.
 // Therefore we only care about the delta between before and after the try/catch block.
 // Thanks to the invariants above and the fact the ids for nodes are an auto-incrementing integer
 // we can easily just drop all delete all context nodes past the id of when the backup was created.
-export function stateCheckpointFactory(state: IParseState): IParseStateCheckpoint {
+export function checkpointFactory(state: IParseState): IParseStateCheckpoint {
     return {
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
@@ -104,8 +108,12 @@ export function stateCheckpointFactory(state: IParseState): IParseStateCheckpoin
     };
 }
 
+// If you have a custom parser + parser state,
+// then you'll have to create your own checkpointFactory/restoreCheckpoint functions.
+// See `benchmark.ts` for an example.
+//
 // See stateCheckpointFactory above for more information.
-export function restoreStateCheckpoint(state: IParseState, checkpoint: IParseStateCheckpoint): void {
+export function restoreCheckpoint(state: IParseState, checkpoint: IParseStateCheckpoint): void {
     state.tokenIndex = checkpoint.tokenIndex;
     state.maybeCurrentToken = state.lexerSnapshot.tokens[state.tokenIndex];
     state.maybeCurrentTokenKind = state.maybeCurrentToken?.kind;
