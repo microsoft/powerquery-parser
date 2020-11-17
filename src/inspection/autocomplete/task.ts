@@ -45,31 +45,38 @@ export function autocomplete<S extends IParseState = IParseState>(
         typeCache,
     );
 
-    const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(
-        parseSettings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        maybeActiveNode,
-        maybeTrailingToken,
-    );
-
-    const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
-        parseSettings,
-        parseState,
-        maybeActiveNode,
-        maybeParseError,
-    );
-
-    const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
-        parseSettings,
-        maybeActiveNode,
-        maybeTrailingToken,
-    );
-
     return {
         triedFieldAccess,
-        triedKeyword,
-        triedLanguageConstant,
-        triedPrimitiveType,
+        triedKeyword: 0 as any,
+        triedLanguageConstant: 0 as any,
+        triedPrimitiveType: 0 as any,
     };
+
+    // const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(
+    //     parseSettings,
+    //     nodeIdMapCollection,
+    //     leafNodeIds,
+    //     maybeActiveNode,
+    //     maybeTrailingToken,
+    // );
+
+    // const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
+    //     parseSettings,
+    //     parseState,
+    //     maybeActiveNode,
+    //     maybeParseError,
+    // );
+
+    // const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
+    //     parseSettings,
+    //     maybeActiveNode,
+    //     maybeTrailingToken,
+    // );
+
+    // return {
+    //     triedFieldAccess,
+    //     triedKeyword,
+    //     triedLanguageConstant,
+    //     triedPrimitiveType,
+    // };
 }

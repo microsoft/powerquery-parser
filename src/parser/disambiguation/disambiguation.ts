@@ -8,20 +8,25 @@ import { IParseState } from "../IParseState";
 
 export type TAmbiguousBracketNode = Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression;
 
+export type TriedDisambiguation<T extends BracketDisambiguation | ParenthesisDisambiguation> = Result<
+    T,
+    ParseError.UnterminatedSequence
+>;
+
 export const enum DismabiguationBehavior {
     Strict = "Strict",
     Thorough = "Thorough",
-}
-
-export const enum ParenthesisDisambiguation {
-    FunctionExpression = "FunctionExpression",
-    ParenthesizedExpression = "ParenthesizedExpression",
 }
 
 export const enum BracketDisambiguation {
     FieldProjection = "FieldProjection",
     FieldSelection = "FieldSelection",
     RecordExpression = "RecordExpression",
+}
+
+export const enum ParenthesisDisambiguation {
+    FunctionExpression = "FunctionExpression",
+    ParenthesizedExpression = "ParenthesizedExpression",
 }
 
 export interface AmbiguousParse<T extends Ast.TNode, S extends IParseState = IParseState> {

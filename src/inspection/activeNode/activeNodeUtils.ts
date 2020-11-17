@@ -204,7 +204,11 @@ function maybeFindAstNodes(
     //  the closest leaf to the left or on position.
     //  the closest leaf to the right of position.
     for (const nodeId of leafNodeIds) {
-        const candidate: Ast.TNode = NodeIdMapUtils.assertGetAst(astNodeById, nodeId);
+        const maybeCandidate: Ast.TNode | undefined = astNodeById.get(nodeId);
+        if (maybeCandidate === undefined) {
+            continue;
+        }
+        const candidate: Ast.TNode = maybeCandidate;
 
         let isBoundIncluded: boolean;
         if (

@@ -99,7 +99,7 @@ describe(`ABC Inspection - Autocomplete - FieldSelection`, () => {
         });
 
         describe(`ParseErr`, () => {
-            it(`WIP [cat = 1, car = 2]|[`, () => {
+            it(`[cat = 1, car = 2]|[`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2]|[`,
                 );
@@ -459,7 +459,7 @@ describe(`ABC Inspection - Autocomplete - FieldSelection`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()()[|`, () => {
+        it(`WIP let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()()[|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()()[|`,
             );

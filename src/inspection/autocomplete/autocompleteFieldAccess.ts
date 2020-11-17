@@ -5,12 +5,10 @@ import { Assert, CommonError, ResultUtils } from "../../common";
 import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import {
-    IParser,
     IParseState,
     NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    ParseError,
     TXorNode,
     XorNodeKind,
     XorNodeUtils,
@@ -207,6 +205,14 @@ function inspectFieldProjection(
     };
 }
 
+function inspectedFieldAccessFactory(isAutocompleteAllowed: boolean): InspectedFieldAccess {
+    return {
+        isAutocompleteAllowed,
+        maybeIdentifierUnderPosition: undefined,
+        fieldNames: [],
+    };
+}
+
 function inspectFieldSelector(
     lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -214,12 +220,10 @@ function inspectFieldSelector(
     fieldSelector: TXorNode,
 ): InspectedFieldAccess {
     const children: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
-    if (children === undefined || children.length < 2) {
-        return {
-            isAutocompleteAllowed: PositionUtils.isInXor(nodeIdMapCollection, position, fieldSelector, true, true),
-            maybeIdentifierUnderPosition: undefined,
-            fieldNames: [],
-        };
+    if (children === undefined) {
+        return inspectedFieldAccessFactory(false);
+    } else if (children.length === 1) {
+        return inspectedFieldAccessFactory(nodeIdMapCollection.astNodeById.has(children[0]));
     }
 
     const generalizedIdentifierId: number = children[1];
@@ -319,13 +323,11 @@ function maybeTypablePrimaryExpression(
             // The previous ancestor is the head. This should only happen if a trailing open bracket exists.
             // Eg. `foo[|`
             if (xorNodeBeforeRpe.node.maybeAttributeIndex === 0) {
-                throw new Error();
                 // // Only valid if there's a trailing bracket, Eg. `foo[|`
                 // if (hasTrailingOpenConstant === true) {
                 //     // Return Rpe.head.
                 //     return xorNodeBeforeRpe;
                 // }
-
                 // // There's nothing we can do.
                 // else {
                 //     break;

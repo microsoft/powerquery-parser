@@ -154,10 +154,6 @@ export function isTParseError<S extends IParseState = IParseState>(error: any): 
 }
 
 export function isTInnerParseError(x: any): x is TInnerParseError {
-    if (x instanceof ParseError) {
-        console.log(1);
-    }
-
     return (
         x instanceof ExpectedAnyTokenKindError ||
         x instanceof ExpectedCsvContinuationError ||
