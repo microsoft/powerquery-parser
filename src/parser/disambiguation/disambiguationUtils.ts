@@ -77,7 +77,6 @@ export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
 
 export function tryDisambiguateBracket<S extends IParseState = IParseState>(
     state: S,
-    _parser: IParser<S>,
 ): Result<BracketDisambiguation, ParseError.UnterminatedSequence> {
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
     let offsetTokenIndex: number = state.tokenIndex + 1;
@@ -127,7 +126,8 @@ export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IPars
         let maybeError: ParseError.ParseError<S> | undefined;
 
         try {
-            maybeNode = parseFn(state, parser);
+            maybeNode = parseFn(variantState, parser);
+            IParseStateUtils.assertNoMoreTokens(variantState);
         } catch (err) {
             if (!ParseError.isTInnerParseError(err)) {
                 throw err;
@@ -136,7 +136,7 @@ export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IPars
         }
 
         let variantResult: Result<T, ParseError.ParseError<S>>;
-        if (maybeBestMatch === undefined || variantState.tokenIndex >= maybeBestMatch.parseState.tokenIndex) {
+        if (maybeBestMatch === undefined || variantState.tokenIndex > maybeBestMatch.parseState.tokenIndex) {
             if (maybeNode !== undefined) {
                 variantResult = ResultUtils.okFactory(maybeNode);
             } else if (maybeError !== undefined) {
@@ -148,6 +148,17 @@ export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IPars
             maybeBestMatch = {
                 parseState: variantState,
                 result: variantResult,
+            };
+        }
+        // They parsed the same amount of tokens and this iteration is an Ok where the previous was an Err.
+        else if (
+            variantState.tokenIndex === maybeBestMatch.parseState.tokenIndex &&
+            maybeNode !== undefined &&
+            ResultUtils.isErr(maybeBestMatch.result)
+        ) {
+            maybeBestMatch = {
+                parseState: variantState,
+                result: ResultUtils.okFactory(maybeNode),
             };
         }
     }
@@ -205,7 +216,6 @@ function strictReadAmbiguousBracket<S extends IParseState = IParseState>(
 ): TAmbiguousBracketNode {
     const triedDisambiguation: Result<BracketDisambiguation, ParseError.UnterminatedSequence> = tryDisambiguateBracket(
         state,
-        parser,
     );
     if (ResultUtils.isErr(triedDisambiguation)) {
         throw triedDisambiguation.error;

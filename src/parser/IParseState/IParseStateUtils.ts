@@ -36,7 +36,8 @@ export function stateFactory<S extends IParseState = IParseState>(
         lexerSnapshot,
         maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
         locale: maybeOverrides?.locale ?? DefaultLocale,
-        disambiguationBehavior: maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
+        disambiguationBehavior:
+            maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind,
@@ -319,6 +320,11 @@ export function assertNoOpenContext(state: IParseState): void {
     Assert.isUndefined(state.maybeCurrentContextNode, undefined, {
         contextNodeId: state.maybeCurrentContextNode?.id,
     });
+}
+
+export function assertIsDoneParsing(state: IParseState): void {
+    assertNoMoreTokens(state);
+    assertNoOpenContext(state);
 }
 
 // -------------------------------------

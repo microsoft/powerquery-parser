@@ -28,8 +28,7 @@ export function tryParse<S extends IParseState = IParseState>(
     });
     try {
         const root: Ast.TNode = maybeParserEntryPointFn(parseState, parseSettings.parser);
-        IParseStateUtils.assertNoMoreTokens(parseState);
-        IParseStateUtils.assertNoOpenContext(parseState);
+        IParseStateUtils.assertIsDoneParsing(parseState);
         return ResultUtils.okFactory({
             lexerSnapshot,
             root,
@@ -52,8 +51,7 @@ export function tryParseDocument<S extends IParseState = IParseState>(
     });
     try {
         root = parseSettings.parser.readExpression(expressionDocumentState, parseSettings.parser);
-        IParseStateUtils.assertNoMoreTokens(expressionDocumentState);
-        IParseStateUtils.assertNoOpenContext(expressionDocumentState);
+        IParseStateUtils.assertIsDoneParsing(expressionDocumentState);
         return ResultUtils.okFactory({
             lexerSnapshot,
             root,
@@ -66,8 +64,7 @@ export function tryParseDocument<S extends IParseState = IParseState>(
         });
         try {
             root = parseSettings.parser.readSectionDocument(sectionDocumentState, parseSettings.parser);
-            IParseStateUtils.assertNoMoreTokens(sectionDocumentState);
-            IParseStateUtils.assertNoOpenContext(sectionDocumentState);
+            IParseStateUtils.assertIsDoneParsing(sectionDocumentState);
             return ResultUtils.okFactory({
                 lexerSnapshot,
                 root,

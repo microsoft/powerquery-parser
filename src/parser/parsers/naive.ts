@@ -165,8 +165,7 @@ export function readDocument<S extends IParseState = IParseState>(state: S, pars
     // If both fail then return the error which parsed more tokens.
     try {
         document = parser.readExpression(state, parser);
-        IParseStateUtils.assertNoMoreTokens(state);
-        IParseStateUtils.assertNoOpenContext(state);
+        IParseStateUtils.assertIsDoneParsing(state);
     } catch (expressionError) {
         // Fast backup deletes context state, but we want to preserve it for the case
         // where both parsing an expression and section document error out.
@@ -185,8 +184,7 @@ export function readDocument<S extends IParseState = IParseState>(state: S, pars
 
         try {
             document = readSectionDocument(state, parser);
-            IParseStateUtils.assertNoMoreTokens(state);
-            IParseStateUtils.assertNoOpenContext(state);
+            IParseStateUtils.assertIsDoneParsing(state);
         } catch (sectionError) {
             let triedError: Error;
             if (expressionCheckpoint.tokenIndex > /* sectionErrorState */ state.tokenIndex) {
