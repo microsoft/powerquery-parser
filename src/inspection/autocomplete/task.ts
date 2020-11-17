@@ -43,7 +43,6 @@ export function autocomplete<S extends IParseState = IParseState>(
         parseState,
         maybeActiveNode,
         typeCache,
-        maybeParseError,
     );
 
     const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(

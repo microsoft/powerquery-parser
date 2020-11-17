@@ -158,7 +158,9 @@ function ensureParseError<S extends IParseState = IParseState>(
     error: Error,
     locale: string,
 ): ParseError.TParseError<S> {
-    if (ParseError.isTInnerParseError(error)) {
+    if (error instanceof ParseError.ParseError) {
+        return error;
+    } else if (ParseError.isTInnerParseError(error)) {
         return new ParseError.ParseError(error, state);
     } else {
         return CommonError.ensureCommonError(locale, error);

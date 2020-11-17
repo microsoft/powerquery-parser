@@ -42,7 +42,7 @@ function assertGetParseErrAutocompleteOkFieldAccess<S extends IParseState = IPar
     return abridgedFieldAccess(actual.triedFieldAccess.value);
 }
 
-describe(`Inspection - Autocomplete - FieldSelection`, () => {
+describe(`ABC Inspection - Autocomplete - FieldSelection`, () => {
     describe(`Selection`, () => {
         describe(`ParseOk`, () => {
             it(`[cat = 1, car = 2][x|]`, () => {
@@ -99,7 +99,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         });
 
         describe(`ParseErr`, () => {
-            it(`[cat = 1, car = 2]|[`, () => {
+            it(`WIP [cat = 1, car = 2]|[`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2]|[`,
                 );
