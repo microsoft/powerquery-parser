@@ -12,107 +12,7 @@ import {
     DismabiguationBehavior,
     ParenthesisDisambiguation,
     TAmbiguousBracketNode,
-    TriedDisambiguation,
 } from "./disambiguation";
-
-// Peeks at tokens which might give a concrete disambiguation.
-export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
-    state: S,
-    parser: IParser<S>,
-): TriedDisambiguation<ParenthesisDisambiguation> {
-    const initialTokenIndex: number = state.tokenIndex;
-    const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
-    const totalTokens: number = tokens.length;
-    let nestedDepth: number = 1;
-    let offsetTokenIndex: number = initialTokenIndex + 1;
-
-    while (offsetTokenIndex < totalTokens) {
-        const offsetTokenKind: Token.TokenKind = tokens[offsetTokenIndex].kind;
-
-        if (offsetTokenKind === Token.TokenKind.LeftParenthesis) {
-            nestedDepth += 1;
-        } else if (offsetTokenKind === Token.TokenKind.RightParenthesis) {
-            nestedDepth -= 1;
-        }
-
-        if (nestedDepth === 0) {
-            // '(x as number) as number' could either be either case,
-            // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
-            if (IParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
-                unsafeMoveTo(state, offsetTokenIndex + 2);
-
-                try {
-                    parser.readNullablePrimitiveType(state, parser);
-                } catch {
-                    parser.restoreCheckpoint(state, checkpoint);
-                    if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
-                        return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
-                    } else {
-                        return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
-                    }
-                }
-
-                let disambiguation: ParenthesisDisambiguation;
-                if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
-                    disambiguation = ParenthesisDisambiguation.FunctionExpression;
-                } else {
-                    disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
-                }
-
-                parser.restoreCheckpoint(state, checkpoint);
-                return ResultUtils.okFactory(disambiguation);
-            } else {
-                if (IParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
-                    return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
-                } else {
-                    return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
-                }
-            }
-        }
-
-        offsetTokenIndex += 1;
-    }
-
-    return ResultUtils.errFactory(IParseStateUtils.unterminatedParenthesesError(state));
-}
-
-export function tryDisambiguateBracket<S extends IParseState = IParseState>(
-    state: S,
-): TriedDisambiguation<BracketDisambiguation> {
-    let offsetTokenIndex: number = state.tokenIndex + 1;
-
-    const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
-    const maybeOffsetToken: Token.Token | undefined = tokens[offsetTokenIndex];
-
-    if (maybeOffsetToken === undefined) {
-        return ResultUtils.errFactory(IParseStateUtils.unterminatedBracketError(state));
-    }
-    const offsetToken: Token.Token = maybeOffsetToken;
-
-    let offsetTokenKind: Token.TokenKind = offsetToken.kind;
-    if (offsetTokenKind === Token.TokenKind.LeftBracket) {
-        return ResultUtils.okFactory(BracketDisambiguation.FieldProjection);
-    } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
-        return ResultUtils.okFactory(BracketDisambiguation.RecordExpression);
-    } else {
-        const totalTokens: number = tokens.length;
-        offsetTokenIndex += 1;
-        while (offsetTokenIndex < totalTokens) {
-            offsetTokenKind = tokens[offsetTokenIndex].kind;
-
-            if (offsetTokenKind === Token.TokenKind.Equal) {
-                return ResultUtils.okFactory(BracketDisambiguation.RecordExpression);
-            } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
-                return ResultUtils.okFactory(BracketDisambiguation.FieldSelection);
-            }
-
-            offsetTokenIndex += 1;
-        }
-
-        return ResultUtils.errFactory(IParseStateUtils.unterminatedBracketError(state));
-    }
-}
 
 // The best match is the one which ended on the highest IParseState.tokenIndex with ties going in order given.
 export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IParseState>(
@@ -158,11 +58,11 @@ export function readAmbiguousBracket<S extends IParseState = IParseState>(
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): TAmbiguousBracketNode {
     // We might be able to peek at tokens to disambiguate what bracketed expression is next.
-    const triedDisambiguateBracket: TriedDisambiguation<BracketDisambiguation> = tryDisambiguateBracket(state);
+    const maybeDisambiguation: BracketDisambiguation | undefined = maybeDisambiguateBracket(state);
 
     // Peeking gave us a concrete answer as to what's next.
-    if (ResultUtils.isOk(triedDisambiguateBracket)) {
-        const disambiguation: BracketDisambiguation = triedDisambiguateBracket.value;
+    if (maybeDisambiguation !== undefined) {
+        const disambiguation: BracketDisambiguation = maybeDisambiguation;
         ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
 
         switch (disambiguation) {
@@ -183,7 +83,7 @@ export function readAmbiguousBracket<S extends IParseState = IParseState>(
     else {
         switch (state.disambiguationBehavior) {
             case DismabiguationBehavior.Strict:
-                throw triedDisambiguateBracket.error;
+                throw IParseStateUtils.unterminatedBracketError(state);
 
             case DismabiguationBehavior.Thorough:
                 return thoroughReadAmbiguousBracket(state, parser, allowedVariants);
@@ -198,15 +98,12 @@ export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
 ): Ast.FunctionExpression | Ast.TExpression {
-    const triedDisambiguation: TriedDisambiguation<ParenthesisDisambiguation> = tryDisambiguateParenthesis(
-        state,
-        parser,
-    );
-    if (ResultUtils.isErr(triedDisambiguation)) {
-        throw triedDisambiguation.error;
+    const maybeDisambiguation: ParenthesisDisambiguation | undefined = maybeDisambiguateParenthesis(state, parser);
+    if (maybeDisambiguation === undefined) {
+        throw IParseStateUtils.unterminatedParenthesesError(state);
     }
-    const disambiguation: ParenthesisDisambiguation = triedDisambiguation.value;
 
+    const disambiguation: ParenthesisDisambiguation = maybeDisambiguation;
     switch (disambiguation) {
         case ParenthesisDisambiguation.FunctionExpression:
             return parser.readFunctionExpression(state, parser);
@@ -216,6 +113,105 @@ export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
 
         default:
             throw Assert.isNever(disambiguation);
+    }
+}
+
+// Peeks at tokens which might give a concrete disambiguation.
+export function maybeDisambiguateParenthesis<S extends IParseState = IParseState>(
+    state: S,
+    parser: IParser<S>,
+): ParenthesisDisambiguation | undefined {
+    const initialTokenIndex: number = state.tokenIndex;
+    const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
+    const totalTokens: number = tokens.length;
+    let nestedDepth: number = 1;
+    let offsetTokenIndex: number = initialTokenIndex + 1;
+
+    while (offsetTokenIndex < totalTokens) {
+        const offsetTokenKind: Token.TokenKind = tokens[offsetTokenIndex].kind;
+
+        if (offsetTokenKind === Token.TokenKind.LeftParenthesis) {
+            nestedDepth += 1;
+        } else if (offsetTokenKind === Token.TokenKind.RightParenthesis) {
+            nestedDepth -= 1;
+        }
+
+        if (nestedDepth === 0) {
+            // '(x as number) as number' could either be either case,
+            // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
+            if (IParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
+                const checkpoint: IParseStateCheckpoint = parser.checkpointFactory(state);
+                unsafeMoveTo(state, offsetTokenIndex + 2);
+
+                try {
+                    parser.readNullablePrimitiveType(state, parser);
+                } catch {
+                    parser.restoreCheckpoint(state, checkpoint);
+                    if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
+                        return ParenthesisDisambiguation.FunctionExpression;
+                    } else {
+                        return ParenthesisDisambiguation.ParenthesizedExpression;
+                    }
+                }
+
+                let disambiguation: ParenthesisDisambiguation;
+                if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
+                    disambiguation = ParenthesisDisambiguation.FunctionExpression;
+                } else {
+                    disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
+                }
+
+                parser.restoreCheckpoint(state, checkpoint);
+                return disambiguation;
+            } else {
+                if (IParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
+                    return ParenthesisDisambiguation.FunctionExpression;
+                } else {
+                    return ParenthesisDisambiguation.ParenthesizedExpression;
+                }
+            }
+        }
+
+        offsetTokenIndex += 1;
+    }
+
+    return undefined;
+}
+
+export function maybeDisambiguateBracket<S extends IParseState = IParseState>(
+    state: S,
+): BracketDisambiguation | undefined {
+    let offsetTokenIndex: number = state.tokenIndex + 1;
+
+    const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
+    const maybeOffsetToken: Token.Token | undefined = tokens[offsetTokenIndex];
+
+    if (maybeOffsetToken === undefined) {
+        return undefined;
+    }
+    const offsetToken: Token.Token = maybeOffsetToken;
+
+    let offsetTokenKind: Token.TokenKind = offsetToken.kind;
+    if (offsetTokenKind === Token.TokenKind.LeftBracket) {
+        return BracketDisambiguation.FieldProjection;
+    } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
+        return BracketDisambiguation.RecordExpression;
+    } else {
+        const totalTokens: number = tokens.length;
+        offsetTokenIndex += 1;
+        while (offsetTokenIndex < totalTokens) {
+            offsetTokenKind = tokens[offsetTokenIndex].kind;
+
+            if (offsetTokenKind === Token.TokenKind.Equal) {
+                return BracketDisambiguation.RecordExpression;
+            } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
+                return BracketDisambiguation.FieldSelection;
+            }
+
+            offsetTokenIndex += 1;
+        }
+
+        return undefined;
     }
 }
 

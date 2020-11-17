@@ -8,11 +8,6 @@ import { IParseState } from "../IParseState";
 
 export type TAmbiguousBracketNode = Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression;
 
-export type TriedDisambiguation<T extends BracketDisambiguation | ParenthesisDisambiguation> = Result<
-    T,
-    ParseError.UnterminatedSequence
->;
-
 export const enum DismabiguationBehavior {
     Strict = "Strict",
     Thorough = "Thorough",
