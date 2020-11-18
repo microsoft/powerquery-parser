@@ -35,7 +35,7 @@ function assertGetParseErrAutocompleteOkKeyword(
     return actual.triedKeyword.value;
 }
 
-describe(`Inspection - Autocomplete - Keyword`, () => {
+describe(`ABC Inspection - Autocomplete - Keyword`, () => {
     it("|", () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`|`);
         const expected: Inspection.AutocompleteKeyword = [

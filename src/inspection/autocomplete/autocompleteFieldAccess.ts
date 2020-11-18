@@ -319,7 +319,7 @@ function maybeTypablePrimaryExpression(
 
         if (xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression) {
             // The previous ancestor must be an attribute of Rpe, which is either its head or ArrrayWrapper.
-            const xorNodeBeforeRpe: TXorNode = ancestry[index - 1];
+            const xorNodeBeforeRpe: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index);
 
             // If we're coming from the head node,
             // then return undefined as there can be no nodes before the head ode.
