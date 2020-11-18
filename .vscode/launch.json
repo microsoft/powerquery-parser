@@ -15,7 +15,7 @@
         "--timeout",
         "999999",
         "-g",
-        "WIP",
+        "ABC",
         "${workspaceFolder}/lib/test/libraryTest/**/*.js"
       ],
       "preLaunchTask": "watch",

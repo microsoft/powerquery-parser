@@ -14,7 +14,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
         state.nodeIdMapCollection,
         xorNode,
     );
-    const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
