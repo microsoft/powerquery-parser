@@ -13,15 +13,15 @@ export const enum DismabiguationBehavior {
     Thorough = "Thorough",
 }
 
-export const enum ParenthesisDisambiguation {
-    FunctionExpression = "FunctionExpression",
-    ParenthesizedExpression = "ParenthesizedExpression",
-}
-
 export const enum BracketDisambiguation {
     FieldProjection = "FieldProjection",
     FieldSelection = "FieldSelection",
     RecordExpression = "RecordExpression",
+}
+
+export const enum ParenthesisDisambiguation {
+    FunctionExpression = "FunctionExpression",
+    ParenthesizedExpression = "ParenthesizedExpression",
 }
 
 export interface AmbiguousParse<T extends Ast.TNode, S extends IParseState = IParseState> {

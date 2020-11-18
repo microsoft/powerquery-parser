@@ -36,8 +36,7 @@ export function stateFactory<S extends IParseState = IParseState>(
         lexerSnapshot,
         maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
         locale: maybeOverrides?.locale ?? DefaultLocale,
-        disambiguationBehavior:
-            maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Thorough,
+        disambiguationBehavior: maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind,

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { ArrayUtils, Assert, CommonError, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
 import { IParser, IParseStateCheckpoint } from "../IParser";
 import { IParseState, IParseStateUtils } from "../IParseState";
@@ -14,10 +14,113 @@ import {
     TAmbiguousBracketNode,
 } from "./disambiguation";
 
-export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
+// The best match is the one which ended on the highest IParseState.tokenIndex with ties going in order given.
+export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
-): Result<ParenthesisDisambiguation, ParseError.UnterminatedSequence> {
+    parseFns: ReadonlyArray<(state: S, parser: IParser<S>) => T>,
+): AmbiguousParse<T, S> {
+    ArrayUtils.assertNonZeroLength(parseFns, "requires at least one parse function");
+
+    let maybeBestMatch: AmbiguousParse<T, S> | undefined = undefined;
+
+    for (const parseFn of parseFns) {
+        const variantState: S = parser.copyState(state);
+
+        let maybeNode: T | undefined;
+        let variantResult: Result<T, ParseError.ParseError<S>>;
+
+        try {
+            maybeNode = parseFn(variantState, parser);
+            variantResult = ResultUtils.okFactory(maybeNode);
+        } catch (err) {
+            if (!ParseError.isTInnerParseError(err)) {
+                throw err;
+            }
+            variantResult = ResultUtils.errFactory(new ParseError.ParseError<S>(err, variantState));
+        }
+
+        const candiate: AmbiguousParse<T, S> = {
+            parseState: variantState,
+            result: variantResult,
+        };
+
+        maybeBestMatch = bestAmbiguousParseMatch<T, S>(maybeBestMatch, candiate);
+    }
+
+    Assert.isDefined(maybeBestMatch);
+    return maybeBestMatch;
+}
+
+export function readAmbiguousBracket<S extends IParseState = IParseState>(
+    state: S,
+    parser: IParser<S>,
+    allowedVariants: ReadonlyArray<BracketDisambiguation>,
+): TAmbiguousBracketNode {
+    // We might be able to peek at tokens to disambiguate what bracketed expression is next.
+    const maybeDisambiguation: BracketDisambiguation | undefined = maybeDisambiguateBracket(state);
+
+    // Peeking gave us a concrete answer as to what's next.
+    if (maybeDisambiguation !== undefined) {
+        const disambiguation: BracketDisambiguation = maybeDisambiguation;
+        ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
+
+        switch (disambiguation) {
+            case BracketDisambiguation.FieldProjection:
+                return parser.readFieldProjection(state, parser);
+
+            case BracketDisambiguation.FieldSelection:
+                return parser.readFieldSelection(state, parser);
+
+            case BracketDisambiguation.RecordExpression:
+                return parser.readRecordExpression(state, parser);
+
+            default:
+                throw Assert.isNever(disambiguation);
+        }
+    }
+    // Else we branch on `IParseState.disambiguousBehavior`.
+    else {
+        switch (state.disambiguationBehavior) {
+            case DismabiguationBehavior.Strict:
+                throw IParseStateUtils.unterminatedBracketError(state);
+
+            case DismabiguationBehavior.Thorough:
+                return thoroughReadAmbiguousBracket(state, parser, allowedVariants);
+
+            default:
+                throw Assert.isNever(state.disambiguationBehavior);
+        }
+    }
+}
+
+export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
+    state: S,
+    parser: IParser<S>,
+): Ast.FunctionExpression | Ast.TExpression {
+    const maybeDisambiguation: ParenthesisDisambiguation | undefined = maybeDisambiguateParenthesis(state, parser);
+    if (maybeDisambiguation === undefined) {
+        throw IParseStateUtils.unterminatedParenthesesError(state);
+    }
+
+    const disambiguation: ParenthesisDisambiguation = maybeDisambiguation;
+    switch (disambiguation) {
+        case ParenthesisDisambiguation.FunctionExpression:
+            return parser.readFunctionExpression(state, parser);
+
+        case ParenthesisDisambiguation.ParenthesizedExpression:
+            return parser.readNullCoalescingExpression(state, parser);
+
+        default:
+            throw Assert.isNever(disambiguation);
+    }
+}
+
+// Peeks at tokens which might give a concrete disambiguation.
+export function maybeDisambiguateParenthesis<S extends IParseState = IParseState>(
+    state: S,
+    parser: IParser<S>,
+): ParenthesisDisambiguation | undefined {
     const initialTokenIndex: number = state.tokenIndex;
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
     const totalTokens: number = tokens.length;
@@ -45,9 +148,9 @@ export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
                 } catch {
                     parser.restoreCheckpoint(state, checkpoint);
                     if (IParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
-                        return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
+                        return ParenthesisDisambiguation.FunctionExpression;
                     } else {
-                        return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
+                        return ParenthesisDisambiguation.ParenthesizedExpression;
                     }
                 }
 
@@ -59,12 +162,12 @@ export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
                 }
 
                 parser.restoreCheckpoint(state, checkpoint);
-                return ResultUtils.okFactory(disambiguation);
+                return disambiguation;
             } else {
                 if (IParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
-                    return ResultUtils.okFactory(ParenthesisDisambiguation.FunctionExpression);
+                    return ParenthesisDisambiguation.FunctionExpression;
                 } else {
-                    return ResultUtils.okFactory(ParenthesisDisambiguation.ParenthesizedExpression);
+                    return ParenthesisDisambiguation.ParenthesizedExpression;
                 }
             }
         }
@@ -72,25 +175,27 @@ export function tryDisambiguateParenthesis<S extends IParseState = IParseState>(
         offsetTokenIndex += 1;
     }
 
-    return ResultUtils.errFactory(IParseStateUtils.unterminatedParenthesesError(state));
+    return undefined;
 }
 
-export function tryDisambiguateBracket<S extends IParseState = IParseState>(
+export function maybeDisambiguateBracket<S extends IParseState = IParseState>(
     state: S,
-): Result<BracketDisambiguation, ParseError.UnterminatedSequence> {
-    const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
+): BracketDisambiguation | undefined {
     let offsetTokenIndex: number = state.tokenIndex + 1;
-    const offsetToken: Token.Token = tokens[offsetTokenIndex];
 
-    if (!offsetToken) {
-        return ResultUtils.errFactory(IParseStateUtils.unterminatedBracketError(state));
+    const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
+    const maybeOffsetToken: Token.Token | undefined = tokens[offsetTokenIndex];
+
+    if (maybeOffsetToken === undefined) {
+        return undefined;
     }
+    const offsetToken: Token.Token = maybeOffsetToken;
 
     let offsetTokenKind: Token.TokenKind = offsetToken.kind;
     if (offsetTokenKind === Token.TokenKind.LeftBracket) {
-        return ResultUtils.okFactory(BracketDisambiguation.FieldProjection);
+        return BracketDisambiguation.FieldProjection;
     } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
-        return ResultUtils.okFactory(BracketDisambiguation.RecordExpression);
+        return BracketDisambiguation.RecordExpression;
     } else {
         const totalTokens: number = tokens.length;
         offsetTokenIndex += 1;
@@ -98,143 +203,15 @@ export function tryDisambiguateBracket<S extends IParseState = IParseState>(
             offsetTokenKind = tokens[offsetTokenIndex].kind;
 
             if (offsetTokenKind === Token.TokenKind.Equal) {
-                return ResultUtils.okFactory(BracketDisambiguation.RecordExpression);
+                return BracketDisambiguation.RecordExpression;
             } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
-                return ResultUtils.okFactory(BracketDisambiguation.FieldSelection);
+                return BracketDisambiguation.FieldSelection;
             }
 
             offsetTokenIndex += 1;
         }
 
-        return ResultUtils.errFactory(IParseStateUtils.unterminatedBracketError(state));
-    }
-}
-
-export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IParseState>(
-    state: S,
-    parser: IParser<S>,
-    parseFns: ReadonlyArray<(state: S, parser: IParser<S>) => T>,
-): AmbiguousParse<T, S> {
-    ArrayUtils.assertNonZeroLength(parseFns, "requires at least one parse function");
-
-    let maybeBestMatch: AmbiguousParse<T, S> | undefined = undefined;
-
-    for (const parseFn of parseFns) {
-        const variantState: S = parser.copyState(state);
-
-        let maybeNode: T | undefined;
-        let maybeError: ParseError.ParseError<S> | undefined;
-
-        try {
-            maybeNode = parseFn(variantState, parser);
-            IParseStateUtils.assertNoMoreTokens(variantState);
-        } catch (err) {
-            if (!ParseError.isTInnerParseError(err)) {
-                throw err;
-            }
-            maybeError = new ParseError.ParseError(err, variantState);
-        }
-
-        let variantResult: Result<T, ParseError.ParseError<S>>;
-        if (maybeBestMatch === undefined || variantState.tokenIndex > maybeBestMatch.parseState.tokenIndex) {
-            if (maybeNode !== undefined) {
-                variantResult = ResultUtils.okFactory(maybeNode);
-            } else if (maybeError !== undefined) {
-                variantResult = ResultUtils.errFactory(maybeError);
-            } else {
-                throw new CommonError.InvariantError(`either maybeNode or maybeError should be truthy`);
-            }
-
-            maybeBestMatch = {
-                parseState: variantState,
-                result: variantResult,
-            };
-        }
-        // They parsed the same amount of tokens and this iteration is an Ok where the previous was an Err.
-        else if (
-            variantState.tokenIndex === maybeBestMatch.parseState.tokenIndex &&
-            maybeNode !== undefined &&
-            ResultUtils.isErr(maybeBestMatch.result)
-        ) {
-            maybeBestMatch = {
-                parseState: variantState,
-                result: ResultUtils.okFactory(maybeNode),
-            };
-        }
-    }
-
-    Assert.isDefined(maybeBestMatch);
-    return maybeBestMatch;
-}
-
-export function readAmbiguousBracket<S extends IParseState = IParseState>(
-    state: S,
-    parser: IParser<S>,
-    allowedVariants: ReadonlyArray<BracketDisambiguation>,
-): TAmbiguousBracketNode {
-    switch (state.disambiguationBehavior) {
-        case DismabiguationBehavior.Strict:
-            return strictReadAmbiguousBracket(state, parser, allowedVariants);
-
-        case DismabiguationBehavior.Thorough:
-            return thoroughReadAmbiguousBracket(state, parser, allowedVariants);
-
-        default:
-            throw Assert.isNever(state.disambiguationBehavior);
-    }
-}
-
-export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
-    state: S,
-    parser: IParser<S>,
-): Ast.FunctionExpression | Ast.TExpression {
-    const triedDisambiguation: Result<
-        ParenthesisDisambiguation,
-        ParseError.UnterminatedSequence
-    > = tryDisambiguateParenthesis(state, parser);
-    if (ResultUtils.isErr(triedDisambiguation)) {
-        throw triedDisambiguation.error;
-    }
-    const disambiguation: ParenthesisDisambiguation = triedDisambiguation.value;
-
-    switch (disambiguation) {
-        case ParenthesisDisambiguation.FunctionExpression:
-            return parser.readFunctionExpression(state, parser);
-
-        case ParenthesisDisambiguation.ParenthesizedExpression:
-            return parser.readNullCoalescingExpression(state, parser);
-
-        default:
-            throw Assert.isNever(disambiguation);
-    }
-}
-
-function strictReadAmbiguousBracket<S extends IParseState = IParseState>(
-    state: S,
-    parser: IParser<S>,
-    allowedVariants: ReadonlyArray<BracketDisambiguation>,
-): TAmbiguousBracketNode {
-    const triedDisambiguation: Result<BracketDisambiguation, ParseError.UnterminatedSequence> = tryDisambiguateBracket(
-        state,
-    );
-    if (ResultUtils.isErr(triedDisambiguation)) {
-        throw triedDisambiguation.error;
-    }
-    const disambiguation: BracketDisambiguation = triedDisambiguation.value;
-    ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
-
-    switch (disambiguation) {
-        case BracketDisambiguation.FieldProjection:
-            return parser.readFieldProjection(state, parser);
-
-        case BracketDisambiguation.FieldSelection:
-            return parser.readFieldSelection(state, parser);
-
-        case BracketDisambiguation.RecordExpression:
-            return parser.readRecordExpression(state, parser);
-
-        default:
-            throw Assert.isNever(disambiguation);
+        return undefined;
     }
 }
 
@@ -294,5 +271,22 @@ function unsafeMoveTo(state: IParseState, tokenIndex: number): void {
     } else {
         state.maybeCurrentToken = undefined;
         state.maybeCurrentTokenKind = undefined;
+    }
+}
+
+function bestAmbiguousParseMatch<T extends Ast.TNode, S extends IParseState = IParseState>(
+    maybeBest: AmbiguousParse<T, S> | undefined,
+    candidate: AmbiguousParse<T, S>,
+): AmbiguousParse<T, S> {
+    if (maybeBest === undefined || maybeBest.parseState.tokenIndex < candidate.parseState.tokenIndex) {
+        return candidate;
+    } else if (
+        maybeBest.parseState.tokenIndex === candidate.parseState.tokenIndex &&
+        ResultUtils.isErr(maybeBest.result) &&
+        ResultUtils.isOk(candidate.result)
+    ) {
+        return candidate;
+    } else {
+        return maybeBest;
     }
 }
