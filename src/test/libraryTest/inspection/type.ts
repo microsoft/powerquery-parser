@@ -215,7 +215,7 @@ describe(`Inspection - Scope - Type`, () => {
         });
 
         it(`(1 as record)[[a]]`, () => {
-            const expression: string = `(1 as record)[[a]]`;
+            const expression: string = `let x = (1 as record) in x[[a]]`;
             const expected: Type.TType = {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
@@ -227,7 +227,7 @@ describe(`Inspection - Scope - Type`, () => {
         });
 
         it(`(1 as record)[[a]]?`, () => {
-            const expression: string = `(1 as record)[[a]]?`;
+            const expression: string = `let x = (1 as record) in x[[a]]?`;
             const expected: Type.TType = {
                 kind: Type.TypeKind.Record,
                 maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
@@ -258,14 +258,14 @@ describe(`Inspection - Scope - Type`, () => {
             assertParseOkNodeTypeEqual(expression, expected);
         });
 
-        it(`(1 as record)[a]`, () => {
-            const expression: string = `(1 as record)[a]`;
+        it(`let x = (1 as record) in x[a]`, () => {
+            const expression: string = `let x = (1 as record) in x[a]`;
             const expected: Type.TType = Type.AnyInstance;
             assertParseOkNodeTypeEqual(expression, expected);
         });
 
-        it(`(1 as record)[a]?`, () => {
-            const expression: string = `(1 as record)[a]?`;
+        it(`let x = (1 as record) in x[a]?`, () => {
+            const expression: string = `let x = (1 as record) in x[a]?`;
             const expected: Type.TType = Type.AnyInstance;
             assertParseOkNodeTypeEqual(expression, expected);
         });
@@ -746,13 +746,13 @@ describe(`Inspection - Scope - Type`, () => {
     describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
         describe(`any is allowed`, () => {
             it(`${Ast.NodeKind.InvokeExpression}`, () => {
-                const expression: string = `(_ as any)()`;
+                const expression: string = `let x = (_ as any) in x()`;
                 const expected: Type.TType = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Any);
                 assertParseOkNodeTypeEqual(expression, expected);
             });
 
             it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
-                const expression: string = `(_ as any){0}`;
+                const expression: string = `let x = (_ as any) in x{0}`;
                 const expected: Type.TType = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Any);
                 assertParseOkNodeTypeEqual(expression, expected);
             });
@@ -778,7 +778,7 @@ describe(`Inspection - Scope - Type`, () => {
             });
 
             it(`${Ast.NodeKind.FieldProjection}`, () => {
-                const expression: string = `(_ as any)[[foo]]`;
+                const expression: string = `let x = (_ as any) in x[[foo]]`;
                 const expected: Type.TType = {
                     kind: Type.TypeKind.Any,
                     maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
