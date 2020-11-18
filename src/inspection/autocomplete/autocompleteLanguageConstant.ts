@@ -21,10 +21,9 @@ export function tryAutocompleteLanguageConstant<S extends IParseState = IParseSt
     parseSettings: ParseSettings<S>,
     parseState: S,
     maybeActiveNode: TMaybeActiveNode,
-    maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteLanguageConstant {
     return ResultUtils.ensureResult(parseSettings.locale, () => {
-        return autocompleteLanguageConstant(parseSettings, parseState, maybeActiveNode, maybeParseError);
+        return autocompleteLanguageConstant(parseSettings, parseState, maybeActiveNode);
     });
 }
 
@@ -33,27 +32,18 @@ function autocompleteLanguageConstant<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
     parseState: S,
     maybeActiveNode: TMaybeActiveNode,
-    maybeParseError: ParseError.ParseError | undefined,
 ): AutocompleteLanguageConstant | undefined {
-    // const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-
     if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         const maybeFunctionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
             maybeActiveNode.ancestry,
             Ast.NodeKind.FunctionExpression,
         );
-        if (maybeFunctionExpressionAncestryIndex === undefined) {
-            if (maybeParseError?.innerError instanceof ParseError.UnterminatedSequence) {
-                return parseAndInspectFunctionExpression(parseSettings, parseState, maybeActiveNode);
-            } else {
-                return undefined;
-            }
-        } else {
+        if (maybeFunctionExpressionAncestryIndex !== undefined) {
             return inspectFunctionExpression(maybeActiveNode, maybeFunctionExpressionAncestryIndex);
         }
-    } else {
-        return parseAndInspectFunctionExpression(parseSettings, parseState, maybeActiveNode);
     }
+
+    return undefined;
 }
 
 function inspectFunctionExpression(
@@ -109,64 +99,4 @@ function inspectFunctionExpression(
     }
 
     return undefined;
-}
-
-function parseAndInspectFunctionExpression<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    parseState: S,
-    originalActiveNode: TMaybeActiveNode,
-): AutocompleteLanguageConstant | undefined {
-    const parsed: AdditionalParse<S> = parseFunctionExpression(parseSettings, parseState);
-    const contextState: ParseContext.State = parsed.parseState.contextState;
-    const maybeNewActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
-        contextState.nodeIdMapCollection,
-        contextState.leafNodeIds,
-        originalActiveNode.position,
-    );
-    if (!ActiveNodeUtils.isPositionInBounds(maybeNewActiveNode)) {
-        return undefined;
-    }
-
-    const newActiveNode: TMaybeActiveNode = maybeNewActiveNode;
-    const ancestry: ReadonlyArray<TXorNode> = newActiveNode.ancestry;
-    const functionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
-        ancestry,
-        Ast.NodeKind.FunctionExpression,
-    );
-    if (functionExpressionAncestryIndex === undefined) {
-        return undefined;
-    }
-
-    return inspectFunctionExpression(newActiveNode, functionExpressionAncestryIndex);
-}
-
-function parseFunctionExpression<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    parseState: S,
-): AdditionalParse<S> {
-    const newState: S = parseSettings.parseStateFactory(parseState.lexerSnapshot, {
-        maybeCancellationToken: parseState.maybeCancellationToken,
-        locale: parseSettings.locale,
-        tokenIndex: parseState.tokenIndex,
-    });
-
-    try {
-        return {
-            root: XorNodeUtils.astFactory(parseSettings.parser.readFunctionExpression(newState, parseSettings.parser)),
-            parseState: newState,
-            maybeParseError: undefined,
-        };
-    } catch (error) {
-        if (CommonError.isTInnerCommonError(error)) {
-            throw error;
-        } else if (!ParseError.isTInnerParseError(error)) {
-            throw new CommonError.InvariantError(`unknown error was thrown`, { error });
-        } else {
-            return {
-                root: XorNodeUtils.contextFactory(Assert.asDefined(newState.contextState.maybeRoot)),
-                parseState: newState,
-                maybeParseError: new ParseError.ParseError(error, newState),
-            };
-        }
-    }
 }

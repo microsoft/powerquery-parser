@@ -53,19 +53,18 @@ export function autocomplete<S extends IParseState = IParseState>(
         maybeTrailingToken,
     );
 
+    const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
+        parseSettings,
+        parseState,
+        maybeActiveNode,
+    );
+
     return {
         triedFieldAccess,
         triedKeyword,
-        triedLanguageConstant: 0 as any,
+        triedLanguageConstant,
         triedPrimitiveType: 0 as any,
     };
-
-    // const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
-    //     parseSettings,
-    //     parseState,
-    //     maybeActiveNode,
-    //     maybeParseError,
-    // );
 
     // const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
     //     parseSettings,

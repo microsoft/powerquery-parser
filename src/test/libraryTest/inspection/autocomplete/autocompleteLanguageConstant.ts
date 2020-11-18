@@ -19,7 +19,7 @@ function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParseState =
     return actual.triedLanguageConstant.value;
 }
 
-describe(`Inspection - Autocomplete - Language constants`, () => {
+describe(`ABC Inspection - Autocomplete - Language constants`, () => {
     it(`let x = (a as |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
             `let x = (a as |`,
@@ -32,7 +32,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         Assert.isUndefined(actual);
     });
 
-    it(`(a, |`, () => {
+    it(`WIP (a, |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(a, |`);
         const expected: ReadonlyArray<string> | undefined = [Language.Constant.LanguageConstantKind.Optional];
         const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
