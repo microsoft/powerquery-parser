@@ -8,6 +8,8 @@ import { IParseState } from "../IParseState";
 
 export type TAmbiguousBracketNode = Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression;
 
+export type TAmbiguousParenthesisNode = Ast.FunctionExpression | Ast.ParenthesizedExpression;
+
 export const enum DismabiguationBehavior {
     Strict = "Strict",
     Thorough = "Thorough",

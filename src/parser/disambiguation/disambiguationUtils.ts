@@ -12,6 +12,7 @@ import {
     DismabiguationBehavior,
     ParenthesisDisambiguation,
     TAmbiguousBracketNode,
+    TAmbiguousParenthesisNode,
 } from "./disambiguation";
 
 // The best match is the one which ended on the highest IParseState.tokenIndex with ties going in order given.
@@ -98,21 +99,36 @@ export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
 ): Ast.FunctionExpression | Ast.TExpression {
+    // We might be able to peek at tokens to disambiguate what bracketed expression is next.
     const maybeDisambiguation: ParenthesisDisambiguation | undefined = maybeDisambiguateParenthesis(state, parser);
-    if (maybeDisambiguation === undefined) {
-        throw IParseStateUtils.unterminatedParenthesesError(state);
+
+    // Peeking gave us a concrete answer as to what's next.
+    if (maybeDisambiguation !== undefined) {
+        const disambiguation: ParenthesisDisambiguation = maybeDisambiguation;
+
+        switch (disambiguation) {
+            case ParenthesisDisambiguation.FunctionExpression:
+                return parser.readFunctionExpression(state, parser);
+
+            case ParenthesisDisambiguation.ParenthesizedExpression:
+                return parser.readParenthesizedExpression(state, parser);
+
+            default:
+                throw Assert.isNever(disambiguation);
+        }
     }
+    // Else we branch on `IParseState.disambiguousBehavior`.
+    else {
+        switch (state.disambiguationBehavior) {
+            case DismabiguationBehavior.Strict:
+                throw IParseStateUtils.unterminatedParenthesesError(state);
 
-    const disambiguation: ParenthesisDisambiguation = maybeDisambiguation;
-    switch (disambiguation) {
-        case ParenthesisDisambiguation.FunctionExpression:
-            return parser.readFunctionExpression(state, parser);
+            case DismabiguationBehavior.Thorough:
+                return thoroughReadAmbiguousParenthesis(state, parser);
 
-        case ParenthesisDisambiguation.ParenthesizedExpression:
-            return parser.readNullCoalescingExpression(state, parser);
-
-        default:
-            throw Assert.isNever(disambiguation);
+            default:
+                throw Assert.isNever(state.disambiguationBehavior);
+        }
     }
 }
 
@@ -215,16 +231,37 @@ export function maybeDisambiguateBracket<S extends IParseState = IParseState>(
     }
 }
 
+// Copy the current state and attempt to read for each of the following:
+//  FieldProjection, FieldSelection, and RecordExpression.
+// Mutates the given state with the read attempt which matched the most tokens.
 function thoroughReadAmbiguousBracket<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): TAmbiguousBracketNode {
-    const ambiguousParse: AmbiguousParse<TAmbiguousBracketNode, S> = readAmbiguous(
-        state,
-        parser,
-        bracketDisambiguationParseFunctions(parser, allowedVariants),
-    );
+    return thoroughReadAmbiguous(state, parser, bracketDisambiguationParseFunctions(parser, allowedVariants));
+}
+
+// Copy the current state and attempt to read for each of the following:
+//  FunctionExpression, ParenthesisExpression.
+// Mutates the given state with the read attempt which matched the most tokens.
+function thoroughReadAmbiguousParenthesis<S extends IParseState = IParseState>(
+    state: S,
+    parser: IParser<S>,
+): TAmbiguousParenthesisNode {
+    return thoroughReadAmbiguous<TAmbiguousParenthesisNode, S>(state, parser, [
+        parser.readFunctionExpression,
+        parser.readParenthesizedExpression,
+    ]);
+}
+
+function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParenthesisNode, S extends IParseState>(
+    state: S,
+    parser: IParser<S>,
+    parseFns: ReadonlyArray<(state: S, parser: IParser<S>) => T>,
+): T {
+    const ambiguousParse: AmbiguousParse<T, S> = readAmbiguous(state, parser, parseFns);
+
     parser.applyState(state, ambiguousParse.parseState);
     if (ResultUtils.isOk(ambiguousParse.result)) {
         return ambiguousParse.result.value;
@@ -238,6 +275,7 @@ function thoroughReadAmbiguousBracket<S extends IParseState = IParseState>(
     }
 }
 
+// Converts BracketDisambiguation into its corrosponding read function.
 function bracketDisambiguationParseFunctions<S extends IParseState = IParseState>(
     parser: IParser<S>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
@@ -260,7 +298,7 @@ function bracketDisambiguationParseFunctions<S extends IParseState = IParseState
 }
 
 // WARNING: Only updates tokenIndex and currentTokenKind,
-//          Manual management of TokenRangeStack is assumed by way of IParseStateCheckpoint.
+//          Manual cleanup of other state fields such as TokenRangeStack is assumed by the caller.
 function unsafeMoveTo(state: IParseState, tokenIndex: number): void {
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
     state.tokenIndex = tokenIndex;
