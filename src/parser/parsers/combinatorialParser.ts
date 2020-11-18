@@ -6,7 +6,7 @@ import { NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
-import { IParser, IParserUtils, IParseStateCheckpoint } from "../IParser";
+import { IParser, IParserUtils } from "../IParser";
 import { IParseState, IParseStateUtils } from "../IParseState";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
