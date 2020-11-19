@@ -19,8 +19,17 @@ export interface ParseOk<S extends IParseState = IParseState> {
 }
 
 export interface IParser<S extends IParseState = IParseState, C extends IParseStateCheckpoint = IParseStateCheckpoint> {
+    // Update `state` to match the the `update`.
     readonly applyState: (state: S, update: S) => void;
+    // Create a deep copy of S.
     readonly copyState: (state: S) => S;
+
+    // Checkpoints are a snapshot for a particular state,
+    // and should enable reverting the state to its earlier version. They do not work on later states.
+    // Eg. given the history below:
+    //  You can restore checkpoint 2 and then checkpoint 1,
+    //  but restoring checkpoint 1 and then checkpoint 2 will result in undefined behavior.
+    // Initial state ------- checkpoint 1 -- checkpoint 2 --- current.
     readonly checkpointFactory: (state: S) => C;
     readonly restoreCheckpoint: (state: S, checkpoint: C) => void;
 
