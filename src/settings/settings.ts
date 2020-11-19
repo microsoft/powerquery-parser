@@ -18,7 +18,7 @@ export interface ParseSettings<S extends IParseState = IParseState> extends Comm
     readonly parser: IParser<S>;
     readonly parseStateFactory: (
         lexerSnapshot: LexerSnapshot,
-        maybeOverrides: TParseStateFactoryOverrides | undefined,
+        maybeOverrides: TParseStateFactoryOverrides<S> | undefined,
     ) => S;
     readonly maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
 }
@@ -29,7 +29,9 @@ export const DefaultSettings: Settings<IParseState> = {
     maybeCancellationToken: undefined,
     locale: DefaultLocale,
     parser: CombinatorialParser,
-    parseStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParseStateFactoryOverrides | undefined) =>
-        IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
+    parseStateFactory: (
+        lexerSnapshot: LexerSnapshot,
+        maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
+    ) => IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
     maybeParserEntryPointFn: undefined,
 };

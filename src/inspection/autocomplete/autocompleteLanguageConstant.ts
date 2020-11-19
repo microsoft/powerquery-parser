@@ -1,38 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, ResultUtils } from "../../common";
+import { ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
-import {
-    AncestryUtils,
-    IParseState,
-    ParseContext,
-    ParseError,
-    TXorNode,
-    XorNodeKind,
-    XorNodeUtils,
-} from "../../parser";
+import { AncestryUtils, IParseState, TXorNode, XorNodeKind } from "../../parser";
 import { ParseSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { PositionUtils } from "../position";
-import { AdditionalParse, AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
+import { AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    parseState: S,
     maybeActiveNode: TMaybeActiveNode,
 ): TriedAutocompleteLanguageConstant {
     return ResultUtils.ensureResult(parseSettings.locale, () => {
-        return autocompleteLanguageConstant(parseSettings, parseState, maybeActiveNode);
+        return autocompleteLanguageConstant(maybeActiveNode);
     });
 }
 
 // Currently only checks "optional" constant in FunctionExpression.
-function autocompleteLanguageConstant<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    parseState: S,
-    maybeActiveNode: TMaybeActiveNode,
-): AutocompleteLanguageConstant | undefined {
+function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteLanguageConstant | undefined {
     if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         const maybeFunctionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
             maybeActiveNode.ancestry,

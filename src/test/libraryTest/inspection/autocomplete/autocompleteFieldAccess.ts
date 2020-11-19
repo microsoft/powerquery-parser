@@ -42,7 +42,7 @@ function assertGetParseErrAutocompleteOkFieldAccess<S extends IParseState = IPar
     return abridgedFieldAccess(actual.triedFieldAccess.value);
 }
 
-describe(`ABC Inspection - Autocomplete - FieldSelection`, () => {
+describe(`Inspection - Autocomplete - FieldSelection`, () => {
     describe(`Selection`, () => {
         describe(`ParseOk`, () => {
             it(`[cat = 1, car = 2][x|]`, () => {

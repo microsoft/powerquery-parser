@@ -4,16 +4,34 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../common";
+import { LexerSnapshot } from "../../../lexer";
 import { Templates } from "../../../localization";
 import { Localization } from "../../../localization";
-import { ParseError } from "../../../parser";
+import { IParseState, IParseStateUtils, ParseError, TParseStateFactoryOverrides } from "../../../parser";
+import { Disambiguation } from "../../../parser/disambiguation";
 import { SequenceKind } from "../../../parser/error";
 import { RecursiveDescentParser } from "../../../parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 
+const DefaultSettingsWithStrict: Settings = {
+    ...DefaultSettings,
+    parseStateFactory: (
+        lexerSnapshot: LexerSnapshot,
+        maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
+    ) => {
+        maybeOverrides = maybeOverrides ?? {};
+        return IParseStateUtils.stateFactory(lexerSnapshot, {
+            ...maybeOverrides,
+            disambiguationBehavior:
+                maybeOverrides.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
+        });
+    },
+};
+
 function assertGetCsvContinuationError(text: string): ParseError.ExpectedCsvContinuationError {
-    const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(DefaultSettings, text).innerError;
+    const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(DefaultSettingsWithStrict, text)
+        .innerError;
     Assert.isTrue(
         innerError instanceof ParseError.ExpectedCsvContinuationError,
         "innerError instanceof ParseError.ExpectedCsvContinuationError",
@@ -25,8 +43,10 @@ function assertGetCsvContinuationError(text: string): ParseError.ExpectedCsvCont
 describe("Parser.Error", () => {
     it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
         const text: string = "(optional x, y) => x";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(DefaultSettings, text)
-            .innerError;
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+            DefaultSettingsWithStrict,
+            text,
+        ).innerError;
         expect(innerError instanceof ParseError.RequiredParameterAfterOptionalParameterError).to.equal(
             true,
             innerError.message,
@@ -35,16 +55,20 @@ describe("Parser.Error", () => {
 
     it("UnterminatedSequence (Bracket): let x = [", () => {
         const text: string = "let x = [";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(DefaultSettings, text)
-            .innerError;
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+            DefaultSettingsWithStrict,
+            text,
+        ).innerError;
         expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
         expect((innerError as ParseError.UnterminatedSequence).kind).to.equal(SequenceKind.Bracket, innerError.message);
     });
 
     it("UnterminatedSequence (Parenthesis): let x = (", () => {
         const text: string = "let x = (";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(DefaultSettings, text)
-            .innerError;
+        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+            DefaultSettingsWithStrict,
+            text,
+        ).innerError;
         expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
         expect((innerError as ParseError.UnterminatedSequence).kind).to.equal(
             SequenceKind.Parenthesis,
@@ -55,8 +79,10 @@ describe("Parser.Error", () => {
     describe(`UnusedTokensRemainError`, () => {
         it("default parser", () => {
             const text: string = "1 1";
-            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(DefaultSettings, text)
-                .innerError;
+            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+                DefaultSettingsWithStrict,
+                text,
+            ).innerError;
             expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
         });
 

@@ -1248,14 +1248,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
-                        maybeValueNodeId: 10,
+                        maybeValueNodeId: 8,
                     },
                     {
                         identifier: "y",
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
-                        keyNodeId: 17,
-                        maybeValueNodeId: 21,
+                        keyNodeId: 15,
+                        maybeValueNodeId: 19,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -1274,7 +1274,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
-                        maybeValueNodeId: 10,
+                        maybeValueNodeId: 8,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(

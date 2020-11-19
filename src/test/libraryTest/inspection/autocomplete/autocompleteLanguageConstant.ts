@@ -19,7 +19,7 @@ function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParseState =
     return actual.triedLanguageConstant.value;
 }
 
-describe(`ABC Inspection - Autocomplete - Language constants`, () => {
+describe(`Inspection - Autocomplete - Language constants`, () => {
     it(`let x = (a as |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
             `let x = (a as |`,

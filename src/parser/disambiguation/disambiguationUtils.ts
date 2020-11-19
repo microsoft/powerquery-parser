@@ -231,6 +231,9 @@ export function maybeDisambiguateBracket<S extends IParseState = IParseState>(
     }
 }
 
+// Copy the current state and attempt to read for each of the following:
+//  FieldProjection, FieldSelection, and RecordExpression.
+// Mutates the given state with the read attempt which matched the most tokens.
 function thoroughReadAmbiguousBracket<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
@@ -239,11 +242,17 @@ function thoroughReadAmbiguousBracket<S extends IParseState = IParseState>(
     return thoroughReadAmbiguous(state, parser, bracketDisambiguationParseFunctions(parser, allowedVariants));
 }
 
+// Copy the current state and attempt to read for each of the following:
+//  FunctionExpression, ParenthesisExpression.
+// Mutates the given state with the read attempt which matched the most tokens.
 function thoroughReadAmbiguousParenthesis<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
 ): TAmbiguousParenthesisNode {
-    return thoroughReadAmbiguous(state, parser, parenthesisDisambiguationParseFunctions(parser));
+    return thoroughReadAmbiguous<TAmbiguousParenthesisNode, S>(state, parser, [
+        parser.readFunctionExpression,
+        parser.readParenthesizedExpression,
+    ]);
 }
 
 function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParenthesisNode, S extends IParseState>(
@@ -266,6 +275,7 @@ function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguousParen
     }
 }
 
+// Converts BracketDisambiguation into its corrosponding read function.
 function bracketDisambiguationParseFunctions<S extends IParseState = IParseState>(
     parser: IParser<S>,
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
@@ -287,14 +297,8 @@ function bracketDisambiguationParseFunctions<S extends IParseState = IParseState
     });
 }
 
-function parenthesisDisambiguationParseFunctions<S extends IParseState = IParseState>(
-    parser: IParser<S>,
-): ReadonlyArray<(state: S, parser: IParser<S>) => TAmbiguousParenthesisNode> {
-    return [parser.readFunctionExpression, parser.readParenthesizedExpression];
-}
-
 // WARNING: Only updates tokenIndex and currentTokenKind,
-//          Manual management of TokenRangeStack is assumed by way of IParseStateCheckpoint.
+//          Manual cleanup of other state fields such as TokenRangeStack is assumed by the caller.
 function unsafeMoveTo(state: IParseState, tokenIndex: number): void {
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
     state.tokenIndex = tokenIndex;
