@@ -18,7 +18,7 @@ export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType, C
 
 export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
 
-export type AutocompleteLanguageConstant = ReadonlyArray<Constant.LanguageConstantKind>;
+export type AutocompleteLanguageConstant = Constant.LanguageConstantKind;
 
 export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
 
