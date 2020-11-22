@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "../../common";
+import { Assert, ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
+import { LanguageConstantKind } from "../../language/constant/constant";
 import { AncestryUtils, IParseState, TXorNode, XorNodeKind } from "../../parser";
 import { ParseSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { PositionUtils, Position } from "../position";
+import { Position, PositionUtils } from "../position";
 import { AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant<S extends IParseState = IParseState>(
@@ -27,25 +28,21 @@ function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): Autoco
     return maybeAutocompleteNullable(maybeActiveNode) || maybeAutocompleteOptional(maybeActiveNode);
 }
 
-function maybeAutocompleteNullable(activeNode: ActiveNode): AutocompleteLanguageConstant | undefined {
+function maybeAutocompleteNullable(activeNode: ActiveNode): LanguageConstantKind.Nullable | undefined {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = ancestry.length;
 
     for (let index: number = 0; index < numAncestors; index += 1) {
         const xorNode: TXorNode = ancestry[index];
 
-        let maybeNullable: AutocompleteLanguageConstant | undefined;
+        let maybeNullable: LanguageConstantKind.Nullable | undefined;
         switch (xorNode.node.kind) {
             case Ast.NodeKind.AsNullablePrimitiveType:
                 maybeNullable = maybeAutocompleteNullableForAsNullablePrimitiveType(activeNode, index);
                 break;
 
-            case Ast.NodeKind.FunctionExpression:
-                maybeNullable = maybeAutocompleteNullableForParameter(activeNode, xorNode);
-                break;
-
             case Ast.NodeKind.PrimitiveType:
-                maybeNullable = maybeAutocompleteNullableForPrimitiveType(activeNode, xorNode);
+                maybeNullable = maybeAutocompleteNullableForPrimitiveType(xorNode);
                 break;
 
             default:
@@ -63,7 +60,7 @@ function maybeAutocompleteNullable(activeNode: ActiveNode): AutocompleteLanguage
 function maybeAutocompleteNullableForAsNullablePrimitiveType(
     activeNode: ActiveNode,
     ancestryIndex: number,
-): AutocompleteLanguageConstant | undefined {
+): LanguageConstantKind.Nullable | undefined {
     const maybeChild: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, ancestryIndex);
     if (maybeChild?.node.maybeAttributeIndex !== 1) {
         return undefined;
@@ -99,66 +96,75 @@ function maybeAutocompleteNullableForAsNullablePrimitiveType(
         } else {
             return undefined;
         }
+    } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
+        return maybeAutocompleteNullableForPrimitiveType(paired);
     } else {
         return undefined;
     }
 }
 
-// function maybeAutocompleteNullableForParameter(
-//     activeNode: ActiveNode,
-//     functionExpression: TXorNode,
-// ): AutocompleteLanguageConstant | undefined {
-//     throw new Error();
-// }
+function maybeAutocompleteNullableForPrimitiveType(primitiveType: TXorNode): LanguageConstantKind.Nullable | undefined {
+    return primitiveType.kind === XorNodeKind.Context ? Constant.LanguageConstantKind.Nullable : undefined;
+}
 
-// function maybeAutocompleteNullableForPrimitiveType(
-//     activeNode: ActiveNode,
-//     primitiveType: TXorNode,
-// ): AutocompleteLanguageConstant | undefined {
-//     throw new Error();
-// }
-
-function maybeAutocompleteOptional(activeNode: ActiveNode): AutocompleteLanguageConstant | undefined {
-    const maybeFnExprIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
+function maybeAutocompleteOptional(activeNode: ActiveNode): LanguageConstantKind.Optional | undefined {
+    const maybeFnExprAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
-    if (maybeFnExprIndex === undefined) {
+    if (maybeFnExprAncestryIndex === undefined) {
         return undefined;
     }
-    const fnExprIndex: number = maybeFnExprIndex;
+    const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
 
-    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
+    const maybeParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+        activeNode.ancestry,
+        fnExprAncestryIndex,
+        4,
+        [Ast.NodeKind.Parameter],
+    );
+    if (maybeParameter === undefined) {
+        return undefined;
+    }
 
-    const maybeParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(ancestry, fnExprIndex, 4);
-    if (maybeParameter === undefined || maybeParameter.node.kind !== Ast.NodeKind.Parameter) {
-        return undefined;
-    }
-    const childOfParameter: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, fnExprIndex, 5);
-    if (
-        // If position is in an already parsed `optional` constant.
-        // `(optional foo as 1|
-        childOfParameter.node.maybeAttributeIndex === 0 ||
-        // If position is in AsNullablePrimitiveType
-        // `(foo as |`
-        childOfParameter.node.maybeAttributeIndex === 2
-    ) {
-        return undefined;
-    }
-    const name: TXorNode = childOfParameter;
-    if (name.kind === XorNodeKind.Context) {
+    const maybeChildOfParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+        activeNode.ancestry,
+        fnExprAncestryIndex,
+        5,
+    );
+    if (maybeChildOfParameter === undefined) {
         return Constant.LanguageConstantKind.Optional;
     }
+    const childOfParameter: TXorNode = maybeChildOfParameter;
 
-    const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
-    const nameLiteral: string = nameAst.literal;
-    if (
-        PositionUtils.isInAst(activeNode.position, nameAst, false, true) &&
-        Constant.LanguageConstantKind.Optional.startsWith(nameLiteral) &&
-        Constant.LanguageConstantKind.Optional.length !== nameLiteral.length
-    ) {
-        return Constant.LanguageConstantKind.Optional;
+    switch (childOfParameter.node.maybeAttributeIndex) {
+        // IParameter.maybeOptionalConstant
+        case 0:
+            return Constant.LanguageConstantKind.Optional;
+
+        // IParameter.name
+        case 1:
+            switch (childOfParameter.kind) {
+                case XorNodeKind.Ast: {
+                    const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
+                    const name: string = nameAst.literal;
+
+                    return Constant.LanguageConstantKind.Optional.startsWith(name) &&
+                        name !== Constant.LanguageConstantKind.Optional &&
+                        PositionUtils.isInAst(activeNode.position, nameAst, false, true)
+                        ? Constant.LanguageConstantKind.Optional
+                        : undefined;
+                }
+
+                case XorNodeKind.Context:
+                    return Constant.LanguageConstantKind.Optional;
+
+                default:
+                    throw Assert.isNever(childOfParameter);
+            }
+
+        default:
+            return undefined;
     }
-
-    return undefined;
 }

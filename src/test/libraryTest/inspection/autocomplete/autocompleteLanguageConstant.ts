@@ -5,6 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection, Language } from "../../../..";
 import { Assert } from "../../../../common";
+import { Constant } from "../../../../language";
 import { IParseState } from "../../../../parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { TestAssertUtils } from "../../../testUtils";
@@ -13,44 +14,60 @@ function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParseState =
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
-): ReadonlyArray<string> | undefined {
+): Inspection.AutocompleteLanguageConstant | undefined {
     const actual: Inspection.Autocomplete = TestAssertUtils.assertGetParseErrAutocompleteOk(settings, text, position);
     Assert.isOk(actual.triedLanguageConstant);
     return actual.triedLanguageConstant.value;
 }
 
 describe(`Inspection - Autocomplete - Language constants`, () => {
-    it(`let x = (a as |`, () => {
-        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-            `let x = (a as |`,
-        );
-        const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
-            DefaultSettings,
-            text,
-            position,
-        );
-        Assert.isUndefined(actual);
+    it(`a as |`, () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`a as |`);
+        const actual:
+            | Inspection.AutocompleteLanguageConstant
+            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
+        expect(actual).to.equal(Constant.LanguageConstantKind.Nullable);
     });
 
-    it(`WIP (a, |`, () => {
-        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(a, |`);
-        const expected: ReadonlyArray<string> | undefined = [Language.Constant.LanguageConstantKind.Optional];
-        const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
-            DefaultSettings,
-            text,
-            position,
-        );
-        expect(actual).to.have.members(expected);
+    it(`a as n|`, () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`a as n|`);
+        const actual:
+            | Inspection.AutocompleteLanguageConstant
+            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
+        expect(actual).to.equal(Constant.LanguageConstantKind.Nullable);
+    });
+
+    it(`(a as |`, () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(a as |`);
+        const actual:
+            | Inspection.AutocompleteLanguageConstant
+            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
+        expect(actual).to.equal(Constant.LanguageConstantKind.Nullable);
+    });
+
+    it(`(a as n|`, () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(a as n|`);
+        const actual:
+            | Inspection.AutocompleteLanguageConstant
+            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
+        expect(actual).to.equal(Constant.LanguageConstantKind.Nullable);
+    });
+
+    it(`(x, |`, () => {
+        const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(x, |`);
+        const expected: Constant.LanguageConstantKind = Language.Constant.LanguageConstantKind.Optional;
+        const actual:
+            | Inspection.AutocompleteLanguageConstant
+            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
+        expect(actual).to.equal(expected);
     });
 
     it(`(x, op|`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(x, op|`);
-        const expected: ReadonlyArray<string> | undefined = [Language.Constant.LanguageConstantKind.Optional];
-        const actual: ReadonlyArray<string> | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
-            DefaultSettings,
-            text,
-            position,
-        );
-        expect(actual).to.have.members(expected);
+        const expected: Constant.LanguageConstantKind = Language.Constant.LanguageConstantKind.Optional;
+        const actual:
+            | Inspection.AutocompleteLanguageConstant
+            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
+        expect(actual).to.equal(expected);
     });
 });
