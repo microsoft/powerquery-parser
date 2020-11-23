@@ -5,12 +5,11 @@ import { Assert, CommonError, ResultUtils } from "../../common";
 import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import {
-    IParser,
+    AncestryUtils,
     IParseState,
     NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    ParseError,
     TXorNode,
     XorNodeKind,
     XorNodeUtils,
@@ -21,7 +20,6 @@ import { Position, PositionUtils } from "../position";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../type/commonTypes";
 import {
-    AdditionalParse,
     AutocompleteFieldAccess,
     AutocompleteItem,
     InspectedFieldAccess,
@@ -33,14 +31,13 @@ export function tryAutocompleteFieldAccess<S extends IParseState = IParseState>(
     parseState: S,
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
-    maybeParseError: ParseError.ParseError | undefined,
 ): TriedAutocompleteFieldAccess {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.okFactory(undefined);
     }
 
     return ResultUtils.ensureResult(parseSettings.locale, () => {
-        return autocompleteFieldAccess(parseSettings, parseState, maybeActiveNode, typeCache, maybeParseError);
+        return autocompleteFieldAccess(parseSettings, parseState, maybeActiveNode, typeCache);
     });
 }
 
@@ -50,11 +47,6 @@ const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKi
     Type.ExtendedTypeKind.DefinedTable,
 ];
 
-const AllowedTrailingOpenWrapperConstants: ReadonlyArray<Token.TokenKind> = [
-    Token.TokenKind.LeftBrace,
-    Token.TokenKind.LeftBracket,
-];
-
 const FieldAccessNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.FieldSelector, Ast.NodeKind.FieldProjection];
 
 function autocompleteFieldAccess<S extends IParseState = IParseState>(
@@ -62,7 +54,6 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
     parseState: S,
     activeNode: ActiveNode,
     typeCache: TypeCache,
-    maybeParseError: ParseError.ParseError | undefined,
 ): AutocompleteFieldAccess | undefined {
     let maybeInspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
 
@@ -79,36 +70,6 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
             parseState.contextState.nodeIdMapCollection,
             activeNode.position,
             maybeFieldAccessAncestor,
-        );
-    }
-
-    // Option 2: The field access is part of a trailing expression.
-    let hasTrailingOpenConstant: boolean;
-    if (maybeParseError !== undefined) {
-        const maybeTrailingToken: Token.Token | undefined = ParseError.maybeTokenFrom(maybeParseError.innerError);
-        hasTrailingOpenConstant =
-            maybeTrailingToken !== undefined &&
-            AllowedTrailingOpenWrapperConstants.includes(maybeTrailingToken.kind) &&
-            PositionUtils.isAfterTokenPosition(activeNode.position, maybeTrailingToken.positionStart, true);
-    } else {
-        hasTrailingOpenConstant = false;
-    }
-
-    if (hasTrailingOpenConstant === true) {
-        // From the starting open constant run a few new parse runs and return the run which parsed the most tokens.
-        const maybeParsedFieldAccess: AdditionalParse | undefined = maybeParseFieldAccessFromParse<S>(
-            parseSettings,
-            parseState,
-        );
-        // Neither parse was succesful.
-        if (maybeParsedFieldAccess === undefined) {
-            return undefined;
-        }
-        maybeInspectedFieldAccess = inspectFieldAccess(
-            maybeParsedFieldAccess.parseState.lexerSnapshot,
-            maybeParsedFieldAccess.parseState.contextState.nodeIdMapCollection,
-            activeNode.position,
-            maybeParsedFieldAccess.root,
         );
     }
 
@@ -129,11 +90,7 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
     // This is delayed until after the field access because running static type analysis on an
     // arbitrary field could be costly.
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
-    const maybeField: TXorNode | undefined = maybeTypablePrimaryExpression(
-        nodeIdMapCollection,
-        activeNode,
-        hasTrailingOpenConstant,
-    );
+    const maybeField: TXorNode | undefined = maybeTypablePrimaryExpression(nodeIdMapCollection, activeNode);
     if (maybeField === undefined) {
         return undefined;
     }
@@ -249,6 +206,14 @@ function inspectFieldProjection(
     };
 }
 
+function inspectedFieldAccessFactory(isAutocompleteAllowed: boolean): InspectedFieldAccess {
+    return {
+        isAutocompleteAllowed,
+        maybeIdentifierUnderPosition: undefined,
+        fieldNames: [],
+    };
+}
+
 function inspectFieldSelector(
     lexerSnapshot: LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -256,12 +221,10 @@ function inspectFieldSelector(
     fieldSelector: TXorNode,
 ): InspectedFieldAccess {
     const children: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
-    if (children === undefined || children.length < 2) {
-        return {
-            isAutocompleteAllowed: PositionUtils.isInXor(nodeIdMapCollection, position, fieldSelector, true, true),
-            maybeIdentifierUnderPosition: undefined,
-            fieldNames: [],
-        };
+    if (children === undefined) {
+        return inspectedFieldAccessFactory(false);
+    } else if (children.length === 1) {
+        return inspectedFieldAccessFactory(nodeIdMapCollection.astNodeById.has(children[0]));
     }
 
     const generalizedIdentifierId: number = children[1];
@@ -345,7 +308,6 @@ function autoCompleteItemsFactory(
 function maybeTypablePrimaryExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
-    hasTrailingOpenConstant: boolean,
 ): TXorNode | undefined {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = ancestry.length;
@@ -357,67 +319,29 @@ function maybeTypablePrimaryExpression(
 
         if (xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression) {
             // The previous ancestor must be an attribute of Rpe, which is either its head or ArrrayWrapper.
-            const xorNodeBeforeRpe: TXorNode = ancestry[index - 1];
+            const xorNodeBeforeRpe: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index);
 
-            // The previous ancestor is the head. This should only happen if a trailing open bracket exists.
-            // Eg. `foo[|`
+            // If we're coming from the head node,
+            // then return undefined as there can be no nodes before the head ode.
             if (xorNodeBeforeRpe.node.maybeAttributeIndex === 0) {
-                // Only valid if there's a trailing bracket, Eg. `foo[|`
-                if (hasTrailingOpenConstant === true) {
-                    // Return Rpe.head.
-                    return xorNodeBeforeRpe;
-                }
-
-                // There's nothing we can do.
-                else {
-                    break;
-                }
+                return undefined;
             }
-            // Else the previous ancestor is the ArrayWrapper.
-            // Return the head if its attribute index is 0, otherwise the (n - 1) element in ArrayWrapper.
-            else {
-                const maybeChildrenForArrayWrapper:
-                    | ReadonlyArray<number>
-                    | undefined = nodeIdMapCollection.childIdsById.get(xorNodeBeforeRpe.node.id);
-
-                // If the ArrayWrapper has no children.
-                if (maybeChildrenForArrayWrapper === undefined) {
-                    // If there's a trailing bracket then we can return the head, else nothing.
-                    // Eg. `foo[|`
-                    return hasTrailingOpenConstant === false
-                        ? undefined
-                        : NodeIdMapUtils.assertGetChildXorByAttributeIndex(
-                              nodeIdMapCollection,
-                              xorNode.node.id,
-                              0,
-                              undefined,
-                          );
-                }
-                // Else if there's a single child then conditionally shift left or remain in place.
-                else if (maybeChildrenForArrayWrapper.length === 1) {
-                    // If an unparsed trailing open bracket exists then don't shift to the left.
-                    if (hasTrailingOpenConstant === true) {
-                        return ancestry[index - 2];
-                    }
-                    // Otherwise return the previous sibling, meaning the head.
-                    else {
-                        return NodeIdMapUtils.assertGetChildXorByAttributeIndex(
-                            nodeIdMapCollection,
-                            xorNode.node.id,
-                            0,
-                            undefined,
-                        );
-                    }
-                }
-                // Else shift one to the left.
-                else {
-                    return NodeIdMapUtils.assertGetChildXorByAttributeIndex(
-                        nodeIdMapCollection,
-                        xorNodeBeforeRpe.node.id,
-                        maybeChildrenForArrayWrapper.length - 2,
-                        undefined,
-                    );
-                }
+            // Else if we're coming from the ArrayWrapper,
+            // then grab the previous sibling.
+            else if (xorNodeBeforeRpe.node.maybeAttributeIndex === 1) {
+                const rpeChild: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index, 2);
+                return NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+                    nodeIdMapCollection,
+                    rpeChild.node.id,
+                );
+            } else {
+                throw new CommonError.InvariantError(
+                    `the child of a ${Ast.NodeKind.RecursivePrimaryExpression} should have an attribute index of either 1 or 2`,
+                    {
+                        parentId: xorNode.node.id,
+                        childId: xorNodeBeforeRpe.node.id,
+                    },
+                );
             }
         } else if (matchingContiguousPrimaryExpression && XorNodeUtils.isTPrimaryExpression(xorNode)) {
             maybeContiguousPrimaryExpression = xorNode;
@@ -427,106 +351,4 @@ function maybeTypablePrimaryExpression(
     }
 
     return maybeContiguousPrimaryExpression;
-}
-
-function maybeParseFieldAccessFromParse<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    parseState: S,
-): AdditionalParse | undefined {
-    const parseFns: ReadonlyArray<(parseSettings: ParseSettings<S>, parseState: S) => AdditionalParse> = [
-        parseFieldProjection,
-        parseFieldSelection,
-    ];
-
-    let maybeBestMatch: AdditionalParse | undefined;
-    for (const fn of parseFns) {
-        const attempt: AdditionalParse = fn(parseSettings, parseState);
-        maybeBestMatch = betterFieldAccessMatch(maybeBestMatch, attempt);
-    }
-
-    return maybeBestMatch;
-}
-
-function parseFieldProjection<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    parseState: S,
-): AdditionalParse {
-    return tryParseFieldAccess<Ast.FieldProjection, S>(
-        parseSettings,
-        parseState,
-        parseSettings.parser.readFieldProjection,
-    );
-}
-
-function parseFieldSelection<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    parseState: S,
-): AdditionalParse {
-    return tryParseFieldAccess<Ast.FieldSelector, S>(
-        parseSettings,
-        parseState,
-        parseSettings.parser.readFieldSelection,
-    );
-}
-
-function tryParseFieldAccess<T extends Ast.FieldProjection | Ast.FieldSelector, S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
-    parseState: S,
-    parseFn: (state: S, parser: IParser<S>) => T,
-): AdditionalParse {
-    const newState: S = parseSettings.parseStateFactory(parseState.lexerSnapshot, {
-        maybeCancellationToken: parseState.maybeCancellationToken,
-        locale: parseSettings.locale,
-        tokenIndex: parseState.tokenIndex,
-    });
-
-    try {
-        const ast: T = parseFn(newState, parseSettings.parser);
-        return {
-            root: XorNodeUtils.astFactory(ast),
-            parseState: newState,
-            maybeParseError: undefined,
-        };
-    } catch (error) {
-        if (CommonError.isTInnerCommonError(error)) {
-            throw error;
-        } else if (!ParseError.isTInnerParseError(error)) {
-            throw new CommonError.InvariantError(`unknown error was thrown`, { error });
-        }
-        const innerParseError: ParseError.TInnerParseError = error;
-
-        return {
-            root: XorNodeUtils.contextFactory(Assert.asDefined(newState.contextState.maybeRoot)),
-            parseState: newState,
-            maybeParseError: new ParseError.ParseError(innerParseError, newState),
-        };
-    }
-}
-
-function betterFieldAccessMatch(
-    maybeBestFieldAccess: AdditionalParse | undefined,
-    currentFieldAccess: AdditionalParse,
-): AdditionalParse {
-    if (maybeBestFieldAccess === undefined) {
-        return currentFieldAccess;
-    }
-
-    const currentTokenIndex: number = tokenIndexFromParseFieldAccess(currentFieldAccess);
-    const bestTokenIndex: number = tokenIndexFromParseFieldAccess(maybeBestFieldAccess);
-
-    // Prioritize FieldSelector over FieldProjection.
-    // Eg. `foo[|` is more likely to be a selection
-    if (currentTokenIndex === bestTokenIndex && currentFieldAccess.root.node.kind === Ast.NodeKind.FieldSelector) {
-        return currentFieldAccess;
-    } else if (currentTokenIndex > bestTokenIndex) {
-        return currentFieldAccess;
-    } else {
-        return maybeBestFieldAccess;
-    }
-}
-
-function tokenIndexFromParseFieldAccess(parsedFieldAccess: AdditionalParse): number {
-    return parsedFieldAccess.maybeParseError === undefined
-        ? Number.MAX_SAFE_INTEGER
-        : parsedFieldAccess.maybeParseError.state.tokenIndex;
 }

@@ -50,7 +50,7 @@ export function inspection<S extends IParseState = IParseState>(
             parseSettings,
             nodeIdMapCollection,
             leafNodeIds,
-            activeNode.ancestry[0].node.id,
+            ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             scopeById,
         );
 

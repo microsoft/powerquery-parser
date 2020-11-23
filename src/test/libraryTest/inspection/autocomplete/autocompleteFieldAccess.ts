@@ -459,9 +459,9 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             expect(actual).to.have.members(expected);
         });
 
-        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()()[|`, () => {
+        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
-                `let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()()[|`,
+                `let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`,
             );
             const expected: AbridgedAutocompleteFieldAccess = ["cat", "car"];
             const actual: AbridgedAutocompleteFieldAccess = assertGetParseErrAutocompleteOkFieldAccess(

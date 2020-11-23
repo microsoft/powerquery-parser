@@ -262,9 +262,9 @@ function readUnaryExpression(state: IParseState, parser: IParser<IParseState>): 
 
         case Token.TokenKind.LeftBracket:
             maybePrimaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
-                Disambiguation.BracketDisambiguation.FieldProjection,
-                Disambiguation.BracketDisambiguation.FieldSelection,
                 Disambiguation.BracketDisambiguation.RecordExpression,
+                Disambiguation.BracketDisambiguation.FieldSelection,
+                Disambiguation.BracketDisambiguation.FieldProjection,
             ]);
             break;
 

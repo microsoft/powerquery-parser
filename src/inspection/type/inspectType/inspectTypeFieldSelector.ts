@@ -20,7 +20,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
     const fieldName: string = (maybeFieldName as Ast.GeneralizedIdentifier).literal;
 
-    const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );

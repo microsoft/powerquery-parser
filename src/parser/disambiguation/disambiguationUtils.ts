@@ -15,7 +15,9 @@ import {
     TAmbiguousParenthesisNode,
 } from "./disambiguation";
 
-// The best match is the one which ended on the highest IParseState.tokenIndex with ties going in order given.
+// For each given parse function it'll create a deep copy of the state then parse with the function.
+// Mutates the given state to whatever parse state which matched the most amount of tokens.
+// Ties are resolved in the order of the given parse functions.
 export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
@@ -53,6 +55,7 @@ export function readAmbiguous<T extends Ast.TNode, S extends IParseState = IPars
     return maybeBestMatch;
 }
 
+// Peeks at the token stream and either performs an explicit read or an ambiguous read.
 export function readAmbiguousBracket<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
@@ -95,6 +98,7 @@ export function readAmbiguousBracket<S extends IParseState = IParseState>(
     }
 }
 
+// Peeks at the token stream and either performs an explicit read or an ambiguous read.
 export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,

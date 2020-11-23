@@ -4,9 +4,13 @@
 import { ArrayUtils, Assert } from "../../../common";
 import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
-import { Collection } from "../nodeIdMap";
+import { ChildIdsById, Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { assertGetXor } from "./commonSelectors";
+
+export function assertGetChildren(childIdsById: ChildIdsById, parentId: number): ReadonlyArray<number> {
+    return Assert.asDefined(childIdsById.get(parentId), `parentId doesn't have any children`, { parentId });
+}
 
 export function assertGetChildAstByAttributeIndex(
     nodeIdMapCollection: Collection,

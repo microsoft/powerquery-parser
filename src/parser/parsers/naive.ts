@@ -758,8 +758,8 @@ export function readRecursivePrimaryExpression<S extends IParseState = IParseSta
                 state,
                 parser,
                 [
-                    Disambiguation.BracketDisambiguation.FieldProjection,
                     Disambiguation.BracketDisambiguation.FieldSelection,
+                    Disambiguation.BracketDisambiguation.FieldProjection,
                 ],
             ) as Ast.TFieldAccessExpression;
             recursiveExpressions.push(bracketExpression);
