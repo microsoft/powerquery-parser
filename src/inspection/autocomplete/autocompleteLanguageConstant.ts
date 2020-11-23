@@ -3,7 +3,6 @@
 
 import { Assert, ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
-import { LanguageConstantKind } from "../../language/constant/constant";
 import { AncestryUtils, IParseState, TXorNode, XorNodeKind } from "../../parser";
 import { ParseSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
@@ -19,7 +18,6 @@ export function tryAutocompleteLanguageConstant<S extends IParseState = IParseSt
     });
 }
 
-// Currently only checks "optional" constant in FunctionExpression.
 function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteLanguageConstant | undefined {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
