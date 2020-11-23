@@ -6,15 +6,16 @@ import { Assert, CommonError, MapUtils } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
+import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";
 import { IParseState, TParseStateFactoryOverrides } from "./IParseState";
 
-// If you have a custom parser + parser state, then you'll have to create your own factory function.
-// See `benchmark.ts` for an example.
-export function stateFactory(
+export function stateFactory<S extends IParseState = IParseState>(
     lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TParseStateFactoryOverrides | undefined,
+    maybeOverrides: TParseStateFactoryOverrides<S> | undefined,
 ): IParseState {
+    maybeOverrides = maybeOverrides !== undefined ? maybeOverrides : {};
+
     const tokenIndex: number = maybeOverrides?.tokenIndex ?? 0;
     const maybeCurrentToken: Token.Token | undefined = lexerSnapshot.tokens[tokenIndex];
     const maybeCurrentTokenKind: Token.TokenKind | undefined = maybeCurrentToken?.kind;
@@ -31,14 +32,35 @@ export function stateFactory(
             : undefined;
 
     return {
+        ...maybeOverrides,
         lexerSnapshot,
         maybeCancellationToken: maybeOverrides?.maybeCancellationToken,
         locale: maybeOverrides?.locale ?? DefaultLocale,
+        disambiguationBehavior: maybeOverrides?.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
         tokenIndex,
         maybeCurrentToken,
         maybeCurrentTokenKind,
         contextState: maybeOverrides?.contextState ?? ParseContextUtils.stateFactory(),
         maybeCurrentContextNode,
+    };
+}
+
+// If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
+// See `benchmark.ts` for an example.
+export function applyState(state: IParseState, update: IParseState): void {
+    state.tokenIndex = update.tokenIndex;
+    state.maybeCurrentToken = update.maybeCurrentToken;
+    state.maybeCurrentTokenKind = update.maybeCurrentTokenKind;
+    state.contextState = update.contextState;
+    state.maybeCurrentContextNode = update.maybeCurrentContextNode;
+}
+
+// If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.
+// See `benchmark.ts` for an example.
+export function copyState(state: IParseState): IParseState {
+    return {
+        ...state,
+        contextState: ParseContextUtils.copyState(state.contextState),
     };
 }
 
@@ -297,6 +319,11 @@ export function assertNoOpenContext(state: IParseState): void {
     Assert.isUndefined(state.maybeCurrentContextNode, undefined, {
         contextNodeId: state.maybeCurrentContextNode?.id,
     });
+}
+
+export function assertIsDoneParsing(state: IParseState): void {
+    assertNoMoreTokens(state);
+    assertNoOpenContext(state);
 }
 
 // -------------------------------------

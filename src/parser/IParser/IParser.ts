@@ -19,8 +19,10 @@ export interface ParseOk<S extends IParseState = IParseState> {
 }
 
 export interface IParser<S extends IParseState = IParseState, C extends IParseStateCheckpoint = IParseStateCheckpoint> {
-    readonly createCheckpoint: (state: S) => C;
-    readonly restoreFromCheckpoint: (state: S, checkpoint: C) => void;
+    readonly applyState: (state: S, update: S) => void;
+    readonly copyState: (state: S) => S;
+    readonly checkpointFactory: (state: S) => C;
+    readonly restoreCheckpoint: (state: S, checkpoint: C) => void;
 
     // 12.1.6 Identifiers
     readonly readIdentifier: (state: S, parser: IParser<S>) => Ast.Identifier;

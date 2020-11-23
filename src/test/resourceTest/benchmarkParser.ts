@@ -4,6 +4,7 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
+import { TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { IParser, IParserUtils, IParseStateCheckpoint } from "../../parser/IParser";
@@ -31,9 +32,30 @@ export interface FunctionTimestamp {
 }
 
 export const BenchmarkParser: IParser<BenchmarkState> = {
-    createCheckpoint: (state: IParseState) => IParserUtils.stateCheckpointFactory(state),
-    restoreFromCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
-        IParserUtils.restoreStateCheckpoint(state, checkpoint),
+    applyState: (state: BenchmarkState, update: BenchmarkState) => {
+        const mutableState: TypeScriptUtils.StripReadonly<BenchmarkState> = state;
+        IParseStateUtils.applyState(mutableState, update);
+        mutableState.functionTimestamps = update.functionTimestamps;
+        mutableState.functionTimestampCounter = update.functionTimestampCounter;
+    },
+    copyState: (state: BenchmarkState) => {
+        return {
+            ...IParseStateUtils.copyState(state),
+            baseParser: state.baseParser,
+            functionTimestampCounter: state.functionTimestampCounter,
+            functionTimestamps: new Map(
+                [
+                    ...state.functionTimestamps.entries(),
+                ].map(([counter, functionTimestamp]: [number, FunctionTimestamp]) => [
+                    counter,
+                    { ...functionTimestamp },
+                ]),
+            ),
+        };
+    },
+    checkpointFactory: (state: IParseState) => IParserUtils.checkpointFactory(state),
+    restoreCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
+        IParserUtils.restoreCheckpoint(state, checkpoint),
 
     // 12.1.6 Identifiers
     readIdentifier: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>

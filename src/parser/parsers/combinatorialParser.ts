@@ -6,7 +6,7 @@ import { NodeIdMap, ParseContextUtils } from "..";
 import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
-import { IParser, IParserUtils, IParseStateCheckpoint } from "../IParser";
+import { IParser, IParserUtils } from "../IParser";
 import { IParseState, IParseStateUtils } from "../IParseState";
 
 // If the Naive parser were to parse the expression '1' it would need to recurse down a dozen or so constructs,
@@ -24,9 +24,10 @@ import { IParseState, IParseStateUtils } from "../IParseState";
 // readUnaryExpression uses limited look ahead to eliminate several function calls on the call stack.
 export const CombinatorialParser: IParser<IParseState> = {
     ...NaiveParseSteps,
-    createCheckpoint: (state: IParseState) => IParserUtils.stateCheckpointFactory(state),
-    restoreFromCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
-        IParserUtils.restoreStateCheckpoint(state, checkpoint),
+    applyState: IParseStateUtils.applyState,
+    copyState: IParseStateUtils.copyState,
+    checkpointFactory: IParserUtils.checkpointFactory,
+    restoreCheckpoint: IParserUtils.restoreCheckpoint,
 
     // 12.2.3.2 Logical expressions
     readLogicalExpression: (state: IParseState, parser: IParser<IParseState>) =>
@@ -263,7 +264,7 @@ function readUnaryExpression(state: IParseState, parser: IParser<IParseState>): 
             maybePrimaryExpression = DisambiguationUtils.readAmbiguousBracket(state, parser, [
                 Disambiguation.BracketDisambiguation.FieldProjection,
                 Disambiguation.BracketDisambiguation.FieldSelection,
-                Disambiguation.BracketDisambiguation.Record,
+                Disambiguation.BracketDisambiguation.RecordExpression,
             ]);
             break;
 
