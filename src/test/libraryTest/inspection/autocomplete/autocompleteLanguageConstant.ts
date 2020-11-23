@@ -55,19 +55,17 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
 
     it(`(x, |`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(x, |`);
-        const expected: Constant.LanguageConstantKind = Language.Constant.LanguageConstantKind.Optional;
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(expected);
+        expect(actual).to.equal(Constant.LanguageConstantKind.Optional);
     });
 
     it(`(x, op|`, () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`(x, op|`);
-        const expected: Constant.LanguageConstantKind = Language.Constant.LanguageConstantKind.Optional;
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(expected);
+        expect(actual).to.equal(Constant.LanguageConstantKind.Optional);
     });
 });

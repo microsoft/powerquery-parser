@@ -24,46 +24,49 @@ function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): Autoco
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
     }
+    const activeNode: ActiveNode = maybeActiveNode;
 
-    return maybeAutocompleteNullable(maybeActiveNode) || maybeAutocompleteOptional(maybeActiveNode);
+    if (isNullableAllowed(activeNode)) {
+        return Constant.LanguageConstantKind.Nullable;
+    } else if (isOptionalAllowed(activeNode)) {
+        return Constant.LanguageConstantKind.Optional;
+    } else {
+        return undefined;
+    }
 }
 
-function maybeAutocompleteNullable(activeNode: ActiveNode): LanguageConstantKind.Nullable | undefined {
+function isNullableAllowed(activeNode: ActiveNode): boolean {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = ancestry.length;
 
     for (let index: number = 0; index < numAncestors; index += 1) {
         const xorNode: TXorNode = ancestry[index];
 
-        let maybeNullable: LanguageConstantKind.Nullable | undefined;
         switch (xorNode.node.kind) {
             case Ast.NodeKind.AsNullablePrimitiveType:
-                maybeNullable = maybeAutocompleteNullableForAsNullablePrimitiveType(activeNode, index);
+                if (isNullableAllowedForAsNullablePrimitiveType(activeNode, index)) {
+                    return true;
+                }
                 break;
 
             case Ast.NodeKind.PrimitiveType:
-                maybeNullable = maybeAutocompleteNullableForPrimitiveType(xorNode);
+                if (isNullableAllowedForPrimitiveType(xorNode)) {
+                    return true;
+                }
                 break;
 
             default:
-                maybeNullable = undefined;
-        }
-
-        if (maybeNullable !== undefined) {
-            return maybeNullable;
+                continue;
         }
     }
 
-    return undefined;
+    return false;
 }
 
-function maybeAutocompleteNullableForAsNullablePrimitiveType(
-    activeNode: ActiveNode,
-    ancestryIndex: number,
-): LanguageConstantKind.Nullable | undefined {
+function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
     const maybeChild: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, ancestryIndex);
     if (maybeChild?.node.maybeAttributeIndex !== 1) {
-        return undefined;
+        return false;
     }
     // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
     const paired: TXorNode = maybeChild;
@@ -71,7 +74,7 @@ function maybeAutocompleteNullableForAsNullablePrimitiveType(
 
     // Ast.PrimitiveType
     if (paired.node.kind === Ast.NodeKind.PrimitiveType && PositionUtils.isBeforeXor(position, paired, false)) {
-        return Constant.LanguageConstantKind.Nullable;
+        return true;
     }
     // Ast.NullablePrimitiveType
     else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
@@ -81,39 +84,35 @@ function maybeAutocompleteNullableForAsNullablePrimitiveType(
             2,
         );
         if (maybeGrandchild === undefined) {
-            return undefined;
+            return false;
         }
         // Ast.Constant || Ast.PrimitiveType
         const grandchild: TXorNode = maybeGrandchild;
 
-        if (
+        return (
             // Ast.Constant
             grandchild.node.kind === Ast.NodeKind.Constant ||
             // before Ast.PrimitiveType
             PositionUtils.isBeforeXor(position, grandchild, false)
-        ) {
-            return Constant.LanguageConstantKind.Nullable;
-        } else {
-            return undefined;
-        }
+        );
     } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
-        return maybeAutocompleteNullableForPrimitiveType(paired);
+        return isNullableAllowedForPrimitiveType(paired);
     } else {
-        return undefined;
+        return false;
     }
 }
 
-function maybeAutocompleteNullableForPrimitiveType(primitiveType: TXorNode): LanguageConstantKind.Nullable | undefined {
-    return primitiveType.kind === XorNodeKind.Context ? Constant.LanguageConstantKind.Nullable : undefined;
+function isNullableAllowedForPrimitiveType(primitiveType: TXorNode): boolean {
+    return primitiveType.kind === XorNodeKind.Context;
 }
 
-function maybeAutocompleteOptional(activeNode: ActiveNode): LanguageConstantKind.Optional | undefined {
+function isOptionalAllowed(activeNode: ActiveNode): boolean {
     const maybeFnExprAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
     if (maybeFnExprAncestryIndex === undefined) {
-        return undefined;
+        return false;
     }
     const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
 
@@ -125,7 +124,7 @@ function maybeAutocompleteOptional(activeNode: ActiveNode): LanguageConstantKind
         [Ast.NodeKind.Parameter],
     );
     if (maybeParameter === undefined) {
-        return undefined;
+        return false;
     }
 
     const maybeChildOfParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
@@ -134,14 +133,14 @@ function maybeAutocompleteOptional(activeNode: ActiveNode): LanguageConstantKind
         5,
     );
     if (maybeChildOfParameter === undefined) {
-        return Constant.LanguageConstantKind.Optional;
+        return true;
     }
     const childOfParameter: TXorNode = maybeChildOfParameter;
 
     switch (childOfParameter.node.maybeAttributeIndex) {
         // IParameter.maybeOptionalConstant
         case 0:
-            return Constant.LanguageConstantKind.Optional;
+            return true;
 
         // IParameter.name
         case 1:
@@ -150,21 +149,21 @@ function maybeAutocompleteOptional(activeNode: ActiveNode): LanguageConstantKind
                     const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
                     const name: string = nameAst.literal;
 
-                    return Constant.LanguageConstantKind.Optional.startsWith(name) &&
+                    return (
+                        Constant.LanguageConstantKind.Optional.startsWith(name) &&
                         name !== Constant.LanguageConstantKind.Optional &&
                         PositionUtils.isInAst(activeNode.position, nameAst, false, true)
-                        ? Constant.LanguageConstantKind.Optional
-                        : undefined;
+                    );
                 }
 
                 case XorNodeKind.Context:
-                    return Constant.LanguageConstantKind.Optional;
+                    return true;
 
                 default:
                     throw Assert.isNever(childOfParameter);
             }
 
         default:
-            return undefined;
+            return false;
     }
 }
