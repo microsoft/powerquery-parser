@@ -14,8 +14,6 @@
         "--colors",
         "--timeout",
         "999999",
-        "-g",
-        "ABC",
         "${workspaceFolder}/lib/test/libraryTest/**/*.js"
       ],
       "preLaunchTask": "watch",
