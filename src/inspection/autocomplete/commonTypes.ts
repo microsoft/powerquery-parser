@@ -3,7 +3,7 @@
 
 import { CommonError, Result } from "../../common";
 import { Constant, Keyword, Token, Type } from "../../language";
-import { IParseState, ParseError, TXorNode } from "../../parser";
+import { TXorNode } from "../../parser";
 
 export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | undefined, CommonError.CommonError>;
 
@@ -18,7 +18,7 @@ export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType, C
 
 export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
 
-export type AutocompleteLanguageConstant = ReadonlyArray<Constant.LanguageConstantKind>;
+export type AutocompleteLanguageConstant = Constant.LanguageConstantKind;
 
 export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
 
@@ -49,10 +49,4 @@ export interface InspectedFieldAccess {
 
 export interface TrailingToken extends Token.Token {
     readonly isInOrOnPosition: boolean;
-}
-
-export interface AdditionalParse<S extends IParseState = IParseState> {
-    readonly root: TXorNode;
-    readonly parseState: S;
-    readonly maybeParseError: ParseError.ParseError<S> | undefined;
 }

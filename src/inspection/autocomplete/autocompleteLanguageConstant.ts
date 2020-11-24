@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "../../common";
+import { Assert, ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
 import { AncestryUtils, IParseState, TXorNode, XorNodeKind } from "../../parser";
 import { ParseSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { PositionUtils } from "../position";
+import { Position, PositionUtils } from "../position";
 import { AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant<S extends IParseState = IParseState>(
@@ -18,72 +18,150 @@ export function tryAutocompleteLanguageConstant<S extends IParseState = IParseSt
     });
 }
 
-// Currently only checks "optional" constant in FunctionExpression.
 function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteLanguageConstant | undefined {
-    if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        const maybeFunctionExpressionAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
-            maybeActiveNode.ancestry,
-            Ast.NodeKind.FunctionExpression,
-        );
-        if (maybeFunctionExpressionAncestryIndex !== undefined) {
-            return inspectFunctionExpression(maybeActiveNode, maybeFunctionExpressionAncestryIndex);
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        return undefined;
+    }
+    const activeNode: ActiveNode = maybeActiveNode;
+
+    if (isNullableAllowed(activeNode)) {
+        return Constant.LanguageConstantKind.Nullable;
+    } else if (isOptionalAllowed(activeNode)) {
+        return Constant.LanguageConstantKind.Optional;
+    } else {
+        return undefined;
+    }
+}
+
+function isNullableAllowed(activeNode: ActiveNode): boolean {
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const numAncestors: number = ancestry.length;
+
+    for (let index: number = 0; index < numAncestors; index += 1) {
+        const xorNode: TXorNode = ancestry[index];
+
+        switch (xorNode.node.kind) {
+            case Ast.NodeKind.AsNullablePrimitiveType:
+                if (isNullableAllowedForAsNullablePrimitiveType(activeNode, index)) {
+                    return true;
+                }
+                break;
+
+            case Ast.NodeKind.PrimitiveType:
+                if (isNullableAllowedForPrimitiveType(xorNode)) {
+                    return true;
+                }
+                break;
+
+            default:
+                continue;
         }
     }
 
-    return undefined;
+    return false;
 }
 
-function inspectFunctionExpression(
-    activeNode: ActiveNode,
-    functionExpressionAncestryIndex: number,
-): AutocompleteLanguageConstant | undefined {
-    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const functionExpressionChild: TXorNode = AncestryUtils.assertGetPreviousXor(
-        ancestry,
-        functionExpressionAncestryIndex,
-        [Ast.NodeKind.ParameterList, Ast.NodeKind.AsNullablePrimitiveType, Ast.NodeKind.Constant],
+function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
+    const maybeChild: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, ancestryIndex);
+    if (maybeChild?.node.maybeAttributeIndex !== 1) {
+        return false;
+    }
+    // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
+    const paired: TXorNode = maybeChild;
+    const position: Position = activeNode.position;
+
+    // Ast.PrimitiveType
+    if (paired.node.kind === Ast.NodeKind.PrimitiveType && PositionUtils.isBeforeXor(position, paired, false)) {
+        return true;
+    }
+    // Ast.NullablePrimitiveType
+    else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
+        const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+            activeNode.ancestry,
+            ancestryIndex,
+            2,
+        );
+        if (maybeGrandchild === undefined) {
+            return false;
+        }
+        // Ast.Constant || Ast.PrimitiveType
+        const grandchild: TXorNode = maybeGrandchild;
+
+        return (
+            // Ast.Constant
+            grandchild.node.kind === Ast.NodeKind.Constant ||
+            // before Ast.PrimitiveType
+            PositionUtils.isBeforeXor(position, grandchild, false)
+        );
+    } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
+        return isNullableAllowedForPrimitiveType(paired);
+    } else {
+        return false;
+    }
+}
+
+function isNullableAllowedForPrimitiveType(primitiveType: TXorNode): boolean {
+    return primitiveType.kind === XorNodeKind.Context;
+}
+
+function isOptionalAllowed(activeNode: ActiveNode): boolean {
+    const maybeFnExprAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
+        activeNode.ancestry,
+        Ast.NodeKind.FunctionExpression,
     );
-    if (functionExpressionChild.node.kind !== Ast.NodeKind.ParameterList) {
-        return undefined;
+    if (maybeFnExprAncestryIndex === undefined) {
+        return false;
+    }
+    const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
+
+    // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
+    const maybeParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+        activeNode.ancestry,
+        fnExprAncestryIndex,
+        4,
+        [Ast.NodeKind.Parameter],
+    );
+    if (maybeParameter === undefined) {
+        return false;
     }
 
-    const maybeParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
-        ancestry,
-        functionExpressionAncestryIndex,
-        4,
-    );
-    if (maybeParameter === undefined || maybeParameter.node.kind !== Ast.NodeKind.Parameter) {
-        return undefined;
-    }
-    const childOfParameter: TXorNode = AncestryUtils.assertGetNthPreviousXor(
-        ancestry,
-        functionExpressionAncestryIndex,
+    const maybeChildOfParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+        activeNode.ancestry,
+        fnExprAncestryIndex,
         5,
     );
-    if (
-        // If position is in an already parsed `optional` constant.
-        // `(optional foo as 1|
-        childOfParameter.node.maybeAttributeIndex === 0 ||
-        // If position is in AsNullablePrimitiveType
-        // `(foo as |`
-        childOfParameter.node.maybeAttributeIndex === 2
-    ) {
-        return undefined;
+    if (maybeChildOfParameter === undefined) {
+        return true;
     }
-    const name: TXorNode = childOfParameter;
-    if (name.kind === XorNodeKind.Context) {
-        return [Constant.LanguageConstantKind.Optional];
-    }
+    const childOfParameter: TXorNode = maybeChildOfParameter;
 
-    const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
-    const nameLiteral: string = nameAst.literal;
-    if (
-        PositionUtils.isInAst(activeNode.position, nameAst, false, true) &&
-        Constant.LanguageConstantKind.Optional.startsWith(nameLiteral) &&
-        Constant.LanguageConstantKind.Optional.length !== nameLiteral.length
-    ) {
-        return [Constant.LanguageConstantKind.Optional];
-    }
+    switch (childOfParameter.node.maybeAttributeIndex) {
+        // IParameter.maybeOptionalConstant
+        case 0:
+            return true;
 
-    return undefined;
+        // IParameter.name
+        case 1:
+            switch (childOfParameter.kind) {
+                case XorNodeKind.Ast: {
+                    const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
+                    const name: string = nameAst.literal;
+
+                    return (
+                        Constant.LanguageConstantKind.Optional.startsWith(name) &&
+                        name !== Constant.LanguageConstantKind.Optional &&
+                        PositionUtils.isInAst(activeNode.position, nameAst, false, true)
+                    );
+                }
+
+                case XorNodeKind.Context:
+                    return true;
+
+                default:
+                    throw Assert.isNever(childOfParameter);
+            }
+
+        default:
+            return false;
+    }
 }
