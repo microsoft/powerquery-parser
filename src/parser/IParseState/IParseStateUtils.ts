@@ -293,7 +293,7 @@ export function testIsOnAnyTokenKind(
     expectedAnyTokenKinds: ReadonlyArray<Token.TokenKind>,
 ): ParseError.ExpectedAnyTokenKindError | undefined {
     const isError: boolean =
-        state.maybeCurrentTokenKind === undefined || expectedAnyTokenKinds.indexOf(state.maybeCurrentTokenKind) === -1;
+        state.maybeCurrentTokenKind === undefined || !expectedAnyTokenKinds.includes(state.maybeCurrentTokenKind);
 
     if (isError) {
         const maybeToken: ParseError.TokenWithColumnNumber | undefined = maybeCurrentTokenWithColumnNumber(state);

@@ -357,8 +357,22 @@ export function readExpression<S extends IParseState = IParseState>(state: S, pa
         case Token.TokenKind.KeywordTry:
             return parser.readErrorHandlingExpression(state, parser);
 
-        case Token.TokenKind.LeftParenthesis:
-            return DisambiguationUtils.readAmbiguousParenthesis(state, parser);
+        case Token.TokenKind.LeftParenthesis: {
+            const maybeDisambiguation:
+                | Disambiguation.ParenthesisDisambiguation
+                | undefined = DisambiguationUtils.maybeDisambiguateParenthesis(state, parser);
+
+            if (
+                maybeDisambiguation &&
+                maybeDisambiguation === Disambiguation.ParenthesisDisambiguation.FunctionExpression
+            ) {
+                return parser.readFunctionExpression(state, parser);
+            } else if (state.disambiguationBehavior === Disambiguation.DismabiguationBehavior.Strict) {
+                throw IParseStateUtils.unterminatedParenthesesError(state);
+            } else {
+                return parser.readNullCoalescingExpression(state, parser);
+            }
+        }
 
         default:
             return parser.readNullCoalescingExpression(state, parser);
