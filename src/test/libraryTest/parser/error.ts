@@ -63,7 +63,7 @@ describe("Parser.Error", () => {
         expect((innerError as ParseError.UnterminatedSequence).kind).to.equal(SequenceKind.Bracket, innerError.message);
     });
 
-    it("WIP UnterminatedSequence (Parenthesis): let x = (1", () => {
+    it("UnterminatedSequence (Parenthesis): let x = (1", () => {
         const text: string = "let x = (1";
         const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettingsWithStrict,

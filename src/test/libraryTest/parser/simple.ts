@@ -1396,7 +1396,7 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.ParameterList covered by many
 
-    describe(`ABC ${Ast.NodeKind.ParenthesizedExpression}`, () => {
+    describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
         it(`(1)`, () => {
             const text: string = `(1)`;
             const expected: ReadonlyArray<AbridgedNode> = [
@@ -1404,6 +1404,20 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.Constant, 0],
                 [Ast.NodeKind.LiteralExpression, 1],
                 [Ast.NodeKind.Constant, 2],
+            ];
+            assertAbridgeNodes(text, expected);
+        });
+
+        it(`(1) + 1`, () => {
+            const text: string = `(1) + 1`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.ArithmeticExpression, undefined],
+                [Ast.NodeKind.ParenthesizedExpression, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1421,6 +1435,23 @@ describe("Parser.AbridgedNode", () => {
                 [Ast.NodeKind.LiteralExpression, 3],
                 [Ast.NodeKind.Constant, 4],
                 [Ast.NodeKind.LiteralExpression, 5],
+                [Ast.NodeKind.Constant, 2],
+                [Ast.NodeKind.Constant, 1],
+                [Ast.NodeKind.LiteralExpression, 2],
+            ];
+            assertAbridgeNodes(text, expected);
+        });
+
+        it(`((1)) and true`, () => {
+            const text: string = `((1)) and true`;
+            const expected: ReadonlyArray<AbridgedNode> = [
+                [Ast.NodeKind.LogicalExpression, undefined],
+                [Ast.NodeKind.ParenthesizedExpression, 0],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.ParenthesizedExpression, 1],
+                [Ast.NodeKind.Constant, 0],
+                [Ast.NodeKind.LiteralExpression, 1],
+                [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 2],
                 [Ast.NodeKind.Constant, 1],
                 [Ast.NodeKind.LiteralExpression, 2],

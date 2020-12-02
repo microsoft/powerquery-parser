@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
-import { Ast, Token } from "../../language";
+import { ArrayUtils, Assert, CommonError, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { Ast, AstUtils, Token } from "../../language";
 import { IParser, IParseStateCheckpoint } from "../IParser";
 import { IParseState, IParseStateUtils } from "../IParseState";
 import {
@@ -102,8 +102,8 @@ export function readAmbiguousBracket<S extends IParseState = IParseState>(
 export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
     state: S,
     parser: IParser<S>,
-): Ast.FunctionExpression | Ast.TExpression {
-    // We might be able to peek at tokens to disambiguate what bracketed expression is next.
+): TAmbiguousParenthesisNode {
+    // We might be able to peek at tokens to disambiguate what parenthesized expression is next.
     const maybeDisambiguation: ParenthesisDisambiguation | undefined = maybeDisambiguateParenthesis(state, parser);
 
     // Peeking gave us a concrete answer as to what's next.
@@ -115,7 +115,7 @@ export function readAmbiguousParenthesis<S extends IParseState = IParseState>(
                 return parser.readFunctionExpression(state, parser);
 
             case ParenthesisDisambiguation.ParenthesizedExpression:
-                return parser.readParenthesizedExpression(state, parser);
+                return readParenthesizedExpressionOrBinOpExpression(state, parser);
 
             default:
                 throw Assert.isNever(disambiguation);
@@ -255,7 +255,7 @@ function thoroughReadAmbiguousParenthesis<S extends IParseState = IParseState>(
 ): TAmbiguousParenthesisNode {
     return thoroughReadAmbiguous<TAmbiguousParenthesisNode, S>(state, parser, [
         parser.readFunctionExpression,
-        parser.readParenthesizedExpression,
+        readParenthesizedExpressionOrBinOpExpression,
     ]);
 }
 
@@ -299,6 +299,27 @@ function bracketDisambiguationParseFunctions<S extends IParseState = IParseState
                 throw Assert.isNever(bracketDisambiguation);
         }
     });
+}
+
+// When the next token is an open parenthesis we can't directly read
+// a ParenthesisExpression as it may leave trailing tokens behind.
+// `(1) + 2`
+function readParenthesizedExpressionOrBinOpExpression<S extends IParseState>(
+    state: S,
+    parser: IParser<S>,
+): Ast.ParenthesizedExpression | Ast.TLogicalExpression {
+    const node: Ast.TNode = parser.readLogicalExpression(state, parser);
+
+    if (
+        node.kind !== Ast.NodeKind.ParenthesizedExpression &&
+        !(AstUtils.isTBinOpExpression(node) && node.left.kind === Ast.NodeKind.ParenthesizedExpression)
+    ) {
+        throw new CommonError.InvariantError(
+            `${thoroughReadAmbiguousParenthesis.name} should've read a parenthesis as the left most node`,
+        );
+    }
+
+    return node;
 }
 
 // WARNING: Only updates tokenIndex and currentTokenKind,
