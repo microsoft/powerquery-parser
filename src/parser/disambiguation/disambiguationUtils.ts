@@ -321,7 +321,7 @@ function readParenthesizedExpressionOrBinOpExpression<S extends IParseState>(
     Assert.isTrue(
         leftMostNode.kind === Ast.NodeKind.Constant &&
             leftMostNode.constantKind === Language.Constant.WrapperConstantKind.LeftParenthesis,
-        "leftMostNode should be a LeftParenthesis",
+        `leftMostNode should be a ${Ast.NodeKind.Constant} with a constantKind of ${Language.Constant.WrapperConstantKind.LeftParenthesis}`,
     );
 
     return node;
