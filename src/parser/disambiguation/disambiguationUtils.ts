@@ -2,10 +2,12 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { ArrayUtils, Assert, CommonError, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { Language } from "../..";
+import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { Ast, AstUtils, Token } from "../../language";
 import { IParser, IParseStateCheckpoint } from "../IParser";
 import { IParseState, IParseStateUtils } from "../IParseState";
+import { NodeIdMapUtils } from "../nodeIdMap";
 import {
     AmbiguousParse,
     BracketDisambiguation,
@@ -310,14 +312,17 @@ function readParenthesizedExpressionOrBinOpExpression<S extends IParseState>(
 ): Ast.ParenthesizedExpression | Ast.TLogicalExpression {
     const node: Ast.TNode = parser.readLogicalExpression(state, parser);
 
-    if (
-        node.kind !== Ast.NodeKind.ParenthesizedExpression &&
-        !(AstUtils.isTBinOpExpression(node) && node.left.kind === Ast.NodeKind.ParenthesizedExpression)
-    ) {
-        throw new CommonError.InvariantError(
-            `${thoroughReadAmbiguousParenthesis.name} should've read a parenthesis as the left most node`,
-        );
-    }
+    const leftMostNode: Ast.TNode = NodeIdMapUtils.assertGetLeftMostAst(
+        state.contextState.nodeIdMapCollection,
+        node.id,
+    );
+
+    AstUtils.assertNodeKind(leftMostNode, Ast.NodeKind.Constant);
+    Assert.isTrue(
+        leftMostNode.kind === Ast.NodeKind.Constant &&
+            leftMostNode.constantKind === Language.Constant.WrapperConstantKind.LeftParenthesis,
+        "leftMostNode should be a LeftParenthesis",
+    );
 
     return node;
 }

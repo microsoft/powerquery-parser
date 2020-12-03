@@ -1,12 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap } from "..";
+import { NodeIdMap, XorNodeUtils } from "..";
 import { Assert } from "../../../common";
 import { Ast } from "../../../language";
 import { AstNodeById, Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { maybeXor } from "./commonSelectors";
+
+export function assertGetLeftMostAst(nodeIdMapCollection: Collection, nodeId: number): Ast.TNode {
+    return XorNodeUtils.assertGetAst(
+        Assert.asDefined(
+            maybeLeftMostXor(nodeIdMapCollection, nodeId),
+            `nodeId does not exist in nodeIdMapCollection`,
+            { nodeId },
+        ),
+    );
+}
 
 export function assertGetLeftMostXor(nodeIdMapCollection: Collection, nodeId: number): TXorNode {
     return Assert.asDefined(
