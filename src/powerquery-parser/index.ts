@@ -1,0 +1,13 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+import * as Task from "../task";
+import * as Inspection from "./inspection";
+import * as Language from "./language";
+import * as Lexer from "./lexer";
+import * as Parser from "./parser";
+
+export { Inspection, Language, Lexer, Parser, Task };
+export * from "./common";
+export * from "./localization";
+export * from "./settings";

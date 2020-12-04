@@ -49,22 +49,6 @@
         "typescript": "^3.8.3"
     },
     "files": [
-        "lib/common/*",
-        "lib/inspection/*",
-        "lib/language/*",
-        "lib/lexer/*",
-        "lib/localization/*",
-        "lib/parser/*",
-        "lib/settings/*",
-        "lib/type/*",
-        "lib/index.d.ts",
-        "lib/index.js",
-        "lib/index.js.map",
-        "lib/settings.d.ts",
-        "lib/settings.js",
-        "lib/settings.js.map",
-        "lib/task.d.ts",
-        "lib/task.js",
-        "lib/task.js.map"
+        "lib/src/**/*"
     ]
 }
