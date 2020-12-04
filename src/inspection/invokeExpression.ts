@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result, ResultUtils } from "../common";
+import { Assert, CommonError, Result, ResultUtils } from "../powerquery-parser/common";
 import { Ast } from "../language";
 import {
     AncestryUtils,

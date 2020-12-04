@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ICancellationToken } from "../common";
+import { ICancellationToken } from "../powerquery-parser/common";
 import { Ast } from "../language";
 import { LexerSnapshot } from "../lexer";
 import { DefaultLocale } from "../localization";

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert } from "../../../common";
+import { Assert } from "../../../powerquery-parser/common";
 import { Constant } from "../../constant";
 
 export function maybePrimitiveTypeConstantKindFromTypeKind(

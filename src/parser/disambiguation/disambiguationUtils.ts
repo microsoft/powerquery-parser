@@ -3,7 +3,7 @@
 
 import { ParseError } from "..";
 import { Language } from "../..";
-import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../powerquery-parser/common";
 import { Ast, AstUtils, Token } from "../../language";
 import { IParser, IParseStateCheckpoint } from "../IParser";
 import { IParseState, IParseStateUtils } from "../IParseState";

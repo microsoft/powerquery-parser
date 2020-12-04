@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, XorNodeUtils } from "..";
-import { Assert } from "../../../common";
+import { Assert } from "../../../powerquery-parser/common";
 import { Ast } from "../../../language";
 import { AstNodeById, Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";

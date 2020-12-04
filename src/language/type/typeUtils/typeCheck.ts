@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { ArrayUtils } from "../../../common";
+import { ArrayUtils } from "../../../powerquery-parser/common";
 import { isCompatible, isCompatibleWithFunctionParameter } from "./isCompatible";
 
 export type TChecked =

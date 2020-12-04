@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert, MapUtils } from "../../../common";
+import { Assert, MapUtils } from "../../../powerquery-parser/common";
 import { isEqualFunctionSignature, isEqualType } from "./isEqualType";
 import { isFieldSpecificationList, isFunctionSignature } from "./typeUtils";
 

@@ -1,6 +1,6 @@
 import "mocha";
 import { Task } from "../..";
-import { ResultUtils } from "../../common";
+import { ResultUtils } from "../../powerquery-parser/common";
 import { CombinatorialParser, IParser, IParseState, RecursiveDescentParser } from "../../parser";
 import { DefaultSettings, Settings } from "../../settings";
 

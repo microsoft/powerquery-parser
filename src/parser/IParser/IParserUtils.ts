@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { CommonError, ResultUtils } from "../../common";
+import { CommonError, ResultUtils } from "../../powerquery-parser/common";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ParseSettings } from "../../settings";

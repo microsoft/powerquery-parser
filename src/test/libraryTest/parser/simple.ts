@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
-import { Assert, Traverse } from "../../../common";
+import { Assert, Traverse } from "../../../powerquery-parser/common";
 import { Ast, Constant } from "../../../language";
 import { DefaultLocale } from "../../../localization";
 import { RecursiveDescentParser } from "../../../parser/parsers";

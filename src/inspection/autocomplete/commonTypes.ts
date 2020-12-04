@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result } from "../../common";
+import { CommonError, Result } from "../../powerquery-parser/common";
 import { Constant, Keyword, Token, Type } from "../../language";
 import { TXorNode } from "../../parser";
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMapIterator, XorNodeUtils } from "..";
-import { CommonError } from "../../../common";
+import { CommonError } from "../../../powerquery-parser/common";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";

@@ -4,7 +4,7 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
-import { TypeScriptUtils } from "../../common";
+import { TypeScriptUtils } from "../../powerquery-parser/common";
 import { Ast, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { IParser, IParserUtils, IParseStateCheckpoint } from "../../parser/IParser";

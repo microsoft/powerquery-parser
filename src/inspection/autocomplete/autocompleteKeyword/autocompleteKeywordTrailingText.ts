@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert } from "../../../common";
+import { ArrayUtils, Assert } from "../../../powerquery-parser/common";
 import { Keyword, Token } from "../../../language";
 import { TrailingToken } from "./../commonTypes";
 

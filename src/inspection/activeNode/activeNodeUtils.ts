@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError } from "../../common";
+import { CommonError } from "../../powerquery-parser/common";
 import { Ast, Constant, ConstantUtils } from "../../language";
 import {
     AncestryUtils,

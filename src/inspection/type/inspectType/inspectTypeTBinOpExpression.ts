@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError } from "../../../common";
+import { Assert, CommonError } from "../../../powerquery-parser/common";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
 import { InspectTypeState, inspectXor } from "./common";

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { Result } from "../../common";
+import { Result } from "../../powerquery-parser/common";
 import { Ast } from "../../language";
 import { IParseState } from "../IParseState";
 

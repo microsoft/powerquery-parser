@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, MapUtils } from "../../../common";
+import { ArrayUtils, MapUtils } from "../../../powerquery-parser/common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { InspectTypeState, inspectXor } from "./common";

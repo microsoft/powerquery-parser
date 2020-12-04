@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TypeScriptUtils } from "../../../common";
+import { TypeScriptUtils } from "../../../powerquery-parser/common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";

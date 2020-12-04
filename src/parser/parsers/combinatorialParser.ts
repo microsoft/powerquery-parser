@@ -3,7 +3,7 @@
 
 import { NaiveParseSteps } from ".";
 import { NodeIdMap, ParseContextUtils } from "..";
-import { ArrayUtils, Assert, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, TypeScriptUtils } from "../../powerquery-parser/common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { IParser, IParserUtils } from "../IParser";

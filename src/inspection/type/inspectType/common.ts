@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from "../../..";
-import { Assert, ResultUtils } from "../../../common";
+import { Assert, ResultUtils } from "../../../powerquery-parser/common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { CommonSettings } from "../../../settings";

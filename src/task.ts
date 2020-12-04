@@ -3,7 +3,7 @@
 
 import { Inspection } from ".";
 import { Lexer } from ".";
-import { Assert, CommonError, Result, ResultUtils } from "./common";
+import { Assert, CommonError, Result, ResultUtils } from "./powerquery-parser/common";
 import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
 import { LexError, LexerSnapshot } from "./lexer";

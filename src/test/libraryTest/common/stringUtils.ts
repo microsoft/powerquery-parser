@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { StringUtils } from "../../../common";
+import { StringUtils } from "../../../powerquery-parser/common";
 
 describe("StringUtils", () => {
     describe(`isIdentifier`, () => {

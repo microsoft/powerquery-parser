@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "../../common";
+import { ResultUtils } from "../../powerquery-parser/common";
 import { Autocomplete, AutocompleteItem } from "./commonTypes";
 
 export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {

@@ -6,7 +6,7 @@ import performanceNow = require("performance-now");
 
 import "mocha";
 import { Task } from "../..";
-import { ResultUtils } from "../../common";
+import { ResultUtils } from "../../powerquery-parser/common";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";
 import {

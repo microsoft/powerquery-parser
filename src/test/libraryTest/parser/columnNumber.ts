@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert } from "../../../common";
+import { Assert } from "../../../powerquery-parser/common";
 import { IParseState, ParseError } from "../../../parser";
 import { TokenWithColumnNumber } from "../../../parser/error";
 import { DefaultSettings } from "../../../settings";

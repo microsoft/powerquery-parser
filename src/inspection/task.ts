@@ -1,4 +1,4 @@
-import { ResultUtils } from "../common";
+import { ResultUtils } from "../powerquery-parser/common";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
 import { AncestryUtils, IParseState, NodeIdMap, ParseError, TXorNode } from "../parser";
 import { ParseSettings } from "../settings";

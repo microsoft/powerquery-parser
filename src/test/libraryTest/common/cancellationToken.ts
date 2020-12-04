@@ -3,7 +3,7 @@
 
 import "mocha";
 import { Lexer } from "../../..";
-import { Assert, CommonError, Result, TimedCancellationToken, TypeScriptUtils } from "../../../common";
+import { Assert, CommonError, Result, TimedCancellationToken, TypeScriptUtils } from "../../../powerquery-parser/common";
 import { LexError } from "../../../lexer";
 import { DefaultSettings, Settings, SettingsUtils } from "../../../settings";
 

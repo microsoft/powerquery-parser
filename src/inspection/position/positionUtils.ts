@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "../../common";
+import { Assert } from "../../powerquery-parser/common";
 import { Ast, Token } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
 import { Position } from "./position";

@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert } from "../../../common";
+import { Assert } from "../../../powerquery-parser/common";
 import { Position } from "../../../inspection";
 import { ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";

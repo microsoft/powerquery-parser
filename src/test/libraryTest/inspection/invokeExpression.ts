@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
-import { Assert } from "../../../common";
+import { Assert } from "../../../powerquery-parser/common";
 import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
 import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";

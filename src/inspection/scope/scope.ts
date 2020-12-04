@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from "../..";
-import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils } from "../../powerquery-parser/common";
 import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
 import {
     AncestryUtils,

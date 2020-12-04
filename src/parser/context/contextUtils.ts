@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseContext } from "../";
-import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../powerquery-parser/common";
 import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";

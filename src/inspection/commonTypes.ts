@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from "..";
-import { CommonError, Result } from "../common";
+import { CommonError, Result } from "../powerquery-parser/common";
 import { ExpectedType } from "../language";
 import { TMaybeActiveNode } from "./activeNode";
 

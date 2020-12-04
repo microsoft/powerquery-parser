@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseContext, ParseContextUtils, ParseError } from "..";
-import { Assert, CommonError, MapUtils } from "../../common";
+import { Assert, CommonError, MapUtils } from "../../powerquery-parser/common";
 import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { DefaultLocale } from "../../localization";

@@ -1,5 +1,5 @@
 import { Constant } from ".";
-import { Assert } from "../../common";
+import { Assert } from "../../powerquery-parser/common";
 import { TokenKind } from "../token";
 
 export function maybeUnaryOperatorKindFrom(

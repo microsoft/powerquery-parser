@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert } from "../../../common";
+import { Assert } from "../../../powerquery-parser/common";
 import { LexerSnapshot } from "../../../lexer";
 import { Templates } from "../../../localization";
 import { Localization } from "../../../localization";

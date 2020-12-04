@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseContext } from "..";
-import { ArrayUtils, Assert } from "../../common";
+import { ArrayUtils, Assert } from "../../powerquery-parser/common";
 import { Ast } from "../../language";
 import { AstXorNode, ContextXorNode, TXorNode, XorNodeKind } from "./xorNode";
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
-import { Assert, MapUtils } from "../../common";
+import { Assert, MapUtils } from "../../powerquery-parser/common";
 import { Ast } from "../../language";
 
 export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {

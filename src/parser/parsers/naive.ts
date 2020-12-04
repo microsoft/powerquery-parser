@@ -11,7 +11,7 @@ import {
     ResultUtils,
     StringUtils,
     TypeScriptUtils,
-} from "../../common";
+} from "../../powerquery-parser/common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";

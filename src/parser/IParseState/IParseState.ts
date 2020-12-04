@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseContext } from "..";
-import { ICancellationToken } from "../../common";
+import { ICancellationToken } from "../../powerquery-parser/common";
 import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation } from "../disambiguation";

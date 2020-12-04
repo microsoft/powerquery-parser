@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, CommonError } from "../../common";
+import { ArrayUtils, Assert, CommonError } from "../../powerquery-parser/common";
 import { Ast } from "../ast";
 import { Constant } from "../constant";
 import { TokenKind } from "../token";

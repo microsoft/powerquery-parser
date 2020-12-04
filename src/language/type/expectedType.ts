@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils } from "../../powerquery-parser/common";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
 import { Ast } from "../../language";
 import { TXorNode, XorNodeKind } from "../../parser";

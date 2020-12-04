@@ -14,7 +14,7 @@ import {
     Result,
     ResultUtils,
     StringUtils,
-} from "../common";
+} from "../powerquery-parser/common";
 import { Keyword, Token } from "../language";
 import { LexSettings } from "../settings";
 
