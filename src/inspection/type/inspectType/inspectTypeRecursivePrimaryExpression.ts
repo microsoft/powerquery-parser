@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "../../../language";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {

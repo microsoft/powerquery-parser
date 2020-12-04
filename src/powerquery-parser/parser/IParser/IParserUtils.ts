@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { CommonError, ResultUtils } from "../../powerquery-parser/common";
-import { Ast } from "../../language";
-import { LexerSnapshot } from "../../powerquery-parser/lexer";
-import { ParseSettings } from "../../settings";
+import { CommonError, ResultUtils } from "../../common";
+import { Ast } from "../../../language";
+import { LexerSnapshot } from "../../lexer";
+import { ParseSettings } from "../../../settings";
 import { ParseContext, ParseContextUtils } from "../context";
 import { IParseState, IParseStateUtils } from "../IParseState";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";

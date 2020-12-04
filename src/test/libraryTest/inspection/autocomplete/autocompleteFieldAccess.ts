@@ -6,7 +6,7 @@ import "mocha";
 import { Inspection } from "../../../..";
 import { Assert } from "../../../../powerquery-parser/common";
 import { AutocompleteItem } from "../../../../inspection";
-import { IParseState } from "../../../../parser";
+import { IParseState } from "../../../../powerquery-parser/parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { TestAssertUtils } from "../../../testUtils";
 

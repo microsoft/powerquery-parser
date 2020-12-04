@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Keyword } from "../../../language";
-import { AncestryUtils, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../../parser";
+import { AncestryUtils, NodeIdMapUtils, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { autocompleteKeywordRightMostLeaf } from "./common";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 

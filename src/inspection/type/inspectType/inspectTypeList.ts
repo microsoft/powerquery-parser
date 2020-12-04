@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "../../../language/type";
-import { NodeIdMapIterator, TXorNode } from "../../../parser";
+import { NodeIdMapIterator, TXorNode } from "../../../powerquery-parser/parser";
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeList(state: InspectTypeState, xorNode: TXorNode): Type.DefinedList {

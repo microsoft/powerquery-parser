@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "../../../language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {

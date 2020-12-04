@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, Result, ResultUtils } from "../../powerquery-parser/common";
 import { Type } from "../../language";
-import { NodeIdMap, NodeIdMapUtils } from "../../parser";
+import { NodeIdMap, NodeIdMapUtils } from "../../powerquery-parser/parser";
 import { CommonSettings } from "../../settings";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";

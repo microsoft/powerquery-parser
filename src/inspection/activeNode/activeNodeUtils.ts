@@ -11,7 +11,7 @@ import {
     TXorNode,
     XorNodeKind,
     XorNodeUtils,
-} from "../../parser";
+} from "../../powerquery-parser/parser";
 import { Position, PositionUtils } from "../position";
 import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 

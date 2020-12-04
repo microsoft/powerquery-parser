@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { Result } from "../../powerquery-parser/common";
-import { Ast } from "../../language";
+import { Result } from "../../common";
+import { Ast } from "../../../language";
 import { IParseState } from "../IParseState";
 
 export type TAmbiguousBracketNode = Ast.FieldProjection | Ast.FieldSelector | Ast.RecordExpression;

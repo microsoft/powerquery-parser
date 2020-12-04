@@ -3,7 +3,7 @@
 
 import { Assert } from "../../../powerquery-parser/common";
 import { Ast, Keyword } from "../../../language";
-import { AncestryUtils, TXorNode, XorNodeKind } from "../../../parser";
+import { AncestryUtils, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { ActiveNode } from "../../activeNode";
 import { PositionUtils } from "../../position";
 import { ExpressionAutocomplete, InspectAutocompleteKeywordState } from "./commonTypes";

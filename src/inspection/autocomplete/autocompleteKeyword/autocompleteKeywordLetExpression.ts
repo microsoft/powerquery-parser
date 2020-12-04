@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Keyword } from "../../../language";
-import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
+import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { PositionUtils } from "../../position";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";

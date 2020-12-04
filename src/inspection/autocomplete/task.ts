@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Token } from "../../language";
-import { IParseState, NodeIdMap, ParseError } from "../../parser";
+import { IParseState, NodeIdMap, ParseError } from "../../powerquery-parser/parser";
 import { ParseSettings } from "../../settings";
 import { TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";

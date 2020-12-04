@@ -3,7 +3,7 @@
 
 import { CommonError, Result } from "../../powerquery-parser/common";
 import { Constant, Keyword, Token, Type } from "../../language";
-import { TXorNode } from "../../parser";
+import { TXorNode } from "../../powerquery-parser/parser";
 
 export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | undefined, CommonError.CommonError>;
 

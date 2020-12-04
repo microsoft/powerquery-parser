@@ -3,7 +3,7 @@
 
 import { ArrayUtils, MapUtils } from "../../../powerquery-parser/common";
 import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TType {

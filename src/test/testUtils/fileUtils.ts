@@ -2,7 +2,7 @@ import * as fs from "fs";
 import "mocha";
 import * as path from "path";
 import { Task } from "../..";
-import { IParseState } from "../../parser";
+import { IParseState } from "../../powerquery-parser/parser";
 import { LexSettings, ParseSettings } from "../../settings";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];

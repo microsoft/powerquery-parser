@@ -1,6 +1,6 @@
 import { ResultUtils } from "../powerquery-parser/common";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
-import { AncestryUtils, IParseState, NodeIdMap, ParseError, TXorNode } from "../parser";
+import { AncestryUtils, IParseState, NodeIdMap, ParseError, TXorNode } from "../powerquery-parser/parser";
 import { ParseSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";

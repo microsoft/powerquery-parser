@@ -7,7 +7,7 @@ import { Inspection } from "../../..";
 import { Assert } from "../../../powerquery-parser/common";
 import { InvokeExpression, Position } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
-import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
+import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../powerquery-parser/parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 

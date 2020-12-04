@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "../../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { InspectTypeState } from "./common";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 

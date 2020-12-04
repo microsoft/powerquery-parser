@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Keyword } from "../../../language";
-import { AncestryUtils, NodeIdMapUtils } from "../../../parser";
+import { AncestryUtils, NodeIdMapUtils } from "../../../powerquery-parser/parser";
 import { PositionUtils } from "../../position";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 

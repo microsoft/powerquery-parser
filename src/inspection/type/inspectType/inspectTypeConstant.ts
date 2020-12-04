@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Constant, Type, TypeUtils } from "../../../language";
-import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../powerquery-parser/parser";
 
 export function inspectTypeConstant(xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Constant);

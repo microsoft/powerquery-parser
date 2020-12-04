@@ -13,7 +13,7 @@ import {
     TXorNode,
     XorNodeKind,
     XorNodeUtils,
-} from "../../parser";
+} from "../../powerquery-parser/parser";
 import { ParseSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";

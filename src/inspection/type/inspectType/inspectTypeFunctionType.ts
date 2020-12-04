@@ -3,7 +3,7 @@
 
 import { TypeScriptUtils } from "../../../powerquery-parser/common";
 import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNode): Type.FunctionType | Type.Unknown {

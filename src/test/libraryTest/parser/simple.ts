@@ -7,7 +7,7 @@ import { Task } from "../../..";
 import { Assert, Traverse } from "../../../powerquery-parser/common";
 import { Ast, Constant } from "../../../language";
 import { DefaultLocale } from "../../../localization";
-import { RecursiveDescentParser } from "../../../parser/parsers";
+import { RecursiveDescentParser } from "../../../powerquery-parser/parser/parsers";
 import { DefaultSettings, Settings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 

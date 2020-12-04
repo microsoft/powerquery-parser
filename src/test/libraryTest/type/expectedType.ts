@@ -7,7 +7,7 @@ import { Assert } from "../../../powerquery-parser/common";
 import { Position } from "../../../inspection";
 import { ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
-import { NodeIdMap, ParseError, ParseOk } from "../../../parser";
+import { NodeIdMap, ParseError, ParseOk } from "../../../powerquery-parser/parser";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 

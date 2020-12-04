@@ -4,8 +4,8 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../powerquery-parser/common";
-import { IParseState, ParseError } from "../../../parser";
-import { TokenWithColumnNumber } from "../../../parser/error";
+import { IParseState, ParseError } from "../../../powerquery-parser/parser";
+import { TokenWithColumnNumber } from "../../../powerquery-parser/parser/error";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 

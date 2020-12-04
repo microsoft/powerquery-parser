@@ -6,7 +6,7 @@ import "mocha";
 import { Assert, Inspection, Lexer, Task } from "../..";
 import { Autocomplete, Position } from "../../inspection";
 import { ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
-import { IParserUtils, IParseState, ParseError, ParseOk, TriedParse } from "../../parser";
+import { IParserUtils, IParseState, ParseError, ParseOk, TriedParse } from "../../powerquery-parser/parser";
 import { LexSettings, ParseSettings } from "../../settings";
 
 // Only works with single line expressions

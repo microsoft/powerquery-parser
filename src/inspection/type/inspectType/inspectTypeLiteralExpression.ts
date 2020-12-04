@@ -3,7 +3,7 @@
 
 import { Assert } from "../../../powerquery-parser/common";
 import { Ast, Type, TypeUtils } from "../../../language";
-import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../powerquery-parser/parser";
 
 export function inspectTypeLiteralExpression(xorNode: TXorNode): Type.TType {
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.LiteralExpression);

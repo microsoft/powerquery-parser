@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Keyword } from "../../../language";
-import { TXorNode, XorNodeKind } from "../../../parser";
+import { TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { ActiveNode, ActiveNodeLeafKind } from "../../activeNode";
 import { PositionUtils } from "../../position";
 import { InspectAutocompleteKeywordState } from "./commonTypes";

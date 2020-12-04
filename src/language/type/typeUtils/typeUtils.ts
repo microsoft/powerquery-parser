@@ -3,7 +3,7 @@
 
 import { Type } from "..";
 import { Assert } from "../../../powerquery-parser/common";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { Ast, AstUtils } from "../../ast";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";

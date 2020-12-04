@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Keyword } from "../../../language";
-import { NodeIdMap, TXorNode } from "../../../parser";
+import { NodeIdMap, TXorNode } from "../../../powerquery-parser/parser";
 import { ActiveNode } from "../../activeNode";
 import { TrailingToken } from "../commonTypes";
 

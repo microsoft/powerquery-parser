@@ -5,7 +5,7 @@ import { ICancellationToken } from "../powerquery-parser/common";
 import { Ast } from "../language";
 import { LexerSnapshot } from "../powerquery-parser/lexer";
 import { DefaultLocale } from "../localization";
-import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TParseStateFactoryOverrides } from "../parser";
+import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TParseStateFactoryOverrides } from "../powerquery-parser/parser";
 
 export interface CommonSettings {
     readonly maybeCancellationToken: ICancellationToken | undefined;

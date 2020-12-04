@@ -8,7 +8,7 @@ import { Assert } from "../../../powerquery-parser/common";
 import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
 import { Ast, Constant } from "../../../language";
-import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
+import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../powerquery-parser/parser";
 import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 

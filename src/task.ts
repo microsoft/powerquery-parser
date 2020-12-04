@@ -17,7 +17,7 @@ import {
     TriedParse,
     TXorNode,
     XorNodeUtils,
-} from "./parser";
+} from "./powerquery-parser/parser";
 import { LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedLexParse<S extends IParseState = IParseState> = Result<

@@ -12,7 +12,7 @@ import {
     TXorNode,
     XorNodeKind,
     XorNodeUtils,
-} from "../../parser";
+} from "../../powerquery-parser/parser";
 import { CommonSettings } from "../../settings";
 import {
     KeyValuePairScopeItem,

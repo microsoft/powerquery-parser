@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, StringUtils } from "../powerquery-parser/common";
-import { Token } from "../language";
-import { Localization, LocalizationUtils } from "../localization";
+import { Assert, CommonError, StringUtils } from "../common";
+import { Token } from "../../language";
+import { Localization, LocalizationUtils } from "../../localization";
 import { IParseState } from "./IParseState";
 
 export type TParseError<S extends IParseState = IParseState> = CommonError.CommonError | ParseError<S>;

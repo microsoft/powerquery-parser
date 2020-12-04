@@ -5,8 +5,8 @@ import { Lexer } from "..";
 import { Assert, StringUtils } from "../powerquery-parser/common";
 import { Token } from "../language";
 import { LexError } from "../powerquery-parser/lexer";
-import { ParseError } from "../parser";
-import { SequenceKind, TokenWithColumnNumber } from "../parser/error";
+import { ParseError } from "../powerquery-parser/parser";
+import { SequenceKind, TokenWithColumnNumber } from "../powerquery-parser/parser/error";
 import { ILocalizationTemplates } from "./templates";
 
 interface ILocalization {

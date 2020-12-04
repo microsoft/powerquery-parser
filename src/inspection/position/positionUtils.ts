@@ -3,7 +3,7 @@
 
 import { Assert } from "../../powerquery-parser/common";
 import { Ast, Token } from "../../language";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../parser";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../powerquery-parser/parser";
 import { Position } from "./position";
 
 export function isBeforeXor(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {

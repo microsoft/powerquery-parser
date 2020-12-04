@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast } from "../../language";
-import { TXorNode } from "../../parser";
+import { TXorNode } from "../../powerquery-parser/parser";
 import { Position } from "../position";
 
 export type TMaybeActiveNode =

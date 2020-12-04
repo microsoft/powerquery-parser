@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Constant } from "../../language";
-import { TXorNode } from "../../parser";
+import { TXorNode } from "../../powerquery-parser/parser";
 
 export type TScopeItem =
     | EachScopeItem

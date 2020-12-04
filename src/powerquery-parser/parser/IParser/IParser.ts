@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { IParseState, ParseError } from "..";
-import { Result } from "../../powerquery-parser/common";
-import { Ast } from "../../language";
+import { Result } from "../../common";
+import { Ast } from "../../../language";
 
 export type TriedParse<S extends IParseState = IParseState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 

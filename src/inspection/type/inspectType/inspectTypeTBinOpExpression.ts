@@ -3,7 +3,7 @@
 
 import { Assert, CommonError } from "../../../powerquery-parser/common";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "../../../language";
-import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
+import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { InspectTypeState, inspectXor } from "./common";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;

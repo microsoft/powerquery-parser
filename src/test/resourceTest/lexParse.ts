@@ -1,7 +1,7 @@
 import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../powerquery-parser/common";
-import { CombinatorialParser, IParser, IParseState, RecursiveDescentParser } from "../../parser";
+import { CombinatorialParser, IParser, IParseState, RecursiveDescentParser } from "../../powerquery-parser/parser";
 import { DefaultSettings, Settings } from "../../settings";
 
 import * as path from "path";

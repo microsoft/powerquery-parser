@@ -7,8 +7,8 @@ import performanceNow = require("performance-now");
 import { TypeScriptUtils } from "../../powerquery-parser/common";
 import { Ast, Token } from "../../language";
 import { LexerSnapshot } from "../../powerquery-parser/lexer";
-import { IParser, IParserUtils, IParseStateCheckpoint } from "../../parser/IParser";
-import { IParseState, IParseStateUtils } from "../../parser/IParseState";
+import { IParser, IParserUtils, IParseStateCheckpoint } from "../../powerquery-parser/parser/IParser";
+import { IParseState, IParseStateUtils } from "../../powerquery-parser/parser/IParseState";
 import { ParseSettings } from "../../settings";
 
 export interface BenchmarkState extends IParseState {

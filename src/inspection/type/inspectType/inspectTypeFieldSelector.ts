@@ -3,7 +3,7 @@
 
 import { Assert } from "../../../powerquery-parser/common";
 import { Ast, Type } from "../../../language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TType {

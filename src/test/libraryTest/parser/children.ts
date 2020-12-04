@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Task } from "../../..";
 import { Ast } from "../../../language";
-import { IParseState, NodeIdMap } from "../../../parser";
+import { IParseState, NodeIdMap } from "../../../powerquery-parser/parser";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";
 

@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from ".";
-import { Assert } from "../../powerquery-parser/common";
-import { Ast } from "../../language";
+import { Assert } from "../../common";
+import { Ast } from "../../../language";
 import { TXorNode } from "./xorNode";
 
 export function assertGetAncestry(nodeIdMapCollection: NodeIdMap.Collection, rootId: number): ReadonlyArray<TXorNode> {

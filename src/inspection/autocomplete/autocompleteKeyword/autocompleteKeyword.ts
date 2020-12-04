@@ -3,7 +3,7 @@
 
 import { ArrayUtils, ResultUtils } from "../../../powerquery-parser/common";
 import { Ast, Keyword, Token } from "../../../language";
-import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { CommonSettings } from "../../../settings";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";
 import { PositionUtils } from "../../position";
