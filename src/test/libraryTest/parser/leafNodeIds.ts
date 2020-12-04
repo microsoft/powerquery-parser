@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { DefaultSettings } from "../../../settings";
+import { DefaultSettings } from "../../../powerquery-parser/settings";
 import { LexParseOk } from "../../../task";
 import { TestAssertUtils } from "../../testUtils";
 

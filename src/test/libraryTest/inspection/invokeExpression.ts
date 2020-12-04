@@ -5,10 +5,10 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../powerquery-parser/common";
-import { InvokeExpression, Position } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils } from "../../../inspection/activeNode";
+import { InvokeExpression, Position } from "../../../powerquery-parser/inspection";
+import { ActiveNode, ActiveNodeUtils } from "../../../powerquery-parser/inspection/activeNode";
 import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../powerquery-parser/parser";
-import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
+import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertInvokeExpressionOk(

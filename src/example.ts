@@ -4,7 +4,7 @@
 /* tslint:disable:no-console */
 
 import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from ".";
-import { AutocompleteUtils } from "./inspection";
+import { AutocompleteUtils } from "./powerquery-parser/inspection";
 
 parseText(`let x = 1 in try x otherwise 2`);
 

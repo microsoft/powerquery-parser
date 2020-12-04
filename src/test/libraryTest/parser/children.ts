@@ -6,7 +6,7 @@ import "mocha";
 import { Task } from "../../..";
 import { Ast } from "../../../powerquery-parser/language";
 import { IParseState, NodeIdMap } from "../../../powerquery-parser/parser";
-import { DefaultSettings } from "../../../settings";
+import { DefaultSettings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 interface ChildIdsByIdEntry {

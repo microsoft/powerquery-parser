@@ -3,7 +3,7 @@
 
 import { Type } from "..";
 import { Assert } from "../../../common";
-import { ParameterScopeItem } from "../../../../inspection";
+import { ParameterScopeItem } from "../../../inspection";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey, typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 import { dedupe } from "./typeUtils";
 

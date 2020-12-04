@@ -7,7 +7,7 @@ import { Inspection } from "../../../..";
 import { Assert } from "../../../../powerquery-parser/common";
 import { LanguageConstantKind } from "../../../../powerquery-parser/language/constant/constant";
 import { IParseState } from "../../../../powerquery-parser/parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
+import { DefaultSettings, LexSettings, ParseSettings } from "../../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../../testUtils";
 
 function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParseState = IParseState>(

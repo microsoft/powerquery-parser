@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import { Assert, Lexer } from "../../..";
 import { Comment, Token } from "../../../powerquery-parser/language";
-import { DefaultSettings } from "../../../settings";
+import { DefaultSettings } from "../../../powerquery-parser/settings";
 
 export type AbridgedComments = ReadonlyArray<[Comment.CommentKind, string]>;
 

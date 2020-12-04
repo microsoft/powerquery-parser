@@ -17,7 +17,7 @@ import {
     RecursiveDescentParser,
     TParseStateFactoryOverrides,
 } from "../../powerquery-parser/parser";
-import { ParseSettings } from "../../settings";
+import { ParseSettings } from "../../powerquery-parser/settings";
 import { TestFileUtils } from "../testUtils";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 

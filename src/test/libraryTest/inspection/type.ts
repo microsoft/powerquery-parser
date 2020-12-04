@@ -5,11 +5,11 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection, Task } from "../../..";
 import { Assert } from "../../../powerquery-parser/common";
-import { Position, ScopeTypeByKey } from "../../../inspection";
-import { ActiveNodeUtils } from "../../../inspection/activeNode";
+import { Position, ScopeTypeByKey } from "../../../powerquery-parser/inspection";
+import { ActiveNodeUtils } from "../../../powerquery-parser/inspection/activeNode";
 import { Ast, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { IParseState, NodeIdMap, ParseContext, ParseError, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
-import { CommonSettings, DefaultSettings } from "../../../settings";
+import { CommonSettings, DefaultSettings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertParseOkNodeTypeEqual(text: string, expected: Type.TType): void {

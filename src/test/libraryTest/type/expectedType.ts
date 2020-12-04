@@ -4,11 +4,11 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../powerquery-parser/common";
-import { Position } from "../../../inspection";
-import { ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
+import { Position } from "../../../powerquery-parser/inspection";
+import { ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../powerquery-parser/inspection/activeNode";
 import { Ast, ExpectedType, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../powerquery-parser/parser";
-import { DefaultSettings } from "../../../settings";
+import { DefaultSettings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertGetParseOkExpectedTypeOk(textWithPipe: string): Type.TType | undefined {

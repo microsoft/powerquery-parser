@@ -3,10 +3,10 @@
 
 import { Type } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
 import { Ast } from "..";
 import { TXorNode, XorNodeKind } from "../../parser";
-import { CommonSettings } from "../../../settings";
+import { CommonSettings } from "../../settings";
 
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 

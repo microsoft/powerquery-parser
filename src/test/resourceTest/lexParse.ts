@@ -2,7 +2,7 @@ import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../powerquery-parser/common";
 import { CombinatorialParser, IParser, IParseState, RecursiveDescentParser } from "../../powerquery-parser/parser";
-import { DefaultSettings, Settings } from "../../settings";
+import { DefaultSettings, Settings } from "../../powerquery-parser/settings";
 
 import * as path from "path";
 import { TestFileUtils } from "../testUtils";

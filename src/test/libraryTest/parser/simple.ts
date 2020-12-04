@@ -8,7 +8,7 @@ import { Assert, Traverse } from "../../../powerquery-parser/common";
 import { Ast, Constant } from "../../../powerquery-parser/language";
 import { DefaultLocale } from "../../../powerquery-parser/localization";
 import { RecursiveDescentParser } from "../../../powerquery-parser/parser/parsers";
-import { DefaultSettings, Settings } from "../../../settings";
+import { DefaultSettings, Settings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 type AbridgedNode = [Ast.NodeKind, number | undefined];

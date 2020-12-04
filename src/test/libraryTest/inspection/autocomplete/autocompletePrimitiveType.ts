@@ -7,7 +7,7 @@ import { Inspection } from "../../../..";
 import { Assert } from "../../../../powerquery-parser/common";
 import { Constant } from "../../../../powerquery-parser/language";
 import { IParseState } from "../../../../powerquery-parser/parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
+import { DefaultSettings, LexSettings, ParseSettings } from "../../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../../testUtils";
 
 function assertGetParseOkAutocompleteOkPrimitiveType<S extends IParseState = IParseState>(

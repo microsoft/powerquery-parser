@@ -11,7 +11,7 @@ import { IParseState, IParseStateUtils, ParseError, TParseStateFactoryOverrides 
 import { Disambiguation } from "../../../powerquery-parser/parser/disambiguation";
 import { SequenceKind } from "../../../powerquery-parser/parser/error";
 import { RecursiveDescentParser } from "../../../powerquery-parser/parser/parsers";
-import { DefaultSettings, Settings } from "../../../settings";
+import { DefaultSettings, Settings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 const DefaultSettingsWithStrict: Settings = {

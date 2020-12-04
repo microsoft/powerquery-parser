@@ -5,7 +5,7 @@ import { ParseError } from "..";
 import { CommonError, ResultUtils } from "../../common";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { ParseSettings } from "../../../settings";
+import { ParseSettings } from "../../settings";
 import { ParseContext, ParseContextUtils } from "../context";
 import { IParseState, IParseStateUtils } from "../IParseState";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";

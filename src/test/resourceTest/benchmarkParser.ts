@@ -9,7 +9,7 @@ import { Ast, Token } from "../../powerquery-parser/language";
 import { LexerSnapshot } from "../../powerquery-parser/lexer";
 import { IParser, IParserUtils, IParseStateCheckpoint } from "../../powerquery-parser/parser/IParser";
 import { IParseState, IParseStateUtils } from "../../powerquery-parser/parser/IParseState";
-import { ParseSettings } from "../../settings";
+import { ParseSettings } from "../../powerquery-parser/settings";
 
 export interface BenchmarkState extends IParseState {
     readonly baseParser: IParser<IParseState>;

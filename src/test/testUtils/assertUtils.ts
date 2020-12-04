@@ -4,10 +4,10 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert, Inspection, Lexer, Task } from "../..";
-import { Autocomplete, Position } from "../../inspection";
-import { ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
+import { Autocomplete, Position } from "../../powerquery-parser/inspection";
+import { ActiveNodeUtils, TMaybeActiveNode } from "../../powerquery-parser/inspection/activeNode";
 import { IParserUtils, IParseState, ParseError, ParseOk, TriedParse } from "../../powerquery-parser/parser";
-import { LexSettings, ParseSettings } from "../../settings";
+import { LexSettings, ParseSettings } from "../../powerquery-parser/settings";
 
 // Only works with single line expressions
 export function assertGetTextWithPosition(text: string): [string, Inspection.Position] {

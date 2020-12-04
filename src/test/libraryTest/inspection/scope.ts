@@ -5,11 +5,11 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../..";
 import { Assert } from "../../../powerquery-parser/common";
-import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
+import { NodeScope, Position, ScopeItemKind } from "../../../powerquery-parser/inspection";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../powerquery-parser/inspection/activeNode";
 import { Ast, Constant } from "../../../powerquery-parser/language";
 import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../powerquery-parser/parser";
-import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
+import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 export type TAbridgedNodeScopeItem =

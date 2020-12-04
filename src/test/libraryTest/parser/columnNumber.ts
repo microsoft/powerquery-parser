@@ -6,7 +6,7 @@ import "mocha";
 import { Assert } from "../../../powerquery-parser/common";
 import { IParseState, ParseError } from "../../../powerquery-parser/parser";
 import { TokenWithColumnNumber } from "../../../powerquery-parser/parser/error";
-import { DefaultSettings } from "../../../settings";
+import { DefaultSettings } from "../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertGetExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {

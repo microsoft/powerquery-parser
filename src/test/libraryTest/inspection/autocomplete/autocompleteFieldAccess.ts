@@ -5,9 +5,9 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../../..";
 import { Assert } from "../../../../powerquery-parser/common";
-import { AutocompleteItem } from "../../../../inspection";
+import { AutocompleteItem } from "../../../../powerquery-parser/inspection";
 import { IParseState } from "../../../../powerquery-parser/parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
+import { DefaultSettings, LexSettings, ParseSettings } from "../../../../powerquery-parser/settings";
 import { TestAssertUtils } from "../../../testUtils";
 
 type AbridgedAutocompleteFieldAccess = ReadonlyArray<string>;
