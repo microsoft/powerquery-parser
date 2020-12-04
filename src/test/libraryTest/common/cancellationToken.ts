@@ -4,7 +4,7 @@
 import "mocha";
 import { Lexer } from "../../..";
 import { Assert, CommonError, Result, TimedCancellationToken, TypeScriptUtils } from "../../../powerquery-parser/common";
-import { LexError } from "../../../lexer";
+import { LexError } from "../../../powerquery-parser/lexer";
 import { DefaultSettings, Settings, SettingsUtils } from "../../../settings";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {

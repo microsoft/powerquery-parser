@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert } from "../../../powerquery-parser/common";
-import { LexerSnapshot } from "../../../lexer";
+import { LexerSnapshot } from "../../../powerquery-parser/lexer";
 import { Templates } from "../../../localization";
 import { Localization } from "../../../localization";
 import { IParseState, IParseStateUtils, ParseError, TParseStateFactoryOverrides } from "../../../parser";

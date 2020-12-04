@@ -14,9 +14,9 @@ import {
     Result,
     ResultUtils,
     StringUtils,
-} from "../powerquery-parser/common";
-import { Keyword, Token } from "../language";
-import { LexSettings } from "../settings";
+} from "../common";
+import { Keyword, Token } from "../../language";
+import { LexSettings } from "../../settings";
 
 // Call Lexer.stateFrom to instantiate a new State instance.
 // Lexer functions will return a new state object.

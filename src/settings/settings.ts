@@ -3,7 +3,7 @@
 
 import { ICancellationToken } from "../powerquery-parser/common";
 import { Ast } from "../language";
-import { LexerSnapshot } from "../lexer";
+import { LexerSnapshot } from "../powerquery-parser/lexer";
 import { DefaultLocale } from "../localization";
 import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TParseStateFactoryOverrides } from "../parser";
 

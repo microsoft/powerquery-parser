@@ -4,7 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert, Lexer, ResultUtils } from "../../..";
-import { LexError } from "../../../lexer";
+import { LexError } from "../../../powerquery-parser/lexer";
 import { DefaultSettings } from "../../../settings";
 
 function assertBadLineNumberKind(lineNumber: number, expectedKind: LexError.BadLineNumberKind): void {

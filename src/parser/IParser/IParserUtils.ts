@@ -4,7 +4,7 @@
 import { ParseError } from "..";
 import { CommonError, ResultUtils } from "../../powerquery-parser/common";
 import { Ast } from "../../language";
-import { LexerSnapshot } from "../../lexer";
+import { LexerSnapshot } from "../../powerquery-parser/lexer";
 import { ParseSettings } from "../../settings";
 import { ParseContext, ParseContextUtils } from "../context";
 import { IParseState, IParseStateUtils } from "../IParseState";

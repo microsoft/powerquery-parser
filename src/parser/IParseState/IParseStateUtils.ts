@@ -4,7 +4,7 @@
 import { ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError, MapUtils } from "../../powerquery-parser/common";
 import { Ast, Constant, Token } from "../../language";
-import { LexerSnapshot } from "../../lexer";
+import { LexerSnapshot } from "../../powerquery-parser/lexer";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";

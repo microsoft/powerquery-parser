@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer } from "..";
-import { CommonError, StringUtils } from "../powerquery-parser/common";
-import { Localization, LocalizationUtils } from "../localization";
+import { Lexer } from "../..";
+import { CommonError, StringUtils } from "../common";
+import { Localization, LocalizationUtils } from "../../localization";
 
 export type TLexError = CommonError.CommonError | LexError;
 

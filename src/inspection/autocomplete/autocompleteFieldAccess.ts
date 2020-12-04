@@ -3,7 +3,7 @@
 
 import { Assert, CommonError, ResultUtils } from "../../powerquery-parser/common";
 import { Ast, Token, Type } from "../../language";
-import { LexerSnapshot } from "../../lexer";
+import { LexerSnapshot } from "../../powerquery-parser/lexer";
 import {
     AncestryUtils,
     IParseState,

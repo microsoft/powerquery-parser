@@ -4,7 +4,7 @@
 import { ParseContext } from "..";
 import { ICancellationToken } from "../../powerquery-parser/common";
 import { Token } from "../../language";
-import { LexerSnapshot } from "../../lexer";
+import { LexerSnapshot } from "../../powerquery-parser/lexer";
 import { Disambiguation } from "../disambiguation";
 
 export type TParseStateFactoryOverrides<S extends IParseState = IParseState> = Partial<NarrowedProperties<S>>;
