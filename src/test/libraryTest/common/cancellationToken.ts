@@ -2,8 +2,14 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Lexer } from "../../..";
-import { Assert, CommonError, Result, TimedCancellationToken, TypeScriptUtils } from "../../../powerquery-parser/common";
+import { Lexer } from "../../../powerquery-parser";
+import {
+    Assert,
+    CommonError,
+    Result,
+    TimedCancellationToken,
+    TypeScriptUtils,
+} from "../../../powerquery-parser/common";
 import { LexError } from "../../../powerquery-parser/lexer";
 import { DefaultSettings, Settings, SettingsUtils } from "../../../powerquery-parser/settings";
 

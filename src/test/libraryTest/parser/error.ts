@@ -7,7 +7,12 @@ import { Assert } from "../../../powerquery-parser/common";
 import { LexerSnapshot } from "../../../powerquery-parser/lexer";
 import { Templates } from "../../../powerquery-parser/localization";
 import { Localization } from "../../../powerquery-parser/localization";
-import { IParseState, IParseStateUtils, ParseError, TParseStateFactoryOverrides } from "../../../powerquery-parser/parser";
+import {
+    IParseState,
+    IParseStateUtils,
+    ParseError,
+    TParseStateFactoryOverrides,
+} from "../../../powerquery-parser/parser";
 import { Disambiguation } from "../../../powerquery-parser/parser/disambiguation";
 import { SequenceKind } from "../../../powerquery-parser/parser/error";
 import { RecursiveDescentParser } from "../../../powerquery-parser/parser/parsers";
