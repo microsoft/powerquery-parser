@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Assert, Lexer } from "../../../";
-import { Token } from "../../../language";
-import { DefaultLocale } from "../../../localization";
+import { Token } from "../../../powerquery-parser/language";
+import { DefaultLocale } from "../../../powerquery-parser/localization";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}

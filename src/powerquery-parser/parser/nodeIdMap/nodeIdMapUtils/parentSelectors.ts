@@ -3,7 +3,7 @@
 
 import { XorNodeUtils } from "..";
 import { Assert } from "../../../common";
-import { Ast } from "../../../../language";
+import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
 import { TXorNode } from "../xorNode";

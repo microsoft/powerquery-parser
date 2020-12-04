@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert } from "../../../powerquery-parser/common";
-import { Ast, Type, TypeUtils } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../powerquery-parser/parser";
 
 export function inspectTypeLiteralExpression(xorNode: TXorNode): Type.TType {

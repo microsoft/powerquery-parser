@@ -6,7 +6,7 @@ import "mocha";
 import { Assert } from "../../../powerquery-parser/common";
 import { Position } from "../../../inspection";
 import { ActiveNodeKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
-import { Ast, ExpectedType, Type, TypeUtils } from "../../../language";
+import { Ast, ExpectedType, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { NodeIdMap, ParseError, ParseOk } from "../../../powerquery-parser/parser";
 import { DefaultSettings } from "../../../settings";
 import { TestAssertUtils } from "../../testUtils";

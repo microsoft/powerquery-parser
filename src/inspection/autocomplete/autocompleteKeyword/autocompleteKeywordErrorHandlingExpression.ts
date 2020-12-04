@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Keyword, Token } from "../../../language";
+import { Keyword, Token } from "../../../powerquery-parser/language";
 import { TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { Position, PositionUtils } from "../../position";
 import { TrailingToken } from "../commonTypes";

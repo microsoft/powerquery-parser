@@ -3,7 +3,7 @@
 
 import { Inspection } from "../../..";
 import { Assert, ResultUtils } from "../../../powerquery-parser/common";
-import { Ast, Type, TypeUtils } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { CommonSettings } from "../../../settings";
 import { NodeScope, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";

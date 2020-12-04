@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../powerquery-parser/parser";
 
 export function inspectTypePrimitiveType(xorNode: TXorNode): Type.TType {

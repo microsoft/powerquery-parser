@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap } from "..";
-import { Ast, Token } from "../../../language";
+import { Ast, Token } from "../../language";
 
 // Parsing use to be one giant evaluation, leading to an all-or-nothing outcome which was unsuitable for a
 // document that was being live edited.

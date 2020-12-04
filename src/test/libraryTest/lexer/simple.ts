@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Keyword, Token } from "../../../language";
+import { Keyword, Token } from "../../../powerquery-parser/language";
 import { assertGetSnapshotAbridgedTokens } from "./common";
 
 describe(`Lexer.Simple.TokenKinds`, () => {

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert } from "../../../powerquery-parser/common";
-import { Ast, Keyword } from "../../../language";
+import { Ast, Keyword } from "../../../powerquery-parser/language";
 import { AncestryUtils, NodeIdMapUtils, TXorNode } from "../../../powerquery-parser/parser";
 import { ActiveNode } from "../../activeNode";
 import { autocompleteKeyword } from "./autocompleteKeyword";

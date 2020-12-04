@@ -3,9 +3,9 @@
 
 import { ParseContext, ParseContextUtils, ParseError } from "..";
 import { Assert, CommonError, MapUtils } from "../../common";
-import { Ast, Constant, Token } from "../../../language";
+import { Ast, Constant, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
-import { DefaultLocale } from "../../../localization";
+import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { SequenceKind } from "../error";
 import { IParseState, TParseStateFactoryOverrides } from "./IParseState";

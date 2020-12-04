@@ -3,7 +3,7 @@
 
 import { IParseState, ParseError } from "..";
 import { Result } from "../../common";
-import { Ast } from "../../../language";
+import { Ast } from "../../language";
 
 export type TriedParse<S extends IParseState = IParseState> = Result<ParseOk<S>, ParseError.TParseError<S>>;
 

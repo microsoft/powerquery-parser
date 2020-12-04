@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result } from "../../powerquery-parser/common";
-import { Constant, Keyword, Token, Type } from "../../language";
+import { Constant, Keyword, Token, Type } from "../../powerquery-parser/language";
 import { TXorNode } from "../../powerquery-parser/parser";
 
 export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | undefined, CommonError.CommonError>;

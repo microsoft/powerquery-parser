@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Type, TypeUtils } from "../../../../language/type";
+import { Type, TypeUtils } from "../../../../powerquery-parser/language/type";
 
 describe(`TypeUtils - isCompatible`, () => {
     describe(`any`, () => {

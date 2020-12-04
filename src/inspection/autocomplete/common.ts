@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Token } from "../../language";
+import { Token } from "../../powerquery-parser/language";
 import { Position, PositionUtils } from "../position";
 import { TrailingToken } from "./commonTypes";
 

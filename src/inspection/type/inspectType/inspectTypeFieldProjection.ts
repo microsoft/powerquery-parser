@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, MapUtils } from "../../../powerquery-parser/common";
-import { Ast, Type, TypeUtils } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { InspectTypeState, inspectXor } from "./common";
 

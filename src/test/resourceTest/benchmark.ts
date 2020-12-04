@@ -8,7 +8,7 @@ import "mocha";
 import { Task } from "../..";
 import { ResultUtils } from "../../powerquery-parser/common";
 import { LexerSnapshot } from "../../powerquery-parser/lexer";
-import { DefaultLocale } from "../../localization";
+import { DefaultLocale } from "../../powerquery-parser/localization";
 import {
     CombinatorialParser,
     IParser,

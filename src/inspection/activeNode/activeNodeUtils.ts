@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError } from "../../powerquery-parser/common";
-import { Ast, Constant, ConstantUtils } from "../../language";
+import { Ast, Constant, ConstantUtils } from "../../powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMap,

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "../../language";
+import { Ast } from "../../powerquery-parser/language";
 import { TXorNode } from "../../powerquery-parser/parser";
 import { Position } from "../position";
 

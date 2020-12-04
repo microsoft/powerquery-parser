@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ParseContext } from "..";
-import { Ast } from "../../../language";
+import { Ast } from "../../language";
 
 export type AstNodeById = NumberMap<Ast.TNode>;
 

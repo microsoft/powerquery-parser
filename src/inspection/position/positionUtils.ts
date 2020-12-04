@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert } from "../../powerquery-parser/common";
-import { Ast, Token } from "../../language";
+import { Ast, Token } from "../../powerquery-parser/language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../powerquery-parser/parser";
 import { Position } from "./position";
 

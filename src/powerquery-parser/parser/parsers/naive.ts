@@ -12,7 +12,7 @@ import {
     StringUtils,
     TypeScriptUtils,
 } from "../../common";
-import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
+import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation, DisambiguationUtils } from "../disambiguation";
 import { IParser, IParseStateCheckpoint } from "../IParser";

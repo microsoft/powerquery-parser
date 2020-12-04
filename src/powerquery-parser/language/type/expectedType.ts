@@ -2,11 +2,11 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
-import { Assert, CommonError, Result, ResultUtils } from "../../powerquery-parser/common";
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
-import { Ast } from "../../language";
-import { TXorNode, XorNodeKind } from "../../powerquery-parser/parser";
-import { CommonSettings } from "../../settings";
+import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
+import { Ast } from "..";
+import { TXorNode, XorNodeKind } from "../../parser";
+import { CommonSettings } from "../../../settings";
 
 export type TriedExpectedType = Result<Type.TType | undefined, CommonError.CommonError>;
 

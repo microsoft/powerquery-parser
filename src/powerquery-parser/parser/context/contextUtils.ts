@@ -3,7 +3,7 @@
 
 import { NodeIdMap, ParseContext } from "..";
 import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../common";
-import { Ast, Token } from "../../../language";
+import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";
 import { Node, State } from "./context";
 

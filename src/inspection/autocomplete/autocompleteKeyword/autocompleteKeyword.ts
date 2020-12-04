@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, ResultUtils } from "../../../powerquery-parser/common";
-import { Ast, Keyword, Token } from "../../../language";
+import { Ast, Keyword, Token } from "../../../powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeKind, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { CommonSettings } from "../../../settings";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";

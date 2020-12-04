@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Keyword } from "../../../language";
+import { Ast, Keyword } from "../../../powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { PositionUtils } from "../../position";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";

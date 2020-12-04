@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "../../language";
+import { Type } from "../../powerquery-parser/language";
 import { ScopeById } from "../scope";
 
 export type TypeById = Map<number, Type.TType>;

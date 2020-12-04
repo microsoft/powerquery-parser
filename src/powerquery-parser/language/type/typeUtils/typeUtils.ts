@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert } from "../../../powerquery-parser/common";
-import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
+import { Assert } from "../../../common";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
 import { Ast, AstUtils } from "../../ast";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";

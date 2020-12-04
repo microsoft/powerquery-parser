@@ -3,7 +3,7 @@
 
 import { NodeIdMapIterator, XorNodeUtils } from "..";
 import { CommonError } from "../../../common";
-import { Ast } from "../../../../language";
+import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
 import { assertGetChildXorByAttributeIndex } from "./childSelectors";

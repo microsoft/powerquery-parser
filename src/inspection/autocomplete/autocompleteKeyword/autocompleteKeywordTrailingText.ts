@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, Assert } from "../../../powerquery-parser/common";
-import { Keyword, Token } from "../../../language";
+import { Keyword, Token } from "../../../powerquery-parser/language";
 import { TrailingToken } from "./../commonTypes";
 
 export function autocompleteKeywordTrailingText(

@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { Inspection } from "../../../..";
 import { Assert } from "../../../../powerquery-parser/common";
-import { Constant } from "../../../../language";
+import { Constant } from "../../../../powerquery-parser/language";
 import { IParseState } from "../../../../powerquery-parser/parser";
 import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
 import { TestAssertUtils } from "../../../testUtils";

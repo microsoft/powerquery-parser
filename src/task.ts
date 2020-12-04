@@ -5,7 +5,7 @@ import { Inspection } from ".";
 import { Lexer } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./powerquery-parser/common";
 import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
-import { Ast } from "./language";
+import { Ast } from "./powerquery-parser/language";
 import { LexError, LexerSnapshot } from "./powerquery-parser/lexer";
 import {
     IParserUtils,

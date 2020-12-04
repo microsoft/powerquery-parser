@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../powerquery-parser/common";
-import { Ast } from "../language";
+import { Ast } from "../powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMap,

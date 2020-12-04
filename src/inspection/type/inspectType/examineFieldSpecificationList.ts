@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "../../../language";
+import { Ast, Type } from "../../../powerquery-parser/language";
 import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { InspectTypeState } from "./common";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";

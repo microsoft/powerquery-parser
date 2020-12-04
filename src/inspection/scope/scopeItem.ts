@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Constant } from "../../language";
+import { Ast, Constant } from "../../powerquery-parser/language";
 import { TXorNode } from "../../powerquery-parser/parser";
 
 export type TScopeItem =

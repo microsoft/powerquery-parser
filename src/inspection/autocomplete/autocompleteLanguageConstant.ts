@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, ResultUtils } from "../../powerquery-parser/common";
-import { Ast, Constant } from "../../language";
+import { Ast, Constant } from "../../powerquery-parser/language";
 import { AncestryUtils, IParseState, TXorNode, XorNodeKind } from "../../powerquery-parser/parser";
 import { ParseSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";

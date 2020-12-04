@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Type, TypeUtils } from "../../../../language/type";
+import { Type, TypeUtils } from "../../../../powerquery-parser/language/type";
 import {
     CheckedDefinedFunction,
     CheckedDefinedList,
@@ -11,7 +11,7 @@ import {
     CheckedDefinedTable,
     Mismatch,
     TChecked,
-} from "../../../../language/type/typeUtils";
+} from "../../../../powerquery-parser/language/type/typeUtils";
 
 interface AbridgedChecked<K = number | string> {
     readonly valid: ReadonlyArray<K>;

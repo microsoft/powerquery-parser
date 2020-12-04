@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { TXorNode, XorNodeUtils } from "../../../powerquery-parser/parser";
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 

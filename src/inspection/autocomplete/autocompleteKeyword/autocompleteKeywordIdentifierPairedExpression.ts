@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Keyword } from "../../../language";
+import { Ast, Keyword } from "../../../powerquery-parser/language";
 import { AncestryUtils, NodeIdMapUtils } from "../../../powerquery-parser/parser";
 import { PositionUtils } from "../../position";
 import { InspectAutocompleteKeywordState } from "./commonTypes";

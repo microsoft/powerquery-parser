@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Comment, Token } from "../../../language";
+import { Comment, Token } from "../../../powerquery-parser/language";
 import {
     AbridgedComments,
     AbridgedLineTokens,

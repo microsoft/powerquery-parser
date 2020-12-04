@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert } from "../../../common";
-import { Ast, Token } from "../../../../language";
+import { Ast, Token } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";

@@ -3,7 +3,7 @@
 
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from ".";
 import { Assert, MapUtils } from "../../common";
-import { Ast } from "../../../language";
+import { Ast } from "../../language";
 
 export interface KeyValuePair<T extends Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly source: TXorNode;

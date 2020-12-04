@@ -1,5 +1,5 @@
 import { ResultUtils } from "../powerquery-parser/common";
-import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
+import { TriedExpectedType, tryExpectedType } from "../powerquery-parser/language/type/expectedType";
 import { AncestryUtils, IParseState, NodeIdMap, ParseError, TXorNode } from "../powerquery-parser/parser";
 import { ParseSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";

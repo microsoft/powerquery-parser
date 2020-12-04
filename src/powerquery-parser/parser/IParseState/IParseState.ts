@@ -3,7 +3,7 @@
 
 import { ParseContext } from "..";
 import { ICancellationToken } from "../../common";
-import { Token } from "../../../language";
+import { Token } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { Disambiguation } from "../disambiguation";
 

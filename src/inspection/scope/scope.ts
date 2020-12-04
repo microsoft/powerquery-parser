@@ -3,7 +3,7 @@
 
 import { Inspection } from "../..";
 import { Assert, CommonError, Result, ResultUtils } from "../../powerquery-parser/common";
-import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
+import { Ast, Type, TypeInspector, TypeUtils } from "../../powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMap,

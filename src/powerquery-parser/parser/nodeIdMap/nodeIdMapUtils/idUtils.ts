@@ -3,7 +3,7 @@
 
 import { NodeIdMap, NodeIdMapIterator } from "..";
 import { MapUtils, TypeScriptUtils } from "../../../common";
-import { Ast } from "../../../../language";
+import { Ast } from "../../../language";
 import { ParseContext } from "../../context";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";

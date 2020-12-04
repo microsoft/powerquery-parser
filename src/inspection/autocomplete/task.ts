@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Token } from "../../language";
+import { Token } from "../../powerquery-parser/language";
 import { IParseState, NodeIdMap, ParseError } from "../../powerquery-parser/parser";
 import { ParseSettings } from "../../settings";
 import { TMaybeActiveNode } from "../activeNode";

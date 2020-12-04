@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError } from "../../../powerquery-parser/common";
-import { Ast, AstUtils, Constant, Type, TypeUtils } from "../../../language";
+import { Ast, AstUtils, Constant, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../powerquery-parser/parser";
 import { InspectTypeState, inspectXor } from "./common";
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../powerquery-parser/common";
-import { Type } from "../../language";
+import { Type } from "../../powerquery-parser/language";
 import { NodeIdMap, NodeIdMapUtils } from "../../powerquery-parser/parser";
 import { CommonSettings } from "../../settings";
 import { NodeScope } from "../scope";
