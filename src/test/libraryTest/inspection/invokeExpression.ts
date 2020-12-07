@@ -3,15 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import {
-    Assert,
-    CommonSettings,
-    DefaultSettings,
-    Inspection,
-    LexSettings,
-    Parser,
-    ParseSettings,
-} from "../../../powerquery-parser";
+import { Assert, CommonSettings, DefaultSettings, Inspection, LexSettings, Parser, ParseSettings } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertInvokeExpressionOk(

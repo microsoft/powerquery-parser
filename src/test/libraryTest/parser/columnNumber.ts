@@ -3,27 +3,27 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert } from "../../../powerquery-parser/common";
-import { IParseState, ParseError } from "../../../powerquery-parser/parser";
-import { TokenWithColumnNumber } from "../../../powerquery-parser/parser/error";
-import { DefaultSettings } from "../../../powerquery-parser/settings";
+import { Assert, DefaultSettings, Parser } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
-function assertGetExpectedTokenKindError(text: string): ParseError.ExpectedTokenKindError {
-    const error: ParseError.ParseError<IParseState> = TestAssertUtils.assertGetParseErr(DefaultSettings, text);
-    const innerError: ParseError.TInnerParseError = error.innerError;
+function assertGetExpectedTokenKindError(text: string): Parser.ParseError.ExpectedTokenKindError {
+    const error: Parser.ParseError.ParseError<Parser.IParseState> = TestAssertUtils.assertGetParseErr(
+        DefaultSettings,
+        text,
+    );
+    const innerError: Parser.ParseError.TInnerParseError = error.innerError;
 
     Assert.isTrue(
-        innerError instanceof ParseError.ExpectedTokenKindError,
-        "innerError instanceof ParseError.ExpectedTokenKindError",
+        innerError instanceof Parser.ParseError.ExpectedTokenKindError,
+        "innerError instanceof Parser.ParseError.ExpectedTokenKindError",
     );
 
-    return innerError as ParseError.ExpectedTokenKindError;
+    return innerError as Parser.ParseError.ExpectedTokenKindError;
 }
 
 function assertErrorAt(text: string, lineNumber: number, columnNumber: number, codeUnit: number): void {
-    const error: ParseError.ExpectedTokenKindError = assertGetExpectedTokenKindError(text);
-    const foundToken: TokenWithColumnNumber = Assert.asDefined(error.maybeFoundToken);
+    const error: Parser.ParseError.ExpectedTokenKindError = assertGetExpectedTokenKindError(text);
+    const foundToken: Parser.ParseError.TokenWithColumnNumber = Assert.asDefined(error.maybeFoundToken);
 
     expect(foundToken.token.positionStart.codeUnit).to.equal(codeUnit, "codeUnit");
     expect(foundToken.token.positionStart.lineNumber).to.equal(lineNumber, "lineNumber");

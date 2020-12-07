@@ -3,56 +3,45 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert } from "../../../powerquery-parser/common";
-import { LexerSnapshot } from "../../../powerquery-parser/lexer";
-import { Templates } from "../../../powerquery-parser/localization";
-import { Localization } from "../../../powerquery-parser/localization";
-import {
-    IParseState,
-    IParseStateUtils,
-    ParseError,
-    TParseStateFactoryOverrides,
-} from "../../../powerquery-parser/parser";
-import { Disambiguation } from "../../../powerquery-parser/parser/disambiguation";
-import { SequenceKind } from "../../../powerquery-parser/parser/error";
-import { RecursiveDescentParser } from "../../../powerquery-parser/parser/parsers";
-import { DefaultSettings, Settings } from "../../../powerquery-parser/settings";
+import { Assert, DefaultSettings, Lexer, Localization, Parser, Settings, Templates } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 const DefaultSettingsWithStrict: Settings = {
     ...DefaultSettings,
     parseStateFactory: (
-        lexerSnapshot: LexerSnapshot,
-        maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
+        lexerSnapshot: Lexer.LexerSnapshot,
+        maybeOverrides: Parser.TParseStateFactoryOverrides<Parser.IParseState> | undefined,
     ) => {
         maybeOverrides = maybeOverrides ?? {};
-        return IParseStateUtils.stateFactory(lexerSnapshot, {
+        return Parser.IParseStateUtils.stateFactory(lexerSnapshot, {
             ...maybeOverrides,
             disambiguationBehavior:
-                maybeOverrides.disambiguationBehavior ?? Disambiguation.DismabiguationBehavior.Strict,
+                maybeOverrides.disambiguationBehavior ?? Parser.Disambiguation.DismabiguationBehavior.Strict,
         });
     },
 };
 
-function assertGetCsvContinuationError(text: string): ParseError.ExpectedCsvContinuationError {
-    const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(DefaultSettingsWithStrict, text)
-        .innerError;
+function assertGetCsvContinuationError(text: string): Parser.ParseError.ExpectedCsvContinuationError {
+    const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+        DefaultSettingsWithStrict,
+        text,
+    ).innerError;
     Assert.isTrue(
-        innerError instanceof ParseError.ExpectedCsvContinuationError,
+        innerError instanceof Parser.ParseError.ExpectedCsvContinuationError,
         "innerError instanceof ParseError.ExpectedCsvContinuationError",
     );
 
-    return innerError as ParseError.ExpectedCsvContinuationError;
+    return innerError as Parser.ParseError.ExpectedCsvContinuationError;
 }
 
 describe("Parser.Error", () => {
     it("RequiredParameterAfterOptionalParameterError: (optional x, y) => x", () => {
         const text: string = "(optional x, y) => x";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+        const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettingsWithStrict,
             text,
         ).innerError;
-        expect(innerError instanceof ParseError.RequiredParameterAfterOptionalParameterError).to.equal(
+        expect(innerError instanceof Parser.ParseError.RequiredParameterAfterOptionalParameterError).to.equal(
             true,
             innerError.message,
         );
@@ -60,23 +49,26 @@ describe("Parser.Error", () => {
 
     it("UnterminatedSequence (Bracket): let x = [", () => {
         const text: string = "let x = [";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+        const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettingsWithStrict,
             text,
         ).innerError;
-        expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
-        expect((innerError as ParseError.UnterminatedSequence).kind).to.equal(SequenceKind.Bracket, innerError.message);
+        expect(innerError instanceof Parser.ParseError.UnterminatedSequence).to.equal(true, innerError.message);
+        expect((innerError as Parser.ParseError.UnterminatedSequence).kind).to.equal(
+            Parser.ParseError.SequenceKind.Bracket,
+            innerError.message,
+        );
     });
 
     it("UnterminatedSequence (Parenthesis): let x = (1", () => {
         const text: string = "let x = (1";
-        const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+        const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
             DefaultSettingsWithStrict,
             text,
         ).innerError;
-        expect(innerError instanceof ParseError.UnterminatedSequence).to.equal(true, innerError.message);
-        expect((innerError as ParseError.UnterminatedSequence).kind).to.equal(
-            SequenceKind.Parenthesis,
+        expect(innerError instanceof Parser.ParseError.UnterminatedSequence).to.equal(true, innerError.message);
+        expect((innerError as Parser.ParseError.UnterminatedSequence).kind).to.equal(
+            Parser.ParseError.SequenceKind.Parenthesis,
             innerError.message,
         );
     });
@@ -84,99 +76,101 @@ describe("Parser.Error", () => {
     describe(`UnusedTokensRemainError`, () => {
         it("default parser", () => {
             const text: string = "1 1";
-            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+            const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
                 DefaultSettingsWithStrict,
                 text,
             ).innerError;
-            expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
+            expect(innerError instanceof Parser.ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
         });
 
         it("custom start", () => {
             const customSettings: Settings = {
                 ...DefaultSettings,
-                parser: RecursiveDescentParser,
-                maybeParserEntryPointFn: RecursiveDescentParser.readIdentifier,
+                parser: Parser.RecursiveDescentParser,
+                maybeParserEntryPointFn: Parser.RecursiveDescentParser.readIdentifier,
             };
             const text: string = "a b";
-            const innerError: ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(customSettings, text)
-                .innerError;
-            expect(innerError instanceof ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
+            const innerError: Parser.ParseError.TInnerParseError = TestAssertUtils.assertGetParseErr(
+                customSettings,
+                text,
+            ).innerError;
+            expect(innerError instanceof Parser.ParseError.UnusedTokensRemainError).to.equal(true, innerError.message);
         });
     });
 
     it(`Dangling Comma for LetExpression`, () => {
         const text: string = "let a = 1, in 1";
-        const continuationError: ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
                 Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.LetExpression,
+                Parser.ParseError.CsvContinuationKind.LetExpression,
             ),
         );
     });
 
     it(`Dangling Comma for ListExpression`, () => {
         const text: string = "{1, }";
-        const continuationError: ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
                 Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
+                Parser.ParseError.CsvContinuationKind.DanglingComma,
             ),
         );
     });
 
     it(`Dangling Comma for FunctionExpression`, () => {
         const text: string = "(a, ) => a";
-        const continuationError: ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
                 Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
+                Parser.ParseError.CsvContinuationKind.DanglingComma,
             ),
         );
     });
 
     it(`Dangling Comma for FunctionType`, () => {
         const text: string = "type function (a as number, ) as number";
-        const continuationError: ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
                 Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
+                Parser.ParseError.CsvContinuationKind.DanglingComma,
             ),
         );
     });
 
     it(`Dangling Comma for RecordExpression`, () => {
         const text: string = "[a = 1,]";
-        const continuationError: ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
                 Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
+                Parser.ParseError.CsvContinuationKind.DanglingComma,
             ),
         );
     });
 
     it(`Dangling Comma for RecordType`, () => {
         const text: string = "type [a = 1,]";
-        const continuationError: ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
                 Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
+                Parser.ParseError.CsvContinuationKind.DanglingComma,
             ),
         );
     });
 
     it(`Dangling Comma for TableType`, () => {
         const text: string = "type table [a = 1,]";
-        const continuationError: ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
+        const continuationError: Parser.ParseError.ExpectedCsvContinuationError = assertGetCsvContinuationError(text);
         expect(continuationError.message).to.equal(
             Localization.error_parse_csvContinuation(
                 Templates.DefaultTemplates,
-                ParseError.CsvContinuationKind.DanglingComma,
+                Parser.ParseError.CsvContinuationKind.DanglingComma,
             ),
         );
     });

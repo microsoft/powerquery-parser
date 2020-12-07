@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, DefaultSettings, Lexer } from "../../../powerquery-parser";
+import { Assert, DefaultSettings, Lexer } from "../../..";
 import { ILineTokens, IState, IToken, Tokenizer } from "./common";
 
 const tokenizer: Tokenizer = new Tokenizer("\n");

@@ -12,7 +12,7 @@ import {
     LexSettings,
     Parser,
     ParseSettings,
-} from "../../../powerquery-parser";
+} from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 export type TAbridgedNodeScopeItem =

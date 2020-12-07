@@ -2,14 +2,13 @@
 // Licensed under the MIT license.
 
 import { Assert, Lexer } from "../../../";
-import { Token } from "../../../powerquery-parser/language";
-import { DefaultLocale } from "../../../powerquery-parser/localization";
+import { DefaultLocale, Language } from "../../../powerquery-parser";
 
 export class Tokenizer implements TokensProvider {
     constructor(private readonly lineTerminator: string) {}
 
     // tslint:disable-next-line: function-name
-    public static ITokenFrom(lineToken: Token.LineToken): IToken {
+    public static ITokenFrom(lineToken: Language.Token.LineToken): IToken {
         // UNSAFE MARKER
         //
         // Purpose of code block:

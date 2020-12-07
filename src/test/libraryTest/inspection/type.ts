@@ -3,15 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import {
-    Assert,
-    CommonSettings,
-    DefaultSettings,
-    Inspection,
-    Language,
-    Parser,
-    Task,
-} from "../../../powerquery-parser";
+import { Assert, CommonSettings, DefaultSettings, Inspection, Language, Parser, Task } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertParseOkNodeTypeEqual(text: string, expected: Language.Type.TType): void {

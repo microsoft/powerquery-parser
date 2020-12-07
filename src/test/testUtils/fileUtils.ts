@@ -1,9 +1,7 @@
 import * as fs from "fs";
 import "mocha";
 import * as path from "path";
-import { Task } from "../..";
-import { IParseState } from "../../powerquery-parser/parser";
-import { LexSettings, ParseSettings } from "../../powerquery-parser/settings";
+import { LexSettings, Parser, ParseSettings, Task } from "../..";
 
 const PowerQueryExtensions: ReadonlyArray<string> = [".m", ".mout", ".pq", "pqm"];
 
@@ -42,7 +40,7 @@ export function writeContents(filePath: string, contents: string): void {
     });
 }
 
-export function tryLexParse<S extends IParseState = IParseState>(
+export function tryLexParse<S extends Parser.IParseState = Parser.IParseState>(
     settings: LexSettings & ParseSettings<S>,
     filePath: string,
 ): Task.TriedLexParse<S> {
