@@ -3,14 +3,18 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../../..";
-import { Assert } from "../../../../powerquery-parser/common";
-import { LanguageConstantKind } from "../../../../powerquery-parser/language/constant/constant";
-import { IParseState } from "../../../../powerquery-parser/parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../../../../powerquery-parser/settings";
+import {
+    Assert,
+    DefaultSettings,
+    Inspection,
+    Language,
+    LexSettings,
+    Parser,
+    ParseSettings,
+} from "../../../../powerquery-parser";
 import { TestAssertUtils } from "../../../testUtils";
 
-function assertGetParseErrAutocompleteOkLanguageConstant<S extends IParseState = IParseState>(
+function assertGetParseErrAutocompleteOkLanguageConstant<S extends Parser.IParseState = Parser.IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
@@ -26,7 +30,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(LanguageConstantKind.Nullable);
+        expect(actual).to.equal(Language.Constant.LanguageConstantKind.Nullable);
     });
 
     it(`a as n|`, () => {
@@ -34,7 +38,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(LanguageConstantKind.Nullable);
+        expect(actual).to.equal(Language.Constant.LanguageConstantKind.Nullable);
     });
 
     it(`(a as |`, () => {
@@ -42,7 +46,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(LanguageConstantKind.Nullable);
+        expect(actual).to.equal(Language.Constant.LanguageConstantKind.Nullable);
     });
 
     it(`(a as n|`, () => {
@@ -50,7 +54,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(LanguageConstantKind.Nullable);
+        expect(actual).to.equal(Language.Constant.LanguageConstantKind.Nullable);
     });
 
     it(`(x, |`, () => {
@@ -58,7 +62,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(LanguageConstantKind.Optional);
+        expect(actual).to.equal(Language.Constant.LanguageConstantKind.Optional);
     });
 
     it(`(x, op|`, () => {
@@ -66,6 +70,6 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         const actual:
             | Inspection.AutocompleteLanguageConstant
             | undefined = assertGetParseErrAutocompleteOkLanguageConstant(DefaultSettings, text, position);
-        expect(actual).to.equal(LanguageConstantKind.Optional);
+        expect(actual).to.equal(Language.Constant.LanguageConstantKind.Optional);
     });
 });

@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../..";
+import { Inspection } from "../../../powerquery-parser";
 import { Assert } from "../../../powerquery-parser/common";
 import { NodeScope, Position, ScopeItemKind } from "../../../powerquery-parser/inspection";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../powerquery-parser/inspection/activeNode";

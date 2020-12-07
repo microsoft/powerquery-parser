@@ -4,7 +4,6 @@
 /* tslint:disable:no-console */
 
 import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from ".";
-import { AutocompleteUtils } from "./powerquery-parser/inspection";
 
 parseText(`let x = 1 in try x otherwise 2`);
 
@@ -120,7 +119,7 @@ function inspectText(text: string, position: Inspection.Position): void {
     const inspection: Inspection.Inspection = triedInspection.value;
 
     // A helper function grabs all autocomplete keys.
-    console.log(`Suggested for autocomplete: ${AutocompleteUtils.keys(inspection.autocomplete).join(", ")}`);
+    console.log(`Suggested for autocomplete: ${Inspection.AutocompleteUtils.keys(inspection.autocomplete).join(", ")}`);
 
     // If an inspection for scope was successful, and if that inspection returned any members.
     if (ResultUtils.isOk(inspection.triedNodeScope) && inspection.triedNodeScope.value !== undefined) {
