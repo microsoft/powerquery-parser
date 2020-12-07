@@ -3,15 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import {
-    Assert,
-    DefaultSettings,
-    Inspection,
-    Language,
-    LexSettings,
-    Parser,
-    ParseSettings,
-} from "../../../../powerquery-parser";
+import { Assert, DefaultSettings, Inspection, Language, LexSettings, Parser, ParseSettings } from "../../../..";
 import { TestAssertUtils } from "../../../testUtils";
 
 function assertGetParseErrAutocompleteOkLanguageConstant<S extends Parser.IParseState = Parser.IParseState>(
