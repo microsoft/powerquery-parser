@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection } from ".";
-import { Lexer } from ".";
-import { Assert, CommonError, Result, ResultUtils } from "./powerquery-parser/common";
-import { ActiveNodeUtils, TMaybeActiveNode } from "./powerquery-parser/inspection/activeNode";
-import { Ast } from "./powerquery-parser/language";
-import { LexError, LexerSnapshot } from "./powerquery-parser/lexer";
+import { Inspection } from "..";
+import { Lexer } from "..";
+import { Assert, CommonError, Result, ResultUtils } from "./common";
+import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
+import { Ast } from "./language";
+import { LexError, LexerSnapshot } from "./lexer";
 import {
     IParserUtils,
     IParseState,
@@ -17,8 +17,8 @@ import {
     TriedParse,
     TXorNode,
     XorNodeUtils,
-} from "./powerquery-parser/parser";
-import { LexSettings, ParseSettings } from "./powerquery-parser/settings/settings";
+} from "./parser";
+import { LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedLexParse<S extends IParseState = IParseState> = Result<
     LexParseOk<S>,
