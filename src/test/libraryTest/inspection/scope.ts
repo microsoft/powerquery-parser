@@ -3,13 +3,16 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../..";
-import { Assert } from "../../../common";
-import { NodeScope, Position, ScopeItemKind } from "../../../inspection";
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../../../inspection/activeNode";
-import { Ast, Constant } from "../../../language";
-import { IParseState, NodeIdMap, ParseContext, ParseError, ParseOk } from "../../../parser";
-import { CommonSettings, DefaultSettings, LexSettings, ParseSettings } from "../../../settings";
+import {
+    Assert,
+    CommonSettings,
+    DefaultSettings,
+    Inspection,
+    Language,
+    LexSettings,
+    Parser,
+    ParseSettings,
+} from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 export type TAbridgedNodeScopeItem =
@@ -24,40 +27,40 @@ type AbridgedNodeScope = ReadonlyArray<TAbridgedNodeScopeItem>;
 interface IAbridgedNodeScopeItem {
     readonly identifier: string;
     readonly isRecursive: boolean;
-    readonly kind: ScopeItemKind;
+    readonly kind: Inspection.ScopeItemKind;
 }
 
 interface AbridgedEachScopeItem extends IAbridgedNodeScopeItem {
-    readonly kind: ScopeItemKind.Each;
+    readonly kind: Inspection.ScopeItemKind.Each;
     readonly eachExpressionNodeId: number;
 }
 
 interface AbridgedKeyValuePairScopeItem extends IAbridgedNodeScopeItem {
-    readonly kind: ScopeItemKind.KeyValuePair;
+    readonly kind: Inspection.ScopeItemKind.KeyValuePair;
     readonly keyNodeId: number;
     readonly maybeValueNodeId: number | undefined;
 }
 
 interface AbridgedParameterScopeItem extends IAbridgedNodeScopeItem {
-    readonly kind: ScopeItemKind.Parameter;
+    readonly kind: Inspection.ScopeItemKind.Parameter;
     readonly isNullable: boolean;
     readonly isOptional: boolean;
-    readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
+    readonly maybeType: Language.Constant.PrimitiveTypeConstantKind | undefined;
 }
 
 interface AbridgedSectionMemberScopeItem extends IAbridgedNodeScopeItem {
-    readonly kind: ScopeItemKind.SectionMember;
+    readonly kind: Inspection.ScopeItemKind.SectionMember;
     readonly keyNodeId: number;
 }
 
 interface AbridgedUndefinedScopeItem extends IAbridgedNodeScopeItem {
-    readonly kind: ScopeItemKind.Undefined;
+    readonly kind: Inspection.ScopeItemKind.Undefined;
     readonly nodeId: number;
 }
 
 function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TScopeItem): TAbridgedNodeScopeItem {
     switch (scopeItem.kind) {
-        case ScopeItemKind.Each:
+        case Inspection.ScopeItemKind.Each:
             return {
                 identifier,
                 isRecursive: scopeItem.isRecursive,
@@ -65,7 +68,7 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
                 eachExpressionNodeId: scopeItem.eachExpression.node.id,
             };
 
-        case ScopeItemKind.KeyValuePair:
+        case Inspection.ScopeItemKind.KeyValuePair:
             return {
                 identifier,
                 isRecursive: scopeItem.isRecursive,
@@ -74,7 +77,7 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
                 maybeValueNodeId: scopeItem.maybeValue?.node.id,
             };
 
-        case ScopeItemKind.Parameter:
+        case Inspection.ScopeItemKind.Parameter:
             return {
                 identifier,
                 isRecursive: scopeItem.isRecursive,
@@ -84,7 +87,7 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
                 maybeType: scopeItem.maybeType,
             };
 
-        case ScopeItemKind.SectionMember:
+        case Inspection.ScopeItemKind.SectionMember:
             return {
                 identifier,
                 isRecursive: scopeItem.isRecursive,
@@ -92,7 +95,7 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
                 keyNodeId: scopeItem.key.id,
             };
 
-        case ScopeItemKind.Undefined:
+        case Inspection.ScopeItemKind.Undefined:
             return {
                 identifier,
                 isRecursive: scopeItem.isRecursive,
@@ -105,7 +108,7 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
     }
 }
 
-function abridgedScopeItemsFactory(nodeScope: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
+function abridgedScopeItemsFactory(nodeScope: Inspection.NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
     const result: TAbridgedNodeScopeItem[] = [];
 
     for (const [identifier, scopeItem] of nodeScope.entries()) {
@@ -115,12 +118,12 @@ function abridgedScopeItemsFactory(nodeScope: NodeScope): ReadonlyArray<TAbridge
     return result;
 }
 
-function abridgedParametersFactory(nodeScope: NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
+function abridgedParametersFactory(nodeScope: Inspection.NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
     const result: AbridgedParameterScopeItem[] = [];
 
     for (const [identifier, scopeItem] of nodeScope.entries()) {
         const abridged: TAbridgedNodeScopeItem = abridgedScopeItemFactory(identifier, scopeItem);
-        if (abridged.kind === ScopeItemKind.Parameter) {
+        if (abridged.kind === Inspection.ScopeItemKind.Parameter) {
             result.push(abridged);
         }
     }
@@ -130,19 +133,19 @@ function abridgedParametersFactory(nodeScope: NodeScope): ReadonlyArray<Abridged
 
 function assertNodeScopeOk(
     settings: CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: Parser.NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
-    position: Position,
-): NodeScope {
-    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
+    position: Inspection.Position,
+): Inspection.NodeScope {
+    const maybeActiveNode: Inspection.TMaybeActiveNode = Inspection.ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         leafNodeIds,
         position,
     );
-    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+    if (!Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return new Map();
     }
-    const activeNode: ActiveNode = maybeActiveNode;
+    const activeNode: Inspection.ActiveNode = maybeActiveNode;
 
     const triedNodeScope: Inspection.TriedNodeScope = Inspection.tryNodeScope(
         settings,
@@ -157,28 +160,28 @@ function assertNodeScopeOk(
 }
 
 export function assertGetParseOkScopeOk(
-    settings: LexSettings & ParseSettings<IParseState>,
+    settings: LexSettings & ParseSettings<Parser.IParseState>,
     text: string,
-    position: Position,
-): NodeScope {
-    const parseOk: ParseOk = TestAssertUtils.assertGetParseOk(settings, text);
-    const contextState: ParseContext.State = parseOk.state.contextState;
+    position: Inspection.Position,
+): Inspection.NodeScope {
+    const parseOk: Parser.ParseOk = TestAssertUtils.assertGetParseOk(settings, text);
+    const contextState: Parser.ParseContext.State = parseOk.state.contextState;
     return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 export function assertGetParseErrScopeOk(
-    settings: LexSettings & ParseSettings<IParseState>,
+    settings: LexSettings & ParseSettings<Parser.IParseState>,
     text: string,
-    position: Position,
-): NodeScope {
-    const parseError: ParseError.ParseError = TestAssertUtils.assertGetParseErr(settings, text);
-    const contextState: ParseContext.State = parseError.state.contextState;
+    position: Inspection.Position,
+): Inspection.NodeScope {
+    const parseError: Parser.ParseError.ParseError = TestAssertUtils.assertGetParseErr(settings, text);
+    const contextState: Parser.ParseContext.State = parseError.state.contextState;
     return assertNodeScopeOk(settings, contextState.nodeIdMapCollection, contextState.leafNodeIds, position);
 }
 
 describe(`subset Inspection - Scope - Identifier`, () => {
     describe(`Scope`, () => {
-        describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
+        describe(`${Language.Ast.NodeKind.EachExpression} (Ast)`, () => {
             it(`|each 1`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `|each 1`,
@@ -209,7 +212,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         isRecursive: false,
-                        kind: ScopeItemKind.Each,
+                        kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
                 ];
@@ -227,7 +230,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         isRecursive: false,
-                        kind: ScopeItemKind.Each,
+                        kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
                 ];
@@ -245,7 +248,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         isRecursive: false,
-                        kind: ScopeItemKind.Each,
+                        kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 3,
                     },
                 ];
@@ -256,7 +259,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.EachExpression} (ParserContext)`, () => {
+        describe(`${Language.Ast.NodeKind.EachExpression} (ParserContext)`, () => {
             it(`each|`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `each|`,
@@ -276,7 +279,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     {
                         identifier: "_",
                         isRecursive: false,
-                        kind: ScopeItemKind.Each,
+                        kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
                 ];
@@ -287,7 +290,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
+        describe(`${Language.Ast.NodeKind.FunctionExpression} (Ast)`, () => {
             it(`|(x) => z`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `|(x) => z`,
@@ -328,7 +331,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.Parameter,
+                        kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
                         isOptional: false,
@@ -336,7 +339,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.Parameter,
+                        kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
                         isOptional: false,
@@ -350,7 +353,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
+        describe(`${Language.Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
             it(`|(x) =>`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `|(x) =>`,
@@ -391,7 +394,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.Parameter,
+                        kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
                         isOptional: false,
@@ -399,7 +402,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.Parameter,
+                        kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
                         isOptional: false,
@@ -413,7 +416,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
+        describe(`${Language.Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
             it(`let x = 1, y = x in 1|`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `let x = 1, y = x in 1|`,
@@ -421,14 +424,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -441,7 +444,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
+        describe(`${Language.Ast.NodeKind.RecordExpression} (Ast)`, () => {
             it(`|[a=1]`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `|[a=1]`,
@@ -471,7 +474,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -490,14 +493,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
@@ -516,21 +519,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
                     },
                     {
                         identifier: "c",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 24,
                         maybeValueNodeId: 28,
@@ -560,7 +563,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -573,7 +576,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
+        describe(`${Language.Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
             it(`|[a=1`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `|[a=1`,
@@ -603,7 +606,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -622,7 +625,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -641,14 +644,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 18,
@@ -667,21 +670,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
                     },
                     {
                         identifier: "c",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 24,
                         maybeValueNodeId: 28,
@@ -700,7 +703,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 10,
@@ -719,14 +722,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 17,
                         maybeValueNodeId: 19,
@@ -739,7 +742,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.Section} (Ast)`, () => {
+        describe(`${Language.Ast.NodeKind.Section} (Ast)`, () => {
             it(`s|ection foo; x = 1; y = 2;`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `s|ection foo; x = 1; y = 2;`,
@@ -758,13 +761,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 16,
                     },
@@ -782,13 +785,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
                     },
@@ -817,25 +820,25 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 16,
                     },
                     {
                         identifier: "z",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 24,
                     },
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 31,
                         maybeValueNodeId: 35,
@@ -848,7 +851,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
+        describe(`${Language.Ast.NodeKind.SectionMember} (ParserContext)`, () => {
             it(`s|ection foo; x = 1; y = 2`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `s|ection foo; x = 1; y = 2`,
@@ -867,13 +870,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 16,
                     },
@@ -891,13 +894,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
                     },
@@ -915,13 +918,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.SectionMember,
+                        kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
                     },
@@ -933,7 +936,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.LetExpression} (Ast)`, () => {
+        describe(`${Language.Ast.NodeKind.LetExpression} (Ast)`, () => {
             it(`let a = 1 in |x`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `let a = 1 in |x`,
@@ -941,7 +944,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -960,7 +963,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -979,7 +982,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -998,14 +1001,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1024,14 +1027,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1050,7 +1053,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "p1",
-                        kind: ScopeItemKind.Parameter,
+                        kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
                         isOptional: false,
@@ -1058,7 +1061,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                     {
                         identifier: "p2",
-                        kind: ScopeItemKind.Parameter,
+                        kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
                         isOptional: false,
@@ -1066,21 +1069,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 19,
                         maybeValueNodeId: 23,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 27,
                         maybeValueNodeId: 31,
                     },
                     {
                         identifier: "c",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 35,
                         maybeValueNodeId: 39,
@@ -1099,21 +1102,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "eggs",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 8,
                     },
                     {
                         identifier: "foo",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 25,
                         maybeValueNodeId: 29,
                     },
                     {
                         identifier: "bar",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 33,
                         maybeValueNodeId: 37,
@@ -1132,28 +1135,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "eggs",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 8,
                     },
                     {
                         identifier: "foo",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 25,
                         maybeValueNodeId: 29,
                     },
                     {
                         identifier: "bar",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 33,
                         maybeValueNodeId: 37,
                     },
                     {
                         identifier: "ham",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 17,
@@ -1166,7 +1169,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
         });
 
-        describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
+        describe(`${Language.Ast.NodeKind.LetExpression} (ParserContext)`, () => {
             it(`let a = 1 in |`, () => {
                 const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                     `let a = 1 in |`,
@@ -1174,7 +1177,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -1193,14 +1196,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1219,14 +1222,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1245,14 +1248,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "y",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
@@ -1271,7 +1274,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.KeyValuePair,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
@@ -1293,7 +1296,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             const expected: ReadonlyArray<AbridgedParameterScopeItem> = [
                 {
                     identifier: "a",
-                    kind: ScopeItemKind.Parameter,
+                    kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
                     isNullable: true,
                     isOptional: false,
@@ -1301,23 +1304,23 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 },
                 {
                     identifier: "b",
-                    kind: ScopeItemKind.Parameter,
+                    kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
                     isNullable: false,
                     isOptional: false,
-                    maybeType: Constant.PrimitiveTypeConstantKind.Number,
+                    maybeType: Language.Constant.PrimitiveTypeConstantKind.Number,
                 },
                 {
                     identifier: "c",
-                    kind: ScopeItemKind.Parameter,
+                    kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
                     isNullable: true,
                     isOptional: false,
-                    maybeType: Constant.PrimitiveTypeConstantKind.Function,
+                    maybeType: Language.Constant.PrimitiveTypeConstantKind.Function,
                 },
                 {
                     identifier: "d",
-                    kind: ScopeItemKind.Parameter,
+                    kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
                     isNullable: true,
                     isOptional: true,
@@ -1325,11 +1328,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 },
                 {
                     identifier: "e",
-                    kind: ScopeItemKind.Parameter,
+                    kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
                     isNullable: false,
                     isOptional: true,
-                    maybeType: Constant.PrimitiveTypeConstantKind.Table,
+                    maybeType: Language.Constant.PrimitiveTypeConstantKind.Table,
                 },
             ];
             const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedParametersFactory(

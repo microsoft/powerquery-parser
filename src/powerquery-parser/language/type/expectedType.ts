@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { Type } from ".";
+import { Ast } from "..";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../inspection/activeNode";
-import { Ast } from "../../language";
 import { TXorNode, XorNodeKind } from "../../parser";
 import { CommonSettings } from "../../settings";
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection } from "..";
+import { Inspection } from "../..";
 import { CommonError, Result } from "../common";
 import { ExpectedType } from "../language";
 import { TMaybeActiveNode } from "./activeNode";

@@ -3,10 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../../..";
-import { Assert } from "../../../../common";
-import { Ast, Keyword } from "../../../../language";
-import { DefaultSettings } from "../../../../settings";
+import { Assert, DefaultSettings, Inspection, Language } from "../../../..";
 import { TestAssertUtils } from "../../../testUtils";
 
 function assertGetParseOkAutocompleteOkKeyword(
@@ -39,8 +36,8 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
     it("|", () => {
         const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`|`);
         const expected: Inspection.AutocompleteKeyword = [
-            ...Keyword.ExpressionKeywordKinds,
-            Keyword.KeywordKind.Section,
+            ...Language.Keyword.ExpressionKeywordKinds,
+            Language.Keyword.KeywordKind.Section,
         ];
         const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
         expect(actual).to.have.members(expected);
@@ -56,14 +53,20 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it("x a|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`x a|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.And, Keyword.KeywordKind.As];
+            const expected: Inspection.AutocompleteKeyword = [
+                Language.Keyword.KeywordKind.And,
+                Language.Keyword.KeywordKind.As,
+            ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it("e|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`e|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
+            const expected: Inspection.AutocompleteKeyword = [
+                Language.Keyword.KeywordKind.Each,
+                Language.Keyword.KeywordKind.Error,
+            ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -72,21 +75,21 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if x then x e|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Else];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Else];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it("i|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`i|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.If];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.If];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it("l|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`l|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Let];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Let];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -100,14 +103,14 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it("x m|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`x m|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Meta];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Meta];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it("n|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`n|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Not];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Not];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -116,7 +119,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `true o|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Or];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Or];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -125,7 +128,10 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true o|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Or, Keyword.KeywordKind.Otherwise];
+            const expected: Inspection.AutocompleteKeyword = [
+                Language.Keyword.KeywordKind.Or,
+                Language.Keyword.KeywordKind.Otherwise,
+            ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -143,7 +149,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true ot|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Otherwise];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Otherwise];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -152,21 +158,21 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true oth|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Otherwise];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Otherwise];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it("s|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`s|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Section];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Section];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it("[] |", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[] |`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Section];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Section];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -180,7 +186,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it("[] s|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`[] s|`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Section];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Section];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -196,7 +202,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `section; s|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Shared];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Shared];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -214,7 +220,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `section; [] s|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Shared];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Shared];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -223,7 +229,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if true t|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Then];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Then];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -231,19 +237,19 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
         it("t|", () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`t|`);
             const expected: Inspection.AutocompleteKeyword = [
-                Keyword.KeywordKind.True,
-                Keyword.KeywordKind.Try,
-                Keyword.KeywordKind.Type,
+                Language.Keyword.KeywordKind.True,
+                Language.Keyword.KeywordKind.Try,
+                Language.Keyword.KeywordKind.Type,
             ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ErrorHandlingExpression}`, () => {
         it(`try |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`try |`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -252,7 +258,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.True];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.True];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -262,24 +268,24 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 `try true |`,
             );
             const expected: Inspection.AutocompleteKeyword = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
-                Keyword.KeywordKind.Otherwise,
+                Language.Keyword.KeywordKind.And,
+                Language.Keyword.KeywordKind.As,
+                Language.Keyword.KeywordKind.Is,
+                Language.Keyword.KeywordKind.Meta,
+                Language.Keyword.KeywordKind.Or,
+                Language.Keyword.KeywordKind.Otherwise,
             ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ErrorRaisingExpression}`, () => {
         it(`if |error`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if |error`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -297,18 +303,18 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `error |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.FunctionExpression}`, () => {
         it(`let x = (_ |) => a in x`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let x = (_ |) => a in x`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.As];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.As];
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -317,13 +323,13 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let x = (_ a|) => a in`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.As];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.As];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.IfExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.IfExpression}`, () => {
         it(`if|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`if|`);
             const expected: Inspection.AutocompleteKeyword = [];
@@ -333,7 +339,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it(` if |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`if |`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -347,14 +353,14 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it(`if |if`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`if |if`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`if i|f`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`if i|f`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.If];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.If];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -363,14 +369,14 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if if |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`if 1 |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`if 1 |`);
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Then];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Then];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -379,7 +385,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if 1 t|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Then];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Then];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -388,7 +394,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if 1 then |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -406,7 +412,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if 1 then 1 e|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Else];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Else];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -424,7 +430,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if 1 th|en 1 else`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Then];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Then];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -433,16 +439,16 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if 1 then 1 else |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.InvokeExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.InvokeExpression}`, () => {
         it(`foo(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`foo(|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -467,16 +473,16 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `foo(a,|`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.ListExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ListExpression}`, () => {
         it(`{|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`{|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -497,34 +503,34 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it(`{1,|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`{1,|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`{1,|2`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`{1,|2`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`{1,|2,`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`{1,|2,`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`{1..|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`{1..|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.OtherwiseExpression}`, () => {
         it(`try true otherwise| false`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true otherwise| false`,
@@ -538,7 +544,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true otherwise |false`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -547,7 +553,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true oth|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Otherwise];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Otherwise];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -556,22 +562,22 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true otherwise |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ParenthesizedExpression}`, () => {
         it(`+(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`+(|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.RecordExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.RecordExpression}`, () => {
         it(`+[|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`+[|`);
             const expected: Inspection.AutocompleteKeyword = [];
@@ -581,7 +587,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it(`+[a=|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`+[a=|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -613,7 +619,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `+[a=| 1]`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseOkAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -656,7 +662,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `+[a=|1,b=`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -685,7 +691,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `error |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -694,7 +700,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let x = |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -703,14 +709,14 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `() => |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`if |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`if |`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -719,7 +725,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if true then |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -728,14 +734,14 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `if true then true else |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`foo(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`foo(|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -744,14 +750,14 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let x = 1 in |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`+{|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`+{|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -760,25 +766,25 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `try true otherwise |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
 
         it(`+(|`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(`+(|`);
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.SectionMember}`, () => {
+    describe(`${Language.Ast.NodeKind.SectionMember}`, () => {
         it(`section; [] |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `section; [] |`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Shared];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Shared];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -796,7 +802,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `section; x = |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -806,11 +812,11 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 `section; x = 1 |`,
             );
             const expected: Inspection.AutocompleteKeyword = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
+                Language.Keyword.KeywordKind.And,
+                Language.Keyword.KeywordKind.As,
+                Language.Keyword.KeywordKind.Is,
+                Language.Keyword.KeywordKind.Meta,
+                Language.Keyword.KeywordKind.Or,
             ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
@@ -820,7 +826,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `section; x = 1 i|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Is];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Is];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -829,18 +835,18 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `section foo; a = () => true; b = "string"; c = 1; d = |;`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
     });
 
-    describe(`${Ast.NodeKind.LetExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.LetExpression}`, () => {
         it(`let a = |`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let a = |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -859,12 +865,12 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 `let a = 1 |`,
             );
             const expected: Inspection.AutocompleteKeyword = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.In,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
+                Language.Keyword.KeywordKind.And,
+                Language.Keyword.KeywordKind.As,
+                Language.Keyword.KeywordKind.In,
+                Language.Keyword.KeywordKind.Is,
+                Language.Keyword.KeywordKind.Meta,
+                Language.Keyword.KeywordKind.Or,
             ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
@@ -875,12 +881,12 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 `let a = 1 | foobar`,
             );
             const expected: Inspection.AutocompleteKeyword = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.In,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
+                Language.Keyword.KeywordKind.And,
+                Language.Keyword.KeywordKind.As,
+                Language.Keyword.KeywordKind.In,
+                Language.Keyword.KeywordKind.Is,
+                Language.Keyword.KeywordKind.Meta,
+                Language.Keyword.KeywordKind.Or,
             ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
@@ -890,7 +896,10 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let a = 1 i|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.In, Keyword.KeywordKind.Is];
+            const expected: Inspection.AutocompleteKeyword = [
+                Language.Keyword.KeywordKind.In,
+                Language.Keyword.KeywordKind.Is,
+            ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -899,7 +908,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let a = 1 o|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Or];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Or];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -908,7 +917,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let a = 1 m|`,
             );
-            const expected: Inspection.AutocompleteKeyword = [Keyword.KeywordKind.Meta];
+            const expected: Inspection.AutocompleteKeyword = [Language.Keyword.KeywordKind.Meta];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -926,7 +935,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             const [text, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
                 `let a = let b = |`,
             );
-            const expected: Inspection.AutocompleteKeyword = Keyword.ExpressionKeywordKinds;
+            const expected: Inspection.AutocompleteKeyword = Language.Keyword.ExpressionKeywordKinds;
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);
         });
@@ -936,12 +945,12 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 `let a = let b = 1 |`,
             );
             const expected: Inspection.AutocompleteKeyword = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.In,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
+                Language.Keyword.KeywordKind.And,
+                Language.Keyword.KeywordKind.As,
+                Language.Keyword.KeywordKind.In,
+                Language.Keyword.KeywordKind.Is,
+                Language.Keyword.KeywordKind.Meta,
+                Language.Keyword.KeywordKind.Or,
             ];
             const actual: Inspection.AutocompleteKeyword = assertGetParseErrAutocompleteOkKeyword(text, position);
             expect(actual).to.have.members(expected);

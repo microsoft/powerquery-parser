@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection } from ".";
-import { Lexer } from ".";
+import { Inspection } from "..";
+import { Lexer } from "..";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";

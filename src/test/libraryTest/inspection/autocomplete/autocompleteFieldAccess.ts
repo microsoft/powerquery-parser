@@ -3,11 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Inspection } from "../../../..";
-import { Assert } from "../../../../common";
-import { AutocompleteItem } from "../../../../inspection";
-import { IParseState } from "../../../../parser";
-import { DefaultSettings, LexSettings, ParseSettings } from "../../../../settings";
+import { Assert, DefaultSettings, Inspection, LexSettings, Parser, ParseSettings } from "../../../..";
 import { TestAssertUtils } from "../../../testUtils";
 
 type AbridgedAutocompleteFieldAccess = ReadonlyArray<string>;
@@ -19,10 +15,10 @@ function abridgedFieldAccess(
         return [];
     }
 
-    return maybeAutocompleteFieldAccess.autocompleteItems.map((item: AutocompleteItem) => item.key);
+    return maybeAutocompleteFieldAccess.autocompleteItems.map((item: Inspection.AutocompleteItem) => item.key);
 }
 
-function assertGetParseOkAutocompleteOkFieldAccess<S extends IParseState = IParseState>(
+function assertGetParseOkAutocompleteOkFieldAccess<S extends Parser.IParseState = Parser.IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,
@@ -32,7 +28,7 @@ function assertGetParseOkAutocompleteOkFieldAccess<S extends IParseState = IPars
     return abridgedFieldAccess(actual.triedFieldAccess.value);
 }
 
-function assertGetParseErrAutocompleteOkFieldAccess<S extends IParseState = IParseState>(
+function assertGetParseErrAutocompleteOkFieldAccess<S extends Parser.IParseState = Parser.IParseState>(
     settings: LexSettings & ParseSettings<S>,
     text: string,
     position: Inspection.Position,

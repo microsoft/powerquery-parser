@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection } from "../../..";
+import { Inspection } from "../../../..";
 import { Assert, ResultUtils } from "../../../common";
 import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";

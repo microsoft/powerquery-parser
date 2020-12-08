@@ -4,15 +4,10 @@
 // tslint:disable-next-line: no-require-imports
 import performanceNow = require("performance-now");
 
-import { TypeScriptUtils } from "../../common";
-import { Ast, Token } from "../../language";
-import { LexerSnapshot } from "../../lexer";
-import { IParser, IParserUtils, IParseStateCheckpoint } from "../../parser/IParser";
-import { IParseState, IParseStateUtils } from "../../parser/IParseState";
-import { ParseSettings } from "../../settings";
+import { Language, Lexer, Parser, ParseSettings, TypeScriptUtils } from "../..";
 
-export interface BenchmarkState extends IParseState {
-    readonly baseParser: IParser<IParseState>;
+export interface BenchmarkState extends Parser.IParseState {
+    readonly baseParser: Parser.IParser<Parser.IParseState>;
     readonly functionTimestamps: Map<number, FunctionTimestamp>;
     functionTimestampCounter: number;
 }
@@ -31,16 +26,16 @@ export interface FunctionTimestamp {
     timeDuration: number | undefined;
 }
 
-export const BenchmarkParser: IParser<BenchmarkState> = {
+export const BenchmarkParser: Parser.IParser<BenchmarkState> = {
     applyState: (state: BenchmarkState, update: BenchmarkState) => {
         const mutableState: TypeScriptUtils.StripReadonly<BenchmarkState> = state;
-        IParseStateUtils.applyState(mutableState, update);
+        Parser.IParseStateUtils.applyState(mutableState, update);
         mutableState.functionTimestamps = update.functionTimestamps;
         mutableState.functionTimestampCounter = update.functionTimestampCounter;
     },
     copyState: (state: BenchmarkState) => {
         return {
-            ...IParseStateUtils.copyState(state),
+            ...Parser.IParseStateUtils.copyState(state),
             baseParser: state.baseParser,
             functionTimestampCounter: state.functionTimestampCounter,
             functionTimestamps: new Map(
@@ -53,264 +48,279 @@ export const BenchmarkParser: IParser<BenchmarkState> = {
             ),
         };
     },
-    checkpointFactory: (state: IParseState) => IParserUtils.checkpointFactory(state),
-    restoreCheckpoint: (state: IParseState, checkpoint: IParseStateCheckpoint) =>
-        IParserUtils.restoreCheckpoint(state, checkpoint),
+    checkpointFactory: (state: Parser.IParseState) => Parser.IParserUtils.checkpointFactory(state),
+    restoreCheckpoint: (state: Parser.IParseState, checkpoint: Parser.IParseStateCheckpoint) =>
+        Parser.IParserUtils.restoreCheckpoint(state, checkpoint),
 
     // 12.1.6 Identifiers
-    readIdentifier: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readIdentifier: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIdentifier),
 
-    readGeneralizedIdentifier: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readGeneralizedIdentifier: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readGeneralizedIdentifier),
-    readKeyword: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readKeyword: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readKeyword),
 
     // 12.2.1 Documents
-    readDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) => {
-        const readDocumentLambda: () => Ast.TDocument = () =>
-            state.baseParser.readDocument(state, (parser as unknown) as IParser<IParseState>) as Ast.TDocument;
+    readDocument: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) => {
+        const readDocumentLambda: () => Language.Ast.TDocument = () =>
+            state.baseParser.readDocument(
+                state,
+                (parser as unknown) as Parser.IParser<Parser.IParseState>,
+            ) as Language.Ast.TDocument;
         return traceFunction(state, parser, readDocumentLambda);
     },
 
     // 12.2.2 Section Documents
-    readSectionDocument: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readSectionDocument: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readSectionDocument),
-    readSectionMembers: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readSectionMembers: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readSectionMembers),
-    readSectionMember: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readSectionMember: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readSectionMember),
 
     // 12.2.3.1 Expressions
-    readNullCoalescingExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readNullCoalescingExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readNullCoalescingExpression),
-    readExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readExpression),
 
     // 12.2.3.2 Logical expressions
-    readLogicalExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readLogicalExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readLogicalExpression),
 
     // 12.2.3.3 Is expression
-    readIsExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readIsExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIsExpression),
-    readNullablePrimitiveType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readNullablePrimitiveType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readNullablePrimitiveType),
 
     // 12.2.3.4 As expression
-    readAsExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readAsExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readAsExpression),
 
     // 12.2.3.5 Equality expression
-    readEqualityExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readEqualityExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readEqualityExpression),
 
     // 12.2.3.6 Relational expression
-    readRelationalExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readRelationalExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readRelationalExpression),
 
     // 12.2.3.7 Arithmetic expressions
-    readArithmeticExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readArithmeticExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readArithmeticExpression),
 
     // 12.2.3.8 Metadata expression
-    readMetadataExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readMetadataExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readMetadataExpression),
 
     // 12.2.3.9 Unary expression
-    readUnaryExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readUnaryExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readUnaryExpression),
 
     // 12.2.3.10 Primary expression
-    readPrimaryExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readPrimaryExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readPrimaryExpression),
-    readRecursivePrimaryExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>, head) => {
-        const readRecursivePrimaryExpressionLambda: () => Ast.RecursivePrimaryExpression = () =>
-            state.baseParser.readRecursivePrimaryExpression(state, (parser as unknown) as IParser<IParseState>, head);
+    readRecursivePrimaryExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>, head) => {
+        const readRecursivePrimaryExpressionLambda: () => Language.Ast.RecursivePrimaryExpression = () =>
+            state.baseParser.readRecursivePrimaryExpression(
+                state,
+                (parser as unknown) as Parser.IParser<Parser.IParseState>,
+                head,
+            );
         return traceFunction(state, parser, readRecursivePrimaryExpressionLambda);
     },
 
     // 12.2.3.11 Literal expression
-    readLiteralExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readLiteralExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readLiteralExpression),
 
     // 12.2.3.12 Identifier expression
-    readIdentifierExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readIdentifierExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIdentifierExpression),
 
     // 12.2.3.14 Parenthesized expression
-    readParenthesizedExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readParenthesizedExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readParenthesizedExpression),
 
     // 12.2.3.15 Not-implemented expression
-    readNotImplementedExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readNotImplementedExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readNotImplementedExpression),
 
     // 12.2.3.16 Invoke expression
-    readInvokeExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readInvokeExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readInvokeExpression),
 
     // 12.2.3.17 List expression
-    readListExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readListExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readListExpression),
-    readListItem: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readListItem: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readListItem),
 
     // 12.2.3.18 Record expression
-    readRecordExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readRecordExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readRecordExpression),
 
     // 12.2.3.19 Item access expression
-    readItemAccessExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readItemAccessExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readItemAccessExpression),
 
     // 12.2.3.20 Field access expression
-    readFieldSelection: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readFieldSelection: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readFieldSelection),
-    readFieldProjection: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readFieldProjection: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readFieldProjection),
-    readFieldSelector: (state: BenchmarkState, parser: IParser<BenchmarkState>, allowOptional: boolean) => {
-        const readFieldSelectorLambda: () => Ast.FieldSelector = () =>
-            state.baseParser.readFieldSelector(state, (parser as unknown) as IParser<IParseState>, allowOptional);
+    readFieldSelector: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>, allowOptional: boolean) => {
+        const readFieldSelectorLambda: () => Language.Ast.FieldSelector = () =>
+            state.baseParser.readFieldSelector(
+                state,
+                (parser as unknown) as Parser.IParser<Parser.IParseState>,
+                allowOptional,
+            );
         return traceFunction(state, parser, readFieldSelectorLambda);
     },
 
     // 12.2.3.21 Function expression
-    readFunctionExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readFunctionExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readFunctionExpression),
-    readParameterList: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readParameterList: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readParameterList),
-    readAsType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readAsType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readAsType),
 
     // 12.2.3.22 Each expression
-    readEachExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readEachExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readEachExpression),
 
     // 12.2.3.23 Let expression
-    readLetExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readLetExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readLetExpression),
 
     // 12.2.3.24 If expression
-    readIfExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readIfExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIfExpression),
 
     // 12.2.3.25 Type expression
-    readTypeExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readTypeExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readTypeExpression),
-    readType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readType),
-    readPrimaryType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readPrimaryType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readPrimaryType),
-    readRecordType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readRecordType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readRecordType),
-    readTableType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readTableType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readTableType),
     readFieldSpecificationList: (
         state: BenchmarkState,
-        parser: IParser<BenchmarkState>,
+        parser: Parser.IParser<BenchmarkState>,
         allowOpenMarker: boolean,
         testPostCommaError,
     ) => {
-        const readFieldSpecificationListLambda: () => Ast.FieldSpecificationList = () =>
+        const readFieldSpecificationListLambda: () => Language.Ast.FieldSpecificationList = () =>
             state.baseParser.readFieldSpecificationList(
                 state,
-                (parser as unknown) as IParser<IParseState>,
+                (parser as unknown) as Parser.IParser<Parser.IParseState>,
                 allowOpenMarker,
                 testPostCommaError,
             );
         return traceFunction(state, parser, readFieldSpecificationListLambda);
     },
-    readListType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readListType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readListType),
-    readFunctionType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readFunctionType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readFunctionType),
-    readParameterSpecificationList: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readParameterSpecificationList: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readParameterSpecificationList),
-    readNullableType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readNullableType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readNullableType),
 
     // 12.2.3.26 Error raising expression
-    readErrorRaisingExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readErrorRaisingExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readErrorRaisingExpression),
 
     // 12.2.3.27 Error handling expression
-    readErrorHandlingExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readErrorHandlingExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readErrorHandlingExpression),
 
     // 12.2.4 Literal Attributes
-    readRecordLiteral: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readRecordLiteral: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readRecordLiteral),
     readFieldNamePairedAnyLiterals: (
         state: BenchmarkState,
-        parser: IParser<BenchmarkState>,
+        parser: Parser.IParser<BenchmarkState>,
         onePairRequired: boolean,
         testPostCommaError,
     ) => {
-        const readFieldNamePairedAnyLiteralsLambda: () => Ast.ICsvArray<
-            Ast.GeneralizedIdentifierPairedAnyLiteral
+        const readFieldNamePairedAnyLiteralsLambda: () => Language.Ast.ICsvArray<
+            Language.Ast.GeneralizedIdentifierPairedAnyLiteral
         > = () =>
             state.baseParser.readFieldNamePairedAnyLiterals(
                 state,
-                (parser as unknown) as IParser<IParseState>,
+                (parser as unknown) as Parser.IParser<Parser.IParseState>,
                 onePairRequired,
                 testPostCommaError,
             );
 
         return traceFunction(state, parser, readFieldNamePairedAnyLiteralsLambda);
     },
-    readListLiteral: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readListLiteral: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readListLiteral),
-    readAnyLiteral: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readAnyLiteral: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readAnyLiteral),
-    readPrimitiveType: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readPrimitiveType: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readPrimitiveType),
 
     // key-value pairs
     readIdentifierPairedExpressions: (
         state: BenchmarkState,
-        parser: IParser<BenchmarkState>,
+        parser: Parser.IParser<BenchmarkState>,
         onePairRequired: boolean,
         testPostCommaError,
     ) => {
-        const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.IdentifierPairedExpression> = () =>
+        const readFieldSpecificationListLambda: () => Language.Ast.ICsvArray<
+            Language.Ast.IdentifierPairedExpression
+        > = () =>
             state.baseParser.readIdentifierPairedExpressions(
                 state,
-                (parser as unknown) as IParser<IParseState>,
+                (parser as unknown) as Parser.IParser<Parser.IParseState>,
                 onePairRequired,
                 testPostCommaError,
             );
 
         return traceFunction(state, parser, readFieldSpecificationListLambda);
     },
-    readIdentifierPairedExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readIdentifierPairedExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readIdentifierPairedExpression),
     readGeneralizedIdentifierPairedExpressions: (
         state: BenchmarkState,
-        parser: IParser<BenchmarkState>,
+        parser: Parser.IParser<BenchmarkState>,
         onePairRequired: boolean,
         testPostCommaError,
     ) => {
-        const readFieldSpecificationListLambda: () => Ast.ICsvArray<Ast.GeneralizedIdentifierPairedExpression> = () =>
+        const readFieldSpecificationListLambda: () => Language.Ast.ICsvArray<
+            Language.Ast.GeneralizedIdentifierPairedExpression
+        > = () =>
             state.baseParser.readGeneralizedIdentifierPairedExpressions(
                 state,
-                (parser as unknown) as IParser<IParseState>,
+                (parser as unknown) as Parser.IParser<Parser.IParseState>,
                 onePairRequired,
                 testPostCommaError,
             );
         return traceFunction(state, parser, readFieldSpecificationListLambda);
     },
-    readGeneralizedIdentifierPairedExpression: (state: BenchmarkState, parser: IParser<BenchmarkState>) =>
+    readGeneralizedIdentifierPairedExpression: (state: BenchmarkState, parser: Parser.IParser<BenchmarkState>) =>
         traceFunction(state, parser, state.baseParser.readGeneralizedIdentifierPairedExpression),
 };
 
-export function benchmarkStateFactory<S extends IParseState = IParseState>(
+export function benchmarkStateFactory<S extends Parser.IParseState = Parser.IParseState>(
     parseSettings: ParseSettings<S>,
-    lexerSnapshot: LexerSnapshot,
-    baseParser: IParser<IParseState>,
+    lexerSnapshot: Lexer.LexerSnapshot,
+    baseParser: Parser.IParser<Parser.IParseState>,
 ): BenchmarkState {
     return {
-        ...IParseStateUtils.stateFactory(lexerSnapshot, {
+        ...Parser.IParseStateUtils.stateFactory(lexerSnapshot, {
             maybeCancellationToken: parseSettings.maybeCancellationToken,
         }),
         baseParser,
@@ -321,20 +331,20 @@ export function benchmarkStateFactory<S extends IParseState = IParseState>(
 
 function traceFunction<T>(
     benchmarkState: BenchmarkState,
-    benchmarkParser: IParser<BenchmarkState>,
-    tracedFn: (state: IParseState, parser: IParser<IParseState>) => T,
+    benchmarkParser: Parser.IParser<BenchmarkState>,
+    tracedFn: (state: Parser.IParseState, parser: Parser.IParser<Parser.IParseState>) => T,
 ): T {
     const fnCallId: number = functionEntry(benchmarkState, tracedFn);
-    const result: T = tracedFn(benchmarkState, (benchmarkParser as unknown) as IParser<IParseState>);
+    const result: T = tracedFn(benchmarkState, (benchmarkParser as unknown) as Parser.IParser<Parser.IParseState>);
     functionExit(benchmarkState, fnCallId);
     return result;
 }
 
-function functionEntry<S extends IParseState, T>(
+function functionEntry<S extends Parser.IParseState, T>(
     state: BenchmarkState,
-    fn: (state: S, parser: IParser<S>) => T,
+    fn: (state: S, parser: Parser.IParser<S>) => T,
 ): number {
-    const tokenPosition: Token.TokenPosition = state.maybeCurrentToken!.positionStart;
+    const tokenPosition: Language.Token.TokenPosition = state.maybeCurrentToken!.positionStart;
     const id: number = state.functionTimestampCounter;
     state.functionTimestampCounter += 1;
 
@@ -357,7 +367,7 @@ function functionEntry<S extends IParseState, T>(
 }
 
 function functionExit(state: BenchmarkState, id: number): void {
-    const tokenPosition: Token.TokenPosition = state.maybeCurrentToken!.positionStart;
+    const tokenPosition: Language.Token.TokenPosition = state.maybeCurrentToken!.positionStart;
     const fnTimestamp: FunctionTimestamp = state.functionTimestamps.get(id)!;
     const finish: number = performanceNow();
     const duration: number = finish - fnTimestamp.timeStart;

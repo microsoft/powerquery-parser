@@ -5,19 +5,7 @@
 import performanceNow = require("performance-now");
 
 import "mocha";
-import { Task } from "../..";
-import { ResultUtils } from "../../common";
-import { LexerSnapshot } from "../../lexer";
-import { DefaultLocale } from "../../localization";
-import {
-    CombinatorialParser,
-    IParser,
-    IParseState,
-    IParseStateUtils,
-    RecursiveDescentParser,
-    TParseStateFactoryOverrides,
-} from "../../parser";
-import { ParseSettings } from "../../settings";
+import { DefaultLocale, Lexer, Parser, ParseSettings, ResultUtils, Task } from "../..";
 import { TestFileUtils } from "../testUtils";
 import { BenchmarkParser, BenchmarkState, FunctionTimestamp } from "./benchmarkParser";
 
@@ -35,8 +23,8 @@ interface FileSummary {
 }
 
 const Parsers: ReadonlyArray<[ParseSettings<BenchmarkState>, string]> = [
-    [benchmarkParseSettingsFactory(CombinatorialParser), "CombinatorialParser"],
-    [benchmarkParseSettingsFactory(RecursiveDescentParser), "RecursiveDescentParser"],
+    [benchmarkParseSettingsFactory(Parser.CombinatorialParser), "CombinatorialParser"],
+    [benchmarkParseSettingsFactory(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
 const NumberOfRunsPerFile: number = 100;
@@ -51,25 +39,27 @@ for (const [parseSettings, parserName] of Parsers) {
 writeReport(ResourceDirectory, allSummaries);
 
 function benchmarkStateFactory(
-    lexerSnapshot: LexerSnapshot,
-    maybeOverrides: TParseStateFactoryOverrides | undefined,
-    baseParser: IParser<IParseState>,
+    lexerSnapshot: Lexer.LexerSnapshot,
+    maybeOverrides: Parser.TParseStateFactoryOverrides | undefined,
+    baseParser: Parser.IParser<Parser.IParseState>,
 ): BenchmarkState {
     return {
-        ...IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
+        ...Parser.IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
         baseParser,
         functionTimestamps: new Map(),
         functionTimestampCounter: 0,
     };
 }
 
-function benchmarkParseSettingsFactory(baseParser: IParser<IParseState>): ParseSettings<BenchmarkState> {
+function benchmarkParseSettingsFactory(baseParser: Parser.IParser<Parser.IParseState>): ParseSettings<BenchmarkState> {
     return {
         maybeCancellationToken: undefined,
         locale: DefaultLocale,
         parser: BenchmarkParser,
-        parseStateFactory: (lexerSnapshot: LexerSnapshot, maybeOverrides: TParseStateFactoryOverrides | undefined) =>
-            benchmarkStateFactory(lexerSnapshot, maybeOverrides, baseParser),
+        parseStateFactory: (
+            lexerSnapshot: Lexer.LexerSnapshot,
+            maybeOverrides: Parser.TParseStateFactoryOverrides | undefined,
+        ) => benchmarkStateFactory(lexerSnapshot, maybeOverrides, baseParser),
         maybeParserEntryPointFn: undefined,
     };
 }

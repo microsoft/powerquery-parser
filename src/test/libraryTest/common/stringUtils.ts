@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { StringUtils } from "../../../common";
+import { StringUtils } from "../../..";
 
 describe("StringUtils", () => {
     describe(`isIdentifier`, () => {

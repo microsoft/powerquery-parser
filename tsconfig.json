@@ -17,6 +17,6 @@
         "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
         "resolveJsonModule": true
     },
-    "include": ["src/**/*.ts", "src/localization/templates/*.json"],
+    "include": ["src/**/*.ts", "src/powerquery-parser/localization/templates/*.json"],
     "exclude": ["node_modules"]
 }

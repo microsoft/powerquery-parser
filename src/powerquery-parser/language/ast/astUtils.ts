@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Ast } from ".";
 import { ArrayUtils, Assert, CommonError } from "../../common";
-import { Ast } from "../ast";
 import { Constant } from "../constant";
 import { TokenKind } from "../token";
 

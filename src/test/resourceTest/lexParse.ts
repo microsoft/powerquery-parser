@@ -1,17 +1,14 @@
 import "mocha";
-import { Task } from "../..";
-import { ResultUtils } from "../../common";
-import { CombinatorialParser, IParser, IParseState, RecursiveDescentParser } from "../../parser";
-import { DefaultSettings, Settings } from "../../settings";
-
 import * as path from "path";
+import { DefaultSettings, Parser, ResultUtils, Settings, Task } from "../..";
 import { TestFileUtils } from "../testUtils";
+
 const parsers: ReadonlyArray<[Settings, string]> = [
-    [createSettings(CombinatorialParser), "CombinatorialParser"],
-    [createSettings(RecursiveDescentParser), "RecursiveDescentParser"],
+    [createSettings(Parser.CombinatorialParser), "CombinatorialParser"],
+    [createSettings(Parser.RecursiveDescentParser), "RecursiveDescentParser"],
 ];
 
-function createSettings(parser: IParser): Settings {
+function createSettings(parser: Parser.IParser): Settings {
     return {
         ...DefaultSettings,
         parser,
@@ -26,7 +23,7 @@ function testNameFromFilePath(filePath: string): string {
     return filePath.replace(path.dirname(__filename), ".");
 }
 
-function parseAllFiles<S extends IParseState>(settings: Settings<S>, parserName: string): void {
+function parseAllFiles<S extends Parser.IParseState>(settings: Settings<S>, parserName: string): void {
     describe(`Run ${parserName} on lexParseResources directory`, () => {
         const fileDirectory: string = path.join(path.dirname(__filename), "lexParseResources");
 

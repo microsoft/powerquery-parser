@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, ParseContext } from "../";
+import { NodeIdMap, ParseContext } from "..";
 import { ArrayUtils, Assert, CommonError, MapUtils, TypeScriptUtils } from "../../common";
 import { Ast, Token } from "../../language";
 import { NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../nodeIdMap";

@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, Lexer } from "../../../";
+import { Assert, Lexer } from "../../..";
 import { assertGetLexOk } from "./common";
 
 const LINE_TERMINATOR: string = `\n`;

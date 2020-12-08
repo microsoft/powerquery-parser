@@ -3,7 +3,7 @@
 
 import { ArrayUtils, Assert } from "../../../common";
 import { Keyword, Token } from "../../../language";
-import { TrailingToken } from "./../commonTypes";
+import { TrailingToken } from "../commonTypes";
 
 export function autocompleteKeywordTrailingText(
     inspected: ReadonlyArray<Keyword.KeywordKind>,

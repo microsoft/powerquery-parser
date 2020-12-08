@@ -3,20 +3,15 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Task } from "../../..";
-import { Assert, Traverse } from "../../../common";
-import { Ast, Constant } from "../../../language";
-import { DefaultLocale } from "../../../localization";
-import { RecursiveDescentParser } from "../../../parser/parsers";
-import { DefaultSettings, Settings } from "../../../settings";
+import { Assert, DefaultLocale, DefaultSettings, Language, Parser, Settings, Task, Traverse } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
-type AbridgedNode = [Ast.NodeKind, number | undefined];
+type AbridgedNode = [Language.Ast.NodeKind, number | undefined];
 
 interface CollectAbridgeNodeState extends Traverse.IState<AbridgedNode[]> {}
 
-interface NthNodeOfKindState extends Traverse.IState<Ast.TNode | undefined> {
-    readonly nodeKind: Ast.NodeKind;
+interface NthNodeOfKindState extends Traverse.IState<Language.Ast.TNode | undefined> {
+    readonly nodeKind: Language.Ast.NodeKind;
     readonly nthRequired: number;
     nthCounter: number;
 }
@@ -45,7 +40,11 @@ function collectAbridgeNodeFromAst(text: string): ReadonlyArray<AbridgedNode> {
     return triedTraverse.value;
 }
 
-function assertGetNthNodeOfKind<N extends Ast.TNode>(text: string, nodeKind: Ast.NodeKind, nthRequired: number): N {
+function assertGetNthNodeOfKind<N extends Language.Ast.TNode>(
+    text: string,
+    nodeKind: Language.Ast.NodeKind,
+    nthRequired: number,
+): N {
     const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
     const state: NthNodeOfKindState = {
         locale: DefaultLocale,
@@ -55,9 +54,9 @@ function assertGetNthNodeOfKind<N extends Ast.TNode>(text: string, nodeKind: Ast
         nthRequired,
     };
 
-    const triedTraverse: Traverse.TriedTraverse<Ast.TNode | undefined> = Traverse.tryTraverseAst<
+    const triedTraverse: Traverse.TriedTraverse<Language.Ast.TNode | undefined> = Traverse.tryTraverseAst<
         NthNodeOfKindState,
-        Ast.TNode | undefined
+        Language.Ast.TNode | undefined
     >(
         state,
         lexParseOk.state.contextState.nodeIdMapCollection,
@@ -72,11 +71,11 @@ function assertGetNthNodeOfKind<N extends Ast.TNode>(text: string, nodeKind: Ast
     return Assert.asDefined(triedTraverse.value) as N;
 }
 
-function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Ast.TNode): void {
+function collectAbridgeNodeVisit(state: CollectAbridgeNodeState, node: Language.Ast.TNode): void {
     state.result.push([node.kind, node.maybeAttributeIndex]);
 }
 
-function nthNodeVisit(state: NthNodeOfKindState, node: Ast.TNode): void {
+function nthNodeVisit(state: NthNodeOfKindState, node: Language.Ast.TNode): void {
     if (node.kind === state.nodeKind) {
         state.nthCounter += 1;
         if (state.nthCounter === state.nthRequired) {
@@ -85,7 +84,7 @@ function nthNodeVisit(state: NthNodeOfKindState, node: Ast.TNode): void {
     }
 }
 
-function nthNodeEarlyExit(state: NthNodeOfKindState, _: Ast.TNode): boolean {
+function nthNodeEarlyExit(state: NthNodeOfKindState, _: Language.Ast.TNode): boolean {
     return state.nthCounter === state.nthRequired;
 }
 
@@ -99,8 +98,8 @@ describe("Parser.AbridgedNode", () => {
         it(`readParameterSpecificationList`, () => {
             const customSettings: Settings = {
                 ...DefaultSettings,
-                parser: RecursiveDescentParser,
-                maybeParserEntryPointFn: RecursiveDescentParser.readParameterSpecificationList,
+                parser: Parser.RecursiveDescentParser,
+                maybeParserEntryPointFn: Parser.RecursiveDescentParser.readParameterSpecificationList,
             };
             const triedLexParse: Task.TriedLexParse = Task.tryLexParse(
                 customSettings,
@@ -110,103 +109,123 @@ describe("Parser.AbridgedNode", () => {
         });
     });
 
-    describe(`${Ast.NodeKind.ArithmeticExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ArithmeticExpression}`, () => {
         it(`1 & 2`, () => {
             const text: string = `1 & 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.And);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.And);
         });
 
         it(`1 * 2`, () => {
             const text: string = `1 * 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Multiplication);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Multiplication);
         });
 
         it(`1 / 2`, () => {
             const text: string = `1 / 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Division);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Division);
         });
 
         it(`1 + 2`, () => {
             const text: string = `1 + 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Addition);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Addition);
         });
 
         it(`1 - 2`, () => {
             const text: string = `1 - 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.ArithmeticOperatorKind.Subtraction);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.ArithmeticOperatorKind.Subtraction);
         });
 
         it(`1 + 2 + 3 + 4`, () => {
             const text: string = `1 + 2 + 3 + 4`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.ArithmeticExpression, 0],
-                [Ast.NodeKind.ArithmeticExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
+                [Language.Ast.NodeKind.ArithmeticExpression, 0],
+                [Language.Ast.NodeKind.ArithmeticExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.AsExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.AsExpression}`, () => {
         it(`1 as number`, () => {
             const text: string = `1 as number`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.AsExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.PrimitiveType, 2],
+                [Language.Ast.NodeKind.AsExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.PrimitiveType, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -214,23 +233,23 @@ describe("Parser.AbridgedNode", () => {
         it(`type function (x as number) as number`, () => {
             const text: string = `type function (x as number) as number`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.FunctionType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ParameterList, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.AsType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.AsType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.FunctionType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ParameterList, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.AsType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.AsType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -240,53 +259,61 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.Csv covered by many
 
-    it(`${Ast.NodeKind.EachExpression}`, () => {
+    it(`${Language.Ast.NodeKind.EachExpression}`, () => {
         const text: string = `each 1`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.EachExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.LiteralExpression, 1],
+            [Language.Ast.NodeKind.EachExpression, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.LiteralExpression, 1],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    describe(`${Ast.NodeKind.EqualityExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.EqualityExpression}`, () => {
         it(`1 = 2`, () => {
             const text: string = `1 = 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.EqualityExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.EqualityExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.EqualityOperatorKind.EqualTo);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperatorKind.EqualTo);
         });
 
         it(`1 <> 2`, () => {
             const text: string = `1 <> 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.EqualityExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.EqualityExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.EqualityOperatorKind.NotEqualTo);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.EqualityOperatorKind.NotEqualTo);
         });
     });
 
-    describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ErrorHandlingExpression}`, () => {
         it(`try 1`, () => {
             const text: string = `try 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ErrorHandlingExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -294,44 +321,44 @@ describe("Parser.AbridgedNode", () => {
         it(`try 1 otherwise 2`, () => {
             const text: string = `try 1 otherwise 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ErrorHandlingExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
-                [Ast.NodeKind.OtherwiseExpression, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.ErrorHandlingExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.OtherwiseExpression, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    it(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
+    it(`${Language.Ast.NodeKind.ErrorRaisingExpression}`, () => {
         const text: string = `error 1`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.ErrorRaisingExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.LiteralExpression, 1],
+            [Language.Ast.NodeKind.ErrorRaisingExpression, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.LiteralExpression, 1],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    describe(`${Ast.NodeKind.FieldProjection}`, () => {
+    describe(`${Language.Ast.NodeKind.FieldProjection}`, () => {
         it(`x[[y]]`, () => {
             const text: string = `x[[y]]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
-                [Ast.NodeKind.IdentifierExpression, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.FieldProjection, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSelector, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Language.Ast.NodeKind.IdentifierExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.FieldProjection, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSelector, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -339,25 +366,25 @@ describe("Parser.AbridgedNode", () => {
         it(`x[[y], [z]]`, () => {
             const text: string = `x[[y], [z]]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
-                [Ast.NodeKind.IdentifierExpression, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.FieldProjection, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSelector, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 1],
-                [Ast.NodeKind.FieldSelector, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Language.Ast.NodeKind.IdentifierExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.FieldProjection, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSelector, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 1],
+                [Language.Ast.NodeKind.FieldSelector, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -365,33 +392,33 @@ describe("Parser.AbridgedNode", () => {
         it(`x[[y]]?`, () => {
             const text: string = `x[[y]]?`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RecursivePrimaryExpression, undefined],
-                [Ast.NodeKind.IdentifierExpression, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.FieldProjection, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSelector, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
+                [Language.Ast.NodeKind.IdentifierExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.FieldProjection, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSelector, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.FieldSelector}`, () => {
+    describe(`${Language.Ast.NodeKind.FieldSelector}`, () => {
         it(`[x]`, () => {
             const text: string = `[x]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FieldSelector, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.FieldSelector, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -399,30 +426,30 @@ describe("Parser.AbridgedNode", () => {
         it(`[x]?`, () => {
             const text: string = `[x]?`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FieldSelector, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.FieldSelector, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.FieldSpecification}`, () => {
+    describe(`${Language.Ast.NodeKind.FieldSpecification}`, () => {
         it(`type [x]`, () => {
             const text: string = `type [x]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.RecordType, 1],
-                [Ast.NodeKind.FieldSpecificationList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -430,17 +457,17 @@ describe("Parser.AbridgedNode", () => {
         it(`type [optional x]`, () => {
             const text: string = `type [optional x]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.RecordType, 1],
-                [Ast.NodeKind.FieldSpecificationList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -448,38 +475,38 @@ describe("Parser.AbridgedNode", () => {
         it(`type [x = number]`, () => {
             const text: string = `type [x = number]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.RecordType, 1],
-                [Ast.NodeKind.FieldSpecificationList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.FieldTypeSpecification, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.FieldTypeSpecification, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.FieldSpecificationList}`, () => {
-        it(`${Ast.NodeKind.FieldSpecificationList}`, () => {
+    describe(`${Language.Ast.NodeKind.FieldSpecificationList}`, () => {
+        it(`${Language.Ast.NodeKind.FieldSpecificationList}`, () => {
             const text: string = `type [x]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.RecordType, 1],
-                [Ast.NodeKind.FieldSpecificationList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -487,18 +514,18 @@ describe("Parser.AbridgedNode", () => {
         it(`type [x, ...]`, () => {
             const text: string = `type [x, ...]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.RecordType, 1],
-                [Ast.NodeKind.FieldSpecificationList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -506,17 +533,17 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.FieldTypeSpecification covered by FieldSpecification
 
-    describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.FunctionExpression}`, () => {
         it(`() => 1`, () => {
             const text: string = `() => 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.LiteralExpression, 3],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -524,16 +551,16 @@ describe("Parser.AbridgedNode", () => {
         it(`(x) => 1`, () => {
             const text: string = `(x) => 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.LiteralExpression, 3],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -541,24 +568,24 @@ describe("Parser.AbridgedNode", () => {
         it(`(x, y, z) => 1`, () => {
             const text: string = `(x, y, z) => 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 1],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 2],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.LiteralExpression, 3],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 1],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 2],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -566,17 +593,17 @@ describe("Parser.AbridgedNode", () => {
         it(`(optional x) => 1`, () => {
             const text: string = `(optional x) => 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.LiteralExpression, 3],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -584,21 +611,21 @@ describe("Parser.AbridgedNode", () => {
         it(`(x as nullable text) => 1`, () => {
             const text: string = `(x as nullable text) => 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.AsNullablePrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.NullablePrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.LiteralExpression, 3],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.NullablePrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -606,20 +633,20 @@ describe("Parser.AbridgedNode", () => {
         it(`(x) as number => x`, () => {
             const text: string = `(x) as number => x`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.IdentifierExpression, 3],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.IdentifierExpression, 3],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -627,23 +654,23 @@ describe("Parser.AbridgedNode", () => {
         it(`(x as number) as number => x`, () => {
             const text: string = `(x as number) as number => x`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.AsNullablePrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.IdentifierExpression, 3],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.IdentifierExpression, 3],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -651,25 +678,25 @@ describe("Parser.AbridgedNode", () => {
         it(`(x as number) as nullable number => x`, () => {
             const text: string = `(x as number) as nullable number => x`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FunctionExpression, undefined],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.AsNullablePrimitiveType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.NullablePrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.IdentifierExpression, 3],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.FunctionExpression, undefined],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.AsNullablePrimitiveType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.NullablePrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.IdentifierExpression, 3],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -677,48 +704,48 @@ describe("Parser.AbridgedNode", () => {
         it(`let Fn = () as nullable text => "asd" in Fn`, () => {
             const text: string = `let Fn = () as nullable text => "asd" in Fn`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LetExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.FunctionExpression, 2],
-                [Ast.NodeKind.ParameterList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.AsNullablePrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.NullablePrimitiveType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.LiteralExpression, 3],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.IdentifierExpression, 3],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.LetExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.FunctionExpression, 2],
+                [Language.Ast.NodeKind.ParameterList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.AsNullablePrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.NullablePrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.IdentifierExpression, 3],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.FunctionType}`, () => {
+    describe(`${Language.Ast.NodeKind.FunctionType}`, () => {
         it(`type function () as number`, () => {
             const text: string = `type function () as number`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.FunctionType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ParameterList, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.AsType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.FunctionType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ParameterList, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.AsType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -726,23 +753,23 @@ describe("Parser.AbridgedNode", () => {
         it(`type function (x as number) as number`, () => {
             const text: string = `type function (x as number) as number`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.FunctionType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ParameterList, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.Parameter, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.AsType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.AsType, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.FunctionType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ParameterList, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.Parameter, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.AsType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.AsType, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.PrimitiveType, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -750,14 +777,14 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.FieldTypeSpecification covered by AsType
 
-    describe(`${Ast.NodeKind.GeneralizedIdentifier}`, () => {
+    describe(`${Language.Ast.NodeKind.GeneralizedIdentifier}`, () => {
         it(`[foo bar]`, () => {
             const text: string = `[foo bar]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FieldSelector, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.FieldSelector, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -765,10 +792,10 @@ describe("Parser.AbridgedNode", () => {
         it(`[1]`, () => {
             const text: string = `[1]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FieldSelector, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.FieldSelector, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -776,10 +803,10 @@ describe("Parser.AbridgedNode", () => {
         it(`[a.1]`, () => {
             const text: string = `[a.1]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.FieldSelector, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.FieldSelector, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -788,108 +815,108 @@ describe("Parser.AbridgedNode", () => {
     it(`Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral`, () => {
         const text: string = `[x=1] section;`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.Section, undefined],
-            [Ast.NodeKind.RecordLiteral, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Csv, 0],
-            [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-            [Ast.NodeKind.GeneralizedIdentifier, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.LiteralExpression, 2],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.Constant, 3],
-            [Ast.NodeKind.ArrayWrapper, 4],
+            [Language.Ast.NodeKind.Section, undefined],
+            [Language.Ast.NodeKind.RecordLiteral, 0],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.ArrayWrapper, 1],
+            [Language.Ast.NodeKind.Csv, 0],
+            [Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+            [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
+            [Language.Ast.NodeKind.Constant, 1],
+            [Language.Ast.NodeKind.LiteralExpression, 2],
+            [Language.Ast.NodeKind.Constant, 2],
+            [Language.Ast.NodeKind.Constant, 1],
+            [Language.Ast.NodeKind.Constant, 3],
+            [Language.Ast.NodeKind.ArrayWrapper, 4],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.GeneralizedIdentifierPairedExpression}`, () => {
+    it(`${Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression}`, () => {
         const text: string = `[x=1]`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.RecordExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Csv, 0],
-            [Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
-            [Ast.NodeKind.GeneralizedIdentifier, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.LiteralExpression, 2],
-            [Ast.NodeKind.Constant, 2],
+            [Language.Ast.NodeKind.RecordExpression, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.ArrayWrapper, 1],
+            [Language.Ast.NodeKind.Csv, 0],
+            [Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
+            [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
+            [Language.Ast.NodeKind.Constant, 1],
+            [Language.Ast.NodeKind.LiteralExpression, 2],
+            [Language.Ast.NodeKind.Constant, 2],
         ];
         assertAbridgeNodes(text, expected);
     });
 
     // Ast.NodeKind.Identifier covered by many
 
-    it(`${Ast.NodeKind.IdentifierExpression}`, () => {
+    it(`${Language.Ast.NodeKind.IdentifierExpression}`, () => {
         const text: string = `@foo`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.IdentifierExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.Identifier, 1],
+            [Language.Ast.NodeKind.IdentifierExpression, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.Identifier, 1],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.IdentifierPairedExpression}`, () => {
+    it(`${Language.Ast.NodeKind.IdentifierPairedExpression}`, () => {
         const text: string = `section; x = 1;`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.Section, undefined],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.Constant, 3],
-            [Ast.NodeKind.ArrayWrapper, 4],
-            [Ast.NodeKind.SectionMember, 0],
-            [Ast.NodeKind.IdentifierPairedExpression, 2],
-            [Ast.NodeKind.Identifier, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.LiteralExpression, 2],
-            [Ast.NodeKind.Constant, 3],
+            [Language.Ast.NodeKind.Section, undefined],
+            [Language.Ast.NodeKind.Constant, 1],
+            [Language.Ast.NodeKind.Constant, 3],
+            [Language.Ast.NodeKind.ArrayWrapper, 4],
+            [Language.Ast.NodeKind.SectionMember, 0],
+            [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
+            [Language.Ast.NodeKind.Identifier, 0],
+            [Language.Ast.NodeKind.Constant, 1],
+            [Language.Ast.NodeKind.LiteralExpression, 2],
+            [Language.Ast.NodeKind.Constant, 3],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.IfExpression}`, () => {
+    it(`${Language.Ast.NodeKind.IfExpression}`, () => {
         const text: string = `if x then x else x`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.IfExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.IdentifierExpression, 1],
-            [Ast.NodeKind.Identifier, 1],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.IdentifierExpression, 3],
-            [Ast.NodeKind.Identifier, 1],
-            [Ast.NodeKind.Constant, 4],
-            [Ast.NodeKind.IdentifierExpression, 5],
-            [Ast.NodeKind.Identifier, 1],
+            [Language.Ast.NodeKind.IfExpression, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.IdentifierExpression, 1],
+            [Language.Ast.NodeKind.Identifier, 1],
+            [Language.Ast.NodeKind.Constant, 2],
+            [Language.Ast.NodeKind.IdentifierExpression, 3],
+            [Language.Ast.NodeKind.Identifier, 1],
+            [Language.Ast.NodeKind.Constant, 4],
+            [Language.Ast.NodeKind.IdentifierExpression, 5],
+            [Language.Ast.NodeKind.Identifier, 1],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.InvokeExpression}`, () => {
+    it(`${Language.Ast.NodeKind.InvokeExpression}`, () => {
         const text: string = `foo()`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
-            [Ast.NodeKind.IdentifierExpression, 0],
-            [Ast.NodeKind.Identifier, 1],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.InvokeExpression, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.Constant, 2],
+            [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Language.Ast.NodeKind.IdentifierExpression, 0],
+            [Language.Ast.NodeKind.Identifier, 1],
+            [Language.Ast.NodeKind.ArrayWrapper, 1],
+            [Language.Ast.NodeKind.InvokeExpression, 0],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.ArrayWrapper, 1],
+            [Language.Ast.NodeKind.Constant, 2],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    describe(`${Ast.NodeKind.IsExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.IsExpression}`, () => {
         it(`1 is number`, () => {
             const text: string = `1 is number`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.IsExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.PrimitiveType, 2],
+                [Language.Ast.NodeKind.IsExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.PrimitiveType, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -897,45 +924,45 @@ describe("Parser.AbridgedNode", () => {
         it(`1 is number is number`, () => {
             const text: string = `1 is number is number`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.IsExpression, undefined],
-                [Ast.NodeKind.IsExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.PrimitiveType, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.PrimitiveType, 2],
+                [Language.Ast.NodeKind.IsExpression, undefined],
+                [Language.Ast.NodeKind.IsExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.PrimitiveType, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.PrimitiveType, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
+    it(`${Language.Ast.NodeKind.ItemAccessExpression}`, () => {
         const text: string = `x{1}`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
-            [Ast.NodeKind.IdentifierExpression, 0],
-            [Ast.NodeKind.Identifier, 1],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.ItemAccessExpression, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.LiteralExpression, 1],
-            [Ast.NodeKind.Constant, 2],
+            [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Language.Ast.NodeKind.IdentifierExpression, 0],
+            [Language.Ast.NodeKind.Identifier, 1],
+            [Language.Ast.NodeKind.ArrayWrapper, 1],
+            [Language.Ast.NodeKind.ItemAccessExpression, 0],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.LiteralExpression, 1],
+            [Language.Ast.NodeKind.Constant, 2],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.ItemAccessExpression} optional`, () => {
+    it(`${Language.Ast.NodeKind.ItemAccessExpression} optional`, () => {
         const text: string = `x{1}?`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.RecursivePrimaryExpression, undefined],
-            [Ast.NodeKind.IdentifierExpression, 0],
-            [Ast.NodeKind.Identifier, 1],
-            [Ast.NodeKind.ArrayWrapper, 1],
-            [Ast.NodeKind.ItemAccessExpression, 0],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.LiteralExpression, 1],
-            [Ast.NodeKind.Constant, 2],
-            [Ast.NodeKind.Constant, 3],
+            [Language.Ast.NodeKind.RecursivePrimaryExpression, undefined],
+            [Language.Ast.NodeKind.IdentifierExpression, 0],
+            [Language.Ast.NodeKind.Identifier, 1],
+            [Language.Ast.NodeKind.ArrayWrapper, 1],
+            [Language.Ast.NodeKind.ItemAccessExpression, 0],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.LiteralExpression, 1],
+            [Language.Ast.NodeKind.Constant, 2],
+            [Language.Ast.NodeKind.Constant, 3],
         ];
         assertAbridgeNodes(text, expected);
     });
@@ -944,8 +971,8 @@ describe("Parser.AbridgedNode", () => {
         it(`#sections`, () => {
             const text: string = `#sections`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.IdentifierExpression, undefined],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.IdentifierExpression, undefined],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -953,28 +980,28 @@ describe("Parser.AbridgedNode", () => {
         it(`#shared`, () => {
             const text: string = `#shared`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.IdentifierExpression, undefined],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.IdentifierExpression, undefined],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.LetExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.LetExpression}`, () => {
         it(`let x = 1 in x`, () => {
             const text: string = `let x = 1 in x`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LetExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.IdentifierExpression, 3],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.LetExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.IdentifierExpression, 3],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -982,32 +1009,32 @@ describe("Parser.AbridgedNode", () => {
         it(`let x = 1 in try x`, () => {
             const text: string = `let x = 1 in try x`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LetExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.ErrorHandlingExpression, 3],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.IdentifierExpression, 1],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.LetExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ErrorHandlingExpression, 3],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.IdentifierExpression, 1],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.ListExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ListExpression}`, () => {
         it(`{}`, () => {
             const text: string = `{}`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ListExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ListExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1015,15 +1042,15 @@ describe("Parser.AbridgedNode", () => {
         it(`{1, 2}`, () => {
             const text: string = `{1, 2}`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ListExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 1],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ListExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1031,15 +1058,15 @@ describe("Parser.AbridgedNode", () => {
         it(`{1..2}`, () => {
             const text: string = `{1..2}`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ListExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.RangeExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ListExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.RangeExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1047,21 +1074,21 @@ describe("Parser.AbridgedNode", () => {
         it(`{1..2, 3..4}`, () => {
             const text: string = `{1..2, 3..4}`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ListExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.RangeExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 1],
-                [Ast.NodeKind.RangeExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ListExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.RangeExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 1],
+                [Language.Ast.NodeKind.RangeExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1069,18 +1096,18 @@ describe("Parser.AbridgedNode", () => {
         it(`{1, 2..3}`, () => {
             const text: string = `{1, 2..3}`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ListExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 1],
-                [Ast.NodeKind.RangeExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ListExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 1],
+                [Language.Ast.NodeKind.RangeExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1088,18 +1115,18 @@ describe("Parser.AbridgedNode", () => {
         it(`{1..2, 3}`, () => {
             const text: string = `{1..2, 3}`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ListExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.RangeExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 1],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ListExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.RangeExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1107,59 +1134,59 @@ describe("Parser.AbridgedNode", () => {
         it(`let x = 1, y = {x..2} in y`, () => {
             const text: string = `let x = 1, y = {x..2} in y`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LetExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Csv, 1],
-                [Ast.NodeKind.IdentifierPairedExpression, 0],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ListExpression, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.RangeExpression, 0],
-                [Ast.NodeKind.IdentifierExpression, 0],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.IdentifierExpression, 3],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.LetExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Csv, 1],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.ListExpression, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.RangeExpression, 0],
+                [Language.Ast.NodeKind.IdentifierExpression, 0],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.IdentifierExpression, 3],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.ListLiteral}`, () => {
+    describe(`${Language.Ast.NodeKind.ListLiteral}`, () => {
         it(`[foo = {1}] section;`, () => {
             const text: string = `[foo = {1}] section;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.RecordLiteral, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ListLiteral, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.RecordLiteral, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.ListLiteral, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1167,140 +1194,140 @@ describe("Parser.AbridgedNode", () => {
         it(`[foo = {}] section;`, () => {
             const text: string = `[foo = {}] section;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.RecordLiteral, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.ListLiteral, 2],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.RecordLiteral, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.ListLiteral, 2],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    it(`${Ast.NodeKind.ListType}`, () => {
+    it(`${Language.Ast.NodeKind.ListType}`, () => {
         const text: string = `type {number}`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.TypePrimaryType, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.ListType, 1],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.PrimitiveType, 1],
-            [Ast.NodeKind.Constant, 2],
+            [Language.Ast.NodeKind.TypePrimaryType, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.ListType, 1],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.PrimitiveType, 1],
+            [Language.Ast.NodeKind.Constant, 2],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    describe(`${Ast.NodeKind.LiteralExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.LiteralExpression}`, () => {
         it(`true`, () => {
             const text: string = `true`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`false`, () => {
             const text: string = `false`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`1`, () => {
             const text: string = `1`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`0x1`, () => {
             const text: string = `0x1`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`0X1`, () => {
             const text: string = `0X1`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`1.2`, () => {
             const text: string = `1.2`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`.1`, () => {
             const text: string = ".1";
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`1e2`, () => {
             const text: string = "1e2";
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`1e+2`, () => {
             const text: string = "1e+2";
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`1e-2`, () => {
             const text: string = "1e-2";
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`#nan`, () => {
             const text: string = `#nan`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`#infinity`, () => {
             const text: string = `#infinity`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`""`, () => {
             const text: string = `""`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`""""`, () => {
             const text: string = `""""`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
 
         it(`null`, () => {
             const text: string = `null`;
-            const expected: ReadonlyArray<AbridgedNode> = [[Ast.NodeKind.LiteralExpression, undefined]];
+            const expected: ReadonlyArray<AbridgedNode> = [[Language.Ast.NodeKind.LiteralExpression, undefined]];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.LogicalExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.LogicalExpression}`, () => {
         it(`true and true`, () => {
             const text: string = `true and true`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LogicalExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.LogicalExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1308,69 +1335,69 @@ describe("Parser.AbridgedNode", () => {
         it(`true or true`, () => {
             const text: string = `true or true`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LogicalExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.LogicalExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    it(`${Ast.NodeKind.MetadataExpression}`, () => {
+    it(`${Language.Ast.NodeKind.MetadataExpression}`, () => {
         const text: string = `1 meta 1`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.MetadataExpression, undefined],
-            [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.LiteralExpression, 2],
+            [Language.Ast.NodeKind.MetadataExpression, undefined],
+            [Language.Ast.NodeKind.LiteralExpression, 0],
+            [Language.Ast.NodeKind.Constant, 1],
+            [Language.Ast.NodeKind.LiteralExpression, 2],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.NotImplementedExpression}`, () => {
+    it(`${Language.Ast.NodeKind.NotImplementedExpression}`, () => {
         const text: string = `...`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.NotImplementedExpression, undefined],
-            [Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.NotImplementedExpression, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.NullablePrimitiveType}`, () => {
+    it(`${Language.Ast.NodeKind.NullablePrimitiveType}`, () => {
         const text: string = `1 is nullable number`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.IsExpression, undefined],
-            [Ast.NodeKind.LiteralExpression, 0],
-            [Ast.NodeKind.Constant, 1],
-            [Ast.NodeKind.NullablePrimitiveType, 2],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.PrimitiveType, 1],
+            [Language.Ast.NodeKind.IsExpression, undefined],
+            [Language.Ast.NodeKind.LiteralExpression, 0],
+            [Language.Ast.NodeKind.Constant, 1],
+            [Language.Ast.NodeKind.NullablePrimitiveType, 2],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.PrimitiveType, 1],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    it(`${Ast.NodeKind.NullableType}`, () => {
+    it(`${Language.Ast.NodeKind.NullableType}`, () => {
         const text: string = `type nullable number`;
         const expected: ReadonlyArray<AbridgedNode> = [
-            [Ast.NodeKind.TypePrimaryType, undefined],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.NullableType, 1],
-            [Ast.NodeKind.Constant, 0],
-            [Ast.NodeKind.PrimitiveType, 1],
+            [Language.Ast.NodeKind.TypePrimaryType, undefined],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.NullableType, 1],
+            [Language.Ast.NodeKind.Constant, 0],
+            [Language.Ast.NodeKind.PrimitiveType, 1],
         ];
         assertAbridgeNodes(text, expected);
     });
 
-    describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.NullCoalescingExpression}`, () => {
         it(`1 ?? a`, () => {
             const text: string = `1 ?? a`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.IdentifierExpression, 2],
-                [Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.IdentifierExpression, 2],
+                [Language.Ast.NodeKind.Identifier, 1],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1378,32 +1405,32 @@ describe("Parser.AbridgedNode", () => {
         it(`1 ?? 1 ?? 1`, () => {
             const text: string = `1 ?? 1 ?? 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.NullCoalescingExpression, undefined],
-                [Ast.NodeKind.NullCoalescingExpression, 0],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.NullCoalescingExpression, undefined],
+                [Language.Ast.NodeKind.NullCoalescingExpression, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    // Ast.NodeKind.OtherwiseExpression covered by `${Ast.NodeKind.ErrorHandlingExpression} otherwise`
+    // Ast.NodeKind.OtherwiseExpression covered by `${Language.Ast.NodeKind.ErrorHandlingExpression} otherwise`
 
     // Ast.NodeKind.Parameter covered by many
 
     // Ast.NodeKind.ParameterList covered by many
 
-    describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.ParenthesizedExpression}`, () => {
         it(`(1)`, () => {
             const text: string = `(1)`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ParenthesizedExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.ParenthesizedExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1411,13 +1438,13 @@ describe("Parser.AbridgedNode", () => {
         it(`(1) + 1`, () => {
             const text: string = `(1) + 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.ArithmeticExpression, undefined],
-                [Ast.NodeKind.ParenthesizedExpression, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.ArithmeticExpression, undefined],
+                [Language.Ast.NodeKind.ParenthesizedExpression, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1425,19 +1452,19 @@ describe("Parser.AbridgedNode", () => {
         it(`(if true then true else false) and true`, () => {
             const text: string = `(if true then true else false) and true`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LogicalExpression, undefined],
-                [Ast.NodeKind.ParenthesizedExpression, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.IfExpression, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.LiteralExpression, 3],
-                [Ast.NodeKind.Constant, 4],
-                [Ast.NodeKind.LiteralExpression, 5],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.LogicalExpression, undefined],
+                [Language.Ast.NodeKind.ParenthesizedExpression, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.IfExpression, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.LiteralExpression, 3],
+                [Language.Ast.NodeKind.Constant, 4],
+                [Language.Ast.NodeKind.LiteralExpression, 5],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1445,47 +1472,47 @@ describe("Parser.AbridgedNode", () => {
         it(`((1)) and true`, () => {
             const text: string = `((1)) and true`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.LogicalExpression, undefined],
-                [Ast.NodeKind.ParenthesizedExpression, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ParenthesizedExpression, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.LogicalExpression, undefined],
+                [Language.Ast.NodeKind.ParenthesizedExpression, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ParenthesizedExpression, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.PrimitiveType}`, () => {
+    describe(`${Language.Ast.NodeKind.PrimitiveType}`, () => {
         it(`1 as time`, () => {
             const text: string = `1 as time`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.AsExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.PrimitiveType, 2],
+                [Language.Ast.NodeKind.AsExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.PrimitiveType, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.RecordExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.RecordExpression}`, () => {
         it(`[x=1]`, () => {
             const text: string = `[x=1]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RecordExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.RecordExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1493,10 +1520,10 @@ describe("Parser.AbridgedNode", () => {
         it(`[]`, () => {
             const text: string = `[]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RecordExpression, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.RecordExpression, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1504,20 +1531,20 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.RecordLiteral covered by many
 
-    describe(`${Ast.NodeKind.RecordType}`, () => {
+    describe(`${Language.Ast.NodeKind.RecordType}`, () => {
         it(`type [x]`, () => {
             const text: string = `type [x]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.RecordType, 1],
-                [Ast.NodeKind.FieldSpecificationList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1525,18 +1552,18 @@ describe("Parser.AbridgedNode", () => {
         it(`type [x, ...]`, () => {
             const text: string = `type [x, ...]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.RecordType, 1],
-                [Ast.NodeKind.FieldSpecificationList, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.RecordType, 1],
+                [Language.Ast.NodeKind.FieldSpecificationList, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1544,72 +1571,88 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.RecursivePrimaryExpression covered by many
 
-    describe(`${Ast.NodeKind.RelationalExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.RelationalExpression}`, () => {
         it(`1 > 2`, () => {
             const text: string = `1 > 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RelationalExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.RelationalExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.GreaterThan);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.GreaterThan);
         });
 
         it(`1 >= 2`, () => {
             const text: string = `1 >= 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RelationalExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.RelationalExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.GreaterThanEqualTo);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.GreaterThanEqualTo);
         });
 
         it(`1 < 2`, () => {
             const text: string = `1 < 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RelationalExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.RelationalExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.LessThan);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.LessThan);
         });
 
         it(`1 <= 2`, () => {
             const text: string = `1 <= 2`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.RelationalExpression, undefined],
-                [Ast.NodeKind.LiteralExpression, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.RelationalExpression, undefined],
+                [Language.Ast.NodeKind.LiteralExpression, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.RelationalOperatorKind.LessThanEqualTo);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.RelationalOperatorKind.LessThanEqualTo);
         });
     });
 
-    describe(`${Ast.NodeKind.Section}`, () => {
+    describe(`${Language.Ast.NodeKind.Section}`, () => {
         it(`section;`, () => {
             const text: string = `section;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1617,14 +1660,14 @@ describe("Parser.AbridgedNode", () => {
         it(`[] section;`, () => {
             const text: string = `[] section;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.RecordLiteral, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.RecordLiteral, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1632,11 +1675,11 @@ describe("Parser.AbridgedNode", () => {
         it(`section foo;`, () => {
             const text: string = `section foo;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Identifier, 2],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Identifier, 2],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1644,16 +1687,16 @@ describe("Parser.AbridgedNode", () => {
         it(`section; x = 1;`, () => {
             const text: string = `section; x = 1;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
-                [Ast.NodeKind.SectionMember, 0],
-                [Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.SectionMember, 0],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1661,41 +1704,41 @@ describe("Parser.AbridgedNode", () => {
         it(`section; x = 1; y = 2;`, () => {
             const text: string = `section; x = 1; y = 2;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
-                [Ast.NodeKind.SectionMember, 0],
-                [Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.SectionMember, 1],
-                [Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.SectionMember, 0],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.SectionMember, 1],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.SectionMember}`, () => {
+    describe(`${Language.Ast.NodeKind.SectionMember}`, () => {
         it(`section; x = 1;`, () => {
             const text: string = `section; x = 1;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
-                [Ast.NodeKind.SectionMember, 0],
-                [Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.SectionMember, 0],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1703,20 +1746,20 @@ describe("Parser.AbridgedNode", () => {
         it(`section; [] x = 1;`, () => {
             const text: string = `section; [] x = 1;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
-                [Ast.NodeKind.SectionMember, 0],
-                [Ast.NodeKind.RecordLiteral, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Constant, 2],
-                [Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.SectionMember, 0],
+                [Language.Ast.NodeKind.RecordLiteral, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1724,37 +1767,37 @@ describe("Parser.AbridgedNode", () => {
         it(`section; shared x = 1;`, () => {
             const text: string = `section; shared x = 1;`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.Section, undefined],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.Constant, 3],
-                [Ast.NodeKind.ArrayWrapper, 4],
-                [Ast.NodeKind.SectionMember, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.IdentifierPairedExpression, 2],
-                [Ast.NodeKind.Identifier, 0],
-                [Ast.NodeKind.Constant, 1],
-                [Ast.NodeKind.LiteralExpression, 2],
-                [Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.Section, undefined],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.Constant, 3],
+                [Language.Ast.NodeKind.ArrayWrapper, 4],
+                [Language.Ast.NodeKind.SectionMember, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.IdentifierPairedExpression, 2],
+                [Language.Ast.NodeKind.Identifier, 0],
+                [Language.Ast.NodeKind.Constant, 1],
+                [Language.Ast.NodeKind.LiteralExpression, 2],
+                [Language.Ast.NodeKind.Constant, 3],
             ];
             assertAbridgeNodes(text, expected);
         });
     });
 
-    describe(`${Ast.NodeKind.TableType}`, () => {
+    describe(`${Language.Ast.NodeKind.TableType}`, () => {
         it(`type table [x]`, () => {
             const text: string = `type table [x]`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.TableType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.FieldSpecificationList, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ArrayWrapper, 1],
-                [Ast.NodeKind.Csv, 0],
-                [Ast.NodeKind.FieldSpecification, 0],
-                [Ast.NodeKind.GeneralizedIdentifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.TableType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.FieldSpecificationList, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ArrayWrapper, 1],
+                [Language.Ast.NodeKind.Csv, 0],
+                [Language.Ast.NodeKind.FieldSpecification, 0],
+                [Language.Ast.NodeKind.GeneralizedIdentifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1762,15 +1805,15 @@ describe("Parser.AbridgedNode", () => {
         it(`type table (x)`, () => {
             const text: string = `type table (x)`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.TypePrimaryType, undefined],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.TableType, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.ParenthesizedExpression, 1],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.IdentifierExpression, 1],
-                [Ast.NodeKind.Identifier, 1],
-                [Ast.NodeKind.Constant, 2],
+                [Language.Ast.NodeKind.TypePrimaryType, undefined],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.TableType, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.ParenthesizedExpression, 1],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.IdentifierExpression, 1],
+                [Language.Ast.NodeKind.Identifier, 1],
+                [Language.Ast.NodeKind.Constant, 2],
             ];
             assertAbridgeNodes(text, expected);
         });
@@ -1778,47 +1821,59 @@ describe("Parser.AbridgedNode", () => {
 
     // Ast.NodeKind.TypePrimaryType covered by many
 
-    describe(`${Ast.NodeKind.UnaryExpression}`, () => {
+    describe(`${Language.Ast.NodeKind.UnaryExpression}`, () => {
         it(`-1`, () => {
             const text: string = `-1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.UnaryExpression, undefined],
-                [Ast.NodeKind.ArrayWrapper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.UnaryExpression, undefined],
+                [Language.Ast.NodeKind.ArrayWrapper, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.UnaryOperatorKind.Negative);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperatorKind.Negative);
         });
 
         it(`not 1`, () => {
             const text: string = `not 1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.UnaryExpression, undefined],
-                [Ast.NodeKind.ArrayWrapper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.UnaryExpression, undefined],
+                [Language.Ast.NodeKind.ArrayWrapper, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.UnaryOperatorKind.Not);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperatorKind.Not);
         });
 
         it(`+1`, () => {
             const text: string = `+1`;
             const expected: ReadonlyArray<AbridgedNode> = [
-                [Ast.NodeKind.UnaryExpression, undefined],
-                [Ast.NodeKind.ArrayWrapper, 0],
-                [Ast.NodeKind.Constant, 0],
-                [Ast.NodeKind.LiteralExpression, 1],
+                [Language.Ast.NodeKind.UnaryExpression, undefined],
+                [Language.Ast.NodeKind.ArrayWrapper, 0],
+                [Language.Ast.NodeKind.Constant, 0],
+                [Language.Ast.NodeKind.LiteralExpression, 1],
             ];
             assertAbridgeNodes(text, expected);
 
-            const operatorNode: Ast.TConstant = assertGetNthNodeOfKind<Ast.TConstant>(text, Ast.NodeKind.Constant, 1);
-            expect(operatorNode.constantKind).to.equal(Constant.UnaryOperatorKind.Positive);
+            const operatorNode: Language.Ast.TConstant = assertGetNthNodeOfKind<Language.Ast.TConstant>(
+                text,
+                Language.Ast.NodeKind.Constant,
+                1,
+            );
+            expect(operatorNode.constantKind).to.equal(Language.Constant.UnaryOperatorKind.Positive);
         });
     });
 });

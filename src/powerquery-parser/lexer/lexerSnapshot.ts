@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { LexError } from ".";
-import { Lexer } from "..";
+import { Lexer } from "../..";
 import { CommonError, ICancellationToken, Result, ResultUtils, StringUtils } from "../common";
 import { Comment, Token } from "../language";
 

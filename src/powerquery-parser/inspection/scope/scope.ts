@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection } from "../..";
+import { Inspection } from "../../..";
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, Type, TypeInspector, TypeUtils } from "../../language";
 import {

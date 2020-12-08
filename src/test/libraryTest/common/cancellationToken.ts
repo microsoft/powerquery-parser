@@ -2,17 +2,24 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Lexer } from "../../..";
-import { Assert, CommonError, Result, TimedCancellationToken, TypeScriptUtils } from "../../../common";
-import { LexError } from "../../../lexer";
-import { DefaultSettings, Settings, SettingsUtils } from "../../../settings";
+import {
+    Assert,
+    CommonError,
+    DefaultSettings,
+    Lexer,
+    Result,
+    Settings,
+    SettingsUtils,
+    TimedCancellationToken,
+    TypeScriptUtils,
+} from "../../..";
 
 function assertGetCancellationError<T, E>(tried: Result<T, E>): CommonError.CancellationError {
     Assert.isErr(tried);
     if (!CommonError.isCommonError(tried.error)) {
         throw new Error(`expected error to be a ${CommonError.CommonError.name}`);
     }
-    const innerError: LexError.TInnerLexError = tried.error.innerError;
+    const innerError: Lexer.LexError.TInnerLexError = tried.error.innerError;
     if (!(innerError instanceof CommonError.CancellationError)) {
         throw new Error(`expected innerError to be a ${CommonError.CancellationError.name}`);
     }

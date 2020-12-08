@@ -3,15 +3,15 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Type, TypeUtils } from "../../../../language/type";
-import {
-    CheckedDefinedFunction,
-    CheckedDefinedList,
-    CheckedDefinedRecord,
-    CheckedDefinedTable,
-    Mismatch,
-    TChecked,
-} from "../../../../language/type/typeUtils";
+import { Language } from "../../../..";
+// import {
+//     CheckedDefinedFunction,
+//     CheckedDefinedList,
+//     CheckedDefinedRecord,
+//     CheckedDefinedTable,
+//     Mismatch,
+//     Language.TChecked,
+// } from "../../../../powerquery-parser/language/type/typeUtils";
 
 interface AbridgedChecked<K = number | string> {
     readonly valid: ReadonlyArray<K>;
@@ -20,8 +20,11 @@ interface AbridgedChecked<K = number | string> {
     readonly missing: ReadonlyArray<K>;
 }
 
-function abridgedCheckedFactory(actual: TChecked): AbridgedChecked {
-    const mismatched: ReadonlyArray<Mismatch<string | number, Type.TType | Type.FunctionParameter>> = actual.invalid;
+function abridgedCheckedFactory(actual: Language.TypeUtils.TChecked): AbridgedChecked {
+    const mismatched: ReadonlyArray<Language.TypeUtils.Mismatch<
+        string | number,
+        Language.Type.TType | Language.Type.FunctionParameter
+    >> = actual.invalid;
     return {
         valid: actual.valid,
         invalid: mismatched.map(mismatch => mismatch.key),
@@ -40,15 +43,18 @@ function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked)
 describe(`TypeUtils - typeCheck`, () => {
     describe(`Table.RenameColumns`, () => {
         it(`list with two text elements, valid`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.TextInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.TextInstance,
             ]);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
-                Type.TextInstance,
-                Type.TextInstance,
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.TextInstance,
             ]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
@@ -59,16 +65,19 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`list with two text elements, invalid`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.TextInstance,
-                Type.TextInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.TextInstance,
+                Language.Type.TextInstance,
             ]);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
-                Type.TextInstance,
-                Type.TextInstance,
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.TextInstance,
             ]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
@@ -79,14 +88,17 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`list of list with two text elements, valid single list`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
-            const schemaType: Type.ListType = TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
                 false,
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [],
@@ -97,17 +109,20 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`list of list with two text elements, valid multiple list`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
-            const schemaType: Type.ListType = TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
                 false,
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0, 1, 2, 3],
                 invalid: [],
@@ -118,12 +133,15 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`list of list with two text elements, empty list`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, []);
-            const schemaType: Type.ListType = TypeUtils.listTypeFactory(
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, []);
+            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
                 false,
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
@@ -134,14 +152,20 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`list of list with two text elements, invalid single list`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                TypeUtils.definedListFactory(false, [Type.NumberInstance, Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.TypeUtils.definedListFactory(false, [
+                    Language.Type.NumberInstance,
+                    Language.Type.TextInstance,
+                ]),
             ]);
-            const schemaType: Type.ListType = TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
                 false,
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [0],
@@ -152,17 +176,23 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`list of list with two text elements, invalid multiple list`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.NumberInstance]),
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [
+                    Language.Type.TextInstance,
+                    Language.Type.NumberInstance,
+                ]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             ]);
-            const schemaType: Type.ListType = TypeUtils.listTypeFactory(
+            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
                 false,
-                TypeUtils.definedListFactory(false, [Type.TextInstance, Type.TextInstance]),
+                Language.TypeUtils.definedListFactory(false, [Language.Type.TextInstance, Language.Type.TextInstance]),
             );
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0, 2, 3],
                 invalid: [1],
@@ -173,17 +203,20 @@ describe(`TypeUtils - typeCheck`, () => {
         });
     });
 
-    describe(`${Type.ExtendedTypeKind.DefinedListType}`, () => {
+    describe(`${Language.Type.ExtendedTypeKind.DefinedListType}`, () => {
         it(`valid`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
@@ -194,15 +227,18 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`invalid`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.DateInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.DateInstance,
             ]);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [1],
@@ -213,12 +249,17 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`extraneous`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [Type.TextInstance]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+            ]);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [],
@@ -229,12 +270,15 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`missing`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, []);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, []);
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
@@ -245,14 +289,20 @@ describe(`TypeUtils - typeCheck`, () => {
         });
     });
 
-    describe(`${Type.ExtendedTypeKind.ListType}`, () => {
+    describe(`${Language.Type.ExtendedTypeKind.ListType}`, () => {
         it(`valid`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.TextInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.TextInstance,
             ]);
-            const schemaType: Type.ListType = TypeUtils.listTypeFactory(false, Type.TextInstance);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithListType(valueType, schemaType);
+            const schemaType: Language.Type.ListType = Language.TypeUtils.listTypeFactory(
+                false,
+                Language.Type.TextInstance,
+            );
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0, 1],
                 invalid: [],
@@ -263,15 +313,18 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`invalid`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.DateInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.DateInstance,
             ]);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [1],
@@ -282,12 +335,17 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`extraneous`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [Type.TextInstance]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+            ]);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [0],
                 invalid: [],
@@ -298,12 +356,15 @@ describe(`TypeUtils - typeCheck`, () => {
         });
 
         it(`missing`, () => {
-            const valueType: Type.DefinedList = TypeUtils.definedListFactory(false, []);
-            const schemaType: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
-                Type.TextInstance,
-                Type.NumberInstance,
+            const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, []);
+            const schemaType: Language.Type.DefinedListType = Language.TypeUtils.definedListTypeFactory(false, [
+                Language.Type.TextInstance,
+                Language.Type.NumberInstance,
             ]);
-            const actual: CheckedDefinedList = TypeUtils.typeCheckListWithDefinedListType(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedList = Language.TypeUtils.typeCheckListWithDefinedListType(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
@@ -314,15 +375,22 @@ describe(`TypeUtils - typeCheck`, () => {
         });
     });
 
-    describe(`${Type.ExtendedTypeKind.FunctionType}`, () => {
+    describe(`${Language.Type.ExtendedTypeKind.FunctionType}`, () => {
         it(`return type`, () => {
-            const valueType: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+            const valueType: Language.Type.DefinedFunction = Language.TypeUtils.definedFunctionFactory(
                 false,
                 [],
-                Type.NullableTextInstance,
+                Language.Type.NullableTextInstance,
             );
-            const schemaType: Type.FunctionType = TypeUtils.functionTypeFactory(false, [], Type.NullableTextInstance);
-            const actual: CheckedDefinedFunction = TypeUtils.typeCheckFunction(valueType, schemaType);
+            const schemaType: Language.Type.FunctionType = Language.TypeUtils.functionTypeFactory(
+                false,
+                [],
+                Language.Type.NullableTextInstance,
+            );
+            const actual: Language.TypeUtils.CheckedDefinedFunction = Language.TypeUtils.typeCheckFunction(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: [],
                 invalid: [],
@@ -333,27 +401,30 @@ describe(`TypeUtils - typeCheck`, () => {
         });
     });
 
-    describe(`${Type.ExtendedTypeKind.RecordType}`, () => {
-        it(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
-            const valueType: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+    describe(`${Language.Type.ExtendedTypeKind.RecordType}`, () => {
+        it(`${Language.Type.ExtendedTypeKind.DefinedRecord}`, () => {
+            const valueType: Language.Type.DefinedRecord = Language.TypeUtils.definedRecordFactory(
                 false,
-                new Map<string, Type.TType>([
-                    ["number", Type.NullableNumberInstance],
-                    ["nullableNumber", Type.NullableNumberInstance],
-                    ["table", Type.TableInstance],
+                new Map<string, Language.Type.TType>([
+                    ["number", Language.Type.NullableNumberInstance],
+                    ["nullableNumber", Language.Type.NullableNumberInstance],
+                    ["table", Language.Type.TableInstance],
                 ]),
                 false,
             );
-            const schemaType: Type.RecordType = TypeUtils.recordTypeFactory(
+            const schemaType: Language.Type.RecordType = Language.TypeUtils.recordTypeFactory(
                 false,
-                new Map<string, Type.TType>([
-                    ["number", Type.NumberInstance],
-                    ["nullableNumber", Type.NullableNumberInstance],
-                    ["text", Type.TextInstance],
+                new Map<string, Language.Type.TType>([
+                    ["number", Language.Type.NumberInstance],
+                    ["nullableNumber", Language.Type.NullableNumberInstance],
+                    ["text", Language.Type.TextInstance],
                 ]),
                 false,
             );
-            const actual: CheckedDefinedRecord = TypeUtils.typeCheckRecord(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedRecord = Language.TypeUtils.typeCheckRecord(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: ["nullableNumber"],
                 invalid: ["number"],
@@ -364,27 +435,30 @@ describe(`TypeUtils - typeCheck`, () => {
         });
     });
 
-    describe(`${Type.ExtendedTypeKind.TableType}`, () => {
-        it(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
-            const valueType: Type.DefinedTable = TypeUtils.definedTableFactory(
+    describe(`${Language.Type.ExtendedTypeKind.TableType}`, () => {
+        it(`${Language.Type.ExtendedTypeKind.DefinedTable}`, () => {
+            const valueType: Language.Type.DefinedTable = Language.TypeUtils.definedTableFactory(
                 false,
-                new Map<string, Type.TType>([
-                    ["number", Type.NullableNumberInstance],
-                    ["nullableNumber", Type.NullableNumberInstance],
-                    ["table", Type.TableInstance],
+                new Map<string, Language.Type.TType>([
+                    ["number", Language.Type.NullableNumberInstance],
+                    ["nullableNumber", Language.Type.NullableNumberInstance],
+                    ["table", Language.Type.TableInstance],
                 ]),
                 false,
             );
-            const schemaType: Type.TableType = TypeUtils.tableTypeFactory(
+            const schemaType: Language.Type.TableType = Language.TypeUtils.tableTypeFactory(
                 false,
-                new Map<string, Type.TType>([
-                    ["number", Type.NumberInstance],
-                    ["nullableNumber", Type.NullableNumberInstance],
-                    ["text", Type.TextInstance],
+                new Map<string, Language.Type.TType>([
+                    ["number", Language.Type.NumberInstance],
+                    ["nullableNumber", Language.Type.NullableNumberInstance],
+                    ["text", Language.Type.TextInstance],
                 ]),
                 false,
             );
-            const actual: CheckedDefinedTable = TypeUtils.typeCheckTable(valueType, schemaType);
+            const actual: Language.TypeUtils.CheckedDefinedTable = Language.TypeUtils.typeCheckTable(
+                valueType,
+                schemaType,
+            );
             const expected: AbridgedChecked = {
                 valid: ["nullableNumber"],
                 invalid: ["number"],
