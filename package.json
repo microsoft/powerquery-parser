@@ -49,6 +49,6 @@
         "typescript": "^3.8.3"
     },
     "files": [
-        "lib/src/**/*"
+        "lib/powerquery-parser/**/*"
     ]
 }
