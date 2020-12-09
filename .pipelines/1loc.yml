@@ -1,22 +1,35 @@
-name: 1loc.yml
+# Variable 'OneLocBuildPAT' was defined in the Variables tab.
+# Use the below to create a PAT token for the ceapex organization.
+# https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task
+#
+# Cron Schedules have been converted using UTC Time Zone and may need to be updated for your location.
 
-trigger: none
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+  always: true
 
-stages:
-    - stage: __default
-      jobs:
-          - job: Job1
-            pool:
-                vmImage: windows-latest
-            steps:
-                - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
-                  env:
-                      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-                  displayName: "Localization Build: src/powerquery-parser/localization/LocProject.json"
-                  inputs:
-                      isCreatePrSelected: true
-                      packageSourceAuth: patAuth
-                      patVariable: "$(OneLocBuildPAT)"
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: master
 
-                - task: PublishBuildArtifacts@1
-                  displayName: "Publish Artifact: drop"
+jobs:
+- job: Job_1
+  displayName: Agent job 1
+  pool:
+    vmImage: windows-latest
+  steps:
+  - checkout: self
+  - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
+    displayName: 'Localization Build: src/powerquery-parser-localization/LocProject.json'
+    inputs:
+      locProj: src/powerquery-parser/localization/LocProject.json
+      packageSourceAuth: patAuth
+      patVariable: $(OneLocBuildPAT)
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
