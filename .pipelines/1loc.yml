@@ -1,0 +1,22 @@
+name: 1loc.yml
+
+trigger: none
+
+stages:
+    - stage: __default
+      jobs:
+          - job: Job1
+            pool:
+                vmImage: windows-latest
+            steps:
+                - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
+                  env:
+                      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+                  displayName: "Localization Build: src/powerquery-parser/localization/LocProject.json"
+                  inputs:
+                      isCreatePrSelected: true
+                      packageSourceAuth: patAuth
+                      patVariable: "$(OneLocBuildPAT)"
+
+                - task: PublishBuildArtifacts@1
+                  displayName: "Publish Artifact: drop"
