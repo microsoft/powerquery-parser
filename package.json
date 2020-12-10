@@ -25,8 +25,8 @@
     "bugs": {
         "url": "https://github.com/microsoft/powerquery-parser/issues"
     },
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "lib/powerquery-parser/index.js",
+    "types": "lib/powerquery-parser/index.d.ts",
     "dependencies": {
         "grapheme-splitter": "^1.0.4"
     },
