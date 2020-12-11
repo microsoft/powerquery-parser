@@ -27,4 +27,19 @@ describe("StringUtils", () => {
             it("a..1", () => expect(StringUtils.isGeneralizedIdentifier("a..1"), "should be false").to.be.false);
         });
     });
+
+    describe(`isQuotedIdentifier`, () => {
+        describe(`valid`, () => {
+            it(`#"foo"`, () => expect(StringUtils.isQuotedIdentifier(`#"foo"`), "should be true").to.be.true);
+            it(`#""`, () => expect(StringUtils.isQuotedIdentifier(`#""`), "should be true").to.be.true);
+            it(`#""""`, () => expect(StringUtils.isQuotedIdentifier(`#""""`), "should be true").to.be.true);
+            it(`#"a""b""c"`, () => expect(StringUtils.isQuotedIdentifier(`#"a""b""c"`), "should be true").to.be.true);
+            it(`#"""b""c"`, () => expect(StringUtils.isQuotedIdentifier(`#"""b""c"`), "should be true").to.be.true);
+            it(`#"a""b"""`, () => expect(StringUtils.isQuotedIdentifier(`#"a""b"""`), "should be true").to.be.true);
+        });
+        describe(`invalid`, () => {
+            it(`#"`, () => expect(StringUtils.isGeneralizedIdentifier(`#"`), "should be false").to.be.false);
+            it(`""`, () => expect(StringUtils.isGeneralizedIdentifier(`""`), "should be false").to.be.false);
+        });
+    });
 });

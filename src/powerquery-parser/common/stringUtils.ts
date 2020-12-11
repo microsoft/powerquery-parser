@@ -168,7 +168,6 @@ export function maybeQuotedIdentifier(text: string, index: number): number | und
     const startingIndex: number = index;
     const textLength: number = text.length;
     let continueMatching: boolean = true;
-    let isValid: boolean = false;
     index += 2;
 
     while (continueMatching) {
@@ -179,7 +178,6 @@ export function maybeQuotedIdentifier(text: string, index: number): number | und
 
             if (chr2 !== '"') {
                 continueMatching = false;
-                isValid = true;
                 index += 1;
                 continue;
             } else {
@@ -194,7 +192,7 @@ export function maybeQuotedIdentifier(text: string, index: number): number | und
         }
     }
 
-    return isValid ? index - startingIndex : undefined;
+    return index !== startingIndex ? index - startingIndex : undefined;
 }
 
 export function maybeNewlineKindAt(text: string, index: number): NewlineKind | undefined {
