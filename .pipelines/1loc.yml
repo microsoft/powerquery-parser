@@ -27,11 +27,15 @@ jobs:
     vmImage: windows-latest
   steps:
   - checkout: self
-  - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
+  - task: cesve.one-loc-build.one-loc-build.OneLocBuild@2
     displayName: 'Localization Build: src/powerquery-parser-localization/LocProject.json'
     inputs:
       locProj: src/powerquery-parser/localization/LocProject.json
       packageSourceAuth: patAuth
       patVariable: $(OneLocBuildPAT)
+      isCreatePrSelected: true
+      repoType: gitHub
+      gitHubPatVariable: $(GitHubPat)
+      gitHubPrMergeMethod: squash
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'
