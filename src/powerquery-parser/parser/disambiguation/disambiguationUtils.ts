@@ -64,12 +64,11 @@ export function readAmbiguousBracket<S extends IParseState = IParseState>(
     allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): TAmbiguousBracketNode {
     // We might be able to peek at tokens to disambiguate what bracketed expression is next.
-    const maybeDisambiguation: BracketDisambiguation | undefined = maybeDisambiguateBracket(state);
+    const maybeDisambiguation: BracketDisambiguation | undefined = maybeDisambiguateBracket(state, allowedVariants);
 
     // Peeking gave us a concrete answer as to what's next.
     if (maybeDisambiguation !== undefined) {
         const disambiguation: BracketDisambiguation = maybeDisambiguation;
-        ArrayUtils.assertIn(allowedVariants, disambiguation, `invalid disambiguation`);
 
         switch (disambiguation) {
             case BracketDisambiguation.FieldProjection:
@@ -202,6 +201,7 @@ export function maybeDisambiguateParenthesis<S extends IParseState = IParseState
 
 export function maybeDisambiguateBracket<S extends IParseState = IParseState>(
     state: S,
+    allowedVariants: ReadonlyArray<BracketDisambiguation>,
 ): BracketDisambiguation | undefined {
     let offsetTokenIndex: number = state.tokenIndex + 1;
 
@@ -214,10 +214,12 @@ export function maybeDisambiguateBracket<S extends IParseState = IParseState>(
     const offsetToken: Token.Token = maybeOffsetToken;
 
     let offsetTokenKind: Token.TokenKind = offsetToken.kind;
+    let result: BracketDisambiguation | undefined;
+
     if (offsetTokenKind === Token.TokenKind.LeftBracket) {
-        return BracketDisambiguation.FieldProjection;
+        result = BracketDisambiguation.FieldProjection;
     } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
-        return BracketDisambiguation.RecordExpression;
+        result = BracketDisambiguation.RecordExpression;
     } else {
         const totalTokens: number = tokens.length;
         offsetTokenIndex += 1;
@@ -225,16 +227,18 @@ export function maybeDisambiguateBracket<S extends IParseState = IParseState>(
             offsetTokenKind = tokens[offsetTokenIndex].kind;
 
             if (offsetTokenKind === Token.TokenKind.Equal) {
-                return BracketDisambiguation.RecordExpression;
+                result = BracketDisambiguation.RecordExpression;
+                break;
             } else if (offsetTokenKind === Token.TokenKind.RightBracket) {
-                return BracketDisambiguation.FieldSelection;
+                result = BracketDisambiguation.FieldSelection;
+                break;
             }
 
             offsetTokenIndex += 1;
         }
-
-        return undefined;
     }
+
+    return result !== undefined && allowedVariants.includes(result) ? result : undefined;
 }
 
 // Copy the current state and attempt to read for each of the following:
