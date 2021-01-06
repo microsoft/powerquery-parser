@@ -32,10 +32,10 @@ jobs:
             inputs:
                 locProj: src/powerquery-parser/localization/LocProject.json
                 packageSourceAuth: patAuth
-                patVariable: $(OneLocBuildPAT)
+                patVariable: '$(OneLocBuildPAT)'
                 isCreatePrSelected: true
                 repoType: gitHub
-                gitHubPatVariable: $(GitHubPat)
+                gitHubPatVariable: '$(GitHubPat)'
                 gitHubPrMergeMethod: squash
             env:
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
