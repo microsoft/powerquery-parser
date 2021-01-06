@@ -30,13 +30,12 @@ jobs:
           - task: cesve.one-loc-build.one-loc-build.OneLocBuild@2
             displayName: "Localization Build: src/powerquery-parser-localization/LocProject.json"
             inputs:
-                locProj: src/powerquery-parser/localization/LocProject.json
-                packageSourceAuth: patAuth
-                patVariable: '$(OneLocBuildPAT)'
+                locProj: 'src/powerquery-parser/localization/LocProject.json'
                 isCreatePrSelected: true
                 repoType: gitHub
                 gitHubPatVariable: '$(GitHubPat)'
-                gitHubPrMergeMethod: squash
+                packageSourceAuth: patAuth
+                patVariable: '$(OneLocBuildPat)'
             env:
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           - task: PublishBuildArtifacts@1
