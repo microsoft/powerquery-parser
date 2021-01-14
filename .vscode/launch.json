@@ -14,7 +14,9 @@
         "--colors",
         "--timeout",
         "999999",
-        "${workspaceFolder}/lib/test/libraryTest/**/*.js"
+        "${workspaceFolder}/lib/test/libraryTest/**/*.js",
+        "-g",
+        "WIP"
       ],
       "preLaunchTask": "watch",
       "internalConsoleOptions": "openOnSessionStart"
