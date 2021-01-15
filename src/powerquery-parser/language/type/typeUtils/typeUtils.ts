@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert } from "../../../common";
+import { Ast, AstUtils } from "../..";
+import { Language } from "../../..";
+import { Assert, StringUtils } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
-import { Ast, AstUtils } from "../../ast";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
-import { Language } from "../../..";
 
 export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
     const anyUnionTypes: Type.AnyUnion[] = [];
@@ -216,10 +216,10 @@ export function nameOf(type: Type.TType, locale: string): string {
             return prefixNullableIfRequired(type, `type {${nameOfIterable(type.itemTypes, locale)}}`);
 
         case Type.ExtendedTypeKind.DefinedRecord:
-            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type));
+            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type, locale));
 
         case Type.ExtendedTypeKind.DefinedTable:
-            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type));
+            return prefixNullableIfRequired(type, `table ${nameOfFieldSpecificationList(type, locale)}`);
 
         case Type.ExtendedTypeKind.FunctionType:
             return prefixNullableIfRequired(type, nameOfFunctionSignature(type, locale));
@@ -231,16 +231,16 @@ export function nameOf(type: Type.TType, locale: string): string {
             return prefixNullableIfRequired(type, nameOf(type.primitiveType, locale));
 
         case Type.ExtendedTypeKind.RecordType:
-            return prefixNullableIfRequired(type, `type ${nameOfFieldSpecificationList(type)}`);
+            return prefixNullableIfRequired(type, `type ${nameOfFieldSpecificationList(type, locale)}`);
 
         case Type.ExtendedTypeKind.TableType:
-            return prefixNullableIfRequired(type, `type table [${nameOfFieldSpecificationList(type)}]`);
+            return prefixNullableIfRequired(type, `type table [${nameOfFieldSpecificationList(type, locale)}]`);
 
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
             return prefixNullableIfRequired(type, `type table ${type.primaryExpression}`);
 
         default:
-            return nameOfTypeKind(type.kind);
+            return prefixNullableIfRequired(type, nameOfTypeKind(type.kind));
     }
 }
 
@@ -337,11 +337,15 @@ function nameOfTypeKind(kind: Type.TypeKind): string {
     return kind === Type.TypeKind.NotApplicable ? "not applicable" : kind.toLowerCase();
 }
 
-function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string {
+function nameOfFieldSpecificationList(type: Type.FieldSpecificationList, locale: string): string {
     const chunks: string[] = [];
 
     for (const [key, value] of type.fields.entries()) {
-        chunks.push(`${key}: ${value}`);
+        chunks.push(`${StringUtils.normalizeIdentifier(key)}: ${nameOf(value, locale)}`);
+    }
+
+    if (type.isOpen === true) {
+        chunks.push("...");
     }
 
     const pairs: string = chunks.join(", ");

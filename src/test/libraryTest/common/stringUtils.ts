@@ -42,4 +42,9 @@ describe("StringUtils", () => {
             it(`""`, () => expect(StringUtils.isGeneralizedIdentifier(`""`), "should be false").to.be.false);
         });
     });
+
+    describe(`normalizeIdentifier`, () => {
+        it(`foo`, () => expect(StringUtils.normalizeIdentifier(`foo`)).to.equal(`foo`));
+        it(`#"foo"`, () => expect(StringUtils.normalizeIdentifier(`#"foo"`)).to.equal(`foo`));
+    });
 });
