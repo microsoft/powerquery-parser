@@ -207,7 +207,7 @@ export function nameOf(type: Type.TType): string {
             return type.unionedTypePairs.map((subtype: Type.TType) => nameOf(subtype)).join(" | ");
 
         case Type.ExtendedTypeKind.DefinedFunction:
-            return prefixNullableIfRequired(type, nameOfFunctionSignature(type));
+            return prefixNullableIfRequired(type, nameOfFunctionSignature(type, true));
 
         case Type.ExtendedTypeKind.DefinedList:
             return prefixNullableIfRequired(type, `{${nameOfIterable(type.elements)}}`);
@@ -222,22 +222,22 @@ export function nameOf(type: Type.TType): string {
             return prefixNullableIfRequired(type, `table ${nameOfFieldSpecificationList(type)}`);
 
         case Type.ExtendedTypeKind.FunctionType:
-            return prefixNullableIfRequired(type, nameOfFunctionSignature(type));
+            return prefixNullableIfRequired(type, `type function ${nameOfFunctionSignature(type, false)}`);
 
         case Type.ExtendedTypeKind.ListType:
             return prefixNullableIfRequired(type, `type {${nameOf(type.itemType)}}`);
 
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-            return prefixNullableIfRequired(type, nameOf(type.primitiveType));
+            return prefixNullableIfRequired(type, `type ${nameOf(type.primitiveType)}`);
 
         case Type.ExtendedTypeKind.RecordType:
             return prefixNullableIfRequired(type, `type ${nameOfFieldSpecificationList(type)}`);
 
         case Type.ExtendedTypeKind.TableType:
-            return prefixNullableIfRequired(type, `type table [${nameOfFieldSpecificationList(type)}]`);
+            return prefixNullableIfRequired(type, `type table ${nameOfFieldSpecificationList(type)}`);
 
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-            return prefixNullableIfRequired(type, `type table ${type.primaryExpression}`);
+            return prefixNullableIfRequired(type, `type table ${nameOf(type.primaryExpression)}`);
 
         case undefined:
             return prefixNullableIfRequired(type, nameOfTypeKind(type.kind));
@@ -356,7 +356,7 @@ function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string
     return `[${pairs}]`;
 }
 
-function nameOfFunctionSignature(type: Type.FunctionSignature): string {
+function nameOfFunctionSignature(type: Type.FunctionSignature, includeFatArrow: boolean): string {
     const parameters: string = type.parameters
         .map((parameter: Type.FunctionParameter) => {
             let partial: string = `${parameter.nameLiteral}:`;
@@ -377,7 +377,7 @@ function nameOfFunctionSignature(type: Type.FunctionSignature): string {
         })
         .join(", ");
 
-    return `(${parameters}) => ${nameOf(type.returnType)}`;
+    return `(${parameters})${includeFatArrow ? " => " : " "}${nameOf(type.returnType)}`;
 }
 
 function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {

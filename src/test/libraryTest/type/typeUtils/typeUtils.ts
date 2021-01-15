@@ -493,7 +493,7 @@ describe(`TypeUtils`, () => {
                     expect(actual).to.equal(`[...]`);
                 });
 
-                it(`[foo: number, bar: nullable text]`, () => {
+                it(`[foo = number, bar = nullable text]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                         false,
                         new Map<string, Type.TType>([
@@ -507,7 +507,7 @@ describe(`TypeUtils`, () => {
                     expect(actual).to.equal(`[foo: number, bar: nullable text]`);
                 });
 
-                it(`[foo: number, bar: nullable text, ...]`, () => {
+                it(`[foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                         false,
                         new Map<string, Type.TType>([
@@ -535,7 +535,7 @@ describe(`TypeUtils`, () => {
                     expect(actual).to.equal(`table [...]`);
                 });
 
-                it(`table [foo: number, bar: nullable text]`, () => {
+                it(`table [foo = number, bar = nullable text]`, () => {
                     const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                         false,
                         new Map<string, Type.TType>([
@@ -549,7 +549,7 @@ describe(`TypeUtils`, () => {
                     expect(actual).to.equal(`table [foo: number, bar: nullable text]`);
                 });
 
-                it(`table [foo: number, bar: nullable text, ...]`, () => {
+                it(`table [foo = number, bar = nullable text, ...]`, () => {
                     const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                         false,
                         new Map<string, Type.TType>([
@@ -561,6 +561,175 @@ describe(`TypeUtils`, () => {
                     const actual: string = TypeUtils.nameOf(type);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.FunctionType}`, () => {
+                it(`type function () any`, () => {
+                    const type: Type.FunctionType = TypeUtils.functionTypeFactory(false, [], Type.AnyInstance);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type function () any`);
+                });
+
+                it(`type function () any`, () => {
+                    const type: Type.FunctionType = TypeUtils.functionTypeFactory(
+                        false,
+                        [
+                            {
+                                isNullable: false,
+                                isOptional: false,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param1",
+                            },
+                            {
+                                isNullable: true,
+                                isOptional: false,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param2",
+                            },
+                            {
+                                isNullable: false,
+                                isOptional: true,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param3",
+                            },
+                            {
+                                isNullable: true,
+                                isOptional: true,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param4",
+                            },
+                        ],
+                        Type.AnyInstance,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(
+                        `type function (param1: number, param2: nullable number, param3: optional number, param4: optional nullable number) any`,
+                    );
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.ListType}`, () => {
+                it(`type {text}`, () => {
+                    const type: Type.ListType = TypeUtils.listTypeFactory(false, Type.TextInstance);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type {text}`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.PrimaryPrimitiveType}`, () => {
+                it(`type text`, () => {
+                    const type: Type.PrimaryPrimitiveType = TypeUtils.primaryPrimitiveTypeFactory(
+                        false,
+                        Type.TextInstance,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type text`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.RecordType}`, () => {
+                it(`type [foo = number]`, () => {
+                    const type: Type.RecordType = TypeUtils.recordTypeFactory(
+                        false,
+                        new Map([["foo", Type.NumberInstance]]),
+                        false,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type [foo: number]`);
+                });
+
+                it(`type [...]`, () => {
+                    const type: Type.RecordType = TypeUtils.recordTypeFactory(false, new Map(), true);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type [...]`);
+                });
+
+                it(`type [foo = number, bar = nullable text]`, () => {
+                    const type: Type.RecordType = TypeUtils.recordTypeFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        false,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`type [foo: number, bar: nullable text]`);
+                });
+
+                it(`type [foo = number, bar = nullable text, ...]`, () => {
+                    const type: Type.RecordType = TypeUtils.recordTypeFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        true,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`type [foo: number, bar: nullable text, ...]`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.TableType}`, () => {
+                it(`type table [foo = number]`, () => {
+                    const type: Type.TableType = TypeUtils.tableTypeFactory(
+                        false,
+                        new Map([["foo", Type.NumberInstance]]),
+                        false,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type table [foo: number]`);
+                });
+
+                it(`type table [...]`, () => {
+                    const type: Type.TableType = TypeUtils.tableTypeFactory(false, new Map(), true);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type table [...]`);
+                });
+
+                it(`type table [foo = number, bar = nullable text]`, () => {
+                    const type: Type.TableType = TypeUtils.tableTypeFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        false,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`type table [foo: number, bar: nullable text]`);
+                });
+
+                it(`type table [foo = number, bar = nullable text, ...]`, () => {
+                    const type: Type.TableType = TypeUtils.tableTypeFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        true,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`type table [foo: number, bar: nullable text, ...]`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.TableTypePrimaryExpression}`, () => {
+                // Assumes `foo` is text.
+                it(`type table foo`, () => {
+                    const type: Type.TableTypePrimaryExpression = TypeUtils.tableTypePrimaryExpression(
+                        false,
+                        Type.TextInstance,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type table text`);
                 });
             });
         });
