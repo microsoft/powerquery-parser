@@ -42,11 +42,11 @@ export function tryType(
 ): TriedType {
     const state: InspectTypeState = {
         settings,
-        givenTypeById: maybeTypeCache?.scopeById ?? new Map(),
+        givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
         leafNodeIds,
-        scopeById: maybeTypeCache?.typeById ?? new Map(),
+        scopeById: maybeTypeCache?.scopeById ?? new Map(),
     };
 
     return ResultUtils.ensureResult(settings.locale, () =>
