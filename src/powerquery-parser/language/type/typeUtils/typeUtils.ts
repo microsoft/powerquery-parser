@@ -7,6 +7,7 @@ import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "
 import { Ast, AstUtils } from "../../ast";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
+import { Language } from "../../..";
 
 export function dedupe(types: ReadonlyArray<Type.TType>): ReadonlyArray<Type.TType> {
     const anyUnionTypes: Type.AnyUnion[] = [];
@@ -200,6 +201,49 @@ export function isFunctionSignature(type: Type.TType): type is Type.TType & Type
     );
 }
 
+export function nameOf(type: Type.TType, locale: string): string {
+    switch (type.maybeExtendedKind) {
+        case Type.ExtendedTypeKind.AnyUnion:
+            return type.unionedTypePairs.map((subtype: Type.TType) => nameOf(subtype, locale)).join(" | ");
+
+        case Type.ExtendedTypeKind.DefinedFunction:
+            return prefixNullableIfRequired(type, nameOfFunctionSignature(type, locale));
+
+        case Type.ExtendedTypeKind.DefinedList:
+            return prefixNullableIfRequired(type, `{${nameOfIterable(type.elements, locale)}}`);
+
+        case Type.ExtendedTypeKind.DefinedListType:
+            return prefixNullableIfRequired(type, `type {${nameOfIterable(type.itemTypes, locale)}}`);
+
+        case Type.ExtendedTypeKind.DefinedRecord:
+            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type));
+
+        case Type.ExtendedTypeKind.DefinedTable:
+            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type));
+
+        case Type.ExtendedTypeKind.FunctionType:
+            return prefixNullableIfRequired(type, nameOfFunctionSignature(type, locale));
+
+        case Type.ExtendedTypeKind.ListType:
+            return prefixNullableIfRequired(type, `type {${nameOf(type.itemType, locale)}}`);
+
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            return prefixNullableIfRequired(type, nameOf(type.primitiveType, locale));
+
+        case Type.ExtendedTypeKind.RecordType:
+            return prefixNullableIfRequired(type, `type ${nameOfFieldSpecificationList(type)}`);
+
+        case Type.ExtendedTypeKind.TableType:
+            return prefixNullableIfRequired(type, `type table [${nameOfFieldSpecificationList(type)}]`);
+
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            return prefixNullableIfRequired(type, `type table ${type.primaryExpression}`);
+
+        default:
+            return nameOfTypeKind(type.kind);
+    }
+}
+
 function inspectAstParameter(node: Ast.TParameter): Type.FunctionParameter {
     let isNullable: boolean;
     let maybeType: Type.TypeKind | undefined;
@@ -287,4 +331,57 @@ function inspectContextParameter(
         isNullable,
         maybeType,
     };
+}
+
+function nameOfTypeKind(kind: Type.TypeKind): string {
+    return kind === Type.TypeKind.NotApplicable ? "not applicable" : kind.toLowerCase();
+}
+
+function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string {
+    const chunks: string[] = [];
+
+    for (const [key, value] of type.fields.entries()) {
+        chunks.push(`${key}: ${value}`);
+    }
+
+    const pairs: string = chunks.join(", ");
+
+    return `[${pairs}]`;
+}
+
+function nameOfFunctionSignature(type: Type.FunctionSignature, locale: string): string {
+    const parameters: string = type.parameters
+        .map((parameter: Type.FunctionParameter) => {
+            // `foo`
+            // `optional foo`
+            let partialParameter: string = parameter.isOptional
+                ? `${Language.Constant.LanguageConstantKind.Optional} ${parameter.nameLiteral}`
+                : parameter.nameLiteral;
+
+            if (parameter.maybeType) {
+                // `foo: nullable text`
+                if (parameter.isNullable) {
+                    partialParameter += `: ${Language.Constant.LanguageConstantKind.Nullable} ${nameOfTypeKind(
+                        parameter.maybeType,
+                    )}`;
+                }
+                // `foo: text`
+                else {
+                    partialParameter += `: ${nameOfTypeKind(parameter.maybeType)}`;
+                }
+            }
+
+            return partialParameter;
+        })
+        .join(", ");
+
+    return `(${parameters}) => ${nameOf(type.returnType, locale)}`;
+}
+
+function nameOfIterable(collection: ReadonlyArray<Type.TType>, locale: string): string {
+    return collection.map((item: Type.TType) => prefixNullableIfRequired(item, nameOf(item, locale))).join(", ");
+}
+
+function prefixNullableIfRequired(type: Type.TType, name: string): string {
+    return type.isNullable ? `${Language.Constant.LanguageConstantKind.Nullable} ${name}` : name;
 }
