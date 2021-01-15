@@ -239,8 +239,11 @@ export function nameOf(type: Type.TType): string {
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
             return prefixNullableIfRequired(type, `type table ${type.primaryExpression}`);
 
-        default:
+        case undefined:
             return prefixNullableIfRequired(type, nameOfTypeKind(type.kind));
+
+        default:
+            throw Assert.isNever(type);
     }
 }
 
@@ -356,26 +359,21 @@ function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string
 function nameOfFunctionSignature(type: Type.FunctionSignature): string {
     const parameters: string = type.parameters
         .map((parameter: Type.FunctionParameter) => {
-            // `foo`
-            // `optional foo`
-            let partialParameter: string = parameter.isOptional
-                ? `${Language.Constant.LanguageConstantKind.Optional} ${parameter.nameLiteral}`
-                : parameter.nameLiteral;
+            let partial: string = `${parameter.nameLiteral}:`;
 
-            if (parameter.maybeType) {
-                // `foo: nullable text`
-                if (parameter.isNullable) {
-                    partialParameter += `: ${Language.Constant.LanguageConstantKind.Nullable} ${nameOfTypeKind(
-                        parameter.maybeType,
-                    )}`;
-                }
-                // `foo: text`
-                else {
-                    partialParameter += `: ${nameOfTypeKind(parameter.maybeType)}`;
-                }
+            if (parameter.isOptional === true) {
+                partial += " optional";
             }
 
-            return partialParameter;
+            if (parameter.isNullable === true) {
+                partial += " nullable";
+            }
+
+            if (parameter.maybeType !== undefined) {
+                partial += ` ${nameOfTypeKind(parameter.maybeType)}`;
+            }
+
+            return partial;
         })
         .join(", ");
 
@@ -383,7 +381,7 @@ function nameOfFunctionSignature(type: Type.FunctionSignature): string {
 }
 
 function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {
-    return collection.map((item: Type.TType) => prefixNullableIfRequired(item, nameOf(item))).join(", ");
+    return collection.map((item: Type.TType) => nameOf(item)).join(", ");
 }
 
 function prefixNullableIfRequired(type: Type.TType, name: string): string {

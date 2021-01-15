@@ -372,6 +372,197 @@ describe(`TypeUtils`, () => {
                     expect(actual).to.equal(`[foo: number] | {text} | table [bar: text, ...]`);
                 });
             });
+
+            describe(`${Type.ExtendedTypeKind.DefinedFunction}`, () => {
+                it(`() => any`, () => {
+                    const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(false, [], Type.AnyInstance);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`() => any`);
+                });
+
+                it(`() => nullable any`, () => {
+                    const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                        false,
+                        [],
+                        Type.NullableAnyInstance,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`() => nullable any`);
+                });
+
+                it(`(param1 as number, param2 as nullable number, optional param3 as number, optional param4 as nullable number) => any`, () => {
+                    const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                        false,
+                        [
+                            {
+                                isNullable: false,
+                                isOptional: false,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param1",
+                            },
+                            {
+                                isNullable: true,
+                                isOptional: false,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param2",
+                            },
+                            {
+                                isNullable: false,
+                                isOptional: true,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param3",
+                            },
+                            {
+                                isNullable: true,
+                                isOptional: true,
+                                maybeType: Type.TypeKind.Number,
+                                nameLiteral: "param4",
+                            },
+                        ],
+                        Type.AnyInstance,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(
+                        `(param1: number, param2: nullable number, param3: optional number, param4: optional nullable number) => any`,
+                    );
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
+                it(`{}`, () => {
+                    const type: Type.DefinedList = TypeUtils.definedListFactory(false, []);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`{}`);
+                });
+
+                it(`nullable {}`, () => {
+                    const type: Type.DefinedList = TypeUtils.definedListFactory(true, []);
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`nullable {}`);
+                });
+
+                it(`{number, nullable text}`, () => {
+                    const type: Type.DefinedList = TypeUtils.definedListFactory(false, [
+                        Type.NumberInstance,
+                        Type.NullableTextInstance,
+                    ]);
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`{number, nullable text}`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.DefinedListType}`, () => {
+                it(`type {}`, () => {
+                    const type: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, []);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`type {}`);
+                });
+
+                it(`nullable type {}`, () => {
+                    const type: Type.DefinedListType = TypeUtils.definedListTypeFactory(true, []);
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`nullable type {}`);
+                });
+
+                it(`type {number, nullable text}`, () => {
+                    const type: Type.DefinedListType = TypeUtils.definedListTypeFactory(false, [
+                        Type.NumberInstance,
+                        Type.NullableTextInstance,
+                    ]);
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`type {number, nullable text}`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
+                it(`[]`, () => {
+                    const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(false, new Map(), false);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`[]`);
+                });
+
+                it(`[...]`, () => {
+                    const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(false, new Map(), true);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`[...]`);
+                });
+
+                it(`[foo: number, bar: nullable text]`, () => {
+                    const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        false,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`[foo: number, bar: nullable text]`);
+                });
+
+                it(`[foo: number, bar: nullable text, ...]`, () => {
+                    const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        true,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`[foo: number, bar: nullable text, ...]`);
+                });
+            });
+
+            describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
+                it(`table []`, () => {
+                    const type: Type.DefinedTable = TypeUtils.definedTableFactory(false, new Map(), false);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`table []`);
+                });
+
+                it(`table [...]`, () => {
+                    const type: Type.DefinedTable = TypeUtils.definedTableFactory(false, new Map(), true);
+                    const actual: string = TypeUtils.nameOf(type);
+                    expect(actual).to.equal(`table [...]`);
+                });
+
+                it(`table [foo: number, bar: nullable text]`, () => {
+                    const type: Type.DefinedTable = TypeUtils.definedTableFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        false,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`table [foo: number, bar: nullable text]`);
+                });
+
+                it(`table [foo: number, bar: nullable text, ...]`, () => {
+                    const type: Type.DefinedTable = TypeUtils.definedTableFactory(
+                        false,
+                        new Map<string, Type.TType>([
+                            ["foo", Type.NumberInstance],
+                            ["bar", Type.NullableTextInstance],
+                        ]),
+                        true,
+                    );
+                    const actual: string = TypeUtils.nameOf(type);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`);
+                });
+            });
         });
     });
 });
