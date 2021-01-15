@@ -309,8 +309,5 @@
     "_tokenKind_semicolon.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<';'>\"}",
 
     "tokenKind_textLiteral": "text",
-    "_tokenKind_textLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing.",
-
-    "typeKind_notApplicable": "not applicable",
-    "_typeKind_notApplicable.comment": "The localized representation of a typeKind. Expected to be user facing."
+    "_tokenKind_textLiteral.comment": "The localized representation of a tokenKind enum. Expected to be user facing."
 }

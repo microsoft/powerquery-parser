@@ -4,7 +4,6 @@
 import { expect } from "chai";
 import "mocha";
 
-import { DefaultLocale } from "../../../../powerquery-parser";
 import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 
 interface AbridgedType {
@@ -190,152 +189,169 @@ describe(`TypeUtils`, () => {
         describe(`non extended`, () => {
             describe("non-nullable", () => {
                 it(`${Type.AnyInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.AnyInstance, DefaultLocale)).to.equal("any");
+                    expect(TypeUtils.nameOf(Type.AnyInstance)).to.equal("any");
                 });
                 it(`${Type.AnyNonNullInstance.kind}`, () => {
                     // tslint:disable-next-line: chai-vague-errors
-                    expect(TypeUtils.nameOf(Type.AnyNonNullInstance, DefaultLocale)).to.equal("anynonnull");
+                    expect(TypeUtils.nameOf(Type.AnyNonNullInstance)).to.equal("anynonnull");
                 });
                 it(`${Type.BinaryInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.BinaryInstance, DefaultLocale)).to.equal("binary");
+                    expect(TypeUtils.nameOf(Type.BinaryInstance)).to.equal("binary");
                 });
                 it(`${Type.DateInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DateInstance, DefaultLocale)).to.equal("date");
+                    expect(TypeUtils.nameOf(Type.DateInstance)).to.equal("date");
                 });
                 it(`${Type.DateTimeInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DateTimeInstance, DefaultLocale)).to.equal("datetime");
+                    expect(TypeUtils.nameOf(Type.DateTimeInstance)).to.equal("datetime");
                 });
                 it(`${Type.DateTimeZoneInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DateTimeZoneInstance, DefaultLocale)).to.equal("datetimezone");
+                    expect(TypeUtils.nameOf(Type.DateTimeZoneInstance)).to.equal("datetimezone");
                 });
                 it(`${Type.DurationInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.DurationInstance, DefaultLocale)).to.equal("duration");
+                    expect(TypeUtils.nameOf(Type.DurationInstance)).to.equal("duration");
                 });
                 it(`${Type.FunctionInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.FunctionInstance, DefaultLocale)).to.equal("function");
+                    expect(TypeUtils.nameOf(Type.FunctionInstance)).to.equal("function");
                 });
                 it(`${Type.ListInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.ListInstance, DefaultLocale)).to.equal("list");
+                    expect(TypeUtils.nameOf(Type.ListInstance)).to.equal("list");
                 });
                 it(`${Type.LogicalInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.LogicalInstance, DefaultLocale)).to.equal("logical");
+                    expect(TypeUtils.nameOf(Type.LogicalInstance)).to.equal("logical");
                 });
                 it(`${Type.NoneInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.NoneInstance, DefaultLocale)).to.equal("none");
+                    expect(TypeUtils.nameOf(Type.NoneInstance)).to.equal("none");
                 });
                 it(`${Type.NullInstance.kind}`, () => {
                     // tslint:disable-next-line: chai-vague-errors
-                    expect(TypeUtils.nameOf(Type.NullInstance, DefaultLocale)).to.equal("null");
+                    expect(TypeUtils.nameOf(Type.NullInstance)).to.equal("null");
                 });
                 it(`${Type.NumberInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.NumberInstance, DefaultLocale)).to.equal("number");
+                    expect(TypeUtils.nameOf(Type.NumberInstance)).to.equal("number");
                 });
                 it(`${Type.RecordInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.RecordInstance, DefaultLocale)).to.equal("record");
+                    expect(TypeUtils.nameOf(Type.RecordInstance)).to.equal("record");
                 });
                 it(`${Type.TableInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.TableInstance, DefaultLocale)).to.equal("table");
+                    expect(TypeUtils.nameOf(Type.TableInstance)).to.equal("table");
                 });
                 it(`${Type.TypePrimitiveInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.TypePrimitiveInstance, DefaultLocale)).to.equal("type");
+                    expect(TypeUtils.nameOf(Type.TypePrimitiveInstance)).to.equal("type");
                 });
 
                 it(`${Type.ActionInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.ActionInstance, DefaultLocale)).to.equal("action");
+                    expect(TypeUtils.nameOf(Type.ActionInstance)).to.equal("action");
                 });
                 it(`${Type.TimeInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.TimeInstance, DefaultLocale)).to.equal("time");
+                    expect(TypeUtils.nameOf(Type.TimeInstance)).to.equal("time");
                 });
 
                 it(`${Type.NotApplicableInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.NotApplicableInstance, DefaultLocale)).to.equal("not applicable");
+                    expect(TypeUtils.nameOf(Type.NotApplicableInstance)).to.equal("not applicable");
                 });
                 it(`${Type.UnknownInstance.kind}`, () => {
-                    expect(TypeUtils.nameOf(Type.UnknownInstance, DefaultLocale)).to.equal("unknown");
+                    expect(TypeUtils.nameOf(Type.UnknownInstance)).to.equal("unknown");
                 });
             });
 
             describe("nullable", () => {
                 it(`${Type.NullableAnyInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableAnyInstance, DefaultLocale);
-                    expect(actual).to.equal("any");
+                    const actual: string = TypeUtils.nameOf(Type.NullableAnyInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable any");
                 });
                 // anynonnull can't be nullable
                 it(`${Type.NullableBinaryInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableBinaryInstance, DefaultLocale);
-                    expect(actual).to.equal("binary");
+                    const actual: string = TypeUtils.nameOf(Type.NullableBinaryInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable binary");
                 });
                 it(`${Type.NullableDateInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDateInstance, DefaultLocale);
-                    expect(actual).to.equal("date");
+                    const actual: string = TypeUtils.nameOf(Type.NullableDateInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable date");
                 });
                 it(`${Type.NullableDateTimeInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDateTimeInstance, DefaultLocale);
-                    expect(actual).to.equal("datetime");
+                    const actual: string = TypeUtils.nameOf(Type.NullableDateTimeInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable datetime");
                 });
                 it(`${Type.NullableDateTimeZoneInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDateTimeZoneInstance, DefaultLocale);
-                    expect(actual).to.equal("datetimezone");
+                    const actual: string = TypeUtils.nameOf(Type.NullableDateTimeZoneInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable datetimezone");
                 });
                 it(`${Type.NullableDurationInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableDurationInstance, DefaultLocale);
-                    expect(actual).to.equal("duration");
+                    const actual: string = TypeUtils.nameOf(Type.NullableDurationInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable duration");
                 });
                 it(`${Type.NullableFunctionInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableFunctionInstance, DefaultLocale);
-                    expect(actual).to.equal("function");
+                    const actual: string = TypeUtils.nameOf(Type.NullableFunctionInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable function");
                 });
                 it(`${Type.NullableListInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableListInstance, DefaultLocale);
-                    expect(actual).to.equal("list");
+                    const actual: string = TypeUtils.nameOf(Type.NullableListInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable list");
                 });
                 it(`${Type.NullableLogicalInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableLogicalInstance, DefaultLocale);
-                    expect(actual).to.equal("logical");
+                    const actual: string = TypeUtils.nameOf(Type.NullableLogicalInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable logical");
                 });
                 it(`${Type.NullableNoneInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNoneInstance, DefaultLocale);
-                    expect(actual).to.equal("none");
+                    const actual: string = TypeUtils.nameOf(Type.NullableNoneInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable none");
                 });
                 it(`${Type.NullableNullInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNullInstance, DefaultLocale);
+                    const actual: string = TypeUtils.nameOf(Type.NullableNullInstance);
                     // tslint:disable-next-line: chai-vague-errors
-                    expect(actual).to.equal("null");
+                    expect(actual).to.equal("nullable null");
                 });
                 it(`${Type.NullableNumberInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNumberInstance, DefaultLocale);
-                    expect(actual).to.equal("number");
+                    const actual: string = TypeUtils.nameOf(Type.NullableNumberInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable number");
                 });
                 it(`${Type.NullableRecordInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableRecordInstance, DefaultLocale);
-                    expect(actual).to.equal("record");
+                    const actual: string = TypeUtils.nameOf(Type.NullableRecordInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable record");
                 });
                 it(`${Type.NullableTableInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableTableInstance, DefaultLocale);
-                    expect(actual).to.equal("table");
+                    const actual: string = TypeUtils.nameOf(Type.NullableTableInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable table");
                 });
                 it(`${Type.NullableTypeInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableTypeInstance, DefaultLocale);
-                    expect(actual).to.equal("type");
+                    const actual: string = TypeUtils.nameOf(Type.NullableTypeInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable type");
                 });
 
                 it(`${Type.NullableActionInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableActionInstance, DefaultLocale);
-                    expect(actual).to.equal("action");
+                    const actual: string = TypeUtils.nameOf(Type.NullableActionInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable action");
                 });
                 it(`${Type.NullableTimeInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableTimeInstance, DefaultLocale);
-                    expect(actual).to.equal("time");
+                    const actual: string = TypeUtils.nameOf(Type.NullableTimeInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable time");
                 });
 
                 it(`${Type.NullableNotApplicableInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableNotApplicableInstance, DefaultLocale);
+                    const actual: string = TypeUtils.nameOf(Type.NullableNotApplicableInstance);
                     // tslint:disable-next-line: chai-vague-errors
                     expect(actual).to.equal("nullable not applicable");
                 });
                 it(`${Type.NullableUnknownInstance.kind}`, () => {
-                    const actual: string = TypeUtils.nameOf(Type.NullableUnknownInstance, DefaultLocale);
-                    expect(actual).to.equal("unknown");
+                    const actual: string = TypeUtils.nameOf(Type.NullableUnknownInstance);
+                    // tslint:disable-next-line: chai-vague-errors
+                    expect(actual).to.equal("nullable unknown");
                 });
             });
         });
@@ -344,7 +360,7 @@ describe(`TypeUtils`, () => {
             describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
                 it(`primitives`, () => {
                     const type: Type.TType = TypeUtils.anyUnionFactory([Type.NumberInstance, Type.ListInstance]);
-                    expect(TypeUtils.nameOf(type, DefaultLocale)).to.equal(`number | list`);
+                    expect(TypeUtils.nameOf(type)).to.equal(`number | list`);
                 });
                 it(`complex`, () => {
                     const type: Type.TType = TypeUtils.anyUnionFactory([
@@ -352,7 +368,7 @@ describe(`TypeUtils`, () => {
                         TypeUtils.definedListFactory(false, [Type.TextInstance]),
                         TypeUtils.definedTableFactory(false, new Map([["bar", Type.TextInstance]]), true),
                     ]);
-                    const actual: string = TypeUtils.nameOf(type, DefaultLocale);
+                    const actual: string = TypeUtils.nameOf(type);
                     expect(actual).to.equal(`[foo: number] | {text} | table [bar: text, ...]`);
                 });
             });

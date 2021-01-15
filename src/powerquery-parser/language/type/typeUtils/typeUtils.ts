@@ -201,40 +201,40 @@ export function isFunctionSignature(type: Type.TType): type is Type.TType & Type
     );
 }
 
-export function nameOf(type: Type.TType, locale: string): string {
+export function nameOf(type: Type.TType): string {
     switch (type.maybeExtendedKind) {
         case Type.ExtendedTypeKind.AnyUnion:
-            return type.unionedTypePairs.map((subtype: Type.TType) => nameOf(subtype, locale)).join(" | ");
+            return type.unionedTypePairs.map((subtype: Type.TType) => nameOf(subtype)).join(" | ");
 
         case Type.ExtendedTypeKind.DefinedFunction:
-            return prefixNullableIfRequired(type, nameOfFunctionSignature(type, locale));
+            return prefixNullableIfRequired(type, nameOfFunctionSignature(type));
 
         case Type.ExtendedTypeKind.DefinedList:
-            return prefixNullableIfRequired(type, `{${nameOfIterable(type.elements, locale)}}`);
+            return prefixNullableIfRequired(type, `{${nameOfIterable(type.elements)}}`);
 
         case Type.ExtendedTypeKind.DefinedListType:
-            return prefixNullableIfRequired(type, `type {${nameOfIterable(type.itemTypes, locale)}}`);
+            return prefixNullableIfRequired(type, `type {${nameOfIterable(type.itemTypes)}}`);
 
         case Type.ExtendedTypeKind.DefinedRecord:
-            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type, locale));
+            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type));
 
         case Type.ExtendedTypeKind.DefinedTable:
-            return prefixNullableIfRequired(type, `table ${nameOfFieldSpecificationList(type, locale)}`);
+            return prefixNullableIfRequired(type, `table ${nameOfFieldSpecificationList(type)}`);
 
         case Type.ExtendedTypeKind.FunctionType:
-            return prefixNullableIfRequired(type, nameOfFunctionSignature(type, locale));
+            return prefixNullableIfRequired(type, nameOfFunctionSignature(type));
 
         case Type.ExtendedTypeKind.ListType:
-            return prefixNullableIfRequired(type, `type {${nameOf(type.itemType, locale)}}`);
+            return prefixNullableIfRequired(type, `type {${nameOf(type.itemType)}}`);
 
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-            return prefixNullableIfRequired(type, nameOf(type.primitiveType, locale));
+            return prefixNullableIfRequired(type, nameOf(type.primitiveType));
 
         case Type.ExtendedTypeKind.RecordType:
-            return prefixNullableIfRequired(type, `type ${nameOfFieldSpecificationList(type, locale)}`);
+            return prefixNullableIfRequired(type, `type ${nameOfFieldSpecificationList(type)}`);
 
         case Type.ExtendedTypeKind.TableType:
-            return prefixNullableIfRequired(type, `type table [${nameOfFieldSpecificationList(type, locale)}]`);
+            return prefixNullableIfRequired(type, `type table [${nameOfFieldSpecificationList(type)}]`);
 
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
             return prefixNullableIfRequired(type, `type table ${type.primaryExpression}`);
@@ -337,11 +337,11 @@ function nameOfTypeKind(kind: Type.TypeKind): string {
     return kind === Type.TypeKind.NotApplicable ? "not applicable" : kind.toLowerCase();
 }
 
-function nameOfFieldSpecificationList(type: Type.FieldSpecificationList, locale: string): string {
+function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string {
     const chunks: string[] = [];
 
     for (const [key, value] of type.fields.entries()) {
-        chunks.push(`${StringUtils.normalizeIdentifier(key)}: ${nameOf(value, locale)}`);
+        chunks.push(`${StringUtils.normalizeIdentifier(key)}: ${nameOf(value)}`);
     }
 
     if (type.isOpen === true) {
@@ -353,7 +353,7 @@ function nameOfFieldSpecificationList(type: Type.FieldSpecificationList, locale:
     return `[${pairs}]`;
 }
 
-function nameOfFunctionSignature(type: Type.FunctionSignature, locale: string): string {
+function nameOfFunctionSignature(type: Type.FunctionSignature): string {
     const parameters: string = type.parameters
         .map((parameter: Type.FunctionParameter) => {
             // `foo`
@@ -379,11 +379,11 @@ function nameOfFunctionSignature(type: Type.FunctionSignature, locale: string): 
         })
         .join(", ");
 
-    return `(${parameters}) => ${nameOf(type.returnType, locale)}`;
+    return `(${parameters}) => ${nameOf(type.returnType)}`;
 }
 
-function nameOfIterable(collection: ReadonlyArray<Type.TType>, locale: string): string {
-    return collection.map((item: Type.TType) => prefixNullableIfRequired(item, nameOf(item, locale))).join(", ");
+function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {
+    return collection.map((item: Type.TType) => prefixNullableIfRequired(item, nameOf(item))).join(", ");
 }
 
 function prefixNullableIfRequired(type: Type.TType, name: string): string {
