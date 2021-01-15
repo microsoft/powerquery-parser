@@ -113,21 +113,6 @@
     "tokenKind_ampersand": "ampersand <'&'>",
     "_tokenKind_ampersand.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'&'>\"}",
 
-    "scopeItemKind_each": "each",
-    "_scopeItemKind_each.comment": "The localized representation of the scopeItemKind enum. Expected to be user facing. {Locked=\"each\"}",
-
-    "scopeItemKind_keyValuePair": "key value",
-    "_scopeItemKind_keyValuePair.comment": "The localized representation of the scopeItemKind enum. Expected to be user facing.",
-
-    "scopeItemKind_parameter": "parameter",
-    "_scopeItemKind_parameter.comment": "The localized representation of the scopeItemKind enum. Expected to be user facing.",
-
-    "scopeItemKind_sectionMember": "section member",
-    "_scopeItemKind_sectionMember.comment": "The localized representation of the scopeItemKind enum. Expected to be user facing.",
-
-    "scopeItemKind_undefined": "undefined",
-    "_scopeItemKind_undefined.comment": "The localized representation of the scopeItemKind enum. Expected to be user facing.",
-
     "tokenKind_asterisk": "asterisk <'*'>",
     "_tokenKind_asterisk.comment": "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'*'>\"}",
 
