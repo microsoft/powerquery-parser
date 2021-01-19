@@ -3,7 +3,7 @@
 
 /* tslint:disable:no-console */
 
-import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from "./powerquery-parser";
+import { Assert, DefaultSettings, Inspection, Lexer, Parser, ResultUtils, Task } from ".";
 
 parseText(`let x = 1 in try x otherwise 2`);
 
