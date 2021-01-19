@@ -12,11 +12,11 @@ export type TScopeItem =
     | UndefinedScopeItem;
 
 export const enum ScopeItemKind {
-    KeyValuePair = "KeyValuePair",
-    Undefined = "Undefined",
     Each = "Each",
+    KeyValuePair = "KeyValuePair",
     Parameter = "Parameter",
     SectionMember = "SectionMember",
+    Undefined = "Undefined",
 }
 
 export interface IScopeItem {

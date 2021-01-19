@@ -54,6 +54,10 @@ export function graphemePositionFrom(
     };
 }
 
+export function normalizeIdentifier(text: string): string {
+    return isQuotedIdentifier(text) ? text.slice(2, text.length - 1) : text;
+}
+
 export function isIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
     return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
 }
