@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { ParseError } from "..";
-import { Language } from "../../..";
 import { ArrayUtils, Assert, Result, ResultUtils, TypeScriptUtils } from "../../common";
-import { Ast, AstUtils, Token } from "../../language";
+import { Ast, AstUtils, Constant, Token } from "../../language";
 import { IParser, IParseStateCheckpoint } from "../IParser";
 import { IParseState, IParseStateUtils } from "../IParseState";
 import { NodeIdMapUtils } from "../nodeIdMap";
@@ -324,8 +323,8 @@ function readParenthesizedExpressionOrBinOpExpression<S extends IParseState>(
     AstUtils.assertNodeKind(leftMostNode, Ast.NodeKind.Constant);
     Assert.isTrue(
         leftMostNode.kind === Ast.NodeKind.Constant &&
-            leftMostNode.constantKind === Language.Constant.WrapperConstantKind.LeftParenthesis,
-        `leftMostNode should be a ${Ast.NodeKind.Constant} with a constantKind of ${Language.Constant.WrapperConstantKind.LeftParenthesis}`,
+            leftMostNode.constantKind === Constant.WrapperConstantKind.LeftParenthesis,
+        `leftMostNode should be a ${Ast.NodeKind.Constant} with a constantKind of ${Constant.WrapperConstantKind.LeftParenthesis}`,
     );
 
     return node;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Lexer } from "../..";
+import { Lexer } from "..";
 import { Assert, StringUtils } from "../common";
 import { Token } from "../language";
 import { LexError } from "../lexer";
