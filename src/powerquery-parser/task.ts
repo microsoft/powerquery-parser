@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection } from "..";
-import { Lexer } from "..";
+import { Inspection, Lexer } from ".";
 import { Assert, CommonError, Result, ResultUtils } from "./common";
 import { ActiveNodeUtils, TMaybeActiveNode } from "./inspection/activeNode";
 import { Ast } from "./language";
-import { LexError, LexerSnapshot } from "./lexer";
 import {
     IParserUtils,
     IParseState,
@@ -22,12 +20,12 @@ import { LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedLexParse<S extends IParseState = IParseState> = Result<
     LexParseOk<S>,
-    LexError.TLexError | ParseError.TParseError<S>
+    Lexer.LexError.TLexError | ParseError.TParseError<S>
 >;
 
 export type TriedLexParseInspect<S extends IParseState = IParseState> = Result<
     LexParseInspectOk<S>,
-    CommonError.CommonError | LexError.LexError | ParseError.ParseError
+    CommonError.CommonError | Lexer.LexError.LexError | ParseError.ParseError
 >;
 
 export interface LexParseOk<S extends IParseState = IParseState> extends ParseOk<S> {
@@ -49,7 +47,7 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
     if (maybeErrorLineMap) {
         const errorLineMap: Lexer.ErrorLineMap = maybeErrorLineMap;
         return ResultUtils.errFactory(
-            new LexError.LexError(new LexError.ErrorLineMapError(settings.locale, errorLineMap)),
+            new Lexer.LexError.LexError(new Lexer.LexError.ErrorLineMapError(settings.locale, errorLineMap)),
         );
     }
 
@@ -58,7 +56,7 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
 
 export function tryParse<S extends IParseState = IParseState>(
     parseSettings: ParseSettings<S>,
-    lexerSnapshot: LexerSnapshot,
+    lexerSnapshot: Lexer.LexerSnapshot,
 ): TriedParse<S> {
     return IParserUtils.tryParse<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
 }
@@ -145,7 +143,7 @@ export function maybeTriedParseFromTriedLexParse<S extends IParseState>(
     let state: S;
 
     if (ResultUtils.isErr(triedLexParse)) {
-        if (LexError.isTLexError(triedLexParse.error)) {
+        if (Lexer.LexError.isTLexError(triedLexParse.error)) {
             return undefined;
         } else if (ParseError.isParseError(triedLexParse.error)) {
             return triedLexParse as TriedParse<S>;
