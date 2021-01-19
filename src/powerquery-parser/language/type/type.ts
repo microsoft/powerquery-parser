@@ -62,7 +62,6 @@ export type TPrimitiveType =
     | Null
     | Number
     | Record
-    | Text
     | Table
     | Text
     | Time
