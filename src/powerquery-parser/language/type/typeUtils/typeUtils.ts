@@ -2,8 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Ast, AstUtils } from "../..";
-import { Language } from "../../..";
+import { Ast, AstUtils, Constant } from "../..";
 import { Assert, StringUtils } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
 import { isEqualType } from "./isEqualType";
@@ -385,5 +384,5 @@ function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {
 }
 
 function prefixNullableIfRequired(type: Type.TType, name: string): string {
-    return type.isNullable ? `${Language.Constant.LanguageConstantKind.Nullable} ${name}` : name;
+    return type.isNullable ? `${Constant.LanguageConstantKind.Nullable} ${name}` : name;
 }
