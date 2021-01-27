@@ -1,7 +1,7 @@
 import { ResultUtils } from "../common";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
 import { AncestryUtils, IParseState, NodeIdMap, ParseError, TXorNode } from "../parser";
-import { ParseSettings } from "../settings";
+import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
@@ -12,7 +12,7 @@ import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache } from "./type/commonTypes";
 
 export function inspection<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
+    settings: InspectionSettings<S>,
     parseState: S,
     maybeParseError: ParseError.ParseError<S> | undefined,
     position: Position,
@@ -28,7 +28,7 @@ export function inspection<S extends IParseState = IParseState>(
     );
 
     const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
-        parseSettings,
+        settings,
         nodeIdMapCollection,
         maybeActiveNode,
     );
@@ -47,7 +47,7 @@ export function inspection<S extends IParseState = IParseState>(
         const activeNode: ActiveNode = maybeActiveNode;
 
         triedNodeScope = tryNodeScope(
-            parseSettings,
+            settings,
             nodeIdMapCollection,
             leafNodeIds,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
@@ -55,9 +55,9 @@ export function inspection<S extends IParseState = IParseState>(
         );
 
         const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(activeNode.ancestry);
-        triedScopeType = tryScopeType(parseSettings, nodeIdMapCollection, leafNodeIds, ancestryLeaf.node.id, typeCache);
+        triedScopeType = tryScopeType(settings, nodeIdMapCollection, leafNodeIds, ancestryLeaf.node.id, typeCache);
 
-        triedExpectedType = tryExpectedType(parseSettings, activeNode);
+        triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
         triedNodeScope = ResultUtils.okFactory(new Map());
         triedScopeType = ResultUtils.okFactory(new Map());
@@ -66,7 +66,7 @@ export function inspection<S extends IParseState = IParseState>(
 
     return {
         maybeActiveNode,
-        autocomplete: autocomplete(parseSettings, parseState, typeCache, maybeActiveNode, maybeParseError),
+        autocomplete: autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
         triedInvokeExpression,
         triedNodeScope,
         triedScopeType,

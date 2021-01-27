@@ -23,7 +23,7 @@ export interface ParseSettings<S extends IParseState = IParseState> extends Comm
     readonly maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
 }
 
-export interface InspectionSettings extends CommonSettings {
+export interface InspectionSettings<S extends IParseState = IParseState> extends ParseSettings<S> {
     readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn;
 }
 

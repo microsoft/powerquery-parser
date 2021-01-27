@@ -114,13 +114,11 @@ function defaultSettingsWithResolver(externalTypeResolver: Language.ExternalType
 
 function createExternalTypeResolverFn(
     name: string,
-    kind: Language.ExternalType.ExternalTypeKind,
+    kind: Language.ExternalType.ExternalTypeRequestKind,
     type: Language.Type.TType,
 ): Language.ExternalType.TExternalTypeResolverFn {
     return (request: Language.ExternalType.TExternalTypeRequest) => {
-        return name !== request.name || kind !== request.kind
-            ? ResultUtils.okFactory(undefined)
-            : ResultUtils.okFactory(type);
+        return name !== request.identifierLiteral || kind !== request.kind ? undefined : type;
     };
 }
 
@@ -1036,7 +1034,7 @@ describe(`Inspection - Type`, () => {
                 const settings: Settings = defaultSettingsWithResolver(
                     createExternalTypeResolverFn(
                         "foo",
-                        Language.ExternalType.ExternalTypeKind.Value,
+                        Language.ExternalType.ExternalTypeRequestKind.Value,
                         Language.Type.NumberInstance,
                     ),
                 );

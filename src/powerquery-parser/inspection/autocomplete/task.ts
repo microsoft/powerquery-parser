@@ -3,7 +3,7 @@
 
 import { Token } from "../../language";
 import { IParseState, NodeIdMap, ParseError } from "../../parser";
-import { ParseSettings } from "../../settings";
+import { InspectionSettings } from "../../settings";
 import { TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
@@ -21,7 +21,7 @@ import {
 } from "./commonTypes";
 
 export function autocomplete<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
+    settings: InspectionSettings<S>,
     parseState: S,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,
@@ -39,14 +39,14 @@ export function autocomplete<S extends IParseState = IParseState>(
     }
 
     const triedFieldAccess: TriedAutocompleteFieldAccess = tryAutocompleteFieldAccess(
-        parseSettings,
+        settings,
         parseState,
         maybeActiveNode,
         typeCache,
     );
 
     const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(
-        parseSettings,
+        settings,
         nodeIdMapCollection,
         leafNodeIds,
         maybeActiveNode,
@@ -54,12 +54,12 @@ export function autocomplete<S extends IParseState = IParseState>(
     );
 
     const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
-        parseSettings,
+        settings,
         maybeActiveNode,
     );
 
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
-        parseSettings,
+        settings,
         maybeActiveNode,
         maybeTrailingToken,
     );

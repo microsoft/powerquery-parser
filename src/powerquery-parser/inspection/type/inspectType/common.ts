@@ -3,9 +3,9 @@
 
 import { Inspection } from "../../..";
 import { Assert, ResultUtils } from "../../../common";
-import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
-import { CommonSettings } from "../../../settings";
+import { Ast, ExternalType, ExternalTypeUtils, Type, TypeUtils } from "../../../language";
+import { IParseState, NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import { InspectionSettings } from "../../../settings";
 import { NodeScope, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { TypeById } from "../commonTypes";
 import { inspectTypeConstant } from "./inspectTypeConstant";
@@ -33,8 +33,8 @@ import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 
-export interface InspectTypeState {
-    readonly settings: CommonSettings;
+export interface InspectTypeState<S extends IParseState = IParseState> {
+    readonly settings: InspectionSettings<S>;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
@@ -318,6 +318,37 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
             })
             .indexOf(false) === -1
     );
+}
+
+export function maybeExternalValueType(state: InspectTypeState, xorNode: TXorNode): Type.TType | undefined {
+    Assert.isTrue(xorNode.kind === XorNodeKind.Ast, `deferencedIdentifier should only return Ast nodes`, {
+        deferencedNodeId: xorNode.node.id,
+        deferencedNodeKind: xorNode.node.kind,
+    });
+
+    if (xorNode.kind === XorNodeKind.Context) {
+        return undefined;
+    }
+    const astNode: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
+        | Ast.Identifier
+        | Ast.IdentifierExpression;
+
+    let name: string;
+    switch (astNode.kind) {
+        case Ast.NodeKind.Identifier:
+            name = astNode.literal;
+            break;
+
+        case Ast.NodeKind.IdentifierExpression:
+            name = astNode.identifier.literal;
+            break;
+
+        default:
+            throw Assert.isNever(astNode);
+    }
+
+    const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequestFactory(name);
+    return state.settings.externalTypeResolver(request);
 }
 
 export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode: TXorNode): undefined | Type.TType {

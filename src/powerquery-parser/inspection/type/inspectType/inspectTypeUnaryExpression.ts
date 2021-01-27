@@ -2,10 +2,13 @@
 // Licensed under the MIT license.
 
 import { Ast, Constant, Type } from "../../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { IParseState, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeUnaryExpression<S extends IParseState = IParseState>(
+    state: InspectTypeState<S>,
+    xorNode: TXorNode,
+): Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.UnaryExpression);
 
