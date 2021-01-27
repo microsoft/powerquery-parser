@@ -9,7 +9,7 @@ import { dedupe } from "./typeUtils";
 
 export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.IPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
-    return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown [isNullable, typeKind] key`, {
+    return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown key for PrimitiveTypeConstantMap`, {
         typeKind,
         isNullable,
     });
