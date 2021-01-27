@@ -14,7 +14,7 @@ import {
     XorNodeKind,
     XorNodeUtils,
 } from "../../parser";
-import { ParseSettings } from "../../settings";
+import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 import { TriedType, tryType } from "../type";
@@ -27,7 +27,7 @@ import {
 } from "./commonTypes";
 
 export function tryAutocompleteFieldAccess<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
+    settings: InspectionSettings,
     parseState: S,
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
@@ -36,8 +36,8 @@ export function tryAutocompleteFieldAccess<S extends IParseState = IParseState>(
         return ResultUtils.okFactory(undefined);
     }
 
-    return ResultUtils.ensureResult(parseSettings.locale, () => {
-        return autocompleteFieldAccess(parseSettings, parseState, maybeActiveNode, typeCache);
+    return ResultUtils.ensureResult(settings.locale, () => {
+        return autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache);
     });
 }
 
@@ -50,7 +50,7 @@ const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKi
 const FieldAccessNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.FieldSelector, Ast.NodeKind.FieldProjection];
 
 function autocompleteFieldAccess<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
+    settings: InspectionSettings,
     parseState: S,
     activeNode: ActiveNode,
     typeCache: TypeCache,
@@ -97,7 +97,7 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
     const field: TXorNode = maybeField;
 
     const triedFieldType: TriedType = tryType(
-        parseSettings,
+        settings,
         nodeIdMapCollection,
         parseState.contextState.leafNodeIds,
         field.node.id,

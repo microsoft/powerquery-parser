@@ -47,7 +47,7 @@ function assertParseErrNodeTypeEqual(text: string, expected: Language.Type.TType
 }
 
 function assertGetParseNodeOk(
-    settings: CommonSettings,
+    settings: InspectionSettings,
     nodeIdMapCollection: Parser.NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     xorNode: Parser.TXorNode,
@@ -1038,7 +1038,7 @@ describe(`Inspection - Type`, () => {
                         Language.Type.NumberInstance,
                     ),
                 );
-                const expression: string = `let x = 1 in x`;
+                const expression: string = `foo`;
                 const expected: Language.Type.TType = Language.Type.NumberInstance;
                 assertParseOkNodeTypeEqual(settings, expression, expected);
             });

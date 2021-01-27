@@ -16,7 +16,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "./parser";
-import { LexSettings, ParseSettings } from "./settings/settings";
+import { InspectionSettings, LexSettings, ParseSettings } from "./settings/settings";
 
 export type TriedLexParse<S extends IParseState = IParseState> = Result<
     LexParseOk<S>,
@@ -55,14 +55,14 @@ export function tryLex(settings: LexSettings, text: string): Lexer.TriedLexerSna
 }
 
 export function tryParse<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
+    settings: ParseSettings<S>,
     lexerSnapshot: Lexer.LexerSnapshot,
 ): TriedParse<S> {
-    return IParserUtils.tryParse<S>(parseSettings, lexerSnapshot) as TriedParse<S>;
+    return IParserUtils.tryParse<S>(settings, lexerSnapshot) as TriedParse<S>;
 }
 
 export function tryInspection<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
+    settings: ParseSettings<S> & InspectionSettings,
     triedParse: TriedParse<S>,
     position: Inspection.Position,
 ): Inspection.TriedInspection {
@@ -85,7 +85,7 @@ export function tryInspection<S extends IParseState = IParseState>(
         parseState = triedParse.value.state;
     }
 
-    return ResultUtils.okFactory(Inspection.inspection(parseSettings, parseState, maybeParseError, position));
+    return ResultUtils.okFactory(Inspection.inspection(settings, parseState, maybeParseError, position));
 }
 
 export function tryLexParse<S extends IParseState = IParseState>(
@@ -110,7 +110,7 @@ export function tryLexParse<S extends IParseState = IParseState>(
 }
 
 export function tryLexParseInspection<S extends IParseState = IParseState>(
-    settings: LexSettings & ParseSettings<S>,
+    settings: LexSettings & ParseSettings<S> & InspectionSettings,
     text: string,
     position: Inspection.Position,
 ): TriedLexParseInspect<S> {

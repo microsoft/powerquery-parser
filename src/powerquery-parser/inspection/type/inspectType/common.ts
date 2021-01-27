@@ -33,8 +33,8 @@ import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 
-export interface InspectTypeState<S extends IParseState = IParseState> {
-    readonly settings: InspectionSettings<S>;
+export interface InspectTypeState {
+    readonly settings: InspectionSettings;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;

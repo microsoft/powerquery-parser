@@ -3,17 +3,17 @@
 
 import { Assert, ResultUtils } from "../../common";
 import { Ast, Constant } from "../../language";
-import { AncestryUtils, IParseState, TXorNode, XorNodeKind } from "../../parser";
-import { ParseSettings } from "../../settings";
+import { AncestryUtils, TXorNode, XorNodeKind } from "../../parser";
+import { CommonSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 import { AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
-export function tryAutocompleteLanguageConstant<S extends IParseState = IParseState>(
-    parseSettings: ParseSettings<S>,
+export function tryAutocompleteLanguageConstant(
+    settings: CommonSettings,
     maybeActiveNode: TMaybeActiveNode,
 ): TriedAutocompleteLanguageConstant {
-    return ResultUtils.ensureResult(parseSettings.locale, () => {
+    return ResultUtils.ensureResult(settings.locale, () => {
         return autocompleteLanguageConstant(maybeActiveNode);
     });
 }

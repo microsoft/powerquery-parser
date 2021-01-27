@@ -4,6 +4,7 @@
 import { expect } from "chai";
 import "mocha";
 import { Assert, Inspection, Lexer, LexSettings, Parser, ParseSettings, Task } from "../..";
+import { InspectionSettings } from "../../powerquery-parser";
 
 // Only works with single line expressions
 export function assertGetTextWithPosition(text: string): [string, Inspection.Position] {
@@ -71,7 +72,7 @@ function assertGetTriedParse<S extends Parser.IParseState = Parser.IParseState>(
 }
 
 export function assertGetParseOkAutocompleteOk<S extends Parser.IParseState = Parser.IParseState>(
-    settings: LexSettings & ParseSettings<S>,
+    settings: LexSettings & ParseSettings<S> & InspectionSettings,
     text: string,
     position: Inspection.Position,
 ): Inspection.Autocomplete {
@@ -80,7 +81,7 @@ export function assertGetParseOkAutocompleteOk<S extends Parser.IParseState = Pa
 }
 
 export function assertGetParseErrAutocompleteOk<S extends Parser.IParseState = Parser.IParseState>(
-    settings: LexSettings & ParseSettings<S>,
+    settings: LexSettings & ParseSettings<S> & InspectionSettings,
     text: string,
     position: Inspection.Position,
 ): Inspection.Autocomplete {
@@ -89,7 +90,7 @@ export function assertGetParseErrAutocompleteOk<S extends Parser.IParseState = P
 }
 
 export function assertGetAutocompleteOk<S extends Parser.IParseState = Parser.IParseState>(
-    parseSettings: ParseSettings<S>,
+    settings: InspectionSettings,
     parseState: S,
     position: Inspection.Position,
     maybeParseError: Parser.ParseError.ParseError<S> | undefined,
@@ -100,7 +101,7 @@ export function assertGetAutocompleteOk<S extends Parser.IParseState = Parser.IP
         position,
     );
     return Inspection.autocomplete(
-        parseSettings,
+        settings,
         parseState,
         {
             scopeById: new Map(),

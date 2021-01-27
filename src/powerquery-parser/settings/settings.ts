@@ -23,7 +23,7 @@ export interface ParseSettings<S extends IParseState = IParseState> extends Comm
     readonly maybeParserEntryPointFn: ((state: S, parser: IParser<S>) => Ast.TNode) | undefined;
 }
 
-export interface InspectionSettings<S extends IParseState = IParseState> extends ParseSettings<S> {
+export interface InspectionSettings extends CommonSettings {
     readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn;
 }
 
@@ -38,5 +38,5 @@ export const DefaultSettings: Settings<IParseState> = {
         maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
     ) => IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
     maybeParserEntryPointFn: undefined,
-    externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => ResultUtils.okFactory(Type.UnknownInstance),
+    externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => Type.UnknownInstance,
 };

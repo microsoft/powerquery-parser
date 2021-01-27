@@ -3,7 +3,15 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, DefaultSettings, Inspection, LexSettings, Parser, ParseSettings } from "../../../..";
+import {
+    Assert,
+    DefaultSettings,
+    Inspection,
+    InspectionSettings,
+    LexSettings,
+    Parser,
+    ParseSettings,
+} from "../../../..";
 import { TestAssertUtils } from "../../../testUtils";
 
 type AbridgedAutocompleteFieldAccess = ReadonlyArray<string>;
@@ -19,7 +27,7 @@ function abridgedFieldAccess(
 }
 
 function assertGetParseOkAutocompleteOkFieldAccess<S extends Parser.IParseState = Parser.IParseState>(
-    settings: LexSettings & ParseSettings<S>,
+    settings: LexSettings & ParseSettings<S> & InspectionSettings,
     text: string,
     position: Inspection.Position,
 ): AbridgedAutocompleteFieldAccess {
@@ -29,7 +37,7 @@ function assertGetParseOkAutocompleteOkFieldAccess<S extends Parser.IParseState 
 }
 
 function assertGetParseErrAutocompleteOkFieldAccess<S extends Parser.IParseState = Parser.IParseState>(
-    settings: LexSettings & ParseSettings<S>,
+    settings: LexSettings & ParseSettings<S> & InspectionSettings,
     text: string,
     position: Inspection.Position,
 ): AbridgedAutocompleteFieldAccess {

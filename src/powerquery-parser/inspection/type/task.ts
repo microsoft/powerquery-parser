@@ -4,7 +4,7 @@
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Type } from "../../language";
 import { NodeIdMap, NodeIdMapUtils } from "../../parser";
-import { CommonSettings } from "../../settings";
+import { InspectionSettings } from "../../settings";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { TypeCache } from "./commonTypes";
@@ -15,7 +15,7 @@ export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 export type TriedType = Result<Type.TType, CommonError.CommonError>;
 
 export function tryScopeType(
-    settings: CommonSettings,
+    settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
@@ -34,7 +34,7 @@ export function tryScopeType(
 }
 
 export function tryType(
-    settings: CommonSettings,
+    settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     nodeId: number,

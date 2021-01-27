@@ -3,7 +3,7 @@
 
 import { Token } from "../../language";
 import { IParseState, NodeIdMap, ParseError } from "../../parser";
-import { InspectionSettings } from "../../settings";
+import { CommonSettings, InspectionSettings } from "../../settings";
 import { TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
@@ -21,7 +21,7 @@ import {
 } from "./commonTypes";
 
 export function autocomplete<S extends IParseState = IParseState>(
-    settings: InspectionSettings<S>,
+    settings: InspectionSettings,
     parseState: S,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,

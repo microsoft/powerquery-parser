@@ -1,7 +1,7 @@
 import { ResultUtils } from "../common";
 import { TriedExpectedType, tryExpectedType } from "../language/type/expectedType";
 import { AncestryUtils, IParseState, NodeIdMap, ParseError, TXorNode } from "../parser";
-import { InspectionSettings } from "../settings";
+import { InspectionSettings, ParseSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
@@ -12,7 +12,7 @@ import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache } from "./type/commonTypes";
 
 export function inspection<S extends IParseState = IParseState>(
-    settings: InspectionSettings<S>,
+    settings: ParseSettings<S> & InspectionSettings,
     parseState: S,
     maybeParseError: ParseError.ParseError<S> | undefined,
     position: Position,
