@@ -253,7 +253,7 @@ describe(`Inspection - Type`, () => {
                 assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
             });
 
-            it(`WIP (1 as record)[[a]]`, () => {
+            it(`(1 as record)[[a]]`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]`;
                 const expected: Language.Type.TType = {
                     kind: Language.Type.TypeKind.Record,
@@ -1019,7 +1019,7 @@ describe(`Inspection - Type`, () => {
 
     describe(`external type`, () => {
         describe(`value`, () => {
-            it(`resolve to external`, () => {
+            it(`resolves to external type`, () => {
                 const settings: Settings = defaultSettingsWithResolver(
                     createExternalTypeResolverFn(
                         "foo",
@@ -1032,7 +1032,7 @@ describe(`Inspection - Type`, () => {
                 assertParseOkNodeTypeEqual(settings, expression, expected);
             });
 
-            it(`indirect resolve to external`, () => {
+            it(`indirect identifier resolves to external type`, () => {
                 const settings: Settings = defaultSettingsWithResolver(
                     createExternalTypeResolverFn(
                         "bar",
@@ -1045,7 +1045,7 @@ describe(`Inspection - Type`, () => {
                 assertParseOkNodeTypeEqual(settings, expression, expected);
             });
 
-            it(`fail to resolve to external`, () => {
+            it(`fails to resolve to external type`, () => {
                 const expression: string = `foo`;
                 const expected: Language.Type.TType = Language.Type.UnknownInstance;
                 assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
