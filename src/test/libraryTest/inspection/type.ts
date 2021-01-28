@@ -3,18 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import {
-    Assert,
-    CommonSettings,
-    DefaultSettings,
-    Inspection,
-    InspectionSettings,
-    Language,
-    Parser,
-    ResultUtils,
-    Settings,
-    Task,
-} from "../../..";
+import { Assert, DefaultSettings, Inspection, InspectionSettings, Language, Parser, Settings, Task } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertParseOkNodeTypeEqual(settings: Settings, text: string, expected: Language.Type.TType): void {
@@ -264,7 +253,7 @@ describe(`Inspection - Type`, () => {
                 assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
             });
 
-            it(`(1 as record)[[a]]`, () => {
+            it(`WIP (1 as record)[[a]]`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]`;
                 const expected: Language.Type.TType = {
                     kind: Language.Type.TypeKind.Record,
@@ -1030,7 +1019,7 @@ describe(`Inspection - Type`, () => {
 
     describe(`external type`, () => {
         describe(`value`, () => {
-            it(`WIP known`, () => {
+            it(`resolve to external`, () => {
                 const settings: Settings = defaultSettingsWithResolver(
                     createExternalTypeResolverFn(
                         "foo",
@@ -1041,6 +1030,25 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `foo`;
                 const expected: Language.Type.TType = Language.Type.NumberInstance;
                 assertParseOkNodeTypeEqual(settings, expression, expected);
+            });
+
+            it(`indirect resolve to external`, () => {
+                const settings: Settings = defaultSettingsWithResolver(
+                    createExternalTypeResolverFn(
+                        "bar",
+                        Language.ExternalType.ExternalTypeRequestKind.Value,
+                        Language.Type.NumberInstance,
+                    ),
+                );
+                const expression: string = `let foo = bar in foo`;
+                const expected: Language.Type.TType = Language.Type.NumberInstance;
+                assertParseOkNodeTypeEqual(settings, expression, expected);
+            });
+
+            it(`fail to resolve to external`, () => {
+                const expression: string = `foo`;
+                const expected: Language.Type.TType = Language.Type.UnknownInstance;
+                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
             });
         });
     });

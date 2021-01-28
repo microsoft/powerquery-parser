@@ -74,6 +74,18 @@ export function assertIsContext(xorNode: TXorNode): asserts xorNode is ContextXo
     });
 }
 
+export function assertIsIdentifier(xorNode: TXorNode): void {
+    assertAnyAstNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
+}
+
+export function assertIsRecord(xorNode: TXorNode): void {
+    assertAnyAstNodeKind(xorNode, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
+}
+
+export function assertIsList(xorNode: TXorNode): void {
+    assertAnyAstNodeKind(xorNode, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
+}
+
 export function assertGetAst(xorNode: TXorNode): Ast.TNode {
     assertIsAst(xorNode);
     return xorNode.node;

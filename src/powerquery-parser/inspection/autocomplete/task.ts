@@ -3,7 +3,7 @@
 
 import { Token } from "../../language";
 import { IParseState, NodeIdMap, ParseError } from "../../parser";
-import { CommonSettings, InspectionSettings } from "../../settings";
+import { InspectionSettings } from "../../settings";
 import { TMaybeActiveNode } from "../activeNode";
 import { TypeCache } from "../type/commonTypes";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";

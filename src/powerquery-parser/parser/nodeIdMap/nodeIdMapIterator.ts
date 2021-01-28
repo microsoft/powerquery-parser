@@ -216,7 +216,7 @@ export function iterLetExpression(
 
 // Return all ListItem children under the given ListExpression/ListLiteral.
 export function iterListItems(nodeIdMapCollection: NodeIdMap.Collection, list: TXorNode): ReadonlyArray<TXorNode> {
-    XorNodeUtils.assertAnyAstNodeKind(list, [Ast.NodeKind.ListExpression, Ast.NodeKind.ListLiteral]);
+    XorNodeUtils.assertIsList(list);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(nodeIdMapCollection, list);
     return maybeArrayWrapper === undefined ? [] : iterArrayWrapper(nodeIdMapCollection, maybeArrayWrapper);
@@ -227,7 +227,7 @@ export function iterRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
     record: TXorNode,
 ): ReadonlyArray<KeyValuePair<Ast.GeneralizedIdentifier>> {
-    XorNodeUtils.assertAnyAstNodeKind(record, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
+    XorNodeUtils.assertIsRecord(record);
 
     const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeArrayWrapperContent(
         nodeIdMapCollection,

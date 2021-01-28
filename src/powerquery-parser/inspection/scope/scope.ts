@@ -103,7 +103,7 @@ export function maybeDereferencedIdentifier(
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined = undefined,
 ): Result<TXorNode | undefined, CommonError.CommonError> {
-    XorNodeUtils.assertAnyAstNodeKind(xorNode, [Ast.NodeKind.Identifier, Ast.NodeKind.IdentifierExpression]);
+    XorNodeUtils.assertIsIdentifier(xorNode);
     const scopeById: ScopeById = maybeScopeById ?? new Map();
 
     if (xorNode.kind === XorNodeKind.Context) {
@@ -143,7 +143,7 @@ export function maybeDereferencedIdentifier(
     }
 
     const nodeScope: NodeScope = triedNodeScope.value;
-    const maybeScopeItem: undefined | TScopeItem = nodeScope.get(identifierLiteral);
+    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(identifierLiteral);
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier.
@@ -153,7 +153,7 @@ export function maybeDereferencedIdentifier(
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
-    let maybeNextXorNode: undefined | TXorNode;
+    let maybeNextXorNode: TXorNode | undefined;
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
         case ScopeItemKind.Parameter:
@@ -345,7 +345,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
 }
 
 function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: TXorNode): void {
-    XorNodeUtils.assertAnyAstNodeKind(record, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
+    XorNodeUtils.assertIsRecord(record);
 
     // Propegates the parent's scope.
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, record.node.id, undefined);
