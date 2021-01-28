@@ -103,3 +103,16 @@ export function isAst(xorNode: TXorNode): xorNode is AstXorNode {
 export function isContext(xorNode: TXorNode): xorNode is ContextXorNode {
     return xorNode.kind === XorNodeKind.Context;
 }
+
+export function maybeIdentifierExpressionLiteral(xorNode: TXorNode): string | undefined {
+    assertAstNodeKind(xorNode, Ast.NodeKind.IdentifierExpression);
+
+    if (isContext(xorNode)) {
+        return undefined;
+    }
+    const identifierExpression: Ast.IdentifierExpression = xorNode.node as Ast.IdentifierExpression;
+
+    return identifierExpression.maybeInclusiveConstant === undefined
+        ? identifierExpression.identifier.literal
+        : identifierExpression.maybeInclusiveConstant.constantKind + identifierExpression.identifier.literal;
+}

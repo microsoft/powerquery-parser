@@ -8,7 +8,7 @@ import { InspectionSettings } from "../../settings";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { TypeCache } from "./commonTypes";
-import { assertGetOrCreateNodeScope, getOrFindScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
+import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;
 
@@ -59,7 +59,7 @@ function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByK
 
     for (const scopeItem of nodeScope.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
-            state.deltaTypeById.set(scopeItem.id, getOrFindScopeItemType(state, scopeItem));
+            state.deltaTypeById.set(scopeItem.id, getOrCreateScopeItemType(state, scopeItem));
         }
     }
 

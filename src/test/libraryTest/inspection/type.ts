@@ -6,8 +6,33 @@ import "mocha";
 import { Assert, DefaultSettings, Inspection, InspectionSettings, Language, Parser, Settings, Task } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
+const ExternalTypeResolver: Language.ExternalType.TExternalTypeResolverFn = (
+    request: Language.ExternalType.TExternalTypeRequest,
+) => {
+    switch (request.kind) {
+        case Language.ExternalType.ExternalTypeRequestKind.Invocation: {
+            if (request.identifierLiteral !== "foo") {
+                return undefined;
+            }
+
+            return request.args.length === 0 ? Language.Type.TextInstance : Language.Type.NumberInstance;
+        }
+
+        case Language.ExternalType.ExternalTypeRequestKind.Value:
+            return request.identifierLiteral === "foo" ? Language.Type.FunctionInstance : undefined;
+
+        default:
+            throw Assert.isNever(request);
+    }
+};
+
+const TestSettings: Settings = {
+    ...DefaultSettings,
+    externalTypeResolver: ExternalTypeResolver,
+};
+
 function assertParseOkNodeTypeEqual(settings: Settings, text: string, expected: Language.Type.TType): void {
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, text);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(TestSettings, text);
     const actual: Language.Type.TType = assertGetParseNodeOk(
         settings,
         lexParseOk.state.contextState.nodeIdMapCollection,
@@ -20,13 +45,13 @@ function assertParseOkNodeTypeEqual(settings: Settings, text: string, expected: 
 
 function assertParseErrNodeTypeEqual(text: string, expected: Language.Type.TType): void {
     const parseErr: Parser.ParseError.ParseError<Parser.IParseState> = TestAssertUtils.assertGetParseErr(
-        DefaultSettings,
+        TestSettings,
         text,
     );
     const root: Parser.ParseContext.Node = Assert.asDefined(parseErr.state.contextState.maybeRoot);
 
     const actual: Language.Type.TType = assertGetParseNodeOk(
-        DefaultSettings,
+        TestSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
         Parser.XorNodeUtils.contextFactory(root),
@@ -60,7 +85,7 @@ function assertParseOkScopeTypeEqual(
     const [textWithoutPipe, position]: [string, Inspection.Position] = TestAssertUtils.assertGetTextWithPosition(
         textWithPipe,
     );
-    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(DefaultSettings, textWithoutPipe);
+    const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(TestSettings, textWithoutPipe);
     const nodeIdMapCollection: Parser.NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = lexParseOk.state.contextState.leafNodeIds;
 
@@ -94,23 +119,6 @@ function assertGetParseOkScopeTypeOk(
     return triedScopeType.value;
 }
 
-function defaultSettingsWithResolver(externalTypeResolver: Language.ExternalType.TExternalTypeResolverFn): Settings {
-    return {
-        ...DefaultSettings,
-        externalTypeResolver,
-    };
-}
-
-function createExternalTypeResolverFn(
-    name: string,
-    kind: Language.ExternalType.ExternalTypeRequestKind,
-    type: Language.Type.TType,
-): Language.ExternalType.TExternalTypeResolverFn {
-    return (request: Language.ExternalType.TExternalTypeRequest) => {
-        return name !== request.identifierLiteral || kind !== request.kind ? undefined : type;
-    };
-}
-
 describe(`Inspection - Type`, () => {
     describe(`static analysis`, () => {
         describe("BinOpExpression", () => {
@@ -120,7 +128,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`true and false`, () => {
@@ -129,7 +137,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`"hello" & "world"`, () => {
@@ -138,7 +146,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Text,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`true + 1`, () => {
@@ -147,7 +155,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.None,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -158,7 +166,7 @@ describe(`Inspection - Type`, () => {
                     ["foo", Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number)],
                     ["bar", Language.TypeUtils.primitiveTypeFactory(true, Language.Type.TypeKind.Number)],
                 ]);
-                assertParseOkScopeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkScopeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -169,7 +177,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 as text`, () => {
@@ -178,13 +186,13 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Text,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 as any`, () => {
                 const expression: string = `1 as any`;
                 const expected: Language.Type.TType = Language.Type.AnyInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -200,7 +208,7 @@ describe(`Inspection - Type`, () => {
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Record),
                     ],
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`try 1 otherwise false`, () => {
@@ -214,7 +222,7 @@ describe(`Inspection - Type`, () => {
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Logical),
                     ],
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -222,7 +230,7 @@ describe(`Inspection - Type`, () => {
             it(`error 1`, () => {
                 const expression: string = `error 1`;
                 const expected: Language.Type.TType = Language.Type.AnyInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -238,19 +246,19 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a=1][[b]]`, () => {
                 const expression: string = `[a=1][[b]]`;
                 const expected: Language.Type.TType = Language.Type.NoneInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a=1][[b]]?`, () => {
                 const expression: string = `[a=1][[b]]?`;
                 const expected: Language.Type.TType = Language.Type.NullInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`(1 as record)[[a]]`, () => {
@@ -262,7 +270,7 @@ describe(`Inspection - Type`, () => {
                     fields: new Map<string, Language.Type.TType>([["a", Language.Type.AnyInstance]]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`(1 as record)[[a]]?`, () => {
@@ -274,7 +282,7 @@ describe(`Inspection - Type`, () => {
                     fields: new Map<string, Language.Type.TType>([["a", Language.Type.AnyInstance]]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -285,31 +293,31 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a=1][b]`, () => {
                 const expression: string = `[a=1][b]`;
                 const expected: Language.Type.TType = Language.Type.NoneInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a=1][b]?`, () => {
                 const expression: string = `[a=1][b]?`;
                 const expected: Language.Type.TType = Language.Type.NullInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = (1 as record) in x[a]`, () => {
                 const expression: string = `let x = (1 as record) in x[a]`;
                 const expected: Language.Type.TType = Language.Type.AnyInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = (1 as record) in x[a]?`, () => {
                 const expression: string = `let x = (1 as record) in x[a]?`;
                 const expected: Language.Type.TType = Language.Type.AnyInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -323,7 +331,7 @@ describe(`Inspection - Type`, () => {
                     parameters: [],
                     returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             // Test AnyUnion return
@@ -339,7 +347,7 @@ describe(`Inspection - Type`, () => {
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
                     ]),
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`(a, b as number, c as nullable number, optional d) => 1`, () => {
@@ -376,7 +384,7 @@ describe(`Inspection - Type`, () => {
                     ],
                     returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -387,7 +395,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Function,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type function () as text`, () => {
@@ -399,7 +407,7 @@ describe(`Inspection - Type`, () => {
                     parameters: [],
                     returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type function (foo as number, bar as nullable text, optional baz as date) as text`, () => {
@@ -430,7 +438,7 @@ describe(`Inspection - Type`, () => {
                     ],
                     returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -441,7 +449,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = 1 in x`, () => {
@@ -450,7 +458,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -461,7 +469,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if true then 1 else false`, () => {
@@ -475,7 +483,7 @@ describe(`Inspection - Type`, () => {
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Logical),
                     ],
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if if true then true else false then 1 else 0`, () => {
@@ -489,7 +497,7 @@ describe(`Inspection - Type`, () => {
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
                     ],
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if`, () => {
@@ -516,7 +524,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Text,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if true then 1`, () => {
@@ -541,7 +549,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -552,7 +560,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -565,7 +573,7 @@ describe(`Inspection - Type`, () => {
                     isNullable: false,
                     elements: [Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number)],
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`{1, ""}`, () => {
@@ -579,7 +587,7 @@ describe(`Inspection - Type`, () => {
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
                     ],
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -592,7 +600,7 @@ describe(`Inspection - Type`, () => {
                     isNullable: false,
                     itemType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -603,7 +611,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`false`, () => {
@@ -612,7 +620,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1`, () => {
@@ -621,7 +629,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`null`, () => {
@@ -630,7 +638,7 @@ describe(`Inspection - Type`, () => {
                     true,
                     Language.Type.TypeKind.Null,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`{}`, () => {
@@ -641,7 +649,7 @@ describe(`Inspection - Type`, () => {
                     isNullable: false,
                     elements: [],
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
             it(`[]`, () => {
                 const expression: string = `[]`;
@@ -652,7 +660,7 @@ describe(`Inspection - Type`, () => {
                     fields: new Map<string, Language.Type.TType>(),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -663,7 +671,7 @@ describe(`Inspection - Type`, () => {
                     true,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -671,7 +679,7 @@ describe(`Inspection - Type`, () => {
             it(`1 ?? 2`, () => {
                 const expression: string = `1 ?? 2`;
                 const expected: Language.Type.TType = Language.Type.NumberInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 ?? ""`, () => {
@@ -680,13 +688,13 @@ describe(`Inspection - Type`, () => {
                     Language.Type.NumberInstance,
                     Language.Type.TextInstance,
                 ]);
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 ?? (1 + "")`, () => {
                 const expression: string = `1 ?? (1 + "")`;
                 const expected: Language.Type.TType = Language.Type.NoneInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -703,7 +711,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] & [bar=2]`, () => {
@@ -717,7 +725,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo=1] & []`, () => {
@@ -731,7 +739,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo=1] & [foo=""]`, () => {
@@ -745,7 +753,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] as record & [foo=1]`, () => {
@@ -759,7 +767,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: true,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo=1] & [] as record`, () => {
@@ -773,7 +781,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: true,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] as record & [] as record`, () => {
@@ -782,7 +790,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Record,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -796,7 +804,7 @@ describe(`Inspection - Type`, () => {
                     fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type [foo, ...]`, () => {
@@ -808,7 +816,7 @@ describe(`Inspection - Type`, () => {
                     fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
                     isOpen: true,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type [foo = number, bar = nullable text]`, () => {
@@ -823,7 +831,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -835,7 +843,7 @@ describe(`Inspection - Type`, () => {
                         false,
                         Language.Type.TypeKind.Any,
                     );
-                    assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
                 it(`${Language.Ast.NodeKind.ItemAccessExpression}`, () => {
@@ -844,7 +852,7 @@ describe(`Inspection - Type`, () => {
                         false,
                         Language.Type.TypeKind.Any,
                     );
-                    assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
                 describe(`${Language.Ast.NodeKind.FieldSelector}`, () => {
@@ -854,7 +862,7 @@ describe(`Inspection - Type`, () => {
                             false,
                             Language.Type.TypeKind.Number,
                         );
-                        assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                        assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
 
                     it("[a=1][b]", () => {
@@ -863,13 +871,13 @@ describe(`Inspection - Type`, () => {
                             false,
                             Language.Type.TypeKind.None,
                         );
-                        assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                        assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
 
                     it("a[b]?", () => {
                         const expression: string = `[a=1][b]?`;
                         const expected: Language.Type.TType = Language.Type.NullInstance;
-                        assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                        assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
                 });
 
@@ -896,7 +904,7 @@ describe(`Inspection - Type`, () => {
                             },
                         ],
                     };
-                    assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
                 it(`${Language.Ast.NodeKind.FieldSelector}`, () => {
@@ -905,7 +913,7 @@ describe(`Inspection - Type`, () => {
                         false,
                         Language.Type.TypeKind.Number,
                     );
-                    assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
             });
 
@@ -915,7 +923,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -929,7 +937,7 @@ describe(`Inspection - Type`, () => {
                     fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type table [foo]`, () => {
@@ -941,7 +949,7 @@ describe(`Inspection - Type`, () => {
                     fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type table [foo = number, bar = nullable text]`, () => {
@@ -956,7 +964,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     isOpen: false,
                 };
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
@@ -967,7 +975,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`-1`, () => {
@@ -976,7 +984,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Number,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`not true`, () => {
@@ -985,7 +993,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`not false`, () => {
@@ -994,7 +1002,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.Logical,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`not 1`, () => {
@@ -1003,7 +1011,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.None,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`+true`, () => {
@@ -1012,7 +1020,7 @@ describe(`Inspection - Type`, () => {
                     false,
                     Language.Type.TypeKind.None,
                 );
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
     });
@@ -1020,35 +1028,45 @@ describe(`Inspection - Type`, () => {
     describe(`external type`, () => {
         describe(`value`, () => {
             it(`resolves to external type`, () => {
-                const settings: Settings = defaultSettingsWithResolver(
-                    createExternalTypeResolverFn(
-                        "foo",
-                        Language.ExternalType.ExternalTypeRequestKind.Value,
-                        Language.Type.NumberInstance,
-                    ),
-                );
                 const expression: string = `foo`;
-                const expected: Language.Type.TType = Language.Type.NumberInstance;
-                assertParseOkNodeTypeEqual(settings, expression, expected);
+                const expected: Language.Type.TType = Language.Type.FunctionInstance;
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`indirect identifier resolves to external type`, () => {
-                const settings: Settings = defaultSettingsWithResolver(
-                    createExternalTypeResolverFn(
-                        "bar",
-                        Language.ExternalType.ExternalTypeRequestKind.Value,
-                        Language.Type.NumberInstance,
-                    ),
-                );
-                const expression: string = `let foo = bar in foo`;
-                const expected: Language.Type.TType = Language.Type.NumberInstance;
-                assertParseOkNodeTypeEqual(settings, expression, expected);
+                const expression: string = `let bar = foo in bar`;
+                const expected: Language.Type.TType = Language.Type.FunctionInstance;
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`fails to resolve to external type`, () => {
-                const expression: string = `foo`;
+                const expression: string = `bar`;
                 const expected: Language.Type.TType = Language.Type.UnknownInstance;
-                assertParseOkNodeTypeEqual(DefaultSettings, expression, expected);
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+        });
+
+        describe(`invocation`, () => {
+            it(`resolves with identifier`, () => {
+                const expression: string = `foo()`;
+                const expected: Language.Type.TType = Language.Type.TextInstance;
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            it(`resolves with deferenced identifier`, () => {
+                const expression: string = `let bar = foo in bar()`;
+                const expected: Language.Type.TType = Language.Type.TextInstance;
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            it(`resolves based on argument`, () => {
+                const expression1: string = `foo()`;
+                const expected1: Language.Type.TType = Language.Type.TextInstance;
+                assertParseOkNodeTypeEqual(TestSettings, expression1, expected1);
+
+                const expression2: string = `foo("bar")`;
+                const expected2: Language.Type.TType = Language.Type.NumberInstance;
+                assertParseOkNodeTypeEqual(TestSettings, expression2, expected2);
             });
         });
     });

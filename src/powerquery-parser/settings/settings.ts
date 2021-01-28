@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { ICancellationToken } from "../common";
-import { Ast, ExternalType, Type } from "../language";
+import { Ast, ExternalType } from "../language";
 import { LexerSnapshot } from "../lexer";
 import { DefaultLocale } from "../localization";
 import { CombinatorialParser, IParser, IParseState, IParseStateUtils, TParseStateFactoryOverrides } from "../parser";
@@ -38,5 +38,5 @@ export const DefaultSettings: Settings<IParseState> = {
         maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
     ) => IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
     maybeParserEntryPointFn: undefined,
-    externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => Type.UnknownInstance,
+    externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => undefined,
 };
