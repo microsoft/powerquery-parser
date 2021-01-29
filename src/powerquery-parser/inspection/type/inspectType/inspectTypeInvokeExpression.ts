@@ -1,13 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "../../../language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
-import { InspectTypeState, inspectXor } from "./common";
+import { Assert } from "../../../common";
+import { Ast, ExternalType, ExternalTypeUtils, Type } from "../../../language";
+import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./common";
 
 export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.InvokeExpression);
+
+    const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = maybeExternalInvokeRequest(
+        state,
+        xorNode,
+    );
+    if (maybeRequest !== undefined) {
+        const maybeType: Type.TType | undefined = state.settings.externalTypeResolver(maybeRequest);
+        if (maybeType !== undefined) {
+            return maybeType;
+        }
+    }
 
     const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
@@ -23,4 +35,29 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
     } else {
         return Type.AnyInstance;
     }
+}
+
+function maybeExternalInvokeRequest(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): ExternalType.ExternalInvocationTypeRequest | undefined {
+    const maybeIdentifier: TXorNode | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifier(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+    );
+
+    if (maybeIdentifier === undefined) {
+        return undefined;
+    }
+    const deferencedIdentifier: TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
+
+    const types: Type.TType[] = [];
+    for (const argument of NodeIdMapIterator.iterInvokeExpression(state.nodeIdMapCollection, xorNode)) {
+        types.push(inspectXor(state, argument));
+    }
+
+    return ExternalTypeUtils.invocationTypeRequestFactory(
+        Assert.asDefined(XorNodeUtils.maybeIdentifierExpressionLiteral(deferencedIdentifier)),
+        types,
+    );
 }

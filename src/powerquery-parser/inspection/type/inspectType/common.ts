@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Inspection } from "../../..";
-import { Assert, ResultUtils, StringUtils } from "../../../common";
+import { Assert, ResultUtils } from "../../../common";
 import { Ast, ExternalType, ExternalTypeUtils, Type, TypeUtils } from "../../../language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { InspectionSettings } from "../../../settings";
@@ -42,21 +42,19 @@ export interface InspectTypeState {
     scopeById: ScopeById;
 }
 
-export function getOrFindScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
-    const nodeId: number = scopeItem.id;
-
-    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeGivenType !== undefined) {
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
-    if (maybeDeltaType !== undefined) {
-        return maybeDeltaType;
-    }
-
-    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
-    return scopeType;
+// Recursively flattens all AnyUnion.unionedTypePairs into a single array,
+// maps each entry into a boolean,
+// then calls all(...) on the mapped values.
+export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType) => boolean): boolean {
+    return (
+        anyUnion.unionedTypePairs
+            .map((type: Type.TType) => {
+                return type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
+                    ? allForAnyUnion(type, conditionFn)
+                    : conditionFn(type);
+            })
+            .indexOf(false) === -1
+    );
 }
 
 export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: number): NodeScope {
@@ -81,6 +79,23 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
     return tryNodeScope(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
 }
 
+export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
+    const nodeId: number = scopeItem.id;
+
+    const maybeGivenType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeGivenType !== undefined) {
+        return maybeGivenType;
+    }
+
+    const maybeDeltaType: Type.TType | undefined = state.givenTypeById.get(nodeId);
+    if (maybeDeltaType !== undefined) {
+        return maybeDeltaType;
+    }
+
+    const scopeType: Type.TType = inspectScopeItem(state, scopeItem);
+    return scopeType;
+}
+
 export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
@@ -103,6 +118,22 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
         default:
             throw Assert.isNever(scopeItem);
     }
+}
+
+export function inspectTypeFromChildAttributeIndex(
+    state: InspectTypeState,
+    parentXorNode: TXorNode,
+    attributeIndex: number,
+): Type.TType {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+
+    const maybeXorNode: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        state.nodeIdMapCollection,
+        parentXorNode.node.id,
+        attributeIndex,
+        undefined,
+    );
+    return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : Type.UnknownInstance;
 }
 
 export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TType {
@@ -289,57 +320,23 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TTy
     return result;
 }
 
-export function inspectTypeFromChildAttributeIndex(
-    state: InspectTypeState,
-    parentXorNode: TXorNode,
-    attributeIndex: number,
-): Type.TType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
-
-    const maybeXorNode: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
-        state.nodeIdMapCollection,
-        parentXorNode.node.id,
-        attributeIndex,
-        undefined,
-    );
-    return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : Type.UnknownInstance;
-}
-
-// Recursively flattens all AnyUnion.unionedTypePairs into a single array,
-// maps each entry into a boolean,
-// then calls all(...) on the mapped values.
-export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TType) => boolean): boolean {
-    return (
-        anyUnion.unionedTypePairs
-            .map((type: Type.TType) => {
-                return type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
-                    ? allForAnyUnion(type, conditionFn)
-                    : conditionFn(type);
-            })
-            .indexOf(false) === -1
-    );
-}
-
 export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode: TXorNode): Type.TType | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
-    const maybeDereferenced: DeferencedIdentifier | undefined = recursiveIdentifierDereference(state, xorNode);
-    if (maybeDereferenced === undefined) {
+    const deferenced: TXorNode = recursiveIdentifierDereference(state, xorNode);
+
+    const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(deferenced);
+    if (maybeDereferencedLiteral === undefined) {
         return undefined;
     }
-    const deferenced: DeferencedIdentifier = maybeDereferenced;
+    const deferencedLiteral: string = maybeDereferencedLiteral;
 
-    // TODO: handle recursive identifiers
-    if (deferenced.isRecursiveIdentifier) {
-        return Type.AnyInstance;
-    }
-
-    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, deferenced.nodeId);
-    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(deferenced.identifierLiteral);
+    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, deferenced.node.id);
+    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (maybeScopeItem === undefined) {
-        return maybeExternalValueType(state.settings.externalTypeResolver, deferenced.identifierLiteral);
+        return maybeExternalValueType(state.settings.externalTypeResolver, deferencedLiteral);
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
@@ -373,26 +370,16 @@ export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode
     return inspectXor(state, maybeNextXorNode);
 }
 
-interface DeferencedIdentifier {
-    readonly identifierLiteral: string;
-    readonly nodeId: number;
-    readonly isRecursiveIdentifier: boolean;
-}
+// Recursively derefence an identifier if it points to another identifier.
+export function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): TXorNode {
+    state.settings.maybeCancellationToken?.throwIfCancelled();
+    XorNodeUtils.assertIsIdentifier(xorNode);
 
-function deferencedIdentifierFactory(
-    identifierLiteral: string,
-    nodeId: number,
-    isRecursiveIdentifier: boolean,
-): DeferencedIdentifier {
-    return {
-        identifierLiteral: StringUtils.normalizeIdentifier(identifierLiteral),
-        nodeId,
-        isRecursiveIdentifier,
-    };
+    return Assert.asDefined(recursiveIdentifierDereferenceHelper(state, xorNode));
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): DeferencedIdentifier | undefined {
+function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: TXorNode): TXorNode | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
@@ -424,14 +411,14 @@ function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNo
 
     // TODO: handle recursive identifiers
     if (isRecursiveIdentifier === true) {
-        return deferencedIdentifierFactory(identifierLiteral, identifierId, true);
+        return xorNode;
     }
 
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, identifierId);
 
     const maybeScopeItem: TScopeItem | undefined = nodeScope.get(identifierLiteral);
     if (maybeScopeItem === undefined) {
-        return deferencedIdentifierFactory(identifierLiteral, identifierId, false);
+        return xorNode;
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
@@ -458,8 +445,8 @@ function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNo
         maybeNextXorNode.kind !== XorNodeKind.Context &&
         (maybeNextXorNode.node.kind === Ast.NodeKind.Identifier ||
             maybeNextXorNode.node.kind === Ast.NodeKind.IdentifierExpression)
-        ? recursiveIdentifierDereference(state, maybeNextXorNode)
-        : deferencedIdentifierFactory(identifierLiteral, identifierId, false);
+        ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
+        : xorNode;
 }
 
 function maybeExternalValueType(

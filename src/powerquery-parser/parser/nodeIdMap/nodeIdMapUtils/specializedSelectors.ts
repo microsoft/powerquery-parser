@@ -6,7 +6,7 @@ import { CommonError } from "../../../common";
 import { Ast } from "../../../language";
 import { Collection } from "../nodeIdMap";
 import { TXorNode, XorNodeKind } from "../xorNode";
-import { assertGetChildXorByAttributeIndex } from "./childSelectors";
+import { assertGetChildXorByAttributeIndex, maybeChildXorByAttributeIndex } from "./childSelectors";
 import { assertGetXor } from "./commonSelectors";
 import { assertGetParentXor } from "./parentSelectors";
 
@@ -50,43 +50,67 @@ export function assertGetRecursiveExpressionPreviousSibling(nodeIdMapCollection:
     }
 }
 
-export function maybeInvokeExpressionName(nodeIdMapCollection: Collection, nodeId: number): string | undefined {
+export function maybeInvokeExpressionIdentifier(nodeIdMapCollection: Collection, nodeId: number): TXorNode | undefined {
     const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
     XorNodeUtils.assertAstNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
 
     // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
     // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
-    let maybeName: string | undefined;
-    if (invokeExprXorNode.node.maybeAttributeIndex === 0) {
-        // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
-        const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
-        const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
-        const headXorNode: TXorNode = assertGetChildXorByAttributeIndex(
-            nodeIdMapCollection,
-            recursiveExprXorNode.node.id,
-            0,
-            undefined,
-        );
-        if (headXorNode.node.kind === Ast.NodeKind.IdentifierExpression) {
-            if (headXorNode.kind !== XorNodeKind.Ast) {
-                const details: {} = {
-                    identifierExpressionNodeId: headXorNode.node.id,
-                    invokeExpressionNodeId: invokeExprXorNode.node.id,
-                };
-                throw new CommonError.InvariantError(
-                    `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
-                    details,
-                );
-            }
-
-            const identifierExpression: Ast.IdentifierExpression = headXorNode.node as Ast.IdentifierExpression;
-            maybeName =
-                identifierExpression.maybeInclusiveConstant === undefined
-                    ? identifierExpression.identifier.literal
-                    : identifierExpression.maybeInclusiveConstant.constantKind +
-                      identifierExpression.identifier.literal;
-        }
+    if (invokeExprXorNode.node.maybeAttributeIndex !== 0) {
+        return undefined;
     }
 
-    return maybeName;
+    // Grab the RecursivePrimaryExpression's head if it's an IdentifierExpression
+    const recursiveArrayXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, invokeExprXorNode.node.id);
+    const recursiveExprXorNode: TXorNode = assertGetParentXor(nodeIdMapCollection, recursiveArrayXorNode.node.id);
+    const maybeHeadXorNode: TXorNode | undefined = maybeChildXorByAttributeIndex(
+        nodeIdMapCollection,
+        recursiveExprXorNode.node.id,
+        0,
+        [Ast.NodeKind.IdentifierExpression],
+    );
+
+    // It's not an identifier expression so there's nothing we can do.
+    if (maybeHeadXorNode === undefined) {
+        return undefined;
+    }
+    const headXorNode: TXorNode = maybeHeadXorNode;
+
+    // The only place for an identifier in a RecursivePrimaryExpression is as the head, therefore an InvokeExpression
+    // only has a name if the InvokeExpression is the 0th element in the RecursivePrimaryExpressionArray.
+    if (headXorNode.kind !== XorNodeKind.Ast) {
+        const details: {} = {
+            identifierExpressionNodeId: headXorNode.node.id,
+            invokeExpressionNodeId: invokeExprXorNode.node.id,
+        };
+        throw new CommonError.InvariantError(
+            `the younger IdentifierExpression sibling should've finished parsing before the InvokeExpression node was reached`,
+            details,
+        );
+    }
+
+    return headXorNode;
+}
+
+export function maybeInvokeExpressionIdentifierLiteral(
+    nodeIdMapCollection: Collection,
+    nodeId: number,
+): string | undefined {
+    const invokeExprXorNode: TXorNode = assertGetXor(nodeIdMapCollection, nodeId);
+    XorNodeUtils.assertAstNodeKind(invokeExprXorNode, Ast.NodeKind.InvokeExpression);
+
+    const maybeIdentifierExpressionXorNode: TXorNode | undefined = maybeInvokeExpressionIdentifier(
+        nodeIdMapCollection,
+        nodeId,
+    );
+    if (maybeIdentifierExpressionXorNode === undefined || maybeIdentifierExpressionXorNode.kind !== XorNodeKind.Ast) {
+        return undefined;
+    }
+    const identifierExpressionXorNode: TXorNode = maybeIdentifierExpressionXorNode;
+    XorNodeUtils.assertAstNodeKind(identifierExpressionXorNode, Ast.NodeKind.IdentifierExpression);
+    const identifierExpression: Ast.IdentifierExpression = identifierExpressionXorNode.node as Ast.IdentifierExpression;
+
+    return identifierExpression.maybeInclusiveConstant === undefined
+        ? identifierExpression.identifier.literal
+        : identifierExpression.maybeInclusiveConstant.constantKind + identifierExpression.identifier.literal;
 }
