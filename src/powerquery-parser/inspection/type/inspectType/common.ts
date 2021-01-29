@@ -427,7 +427,7 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
         case ScopeItemKind.Each:
         case ScopeItemKind.Parameter:
         case ScopeItemKind.Undefined:
-            return undefined;
+            return xorNode;
 
         case ScopeItemKind.KeyValuePair:
             maybeNextXorNode = scopeItem.maybeValue;
