@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result } from "../../../common";
 import { TType } from "../type";
 
 export type TExternalTypeRequest = ExternalValueTypeRequest | ExternalInvocationTypeRequest;
 
 export type TExternalTypeResolverFn = (request: TExternalTypeRequest) => TType | undefined;
 
-export type TriedExternalType = Result<TType | undefined, CommonError.CommonError>;
+export type TExternalInvocationTypeResolverFn = (request: ExternalInvocationTypeRequest) => TType | undefined;
+
+export type TExternalValueTypeResolverFn = (request: ExternalValueTypeRequest) => TType | undefined;
 
 export const enum ExternalTypeRequestKind {
     Invocation = "Invocation",

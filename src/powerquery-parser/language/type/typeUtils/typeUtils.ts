@@ -2,9 +2,11 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Ast, AstUtils, Constant } from "../..";
-import { Assert, StringUtils } from "../../../common";
+import { Ast, AstUtils } from "../..";
+import { Assert } from "../../../common";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, TXorNode, XorNodeKind } from "../../../parser";
+import { primitiveTypeFactory } from "./factories";
+import { isCompatible } from "./isCompatible";
 import { isEqualType } from "./isEqualType";
 import { typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 
@@ -163,27 +165,6 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
     }
 }
 
-export function inspectParameter(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    parameter: TXorNode,
-): Type.FunctionParameter | undefined {
-    switch (parameter.kind) {
-        case XorNodeKind.Ast:
-            return inspectAstParameter(parameter.node as Ast.TParameter);
-
-        case XorNodeKind.Context:
-            return inspectContextParameter(nodeIdMapCollection, parameter.node);
-
-        default:
-            throw Assert.isNever(parameter);
-    }
-}
-
-export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
-    // Fast comparison then deep comparison
-    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
-}
-
 export function isFieldSpecificationList(type: Type.TType): type is Type.TType & Type.FieldSpecificationList {
     return (
         (type.kind === Type.TypeKind.Record && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord) ||
@@ -200,49 +181,57 @@ export function isFunctionSignature(type: Type.TType): type is Type.TType & Type
     );
 }
 
-export function nameOf(type: Type.TType): string {
-    switch (type.maybeExtendedKind) {
-        case Type.ExtendedTypeKind.AnyUnion:
-            return type.unionedTypePairs.map((subtype: Type.TType) => nameOf(subtype)).join(" | ");
+export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
+    // Fast comparison then deep comparison
+    return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
+}
 
-        case Type.ExtendedTypeKind.DefinedFunction:
-            return prefixNullableIfRequired(type, nameOfFunctionSignature(type, true));
+export function isValidInvocation(functionType: Type.DefinedFunction, args: ReadonlyArray<Type.TType>): boolean {
+    // You can't provide more arguments than are on the function signature.
+    if (args.length > functionType.parameters.length) {
+        return false;
+    }
 
-        case Type.ExtendedTypeKind.DefinedList:
-            return prefixNullableIfRequired(type, `{${nameOfIterable(type.elements)}}`);
+    const parameters: ReadonlyArray<Type.FunctionParameter> = functionType.parameters;
+    const numParameters: number = parameters.length;
 
-        case Type.ExtendedTypeKind.DefinedListType:
-            return prefixNullableIfRequired(type, `type {${nameOfIterable(type.itemTypes)}}`);
+    for (let index: number = 1; index < numParameters; index += 1) {
+        const parameter: Type.FunctionParameter = Assert.asDefined(parameters[index]);
+        const maybeArgType: Type.TType | undefined = args[index];
 
-        case Type.ExtendedTypeKind.DefinedRecord:
-            return prefixNullableIfRequired(type, nameOfFieldSpecificationList(type));
+        if (maybeArgType !== undefined) {
+            const argType: Type.TType = maybeArgType;
+            const parameterType: Type.TType = primitiveTypeFactory(
+                parameter.isNullable,
+                Assert.asDefined(parameter.maybeType),
+            );
 
-        case Type.ExtendedTypeKind.DefinedTable:
-            return prefixNullableIfRequired(type, `table ${nameOfFieldSpecificationList(type)}`);
+            if (!isCompatible(argType, parameterType)) {
+                return false;
+            }
+        }
 
-        case Type.ExtendedTypeKind.FunctionType:
-            return prefixNullableIfRequired(type, `type function ${nameOfFunctionSignature(type, false)}`);
+        if (!parameter.isOptional) {
+            return false;
+        }
+    }
 
-        case Type.ExtendedTypeKind.ListType:
-            return prefixNullableIfRequired(type, `type {${nameOf(type.itemType)}}`);
+    return true;
+}
 
-        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
-            return prefixNullableIfRequired(type, `type ${nameOf(type.primitiveType)}`);
+export function inspectParameter(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    parameter: TXorNode,
+): Type.FunctionParameter | undefined {
+    switch (parameter.kind) {
+        case XorNodeKind.Ast:
+            return inspectAstParameter(parameter.node as Ast.TParameter);
 
-        case Type.ExtendedTypeKind.RecordType:
-            return prefixNullableIfRequired(type, `type ${nameOfFieldSpecificationList(type)}`);
-
-        case Type.ExtendedTypeKind.TableType:
-            return prefixNullableIfRequired(type, `type table ${nameOfFieldSpecificationList(type)}`);
-
-        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
-            return prefixNullableIfRequired(type, `type table ${nameOf(type.primaryExpression)}`);
-
-        case undefined:
-            return prefixNullableIfRequired(type, nameOfTypeKind(type.kind));
+        case XorNodeKind.Context:
+            return inspectContextParameter(nodeIdMapCollection, parameter.node);
 
         default:
-            throw Assert.isNever(type);
+            throw Assert.isNever(parameter);
     }
 }
 
@@ -333,56 +322,4 @@ function inspectContextParameter(
         isNullable,
         maybeType,
     };
-}
-
-function nameOfTypeKind(kind: Type.TypeKind): string {
-    return kind === Type.TypeKind.NotApplicable ? "not applicable" : kind.toLowerCase();
-}
-
-function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string {
-    const chunks: string[] = [];
-
-    for (const [key, value] of type.fields.entries()) {
-        chunks.push(`${StringUtils.normalizeIdentifier(key)}: ${nameOf(value)}`);
-    }
-
-    if (type.isOpen === true) {
-        chunks.push("...");
-    }
-
-    const pairs: string = chunks.join(", ");
-
-    return `[${pairs}]`;
-}
-
-function nameOfFunctionSignature(type: Type.FunctionSignature, includeFatArrow: boolean): string {
-    const parameters: string = type.parameters
-        .map((parameter: Type.FunctionParameter) => {
-            let partial: string = `${parameter.nameLiteral}:`;
-
-            if (parameter.isOptional === true) {
-                partial += " optional";
-            }
-
-            if (parameter.isNullable === true) {
-                partial += " nullable";
-            }
-
-            if (parameter.maybeType !== undefined) {
-                partial += ` ${nameOfTypeKind(parameter.maybeType)}`;
-            }
-
-            return partial;
-        })
-        .join(", ");
-
-    return `(${parameters})${includeFatArrow ? " => " : " "}${nameOf(type.returnType)}`;
-}
-
-function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {
-    return collection.map((item: Type.TType) => nameOf(item)).join(", ");
-}
-
-function prefixNullableIfRequired(type: Type.TType, name: string): string {
-    return type.isNullable ? `${Constant.LanguageConstantKind.Nullable} ${name}` : name;
 }

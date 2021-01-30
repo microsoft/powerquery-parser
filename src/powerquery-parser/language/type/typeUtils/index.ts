@@ -4,6 +4,7 @@
 export * from "./factories";
 export * from "./isCompatible";
 export * from "./isEqualType";
+export * from "./nameOf";
 export * from "./primitive";
 export * from "./typeCheck";
 export * from "./typeUtils";
