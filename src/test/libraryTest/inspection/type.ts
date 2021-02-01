@@ -204,7 +204,7 @@ describe(`Inspection - Type`, () => {
                     maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
                     isNullable: false,
                     unionedTypePairs: [
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
+                        Language.TypeUtils.numberLiteralFactory(false, "1"),
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Record),
                     ],
                 };
@@ -218,7 +218,7 @@ describe(`Inspection - Type`, () => {
                     maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
                     isNullable: false,
                     unionedTypePairs: [
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
+                        Language.TypeUtils.numberLiteralFactory(false, "1"),
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Logical),
                     ],
                 };
@@ -242,7 +242,7 @@ describe(`Inspection - Type`, () => {
                     maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
                     isNullable: false,
                     fields: new Map<string, Language.Type.TType>([
-                        ["a", Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number)],
+                        ["a", Language.TypeUtils.numberLiteralFactory(false, "1")],
                     ]),
                     isOpen: false,
                 };
@@ -289,7 +289,7 @@ describe(`Inspection - Type`, () => {
         describe(`${Language.Ast.NodeKind.FieldSelector}`, () => {
             it(`[a=1][a]`, () => {
                 const expression: string = `[a=1][a]`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
+                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(
                     false,
                     Language.Type.TypeKind.Number,
                 );
@@ -329,7 +329,7 @@ describe(`Inspection - Type`, () => {
                     maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedFunction,
                     isNullable: false,
                     parameters: [],
-                    returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
+                    returnType: Language.TypeUtils.numberLiteralFactory(false, "1"),
                 };
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
@@ -343,8 +343,8 @@ describe(`Inspection - Type`, () => {
                     isNullable: false,
                     parameters: [],
                     returnType: Language.TypeUtils.anyUnionFactory([
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
+                        Language.TypeUtils.numberLiteralFactory(false, "1"),
+                        Language.TypeUtils.textLiteralFactory(false, `""`),
                     ]),
                 };
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -382,7 +382,7 @@ describe(`Inspection - Type`, () => {
                             maybeType: undefined,
                         },
                     ],
-                    returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
+                    returnType: Language.TypeUtils.numberLiteralFactory(false, "1"),
                 };
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
@@ -454,10 +454,7 @@ describe(`Inspection - Type`, () => {
 
             it(`let x = 1 in x`, () => {
                 const expression: string = "let x = 1 in x";
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Number,
-                );
+                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -479,7 +476,7 @@ describe(`Inspection - Type`, () => {
                     maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
                     isNullable: false,
                     unionedTypePairs: [
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
+                        Language.TypeUtils.numberLiteralFactory(false, "1"),
                         Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Logical),
                     ],
                 };
@@ -493,8 +490,8 @@ describe(`Inspection - Type`, () => {
                     maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
                     isNullable: false,
                     unionedTypePairs: [
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
+                        Language.TypeUtils.numberLiteralFactory(false, "1"),
+                        Language.TypeUtils.textLiteralFactory(false, `""`),
                     ],
                 };
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -518,12 +515,21 @@ describe(`Inspection - Type`, () => {
                 assertParseErrNodeTypeEqual(expression, expected);
             });
 
-            it(`if 1 as any then "a" else "b"`, () => {
+            it(`if 1 as any then "a" as text else "b" as text`, () => {
                 const expression: string = `if 1 as any then "a" else "b"`;
                 const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
                     false,
                     Language.Type.TypeKind.Text,
                 );
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            it(`if 1 as any then "a" else "b"`, () => {
+                const expression: string = `if 1 as any then "a" else "b"`;
+                const expected: Language.Type.TType = Language.TypeUtils.anyUnionFactory([
+                    Language.TypeUtils.textLiteralFactory(false, `"a"`),
+                    Language.TypeUtils.textLiteralFactory(false, `"b"`),
+                ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
@@ -858,10 +864,7 @@ describe(`Inspection - Type`, () => {
                 describe(`${Language.Ast.NodeKind.FieldSelector}`, () => {
                     it("[a=1][a]", () => {
                         const expression: string = `[a=1][a]`;
-                        const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                            false,
-                            Language.Type.TypeKind.Number,
-                        );
+                        const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
                         assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
 
@@ -971,10 +974,7 @@ describe(`Inspection - Type`, () => {
         describe(`${Language.Ast.NodeKind.UnaryExpression}`, () => {
             it(`+1`, () => {
                 const expression: string = `+1`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Number,
-                );
+                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
