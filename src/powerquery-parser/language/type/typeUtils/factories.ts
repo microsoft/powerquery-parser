@@ -106,9 +106,9 @@ export function functionTypeFactory(
     };
 }
 
-export function numberLiteralFactory(literal: string): Type.NumberLiteral {
+export function numberLiteralFactory(isNullable: boolean, literal: string): Type.NumberLiteral {
     return {
-        isNullable: false,
+        isNullable,
         kind: Type.TypeKind.Number,
         maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
         literal,
@@ -177,9 +177,9 @@ export function tableTypeFactory(
     };
 }
 
-export function textLiteralFactory(literal: string): Type.TextLiteral {
+export function textLiteralFactory(isNullable: boolean, literal: string): Type.TextLiteral {
     return {
-        isNullable: false,
+        isNullable,
         kind: Type.TypeKind.Text,
         maybeExtendedKind: Type.ExtendedTypeKind.TextLiteral,
         literal,

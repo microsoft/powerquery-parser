@@ -260,7 +260,6 @@ export interface ListType extends IExtendedType {
 export interface NumberLiteral extends IPrimitiveLiteral {
     readonly kind: TypeKind.Number;
     readonly maybeExtendedKind: ExtendedTypeKind.NumberLiteral;
-    readonly isNullable: false;
     readonly normalizedLiteral: number;
 }
 
@@ -291,7 +290,6 @@ export interface TableTypePrimaryExpression extends IExtendedType {
 export interface TextLiteral extends IPrimitiveLiteral {
     readonly kind: TypeKind.Text;
     readonly maybeExtendedKind: ExtendedTypeKind.TextLiteral;
-    readonly isNullable: false;
 }
 
 // -------------------------------------------------------

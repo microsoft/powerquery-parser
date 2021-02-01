@@ -18,10 +18,10 @@ export function inspectTypeLiteralExpression(
 
             switch (typeKind) {
                 case Type.TypeKind.Number:
-                    return TypeUtils.numberLiteralFactory(literalExpression.literal);
+                    return TypeUtils.numberLiteralFactory(false, literalExpression.literal);
 
                 case Type.TypeKind.Text:
-                    return TypeUtils.textLiteralFactory(literalExpression.literal);
+                    return TypeUtils.textLiteralFactory(false, literalExpression.literal);
 
                 default:
                     return TypeUtils.primitiveTypeFactory(
