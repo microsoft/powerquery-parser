@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "../../../language";
+import { Ast, Type, TypeUtils } from "../../../language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
@@ -15,7 +15,9 @@ export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode)
         Ast.NodeKind.Constant,
     ]);
 
-    const maybeParameterType: Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const maybeParameterType: Type.TType | undefined = TypeUtils.assertAsTPrimitiveType(
+        inspectTypeFromChildAttributeIndex(state, xorNode, 2),
+    );
 
     return {
         ...maybeParameterType,

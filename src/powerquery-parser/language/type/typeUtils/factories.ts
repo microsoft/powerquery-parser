@@ -7,7 +7,7 @@ import { ParameterScopeItem } from "../../../inspection";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey, typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 import { dedupe } from "./typeUtils";
 
-export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.IPrimitiveType {
+export function primitiveTypeFactory<T extends Type.TypeKind>(isNullable: boolean, typeKind: T): Type.TPrimitiveType {
     const key: string = primitiveTypeMapKey(isNullable, typeKind);
     return Assert.asDefined(PrimitiveTypeConstantMap.get(key), `unknown key for PrimitiveTypeConstantMap`, {
         typeKind,
@@ -106,7 +106,17 @@ export function functionTypeFactory(
     };
 }
 
-export function parameterFactory(parameter: ParameterScopeItem): Type.TType {
+export function numberLiteralFactory(literal: string): Type.NumberLiteral {
+    return {
+        isNullable: false,
+        kind: Type.TypeKind.Number,
+        maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
+        literal,
+        normalizedLiteral: Number.parseFloat(literal),
+    };
+}
+
+export function parameterFactory(parameter: ParameterScopeItem): Type.TPrimitiveType {
     if (parameter.maybeType === undefined) {
         return Type.NoneInstance;
     }
@@ -164,6 +174,15 @@ export function tableTypeFactory(
         isNullable,
         fields,
         isOpen,
+    };
+}
+
+export function textLiteralFactory(literal: string): Type.TextLiteral {
+    return {
+        isNullable: false,
+        kind: Type.TypeKind.Text,
+        maybeExtendedKind: Type.ExtendedTypeKind.TextLiteral,
+        literal,
     };
 }
 

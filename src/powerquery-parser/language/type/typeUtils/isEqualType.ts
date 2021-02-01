@@ -91,6 +91,9 @@ function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedTyp
         case Type.ExtendedTypeKind.ListType:
             return isEqualListType(left, right as Type.ListType);
 
+        case Type.ExtendedTypeKind.NumberLiteral:
+            return isEqualNumberLiteral(left, right as Type.NumberLiteral);
+
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
             return isEqualPrimaryPrimitiveType(left, right as Type.PrimaryPrimitiveType);
 
@@ -102,6 +105,9 @@ function isEqualExtendedTypes(left: Type.TExtendedType, right: Type.TExtendedTyp
 
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
             return isEqualTableTypePrimaryExpression(left, right as Type.TableTypePrimaryExpression);
+
+        case Type.ExtendedTypeKind.TextLiteral:
+            return isEqualTextLiteral(left, right as Type.TextLiteral);
 
         default:
             throw Assert.isNever(left);
@@ -214,6 +220,10 @@ function isEqualListType(left: Type.ListType, right: Type.ListType): boolean {
     return left === right || (left.isNullable === right.isNullable && isEqualType(left.itemType, right.itemType));
 }
 
+function isEqualNumberLiteral(left: Type.NumberLiteral, right: Type.NumberLiteral): boolean {
+    return left === right || (left.isNullable === right.isNullable && left.literal === right.literal);
+}
+
 function isEqualRecordType(left: Type.RecordType, right: Type.RecordType): boolean {
     return left.isNullable === right.isNullable && isEqualFieldSpecificationList(left, right);
 }
@@ -227,4 +237,8 @@ function isEqualTableTypePrimaryExpression(
     right: Type.TableTypePrimaryExpression,
 ): boolean {
     return left === right || isEqualType(left.primaryExpression, right.primaryExpression);
+}
+
+function isEqualTextLiteral(left: Type.TextLiteral, right: Type.TextLiteral): boolean {
+    return left === right || (left.isNullable === right.isNullable && left.literal === right.literal);
 }

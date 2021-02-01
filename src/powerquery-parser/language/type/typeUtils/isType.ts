@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
+import { Assert } from "../../../common";
 
 export function isAction(type: Type.TType): type is Type.Action {
     return type.kind === Type.TypeKind.Action;
@@ -91,6 +92,10 @@ export function isNumber(type: Type.TType): type is Type.Number {
     return type.kind === Type.TypeKind.Number;
 }
 
+export function isNumberLiteral(type: Type.TType): type is Type.NumberLiteral {
+    return type.kind === Type.TypeKind.Number && type.maybeExtendedKind === Type.ExtendedTypeKind.NumberLiteral;
+}
+
 export function isPrimaryPrimitiveType(type: Type.TType): type is Type.PrimaryPrimitiveType {
     return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.PrimaryPrimitiveType;
 }
@@ -121,8 +126,51 @@ export function isText(type: Type.TType): type is Type.Text {
     return type.kind === Type.TypeKind.Text;
 }
 
+export function isTextLiteral(type: Type.TType): type is Type.TextLiteral {
+    return type.kind === Type.TypeKind.Text && type.maybeExtendedKind === Type.ExtendedTypeKind.TextLiteral;
+}
+
 export function isTime(type: Type.TType): type is Type.Time {
     return type.kind === Type.TypeKind.Time;
+}
+
+export function isTPrimitiveType(type: Type.TType): type is Type.TPrimitiveType {
+    switch (type.kind) {
+        case Type.TypeKind.Action:
+        case Type.TypeKind.Any:
+        case Type.TypeKind.AnyNonNull:
+        case Type.TypeKind.Binary:
+        case Type.TypeKind.Date:
+        case Type.TypeKind.DateTime:
+        case Type.TypeKind.DateTimeZone:
+        case Type.TypeKind.Duration:
+        case Type.TypeKind.Function:
+        case Type.TypeKind.List:
+        case Type.TypeKind.Logical:
+        case Type.TypeKind.None:
+        case Type.TypeKind.Null:
+        case Type.TypeKind.Number:
+        case Type.TypeKind.Record:
+        case Type.TypeKind.Table:
+        case Type.TypeKind.Text:
+        case Type.TypeKind.Time:
+        case Type.TypeKind.Type:
+            return type.maybeExtendedKind === undefined;
+
+        case Type.TypeKind.Unknown:
+        case Type.TypeKind.NotApplicable:
+            return false;
+
+        default:
+            throw Assert.isNever(type);
+    }
+}
+
+export function isTPrimitiveTypeLiteral(type: Type.TType): type is Type.TPrimitiveTypeLiteral {
+    return (
+        type.maybeExtendedKind === Type.ExtendedTypeKind.TextLiteral ||
+        type.maybeExtendedKind === Type.ExtendedTypeKind.NumberLiteral
+    );
 }
 
 export function isType(type: Type.TType): type is Type.Type {

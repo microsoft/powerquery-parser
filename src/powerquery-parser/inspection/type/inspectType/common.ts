@@ -191,12 +191,22 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TTy
             break;
 
         case Ast.NodeKind.NullableType:
-        case Ast.NodeKind.NullablePrimitiveType:
             result = {
                 ...inspectTypeFromChildAttributeIndex(state, xorNode, 1),
                 isNullable: true,
             };
             break;
+
+        case Ast.NodeKind.NullablePrimitiveType: {
+            const subType: Type.TType = TypeUtils.assertAsTPrimitiveType(
+                inspectTypeFromChildAttributeIndex(state, xorNode, 1),
+            );
+            result = {
+                ...subType,
+                isNullable: true,
+            };
+            break;
+        }
 
         case Ast.NodeKind.RecordLiteral:
         case Ast.NodeKind.RecordExpression:
