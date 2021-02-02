@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert } from "../../../common";
+import { Assert, StringUtils } from "../../../common";
 import { ParameterScopeItem } from "../../../inspection";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey, typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 import { dedupe } from "./typeUtils";
@@ -112,7 +112,7 @@ export function numberLiteralFactory(isNullable: boolean, literal: string): Type
         kind: Type.TypeKind.Number,
         maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
         literal,
-        normalizedLiteral: Number.parseFloat(literal),
+        normalizedLiteral: Number.parseFloat(Assert.asDefined(StringUtils.maybeNormalizeNumber(literal))),
     };
 }
 

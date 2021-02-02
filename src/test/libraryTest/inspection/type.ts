@@ -971,13 +971,19 @@ describe(`Inspection - Type`, () => {
         describe(`${Language.Ast.NodeKind.UnaryExpression}`, () => {
             it(`+1`, () => {
                 const expression: string = `+1`;
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "+1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`-1`, () => {
                 const expression: string = `-1`;
                 const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "-1");
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            it(`--1`, () => {
+                const expression: string = `--1`;
+                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "--1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
