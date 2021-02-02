@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as ArrayUtils from "./arrayUtils";
-import * as Assert from "./assert";
-import * as CommonError from "./error";
-import * as MapUtils from "./mapUtils";
-import * as Pattern from "./patterns";
-import * as StringUtils from "./stringUtils";
-import * as Traverse from "./traversal";
-import * as TypeScriptUtils from "./typeScriptTypeUtils";
+export * as ArrayUtils from "./arrayUtils";
+export * as Assert from "./assert";
+export * as CommonError from "./error";
+export * as MapUtils from "./mapUtils";
+export * as Pattern from "./patterns";
+export * as StringUtils from "./stringUtils";
+export * as Traverse from "./traversal";
+export * as TypeScriptUtils from "./typeScriptTypeUtils";
 
-export { ArrayUtils, Assert, CommonError, MapUtils, Pattern, StringUtils, Traverse, TypeScriptUtils };
 export * from "./cancellationToken";
 export * from "./partialResult";
 export * from "./result";
