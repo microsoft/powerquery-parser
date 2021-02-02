@@ -30,6 +30,9 @@ export type TExtendedTypeKind =
 export type TPrimitiveTypeLiteral = NumberLiteral | TextLiteral;
 export type TPrimitiveTypeLiteralExtendedKind = ExtendedTypeKind.NumberLiteral | ExtendedTypeKind.TextLiteral;
 
+export type TNumber = Number | NumberLiteral;
+export type TText = Text | TextLiteral;
+
 export type Action = IPrimitiveType<TypeKind.Action>;
 export type Any = IPrimitiveType<TypeKind.Any>;
 export type AnyNonNull = IPrimitiveType<TypeKind.AnyNonNull>;

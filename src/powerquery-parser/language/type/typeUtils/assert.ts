@@ -111,7 +111,7 @@ export function assertAsNull(type: Type.TType): Type.Null {
     return type;
 }
 
-export function assertAsNumber(type: Type.TType): Type.Number | Type.NumberLiteral {
+export function assertAsNumber(type: Type.TType): Type.TNumber {
     assertIsNumber(type);
     return type;
 }
@@ -151,7 +151,7 @@ export function assertAsTableTypePrimaryExpression(type: Type.TType): Type.Table
     return type;
 }
 
-export function assertAsText(type: Type.TType): Type.Text | Type.TextLiteral {
+export function assertAsText(type: Type.TType): Type.TText {
     assertIsText(type);
     return type;
 }
@@ -438,7 +438,7 @@ export function assertIsNull(type: Type.TType): asserts type is Type.Null {
     }
 }
 
-export function assertIsNumber(type: Type.TType): asserts type is Type.Number | Type.NumberLiteral {
+export function assertIsNumber(type: Type.TType): asserts type is Type.TNumber {
     if (!isType.isNumber(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -580,7 +580,7 @@ export function assertIsTableTypePrimaryExpression(type: Type.TType): asserts ty
     }
 }
 
-export function assertIsText(type: Type.TType): asserts type is Type.Text | Type.TextLiteral {
+export function assertIsText(type: Type.TType): asserts type is Type.TText {
     if (!isType.isText(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
