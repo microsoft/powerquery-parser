@@ -96,7 +96,7 @@ function nameOfFunctionSignature(type: Type.FunctionSignature, includeFatArrow: 
         })
         .join(", ");
 
-    return `(${parameters}) ${includeFatArrow ? "=>" : ""} ${nameOf(type.returnType)}`;
+    return `(${parameters})${includeFatArrow ? " =>" : ""} ${nameOf(type.returnType)}`;
 }
 
 function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {
