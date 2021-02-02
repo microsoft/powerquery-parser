@@ -58,12 +58,39 @@ export function normalizeIdentifier(text: string): string {
     return isQuotedIdentifier(text) ? text.slice(2, text.length - 1) : text;
 }
 
-export function isIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
-    return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
+export function maybeNormalizeNumber(text: string): string | undefined {
+    let isPositive: boolean = true;
+    let charOffset: number = 0;
+    let char: string | undefined = text[charOffset];
+
+    while (char === "+" || char === "-") {
+        if (char === "-") {
+            isPositive = !isPositive;
+        }
+
+        charOffset += 1;
+        char = text[charOffset];
+    }
+
+    const allButUnaryOperators: string = text.slice(charOffset);
+
+    if (maybeRegexMatchLength(Pattern.Numeric, allButUnaryOperators, 0) !== allButUnaryOperators.length) {
+        return undefined;
+    }
+
+    return isPositive === true ? allButUnaryOperators : `-${allButUnaryOperators}`;
 }
 
 export function isGeneralizedIdentifier(text: string): boolean {
     return maybeGeneralizedIdentifierLength(text, 0) === text.length;
+}
+
+export function isIdentifier(text: string, allowTrailingPeriod: boolean): boolean {
+    return maybeIdentifierLength(text, 0, allowTrailingPeriod) === text.length;
+}
+
+export function isNumeric(text: string): boolean {
+    return maybeRegexMatchLength(Pattern.Numeric, text, 0) === text.length;
 }
 
 export function isQuotedIdentifier(text: string): boolean {

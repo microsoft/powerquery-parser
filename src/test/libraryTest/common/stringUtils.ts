@@ -47,4 +47,16 @@ describe("StringUtils", () => {
         it(`foo`, () => expect(StringUtils.normalizeIdentifier(`foo`)).to.equal(`foo`));
         it(`#"foo"`, () => expect(StringUtils.normalizeIdentifier(`#"foo"`)).to.equal(`foo`));
     });
+
+    describe(`maybeNormalizeNumber`, () => {
+        // tslint:disable-next-line: chai-vague-errors
+        it(`foo`, () => expect(StringUtils.maybeNormalizeNumber(`foo`)).to.be.undefined);
+        it(`1`, () => expect(StringUtils.maybeNormalizeNumber(`1`)).to.equal("1"));
+        it(`-1`, () => expect(StringUtils.maybeNormalizeNumber(`-1`)).to.equal("-1"));
+        it(`--1`, () => expect(StringUtils.maybeNormalizeNumber(`--1`)).to.equal("1"));
+        it(`+1`, () => expect(StringUtils.maybeNormalizeNumber(`+1`)).to.equal("1"));
+        it(`-+1`, () => expect(StringUtils.maybeNormalizeNumber(`-+1`)).to.equal("-1"));
+        it(`+-1`, () => expect(StringUtils.maybeNormalizeNumber(`+-1`)).to.equal("-1"));
+        it(`--1E1`, () => expect(StringUtils.maybeNormalizeNumber(`--1E1`)).to.equal("1E1"));
+    });
 });
