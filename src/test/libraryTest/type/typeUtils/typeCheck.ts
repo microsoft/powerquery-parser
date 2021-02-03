@@ -4,14 +4,6 @@
 import { expect } from "chai";
 import "mocha";
 import { Language } from "../../../..";
-// import {
-//     CheckedDefinedFunction,
-//     CheckedDefinedList,
-//     CheckedDefinedRecord,
-//     CheckedDefinedTable,
-//     Mismatch,
-//     Language.TChecked,
-// } from "../../../../powerquery-parser/language/type/typeUtils";
 
 interface AbridgedChecked<K = number | string> {
     readonly valid: ReadonlyArray<K>;
@@ -40,7 +32,7 @@ function assertAbridgedEqual(actual: AbridgedChecked, expected: AbridgedChecked)
     expect(actual.missing).to.have.members(expected.missing, "mismatch on missing");
 }
 
-describe(`TypeUtils - typeCheck`, () => {
+describe(`TypeUtils.typeCheck`, () => {
     describe(`Table.RenameColumns`, () => {
         it(`list with two text elements, valid`, () => {
             const valueType: Language.Type.DefinedList = Language.TypeUtils.definedListFactory(false, [
