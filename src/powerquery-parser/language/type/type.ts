@@ -30,7 +30,12 @@ export type TExtendedTypeKind =
 export type TPrimitiveTypeLiteral = NumberLiteral | TextLiteral;
 export type TPrimitiveTypeLiteralExtendedKind = ExtendedTypeKind.NumberLiteral | ExtendedTypeKind.TextLiteral;
 
+export type TAny = Any | AnyUnion;
+export type TList = List | DefinedList;
+export type TFunction = Function | DefinedFunction;
 export type TNumber = Number | NumberLiteral;
+export type TRecord = Record | DefinedRecord;
+export type TTable = Table | DefinedTable;
 export type TText = Text | TextLiteral;
 
 export type Action = IPrimitiveType<TypeKind.Action>;

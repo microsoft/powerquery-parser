@@ -126,7 +126,7 @@ export function assertAsPrimaryPrimitiveType(type: Type.TType): Type.PrimaryPrim
     return type;
 }
 
-export function assertAsRecord(type: Type.TType): Type.Record | Type.DefinedRecord {
+export function assertAsRecord(type: Type.TType): Type.TRecord {
     assertIsRecord(type);
     return type;
 }
@@ -136,7 +136,7 @@ export function assertAsRecordType(type: Type.TType): Type.RecordType {
     return type;
 }
 
-export function assertAsTable(type: Type.TType): Type.Table | Type.DefinedTable {
+export function assertAsTable(type: Type.TType): Type.TTable {
     assertIsTable(type);
     return type;
 }
@@ -520,7 +520,7 @@ export function assertIsTPrimitiveTypeLiteral(type: Type.TType): asserts type is
     }
 }
 
-export function assertIsRecord(type: Type.TType): asserts type is Type.Record | Type.DefinedRecord {
+export function assertIsRecord(type: Type.TType): asserts type is Type.TRecord {
     if (!isType.isRecord(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
@@ -544,7 +544,7 @@ export function assertIsRecordType(type: Type.TType): asserts type is Type.Recor
     }
 }
 
-export function assertIsTable(type: Type.TType): asserts type is Type.Table | Type.DefinedTable {
+export function assertIsTable(type: Type.TType): asserts type is Type.TTable {
     if (!isType.isTable(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
