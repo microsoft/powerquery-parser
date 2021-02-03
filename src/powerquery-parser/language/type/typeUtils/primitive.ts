@@ -141,7 +141,7 @@ export function typeKindFromPrimitiveTypeConstantKind(
     }
 }
 
-export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.IPrimitiveType> = new Map<string, Type.IPrimitiveType>([
+export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> = new Map<string, Type.TPrimitiveType>([
     [primitiveTypeMapKey(Type.AnyInstance.isNullable, Type.AnyInstance.kind), Type.AnyInstance],
     [primitiveTypeMapKey(Type.AnyNonNullInstance.isNullable, Type.AnyNonNullInstance.kind), Type.AnyNonNullInstance],
     [primitiveTypeMapKey(Type.BinaryInstance.isNullable, Type.BinaryInstance.kind), Type.BinaryInstance],
