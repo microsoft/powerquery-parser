@@ -11,7 +11,7 @@ export function assertAsAction(type: Type.TType): Type.Action {
     return type;
 }
 
-export function assertAsAny(type: Type.TType): Type.Any | Type.AnyUnion {
+export function assertAsAny(type: Type.TType): Type.TAny {
     assertIsAny(type);
     return type;
 }
@@ -76,7 +76,7 @@ export function assertAsDuration(type: Type.TType): Type.Duration {
     return type;
 }
 
-export function assertAsFunction(type: Type.TType): Type.Function | Type.DefinedFunction {
+export function assertAsFunction(type: Type.TType): Type.TFunction {
     assertIsFunction(type);
     return type;
 }
@@ -86,7 +86,7 @@ export function assertAsFunctionType(type: Type.TType): Type.FunctionType {
     return type;
 }
 
-export function assertAsList(type: Type.TType): Type.List | Type.DefinedList {
+export function assertAsList(type: Type.TType): Type.TList {
     assertIsList(type);
     return type;
 }
@@ -354,7 +354,7 @@ export function assertIsDuration(type: Type.TType): asserts type is Type.Duratio
     }
 }
 
-export function assertIsFunction(type: Type.TType): asserts type is Type.Function | Type.DefinedFunction {
+export function assertIsFunction(type: Type.TType): asserts type is Type.TFunction {
     if (!isType.isFunction(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,
