@@ -378,7 +378,7 @@ export function assertIsFunctionType(type: Type.TType): asserts type is Type.Fun
     }
 }
 
-export function assertIsList(type: Type.TType): asserts type is Type.List | Type.DefinedList {
+export function assertIsList(type: Type.TType): asserts type is Type.TList {
     if (!isType.isList(type)) {
         const details: AssertErrorDetails = {
             givenTypeKind: type.kind,

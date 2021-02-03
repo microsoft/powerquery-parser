@@ -8,7 +8,7 @@ export function isAction(type: Type.TType): type is Type.Action {
     return type.kind === Type.TypeKind.Action;
 }
 
-export function isAny(type: Type.TType): type is Type.Any | Type.AnyUnion {
+export function isAny(type: Type.TType): type is Type.TAny {
     return type.kind === Type.TypeKind.Any;
 }
 
@@ -69,7 +69,7 @@ export function isFieldSpecificationList(type: Type.TType): type is Type.TType &
     );
 }
 
-export function isFunction(type: Type.TType): type is Type.Function | Type.DefinedFunction {
+export function isFunction(type: Type.TType): type is Type.TFunction {
     return type.kind === Type.TypeKind.Function;
 }
 
@@ -84,7 +84,7 @@ export function isFunctionType(type: Type.TType): type is Type.FunctionType {
     return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.FunctionType;
 }
 
-export function isList(type: Type.TType): type is Type.List | Type.DefinedList {
+export function isList(type: Type.TType): type is Type.TList {
     return type.kind === Type.TypeKind.List;
 }
 
