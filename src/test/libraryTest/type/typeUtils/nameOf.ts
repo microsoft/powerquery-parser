@@ -9,6 +9,9 @@ import { Type, TypeUtils } from "../../../../powerquery-parser/language";
 describe(`TypeUtils.nameOf`, () => {
     describe(`non extended`, () => {
         describe("non-nullable", () => {
+            it(`${Type.ActionInstance.kind}`, () => {
+                expect(TypeUtils.nameOf(Type.ActionInstance)).to.equal("action");
+            });
             it(`${Type.AnyInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.AnyInstance)).to.equal("any");
             });
@@ -43,6 +46,9 @@ describe(`TypeUtils.nameOf`, () => {
             it(`${Type.NoneInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.NoneInstance)).to.equal("none");
             });
+            it(`${Type.NotApplicableInstance.kind}`, () => {
+                expect(TypeUtils.nameOf(Type.NotApplicableInstance)).to.equal("not applicable");
+            });
             it(`${Type.NullInstance.kind}`, () => {
                 // tslint:disable-next-line: chai-vague-errors
                 expect(TypeUtils.nameOf(Type.NullInstance)).to.equal("null");
@@ -50,25 +56,26 @@ describe(`TypeUtils.nameOf`, () => {
             it(`${Type.NumberInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.NumberInstance)).to.equal("number");
             });
+            it(`${Type.NumberInstance.kind} literal`, () => {
+                expect(TypeUtils.nameOf(TypeUtils.numberLiteralFactory(false, "1"))).to.equal("1");
+            });
             it(`${Type.RecordInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.RecordInstance)).to.equal("record");
             });
             it(`${Type.TableInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.TableInstance)).to.equal("table");
             });
-            it(`${Type.TypePrimitiveInstance.kind}`, () => {
-                expect(TypeUtils.nameOf(Type.TypePrimitiveInstance)).to.equal("type");
+            it(`${Type.TextInstance.kind}`, () => {
+                expect(TypeUtils.nameOf(Type.TextInstance)).to.equal("number");
             });
-
-            it(`${Type.ActionInstance.kind}`, () => {
-                expect(TypeUtils.nameOf(Type.ActionInstance)).to.equal("action");
+            it(`${Type.TextInstance.kind} literal`, () => {
+                expect(TypeUtils.nameOf(TypeUtils.textLiteralFactory(false, `"foo"`))).to.equal(`"foo"`);
             });
             it(`${Type.TimeInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.TimeInstance)).to.equal("time");
             });
-
-            it(`${Type.NotApplicableInstance.kind}`, () => {
-                expect(TypeUtils.nameOf(Type.NotApplicableInstance)).to.equal("not applicable");
+            it(`${Type.TypePrimitiveInstance.kind}`, () => {
+                expect(TypeUtils.nameOf(Type.TypePrimitiveInstance)).to.equal("type");
             });
             it(`${Type.UnknownInstance.kind}`, () => {
                 expect(TypeUtils.nameOf(Type.UnknownInstance)).to.equal("unknown");
