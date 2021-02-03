@@ -60,8 +60,24 @@ export function isDuration(type: Type.TType): type is Type.Duration {
     return type.kind === Type.TypeKind.Duration;
 }
 
+export function isFieldSpecificationList(type: Type.TType): type is Type.TType & Type.FieldSpecificationList {
+    return (
+        (type.kind === Type.TypeKind.Record && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord) ||
+        (type.kind === Type.TypeKind.Table && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable) ||
+        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.RecordType) ||
+        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.TableType)
+    );
+}
+
 export function isFunction(type: Type.TType): type is Type.Function | Type.DefinedFunction {
     return type.kind === Type.TypeKind.Function;
+}
+
+export function isFunctionSignature(type: Type.TType): type is Type.TType & Type.FunctionSignature {
+    return (
+        (type.kind === Type.TypeKind.Function && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) ||
+        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.FunctionType)
+    );
 }
 
 export function isFunctionType(type: Type.TType): type is Type.FunctionType {
@@ -100,7 +116,7 @@ export function isPrimaryPrimitiveType(type: Type.TType): type is Type.PrimaryPr
     return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.PrimaryPrimitiveType;
 }
 
-export function isRecord(type: Type.TType): type is Type.Record | Type.DefinedRecord {
+export function isRecord(type: Type.TType): type is Type.TRecord {
     return type.kind === Type.TypeKind.Record;
 }
 
@@ -108,7 +124,7 @@ export function isRecordType(type: Type.TType): type is Type.RecordType {
     return type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.RecordType;
 }
 
-export function isTable(type: Type.TType): type is Type.Table | Type.DefinedTable {
+export function isTable(type: Type.TType): type is Type.TTable {
     return type.kind === Type.TypeKind.Table;
 }
 

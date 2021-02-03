@@ -165,22 +165,6 @@ export function typeKindFromLiteralKind(literalKind: Ast.LiteralKind): Type.Type
     }
 }
 
-export function isFieldSpecificationList(type: Type.TType): type is Type.TType & Type.FieldSpecificationList {
-    return (
-        (type.kind === Type.TypeKind.Record && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedRecord) ||
-        (type.kind === Type.TypeKind.Table && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedTable) ||
-        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.RecordType) ||
-        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.TableType)
-    );
-}
-
-export function isFunctionSignature(type: Type.TType): type is Type.TType & Type.FunctionSignature {
-    return (
-        (type.kind === Type.TypeKind.Function && type.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) ||
-        (type.kind === Type.TypeKind.Type && type.maybeExtendedKind === Type.ExtendedTypeKind.FunctionType)
-    );
-}
-
 export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.TType): boolean {
     // Fast comparison then deep comparison
     return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
