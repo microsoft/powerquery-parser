@@ -66,7 +66,7 @@ describe(`TypeUtils.nameOf`, () => {
                 expect(TypeUtils.nameOf(Type.TableInstance)).to.equal("table");
             });
             it(`${Type.TextInstance.kind}`, () => {
-                expect(TypeUtils.nameOf(Type.TextInstance)).to.equal("number");
+                expect(TypeUtils.nameOf(Type.TextInstance)).to.equal("text");
             });
             it(`${Type.TextInstance.kind} literal`, () => {
                 expect(TypeUtils.nameOf(TypeUtils.textLiteralFactory(false, `"foo"`))).to.equal(`"foo"`);
@@ -83,103 +83,94 @@ describe(`TypeUtils.nameOf`, () => {
         });
 
         describe("nullable", () => {
+            it(`${Type.NullableActionInstance.kind}`, () => {
+                const actual: string = TypeUtils.nameOf(Type.NullableActionInstance);
+                expect(actual).to.equal("nullable action", undefined);
+            });
             it(`${Type.NullableAnyInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableAnyInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable any");
+                expect(actual).to.equal("nullable any", undefined);
             });
             // anynonnull can't be nullable
             it(`${Type.NullableBinaryInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableBinaryInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable binary");
+                expect(actual).to.equal("nullable binary", undefined);
             });
             it(`${Type.NullableDateInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableDateInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable date");
+                expect(actual).to.equal("nullable date", undefined);
             });
             it(`${Type.NullableDateTimeInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableDateTimeInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable datetime");
+                expect(actual).to.equal("nullable datetime", undefined);
             });
             it(`${Type.NullableDateTimeZoneInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableDateTimeZoneInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable datetimezone");
+                expect(actual).to.equal("nullable datetimezone", undefined);
             });
             it(`${Type.NullableDurationInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableDurationInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable duration");
+                expect(actual).to.equal("nullable duration", undefined);
             });
             it(`${Type.NullableFunctionInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableFunctionInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable function");
+                expect(actual).to.equal("nullable function", undefined);
             });
             it(`${Type.NullableListInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableListInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable list");
+                expect(actual).to.equal("nullable list", undefined);
             });
             it(`${Type.NullableLogicalInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableLogicalInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable logical");
+                expect(actual).to.equal("nullable logical", undefined);
             });
             it(`${Type.NullableNoneInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableNoneInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable none");
+                expect(actual).to.equal("nullable none", undefined);
+            });
+            it(`${Type.NullableNotApplicableInstance.kind}`, () => {
+                const actual: string = TypeUtils.nameOf(Type.NullableNotApplicableInstance);
+                expect(actual).to.equal("nullable not applicable", undefined);
             });
             it(`${Type.NullableNullInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableNullInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable null");
+                expect(actual).to.equal("nullable null", undefined);
             });
             it(`${Type.NullableNumberInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableNumberInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable number");
+                expect(actual).to.equal("nullable number", undefined);
+            });
+            it(`${Type.NullableNumberInstance.kind} literal`, () => {
+                const actual: string = TypeUtils.nameOf(TypeUtils.numberLiteralFactory(true, `1`));
+                expect(actual).to.equal(`nullable 1`, undefined);
             });
             it(`${Type.NullableRecordInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableRecordInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable record");
+                expect(actual).to.equal("nullable record", undefined);
             });
             it(`${Type.NullableTableInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableTableInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable table");
+                expect(actual).to.equal("nullable table", undefined);
             });
-            it(`${Type.NullableTypeInstance.kind}`, () => {
-                const actual: string = TypeUtils.nameOf(Type.NullableTypeInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable type");
+            it(`${Type.TextInstance.kind}`, () => {
+                const actual: string = TypeUtils.nameOf(Type.NullableTextInstance);
+                expect(actual).to.equal("nullable text", undefined);
             });
-
-            it(`${Type.NullableActionInstance.kind}`, () => {
-                const actual: string = TypeUtils.nameOf(Type.NullableActionInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable action");
+            it(`${Type.TextInstance.kind} literal`, () => {
+                const actual: string = TypeUtils.nameOf(TypeUtils.textLiteralFactory(true, `"foo"`));
+                expect(actual).to.equal(`nullable "foo"`, undefined);
             });
             it(`${Type.NullableTimeInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableTimeInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable time");
+                expect(actual).to.equal("nullable time", undefined);
             });
-
-            it(`${Type.NullableNotApplicableInstance.kind}`, () => {
-                const actual: string = TypeUtils.nameOf(Type.NullableNotApplicableInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable not applicable");
+            it(`${Type.NullableTypeInstance.kind}`, () => {
+                const actual: string = TypeUtils.nameOf(Type.NullableTypeInstance);
+                expect(actual).to.equal("nullable type", undefined);
             });
             it(`${Type.NullableUnknownInstance.kind}`, () => {
                 const actual: string = TypeUtils.nameOf(Type.NullableUnknownInstance);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal("nullable unknown");
+                expect(actual).to.equal("nullable unknown", undefined);
             });
         });
     });
@@ -215,8 +206,8 @@ describe(`TypeUtils.nameOf`, () => {
                     Type.NullableAnyInstance,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`() => nullable any`);
+
+                expect(actual).to.equal(`() => nullable any`, undefined);
             });
 
             it(`(param1 as number, param2 as nullable number, optional param3 as number, optional param4 as nullable number) => any`, () => {
@@ -251,9 +242,10 @@ describe(`TypeUtils.nameOf`, () => {
                     Type.AnyInstance,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
+
                 expect(actual).to.equal(
                     `(param1: number, param2: nullable number, param3: optional number, param4: optional nullable number) => any`,
+                    undefined,
                 );
             });
         });
@@ -268,8 +260,8 @@ describe(`TypeUtils.nameOf`, () => {
             it(`nullable {}`, () => {
                 const type: Type.DefinedList = TypeUtils.definedListFactory(true, []);
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`nullable {}`);
+
+                expect(actual).to.equal(`nullable {}`, undefined);
             });
 
             it(`{number, nullable text}`, () => {
@@ -278,8 +270,8 @@ describe(`TypeUtils.nameOf`, () => {
                     Type.NullableTextInstance,
                 ]);
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`{number, nullable text}`);
+
+                expect(actual).to.equal(`{number, nullable text}`, undefined);
             });
         });
 
@@ -293,8 +285,8 @@ describe(`TypeUtils.nameOf`, () => {
             it(`nullable type {}`, () => {
                 const type: Type.DefinedListType = TypeUtils.definedListTypeFactory(true, []);
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`nullable type {}`);
+
+                expect(actual).to.equal(`nullable type {}`, undefined);
             });
 
             it(`type {number, nullable text}`, () => {
@@ -303,8 +295,8 @@ describe(`TypeUtils.nameOf`, () => {
                     Type.NullableTextInstance,
                 ]);
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`type {number, nullable text}`);
+
+                expect(actual).to.equal(`type {number, nullable text}`, undefined);
             });
         });
 
@@ -331,8 +323,8 @@ describe(`TypeUtils.nameOf`, () => {
                     false,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`[foo: number, bar: nullable text]`);
+
+                expect(actual).to.equal(`[foo: number, bar: nullable text]`, undefined);
             });
 
             it(`[foo = number, bar = nullable text, ...]`, () => {
@@ -345,8 +337,8 @@ describe(`TypeUtils.nameOf`, () => {
                     true,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`[foo: number, bar: nullable text, ...]`);
+
+                expect(actual).to.equal(`[foo: number, bar: nullable text, ...]`, undefined);
             });
         });
 
@@ -373,8 +365,8 @@ describe(`TypeUtils.nameOf`, () => {
                     false,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`table [foo: number, bar: nullable text]`);
+
+                expect(actual).to.equal(`table [foo: number, bar: nullable text]`, undefined);
             });
 
             it(`table [foo = number, bar = nullable text, ...]`, () => {
@@ -387,8 +379,8 @@ describe(`TypeUtils.nameOf`, () => {
                     true,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`);
+
+                expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`, undefined);
             });
         });
 
@@ -431,9 +423,10 @@ describe(`TypeUtils.nameOf`, () => {
                     Type.AnyInstance,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
+
                 expect(actual).to.equal(
                     `type function (param1: number, param2: nullable number, param3: optional number, param4: optional nullable number) any`,
+                    undefined,
                 );
             });
         });
@@ -481,8 +474,8 @@ describe(`TypeUtils.nameOf`, () => {
                     false,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`type [foo: number, bar: nullable text]`);
+
+                expect(actual).to.equal(`type [foo: number, bar: nullable text]`, undefined);
             });
 
             it(`type [foo = number, bar = nullable text, ...]`, () => {
@@ -495,8 +488,8 @@ describe(`TypeUtils.nameOf`, () => {
                     true,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`type [foo: number, bar: nullable text, ...]`);
+
+                expect(actual).to.equal(`type [foo: number, bar: nullable text, ...]`, undefined);
             });
         });
 
@@ -527,8 +520,8 @@ describe(`TypeUtils.nameOf`, () => {
                     false,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`type table [foo: number, bar: nullable text]`);
+
+                expect(actual).to.equal(`type table [foo: number, bar: nullable text]`, undefined);
             });
 
             it(`type table [foo = number, bar = nullable text, ...]`, () => {
@@ -541,8 +534,8 @@ describe(`TypeUtils.nameOf`, () => {
                     true,
                 );
                 const actual: string = TypeUtils.nameOf(type);
-                // tslint:disable-next-line: chai-vague-errors
-                expect(actual).to.equal(`type table [foo: number, bar: nullable text, ...]`);
+
+                expect(actual).to.equal(`type table [foo: number, bar: nullable text, ...]`, undefined);
             });
         });
 

@@ -7,6 +7,10 @@ import { Assert, StringUtils } from "../../../common";
 
 export function nameOf(type: Type.TType): string {
     switch (type.maybeExtendedKind) {
+        case Type.ExtendedTypeKind.NumberLiteral:
+        case Type.ExtendedTypeKind.TextLiteral:
+            return prefixNullableIfRequired(type, `${type.literal}`);
+
         case Type.ExtendedTypeKind.AnyUnion:
             return type.unionedTypePairs.map((subtype: Type.TType) => nameOf(subtype)).join(" | ");
 
@@ -31,9 +35,6 @@ export function nameOf(type: Type.TType): string {
         case Type.ExtendedTypeKind.ListType:
             return prefixNullableIfRequired(type, `type {${nameOf(type.itemType)}}`);
 
-        case Type.ExtendedTypeKind.NumberLiteral:
-            return prefixNullableIfRequired(type, `${type.literal}`);
-
         case Type.ExtendedTypeKind.PrimaryPrimitiveType:
             return prefixNullableIfRequired(type, `type ${nameOf(type.primitiveType)}`);
 
@@ -45,9 +46,6 @@ export function nameOf(type: Type.TType): string {
 
         case Type.ExtendedTypeKind.TableTypePrimaryExpression:
             return prefixNullableIfRequired(type, `type table ${nameOf(type.primaryExpression)}`);
-
-        case Type.ExtendedTypeKind.TextLiteral:
-            return prefixNullableIfRequired(type, `"${type.literal}"`);
 
         case undefined:
             return prefixNullableIfRequired(type, nameOfTypeKind(type.kind));
