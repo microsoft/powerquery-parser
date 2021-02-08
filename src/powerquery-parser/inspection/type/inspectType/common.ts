@@ -336,7 +336,17 @@ export function maybeDereferencedIdentifierType(state: InspectTypeState, xorNode
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (maybeScopeItem === undefined) {
-        return maybeExternalValueType(state.settings.externalTypeResolver, deferencedLiteral);
+        const maybeResolver: ExternalType.TExternalTypeResolverFn | undefined =
+            state.settings.maybeExternalTypeResolver;
+
+        if (maybeResolver === undefined) {
+            return undefined;
+        }
+
+        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequestFactory(
+            deferencedLiteral,
+        );
+        return maybeResolver(request);
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
@@ -447,12 +457,4 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             maybeNextXorNode.node.kind === Ast.NodeKind.IdentifierExpression)
         ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
         : xorNode;
-}
-
-function maybeExternalValueType(
-    externalTypeResolverFn: ExternalType.TExternalTypeResolverFn,
-    identifierLiteral: string,
-): Type.TType | undefined {
-    const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequestFactory(identifierLiteral);
-    return externalTypeResolverFn(request);
 }

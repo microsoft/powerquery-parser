@@ -170,6 +170,35 @@ export function isTypeInArray(collection: ReadonlyArray<Type.TType>, item: Type.
     return collection.includes(item) || collection.find((type: Type.TType) => isEqualType(item, type)) !== undefined;
 }
 
+export function isTypeKind(text: string): text is Type.TypeKind {
+    switch (text) {
+        case Type.TypeKind.Action:
+        case Type.TypeKind.Any:
+        case Type.TypeKind.Binary:
+        case Type.TypeKind.Date:
+        case Type.TypeKind.DateTime:
+        case Type.TypeKind.DateTimeZone:
+        case Type.TypeKind.Duration:
+        case Type.TypeKind.Function:
+        case Type.TypeKind.List:
+        case Type.TypeKind.Logical:
+        case Type.TypeKind.None:
+        case Type.TypeKind.NotApplicable:
+        case Type.TypeKind.Null:
+        case Type.TypeKind.Number:
+        case Type.TypeKind.Record:
+        case Type.TypeKind.Table:
+        case Type.TypeKind.Text:
+        case Type.TypeKind.Time:
+        case Type.TypeKind.Type:
+        case Type.TypeKind.Unknown:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 export function isValidInvocation(functionType: Type.DefinedFunction, args: ReadonlyArray<Type.TType>): boolean {
     // You can't provide more arguments than are on the function signature.
     if (args.length > functionType.parameters.length) {

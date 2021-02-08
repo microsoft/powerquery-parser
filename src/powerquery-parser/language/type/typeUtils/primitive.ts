@@ -142,6 +142,7 @@ export function typeKindFromPrimitiveTypeConstantKind(
 }
 
 export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> = new Map<string, Type.TPrimitiveType>([
+    [primitiveTypeMapKey(Type.ActionInstance.isNullable, Type.ActionInstance.kind), Type.ActionInstance],
     [primitiveTypeMapKey(Type.AnyInstance.isNullable, Type.AnyInstance.kind), Type.AnyInstance],
     [primitiveTypeMapKey(Type.AnyNonNullInstance.isNullable, Type.AnyNonNullInstance.kind), Type.AnyNonNullInstance],
     [primitiveTypeMapKey(Type.BinaryInstance.isNullable, Type.BinaryInstance.kind), Type.BinaryInstance],
@@ -156,22 +157,26 @@ export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> 
     [primitiveTypeMapKey(Type.ListInstance.isNullable, Type.ListInstance.kind), Type.ListInstance],
     [primitiveTypeMapKey(Type.LogicalInstance.isNullable, Type.LogicalInstance.kind), Type.LogicalInstance],
     [primitiveTypeMapKey(Type.NoneInstance.isNullable, Type.NoneInstance.kind), Type.NoneInstance],
+    [
+        primitiveTypeMapKey(Type.NotApplicableInstance.isNullable, Type.NotApplicableInstance.kind),
+        Type.NotApplicableInstance,
+    ],
     [primitiveTypeMapKey(Type.NullInstance.isNullable, Type.NullInstance.kind), Type.NullInstance],
     [primitiveTypeMapKey(Type.NumberInstance.isNullable, Type.NumberInstance.kind), Type.NumberInstance],
     [primitiveTypeMapKey(Type.RecordInstance.isNullable, Type.RecordInstance.kind), Type.RecordInstance],
     [primitiveTypeMapKey(Type.TableInstance.isNullable, Type.TableInstance.kind), Type.TableInstance],
+    [primitiveTypeMapKey(Type.TimeInstance.isNullable, Type.TimeInstance.kind), Type.TimeInstance],
     [primitiveTypeMapKey(Type.TextInstance.isNullable, Type.TextInstance.kind), Type.TextInstance],
     [
         primitiveTypeMapKey(Type.TypePrimitiveInstance.isNullable, Type.TypePrimitiveInstance.kind),
         Type.TypePrimitiveInstance,
     ],
-    [primitiveTypeMapKey(Type.ActionInstance.isNullable, Type.ActionInstance.kind), Type.ActionInstance],
-    [primitiveTypeMapKey(Type.TimeInstance.isNullable, Type.TimeInstance.kind), Type.TimeInstance],
-    [
-        primitiveTypeMapKey(Type.NotApplicableInstance.isNullable, Type.NotApplicableInstance.kind),
-        Type.NotApplicableInstance,
-    ],
     [primitiveTypeMapKey(Type.UnknownInstance.isNullable, Type.UnknownInstance.kind), Type.UnknownInstance],
+
+    [
+        primitiveTypeMapKey(Type.NullableActionInstance.isNullable, Type.NullableActionInstance.kind),
+        Type.NullableActionInstance,
+    ],
     [primitiveTypeMapKey(Type.NullableAnyInstance.isNullable, Type.NullableAnyInstance.kind), Type.NullableAnyInstance],
     [
         primitiveTypeMapKey(Type.NullableBinaryInstance.isNullable, Type.NullableBinaryInstance.kind),
@@ -210,6 +215,10 @@ export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> 
         Type.NullableNoneInstance,
     ],
     [
+        primitiveTypeMapKey(Type.NullableNotApplicableInstance.isNullable, Type.NullableNotApplicableInstance.kind),
+        Type.NullableNotApplicableInstance,
+    ],
+    [
         primitiveTypeMapKey(Type.NullableNullInstance.isNullable, Type.NullableNullInstance.kind),
         Type.NullableNullInstance,
     ],
@@ -230,20 +239,12 @@ export const PrimitiveTypeConstantMap: ReadonlyMap<string, Type.TPrimitiveType> 
         Type.NullableTextInstance,
     ],
     [
-        primitiveTypeMapKey(Type.NullableTypeInstance.isNullable, Type.NullableTypeInstance.kind),
-        Type.NullableTypeInstance,
-    ],
-    [
-        primitiveTypeMapKey(Type.NullableActionInstance.isNullable, Type.NullableActionInstance.kind),
-        Type.NullableActionInstance,
-    ],
-    [
         primitiveTypeMapKey(Type.NullableTimeInstance.isNullable, Type.NullableTimeInstance.kind),
         Type.NullableTimeInstance,
     ],
     [
-        primitiveTypeMapKey(Type.NullableNotApplicableInstance.isNullable, Type.NullableNotApplicableInstance.kind),
-        Type.NullableNotApplicableInstance,
+        primitiveTypeMapKey(Type.NullableTypeInstance.isNullable, Type.NullableTypeInstance.kind),
+        Type.NullableTypeInstance,
     ],
     [
         primitiveTypeMapKey(Type.NullableUnknownInstance.isNullable, Type.NullableUnknownInstance.kind),

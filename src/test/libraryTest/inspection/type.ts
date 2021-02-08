@@ -28,7 +28,7 @@ const ExternalTypeResolver: Language.ExternalType.TExternalTypeResolverFn = (
 
 const TestSettings: Settings = {
     ...DefaultSettings,
-    externalTypeResolver: ExternalTypeResolver,
+    maybeExternalTypeResolver: ExternalTypeResolver,
 };
 
 function assertParseOkNodeTypeEqual(settings: Settings, text: string, expected: Language.Type.TType): void {

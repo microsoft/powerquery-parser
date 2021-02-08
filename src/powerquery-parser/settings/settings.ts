@@ -24,7 +24,7 @@ export interface ParseSettings<S extends IParseState = IParseState> extends Comm
 }
 
 export interface InspectionSettings extends CommonSettings {
-    readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn;
+    readonly maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined;
 }
 
 export type Settings<S extends IParseState = IParseState> = LexSettings & ParseSettings<S> & InspectionSettings;
@@ -38,5 +38,5 @@ export const DefaultSettings: Settings<IParseState> = {
         maybeOverrides: TParseStateFactoryOverrides<IParseState> | undefined,
     ) => IParseStateUtils.stateFactory(lexerSnapshot, maybeOverrides),
     maybeParserEntryPointFn: undefined,
-    externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => undefined,
+    maybeExternalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => undefined,
 };

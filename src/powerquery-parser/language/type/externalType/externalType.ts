@@ -29,3 +29,8 @@ export interface ExternalInvocationTypeRequest extends IExternalType {
     readonly kind: ExternalTypeRequestKind.Invocation;
     readonly args: ReadonlyArray<TType>;
 }
+
+// A null/no-op resolver for when one is required but shouldn't resolve anything, eg. for test mocks.
+export function noOpExternalTypeResolver(_request: TExternalTypeRequest): undefined {
+    return undefined;
+}
