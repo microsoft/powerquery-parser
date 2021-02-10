@@ -17,8 +17,9 @@ import { TestAssertUtils } from "../../testUtils";
 
 export type TAbridgedNodeScopeItem =
     | AbridgedEachScopeItem
-    | AbridgedKeyValuePairScopeItem
+    | AbridgedLetVariableScopeItem
     | AbridgedParameterScopeItem
+    | AbridgedRecordScopeItem
     | AbridgedSectionMemberScopeItem
     | AbridgedUndefinedScopeItem;
 
@@ -35,8 +36,8 @@ interface AbridgedEachScopeItem extends IAbridgedNodeScopeItem {
     readonly eachExpressionNodeId: number;
 }
 
-interface AbridgedKeyValuePairScopeItem extends IAbridgedNodeScopeItem {
-    readonly kind: Inspection.ScopeItemKind.KeyValuePair;
+interface AbridgedLetVariableScopeItem extends IAbridgedNodeScopeItem {
+    readonly kind: Inspection.ScopeItemKind.LetVariable;
     readonly keyNodeId: number;
     readonly maybeValueNodeId: number | undefined;
 }
@@ -48,9 +49,16 @@ interface AbridgedParameterScopeItem extends IAbridgedNodeScopeItem {
     readonly maybeType: Language.Constant.PrimitiveTypeConstantKind | undefined;
 }
 
+interface AbridgedRecordScopeItem extends IAbridgedNodeScopeItem {
+    readonly kind: Inspection.ScopeItemKind.RecordField;
+    readonly keyNodeId: number;
+    readonly maybeValueNodeId: number | undefined;
+}
+
 interface AbridgedSectionMemberScopeItem extends IAbridgedNodeScopeItem {
     readonly kind: Inspection.ScopeItemKind.SectionMember;
     readonly keyNodeId: number;
+    readonly maybeValueNodeId: number | undefined;
 }
 
 interface AbridgedUndefinedScopeItem extends IAbridgedNodeScopeItem {
@@ -60,21 +68,23 @@ interface AbridgedUndefinedScopeItem extends IAbridgedNodeScopeItem {
 
 function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TScopeItem): TAbridgedNodeScopeItem {
     switch (scopeItem.kind) {
-        case Inspection.ScopeItemKind.Each:
-            return {
-                identifier,
-                isRecursive: scopeItem.isRecursive,
-                kind: scopeItem.kind,
-                eachExpressionNodeId: scopeItem.eachExpression.node.id,
-            };
-
-        case Inspection.ScopeItemKind.KeyValuePair:
+        case Inspection.ScopeItemKind.LetVariable:
+        case Inspection.ScopeItemKind.RecordField:
+        case Inspection.ScopeItemKind.SectionMember:
             return {
                 identifier,
                 isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 keyNodeId: scopeItem.key.id,
                 maybeValueNodeId: scopeItem.maybeValue?.node.id,
+            };
+
+        case Inspection.ScopeItemKind.Each:
+            return {
+                identifier,
+                isRecursive: scopeItem.isRecursive,
+                kind: scopeItem.kind,
+                eachExpressionNodeId: scopeItem.eachExpression.node.id,
             };
 
         case Inspection.ScopeItemKind.Parameter:
@@ -85,14 +95,6 @@ function abridgedScopeItemFactory(identifier: string, scopeItem: Inspection.TSco
                 isNullable: scopeItem.isNullable,
                 isOptional: scopeItem.isOptional,
                 maybeType: scopeItem.maybeType,
-            };
-
-        case Inspection.ScopeItemKind.SectionMember:
-            return {
-                identifier,
-                isRecursive: scopeItem.isRecursive,
-                kind: scopeItem.kind,
-                keyNodeId: scopeItem.key.id,
             };
 
         case Inspection.ScopeItemKind.Undefined:
@@ -424,14 +426,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "y",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -474,7 +476,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -493,14 +495,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
@@ -519,21 +521,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
                     },
                     {
                         identifier: "c",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
                         keyNodeId: 24,
                         maybeValueNodeId: 28,
@@ -563,7 +565,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -606,7 +608,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -625,7 +627,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
@@ -644,14 +646,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 18,
@@ -670,21 +672,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
                         keyNodeId: 8,
                         maybeValueNodeId: 12,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
                     },
                     {
                         identifier: "c",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
                         keyNodeId: 24,
                         maybeValueNodeId: 28,
@@ -703,7 +705,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 10,
@@ -722,14 +724,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 17,
                         maybeValueNodeId: 19,
@@ -764,12 +766,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                 ];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
@@ -788,12 +792,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                 ];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedScopeItemsFactory(
@@ -823,22 +829,25 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                     {
                         identifier: "z",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 24,
+                        maybeValueNodeId: 26,
                     },
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 31,
                         maybeValueNodeId: 35,
@@ -873,12 +882,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -897,12 +908,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
+                        maybeValueNodeId: 20,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -921,12 +934,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
+                        maybeValueNodeId: 12,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
+                        maybeValueNodeId: 18,
                     },
                 ];
                 const actual: AbridgedNodeScope = abridgedScopeItemsFactory(
@@ -944,7 +959,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -963,7 +978,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -982,7 +997,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -1001,14 +1016,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1027,14 +1042,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1069,21 +1084,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 19,
                         maybeValueNodeId: 23,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 27,
                         maybeValueNodeId: 31,
                     },
                     {
                         identifier: "c",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 35,
                         maybeValueNodeId: 39,
@@ -1102,21 +1117,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "eggs",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 8,
                     },
                     {
                         identifier: "foo",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 25,
                         maybeValueNodeId: 29,
                     },
                     {
                         identifier: "bar",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 33,
                         maybeValueNodeId: 37,
@@ -1135,28 +1150,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "eggs",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 8,
                     },
                     {
                         identifier: "foo",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 25,
                         maybeValueNodeId: 29,
                     },
                     {
                         identifier: "bar",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 33,
                         maybeValueNodeId: 37,
                     },
                     {
                         identifier: "ham",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
                         maybeValueNodeId: 17,
@@ -1177,7 +1192,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
@@ -1196,14 +1211,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1222,14 +1237,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 10,
                     },
                     {
                         identifier: "b",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 14,
                         maybeValueNodeId: 18,
@@ -1248,14 +1263,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,
                     },
                     {
                         identifier: "y",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 16,
                         maybeValueNodeId: 20,
@@ -1274,7 +1289,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
-                        kind: Inspection.ScopeItemKind.KeyValuePair,
+                        kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
                         maybeValueNodeId: 9,

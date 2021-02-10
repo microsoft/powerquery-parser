@@ -6,15 +6,19 @@ import { TXorNode } from "../../parser";
 
 export type TScopeItem =
     | EachScopeItem
-    | KeyValuePairScopeItem
+    | LetVariableScopeItem
     | ParameterScopeItem
+    | RecordFieldScopeItem
     | SectionMemberScopeItem
     | UndefinedScopeItem;
 
+export type TKeyValuePairScopeItem = LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem;
+
 export const enum ScopeItemKind {
     Each = "Each",
-    KeyValuePair = "KeyValuePair",
+    LetVariable = "LetVariable",
     Parameter = "Parameter",
+    RecordField = "RecordField",
     SectionMember = "SectionMember",
     Undefined = "Undefined",
 }
@@ -25,16 +29,21 @@ export interface IScopeItem {
     readonly isRecursive: boolean;
 }
 
+export interface IKeyValuePairScopeItem<
+    Key extends Ast.Identifier | Ast.GeneralizedIdentifier,
+    Kind extends ScopeItemKind.LetVariable | ScopeItemKind.RecordField | ScopeItemKind.SectionMember
+> extends IScopeItem {
+    readonly kind: Kind;
+    readonly key: Key;
+    readonly maybeValue: TXorNode | undefined;
+}
+
 export interface EachScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Each;
     readonly eachExpression: TXorNode;
 }
 
-export interface KeyValuePairScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.KeyValuePair;
-    readonly key: Ast.Identifier | Ast.GeneralizedIdentifier;
-    readonly maybeValue: TXorNode | undefined;
-}
+export type LetVariableScopeItem = IKeyValuePairScopeItem<Ast.Identifier, ScopeItemKind.LetVariable>;
 
 export interface ParameterScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Parameter;
@@ -44,11 +53,9 @@ export interface ParameterScopeItem extends IScopeItem {
     readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
 }
 
-export interface SectionMemberScopeItem extends IScopeItem {
-    readonly kind: ScopeItemKind.SectionMember;
-    readonly key: Ast.Identifier;
-    readonly maybeValue: TXorNode | undefined;
-}
+export type RecordFieldScopeItem = IKeyValuePairScopeItem<Ast.GeneralizedIdentifier, ScopeItemKind.RecordField>;
+
+export type SectionMemberScopeItem = IKeyValuePairScopeItem<Ast.Identifier, ScopeItemKind.SectionMember>;
 
 export interface UndefinedScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Undefined;

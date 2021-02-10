@@ -15,8 +15,9 @@ import {
 } from "../../parser";
 import { CommonSettings } from "../../settings";
 import {
-    KeyValuePairScopeItem,
+    LetVariableScopeItem,
     ParameterScopeItem,
+    RecordFieldScopeItem,
     ScopeItemKind,
     SectionMemberScopeItem,
     TScopeItem,
@@ -160,7 +161,8 @@ export function maybeDereferencedIdentifier(
         case ScopeItemKind.Undefined:
             break;
 
-        case ScopeItemKind.KeyValuePair:
+        case ScopeItemKind.LetVariable:
+        case ScopeItemKind.RecordField:
             maybeNextXorNode = scopeItem.maybeValue;
             break;
 
@@ -333,13 +335,13 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
         Ast.Identifier
     >> = NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, letExpr);
 
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyValuePairScopeItemFactory);
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, letVariableScopeItemFactory);
 
     // Places the assignments from the 'let' into LetExpression.expression
-    const newEntries: ReadonlyArray<[string, KeyValuePairScopeItem]> = scopeItemsFromKeyValuePairs(
+    const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemsFromKeyValuePairs(
         keyValuePairs,
         -1,
-        keyValuePairScopeItemFactory,
+        letVariableScopeItemFactory,
     );
     expandChildScope(state, letExpr, [3], newEntries, nodeScope);
 }
@@ -353,7 +355,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<
         Ast.GeneralizedIdentifier
     >> = NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, record);
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyValuePairScopeItemFactory);
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, recordMemberScopeItemFactory);
 }
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
@@ -521,12 +523,25 @@ function sectionMemberScopeItemFactory(
     };
 }
 
-function keyValuePairScopeItemFactory<T extends Ast.Identifier | Ast.GeneralizedIdentifier>(
-    keyValuePair: NodeIdMapIterator.KeyValuePair<T>,
+function letVariableScopeItemFactory(
+    keyValuePair: NodeIdMapIterator.KeyValuePair<Ast.Identifier>,
     isRecursive: boolean,
-): KeyValuePairScopeItem {
+): LetVariableScopeItem {
     return {
-        kind: ScopeItemKind.KeyValuePair,
+        kind: ScopeItemKind.LetVariable,
+        id: keyValuePair.source.node.id,
+        isRecursive,
+        key: keyValuePair.key,
+        maybeValue: keyValuePair.maybeValue,
+    };
+}
+
+function recordMemberScopeItemFactory(
+    keyValuePair: NodeIdMapIterator.KeyValuePair<Ast.GeneralizedIdentifier>,
+    isRecursive: boolean,
+): RecordFieldScopeItem {
+    return {
+        kind: ScopeItemKind.RecordField,
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
