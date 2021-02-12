@@ -3,11 +3,11 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, CommonSettings, DefaultSettings, Inspection, LexSettings, Parser, ParseSettings } from "../../..";
+import { Assert, DefaultSettings, Inspection, InspectionSettings, Parser, Settings } from "../../..";
 import { TestAssertUtils } from "../../testUtils";
 
 function assertInvokeExpressionOk(
-    settings: CommonSettings,
+    settings: InspectionSettings,
     nodeIdMapCollection: Parser.NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     position: Inspection.Position,
@@ -21,6 +21,7 @@ function assertInvokeExpressionOk(
     const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
         settings,
         nodeIdMapCollection,
+        leafNodeIds,
         activeNode,
     );
     Assert.isOk(triedInspect);
@@ -28,7 +29,7 @@ function assertInvokeExpressionOk(
 }
 
 function assertParseOkInvokeExpressionOk(
-    settings: LexSettings & ParseSettings<Parser.IParseState>,
+    settings: Settings,
     text: string,
     position: Inspection.Position,
 ): Inspection.InvokeExpression | undefined {
@@ -38,7 +39,7 @@ function assertParseOkInvokeExpressionOk(
 }
 
 function assertParseErrInvokeExpressionOk(
-    settings: LexSettings & ParseSettings<Parser.IParseState>,
+    settings: Settings,
     text: string,
     position: Inspection.Position,
 ): Inspection.InvokeExpression | undefined {

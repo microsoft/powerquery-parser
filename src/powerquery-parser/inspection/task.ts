@@ -7,9 +7,9 @@ import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
 import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { Position } from "./position";
-import { ScopeById, TriedNodeScope, tryNodeScope } from "./scope";
+import { TriedNodeScope, tryNodeScope } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
-import { TypeCache } from "./type/commonTypes";
+import { createTypeCache, TypeCache } from "./typeCache";
 
 export function inspection<S extends IParseState = IParseState>(
     settings: ParseSettings<S> & InspectionSettings,
@@ -17,6 +17,7 @@ export function inspection<S extends IParseState = IParseState>(
     maybeParseError: ParseError.ParseError<S> | undefined,
     position: Position,
 ): Inspection {
+    const typeCache: TypeCache = createTypeCache();
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseState.contextState.leafNodeIds;
 
@@ -30,15 +31,10 @@ export function inspection<S extends IParseState = IParseState>(
     const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
         settings,
         nodeIdMapCollection,
+        leafNodeIds,
         maybeActiveNode,
+        typeCache,
     );
-
-    // Creating caches that are shared across inspections.
-    const scopeById: ScopeById = new Map();
-    const typeCache: TypeCache = {
-        scopeById,
-        typeById: new Map(),
-    };
 
     let triedNodeScope: TriedNodeScope;
     let triedScopeType: TriedScopeType;
@@ -51,7 +47,7 @@ export function inspection<S extends IParseState = IParseState>(
             nodeIdMapCollection,
             leafNodeIds,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
-            scopeById,
+            typeCache.scopeById,
         );
 
         const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(activeNode.ancestry);

@@ -7,7 +7,7 @@ import { NodeIdMap, NodeIdMapUtils } from "../../parser";
 import { InspectionSettings } from "../../settings";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
-import { TypeCache } from "./commonTypes";
+import { TypeCache } from "../typeCache";
 import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 
 export type TriedScopeType = Result<ScopeTypeByKey, CommonError.CommonError>;

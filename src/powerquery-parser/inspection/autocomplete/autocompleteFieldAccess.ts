@@ -18,7 +18,7 @@ import { InspectionSettings } from "../../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
 import { TriedType, tryType } from "../type";
-import { TypeCache } from "../type/commonTypes";
+import { TypeCache } from "../typeCache";
 import {
     AutocompleteFieldAccess,
     AutocompleteItem,

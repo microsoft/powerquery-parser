@@ -7,7 +7,7 @@ import { Ast, ExternalType, ExternalTypeUtils, Type, TypeUtils } from "../../../
 import { NodeIdMap, NodeIdMapUtils, TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
 import { InspectionSettings } from "../../../settings";
 import { NodeScope, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
-import { TypeById } from "../commonTypes";
+import { TypeById } from "../../typeCache";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
 import { inspectTypeFieldProjection } from "./inspectTypeFieldProjection";
