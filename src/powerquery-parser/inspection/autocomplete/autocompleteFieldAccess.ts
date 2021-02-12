@@ -285,24 +285,21 @@ function autoCompleteItemsFactory(
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
-
-    const possibleAutocompleteItems: AutocompleteItem[] = [];
+    const autocompleteItems: AutocompleteItem[] = [];
 
     const maybeIdentifierUnderPosition: string | undefined = inspectedFieldAccess.maybeIdentifierUnderPosition;
     for (const [key, type] of fieldEntries) {
-        if (fieldAccessNames.includes(key) === true) {
-            continue;
-        }
-
-        if (maybeIdentifierUnderPosition === undefined || key.indexOf(maybeIdentifierUnderPosition) === 0) {
-            possibleAutocompleteItems.push({
+        // Exclude field names that have already been added,
+        // except if it's the field under the cursor position.
+        if (!fieldAccessNames.includes(key) || key === maybeIdentifierUnderPosition) {
+            autocompleteItems.push({
                 key,
                 type,
             });
         }
     }
 
-    return possibleAutocompleteItems;
+    return autocompleteItems;
 }
 
 function maybeTypablePrimaryExpression(
