@@ -289,14 +289,17 @@ function autoCompleteItemsFactory(
 
     const maybeIdentifierUnderPosition: string | undefined = inspectedFieldAccess.maybeIdentifierUnderPosition;
     for (const [key, type] of fieldEntries) {
-        // Exclude field names that have already been added,
-        // except if it's the field under the cursor position.
-        if (!fieldAccessNames.includes(key) || key === maybeIdentifierUnderPosition) {
-            autocompleteItems.push({
-                key,
-                type,
-            });
+        if (
+            (fieldAccessNames.includes(key) && key !== maybeIdentifierUnderPosition) ||
+            (maybeIdentifierUnderPosition && !key.startsWith(maybeIdentifierUnderPosition))
+        ) {
+            continue;
         }
+
+        autocompleteItems.push({
+            key,
+            type,
+        });
     }
 
     return autocompleteItems;
