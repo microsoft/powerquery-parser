@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils, Assert } from "../common";
+import { Assert, CommonError, Result, ResultUtils } from "../common";
 import { Ast, Type } from "../language";
 import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../parser";
 import { InspectionSettings } from "../settings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
+import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "./scope";
 import { TriedType, tryType } from "./type";
 import { createTypeCache, TypeCache } from "./typeCache";
 
@@ -13,7 +14,8 @@ export type TriedInvokeExpression = Result<InvokeExpression | undefined, CommonE
 
 export interface InvokeExpression {
     readonly xorNode: TXorNode;
-    readonly type: Type.TType;
+    readonly functionType: Type.TType;
+    readonly isNameInLocalScope: boolean;
     readonly maybeName: string | undefined;
     readonly maybeArguments: InvokeExpressionArgs | undefined;
 }
@@ -71,12 +73,38 @@ function inspectInvokeExpression(
                 previousNode.node.id,
                 typeCache,
             );
-            const type: Type.TType = Assert.unwrapOk(triedPreviousNodeType);
+            const functionType: Type.TType = Assert.unwrapOk(triedPreviousNodeType);
+            const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
+                nodeIdMapCollection,
+                xorNode.node.id,
+            );
+
+            // Try to find out if the identifier is a local or external name.
+            let isNameInLocalScope: boolean;
+            if (maybeName !== undefined) {
+                // Seed local scope
+                const scope: NodeScope = Assert.unwrapOk(
+                    assertGetOrCreateNodeScope(
+                        settings,
+                        nodeIdMapCollection,
+                        leafNodeIds,
+                        xorNode.node.id,
+                        typeCache.scopeById,
+                    ),
+                );
+                const maybeNameScopeItem: TScopeItem | undefined = scope.get(maybeName);
+
+                isNameInLocalScope =
+                    maybeNameScopeItem !== undefined && maybeNameScopeItem.kind !== ScopeItemKind.Undefined;
+            } else {
+                isNameInLocalScope = false;
+            }
 
             return {
                 xorNode,
-                type,
-                maybeName: NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(nodeIdMapCollection, xorNode.node.id),
+                functionType,
+                isNameInLocalScope,
+                maybeName,
                 maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
             };
         }
