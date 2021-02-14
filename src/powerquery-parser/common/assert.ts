@@ -65,6 +65,16 @@ export function isErr<T, E>(result: Result<T, E>): asserts result is Err<E> {
     }
 }
 
+export function unwrapOk<T, E extends Error>(result: Result<T, E>): T {
+    isOk(result);
+    return result.value;
+}
+
+export function unwrapErr<T, E extends Error>(result: Result<T, E>): E {
+    isErr(result);
+    return result.error;
+}
+
 export function shouldNeverBeReachedTypescript(): CommonError.InvariantError {
     return new CommonError.InvariantError(`this should never be reached but TypeScript can't tell that`);
 }

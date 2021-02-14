@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "../common";
+import { CommonError, Result, ResultUtils, Assert } from "../common";
 import { Ast, Type } from "../language";
 import { AncestryUtils, NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode } from "../parser";
 import { InspectionSettings } from "../settings";
@@ -71,18 +71,14 @@ function inspectInvokeExpression(
                 previousNode.node.id,
                 typeCache,
             );
+            const type: Type.TType = Assert.unwrapOk(triedPreviousNodeType);
 
-            if (ResultUtils.isOk(triedPreviousNodeType)) {
-                return {
-                    xorNode,
-                    type: triedPreviousNodeType.value,
-                    maybeName: NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
-                        nodeIdMapCollection,
-                        xorNode.node.id,
-                    ),
-                    maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
-                };
-            }
+            return {
+                xorNode,
+                type,
+                maybeName: NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(nodeIdMapCollection, xorNode.node.id),
+                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
+            };
         }
     }
 
