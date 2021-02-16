@@ -3,23 +3,22 @@
 
 import { expect } from "chai";
 import "mocha";
-import { Assert, DefaultSettings, Inspection, InspectionSettings, Language, Parser, Settings, Task } from "../../..";
+import { Assert, DefaultSettings, Inspection, InspectionSettings, Parser, Settings, Task } from "../../..";
+import { Ast, ExternalType, Type, TypeUtils } from "../../../powerquery-parser/language";
 import { TestAssertUtils } from "../../testUtils";
 
-const ExternalTypeResolver: Language.ExternalType.TExternalTypeResolverFn = (
-    request: Language.ExternalType.TExternalTypeRequest,
-) => {
+const ExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (request: ExternalType.TExternalTypeRequest) => {
     switch (request.kind) {
-        case Language.ExternalType.ExternalTypeRequestKind.Invocation: {
+        case ExternalType.ExternalTypeRequestKind.Invocation: {
             if (request.identifierLiteral !== "foo") {
                 return undefined;
             }
 
-            return request.args.length === 0 ? Language.Type.TextInstance : Language.Type.NumberInstance;
+            return request.args.length === 0 ? Type.TextInstance : Type.NumberInstance;
         }
 
-        case Language.ExternalType.ExternalTypeRequestKind.Value:
-            return request.identifierLiteral === "foo" ? Language.Type.FunctionInstance : undefined;
+        case ExternalType.ExternalTypeRequestKind.Value:
+            return request.identifierLiteral === "foo" ? Type.FunctionInstance : undefined;
 
         default:
             throw Assert.isNever(request);
@@ -31,9 +30,9 @@ const TestSettings: Settings = {
     maybeExternalTypeResolver: ExternalTypeResolver,
 };
 
-function assertParseOkNodeTypeEqual(settings: Settings, text: string, expected: Language.Type.TType): void {
+function assertParseOkNodeTypeEqual(settings: Settings, text: string, expected: Type.TType): void {
     const lexParseOk: Task.LexParseOk = TestAssertUtils.assertGetLexParseOk(TestSettings, text);
-    const actual: Language.Type.TType = assertGetParseNodeOk(
+    const actual: Type.TType = assertGetParseNodeOk(
         settings,
         lexParseOk.state.contextState.nodeIdMapCollection,
         lexParseOk.state.contextState.leafNodeIds,
@@ -43,14 +42,14 @@ function assertParseOkNodeTypeEqual(settings: Settings, text: string, expected: 
     expect(actual).deep.equal(expected);
 }
 
-function assertParseErrNodeTypeEqual(text: string, expected: Language.Type.TType): void {
+function assertParseErrNodeTypeEqual(text: string, expected: Type.TType): void {
     const parseErr: Parser.ParseError.ParseError<Parser.IParseState> = TestAssertUtils.assertGetParseErr(
         TestSettings,
         text,
     );
     const root: Parser.ParseContext.Node = Assert.asDefined(parseErr.state.contextState.maybeRoot);
 
-    const actual: Language.Type.TType = assertGetParseNodeOk(
+    const actual: Type.TType = assertGetParseNodeOk(
         TestSettings,
         parseErr.state.contextState.nodeIdMapCollection,
         parseErr.state.contextState.leafNodeIds,
@@ -65,7 +64,7 @@ function assertGetParseNodeOk(
     nodeIdMapCollection: Parser.NodeIdMap.Collection,
     leafNodeIds: ReadonlyArray<number>,
     xorNode: Parser.TXorNode,
-): Language.Type.TType {
+): Type.TType {
     const triedType: Inspection.TriedType = Inspection.tryType(
         settings,
         nodeIdMapCollection,
@@ -124,236 +123,216 @@ describe(`Inspection - Type`, () => {
         describe("BinOpExpression", () => {
             it(`1 + 1`, () => {
                 const expression: string = "1 + 1";
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Number,
-                );
+                const expected: Type.Number = Type.NumberInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`true and false`, () => {
                 const expression: string = `true and false`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`"hello" & "world"`, () => {
                 const expression: string = `"hello" & "world"`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Text,
-                );
+                const expected: Type.Text = Type.TextInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`true + 1`, () => {
                 const expression: string = `true + 1`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.None,
-                );
+                const expected: Type.None = Type.NoneInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.AsNullablePrimitiveType}`, () => {
+        describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
             it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
                 const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
-                const expected: Inspection.ScopeTypeByKey = new Map<string, Language.Type.TType>([
-                    ["foo", Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number)],
-                    ["bar", Language.TypeUtils.primitiveTypeFactory(true, Language.Type.TypeKind.Number)],
+                const expected: Inspection.ScopeTypeByKey = new Map<string, Type.TType>([
+                    ["foo", Type.NumberInstance],
+                    ["bar", Type.NullableNumberInstance],
                 ]);
                 assertParseOkScopeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.AsExpression}`, () => {
+        describe(`${Ast.NodeKind.AsExpression}`, () => {
             it(`1 as number`, () => {
                 const expression: string = `1 as number`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Number,
-                );
+                const expected: Type.Number = Type.NumberInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 as text`, () => {
                 const expression: string = `1 as text`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Text,
-                );
+                const expected: Type.Text = Type.TextInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 as any`, () => {
                 const expression: string = `1 as any`;
-                const expected: Language.Type.TType = Language.Type.AnyInstance;
+                const expected: Type.Any = Type.AnyInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.ErrorHandlingExpression}`, () => {
+        describe(`${Ast.NodeKind.EachExpression}`, () => {
+            it(`each 1`, () => {
+                const expression: string = `each 1`;
+                const expected: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                    false,
+                    [
+                        {
+                            isNullable: false,
+                            isOptional: false,
+                            maybeType: Type.TypeKind.Any,
+                            nameLiteral: "_",
+                        },
+                    ],
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                );
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+        });
+
+        describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try 1`, () => {
                 const expression: string = `try 1`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Any,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
-                    isNullable: false,
-                    unionedTypePairs: [
-                        Language.TypeUtils.numberLiteralFactory(false, "1"),
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Record),
-                    ],
-                };
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record),
+                ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`try 1 otherwise false`, () => {
                 const expression: string = `try 1 otherwise false`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Any,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
-                    isNullable: false,
-                    unionedTypePairs: [
-                        Language.TypeUtils.numberLiteralFactory(false, "1"),
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Logical),
-                    ],
-                };
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical),
+                ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.ErrorRaisingExpression}`, () => {
+        describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
             it(`error 1`, () => {
                 const expression: string = `error 1`;
-                const expected: Language.Type.TType = Language.Type.AnyInstance;
+                const expected: Type.Any = Type.AnyInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.FieldProjection}`, () => {
+        describe(`${Ast.NodeKind.FieldProjection}`, () => {
             it(`[a = 1][[a]]`, () => {
                 const expression: string = `[a = 1][[a]]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["a", Language.TypeUtils.numberLiteralFactory(false, "1")],
-                    ]),
-                    isOpen: false,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["a", TypeUtils.numberLiteralFactory(false, "1")]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a = 1][[b]]`, () => {
                 const expression: string = `[a = 1][[b]]`;
-                const expected: Language.Type.TType = Language.Type.NoneInstance;
+                const expected: Type.None = Type.NoneInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a = 1][[b]]?`, () => {
                 const expression: string = `[a = 1][[b]]?`;
-                const expected: Language.Type.TType = Language.Type.NullInstance;
+                const expected: Type.Null = Type.NullInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`(1 as record)[[a]]`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([["a", Language.Type.AnyInstance]]),
-                    isOpen: false,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["a", Type.AnyInstance]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`(1 as record)[[a]]?`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]?`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([["a", Language.Type.AnyInstance]]),
-                    isOpen: false,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["a", Type.AnyInstance]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.FieldSelector}`, () => {
+        describe(`${Ast.NodeKind.FieldSelector}`, () => {
             it(`[a = 1][a]`, () => {
                 const expression: string = `[a = 1][a]`;
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a = 1][b]`, () => {
                 const expression: string = `[a = 1][b]`;
-                const expected: Language.Type.TType = Language.Type.NoneInstance;
+                const expected: Type.TType = Type.NoneInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a = 1][b]?`, () => {
                 const expression: string = `[a = 1][b]?`;
-                const expected: Language.Type.TType = Language.Type.NullInstance;
+                const expected: Type.TType = Type.NullInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = (1 as record) in x[a]`, () => {
                 const expression: string = `let x = (1 as record) in x[a]`;
-                const expected: Language.Type.TType = Language.Type.AnyInstance;
+                const expected: Type.TType = Type.AnyInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = (1 as record) in x[a]?`, () => {
                 const expression: string = `let x = (1 as record) in x[a]?`;
-                const expected: Language.Type.TType = Language.Type.AnyInstance;
+                const expected: Type.TType = Type.AnyInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.FunctionExpression}`, () => {
+        describe(`${Ast.NodeKind.FunctionExpression}`, () => {
             it(`() => 1`, () => {
                 const expression: string = `() => 1`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Function,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedFunction,
-                    isNullable: false,
-                    parameters: [],
-                    returnType: Language.TypeUtils.numberLiteralFactory(false, "1"),
-                };
+                const expected: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                    false,
+                    [],
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             // Test AnyUnion return
             it(`() => if true then 1 else ""`, () => {
                 const expression: string = `() => if true then 1 else ""`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Function,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedFunction,
-                    isNullable: false,
-                    parameters: [],
-                    returnType: Language.TypeUtils.anyUnionFactory([
-                        Language.TypeUtils.numberLiteralFactory(false, "1"),
-                        Language.TypeUtils.textLiteralFactory(false, `""`),
+                const expected: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                    false,
+                    [],
+                    TypeUtils.anyUnionFactory([
+                        TypeUtils.numberLiteralFactory(false, "1"),
+                        TypeUtils.textLiteralFactory(false, `""`),
                     ]),
-                };
+                );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`(a, b as number, c as nullable number, optional d) => 1`, () => {
                 const expression: string = `(a, b as number, c as nullable number, optional d) => 1`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Function,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedFunction,
-                    isNullable: false,
-                    parameters: [
+                const expected: Type.TType = TypeUtils.definedFunctionFactory(
+                    false,
+                    [
                         {
                             nameLiteral: "a",
                             isNullable: true,
@@ -364,13 +343,13 @@ describe(`Inspection - Type`, () => {
                             nameLiteral: "b",
                             isNullable: false,
                             isOptional: false,
-                            maybeType: Language.Type.TypeKind.Number,
+                            maybeType: Type.TypeKind.Number,
                         },
                         {
                             nameLiteral: "c",
                             isNullable: true,
                             isOptional: false,
-                            maybeType: Language.Type.TypeKind.Number,
+                            maybeType: Type.TypeKind.Number,
                         },
                         {
                             nameLiteral: "d",
@@ -379,647 +358,507 @@ describe(`Inspection - Type`, () => {
                             maybeType: undefined,
                         },
                     ],
-                    returnType: Language.TypeUtils.numberLiteralFactory(false, "1"),
-                };
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.FunctionType}`, () => {
+        describe(`${Ast.NodeKind.FunctionType}`, () => {
             it(`type function`, () => {
                 const expression: string = `type function`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Function,
-                );
+                const expected: Type.Function = Type.FunctionInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type function () as text`, () => {
                 const expression: string = `type function () as text`;
-                const expected: Language.Type.FunctionType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.FunctionType,
-                    isNullable: false,
-                    parameters: [],
-                    returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
-                };
+                const expected: Type.FunctionType = TypeUtils.functionTypeFactory(false, [], Type.TextInstance);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type function (foo as number, bar as nullable text, optional baz as date) as text`, () => {
                 const expression: string = `type function (foo as number, bar as nullable text, optional baz as date) as text`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.FunctionType,
-                    isNullable: false,
-                    parameters: [
+                const expected: Type.FunctionType = TypeUtils.functionTypeFactory(
+                    false,
+                    [
                         {
                             nameLiteral: "foo",
                             isNullable: false,
                             isOptional: false,
-                            maybeType: Language.Type.TypeKind.Number,
+                            maybeType: Type.TypeKind.Number,
                         },
                         {
                             nameLiteral: "bar",
                             isNullable: true,
                             isOptional: false,
-                            maybeType: Language.Type.TypeKind.Text,
+                            maybeType: Type.TypeKind.Text,
                         },
                         {
                             nameLiteral: "baz",
                             isNullable: false,
                             isOptional: true,
-                            maybeType: Language.Type.TypeKind.Date,
+                            maybeType: Type.TypeKind.Date,
                         },
                     ],
-                    returnType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Text),
-                };
+                    Type.TextInstance,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.IdentifierExpression}`, () => {
+        describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
             it(`let x = true in x`, () => {
                 const expression: string = "let x = true in x";
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = 1 in x`, () => {
                 const expression: string = "let x = 1 in x";
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.IfExpression}`, () => {
+        describe(`${Ast.NodeKind.IfExpression}`, () => {
             it(`if true then true else false`, () => {
                 const expression: string = `if true then true else false`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if true then 1 else false`, () => {
                 const expression: string = `if true then 1 else false`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Any,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
-                    isNullable: false,
-                    unionedTypePairs: [
-                        Language.TypeUtils.numberLiteralFactory(false, "1"),
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Logical),
-                    ],
-                };
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical),
+                ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if if true then true else false then 1 else 0`, () => {
                 const expression: string = `if if true then true else false then 1 else ""`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Any,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
-                    isNullable: false,
-                    unionedTypePairs: [
-                        Language.TypeUtils.numberLiteralFactory(false, "1"),
-                        Language.TypeUtils.textLiteralFactory(false, `""`),
-                    ],
-                };
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.textLiteralFactory(false, `""`),
+                ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if`, () => {
                 const expression: string = `if`;
-                const expected: Language.Type.TType = Language.Type.UnknownInstance;
+                const expected: Type.TType = Type.UnknownInstance;
                 assertParseErrNodeTypeEqual(expression, expected);
             });
 
             it(`if "a"`, () => {
                 const expression: string = `if "a"`;
-                const expected: Language.Type.TType = Language.Type.NoneInstance;
+                const expected: Type.TType = Type.NoneInstance;
                 assertParseErrNodeTypeEqual(expression, expected);
             });
 
             it(`if true or "a"`, () => {
                 const expression: string = `if true or "a"`;
-                const expected: Language.Type.TType = Language.Type.NoneInstance;
+                const expected: Type.TType = Type.NoneInstance;
                 assertParseErrNodeTypeEqual(expression, expected);
             });
 
             it(`if 1 as any then "a" as text else "b" as text`, () => {
                 const expression: string = `if 1 as any then "a"as text else "b" as text`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Text,
-                );
+                const expected: Type.TType = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Text);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if 1 as any then "a" else "b"`, () => {
                 const expression: string = `if 1 as any then "a" else "b"`;
-                const expected: Language.Type.TType = Language.TypeUtils.anyUnionFactory([
-                    Language.TypeUtils.textLiteralFactory(false, `"a"`),
-                    Language.TypeUtils.textLiteralFactory(false, `"b"`),
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.textLiteralFactory(false, `"a"`),
+                    TypeUtils.textLiteralFactory(false, `"b"`),
                 ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if true then 1`, () => {
                 const expression: string = `if true then 1`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Any,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
-                    isNullable: false,
-                    unionedTypePairs: [
-                        Language.TypeUtils.numberLiteralFactory(false, "1"),
-                        Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Unknown),
-                    ],
-                };
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Unknown),
+                ]);
                 assertParseErrNodeTypeEqual(expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.IsExpression}`, () => {
+        describe(`${Ast.NodeKind.IsExpression}`, () => {
             it(`1 is text`, () => {
                 const expression: string = `1 is text`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.IsNullablePrimitiveType}`, () => {
+        describe(`${Ast.NodeKind.IsNullablePrimitiveType}`, () => {
             it(`1 is nullable text`, () => {
                 const expression: string = `1 is nullable text`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.ListExpression}`, () => {
+        describe(`${Ast.NodeKind.ListExpression}`, () => {
             it(`{1}`, () => {
                 const expression: string = `{1}`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.List,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedList,
-                    isNullable: false,
-                    elements: [Language.TypeUtils.numberLiteralFactory(false, "1")],
-                };
+                const expected: Type.DefinedList = TypeUtils.definedListFactory(false, [
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`{1, ""}`, () => {
                 const expression: string = `{1, ""}`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.List,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedList,
-                    isNullable: false,
-                    elements: [
-                        Language.TypeUtils.numberLiteralFactory(false, "1"),
-                        Language.TypeUtils.textLiteralFactory(false, `""`),
-                    ],
-                };
+                const expected: Type.DefinedList = TypeUtils.definedListFactory(false, [
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.textLiteralFactory(false, `""`),
+                ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.ListType}`, () => {
+        describe(`${Ast.NodeKind.ListType}`, () => {
             it(`type { number }`, () => {
                 const expression: string = `type { number }`;
-                const expected: Language.Type.ListType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.ListType,
-                    isNullable: false,
-                    itemType: Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number),
-                };
+                const expected: Type.ListType = TypeUtils.listTypeFactory(
+                    false,
+                    TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Number),
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.LiteralExpression}`, () => {
+        describe(`${Ast.NodeKind.LiteralExpression}`, () => {
             it(`true`, () => {
                 const expression: string = "true";
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`false`, () => {
                 const expression: string = "false";
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1`, () => {
                 const expression: string = "1";
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`null`, () => {
                 const expression: string = "null";
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    true,
-                    Language.Type.TypeKind.Null,
-                );
+                const expected: Type.TType = TypeUtils.primitiveTypeFactory(true, Type.TypeKind.Null);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`{}`, () => {
                 const expression: string = `{}`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.List,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedList,
-                    isNullable: false,
-                    elements: [],
-                };
+                const expected: Type.DefinedList = TypeUtils.definedListFactory(false, []);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
             it(`[]`, () => {
                 const expression: string = `[]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>(),
-                    isOpen: false,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(false, new Map(), false);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.NullableType}`, () => {
+        describe(`${Ast.NodeKind.NullableType}`, () => {
             it(`type nullable number`, () => {
                 const expression: string = "type nullable number";
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    true,
-                    Language.Type.TypeKind.Number,
-                );
+                const expected: Type.TType = TypeUtils.primitiveTypeFactory(true, Type.TypeKind.Number);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.NullCoalescingExpression}`, () => {
+        describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
             it(`1 ?? 1`, () => {
                 const expression: string = `1 ?? 1`;
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 ?? 2`, () => {
                 const expression: string = `1 ?? 2`;
-                const expected: Language.Type.TType = Language.TypeUtils.anyUnionFactory([
-                    Language.TypeUtils.numberLiteralFactory(false, "1"),
-                    Language.TypeUtils.numberLiteralFactory(false, `2`),
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.numberLiteralFactory(false, `2`),
                 ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 ?? ""`, () => {
                 const expression: string = `1 ?? ""`;
-                const expected: Language.Type.TType = Language.TypeUtils.anyUnionFactory([
-                    Language.TypeUtils.numberLiteralFactory(false, "1"),
-                    Language.TypeUtils.textLiteralFactory(false, `""`),
+                const expected: Type.TType = TypeUtils.anyUnionFactory([
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                    TypeUtils.textLiteralFactory(false, `""`),
                 ]);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 ?? (1 + "")`, () => {
                 const expression: string = `1 ?? (1 + "")`;
-                const expected: Language.Type.TType = Language.Type.NoneInstance;
+                const expected: Type.None = Type.NoneInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.RecordExpression}`, () => {
+        describe(`${Ast.NodeKind.RecordExpression}`, () => {
             it(`[foo = 1] & [bar = 2]`, () => {
                 const expression: string = `[foo = 1] & [bar = 2]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["foo", Language.TypeUtils.numberLiteralFactory(false, "1")],
-                        ["bar", Language.TypeUtils.numberLiteralFactory(false, "2")],
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([
+                        ["foo", TypeUtils.numberLiteralFactory(false, "1")],
+                        ["bar", TypeUtils.numberLiteralFactory(false, "2")],
                     ]),
-                    isOpen: false,
-                };
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] & [bar = 2]`, () => {
                 const expression: string = `[] & [bar = 2]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["bar", Language.TypeUtils.numberLiteralFactory(false, "2")],
-                    ]),
-                    isOpen: false,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["bar", TypeUtils.numberLiteralFactory(false, "2")]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo = 1] & []`, () => {
                 const expression: string = `[foo = 1] & []`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["foo", Language.TypeUtils.numberLiteralFactory(false, "1")],
-                    ]),
-                    isOpen: false,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", TypeUtils.numberLiteralFactory(false, "1")]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo = 1] & [foo = ""]`, () => {
                 const expression: string = `[foo = 1] & [foo = ""]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["foo", Language.TypeUtils.textLiteralFactory(false, `""`)],
-                    ]),
-                    isOpen: false,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", TypeUtils.textLiteralFactory(false, `""`)]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] as record & [foo = 1]`, () => {
                 const expression: string = `[] as record & [foo = 1]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["foo", Language.TypeUtils.numberLiteralFactory(false, "1")],
-                    ]),
-                    isOpen: true,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", TypeUtils.numberLiteralFactory(false, "1")]]),
+                    true,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo = 1] & [] as record`, () => {
                 const expression: string = `[foo = 1] & [] as record`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Record,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["foo", Language.TypeUtils.numberLiteralFactory(false, "1")],
-                    ]),
-                    isOpen: true,
-                };
+                const expected: Type.DefinedRecord = TypeUtils.definedRecordFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", TypeUtils.numberLiteralFactory(false, "1")]]),
+                    true,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] as record & [] as record`, () => {
                 const expression: string = `[] as record & [] as record`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Record,
-                );
+                const expected: Type.TType = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.RecordType}`, () => {
+        describe(`${Ast.NodeKind.RecordType}`, () => {
             it(`type [foo]`, () => {
                 const expression: string = `type [foo]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.RecordType,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
-                    isOpen: false,
-                };
+                const expected: Type.RecordType = TypeUtils.recordTypeFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type [foo, ...]`, () => {
                 const expression: string = `type [foo, ...]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.RecordType,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
-                    isOpen: true,
-                };
+                const expected: Type.RecordType = TypeUtils.recordTypeFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
+                    true,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type [foo = number, bar = nullable text]`, () => {
                 const expression: string = `type [foo = number, bar = nullable text]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.RecordType,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["foo", Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number)],
-                        ["bar", Language.TypeUtils.primitiveTypeFactory(true, Language.Type.TypeKind.Text)],
+                const expected: Type.RecordType = TypeUtils.recordTypeFactory(
+                    false,
+                    new Map<string, Type.TType>([
+                        ["foo", TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Number)],
+                        ["bar", TypeUtils.primitiveTypeFactory(true, Type.TypeKind.Text)],
                     ]),
-                    isOpen: false,
-                };
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.RecursivePrimaryExpression}`, () => {
+        describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
             describe(`any is allowed`, () => {
-                it(`${Language.Ast.NodeKind.InvokeExpression}`, () => {
+                it(`${Ast.NodeKind.InvokeExpression}`, () => {
                     const expression: string = `let x = (_ as any) in x()`;
-                    const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                        false,
-                        Language.Type.TypeKind.Any,
-                    );
+                    const expected: Type.Any = Type.AnyInstance;
                     assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
-                it(`${Language.Ast.NodeKind.ItemAccessExpression}`, () => {
+                it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
                     const expression: string = `let x = (_ as any) in x{0}`;
-                    const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                        false,
-                        Language.Type.TypeKind.Any,
-                    );
+                    const expected: Type.Any = Type.AnyInstance;
                     assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
-                describe(`${Language.Ast.NodeKind.FieldSelector}`, () => {
+                describe(`${Ast.NodeKind.FieldSelector}`, () => {
                     it("[a = 1][a]", () => {
                         const expression: string = `[a = 1][a]`;
-                        const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                        const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "1");
                         assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
 
                     it("[a = 1][b]", () => {
                         const expression: string = `[a = 1][b]`;
-                        const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                            false,
-                            Language.Type.TypeKind.None,
-                        );
+                        const expected: Type.None = Type.NoneInstance;
                         assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
 
                     it("a[b]?", () => {
                         const expression: string = `[a = 1][b]?`;
-                        const expected: Language.Type.TType = Language.Type.NullInstance;
+                        const expected: Type.Null = Type.NullInstance;
                         assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
                 });
 
-                it(`${Language.Ast.NodeKind.FieldProjection}`, () => {
+                it(`${Ast.NodeKind.FieldProjection}`, () => {
                     const expression: string = `let x = (_ as any) in x[[foo]]`;
-                    const expected: Language.Type.TType = {
-                        kind: Language.Type.TypeKind.Any,
-                        maybeExtendedKind: Language.Type.ExtendedTypeKind.AnyUnion,
-                        isNullable: false,
-                        unionedTypePairs: [
-                            {
-                                kind: Language.Type.TypeKind.Record,
-                                maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedRecord,
-                                isNullable: false,
-                                fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
-                                isOpen: false,
-                            },
-                            {
-                                kind: Language.Type.TypeKind.Table,
-                                maybeExtendedKind: Language.Type.ExtendedTypeKind.DefinedTable,
-                                isNullable: false,
-                                fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
-                                isOpen: false,
-                            },
-                        ],
-                    };
+                    const expected: Type.TType = TypeUtils.anyUnionFactory([
+                        TypeUtils.definedRecordFactory(
+                            false,
+                            new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
+                            false,
+                        ),
+                        TypeUtils.definedTableFactory(
+                            false,
+                            new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
+                            false,
+                        ),
+                    ]);
                     assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
-                it(`${Language.Ast.NodeKind.FieldSelector}`, () => {
+                it(`${Ast.NodeKind.FieldSelector}`, () => {
                     const expression: string = `[a = 1][a]`;
-                    const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                    const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "1");
                     assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
             });
 
             it(`let x = () as function => () as number => 1 in x()()`, () => {
                 const expression: string = `let x = () as function => () as number => 1 in x()()`;
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.TableType}`, () => {
+        describe(`${Ast.NodeKind.TableType}`, () => {
             it(`type table [foo]`, () => {
                 const expression: string = `type table [foo]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.TableType,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
-                    isOpen: false,
-                };
+                const expected: Type.TableType = TypeUtils.tableTypeFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type table [foo]`, () => {
                 const expression: string = `type table [foo]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.TableType,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([["foo", Language.Type.AnyInstance]]),
-                    isOpen: false,
-                };
+                const expected: Type.TableType = TypeUtils.tableTypeFactory(
+                    false,
+                    new Map<string, Type.TType>([["foo", Type.AnyInstance]]),
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type table [foo = number, bar = nullable text]`, () => {
                 const expression: string = `type table [foo = number, bar = nullable text]`;
-                const expected: Language.Type.TType = {
-                    kind: Language.Type.TypeKind.Type,
-                    maybeExtendedKind: Language.Type.ExtendedTypeKind.TableType,
-                    isNullable: false,
-                    fields: new Map<string, Language.Type.TType>([
-                        ["foo", Language.TypeUtils.primitiveTypeFactory(false, Language.Type.TypeKind.Number)],
-                        ["bar", Language.TypeUtils.primitiveTypeFactory(true, Language.Type.TypeKind.Text)],
+                const expected: Type.TableType = TypeUtils.tableTypeFactory(
+                    false,
+                    new Map<string, Type.TType>([
+                        ["foo", TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Number)],
+                        ["bar", TypeUtils.primitiveTypeFactory(true, Type.TypeKind.Text)],
                     ]),
-                    isOpen: false,
-                };
+                    false,
+                );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
-        describe(`${Language.Ast.NodeKind.UnaryExpression}`, () => {
+        describe(`${Ast.NodeKind.UnaryExpression}`, () => {
             it(`+1`, () => {
                 const expression: string = `+1`;
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "+1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "+1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`-1`, () => {
                 const expression: string = `-1`;
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "-1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "-1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`--1`, () => {
                 const expression: string = `--1`;
-                const expected: Language.Type.TType = Language.TypeUtils.numberLiteralFactory(false, "--1");
+                const expected: Type.NumberLiteral = TypeUtils.numberLiteralFactory(false, "--1");
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`not true`, () => {
                 const expression: string = `not true`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`not false`, () => {
                 const expression: string = `not false`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.Logical,
-                );
+                const expected: Type.Logical = Type.LogicalInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`not 1`, () => {
                 const expression: string = `not 1`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.None,
-                );
+                const expected: Type.None = Type.NoneInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`+true`, () => {
                 const expression: string = `+true`;
-                const expected: Language.Type.TType = Language.TypeUtils.primitiveTypeFactory(
-                    false,
-                    Language.Type.TypeKind.None,
-                );
+                const expected: Type.TType = TypeUtils.primitiveTypeFactory(false, Type.TypeKind.None);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -1029,19 +868,19 @@ describe(`Inspection - Type`, () => {
         describe(`value`, () => {
             it(`resolves to external type`, () => {
                 const expression: string = `foo`;
-                const expected: Language.Type.TType = Language.Type.FunctionInstance;
+                const expected: Type.Function = Type.FunctionInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`indirect identifier resolves to external type`, () => {
                 const expression: string = `let bar = foo in bar`;
-                const expected: Language.Type.TType = Language.Type.FunctionInstance;
+                const expected: Type.Function = Type.FunctionInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`fails to resolve to external type`, () => {
                 const expression: string = `bar`;
-                const expected: Language.Type.TType = Language.Type.UnknownInstance;
+                const expected: Type.Unknown = Type.UnknownInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -1049,23 +888,23 @@ describe(`Inspection - Type`, () => {
         describe(`invocation`, () => {
             it(`resolves with identifier`, () => {
                 const expression: string = `foo()`;
-                const expected: Language.Type.TType = Language.Type.TextInstance;
+                const expected: Type.Text = Type.TextInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`resolves with deferenced identifier`, () => {
                 const expression: string = `let bar = foo in bar()`;
-                const expected: Language.Type.TType = Language.Type.TextInstance;
+                const expected: Type.Text = Type.TextInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`resolves based on argument`, () => {
                 const expression1: string = `foo()`;
-                const expected1: Language.Type.TType = Language.Type.TextInstance;
+                const expected1: Type.Text = Type.TextInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression1, expected1);
 
                 const expression2: string = `foo("bar")`;
-                const expected2: Language.Type.TType = Language.Type.NumberInstance;
+                const expected2: Type.Number = Type.NumberInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression2, expected2);
             });
         });

@@ -9,6 +9,7 @@ import { InspectionSettings } from "../../../settings";
 import { NodeScope, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { TypeById } from "../../typeCache";
 import { inspectTypeConstant } from "./inspectTypeConstant";
+import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
 import { inspectTypeFieldProjection } from "./inspectTypeFieldProjection";
 import { inspectTypeFieldSelector } from "./inspectTypeFieldSelector";
@@ -159,7 +160,6 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TTy
 
         case Ast.NodeKind.AsType:
         case Ast.NodeKind.AsNullablePrimitiveType:
-        case Ast.NodeKind.EachExpression:
         case Ast.NodeKind.FieldTypeSpecification:
         case Ast.NodeKind.OtherwiseExpression:
         case Ast.NodeKind.ParenthesizedExpression:
@@ -209,6 +209,10 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TTy
 
         case Ast.NodeKind.Constant:
             result = inspectTypeConstant(xorNode);
+            break;
+
+        case Ast.NodeKind.EachExpression:
+            result = inspectTypeEachExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.ErrorHandlingExpression:
