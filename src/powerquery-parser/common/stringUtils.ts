@@ -55,7 +55,14 @@ export function graphemePositionFrom(
 }
 
 export function normalizeIdentifier(text: string): string {
-    return isQuotedIdentifier(text) ? text.slice(2, text.length - 1) : text;
+    if (isQuotedIdentifier(text)) {
+        const stripped: string = text.slice(2, text.length - 1);
+        return isIdentifier(stripped, false) ? stripped : text;
+    } else {
+        return text;
+    }
+
+    return isQuotedIdentifier(text) && isIdentifier(text, false) ? text.slice(2, text.length - 1) : text;
 }
 
 export function maybeNormalizeNumber(text: string): string | undefined {

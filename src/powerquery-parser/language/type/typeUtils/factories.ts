@@ -87,7 +87,7 @@ export function definedTableFactory(
         kind: Type.TypeKind.Table,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
         isNullable,
-        fields,
+        fields: normalizeFields(fields),
         isOpen,
     };
 }
@@ -172,7 +172,7 @@ export function tableTypeFactory(
         kind: Type.TypeKind.Type,
         maybeExtendedKind: Type.ExtendedTypeKind.TableType,
         isNullable,
-        fields,
+        fields: normalizeFields(fields),
         isOpen,
     };
 }
@@ -196,4 +196,13 @@ export function tableTypePrimaryExpression(
         isNullable,
         primaryExpression,
     };
+}
+
+function normalizeFields(fields: Map<string, Type.TType>): Map<string, Type.TType> {
+    const partial: Map<string, Type.TType> = new Map();
+    for (const [key, value] of fields.entries()) {
+        partial.set(StringUtils.normalizeIdentifier(key), value);
+    }
+
+    return partial;
 }

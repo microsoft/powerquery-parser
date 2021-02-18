@@ -46,6 +46,8 @@ describe("StringUtils", () => {
     describe(`normalizeIdentifier`, () => {
         it(`foo`, () => expect(StringUtils.normalizeIdentifier(`foo`)).to.equal(`foo`));
         it(`#"foo"`, () => expect(StringUtils.normalizeIdentifier(`#"foo"`)).to.equal(`foo`));
+        it(`#"space space"`, () =>
+            expect(StringUtils.normalizeIdentifier(`#"space space"`)).to.equal(`#"space space"`));
     });
 
     describe(`maybeNormalizeNumber`, () => {

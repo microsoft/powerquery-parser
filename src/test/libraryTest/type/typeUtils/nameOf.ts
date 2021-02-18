@@ -183,9 +183,9 @@ describe(`TypeUtils.nameOf`, () => {
             });
             it(`complex`, () => {
                 const type: Type.TType = TypeUtils.anyUnionFactory([
-                    TypeUtils.definedRecordFactory(false, new Map([["foo", Type.NumberInstance]]), false),
+                    TypeUtils.definedRecordFactory(false, new Map([[`foo`, Type.NumberInstance]]), false),
                     TypeUtils.definedListFactory(false, [Type.TextInstance]),
-                    TypeUtils.definedTableFactory(false, new Map([["bar", Type.TextInstance]]), true),
+                    TypeUtils.definedTableFactory(false, new Map([[`bar`, Type.TextInstance]]), true),
                 ]);
                 const actual: string = TypeUtils.nameOf(type);
                 expect(actual).to.equal(`[foo: number] | {text} | table [bar: text, ...]`);
@@ -317,8 +317,8 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     false,
                 );
@@ -331,8 +331,8 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.DefinedRecord = TypeUtils.definedRecordFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     true,
                 );
@@ -359,8 +359,8 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     false,
                 );
@@ -373,14 +373,28 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.DefinedTable = TypeUtils.definedTableFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     true,
                 );
                 const actual: string = TypeUtils.nameOf(type);
 
                 expect(actual).to.equal(`table [foo: number, bar: nullable text, ...]`, undefined);
+            });
+
+            it(`table [#"foo" = number, #"space space"]`, () => {
+                const type: Type.DefinedTable = TypeUtils.definedTableFactory(
+                    false,
+                    new Map<string, Type.TType>([
+                        [`foo`, Type.NumberInstance],
+                        [`#"space space"`, Type.NullableTextInstance],
+                    ]),
+                    false,
+                );
+                const actual: string = TypeUtils.nameOf(type);
+
+                expect(actual).to.equal(`table [foo: number, #"space space": nullable text]`, undefined);
             });
         });
 
@@ -451,7 +465,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`type [foo = number]`, () => {
                 const type: Type.RecordType = TypeUtils.recordTypeFactory(
                     false,
-                    new Map([["foo", Type.NumberInstance]]),
+                    new Map([[`foo`, Type.NumberInstance]]),
                     false,
                 );
                 const actual: string = TypeUtils.nameOf(type);
@@ -468,8 +482,8 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.RecordType = TypeUtils.recordTypeFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     false,
                 );
@@ -482,8 +496,8 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.RecordType = TypeUtils.recordTypeFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     true,
                 );
@@ -497,7 +511,7 @@ describe(`TypeUtils.nameOf`, () => {
             it(`type table [foo = number]`, () => {
                 const type: Type.TableType = TypeUtils.tableTypeFactory(
                     false,
-                    new Map([["foo", Type.NumberInstance]]),
+                    new Map([[`foo`, Type.NumberInstance]]),
                     false,
                 );
                 const actual: string = TypeUtils.nameOf(type);
@@ -514,8 +528,8 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.TableType = TypeUtils.tableTypeFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     false,
                 );
@@ -528,8 +542,8 @@ describe(`TypeUtils.nameOf`, () => {
                 const type: Type.TableType = TypeUtils.tableTypeFactory(
                     false,
                     new Map<string, Type.TType>([
-                        ["foo", Type.NumberInstance],
-                        ["bar", Type.NullableTextInstance],
+                        [`foo`, Type.NumberInstance],
+                        [`bar`, Type.NullableTextInstance],
                     ]),
                     true,
                 );
