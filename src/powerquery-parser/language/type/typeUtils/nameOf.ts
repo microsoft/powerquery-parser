@@ -3,7 +3,7 @@
 
 import { Type } from "..";
 import { Constant } from "../..";
-import { Assert, StringUtils } from "../../../common";
+import { Assert } from "../../../common";
 
 export function nameOf(type: Type.TType): string {
     switch (type.maybeExtendedKind) {
