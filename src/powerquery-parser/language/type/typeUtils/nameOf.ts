@@ -68,6 +68,8 @@ export function nameOfFunctionParameter(parameter: Type.FunctionParameter): stri
 
     if (parameter.maybeType !== undefined) {
         partial += ` ${nameOfTypeKind(parameter.maybeType)}`;
+    } else {
+        partial += ` ${nameOfTypeKind(Type.TypeKind.Any)}`;
     }
 
     return partial;

@@ -210,6 +210,30 @@ describe(`TypeUtils.nameOf`, () => {
                 expect(actual).to.equal(`() => nullable any`, undefined);
             });
 
+            it(`(x, optional y) => 1`, () => {
+                const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
+                    false,
+                    [
+                        {
+                            isNullable: false,
+                            isOptional: false,
+                            maybeType: undefined,
+                            nameLiteral: "x",
+                        },
+                        {
+                            isNullable: false,
+                            isOptional: true,
+                            maybeType: undefined,
+                            nameLiteral: "y",
+                        },
+                    ],
+                    TypeUtils.numberLiteralFactory(false, "1"),
+                );
+                const actual: string = TypeUtils.nameOf(type);
+
+                expect(actual).to.equal(`(x: any, y: optional any) => 1`, undefined);
+            });
+
             it(`(param1 as number, param2 as nullable number, optional param3 as number, optional param4 as nullable number) => any`, () => {
                 const type: Type.DefinedFunction = TypeUtils.definedFunctionFactory(
                     false,
