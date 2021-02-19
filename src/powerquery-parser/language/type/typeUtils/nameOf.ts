@@ -63,7 +63,7 @@ function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string
     const chunks: string[] = [];
 
     for (const [key, value] of type.fields.entries()) {
-        chunks.push(`${StringUtils.normalizeIdentifier(key)}: ${nameOf(value)}`);
+        chunks.push(`${key}: ${nameOf(value)}`);
     }
 
     if (type.isOpen === true) {

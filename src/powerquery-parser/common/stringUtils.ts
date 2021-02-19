@@ -12,6 +12,14 @@ export const enum NewlineKind {
     DoubleCharacter = "DoubleCharacter", // CARRIAGE RETURN + LINE FEED
 }
 
+export const enum IdentifierKind {
+    Generalized = "Generalized",
+    Invalid = "Invalid",
+    Quote = "Quote",
+    QuoteRequired = "QuoteRequired",
+    Regular = "Regular",
+}
+
 export interface GraphemePosition {
     readonly lineNumber: number;
     readonly lineCodeUnit: number;
@@ -66,6 +74,18 @@ export function graphemePositionFrom(
         columnNumber: columnNumberFrom(text, lineCodeUnit),
         maybeCodeUnit,
     };
+}
+
+export function identifierKind(text: string, allowTrailingPeriod: boolean): IdentifierKind {
+    if (isRegularIdentifier(text, allowTrailingPeriod)) {
+        return IdentifierKind.Regular;
+    } else if (isQuotedIdentifier(text)) {
+        return isRegularIdentifier(text.slice(2, -1), false) ? IdentifierKind.Quote : IdentifierKind.QuoteRequired;
+    } else if (isGeneralizedIdentifier(text)) {
+        return IdentifierKind.Generalized;
+    } else {
+        return IdentifierKind.Invalid;
+    }
 }
 
 export function isGeneralizedIdentifier(text: string): boolean {

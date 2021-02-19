@@ -6,14 +6,14 @@ import "mocha";
 import { StringUtils } from "../../..";
 
 describe("StringUtils", () => {
-    describe(`isIdentifier`, () => {
+    describe(`isRegularIdentifier`, () => {
         describe(`valid`, () => {
-            it(`foo`, () => expect(StringUtils.isIdentifier("foo", false), "should be true").to.be.true);
-            it(`foo`, () => expect(StringUtils.isIdentifier("foo", true), "should be true").to.be.true);
-            it(`foo.`, () => expect(StringUtils.isIdentifier("foo.", true), "should be true").to.be.true);
+            it(`foo`, () => expect(StringUtils.isRegularIdentifier("foo", false), "should be true").to.be.true);
+            it(`foo`, () => expect(StringUtils.isRegularIdentifier("foo", true), "should be true").to.be.true);
+            it(`foo.`, () => expect(StringUtils.isRegularIdentifier("foo.", true), "should be true").to.be.true);
         });
         describe(`invalid`, () => {
-            it(`foo.`, () => expect(StringUtils.isIdentifier("foo.", false), "should be false").to.be.false);
+            it(`foo.`, () => expect(StringUtils.isRegularIdentifier("foo.", false), "should be false").to.be.false);
         });
     });
 
@@ -41,13 +41,6 @@ describe("StringUtils", () => {
             it(`#"`, () => expect(StringUtils.isGeneralizedIdentifier(`#"`), "should be false").to.be.false);
             it(`""`, () => expect(StringUtils.isGeneralizedIdentifier(`""`), "should be false").to.be.false);
         });
-    });
-
-    describe(`normalizeIdentifier`, () => {
-        it(`foo`, () => expect(StringUtils.normalizeIdentifier(`foo`)).to.equal(`foo`));
-        it(`#"foo"`, () => expect(StringUtils.normalizeIdentifier(`#"foo"`)).to.equal(`foo`));
-        it(`#"space space"`, () =>
-            expect(StringUtils.normalizeIdentifier(`#"space space"`)).to.equal(`#"space space"`));
     });
 
     describe(`maybeNormalizeNumber`, () => {

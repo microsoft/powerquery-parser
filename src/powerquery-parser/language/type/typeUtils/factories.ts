@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "..";
-import { Assert, StringUtils } from "../../../common";
+import { Assert, CommonError, StringUtils } from "../../../common";
 import { ParameterScopeItem } from "../../../inspection";
 import { PrimitiveTypeConstantMap, primitiveTypeMapKey, typeKindFromPrimitiveTypeConstantKind } from "./primitive";
 import { dedupe } from "./typeUtils";
@@ -87,7 +87,7 @@ export function definedTableFactory(
         kind: Type.TypeKind.Table,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
         isNullable,
-        fields: normalizeFields(fields),
+        fields,
         isOpen,
     };
 }
@@ -172,12 +172,16 @@ export function tableTypeFactory(
         kind: Type.TypeKind.Type,
         maybeExtendedKind: Type.ExtendedTypeKind.TableType,
         isNullable,
-        fields: normalizeFields(fields),
+        fields,
         isOpen,
     };
 }
 
 export function textLiteralFactory(isNullable: boolean, literal: string): Type.TextLiteral {
+    if (literal[0] !== `"` || literal[literal.length - 1] !== `"`) {
+        throw new CommonError.InvariantError(`text literal must begin and end with double quote`);
+    }
+
     return {
         isNullable,
         kind: Type.TypeKind.Text,
@@ -196,13 +200,4 @@ export function tableTypePrimaryExpression(
         isNullable,
         primaryExpression,
     };
-}
-
-function normalizeFields(fields: Map<string, Type.TType>): Map<string, Type.TType> {
-    const partial: Map<string, Type.TType> = new Map();
-    for (const [key, value] of fields.entries()) {
-        partial.set(StringUtils.normalizeIdentifier(key), value);
-    }
-
-    return partial;
 }
