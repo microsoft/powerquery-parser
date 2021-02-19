@@ -55,6 +55,30 @@ export function nameOf(type: Type.TType): string {
     }
 }
 
+export function nameOfFunctionParameter(parameter: Type.FunctionParameter): string {
+    let partial: string = `${parameter.nameLiteral}:`;
+
+    if (parameter.isOptional === true) {
+        partial += " optional";
+    }
+
+    if (parameter.isNullable === true) {
+        partial += " nullable";
+    }
+
+    if (parameter.maybeType !== undefined) {
+        partial += ` ${nameOfTypeKind(parameter.maybeType)}`;
+    }
+
+    return partial;
+}
+
+export function nameOfFunctionSignature(type: Type.FunctionSignature, includeFatArrow: boolean): string {
+    const parameters: string = type.parameters.map(nameOfFunctionParameter).join(", ");
+
+    return `(${parameters})${includeFatArrow ? " =>" : ""} ${nameOf(type.returnType)}`;
+}
+
 function nameOfTypeKind(kind: Type.TypeKind): string {
     return kind === Type.TypeKind.NotApplicable ? "not applicable" : kind.toLowerCase();
 }
@@ -73,30 +97,6 @@ function nameOfFieldSpecificationList(type: Type.FieldSpecificationList): string
     const pairs: string = chunks.join(", ");
 
     return `[${pairs}]`;
-}
-
-function nameOfFunctionSignature(type: Type.FunctionSignature, includeFatArrow: boolean): string {
-    const parameters: string = type.parameters
-        .map((parameter: Type.FunctionParameter) => {
-            let partial: string = `${parameter.nameLiteral}:`;
-
-            if (parameter.isOptional === true) {
-                partial += " optional";
-            }
-
-            if (parameter.isNullable === true) {
-                partial += " nullable";
-            }
-
-            if (parameter.maybeType !== undefined) {
-                partial += ` ${nameOfTypeKind(parameter.maybeType)}`;
-            }
-
-            return partial;
-        })
-        .join(", ");
-
-    return `(${parameters})${includeFatArrow ? " =>" : ""} ${nameOf(type.returnType)}`;
 }
 
 function nameOfIterable(collection: ReadonlyArray<Type.TType>): string {
