@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, ResultUtils } from "../../common";
+import { Assert, CommonError, ResultUtils, StringUtils } from "../../common";
 import { Ast, Token, Type } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import {
@@ -296,8 +296,12 @@ function autoCompleteItemsFactory(
             continue;
         }
 
+        // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
+        const identifierKind: StringUtils.IdentifierKind = StringUtils.identifierKind(key, false);
+        const normalizedKey: string = identifierKind === StringUtils.IdentifierKind.Quote ? key.slice(2, -1) : key;
+
         autocompleteItems.push({
-            key,
+            key: normalizedKey,
             type,
         });
     }
